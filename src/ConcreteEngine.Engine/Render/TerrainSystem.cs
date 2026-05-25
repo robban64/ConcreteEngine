@@ -45,6 +45,10 @@ internal sealed class TerrainSystem
 
         if (MainTerrain.Material is { } material)
         {
+            var textureId = MainTerrain.GroundTextures.Compile(_gfx.Textures);
+            material.SetOverrideTexture(0, textureId);
+            
+            /*
             TextureId arrayTextureId = default;
             var span = material.GetTextureSources();
             var layer = 0;
@@ -52,12 +56,15 @@ internal sealed class TerrainSystem
             {
                 if(source.Usage != TextureUsage.Environment) continue;
 
-                var textureId = assetSystem.Assets.Get<Texture>(source.Texture).GfxId;
+                var textureId = assetSystem.Assets.Get<Texture>(source.AssetTexture).GfxId;
                 if (arrayTextureId == default)
                     arrayTextureId = _gfx.Textures.CreateTexture2DArrayFrom(textureId, 4);
                 else
                     _gfx.Textures.SetTexture2DArrayLayerFrom(arrayTextureId, textureId, layer++);
             }
+
+            Terrain.Main.ArrayTexture = arrayTextureId;
+            */
         }
 
     }

@@ -70,7 +70,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         string? shaderName = null;
 
         if (record.TextureSlots.Length > 0)
-            slots = CreateSlots(record);
+            slots = CreateSources(record);
         else if (record.Profile != MaterialProfile.None)
         {
             var profile = _profiles[(int)record.Profile];
@@ -128,22 +128,22 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
     }
 
 
-    private TextureSource[] CreateSlots(MaterialRecord embedded)
+    private TextureSource[] CreateSources(MaterialRecord embedded)
     {
         if (embedded.TextureSlots.Length == 0)
         {
             return [new TextureSource(default, TextureUsage.Albedo)];
         }
 
-        var slotInfo = new TextureSource[embedded.TextureSlots.Length];
-        for (int i = 0; i < slotInfo.Length; i++)
+        var sources = new TextureSource[embedded.TextureSlots.Length];
+        for (int i = 0; i < sources.Length; i++)
         {
             var slot = embedded.TextureSlots[i];
             AssetId? slotAsset = null;
 
-            if (slot.SlotKind == TextureUsage.Shadowmap)
+            if (slot.SlotKind == TextureUsage.Shadowmap || slot.TextureKind == TextureKind.Texture2DArray)
             {
-                slotInfo[i] = new TextureSource(default, slot.SlotKind, slot.TextureKind);
+                sources[i] = new TextureSource(default, slot.SlotKind, slot.TextureKind);
                 continue;
             }
 
@@ -153,10 +153,10 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             if (slotAsset is not { } slotAssetId)
                 throw new InvalidOperationException($"Texture {slot.Name} does not exists for {embedded.Name}");
 
-            slotInfo[i] = new TextureSource(slotAssetId, slot.SlotKind, slot.TextureKind);
+            sources[i] = new TextureSource(slotAssetId, slot.SlotKind, slot.TextureKind);
         }
 
-        return slotInfo;
+        return sources;
     }
 
     private TextureSource[] CreateSlotsFromProfile(ProfileSlot[] profile, MaterialRecord desc)

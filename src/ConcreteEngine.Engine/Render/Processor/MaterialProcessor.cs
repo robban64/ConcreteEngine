@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Buffer;
@@ -47,7 +48,7 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
         {
             var source = textureSources[i];
             if(!ResolveFallbackTextureId(source, out var textureId))
-                textureId = assetStore.Get<Texture>(source.Texture).GfxId;
+                textureId = assetStore.Get<Texture>(source.AssetTexture).GfxId;
             
             slots[i] = new TextureBinding(textureId, source.Usage, source.TextureKind);
         }
@@ -55,8 +56,14 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
         return textureSources.Length;
     }
 
-    public static bool ResolveFallbackTextureId(TextureSource source, out TextureId textureId)
+    private static bool ResolveFallbackTextureId(TextureSource source, out TextureId textureId)
     {
+        if (source.TextureKind == TextureKind.Texture2DArray)
+        {
+            textureId = source.OverrideTextureId;
+            return true;
+        }
+        
         if (source.IsFallback)
         {
             textureId = GfxTextures.Fallback.AlbedoId;
@@ -70,7 +77,7 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
             return true;
         }
 
-        if (!source.Texture.IsValid())
+        if (!source.AssetTexture.IsValid())
         {
             switch (source.Usage)
             {

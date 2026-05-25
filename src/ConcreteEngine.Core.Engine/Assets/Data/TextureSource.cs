@@ -1,18 +1,21 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets.Data;
 
 public readonly record struct TextureSource(
-    AssetId Texture,
+    AssetId AssetTexture,
     TextureUsage Usage,
     TextureKind TextureKind = TextureKind.Texture2D,
-    TexturePixelFormat PixelFormat = TexturePixelFormat.SrgbAlpha
+    TexturePixelFormat PixelFormat = TexturePixelFormat.SrgbAlpha,
+    TextureId  OverrideTextureId = default
 )
 {
-    public readonly bool IsFallback = !Texture.IsValid() && HasFallbackArgs(Usage, TextureKind);
+    public readonly bool IsFallback = !AssetTexture.IsValid() && HasFallbackArgs(Usage, TextureKind);
 
-    public TextureSource WithAssetId(AssetId assetId) => this with { Texture = assetId };
+    public TextureSource WithAssetId(AssetId assetId) => this with { AssetTexture = assetId };
 
     public string GetFallbackName()
     {
@@ -29,12 +32,6 @@ public readonly record struct TextureSource(
 
     private static bool HasFallbackArgs(TextureUsage usage, TextureKind textureKind)
     {
-        var fallBackUsage = usage switch
-        {
-            TextureUsage.Shadowmap => true,
-            TextureUsage.Lightmap => true,
-            _ => false
-        };
-        return fallBackUsage || textureKind == TextureKind.Multisample2D;
+        return usage is TextureUsage.Shadowmap or TextureUsage.Lightmap || textureKind == TextureKind.Multisample2D;
     }
 }

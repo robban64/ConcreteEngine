@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
@@ -30,6 +31,8 @@ public sealed class Terrain
 
     private TerrainChunk[] _chunks = [];
 
+    public readonly TextureArray GroundTextures = new(4);
+
     public Material? Material { get; private set; }
     public Material? FoliageMaterial { get; private set; }
     
@@ -55,7 +58,17 @@ public sealed class Terrain
     public MaterialId MaterialId => Material?.MaterialId ?? MaterialStore.FallbackMaterial.MaterialId;
     public MaterialId FoliageMaterialId => FoliageMaterial?.MaterialId ?? MaterialStore.FallbackMaterial.MaterialId;
 
-    public void SetMaterial(Material material) => Material = material;
+    public void SetTexture(int slot, Texture texture)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, 4);
+        GroundTextures.SetTexture(slot, texture);
+    }
+
+    public void SetMaterial(Material material)
+    {
+        Material = material;
+    }
+
     public void SetFoliageMaterial(Material material) => FoliageMaterial = material;
 
     public void CreateFrom(Texture heightmap, Texture? splatMap = null)

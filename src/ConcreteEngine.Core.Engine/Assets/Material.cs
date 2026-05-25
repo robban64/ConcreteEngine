@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Graphics.Gfx.Types;
+using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
@@ -50,12 +51,15 @@ public sealed class Material : AssetObject
     public ReadOnlySpan<TextureSource> GetTextureSources() => _textureSources;
     public MaterialProperties GetProperties() => new(Transparency, HasNormal, HasAlphaMask, HasShadowMap);
 
+    public void SetOverrideTexture(int slot, TextureId textureId)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
+        _textureSources[slot] = _textureSources[slot] with { OverrideTextureId = textureId };
+    }
 
     public void SetTexture(int slot, Texture? texture)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(slot);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, _textureSources.Length);
-
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
 
         ref var source = ref _textureSources[slot];
 
@@ -68,7 +72,7 @@ public sealed class Material : AssetObject
 
         if (source != default)
         {
-            source = source with { Texture = AssetId.Empty };
+            source = source with { AssetTexture = AssetId.Empty };
             MarkDirty();
         }
     }
@@ -207,7 +211,7 @@ public sealed class Material : AssetObject
         foreach (var slot in _textureSources)
         {
             if (!HasShadowMap) HasShadowMap = slot.Usage == TextureUsage.Shadowmap;
-            if (!slot.Texture.IsValid()) continue;
+            if (!slot.AssetTexture.IsValid()) continue;
             if (!HasNormal) HasNormal = slot.Usage == TextureUsage.Normal;
             if (!HasAlphaMask) HasAlphaMask = slot.Usage == TextureUsage.Mask;
         }

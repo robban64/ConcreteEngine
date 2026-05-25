@@ -21,14 +21,11 @@ out vec4 FragColor;
 @import ubo:MaterialUniform
 @import ubo:DrawUniform
 
-layout(binding = 0) uniform sampler2D uTexture;
-layout(binding = 1) uniform sampler2D uAlbedoR;
-layout(binding = 2) uniform sampler2D uAlbedoG;
-layout(binding = 3) uniform sampler2D uAlbedoB;
-layout(binding = 4) uniform sampler2D uWeightMap;
+layout(binding = 0) uniform sampler2DArray uGroundTexture;
+layout(binding = 1) uniform sampler2D uWeightMap;
 
 // depth
-layout(binding = 5) uniform sampler2DShadow uShadowMap;
+layout(binding = 2) uniform sampler2DShadow uShadowMap;
 
 const vec2 offsets[4] = vec2[](
 vec2(-0.5, -0.5),
@@ -128,13 +125,14 @@ vec3 terrainAlbedo(vec2 texCoords, float uvRepeat) {
     vec2 uv = texCoords * uvRepeat;
 
     vec3 wrgb = texture(uWeightMap, texCoords).rgb;
+    
     float w3 = max(1.0 - (wrgb.r + wrgb.g + wrgb.b), 0.0);
-
-    vec3 c0 = texture(uTexture, uv).rgb;
-    vec3 c1 = texture(uAlbedoR, uv).rgb;
-    vec3 c2 = texture(uAlbedoG, uv).rgb;
-    vec3 c3 = texture(uAlbedoB, uv).rgb;
-
+    
+    vec3 c0 = texture(uGroundTexture, vec3(uv, 0)).rgb;
+    vec3 c1 = texture(uGroundTexture, vec3(uv, 1)).rgb;
+    vec3 c2 = texture(uGroundTexture, vec3(uv, 2)).rgb;
+    vec3 c3 = texture(uGroundTexture, vec3(uv, 3)).rgb;
+    
     vec3 totalColor = c0 * w3 + c1 * wrgb.r + c2 * wrgb.g + c3 * wrgb.b;
     return totalColor;
 }

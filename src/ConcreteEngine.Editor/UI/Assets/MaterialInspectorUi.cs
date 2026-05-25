@@ -120,8 +120,8 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
             DrawHover(binding, sw);
 
             ImGui.TableNextColumn();
-            if (binding.Texture.IsValid())
-                DrawAssetSlot(asset, i, Assets.Get<Texture>(binding.Texture), sw);
+            if (binding.AssetTexture.IsValid())
+                DrawAssetSlot(asset, i, Assets.Get<Texture>(binding.AssetTexture), sw);
             else
                 DrawAssetSlotEmptyTexture(asset, i, binding, sw);
 

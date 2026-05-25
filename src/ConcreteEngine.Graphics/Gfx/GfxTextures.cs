@@ -163,7 +163,10 @@ public sealed class GfxTextures
         _driver.TextureStorage3D(handle, new Size3D(baseMeta.Width, baseMeta.Height, layers), gpuProps);
 
         var meta = baseMeta with { Kind = TextureKind.Texture2DArray, Depth = (ushort)layers };
-        return _textureStore.Add(in meta, handle);
+        var textureId = _textureStore.Add(in meta, handle);
+        
+        ApplyProperties(textureId);
+        return textureId;
     }
 
     public void SetTexture2DArrayLayerFrom(TextureId arrayId, TextureId srcId, int layer)
@@ -192,11 +195,12 @@ public sealed class GfxTextures
                 srcKind: TextureKind.Texture2D,
                 dst: dstHandle,
                 dstKind: TextureKind.Texture2DArray,
-                srcLevel: 0,
+                srcLevel: mip,
                 dstLevel: mip,
                 srcSize: CalcMipSize(mip, size).ToSize3D(1),
                 dstPos: new Vector3I(0, 0, layer)
             );
+            
         }
     }
 
@@ -286,7 +290,7 @@ public sealed class GfxTextures
         if (meta.Lod != Half.Zero)
             _driver.SetLodBias(texRef, (float)meta.Lod);
 
-        if (meta.MipLevels > 1)
+        if (meta.MipLevels > 1 && meta.Kind  != TextureKind.Texture2DArray)
             _driver.GenerateMipMaps(texRef);
     }
 

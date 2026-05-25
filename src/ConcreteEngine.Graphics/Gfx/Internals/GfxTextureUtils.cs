@@ -27,13 +27,13 @@ internal static class GfxTextureUtils
         return (int)float.Floor(float.Log2(size)) + 1;
     }
 
-    public static Size2D CalcMipSize(int mipLevels, Size2D size)
+    public static Size2D CalcMipSize(int mipLevel, Size2D size)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(mipLevels);
+        ArgumentOutOfRangeException.ThrowIfNegative(mipLevel);
         if (size.IsNegativeOrZero()) throw new ArgumentOutOfRangeException(nameof(size));
 
-        int w = int.Max(1, size.Width >> mipLevels);
-        int h = int.Max(1, size.Height >> mipLevels);
+        int w = int.Max(1, size.Width >> mipLevel);
+        int h = int.Max(1, size.Height >> mipLevel);
         return new Size2D(w, h);
     }
     

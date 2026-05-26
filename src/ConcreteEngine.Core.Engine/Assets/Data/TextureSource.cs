@@ -10,7 +10,7 @@ public readonly record struct TextureSource(
     TextureUsage Usage,
     TextureKind TextureKind = TextureKind.Texture2D,
     TexturePixelFormat PixelFormat = TexturePixelFormat.SrgbAlpha,
-    TextureId  OverrideTextureId = default
+    TextureId OverrideTextureId = default
 )
 {
     public readonly bool IsFallback = !AssetTexture.IsValid() && HasFallbackArgs(Usage, TextureKind);

@@ -62,13 +62,19 @@ internal sealed class GlMeshes
 
         switch (a.Format)
         {
+            case VertexFormat.Int:
+            case VertexFormat.UInt:
+                Gl.VertexArrayAttribIFormat(vao, a.Location, a.Components, primitive, a.Offset);
+                break;
             case VertexFormat.Float:
-            case VertexFormat.UByte:
             case VertexFormat.Half:
                 Gl.VertexArrayAttribFormat(vao, a.Location, a.Components, primitive, a.Normalized, a.Offset);
                 break;
-            case VertexFormat.Integer:
-                Gl.VertexArrayAttribIFormat(vao, a.Location, a.Components, primitive, a.Offset);
+            case VertexFormat.UByte:
+                if(a.Normalized)
+                    Gl.VertexArrayAttribFormat(vao, a.Location, a.Components, primitive, a.Normalized, a.Offset);
+                else
+                    Gl.VertexArrayAttribIFormat(vao, a.Location, a.Components, primitive, a.Offset);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(a.Format), a.Format, null);

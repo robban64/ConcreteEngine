@@ -143,7 +143,7 @@ public sealed class GameEngine : IDisposable
 
     private void OnSystemTick(float dt)
     {
-        TerrainSystem.Instance.OnTick(_coreSystems.AssetSystem);
+        TerrainSystem.Instance.OnTick();
         
         if (_systemStepper.Tick() && _window.Refresh())
         {

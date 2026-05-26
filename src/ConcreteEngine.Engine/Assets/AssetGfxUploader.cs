@@ -77,7 +77,7 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
         gfx.Shaders.RecreateShader(shaderId, vs, fs, out var samplers);
         info = new ShaderCreationInfo(shaderId, samplers);
     }
-
+/*
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void FillAttributes(Span<VertexAttributeDef> attrib)
     {
@@ -100,7 +100,8 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
         attrib[3] = attribBuilder.Make<Vector3>(3);
 
         attribBuilder.ResetOffset();
-        attrib[4] = attribBuilder.Make<Int4>(4, binding: 1, vertexFormat: VertexFormat.Integer);
+        attrib[4] = attribBuilder.Make<Int4>(4, binding: 1, vertexFormat: VertexFormat.Int);
         attrib[5] = attribBuilder.Make<Vector4>(5, binding: 1);
     }
+*/
 }

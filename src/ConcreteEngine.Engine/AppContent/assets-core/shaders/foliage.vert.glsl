@@ -6,13 +6,15 @@ layout(location = 2) in vec3 aNormal;
 layout(location = 3) in vec4 aTangent;
 
 layout (location = 4) in mediump vec4 aInstancePosition;
-layout (location = 5) in vec4 aInstanceColor;
+layout (location = 5) in vec3 aInstanceColor;
+layout (location = 6) in uint aInstanceLayer;
 
 out VS_OUT {
     vec3 FragPos;
     vec2 TexCoord;
     vec3 N_world;
-    vec4 FoliageColor;
+    vec3 InstanceColor;
+    flat uint InstanceLayer;
 } vs_out;
 
 @import ubo:EngineUniform
@@ -39,8 +41,10 @@ void main() {
     
     vs_out.FragPos = pos;
     vs_out.TexCoord = aTexCoord;
-    vs_out.FoliageColor = aInstanceColor;
     vs_out.N_world = aNormal;
+
+    vs_out.InstanceColor = aInstanceColor;
+    vs_out.InstanceLayer = aInstanceLayer;
 
     gl_Position = uProjViewMat * vec4(pos, 1.0);
 }

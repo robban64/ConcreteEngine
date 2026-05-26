@@ -4,7 +4,8 @@ in VS_OUT {
     vec3 FragPos;
     vec2 TexCoord;
     vec3 N_world;
-    vec4 FoliageColor;
+    vec3 InstanceColor;
+    flat uint InstanceLayer;
 } fs_in;
 
 out vec4 FragColor;
@@ -15,7 +16,7 @@ out vec4 FragColor;
 @import ubo:ShadowUniform
 @import ubo:MaterialUniform
 
-layout(binding = 0) uniform sampler2D uTexture;
+layout(binding = 0) uniform sampler2DArray uTexture;
 layout(binding = 1) uniform sampler2DShadow uShadowMap;
 
 const vec2 offsets[4] = vec2[](
@@ -66,11 +67,13 @@ float sampleShadowMap(vec4 lightSpacePos, vec3 N, vec3 L)
 
 void main()
 {
-    vec4 baseTex = texture(uTexture, fs_in.TexCoord);
-    if (baseTex.a < 0.5) discard;
+    vec4 baseTex = texture(uTexture, vec3(fs_in.TexCoord, fs_in.InstanceLayer));
+    float alpha = smoothstep(0.3, 0.7, baseTex.a);
+    //if (baseTex.a < 0.5) discard;
+    //if(baseTex == vec4(0.0)) baseTex = vec4(1.0);
 
-    vec3 baseColor = baseTex.rgb * fs_in.FoliageColor.rgb;
-
+    vec3 baseColor = baseTex.rgb * fs_in.InstanceColor.rgb;
+    
     vec3 N = normalize(fs_in.N_world); 
     vec3 Ld = normalize(-uLightDirection.xyz);
     vec3 LiD = uLightDiffuse.rgb * uLightDiffuse.a;
@@ -96,6 +99,6 @@ void main()
 
     vec3 finalColor = mix(litColor, fogColor, fogF);
 
-    FragColor = vec4(finalColor, 1.0);
+    FragColor = vec4(finalColor, alpha);
 }
 

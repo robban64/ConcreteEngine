@@ -30,9 +30,11 @@ public enum DrawPrimitive : byte
 
 public enum VertexFormat : byte
 {
-    Float = 0,
-    Integer = 1,
-    UByte = 2,
-    UShort = 3,
-    Half = 4
+    Invalid ,
+    Float ,
+    Int ,
+    UInt ,
+    UByte ,
+    UShort ,
+    Half ,
 }

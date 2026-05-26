@@ -1,38 +1,59 @@
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
-public sealed class TextureArray
+public abstract class CompositeTexture
 {
-    private readonly Texture?[] _textures;
-    public TextureId GfxId { get; private set; }
+    protected readonly Texture?[] Textures;
 
-    public TextureArray(int length)
+    public bool IsDirty { get; protected set; }
+
+    public CompositeTexture(int length)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(length, 2);
-        _textures = new Texture[length];
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(length, 255);
+
+        Textures = new Texture[length];
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool HasEmptyTextureSlot() => Textures.Contains(null);
 
     public void SetTexture(int index, Texture texture)
     {
         ArgumentNullException.ThrowIfNull(texture);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_textures.Length, nameof(index));
-        _textures[index] = texture;
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)Textures.Length, nameof(index));
+        Textures[index] = texture;
+        IsDirty = true;
     }
+    
+    internal abstract TextureId Compile(GfxTextures gfx);
 
-    internal TextureId Compile(GfxTextures gfx)
+}
+
+
+public sealed class TextureArray(int length) : CompositeTexture(length)
+{
+    public TextureId GfxId { get; private set; }
+
+    internal override TextureId Compile(GfxTextures gfx)
     {
-        for (int i = 0; i < _textures.Length; i++)
+        if(!IsDirty) return GfxId;
+        IsDirty = false;
+        
+        for (int i = 0; i < Textures.Length; i++)
         {
-            if (_textures[i] == null) throw new InvalidOperationException($"Texture {i} is null");
-            if (_textures[i]!.GfxId == default) throw new InvalidOperationException($"Texture {i} has empty TextureId");
+            if (Textures[i] == null) throw new InvalidOperationException($"Texture {i} is null");
+            if (Textures[i]!.GfxId == default) throw new InvalidOperationException($"Texture {i} has empty TextureId");
         }
 
-        var arrayId = gfx.CreateTexture2DArrayFrom(_textures[0]!.GfxId, _textures.Length);
-        for (int i = 0; i < _textures.Length; i++)
-            gfx.SetTexture2DArrayLayerFrom(arrayId, _textures[i]!.GfxId, i);
+        var arrayId = gfx.CreateTexture2DArrayFrom(Textures[0]!.GfxId, Textures.Length);
+        for (int i = 0; i < Textures.Length; i++)
+            gfx.SetTexture2DArrayLayerFrom(arrayId, Textures[i]!.GfxId, i);
 
         return GfxId = arrayId;
     }

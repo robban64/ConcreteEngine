@@ -20,16 +20,17 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
         if (materials.DirtyCount > 0) _hasUploadedMaterial = false;
 
         materials.ClearDirty();
+        Submit(renderer.UploadBuffers.Materials);
+    }
 
-        var materialBuffer = renderer.UploadBuffers.Materials;
-
+    private void Submit(MaterialBuffer materialBuffer)
+    {
         Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
         foreach (var material in assetStore.GetAssetEnumerator<Material>())
         {
             int slotLength = GetMaterialUploadData(material, slots, out var payload);
             materialBuffer.Submit(in payload, slots.Slice(0, slotLength));
         }
-
         _hasUploadedMaterial = true;
     }
 
@@ -66,31 +67,25 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
         
         if (source.IsFallback)
         {
-            textureId = GfxTextures.Fallback.AlbedoId;
-            if (source.Usage == TextureUsage.Normal) textureId = GfxTextures.Fallback.NormalId;
+            textureId = source.Usage switch
+            {
+                TextureUsage.Normal => GfxTextures.Fallback.NormalId,
+                TextureUsage.Shadowmap => default,
+                _ => GfxTextures.Fallback.AlbedoId
+            };
             return true;
         }
-
-        if (source.Usage == TextureUsage.Shadowmap)
-        {
-            textureId = default;
-            return true;
-        }
-
+        
         if (!source.AssetTexture.IsValid())
         {
-            switch (source.Usage)
+            textureId = source.Usage switch
             {
-                case TextureUsage.Albedo: 
-                    textureId = GfxTextures.Fallback.AlbedoId;
-                    return true;
-                case TextureUsage.Normal: 
-                    textureId = GfxTextures.Fallback.NormalId;
-                    return true;
-                case TextureUsage.Mask: 
-                    textureId = GfxTextures.Fallback.AlphaMaskId;
-                    return true;
-            }
+                TextureUsage.Albedo => GfxTextures.Fallback.AlbedoId,
+                TextureUsage.Normal => GfxTextures.Fallback.NormalId,
+                TextureUsage.Mask => GfxTextures.Fallback.AlphaMaskId,
+                _ => default
+            };
+            return true;
         }
 
         textureId = default;

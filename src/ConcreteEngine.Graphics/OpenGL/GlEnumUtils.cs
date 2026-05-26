@@ -207,7 +207,8 @@ internal static class GlEnumExtensions
         return value switch
         {
             VertexFormat.Float => GLEnum.Float,
-            VertexFormat.Integer => GLEnum.Int,
+            VertexFormat.Int => GLEnum.Int,
+            VertexFormat.UInt => GLEnum.UnsignedInt,
             VertexFormat.UByte => GLEnum.UnsignedByte,
             VertexFormat.UShort => GLEnum.UnsignedShort,
             VertexFormat.Half => GLEnum.HalfFloat,

@@ -26,6 +26,7 @@ public readonly struct TextureMeta(
     public int Height { get; init; } = height;
     public ushort Depth { get; init; } = depth;
     public Half Lod { get; init; } = lod;
+    public GpuTextureBorder BorderColor { get; init; } = borderColor;
     public byte MipLevels { get; init; } = mipLevels;
     public byte Samples { get; init; } = samples;
     public TexturePreset Preset { get; init; } = preset;
@@ -33,11 +34,11 @@ public readonly struct TextureMeta(
     public TextureAnisotropy Anisotropy { get; init; } = anisotropy;
     public TexturePixelFormat PixelFormat { get; init; } = pixelFormat;
     public DepthMode CompareTextureFunc { get; init; } = compareTextureFunc;
-    public GpuTextureBorder BorderColor { get; init; } = borderColor;
 
     public bool IsMipMapped => MipLevels > 1;
     public bool IsMsaa => Kind == TextureKind.Multisample2D && Samples > 0;
 
+    public int GetArrayLength() => Kind == TextureKind.Texture2DArray ? Depth : 0;
     public Size2D AsSize2D() => new(Width, Height);
     public Size3D AsSize3D() => new(Width, Height, Depth);
 }

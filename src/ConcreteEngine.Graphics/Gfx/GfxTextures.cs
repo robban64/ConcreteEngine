@@ -149,10 +149,10 @@ public sealed class GfxTextures
         return textureId;
     }
 
-    public TextureId CreateTexture2DArrayFrom(TextureId baseTexId, int layers)
+    public TextureId CreateTexture2DArrayFrom(TextureId baseTexId, int layerCount)
     {
         ArgumentOutOfRangeException.ThrowIfZero(baseTexId.Value, nameof(baseTexId));
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(layers, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(layerCount, 1);
 
         var baseMeta = _textureStore.GetMeta(baseTexId);
         if (baseMeta.Kind != TextureKind.Texture2D) throw new GraphicsException(nameof(baseMeta.Kind));
@@ -160,9 +160,9 @@ public sealed class GfxTextures
         var handle = _driver.CreateTexture(TextureKind.Texture2DArray);
 
         var gpuProps = new GpuTextureProps(baseMeta.PixelFormat, baseMeta.MipLevels, baseMeta.Samples);
-        _driver.TextureStorage3D(handle, new Size3D(baseMeta.Width, baseMeta.Height, layers), gpuProps);
+        _driver.TextureStorage3D(handle, new Size3D(baseMeta.Width, baseMeta.Height, layerCount), gpuProps);
 
-        var meta = baseMeta with { Kind = TextureKind.Texture2DArray, Depth = (ushort)layers };
+        var meta = baseMeta with { Kind = TextureKind.Texture2DArray, Depth = (ushort)layerCount };
         var textureId = _textureStore.Add(in meta, handle);
         
         ApplyProperties(textureId);
@@ -176,16 +176,11 @@ public sealed class GfxTextures
         ArgumentOutOfRangeException.ThrowIfNegative(layer);
 
         var dstHandle = _textureStore.GetHandleAndMeta(arrayId, out var dstMeta);
-        if (dstMeta.Depth < 2) throw new GraphicsException(nameof(dstMeta.MipLevels));
-        if (dstMeta.Kind != TextureKind.Texture2DArray) throw new GraphicsException(nameof(dstMeta.Kind));
-
         var srcHandle = _textureStore.GetHandleAndMeta(srcId, out var srcMeta);
-        if (srcMeta.Kind != TextureKind.Texture2D) throw new GraphicsException(nameof(srcMeta.Kind));
-
-        if (dstMeta.PixelFormat != srcMeta.PixelFormat) throw new GraphicsException(nameof(srcMeta.PixelFormat));
-        if (dstMeta.MipLevels != srcMeta.MipLevels) throw new GraphicsException(nameof(srcMeta.MipLevels));
-        if (dstMeta.Width != srcMeta.Width || dstMeta.Height != srcMeta.Height)
-            throw new GraphicsException("Mismatch texture size");
+        
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(layer, dstMeta.GetArrayLength());
+        
+        ValidateTexture2DArrayMeta(in dstMeta, in srcMeta);
 
         var size = dstMeta.AsSize2D();
         for (int mip = 0; mip < dstMeta.MipLevels; mip++)

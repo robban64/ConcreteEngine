@@ -23,7 +23,7 @@ public static class VertexAttributes
         SkinnedAttributes[2] = Vertex3DAttributes[2] = attribBuilder.Make<Vector3>(2);
         SkinnedAttributes[3] = Vertex3DAttributes[3] = attribBuilder.Make<Vector3>(3);
         attribBuilder.ResetOffset();
-        SkinnedAttributes[4] = attribBuilder.Make<Int4>(4, binding: 1, vertexFormat: VertexFormat.Integer);
+        SkinnedAttributes[4] = attribBuilder.Make<Int4>(4, binding: 1, vertexFormat: VertexFormat.Int);
         SkinnedAttributes[5] = attribBuilder.Make<Vector4>(5, binding: 1);
     }
 }

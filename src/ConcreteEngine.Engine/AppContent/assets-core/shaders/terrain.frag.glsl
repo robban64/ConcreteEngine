@@ -134,6 +134,7 @@ vec3 terrainAlbedo(vec2 texCoords, float uvRepeat) {
     vec3 c3 = texture(uGroundTexture, vec3(uv, 3)).rgb;
     
     vec3 totalColor = c0 * w3 + c1 * wrgb.r + c2 * wrgb.g + c3 * wrgb.b;
+    //if(totalColor.a == 0.0) totalColor = vec4(1.0);
     return totalColor;
 }
 

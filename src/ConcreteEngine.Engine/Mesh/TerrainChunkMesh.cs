@@ -1,10 +1,8 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -35,8 +33,6 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
     public MeshId FoliageMeshId;
     public VertexBufferId FoliageInstanceVboId;
     public float FoliageDensity;
-
-    public BoundingBox Bounds;
 
     private NativeView<Vertex3D> _vertices = vertices;
     private NativeView<FoliageGpuInstance> _foliageView = NativeView<FoliageGpuInstance>.MakeNull();
@@ -101,13 +97,14 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
             6, 5, 7
         };
         
-        Span<VertexAttributeDef> attribs = stackalloc VertexAttributeDef[6];
+        Span<VertexAttributeDef> attribs = stackalloc VertexAttributeDef[7];
         VertexAttributes.GetVertex3DAttributes().CopyTo(attribs);
         
         var instanceAttributeMaker = new VertexAttributeMaker();
-        attribs[4] = instanceAttributeMaker.Make<Half4>(4, 1, VertexFormat.Half);
-        attribs[5] = instanceAttributeMaker.Make<ColorRgba>(5, 1, VertexFormat.UByte, true);
-        
+        attribs[4] = instanceAttributeMaker.Make<Half4>(location: 4, binding: 1, VertexFormat.Half);
+        attribs[5] = instanceAttributeMaker.Make(stride: 3, location: 5, binding: 1, VertexFormat.UByte, true);
+        attribs[6] = instanceAttributeMaker.Make<byte>(location: 6, binding: 1, VertexFormat.UByte);
+
         var drawProps = MeshDrawProperties.MakeElementalInstance(
             size: DrawElementSize.UnsignedShort,
             primitive:DrawPrimitive.Triangles,
@@ -128,15 +125,16 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
      
     internal int GenerateFoliageBuffer(NativeView<FoliageGpuInstance> instanceData, ReadOnlySpan<byte> data, float density, Terrain terrain, TerrainChunk chunk)
     {
-        if (instanceData.IsNull) throw new ArgumentNullException(nameof(instanceData));
-        if(!_foliageView.IsNull) throw new InvalidOperationException("Foliage buffer already allocated");
+        if (instanceData.IsNull) Throwers.NullPointer(nameof(instanceData));
+        if(!_foliageView.IsNull) Throwers.InvalidOperation("Foliage buffer already allocated");
         
         _foliageView = instanceData;
         FoliageDensity = density;
-        
+
         var step = 1.0f / density;
         
-        var rowStrideBytes = (int)(data.Length / (ChunkQuads * density));
+        var start = chunk.WorldStart;
+        var dimensions = terrain.Dimension - 1;
 
         var random = new FastRandom((uint)chunk.WorldStart.GetHashCode());
         var instanceCount = 0;
@@ -147,23 +145,23 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
                 float offsetX = random.NextFloat() * step;
                 float offsetZ = random.NextFloat() * step;
             
-                float worldX = chunk.WorldStart.X + x + offsetX;
-                float worldZ = chunk.WorldStart.Y + z + offsetZ;
+                float worldX = start.X + x + offsetX;
+                float worldZ = start.Y + z + offsetZ;
 
-                var idx = (int)z * rowStrideBytes + (int)x * 4;
-                if ((uint)(idx + 4 - 1) >= (uint)data.Length) continue;
+                var layer = TerrainUtils.SampleLayer(data, (int)(start.X + x), (int)(start.Y + z), dimensions);
+                if(layer < 0) continue;
 
-                byte r = data[idx];
-                if (r / 255f < 0.01f) continue;
-
-                //float t = chunk.GetHeight((int)x, (int)z);
-                float y = terrain.GetSmoothHeight(worldX, worldZ);
+                float y = terrain.GetHeight(worldX, worldZ);
                 
                 int vi = (int)(z * ChunkSamples + x);
 
                 ref var instance = ref instanceData[vi];
                 instance.PositionSize = new Half4(worldX, y, worldZ, random.RandomFloat(0.8f, 1.2f));
-                instance.Color = ColorRgba.White;
+                instance.Color.R = (byte)(255f * random.RandomFloat(0.8f, 1f));
+                instance.Color.G = (byte)(255f * random.RandomFloat(0.8f, 1f));
+                instance.Color.B = (byte)(255f * random.RandomFloat(0.8f, 1f));
+                instance.Color.A = (byte)layer;
+
                 
                 instanceCount++;
 
@@ -184,7 +182,6 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
         var start = chunk.WorldStart;
         var end = chunk.WorldStart + ChunkQuads;
 
-        float minY = float.MaxValue, maxY = float.MinValue;
         for (int z = 0; z < ChunkSamples; z++)
         {
             for (int x = 0; x < ChunkSamples; x++)
@@ -193,8 +190,6 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
                 float worldZ = start.Y + z;
 
                 float y = chunk.GetHeight(x, z);
-                minY = float.Min(minY, y);
-                maxY = float.Max(maxY, y);
 
                 float u = worldX / (dimension - 1);
                 float v = worldZ / (dimension - 1);
@@ -212,33 +207,8 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
             }
         }
 
-        InvalidOpThrower.ThrowIf(minY > maxY);
-        Bounds = new BoundingBox(new Vector3(start.X, minY, start.Y), new Vector3(end.X, maxY, end.Y));
     }
     
-    
-    private void CalculateBounds(TerrainChunk chunk)
-    {
-        if (HasNullVertices) throw new InvalidOperationException("Mesh buffer not allocated");
-        if (VertexCount != ChunkSamples * ChunkSamples) throw new InvalidOperationException("Invalid vertex count");
-
-        var start = chunk.WorldStart;
-        var end = chunk.WorldStart + ChunkQuads;
-
-        float minY = float.MaxValue, maxY = float.MinValue;
-        for (int z = 0; z < ChunkSamples; z++)
-        {
-            for (int x = 0; x < ChunkSamples; x++)
-            {
-                float y = chunk.GetHeight(x, z);
-                minY = float.Min(minY, y);
-                maxY = float.Max(maxY, y);
-            }
-        }
-
-        InvalidOpThrower.ThrowIf(minY > maxY);
-        Bounds = new BoundingBox(new Vector3(start.X, minY, start.Y), new Vector3(end.X, maxY, end.Y));
-    }
 
     internal void FillVertices(TerrainChunk chunk, int dimension)
     {

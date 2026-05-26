@@ -13,11 +13,12 @@ internal static class GfxEnumUtils
     public static int SizeInBytes(this VertexFormat fmt) =>
         fmt switch
         {
+            VertexFormat.Float => 4,
+            VertexFormat.Int => 4,
+            VertexFormat.UInt => 4,
             VertexFormat.UByte => 1,
             VertexFormat.UShort => 2,
             VertexFormat.Half => 2,
-            VertexFormat.Float => 4,
-            VertexFormat.Integer => 4,
             _ => Throwers.Unreachable<int>(nameof(fmt))
         };
 

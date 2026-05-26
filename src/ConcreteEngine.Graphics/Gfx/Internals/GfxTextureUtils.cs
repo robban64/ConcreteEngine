@@ -36,6 +36,20 @@ internal static class GfxTextureUtils
         int h = int.Max(1, size.Height >> mipLevel);
         return new Size2D(w, h);
     }
+
+    public static void ValidateTexture2DArrayMeta(in TextureMeta arrayMeta, in TextureMeta srcMeta)
+    {
+        if (srcMeta.Kind != TextureKind.Texture2D) throw new GraphicsException(nameof(srcMeta.Kind));
+        if (arrayMeta.Kind != TextureKind.Texture2DArray) throw new GraphicsException(nameof(arrayMeta.Kind));
+
+        if (arrayMeta.Depth < 2) throw new GraphicsException(nameof(arrayMeta.MipLevels));
+
+        if (arrayMeta.PixelFormat != srcMeta.PixelFormat) throw new GraphicsException(nameof(srcMeta.PixelFormat));
+        if (arrayMeta.MipLevels != srcMeta.MipLevels) throw new GraphicsException(nameof(srcMeta.MipLevels));
+        if (arrayMeta.Width != srcMeta.Width || arrayMeta.Height != srcMeta.Height)
+            throw new GraphicsException("Mismatch texture size");
+
+    }
     
     public static void ValidateUploadSize(Size2D size, Size2D metaSize)
     {

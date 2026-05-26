@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -41,6 +42,7 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
     public int IndexBufferCapacity => _indexBuffer.Length;
     public int VertexBufferCapacity => _vertexBuffer.Length;
     public int FoliageBufferCapacity => _foliageBuffer.Length;
+    public bool HasFoliage => _foliageBuffer.Length > 0;
 
     public void Dispose()
     {
@@ -50,11 +52,6 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
         _indexBuffer.Dispose();
         _vertexBuffer.Dispose();
         _foliageBuffer.Dispose();
-    }
-
-    private void AllocateTextureArrays()
-    {
-        
     }
 
     public void Allocate(ReadOnlySpan<TerrainChunk> chunks, ReadOnlySpan<byte> data, int dimension, float maxHeight)
@@ -100,6 +97,7 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
             var instanceCount = meshChunk.GenerateFoliageBuffer(view, data, density, terrain, it);
             meshChunk.GenerateFoliageMesh(gfx.Meshes, instanceCount);
         }
+
     }
 
     private static void FillIndexBuffer(NativeView<ushort> indices)

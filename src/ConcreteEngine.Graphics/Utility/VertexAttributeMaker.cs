@@ -10,6 +10,25 @@ public struct VertexAttributeMaker
     private int _offset;
 
     public void ResetOffset() => _offset = 0;
+    
+    public VertexAttributeDef Make(
+        int stride,
+        byte location,
+        byte binding = 0,
+        VertexFormat vertexFormat = VertexFormat.Float,
+        bool normalized = false)
+    {
+        var scalar = vertexFormat.SizeInBytes();
+        if (stride % scalar != 0)
+            throw new ArgumentException("Component size must be a multiple.");
+
+        var componentCount = stride / scalar;
+
+        var attribOffset = _offset;
+        _offset += stride;
+        return new VertexAttributeDef(location, binding, componentCount, attribOffset, vertexFormat, normalized);
+    }
+
 
     public VertexAttributeDef Make<TComponent>(
         byte location,

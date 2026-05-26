@@ -15,14 +15,14 @@ internal static class EnvironmentProcessor
 
     public static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, TerrainSystem terrain, CameraFrustum camera)
     {
-        var material = terrain.MainTerrain.MaterialId;
-        var foliageMaterial = terrain.MainTerrain.FoliageMaterialId;
+        var mainTerrain = terrain.MainTerrain;
+        var material = mainTerrain.MaterialId;
+        var foliageMaterial = mainTerrain.FoliageMaterialId;
         
-        var terrainMesh = terrain.TerrainMesh;
         ref readonly var transform = ref _terrainMatrixUniform;
-        foreach (var it in terrainMesh.GetMeshChunks())
+        foreach (var it in terrain.TerrainMesh.GetMeshChunks())
         {
-            if (!camera.IntersectsBox(in it.Bounds)) continue;
+            if (!camera.IntersectsBox(in mainTerrain.GetChunk(it.Slot).GetBounds())) continue;
             var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
             var cmd = new DrawCommand(it.TerrainMeshId, material);
             commandBuffer.Submit(cmd, meta, in transform);

@@ -18,14 +18,10 @@ public readonly record struct GfxId<TMeta>(ushort Id) : IComparable<GfxId<TMeta>
 }
 
 
-/*
-public readonly record struct GfxId(int ResourceId, ushort Gen, GraphicsKind Kind)
-{
-    public readonly int ResourceId = ResourceId;
-    public readonly ushort Gen = Gen;
-    public readonly GraphicsKind Kind = Kind;
-    public bool IsValid() => ResourceId > 0 && Gen > 0 && Kind != GraphicsKind.Invalid;
 
-    internal bool ValidateHandle(GfxHandle handle) => Gen == handle.Gen && Kind == handle.Kind;
+internal readonly record struct GfxId(ushort Id, GraphicsKind Kind)
+{
+    public static implicit operator ushort(GfxId id) => id.Id;
+
+    public bool IsValid() => Id > 0 &&  Kind != GraphicsKind.Invalid;
 }
-*/

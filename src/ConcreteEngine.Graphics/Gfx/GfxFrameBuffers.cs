@@ -25,9 +25,9 @@ public sealed class GfxFrameBuffers
 
     internal GfxFrameBuffers(GfxContextInternal context, GfxTextures gfxTextures)
     {
-        _fboStore = context.Resources.GfxStoreHub.FboStore;
-        _rboStore = context.Resources.GfxStoreHub.RboStore;
-        _textureStore = context.Resources.GfxStoreHub.TextureStore;
+        _fboStore = GfxRegistry.GetGfxStore<FrameBufferMeta>();
+        _rboStore = GfxRegistry.GetGfxStore<RenderBufferMeta>();
+        _textureStore = GfxRegistry.GetGfxStore<TextureMeta>();
 
         _disposer = context.Disposer;
         _driver = context.Driver.FrameBuffers;

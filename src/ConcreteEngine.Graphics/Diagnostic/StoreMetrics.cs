@@ -18,7 +18,7 @@ internal interface IStoreMetrics
 internal sealed class StoreMetrics<TMeta>(
     GraphicsKind kind,
     GfxResourceStore<TMeta> gfxStore,
-    IBackendResourceStore backendStore)
+    BackendResourceStore backendStore)
     : IStoreMetrics where TMeta : unmanaged, IResourceMeta
 
 {
@@ -42,28 +42,25 @@ internal sealed class StoreMetrics<TMeta>(
 
     private GfxMetaInfo GetSpecialMetric()
     {
-        return default;
-        /*
         return gfxStore switch
         {
-            GraphicsKind.Texture =>
-                GetTextureMetric(((GfxResourceStore<TextureMeta>)gfxStore).GetMetaSpan()),
-            GraphicsKind.Shader =>
-                GetShaderMetric(((IGfxMetaResourceStore<ShaderMeta>)gfxStore).GetMetaSpan()),
-            GraphicsKind.Mesh =>
-                GetMeshMetric(((IGfxMetaResourceStore<MeshMeta>)gfxStore).GetMetaSpan()),
-            GraphicsKind.VertexBuffer =>
-                GetVboMetric(((IGfxMetaResourceStore<VertexBufferMeta>)gfxStore).GetMetaSpan()),
-            GraphicsKind.IndexBuffer =>
-                GetIboMetric(((IGfxMetaResourceStore<IndexBufferMeta>)gfxStore).GetMetaSpan()),
-            GraphicsKind.UniformBuffer =>
-                GetUboMetric(((IGfxMetaResourceStore<UniformBufferMeta>)gfxStore).GetMetaSpan()),
-            GraphicsKind.FrameBuffer =>
-                GetFboMetric(((IGfxMetaResourceStore<FrameBufferMeta>)gfxStore).GetMetaSpan()),
-            GraphicsKind.RenderBuffer =>
-                GetRboMetric(((IGfxMetaResourceStore<RenderBufferMeta>)gfxStore).GetMetaSpan()),
+            GfxResourceStore<TextureMeta>  texStore =>
+                GetTextureMetric(texStore.GetMetaSpan()),
+            GfxResourceStore<ShaderMeta>  shaderStore =>
+                GetShaderMetric(shaderStore.GetMetaSpan()),
+            GfxResourceStore<MeshMeta>  meshStore =>
+                GetMeshMetric(meshStore.GetMetaSpan()),
+            GfxResourceStore<VertexBufferMeta>  vertexBufferStore =>
+                GetVboMetric(vertexBufferStore.GetMetaSpan()),
+            GfxResourceStore<IndexBufferMeta>   indexBufferStore =>
+                GetIboMetric(indexBufferStore.GetMetaSpan()),
+            GfxResourceStore<UniformBufferMeta>  uniformBufferStore =>
+                GetUboMetric(uniformBufferStore.GetMetaSpan()),
+            GfxResourceStore<FrameBufferMeta>  frameBufferStore =>
+                GetFboMetric(frameBufferStore.GetMetaSpan()),
+            GfxResourceStore<RenderBufferMeta>  renderBufferStore =>
+                GetRboMetric(renderBufferStore.GetMetaSpan()),
             _ => throw new ArgumentOutOfRangeException()
         };
-        */
     }
 }

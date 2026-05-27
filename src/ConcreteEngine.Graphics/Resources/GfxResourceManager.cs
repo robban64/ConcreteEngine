@@ -5,42 +5,29 @@ using static ConcreteEngine.Graphics.GraphicsKind;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-public interface IGfxResourceManager
+internal sealed class GfxResourceManager : IDisposable
 {
-    GfxResourceApi GetGfxApi();
-}
-
-internal sealed class GfxResourceManager : IGfxResourceManager
-{
-    private readonly GfxResourceApi _resourceApi;
-
-    internal BackendStoreHub BackendStoreHub { get; }
-    internal GfxStoreHub GfxStoreHub { get; }
     internal ResourceBackendDispatcher BackendDispatcher { get; }
 
     internal GfxResourceManager()
     {
-        GfxStoreHub = new GfxStoreHub();
+        GfxRegistry.CreateStores();
 
-        BackendStoreHub = new BackendStoreHub();
         BackendDispatcher = new ResourceBackendDispatcher { OnDelete = OnDeleted };
-
-        _resourceApi = new GfxResourceApi(GfxStoreHub, BackendStoreHub);
 
         RegisterMetricsBindings();
     }
 
     private void RegisterMetricsBindings()
     {
-        var (gfx, bk) = (GfxStoreHub, BackendStoreHub);
-        GfxMetrics.BindStore(gfx.GetStore<TextureMeta>(), bk.GetStore(Texture));
-        GfxMetrics.BindStore(gfx.GetStore<ShaderMeta>(), bk.GetStore(Shader));
-        GfxMetrics.BindStore(gfx.GetStore<MeshMeta>(), bk.GetStore(Mesh));
-        GfxMetrics.BindStore(gfx.GetStore<VertexBufferMeta>(), bk.GetStore(VertexBuffer));
-        GfxMetrics.BindStore(gfx.GetStore<IndexBufferMeta>(), bk.GetStore(IndexBuffer));
-        GfxMetrics.BindStore(gfx.GetStore<FrameBufferMeta>(), bk.GetStore(FrameBuffer));
-        GfxMetrics.BindStore(gfx.GetStore<RenderBufferMeta>(), bk.GetStore(RenderBuffer));
-        GfxMetrics.BindStore(gfx.GetStore<UniformBufferMeta>(), bk.GetStore(UniformBuffer));
+        GfxMetrics.BindStore<TextureMeta>();
+        GfxMetrics.BindStore<ShaderMeta>();
+        GfxMetrics.BindStore<MeshMeta>();
+        GfxMetrics.BindStore<VertexBufferMeta>();
+        GfxMetrics.BindStore<IndexBufferMeta>();
+        GfxMetrics.BindStore<FrameBufferMeta>();
+        GfxMetrics.BindStore<RenderBufferMeta>();
+        GfxMetrics.BindStore<UniformBufferMeta>();
     }
 
 
@@ -50,5 +37,5 @@ internal sealed class GfxResourceManager : IGfxResourceManager
     }
 
 
-    public GfxResourceApi GetGfxApi() => _resourceApi;
+    public void Dispose() => GfxRegistry.DisposeAllStores();
 }

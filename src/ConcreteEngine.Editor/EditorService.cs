@@ -20,11 +20,11 @@ internal sealed class EditorService
     private readonly PanelRouter _router;
     private readonly SelectionManager _selectionManager;
 
-    public EditorService(EngineWindow engineWindow, GfxResourceApi gfxApi)
+    public EditorService(EngineWindow engineWindow)
     {
         _eventDispatcher = new EventDispatcher();
 
-        _stateManager = new StateManager(_eventDispatcher, gfxApi);
+        _stateManager = new StateManager(_eventDispatcher);
 
         _selectionManager = new SelectionManager(_stateManager);
         _interactionHandler = new InteractionHandler(_stateManager, _selectionManager);

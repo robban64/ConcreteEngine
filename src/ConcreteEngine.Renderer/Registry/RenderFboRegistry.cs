@@ -17,7 +17,6 @@ namespace ConcreteEngine.Renderer.Registry;
 public sealed class RenderFboRegistry
 {
     private readonly GfxFrameBuffers _gfxFbo;
-    private readonly GfxResourceApi _gfxApi;
 
     private int _fboCount;
 
@@ -31,7 +30,7 @@ public sealed class RenderFboRegistry
     internal void OnFboChange(int id)
     {
         var fboId = (FrameBufferId)id;
-        var meta = _gfxApi.GetMeta<FrameBufferMeta>(fboId);
+        var meta = GfxResourceApi.GetMeta(fboId);
 
         var renderFbo = GetById(fboId);
         if (renderFbo is null) throw new InvalidOperationException($"FrameBuffer with id: {fboId} not found");
@@ -42,7 +41,6 @@ public sealed class RenderFboRegistry
     internal RenderFboRegistry(GfxContext gfx)
     {
         _gfxFbo = gfx.FrameBuffers;
-        _gfxApi = gfx.ResourceManager.GetGfxApi();
     }
 
     internal void BeginRegistration(Size2D outputSize)
@@ -68,7 +66,7 @@ public sealed class RenderFboRegistry
 
         var gfxDescriptor = entry.Build(outputSize);
         var fboId = _gfxFbo.CreateFrameBuffer(gfxDescriptor);
-        var meta = _gfxApi.GetMeta<FrameBufferMeta>(fboId);
+        var meta = GfxResourceApi.GetMeta(fboId);
 
         var sizePolicy = entry.FboSizePolicy ?? RenderFboSizePolicy.MakeDefault();
 

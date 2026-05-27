@@ -8,7 +8,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceApi gfxApi)
+internal sealed class StateManager(EventDispatcher eventDispatcher)
 {
     public event Action<EditorContext, EditorContext>? ContextChanged;
 
@@ -46,7 +46,7 @@ internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceA
     public void GetOrSetTextureHandle(TextureId id, scoped ref TexturePtrHandle texHandle)
     {
         ArgumentOutOfRangeException.ThrowIfZero(id.Value, nameof(id));
-        var handle = gfxApi.GetNativeHandle<TextureMeta>(id);
+        var handle = GfxResourceApi.GetNativeHandle(id);
         if (texHandle.Handle == handle) return;
 
         if (!texHandle.TexturePtr.IsNull) texHandle.TexturePtr.Destroy();

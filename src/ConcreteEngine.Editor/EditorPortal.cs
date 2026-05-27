@@ -47,7 +47,7 @@ public sealed class EditorPortal : IDisposable
         ConsoleGateway.Service.Setup();
 
         InspectorFieldProvider.Create();
-        _service = new EditorService(_engineContext.Window, _engineContext.GfxApi);
+        _service = new EditorService(_engineContext.Window);
         Initialized = true;
     }
 

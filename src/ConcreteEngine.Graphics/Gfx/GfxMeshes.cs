@@ -4,6 +4,7 @@ using ConcreteEngine.Graphics.Gfx.Internals;
 using ConcreteEngine.Graphics.Gfx.Types;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
+using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Graphics.Gfx;
@@ -31,9 +32,9 @@ public sealed class GfxMeshes
     {
         _driver = context.Driver;
         _buffers = buffers;
-        _meshStore = context.Resources.GfxStoreHub.MeshStore;
-        _vboStore = context.Resources.GfxStoreHub.VboStore;
-        _iboStore = context.Resources.GfxStoreHub.IboStore;
+        _meshStore = GfxRegistry.GetGfxStore<MeshMeta>();
+        _vboStore = GfxRegistry.GetGfxStore<VertexBufferMeta>();
+        _iboStore = GfxRegistry.GetGfxStore<IndexBufferMeta>();
 
         _meshAttributes = new Dictionary<int, MeshLayout>(int.Max(64, _meshStore.Capacity));
         CreatePrimitives(this);

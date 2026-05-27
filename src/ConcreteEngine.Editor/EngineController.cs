@@ -8,7 +8,6 @@ namespace ConcreteEngine.Editor;
 
 public sealed class EditorEngineContext
 {
-    public required GfxResourceApi GfxApi;
     public required InputController Input;
     public required EngineWindow Window;
 }

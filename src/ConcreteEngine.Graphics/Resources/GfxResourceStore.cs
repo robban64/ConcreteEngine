@@ -10,7 +10,7 @@ using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-public interface IGfxResourceStore : IDisposable
+internal interface IGfxResourceStore : IDisposable
 {
     GraphicsKind GraphicsKind { get; }
     int Count { get; }
@@ -20,6 +20,8 @@ public interface IGfxResourceStore : IDisposable
     int GetAliveCount();
 
     void BindOnUpdateCallback(Action<int> callback);
+
+    GfxHandle Remove(GfxId id);
 }
 
 internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore
@@ -96,10 +98,10 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore
         return id;
     }
 
-    public GfxHandle Remove(GfxId<TMeta> id)
+    public GfxHandle Remove(GfxId id)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(id, 0, nameof(id));
-        return Remove(id, out _);
+        if(!id.IsValid() || id.Kind != GraphicsKind) Throwers.InvalidOperation($"Invalid handle {id}");
+        return Remove(new GfxId<TMeta>(id), out _);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

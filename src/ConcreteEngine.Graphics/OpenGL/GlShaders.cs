@@ -10,13 +10,7 @@ internal sealed class GlShaders
 {
     private static GL Gl => GlBackendDriver.Gl;
 
-    private readonly BackendResourceStore<GlHandle> _shaderStore;
-
-    internal GlShaders(GlCtx ctx)
-    {
-        _shaderStore = ctx.Store.ShaderStore;
-    }
-
+    private readonly BackendResourceStore _shaderStore = GfxRegistry.GetBackendStore<ShaderMeta>();
 
     public GfxHandle CreateShader(NativeView<byte> vertexSource, NativeView<byte> fragmentSource)
     {
@@ -34,7 +28,7 @@ internal sealed class GlShaders
             throw;
         }
 
-        GlHandle handle = default;
+        NativeHandle handle = default;
         try
         {
             handle = CreateShaderProgram(vertexShader, fragmentShader);
@@ -52,12 +46,12 @@ internal sealed class GlShaders
             Gl.DeleteShader(fragmentShader);
         }
 
-        return _shaderStore.Add(new GlHandle(handle));
+        return _shaderStore.Add(handle);
     }
 
     public int GetSamplersFromProgram(GfxHandle shaderRef)
     {
-        var handle = _shaderStore.GetHandle(shaderRef).Value;
+        var handle = _shaderStore.Get(shaderRef);
         Gl.UseProgram(handle);
 
         Gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
@@ -76,7 +70,7 @@ internal sealed class GlShaders
         return samplers;
     }
 
-    private GlHandle CreateShaderProgram(uint vertexShader, uint fragmentShader)
+    private static NativeHandle CreateShaderProgram(uint vertexShader, uint fragmentShader)
     {
         var program = Gl.CreateProgram();
         Gl.AttachShader(program, vertexShader);
@@ -87,10 +81,10 @@ internal sealed class GlShaders
         if (status != (int)GLEnum.True)
             throw GraphicsException.ShaderLinkFailed(program.ToString(), Gl.GetProgramInfoLog(program));
 
-        return new GlHandle(program);
+        return new NativeHandle(program);
     }
 
-    private unsafe uint CompileShader(ShaderType shaderType, NativeView<byte> source)
+    private static unsafe uint CompileShader(ShaderType shaderType, NativeView<byte> source)
     {
         var shader = Gl.CreateShader(shaderType);
 
@@ -109,7 +103,7 @@ internal sealed class GlShaders
 
     public List<(string, int)> GetUniformsFromProgram(GfxHandle shaderRef)
     {
-        var handle = _shaderStore.GetHandle(shaderRef).Value;
+        var handle = _shaderStore.Get(shaderRef);
         Gl.UseProgram(handle);
         Gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
         var uniforms = new List<(string, int)>(uniformsLength);

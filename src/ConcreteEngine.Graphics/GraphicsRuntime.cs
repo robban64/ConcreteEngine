@@ -44,7 +44,7 @@ public sealed class GraphicsRuntime : IDisposable
             throw GraphicsException.UnsupportedFeature("Only OpenGL is supported");
 
         _resources = new GfxResourceManager();
-        _disposer = new GfxResourceDisposer(_resources);
+        _disposer = new GfxResourceDisposer();
 
         var capabilities = InitializeDriver(glConfig);
 
@@ -70,7 +70,6 @@ public sealed class GraphicsRuntime : IDisposable
 
         Gfx = new GfxContext
         {
-            ResourceManager = _resources,
             Disposer = _disposer,
             Buffers = _buffers,
             Meshes = _meshes,
@@ -116,12 +115,7 @@ public sealed class GraphicsRuntime : IDisposable
         _isDisposed = true;
 
         _draw.Dispose();
-        foreach (var kind in EnumCache<GraphicsKind>.Values)
-        {
-            if (kind == GraphicsKind.Invalid) continue;
-            _resources.GfxStoreHub.GetStore(kind).Dispose();
-            _resources.BackendStoreHub.GetStore(kind).Dispose();
-        }
+        _resources.Dispose();
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

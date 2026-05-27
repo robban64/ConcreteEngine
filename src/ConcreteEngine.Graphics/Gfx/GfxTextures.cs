@@ -14,66 +14,6 @@ using static ConcreteEngine.Graphics.Gfx.Internals.GfxTextureUtils;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-/*
-    public TextureId BuildTexture2DArray(ReadOnlySpan<TextureId> textures, int totalLayers = 0)
-    {
-        ArgumentOutOfRangeException.ThrowIfZero(textures.Length);
-
-        var layers = int.Max(textures.Length, totalLayers);
-
-        var baseMeta = _textureStore.GetMeta(textures[0]);
-        if (baseMeta.Kind != TextureKind.Texture2D) throw new GraphicsException(nameof(baseMeta.Kind));
-
-        foreach (var texId in textures)
-        {
-            var handle = _textureStore.GetHandleAndMeta(texId, out var meta);
-
-            if (meta.Kind != TextureKind.Texture2D) throw new GraphicsException(nameof(meta.Kind));
-            if (baseMeta.PixelFormat != meta.PixelFormat) throw new GraphicsException(nameof(meta.PixelFormat));
-            if (baseMeta.MipLevels != meta.MipLevels) throw new GraphicsException(nameof(meta.MipLevels));
-            if (baseMeta.Width != meta.Width || baseMeta.Height != meta.Height)
-                throw new GraphicsException("Mismatch texture size");
-        }
-
-        var dstHandle = _driver.CreateTexture(TextureKind.Texture2DArray);
-
-        var gpuProps = new GpuTextureProps(baseMeta.PixelFormat, baseMeta.MipLevels, baseMeta.Samples);
-        _driver.TextureStorage3D(dstHandle, new Size3D(baseMeta.Width, baseMeta.Height, layers), gpuProps);
-
-        var size = new Size3D(baseMeta.Width, baseMeta.Height, 1);
-        for (var layer = 0; layer < layers; layer++)
-        {
-            var texId = textures[layer];
-            var srcHandle = _textureStore.GetHandle(texId);
-            _driver.CopyTextureData(
-                src: srcHandle,
-                srcKind: TextureKind.Texture2D,
-                dst: dstHandle,
-                dstKind: TextureKind.Texture2DArray,
-                srcLevel: 0,
-                dstLevel: 0,
-                srcSize: size,
-                dstPos: new Vector3I(0, 0, layer)
-            );
-            for (int mip = 0; mip < baseMeta.MipLevels; mip++)
-            {
-                _driver.CopyTextureData(
-                    src: srcHandle,
-                    srcKind: TextureKind.Texture2D,
-                    dst: dstHandle,
-                    dstKind: TextureKind.Texture2DArray,
-                    srcLevel: 0,
-                    dstLevel: mip,
-                    srcSize: GfxUtilsInternal.CalcMipSize(mip, size).ToSize3D(1),
-                    dstPos: new Vector3I(0, 0, layer)
-                );
-            }
-        }
-
-        return _textureStore.Add(baseMeta, dstHandle);
-    }
-    */
-
 public sealed class GfxTextures
 {
     public static class Fallback
@@ -91,7 +31,7 @@ public sealed class GfxTextures
     internal GfxTextures(GfxContextInternal context)
     {
         _disposer = context.Disposer;
-        _textureStore = context.Resources.GfxStoreHub.TextureStore;
+        _textureStore = GfxRegistry.GetGfxStore<TextureMeta>();
         _driver = context.Driver.Textures;
 
         Fallback.AlbedoId = CreateOnePixelTexture([255, 255, 255, 255], TexturePixelFormat.SrgbAlpha);

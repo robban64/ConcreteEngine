@@ -8,9 +8,9 @@ internal sealed class GlDisposer
     private static GL Gl => GlBackendDriver.Gl;
     private readonly ResourceBackendDispatcher _dispatcher;
 
-    internal GlDisposer(GlCtx ctx)
+    internal GlDisposer(ResourceBackendDispatcher dispatcher)
     {
-        _dispatcher = ctx.Dispatcher;
+        _dispatcher = dispatcher;
     }
 
     public void DeleteGlResource(DeleteResourceCommand cmd)

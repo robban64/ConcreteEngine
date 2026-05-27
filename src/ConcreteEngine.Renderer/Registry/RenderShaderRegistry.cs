@@ -14,12 +14,10 @@ public sealed class RenderShaderRegistry
 
     private RenderShader[] _shaderRegistry = [];
 
-    private readonly GfxResourceApi _gfxApi;
     private readonly GfxShaders _gfxShaders;
 
     internal RenderShaderRegistry(GfxContext gfx)
     {
-        _gfxApi = gfx.ResourceManager.GetGfxApi();
         _gfxShaders = gfx.Shaders;
     }
 
@@ -41,7 +39,7 @@ public sealed class RenderShaderRegistry
             if (_shaderRegistry[shaderId - 1] != null)
                 throw new InvalidOperationException(nameof(_shaderRegistry));
 
-            var meta = _gfxApi.GetMeta< ShaderMeta>(shaderId);
+            var meta = GfxResourceApi.GetMeta(shaderId);
             _shaderRegistry[shaderId - 1] = new RenderShader(shaderId, meta);
         }
     }

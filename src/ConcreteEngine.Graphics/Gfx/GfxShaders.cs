@@ -9,17 +9,17 @@ namespace ConcreteEngine.Graphics.Gfx;
 public sealed class GfxShaders
 {
     private readonly GfxResourceDisposer _disposer;
-    private readonly IDriverDebugger _drivDebug;
+    private readonly IDriverDebugger _debugger;
 
     private readonly ShaderStore _store;
     private readonly GlShaders _driver;
 
     internal GfxShaders(GfxContextInternal context)
     {
-        _store = context.Resources.GfxStoreHub.ShaderStore;
+        _store = GfxRegistry.GetGfxStore<ShaderMeta>();
         _driver = context.Driver.Shaders;
         _disposer = context.Disposer;
-        _drivDebug = context.Driver.Debugger;
+        _debugger = context.Driver.Debugger;
     }
 
     public ShaderId CreateShader(NativeView<byte> vs, NativeView<byte> fs, out int samplers)
@@ -36,7 +36,7 @@ public sealed class GfxShaders
         if (vs.IsNull || vs.Length == 0) throw new ArgumentOutOfRangeException(nameof(vs));
         if (fs.IsNull || fs.Length == 0) throw new ArgumentOutOfRangeException(nameof(fs));
 
-        _drivDebug.ToggleDebug(false);
+        _debugger.ToggleDebug(false);
         GfxHandle oldRef = default, newRef = default;
         try
         {
@@ -45,7 +45,7 @@ public sealed class GfxShaders
         }
         finally
         {
-            _drivDebug.ToggleDebug(true);
+            _debugger.ToggleDebug(true);
         }
 
         samplers = _driver.GetSamplersFromProgram(newRef);

@@ -5,6 +5,7 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internals;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
+using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -26,7 +27,7 @@ public sealed unsafe class GfxDraw : IDisposable
         if (!_tableMemory.IsNull) throw new InvalidOperationException("DrawTable is already initialized.");
 
         _states = ctx.Driver.States;
-        _meshStore = ctx.Resources.GfxStoreHub.MeshStore;
+        _meshStore = GfxRegistry.GetGfxStore<MeshMeta>();
 
         _tableMemory = NativeArray.Allocate<byte>(sizeof(nint) * 4);
 

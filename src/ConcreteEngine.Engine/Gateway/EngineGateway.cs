@@ -58,7 +58,6 @@ internal sealed class EngineGateway : IDisposable
 
         var engineContext = new EditorEngineContext
         {
-            GfxApi = gfxContext.ResourceManager.GetGfxApi(),
             Input = new InputLayerController(inputSystem, InputLayerKind.Ui),
             Window = window,
         };

@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Inspector.Impl;
@@ -17,9 +18,11 @@ internal sealed class CameraPanel(StateManager state) : EditorPanel(StateEnums.C
 
     private static readonly InspectCameraFields InspectFields = InspectorFieldProvider.Instance.CameraFields;
 
+    private Camera MainCamera => CameraSystem.Instance.Camera;
+    
     private void UpdateText()
     {
-        var viewport = EngineObjectStore.Camera.Viewport;
+        var viewport = MainCamera.Viewport;
 
         DataPtr.Slice(_viewportStrHandle).Writer()
             .Append("Width: "u8).Append(viewport.Width)
@@ -34,7 +37,7 @@ internal sealed class CameraPanel(StateManager state) : EditorPanel(StateEnums.C
         _viewportStrHandle = allocator.AllocSlice(32).AsRange16();
         _aspectStrHandle = allocator.AllocSlice(24).AsRange16();
 
-        _currentViewport = EngineObjectStore.Camera.Viewport;
+        _currentViewport = MainCamera.Viewport;
 
         UpdateText();
         InspectFields.Refresh();
@@ -42,7 +45,7 @@ internal sealed class CameraPanel(StateManager state) : EditorPanel(StateEnums.C
 
     public override void OnUpdateDiagnostic()
     {
-        if (_currentViewport != EngineObjectStore.Camera.Viewport) UpdateText();
+        if (_currentViewport != MainCamera.Viewport) UpdateText();
     }
 
 

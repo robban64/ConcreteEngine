@@ -43,15 +43,13 @@ internal sealed class EngineGateway : IDisposable
 
         Enabled = true;
 
-        var store = coreSystem.GetSystem<SceneSystem>().SceneStore;
         var inputSystem = coreSystem.GetSystem<InputSystem>();
 
         var engineBundle = new EditorEngineBundle
         {
-            Camera = CameraSystem.Instance.Camera,
             Visuals = VisualManager.Instance,
-            RayCaster = CameraSystem.Instance.RayCaster,
-            SceneStore = store,
+            SceneStore = coreSystem.Scene.SceneStore,
+            SceneSpawner = coreSystem.Scene.SceneSpawner,
             Assets = coreSystem.Assets.Assets,
             FileRegistry = coreSystem.Assets.Files,
         };

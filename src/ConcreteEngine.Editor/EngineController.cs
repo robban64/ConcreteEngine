@@ -13,10 +13,9 @@ public sealed class EditorEngineContext
 
 public sealed class EditorEngineBundle
 {
-    public required Camera Camera;
     public required VisualManager Visuals;
-    public required RayCaster RayCaster;
     public required SceneStore SceneStore;
+    public required SceneSpawner SceneSpawner;
     public required AssetStore Assets;
     public required AssetFileRegistry FileRegistry;
 }

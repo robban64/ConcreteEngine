@@ -171,6 +171,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         var hasSelection = _selectedFile.IsValid();
         var isFolder = binding == FileBinding.Unknown;
+        var isModel = _assetBrowser.CurrentKind == AssetKind.Model;
 
         for (var i = start; i < end; i++)
         {
@@ -184,6 +185,14 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
             if (ImGui.Selectable("##select"u8, selected, selectFlags, ListItemSelectSize))
                 OnListItemClick(it);
+
+            if (isModel && binding == FileBinding.RootFile  && ImGui.BeginDragDropSource())
+            {
+                FileRegistry.TryGetByRootFileId(it.FileId, out var  modelId);
+                ImGui.SetDragDropPayload("ASSET_MODEL"u8, &modelId, (nuint)Unsafe.SizeOf<AssetId>());
+                AppDraw.Text(name);
+                ImGui.EndDragDropSource();
+            }
 
             ImGui.SetCursorPosY(i * (ListItemHeight + ListItemPad) + (ListItemPad - 1));
 
@@ -225,10 +234,11 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         {
             var modelId = *(AssetId*)payload.Data;
             if (!modelId.IsValid()) return;
+            
             var model = Assets.Get<Model>(modelId);
             var camera = EditorCamera.Instance.Camera;
             var transform = new Transform(camera.Translation + camera.Forward * 10);
-            //EngineObjectStore.SceneStore.SpawnSceneObject(model, transform);
+            EngineObjectStore.SceneSpawner.SpawnFrom(model, in transform);
         }
     }
 

@@ -106,9 +106,9 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
     // ReSharper disable CompareOfFloatsByEqualityOperator
     public readonly bool Equals(Color4 other) => R == other.R && G == other.G && B == other.B && A == other.A;
 
-    public readonly override bool Equals(object? obj) => obj is Color4 other && Equals(other);
-    public readonly override int GetHashCode() => HashCode.Combine(R, G, B, A);
-    public readonly override string ToString() => $"[R:{R:F2} G:{G:F2} B:{B:F2} A:{A:F2}]";
+    public override readonly bool Equals(object? obj) => obj is Color4 other && Equals(other);
+    public override readonly int GetHashCode() => HashCode.Combine(R, G, B, A);
+    public override readonly string ToString() => $"[R:{R:F2} G:{G:F2} B:{B:F2} A:{A:F2}]";
 
     // 
     public static Color4 FromHex(ReadOnlySpan<char> hex)

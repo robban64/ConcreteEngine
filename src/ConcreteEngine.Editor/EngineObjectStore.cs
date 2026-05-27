@@ -6,19 +6,17 @@ namespace ConcreteEngine.Editor;
 
 internal static class EngineObjectStore
 {
-    public static RayCaster RayCaster = null!;
     public static SceneStore SceneStore = null!;
+    public static SceneSpawner SceneSpawner = null!;
     public static AssetFileRegistry FileRegistry = null!;
     public static AssetStore Assets = null!;
 
-    public static Camera Camera = null!;
     public static VisualManager Visuals = null!;
 
     public static void Create(EditorEngineBundle bundle)
     {
-        RayCaster = bundle.RayCaster;
         SceneStore = bundle.SceneStore;
-        Camera = bundle.Camera;
+        SceneSpawner = bundle.SceneSpawner;
         Visuals = bundle.Visuals;
         FileRegistry = bundle.FileRegistry;
         Assets = bundle.Assets;

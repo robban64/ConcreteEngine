@@ -19,6 +19,18 @@ internal readonly record struct GlHandle(uint Value) : IGraphicsHandle
     public static implicit operator NativeHandle(GlHandle handle) => new(handle.Value);
 }
 
+
+internal readonly record struct BkHandle(uint Handle)
+{
+    public readonly uint Handle = Handle;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator uint(BkHandle typed) => typed.Handle;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsValid() => Handle > 0;
+}
+
 public readonly record struct NativeHandle(nint Value)
 {
     public NativeHandle(uint value) : this((nint)value) { }

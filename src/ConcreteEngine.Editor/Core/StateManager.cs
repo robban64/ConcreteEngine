@@ -46,7 +46,7 @@ internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceA
     public void GetOrSetTextureHandle(TextureId id, scoped ref TexturePtrHandle texHandle)
     {
         ArgumentOutOfRangeException.ThrowIfZero(id.Value, nameof(id));
-        var handle = gfxApi.GetNativeHandle<TextureId, TextureMeta>(id);
+        var handle = gfxApi.GetNativeHandle<TextureMeta>(id);
         if (texHandle.Handle == handle) return;
 
         if (!texHandle.TexturePtr.IsNull) texHandle.TexturePtr.Destroy();

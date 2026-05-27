@@ -20,7 +20,7 @@ public static class GfxMetrics
 
 
     internal static void BindStore<TMeta>(
-        IGfxMetaResourceStore<TMeta> gfxStore,
+        GfxResourceStore<TMeta> gfxStore,
         IBackendResourceStore backendStore)
         where TMeta : unmanaged, IResourceMeta
     {

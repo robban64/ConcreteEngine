@@ -11,7 +11,7 @@ public sealed class GfxShaders
     private readonly GfxResourceDisposer _disposer;
     private readonly IDriverDebugger _drivDebug;
 
-    private readonly GfxResourceStore<ShaderId, ShaderMeta> _store;
+    private readonly ShaderStore _store;
     private readonly GlShaders _driver;
 
     internal GfxShaders(GfxContextInternal context)
@@ -32,7 +32,7 @@ public sealed class GfxShaders
 
     public void RecreateShader(ShaderId shaderId, NativeView<byte> vs, NativeView<byte> fs, out int samplers)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(shaderId.Value, 0, nameof(shaderId));
+        ArgumentOutOfRangeException.ThrowIfZero(shaderId.Id, nameof(shaderId));
         if (vs.IsNull || vs.Length == 0) throw new ArgumentOutOfRangeException(nameof(vs));
         if (fs.IsNull || fs.Length == 0) throw new ArgumentOutOfRangeException(nameof(fs));
 

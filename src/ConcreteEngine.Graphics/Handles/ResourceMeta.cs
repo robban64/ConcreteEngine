@@ -5,7 +5,10 @@ using ConcreteEngine.Graphics.Gfx.Types;
 
 namespace ConcreteEngine.Graphics.Handles;
 
-public interface IResourceMeta;
+public interface IResourceMeta
+{
+    static abstract GraphicsKind ResourceKind { get; }
+}
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct TextureMeta(
@@ -41,12 +44,17 @@ public readonly struct TextureMeta(
     public int GetArrayLength() => Kind == TextureKind.Texture2DArray ? Depth : 0;
     public Size2D AsSize2D() => new(Width, Height);
     public Size3D AsSize3D() => new(Width, Height, Depth);
+    
+    public static GraphicsKind ResourceKind => GraphicsKind.Texture;
+
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct ShaderMeta(int samplerSlots) : IResourceMeta
 {
     public readonly int SamplerSlots = samplerSlots;
+    public static GraphicsKind ResourceKind => GraphicsKind.Shader;
+
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -59,6 +67,8 @@ public readonly struct MeshMeta : IResourceMeta
     public DrawPrimitive Primitive { get; init; }
     public DrawMeshKind Kind { get; init; }
     public DrawElementSize ElementSize { get; init; }
+    public static GraphicsKind ResourceKind => GraphicsKind.Mesh;
+
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -82,6 +92,9 @@ public readonly struct VertexBufferMeta(
 
     public long Capacity => Stride * ElementCount;
 
+    public static GraphicsKind ResourceKind => GraphicsKind.VertexBuffer;
+
+    
     public static VertexBufferMeta CreateCopy(in VertexBufferMeta m, int count, int stride, uint offset,
         BufferUsage usage) =>
         new(stride, count, offset, m.Divisor, usage, m.Storage, m.Access);
@@ -103,6 +116,7 @@ public readonly struct IndexBufferMeta(
     public readonly BufferAccess Access = access;
 
     public nint Capacity => Stride * ElementCount;
+    public static GraphicsKind ResourceKind => GraphicsKind.IndexBuffer;
 
     public static IndexBufferMeta CreateCopy(in IndexBufferMeta meta, int count, int stride, BufferUsage usage) =>
         new(count, stride, usage, meta.Storage, meta.Access);
@@ -118,6 +132,7 @@ public readonly struct FrameBufferMeta(
     public readonly Size2D Size = size;
     public readonly FboAttachmentIds Attachments = attachments;
     public readonly RenderBufferMsaa MultiSample = multiSample;
+    public static GraphicsKind ResourceKind => GraphicsKind.FrameBuffer;
 
     internal static FrameBufferMeta MakeResizeCopy(in FrameBufferMeta meta, Size2D size) =>
         new(size, meta.Attachments, meta.MultiSample);
@@ -133,6 +148,8 @@ public readonly struct RenderBufferMeta(
     public readonly Size2D Size = size;
     public readonly FrameBufferAttachmentSlot AttachmentSlot = attachmentSlot;
     public readonly RenderBufferMsaa Multisample = multisample;
+    public static GraphicsKind ResourceKind => GraphicsKind.RenderBuffer;
+
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -151,6 +168,7 @@ public readonly struct UniformBufferMeta(
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;
+    public static GraphicsKind ResourceKind => GraphicsKind.UniformBuffer;
 
     public static UniformBufferMeta MakeResizeCopy(in UniformBufferMeta meta, uint capacity) =>
         new(meta.Slot, meta.Stride, capacity, meta.Usage, meta.Storage, meta.Access);

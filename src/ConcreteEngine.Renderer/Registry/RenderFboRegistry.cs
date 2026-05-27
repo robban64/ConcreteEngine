@@ -31,7 +31,7 @@ public sealed class RenderFboRegistry
     internal void OnFboChange(int id)
     {
         var fboId = (FrameBufferId)id;
-        var meta = _gfxApi.GetMeta<FrameBufferId, FrameBufferMeta>(fboId);
+        var meta = _gfxApi.GetMeta<FrameBufferMeta>(fboId);
 
         var renderFbo = GetById(fboId);
         if (renderFbo is null) throw new InvalidOperationException($"FrameBuffer with id: {fboId} not found");
@@ -68,7 +68,7 @@ public sealed class RenderFboRegistry
 
         var gfxDescriptor = entry.Build(outputSize);
         var fboId = _gfxFbo.CreateFrameBuffer(gfxDescriptor);
-        var meta = _gfxApi.GetMeta<FrameBufferId, FrameBufferMeta>(fboId);
+        var meta = _gfxApi.GetMeta<FrameBufferMeta>(fboId);
 
         var sizePolicy = entry.FboSizePolicy ?? RenderFboSizePolicy.MakeDefault();
 

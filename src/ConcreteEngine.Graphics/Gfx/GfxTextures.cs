@@ -86,7 +86,7 @@ public sealed class GfxTextures
     private readonly GlTextures _driver;
 
     private readonly GfxResourceDisposer _disposer;
-    private readonly GfxResourceStore<TextureId, TextureMeta> _textureStore;
+    private readonly TextureStore _textureStore;
 
     internal GfxTextures(GfxContextInternal context)
     {
@@ -151,7 +151,7 @@ public sealed class GfxTextures
 
     public TextureId CreateTexture2DArrayFrom(TextureId baseTexId, int layerCount)
     {
-        ArgumentOutOfRangeException.ThrowIfZero(baseTexId.Value, nameof(baseTexId));
+        ArgumentOutOfRangeException.ThrowIfZero(baseTexId.Id, nameof(baseTexId));
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(layerCount, 1);
 
         var baseMeta = _textureStore.GetMeta(baseTexId);
@@ -171,8 +171,8 @@ public sealed class GfxTextures
 
     public void SetTexture2DArrayLayerFrom(TextureId arrayId, TextureId srcId, int layer)
     {
-        ArgumentOutOfRangeException.ThrowIfZero(arrayId.Value, nameof(arrayId));
-        ArgumentOutOfRangeException.ThrowIfZero(srcId.Value, nameof(srcId));
+        ArgumentOutOfRangeException.ThrowIfZero(arrayId.Id, nameof(arrayId));
+        ArgumentOutOfRangeException.ThrowIfZero(srcId.Id, nameof(srcId));
         ArgumentOutOfRangeException.ThrowIfNegative(layer);
 
         var dstHandle = _textureStore.GetHandleAndMeta(arrayId, out var dstMeta);

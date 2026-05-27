@@ -1,10 +1,13 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Command;
+using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -45,12 +48,10 @@ public sealed class AssetSystem : IGameEngineSystem
         _pendingQueue.Enqueue(new AssetRecreateRequest(command.Asset, command.Kind));
     }
 
-    internal void ProcessPendingQueue(long frameId)
+    internal void ProcessPendingQueue()
     {
-        _pendingQueue.OnFrameStart(frameId);
         _pendingQueue.TryDrain(_loader!, Assets);
     }
-
 
     internal bool ProcessLoader() => _loader!.ProcessLoader();
 

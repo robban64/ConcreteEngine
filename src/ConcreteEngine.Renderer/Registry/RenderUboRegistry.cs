@@ -47,7 +47,7 @@ public sealed class RenderUboRegistry
     internal void OnUboChanged(int id)
     {
         var uboId = (UniformBufferId)id;
-        var meta = _gfxApi.GetMeta<UniformBufferId, UniformBufferMeta>(uboId);
+        var meta = _gfxApi.GetMeta< UniformBufferMeta>(uboId);
         var renderUbo = GetBySlot(meta.Slot);
         renderUbo.SetCapacity(meta.Capacity);
     }
@@ -77,7 +77,7 @@ public sealed class RenderUboRegistry
         InvalidOpThrower.ThrowIfNotNull(_uboRegistry[newSlot]);
 
         var uboId = TypeRegistry<TUbo>.UboId = _gfxBuffers.CreateUniformBuffer<TUbo>(newSlot);
-        var meta = _gfxApi.GetMeta<UniformBufferId, UniformBufferMeta>(uboId);
+        var meta = _gfxApi.GetMeta< UniformBufferMeta>(uboId);
 
         _uboRegistry[newSlot] = new RenderUbo(uboId, newSlot, in meta);
         _uboCount++;

@@ -41,7 +41,7 @@ public sealed class RenderShaderRegistry
             if (_shaderRegistry[shaderId - 1] != null)
                 throw new InvalidOperationException(nameof(_shaderRegistry));
 
-            var meta = _gfxApi.GetMeta<ShaderId, ShaderMeta>(shaderId);
+            var meta = _gfxApi.GetMeta< ShaderMeta>(shaderId);
             _shaderRegistry[shaderId - 1] = new RenderShader(shaderId, meta);
         }
     }

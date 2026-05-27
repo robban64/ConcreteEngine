@@ -33,14 +33,14 @@ internal sealed class GfxResourceManager : IGfxResourceManager
     private void RegisterMetricsBindings()
     {
         var (gfx, bk) = (GfxStoreHub, BackendStoreHub);
-        GfxMetrics.BindStore(gfx.GetMetaStore<TextureMeta>(Texture), bk.GetStore(Texture));
-        GfxMetrics.BindStore(gfx.GetMetaStore<ShaderMeta>(Shader), bk.GetStore(Shader));
-        GfxMetrics.BindStore(gfx.GetMetaStore<MeshMeta>(Mesh), bk.GetStore(Mesh));
-        GfxMetrics.BindStore(gfx.GetMetaStore<VertexBufferMeta>(VertexBuffer), bk.GetStore(VertexBuffer));
-        GfxMetrics.BindStore(gfx.GetMetaStore<IndexBufferMeta>(IndexBuffer), bk.GetStore(IndexBuffer));
-        GfxMetrics.BindStore(gfx.GetMetaStore<FrameBufferMeta>(FrameBuffer), bk.GetStore(FrameBuffer));
-        GfxMetrics.BindStore(gfx.GetMetaStore<RenderBufferMeta>(RenderBuffer), bk.GetStore(RenderBuffer));
-        GfxMetrics.BindStore(gfx.GetMetaStore<UniformBufferMeta>(UniformBuffer), bk.GetStore(UniformBuffer));
+        GfxMetrics.BindStore(gfx.GetStore<TextureMeta>(), bk.GetStore(Texture));
+        GfxMetrics.BindStore(gfx.GetStore<ShaderMeta>(), bk.GetStore(Shader));
+        GfxMetrics.BindStore(gfx.GetStore<MeshMeta>(), bk.GetStore(Mesh));
+        GfxMetrics.BindStore(gfx.GetStore<VertexBufferMeta>(), bk.GetStore(VertexBuffer));
+        GfxMetrics.BindStore(gfx.GetStore<IndexBufferMeta>(), bk.GetStore(IndexBuffer));
+        GfxMetrics.BindStore(gfx.GetStore<FrameBufferMeta>(), bk.GetStore(FrameBuffer));
+        GfxMetrics.BindStore(gfx.GetStore<RenderBufferMeta>(), bk.GetStore(RenderBuffer));
+        GfxMetrics.BindStore(gfx.GetStore<UniformBufferMeta>(), bk.GetStore(UniformBuffer));
     }
 
 

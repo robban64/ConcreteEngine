@@ -17,7 +17,7 @@ internal interface IStoreMetrics
 
 internal sealed class StoreMetrics<TMeta>(
     GraphicsKind kind,
-    IGfxMetaResourceStore<TMeta> gfxStore,
+    GfxResourceStore<TMeta> gfxStore,
     IBackendResourceStore backendStore)
     : IStoreMetrics where TMeta : unmanaged, IResourceMeta
 
@@ -42,10 +42,12 @@ internal sealed class StoreMetrics<TMeta>(
 
     private GfxMetaInfo GetSpecialMetric()
     {
-        return Kind switch
+        return default;
+        /*
+        return gfxStore switch
         {
             GraphicsKind.Texture =>
-                GetTextureMetric(((IGfxMetaResourceStore<TextureMeta>)gfxStore).GetMetaSpan()),
+                GetTextureMetric(((GfxResourceStore<TextureMeta>)gfxStore).GetMetaSpan()),
             GraphicsKind.Shader =>
                 GetShaderMetric(((IGfxMetaResourceStore<ShaderMeta>)gfxStore).GetMetaSpan()),
             GraphicsKind.Mesh =>
@@ -62,5 +64,6 @@ internal sealed class StoreMetrics<TMeta>(
                 GetRboMetric(((IGfxMetaResourceStore<RenderBufferMeta>)gfxStore).GetMetaSpan()),
             _ => throw new ArgumentOutOfRangeException()
         };
+        */
     }
 }

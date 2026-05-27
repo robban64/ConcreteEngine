@@ -52,8 +52,8 @@ internal sealed class EngineGateway : IDisposable
             Visuals = VisualManager.Instance,
             RayCaster = CameraSystem.Instance.RayCaster,
             SceneStore = store,
-            Assets = coreSystem.AssetSystem.Assets,
-            FileRegistry = coreSystem.AssetSystem.Files,
+            Assets = coreSystem.Assets.Assets,
+            FileRegistry = coreSystem.Assets.Files,
         };
 
         var engineContext = new EditorEngineContext

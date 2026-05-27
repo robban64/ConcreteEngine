@@ -151,8 +151,8 @@ public sealed class GameEngine : IDisposable
             _commandQueues.Enqueue(command);
         }
 
-        if (_coreSystems.AssetSystem.PendingAssetCount > 0)
-            _coreSystems.AssetSystem.ProcessPendingQueue(EngineTime.GameTickId);
+        if (_coreSystems.Assets.PendingAssetCount > 0)
+            _coreSystems.Assets.ProcessPendingQueue();
 
         if (_commandQueues.QueuesCount > 0)
             _commandQueues.DrainDispatch();
@@ -178,7 +178,7 @@ public sealed class GameEngine : IDisposable
     {
         _gateway.Dispose();
         _sceneSystem.Current?.Unload();
-        _coreSystems.AssetSystem.Shutdown();
+        _coreSystems.Assets.Shutdown();
         _coreSystems.GetSystem<EngineRenderSystem>().Shutdown();
         _graphics.Dispose();
     }

@@ -18,34 +18,13 @@ internal sealed class GfxStoreHub
     public readonly RboStore RboStore = new(LowCapacity);
     public readonly UboStore UboStore = new(LowCapacity);
 
-    internal GfxResourceStore<TId, TMeta> GetStore<TId, TMeta>()
-        where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
+    internal GfxResourceStore<TMeta> GetStore< TMeta>() where TMeta : unmanaged, IResourceMeta
     {
-        if (GetStore(TId.Kind) is GfxResourceStore<TId, TMeta> typed) return typed;
+        if (GetStore(TMeta.ResourceKind) is GfxResourceStore<TMeta> typed) return typed;
 
-        ThrowInvalidStoreType(TId.Kind, typeof(TId), typeof(TMeta));
+        ThrowInvalidStoreType(TMeta.ResourceKind, typeof(TMeta), typeof(TMeta));
         return null!;
     }
-
-    internal IGfxResourceStore<TId> GetHandleStore<TId>() where TId : unmanaged, IResourceId
-    {
-        var store = GetStore(TId.Kind);
-        if (store is IGfxResourceStore<TId> typed) return typed;
-
-        ThrowInvalidStoreType(TId.Kind, typeof(TId));
-        return null!;
-    }
-
-    internal IGfxMetaResourceStore<TMeta> GetMetaStore<TMeta>(GraphicsKind kind)
-        where TMeta : unmanaged, IResourceMeta
-    {
-        var store = GetStore(kind);
-        if (store is IGfxMetaResourceStore<TMeta> typed) return typed;
-
-        ThrowInvalidStoreType(kind, typeof(TMeta));
-        return null!;
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IGfxResourceStore GetStore(GraphicsKind kind)
     {

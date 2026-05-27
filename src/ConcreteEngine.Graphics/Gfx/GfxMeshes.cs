@@ -87,7 +87,7 @@ public sealed class GfxMeshes
     public VertexBufferId CreateAttachVertexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateVboArgs args)
         where T : unmanaged
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(meshId.Value);
+        ArgumentOutOfRangeException.ThrowIfZero(meshId.Id);
         var offset = (uint)args.Offset;
         var vbo = _buffers.CreateVertexBuffer(data, args.Divisor, offset, args.Storage, args.Access, args.Length);
         AttachVertexBuffer(meshId, vbo, args.Binding);
@@ -98,7 +98,7 @@ public sealed class GfxMeshes
     public IndexBufferId CreateAttachIndexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateIboArgs args)
         where T : unmanaged
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(meshId.Value);
+        ArgumentOutOfRangeException.ThrowIfZero(meshId.Id);
         var ibo = _buffers.CreateIndexBuffer(data, args.Storage, args.Access, args.Length);
         AttachIndexBuffer(meshId, ibo);
         return ibo;

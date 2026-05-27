@@ -1,8 +1,19 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Graphics.Resources;
+
+public static class GfxRegistry {
+    private static readonly IGfxResourceStore[] GfxStores = new IGfxResourceStore[GfxMetrics.StoreCount];
+    private static readonly BackendResourceStore<GlHandle>[] BackendStores = new BackendResourceStore<GlHandle>[GfxMetrics.StoreCount];
+
+    public static class Store<TMeta> where TMeta : unmanaged, IResourceMeta
+    {
+        
+    }
+}
 
 public sealed class GfxResourceApi
 {
@@ -19,33 +30,15 @@ public sealed class GfxResourceApi
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeHandle GetNativeHandle<TId, TMeta>(TId id) where TId : unmanaged, IResourceId
-        where TMeta : unmanaged, IResourceMeta
+    public NativeHandle GetNativeHandle<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
     {
-        var handle = _storeHub.GetStore<TId, TMeta>().GetHandle(id);
+        var handle = _storeHub.GetStore<TMeta>().GetHandle(id);
         return _backendHub.GetStore(handle.Kind).GetNativeHandle(handle);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxRef GetTextureGfxRef(TextureId id)
+    public TMeta GetMeta<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
     {
-        var handle = _storeHub.TextureStore.GetHandle(id);
-        return new GfxRef(id, handle.Gen, handle.Kind);
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeHandle GetTextureGpuHandle(GfxRef refHandle)
-    {
-        var handle = _storeHub.TextureStore.GetHandleRaw(refHandle.ResourceId);
-        if (!refHandle.ValidateHandle(handle)) Throwers.InvalidHandle(refHandle);
-        return _backendHub.TextureStore.GetNativeHandle(handle);
-    }
-
-
-    public TMeta GetMeta<TId, TMeta>(TId id) where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
-    {
-        return _storeHub.GetStore<TId, TMeta>().GetMeta(id);
+        return _storeHub.GetStore<TMeta>().GetMeta(id);
     }
 
     public void BindMetaChanged(GraphicsKind kind, Action<int> callback)

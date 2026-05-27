@@ -9,7 +9,7 @@ namespace ConcreteEngine.Graphics.Resources;
 public interface IGfxResourceDisposer
 {
     int PendingCount { get; }
-    void EnqueueRemoval<TId>(TId id) where TId : unmanaged, IResourceId;
+    void EnqueueRemoval<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta;
 }
 
 internal sealed class GfxResourceDisposer : IGfxResourceDisposer
@@ -47,20 +47,20 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         }
     }
 
-    public void EnqueueRemoval<TId>(TId id) where TId : unmanaged, IResourceId
+    public void EnqueueRemoval<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
-        var resourceKind = TId.Kind;
-        var fStore = _gfxStoreHub.GetHandleStore<TId>();
+        ArgumentOutOfRangeException.ThrowIfZero(id.Id);
+        var resourceKind = TMeta.ResourceKind;
+        var fStore = _gfxStoreHub.GetStore<TMeta>();
         var gfxHandle = fStore.GetHandle(id);
 
         var bStore = _backendStoreHub.GetStore(resourceKind);
         var native = bStore.GetNativeHandle(gfxHandle);
 
-        var cmd = DeleteResourceCommand.MakeDelete(gfxHandle, native, id.Value);
+        var cmd = DeleteResourceCommand.MakeDelete(gfxHandle, native, id);
         _disposeQueue.Enqueue(cmd);
 
-        GfxLog.LogBackend(native, gfxHandle, TId.Kind.ToLogTopic(), LogAction.Evict);
+        GfxLog.LogBackend(native, gfxHandle, resourceKind.ToLogTopic(), LogAction.Evict);
     }
 
     public void EnqueueReplace(GfxHandle handle)

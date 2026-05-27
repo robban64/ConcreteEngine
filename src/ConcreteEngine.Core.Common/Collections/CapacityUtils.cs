@@ -4,7 +4,7 @@ public static class CapacityUtils
 {
     public const int PageSize = 4_096;
 
-    
+
     public static int CapacityGrowthToFit(int current, int required)
     {
         var newSize = current;
@@ -12,7 +12,7 @@ public static class CapacityUtils
         return newSize;
     }
 /*
-   
+
    public static int CapacityGrowthSafe(int currentCapacity, int requiredSize,
        int largeThreshold = TableDefaultThreshold)
    {
@@ -32,8 +32,8 @@ public static class CapacityUtils
 
        return (newCapacity + 63) & ~63;
    }
-   
-   
+
+
     public static int CapacityGrowthLinear(int current, int required, int step = 16)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(step);

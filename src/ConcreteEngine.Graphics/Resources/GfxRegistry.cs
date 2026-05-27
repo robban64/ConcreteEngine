@@ -19,19 +19,21 @@ public static class GfxRegistry
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static GfxResourceStore<TMeta> GetGfxStore<TMeta>() 
-        where TMeta : unmanaged, IResourceMeta => Store<TMeta>.Gfx;
+    internal static GfxResourceStore<TMeta> GetGfxStore<TMeta>()
+        where TMeta : unmanaged, IResourceMeta =>
+        Store<TMeta>.Gfx;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static BackendResourceStore GetBackendStore<TMeta>() 
-        where TMeta : unmanaged, IResourceMeta => Store<TMeta>.Backend;
-    
+    internal static BackendResourceStore GetBackendStore<TMeta>()
+        where TMeta : unmanaged, IResourceMeta =>
+        Store<TMeta>.Backend;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static IGfxResourceStore GetGfxStore(GraphicsKind kind) => GfxStores[(int)kind - 1]; 
-    
+    internal static IGfxResourceStore GetGfxStore(GraphicsKind kind) => GfxStores[(int)kind - 1];
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static BackendResourceStore GetBackendStore(GraphicsKind kind) => BackendStores[(int)kind - 1]; 
-    
+    internal static BackendResourceStore GetBackendStore(GraphicsKind kind) => BackendStores[(int)kind - 1];
+
     internal static void CreateStores()
     {
         CreateStore<TextureMeta>();
@@ -43,13 +45,13 @@ public static class GfxRegistry
         CreateStore<RenderBufferMeta>();
         CreateStore<UniformBufferMeta>();
     }
-    
+
     internal static void DisposeAllStores()
     {
         foreach (var store in GfxStores) store.Dispose();
         foreach (var store in BackendStores) store.Dispose();
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void CreateStore<TMeta>() where TMeta : unmanaged, IResourceMeta
     {

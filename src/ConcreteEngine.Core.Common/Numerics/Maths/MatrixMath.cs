@@ -8,7 +8,6 @@ namespace ConcreteEngine.Core.Common.Numerics.Maths;
 
 public static class MatrixMath
 {
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void MultiplyAffine(ref Matrix4x4 dst, in Matrix4x4 src1, in Matrix4x4 src2)
     {

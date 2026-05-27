@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Graphics.Gfx.Types;
+namespace ConcreteEngine.Graphics.Gfx;
 
 internal readonly struct GpuTextureProps(TexturePixelFormat format, uint levels, uint samples)
 {
@@ -11,7 +10,6 @@ internal readonly struct GpuTextureProps(TexturePixelFormat format, uint levels,
     public static GpuTextureProps Make(TexturePixelFormat format, int levels, int samples) =>
         new(format, (uint)levels, (uint)samples);
 }
-
 
 public readonly struct CreateTextureProps(
     float lod,
@@ -25,7 +23,7 @@ public readonly struct CreateTextureProps(
 )
 {
     public readonly GpuTextureBorder BorderColor = borderColor;
-    
+
     public readonly Half Lod = (Half)lod;
     public readonly TextureKind Kind = kind;
     public readonly TexturePixelFormat Format = format;
@@ -34,9 +32,7 @@ public readonly struct CreateTextureProps(
     public readonly TextureAnisotropy Anisotropy = anisotropy;
     public readonly DepthMode CompareTextureFunc = compareTextureFunc;
     public readonly RenderBufferMsaa Samples = samples;
-
 }
-
 
 public readonly struct CreateFboInfo(
     Size2D size,
@@ -85,7 +81,6 @@ public readonly struct CreateVboArgs(
 
     public static CreateVboArgs MakeDynamic(int binding) =>
         new(storage: BufferStorage.Dynamic, BufferAccess.MapWrite, binding: (byte)binding);
-    
 }
 
 public readonly struct CreateIboArgs(

@@ -2,12 +2,10 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets.Loader.Data;
-using ConcreteEngine.Graphics.Handles;
 using Silk.NET.Assimp;
 using static ConcreteEngine.Engine.Assets.ImporterAssimp.AssimpUtils;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
@@ -126,7 +124,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
             var meshId = animation != null
                 ? gfxUploader.UploadAnimatedMesh(vertices, skinned, indices, is16Bit)
-                : gfxUploader.UploadMesh(vertices, indices,  is16Bit);
+                : gfxUploader.UploadMesh(vertices, indices, is16Bit);
 
             if (!meshId.IsValid())
                 Throwers.InvalidOperation("Upload returned invalid MeshId");
@@ -274,7 +272,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ProcessMeshVertices(AssimpMesh* aiMesh, int meshIndex, ModelImportContext ctx)
     {
-       var is16Bit = ctx.Model.GetMeshData(meshIndex, out var vertices, out var skinned, out var indices);
+        var is16Bit = ctx.Model.GetMeshData(meshIndex, out var vertices, out var skinned, out var indices);
 
         if (is16Bit)
             WriteIndicesU16(aiMesh, indices.Reinterpret<ushort>());
@@ -285,6 +283,5 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
         if (ctx.Animation != null)
             WriteSkinningData(aiMesh, ctx.Animation, skinned);
-
     }
 }

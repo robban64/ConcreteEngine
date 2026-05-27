@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Configuration;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
@@ -122,8 +122,7 @@ internal sealed class GlStates
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindTexture(GfxHandle texRef, int slot) =>
-        _gl.BindTextureUnit((uint)slot, _textureStore.Get(texRef));
+    public void BindTexture(GfxHandle texRef, int slot) => _gl.BindTextureUnit((uint)slot, _textureStore.Get(texRef));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindTextureSlot(int slot) => _gl.BindTextureUnit((uint)slot, 0);

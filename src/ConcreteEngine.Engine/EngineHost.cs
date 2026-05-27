@@ -6,7 +6,7 @@ using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 using Silk.NET.GLFW;
 using Silk.NET.Input;
 using Silk.NET.Maths;

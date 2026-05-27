@@ -27,7 +27,6 @@ internal sealed class AssetPendingQueue
 
         _queue.Enqueue(request);
         return true;
-
     }
 
     public bool TryDrain(AssetLoader loader, AssetStore store)
@@ -66,7 +65,7 @@ internal sealed class AssetPendingQueue
                 default:
                     throw new ArgumentException($"{request.Kind} is invalid for recreate", nameof(request.Kind));
             }
-            
+
             return true;
         }
         catch (Exception ex)
@@ -85,5 +84,4 @@ internal sealed class AssetPendingQueue
             throw;
         }
     }
-
 }

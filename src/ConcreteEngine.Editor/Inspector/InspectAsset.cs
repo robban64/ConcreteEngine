@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Graphics.Gfx.Types;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Editor.Inspector;
 

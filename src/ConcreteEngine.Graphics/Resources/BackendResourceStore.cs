@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
@@ -24,7 +23,7 @@ internal interface IBackendResourceStore : IDisposable
     int GetAliveCount();
 }
 
-internal sealed class BackendResourceStore : IBackendResourceStore 
+internal sealed class BackendResourceStore : IBackendResourceStore
 {
     private NativeArray<NativeHandle> _handles;
 

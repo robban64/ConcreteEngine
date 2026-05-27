@@ -2,8 +2,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
-using ConcreteEngine.Graphics.Gfx.Types;
-using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;

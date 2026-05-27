@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Collections;
 
@@ -85,7 +84,7 @@ public sealed class SlotArray<T> where T : class
 
         var len = Count + amount;
         if (oldSize >= len) return;
-        
+
         var newSize = CapacityUtils.CapacityGrowthToFit(oldSize, len);
         Array.Resize(ref _entries, newSize);
 

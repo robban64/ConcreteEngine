@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Internals;
 using Silk.NET.OpenGL;
 

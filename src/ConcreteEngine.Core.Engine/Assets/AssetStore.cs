@@ -36,10 +36,9 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         _fileRegistry = fileRegistry;
         _collections = AssetTypeCollection.CreateAll();
         _nameExistsDel = (name, type) => !_byName.ContainsKey((type, name));
-        
-        _assets.OnResize = static (oldSize, newSize) => 
-            Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetStore), oldSize, newSize));
 
+        _assets.OnResize = static (oldSize, newSize) =>
+            Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetStore), oldSize, newSize));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

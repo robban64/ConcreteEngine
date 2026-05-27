@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
-using static ConcreteEngine.Graphics.Gfx.Types.GfxStateFlags;
+using static ConcreteEngine.Graphics.Gfx.GfxStateFlags;
 
-namespace ConcreteEngine.Graphics.Gfx.Types;
+namespace ConcreteEngine.Graphics.Gfx;
 
 [Flags]
 public enum GfxStateFlags : ushort

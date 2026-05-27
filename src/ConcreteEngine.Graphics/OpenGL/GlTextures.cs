@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Types;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
@@ -73,7 +72,7 @@ internal sealed class GlTextures
         var srcHandle = _textureStore.Get(src);
         var dstHandle = _textureStore.Get(dst);
         (uint width, uint height, uint depth) = srcSize.ToUnsigned();
-        
+
         Gl.CopyImageSubData(
             srcHandle, srcKind.ToGlEnum(), srcLevel, srcPos.X, srcPos.Y, srcPos.Z,
             dstHandle, dstKind.ToGlEnum(), dstLevel, dstPos.X, dstPos.Y, dstPos.Z,

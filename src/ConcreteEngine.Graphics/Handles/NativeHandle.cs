@@ -8,6 +8,6 @@ public readonly record struct NativeHandle(ulong Value)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator uint(NativeHandle handle) => (uint)handle.Value;
-    
+
     public bool IsValid() => Value != 0;
 }

@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Assets.Extensions;
+using ConcreteEngine.Core.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Editor.UI.Assets;
 

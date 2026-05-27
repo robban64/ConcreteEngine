@@ -1,5 +1,3 @@
-using ConcreteEngine.Graphics.Handles;
-
 namespace ConcreteEngine.Renderer.Core;
 
 public readonly struct CoreShaders

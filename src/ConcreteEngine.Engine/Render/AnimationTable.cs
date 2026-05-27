@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Render.Data;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Render;
 
@@ -14,7 +13,7 @@ internal sealed class AnimationRig
     public readonly Matrix4x4[] BindPose;
     public readonly Matrix4x4[] InverseBindPose;
     public readonly AnimationChannel[] Channels;
-    
+
     public readonly Id16<ModelAnimation> AnimationId;
 
     public AnimationRig(ModelAnimation source, AnimationChannel[] channels)
@@ -22,7 +21,7 @@ internal sealed class AnimationRig
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(channels);
         ArgumentOutOfRangeException.ThrowIfZero(source.AnimationId.Value, nameof(source.AnimationId));
-        
+
         AnimationId = source.AnimationId;
 
         ParentIndices = source.ParentIndices;
@@ -30,7 +29,7 @@ internal sealed class AnimationRig
         InverseBindPose = source.InverseBindPose;
         Channels = channels;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SkinningContext GetSkinningContext(int clip)
     {
@@ -44,14 +43,13 @@ internal sealed class AnimationRig
     }
 }
 
-
 internal sealed class AnimationTable
 {
     public static AnimationTable Instance { get; private set; } = null!;
     public static AnimationTable Make() => Instance = new AnimationTable();
 
     private AnimationRig[] _animations = [];
-    
+
     public int Count { get; private set; }
 
     private AnimationTable()
@@ -63,7 +61,7 @@ internal sealed class AnimationTable
     public SkinningContext GetSkinningContext(Id16<ModelAnimation> id, int clip)
     {
         var index = id.Index();
-        if ((uint)index >= (uint)_animations.Length) 
+        if ((uint)index >= (uint)_animations.Length)
             Throwers.BufferOverflow(nameof(AnimationChannel), index, _animations.Length);
         return _animations[index].GetSkinningContext(clip);
     }
@@ -87,7 +85,7 @@ internal sealed class AnimationTable
             var animation = model.Animation!;
             var index = animation.AnimationId.Index();
             var clips = CreateClipChannels(animation);
-            
+
             _animations[index] = new AnimationRig(animation, clips);
         }
     }
@@ -109,6 +107,7 @@ internal sealed class AnimationTable
                     clip[b] = new AnimationChannel(animationClip.Channels[b]);
             }
         }
+
         return clips;
     }
 }

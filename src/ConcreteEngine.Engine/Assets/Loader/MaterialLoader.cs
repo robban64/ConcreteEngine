@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
@@ -185,7 +185,9 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         new()
         {
             [(int)MaterialProfile.None] = new MatProfileInfo("Model"),
-            [(int)MaterialProfile.Foliage] = new MatProfileInfo("Foliage", new ProfileSlot(TextureUsage.Albedo),new ProfileSlot(TextureUsage.Shadowmap)),
+            [(int)MaterialProfile.Foliage] =
+                new MatProfileInfo("Foliage", new ProfileSlot(TextureUsage.Albedo),
+                    new ProfileSlot(TextureUsage.Shadowmap)),
             [(int)MaterialProfile.Particle] = new MatProfileInfo("Particle", new ProfileSlot(TextureUsage.Albedo)),
             [(int)MaterialProfile.Sky] =
                 new MatProfileInfo("Skybox", new ProfileSlot(TextureUsage.Albedo, TextureKind.CubeMap)),

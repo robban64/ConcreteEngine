@@ -26,7 +26,7 @@ public sealed class AssetFileRegistry
 
     internal AssetFileRegistry()
     {
-        _files.OnResize = static (oldSize, newSize) => 
+        _files.OnResize = static (oldSize, newSize) =>
             Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetFileRegistry), oldSize, newSize));
     }
 

@@ -26,7 +26,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         Instance = 1 << 2,
         Transform = 1 << 3,
     }
-    
+
     public SceneObjectId Id { get; }
     public Guid GId { get; }
 
@@ -130,7 +130,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         {
             if (it is TInstance component) return component;
         }
-        
+
         Throwers.InvalidOperation($"Cannot find component of type {typeof(TInstance).Name}");
         return null!;
     }

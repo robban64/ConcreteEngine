@@ -3,9 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internals;
-using ConcreteEngine.Graphics.Gfx.Types;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
@@ -41,7 +39,7 @@ public sealed class GfxCommands
         _frameBuffers = ctx.Driver.FrameBuffers;
 
         _fboStore = GfxRegistry.GetGfxStore<FrameBufferMeta>();
-        _textureStore =GfxRegistry.GetGfxStore<TextureMeta>();
+        _textureStore = GfxRegistry.GetGfxStore<TextureMeta>();
         _shaderStore = GfxRegistry.GetGfxStore<ShaderMeta>();
 
         SetBlendMode(BlendMode.Alpha);

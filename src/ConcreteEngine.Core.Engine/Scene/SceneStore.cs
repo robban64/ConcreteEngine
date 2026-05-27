@@ -12,7 +12,8 @@ public sealed class SceneStore : ISceneObjectNotifier
 
     private readonly SlotArray<SceneObject> _sceneObjects = new(DefaultCapacity);
 
-    private readonly List<Handle32<SceneObject>>[] _byKind = new List<Handle32<SceneObject>>[EnumCache<SceneObjectKind>.Count];
+    private readonly List<Handle32<SceneObject>>[] _byKind =
+        new List<Handle32<SceneObject>>[EnumCache<SceneObjectKind>.Count];
 
     private readonly Dictionary<string, Handle32<SceneObject>> _byName = new(DefaultCapacity);
 
@@ -31,10 +32,9 @@ public sealed class SceneStore : ISceneObjectNotifier
         }
 
         _factory = factory;
-        
-        _sceneObjects.OnResize = static (oldSize, newSize) => 
-            Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(SceneStore), oldSize, newSize));
 
+        _sceneObjects.OnResize = static (oldSize, newSize) =>
+            Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(SceneStore), oldSize, newSize));
     }
 
     public int ActiveCount => _sceneObjects.ActiveCount;
@@ -81,7 +81,6 @@ public sealed class SceneStore : ISceneObjectNotifier
         if (_byName.TryGetValue(name, out var handle)) id = (SceneObjectId)handle;
         id = default;
         return id.Value > 0;
-
     }
 
     public bool TryGetByName(string name, [NotNullWhen(true)] out SceneObject? sceneObject)

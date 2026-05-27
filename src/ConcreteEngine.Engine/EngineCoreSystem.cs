@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Engine.Assets;
@@ -22,7 +21,7 @@ public sealed class EngineCoreSystem : IEngineSystemManager
         Scene = sceneSystem;
         Render = renderSystem;
         Assets = assets;
-        
+
         Register(inputSystem);
         Register(assets);
         Register(sceneSystem);

@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
@@ -15,7 +14,6 @@ public sealed class QuadNode
     public BoundingBox Bounds;
     public QuadNode[] Children;
 }
-
 
 public sealed class Terrain
 {
@@ -32,7 +30,7 @@ public sealed class Terrain
     private TerrainChunk[] _chunks = [];
 
     public bool IsDirty { get; internal set; } = true;
-    
+
     public float MaxHeight { get; private set; } = DefaultMaxHeight;
     public int Dimension { get; private set; }
     public int GridDimension { get; private set; }
@@ -43,7 +41,7 @@ public sealed class Terrain
 
     public Material? GroundMaterial { get; private set; }
     public Material? FoliageMaterial { get; private set; }
-    
+
     public Texture? Heightmap { get; private set; }
     public Texture? Splatmap { get; private set; }
 
@@ -52,7 +50,7 @@ public sealed class Terrain
     }
 
     public bool HasHeightmap => _chunks.Length > 0 && Heightmap is { PixelData: not null };
-    
+
     public ReadOnlySpan<TerrainChunk> GetChunks() => _chunks;
 
     public MaterialId MaterialId => GroundMaterial?.MaterialId ?? MaterialStore.FallbackMaterial.MaterialId;
@@ -64,7 +62,7 @@ public sealed class Terrain
         GroundAlbedoTextures.SetTexture(slot, texture);
         IsDirty = true;
     }
-    
+
     public void SetFoliageTexture(int slot, Texture texture)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, 4);
@@ -134,7 +132,7 @@ public sealed class Terrain
 
         height = float.Clamp(height, 0, MaxHeight);
         chunk.SetHeight(height, lx, lz);
-        
+
         IsDirty = true;
     }
 
@@ -206,7 +204,7 @@ public sealed class Terrain
         return pointOnPlane with { Y = terrainHeight };
     }
 
-    
+
     private void CreateTerrainChunks(ReadOnlySpan<byte> heightmap)
     {
         int chunkCount = GridDimension;
@@ -221,5 +219,4 @@ public sealed class Terrain
             }
         }
     }
-
 }

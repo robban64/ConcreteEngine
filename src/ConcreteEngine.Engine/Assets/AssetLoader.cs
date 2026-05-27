@@ -6,7 +6,6 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Engine.Assets.ImporterAssimp;
 using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Graphics;
 
@@ -91,7 +90,8 @@ internal sealed class AssetLoader(AssetStore store, GfxContext gfx)
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void DeactivateLoader()
-    {;
+    {
+        ;
         foreach (var loader in _loaders)
             loader?.Teardown();
 

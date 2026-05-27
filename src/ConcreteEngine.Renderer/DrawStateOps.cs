@@ -1,7 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Types;
-using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Renderer;
 

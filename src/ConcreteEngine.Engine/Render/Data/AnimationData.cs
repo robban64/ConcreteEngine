@@ -19,7 +19,8 @@ internal readonly ref struct SkinningContext
         ReadOnlySpan<Matrix4x4> inverseBindPose,
         ReadOnlySpan<AnimationChannel> channels)
     {
-        if (parentIndices.Length != channels.Length || parentIndices.Length != bindPose.Length || parentIndices.Length != inverseBindPose.Length)
+        if (parentIndices.Length != channels.Length || parentIndices.Length != bindPose.Length ||
+            parentIndices.Length != inverseBindPose.Length)
             Throwers.InvalidOperation("Length mismatch");
 
         ParentIndices = parentIndices;

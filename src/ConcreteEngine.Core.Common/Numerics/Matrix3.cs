@@ -11,7 +11,6 @@ public struct Matrix3
     public Vector3 V2;
 }
 
-
 [StructLayout(LayoutKind.Sequential)]
 public struct Matrix3X4
 {
@@ -25,9 +24,18 @@ public struct Matrix3X4
         float m31, float m32, float m33, float m34
     )
     {
-        M11 = m11; M12 = m12; M13 = m13; M14 = m14;
-        M21 = m21; M22 = m22; M23 = m23; M24 = m24;
-        M31 = m31; M32 = m32; M33 = m33; M34 = m34;
+        M11 = m11;
+        M12 = m12;
+        M13 = m13;
+        M14 = m14;
+        M21 = m21;
+        M22 = m22;
+        M23 = m23;
+        M24 = m24;
+        M31 = m31;
+        M32 = m32;
+        M33 = m33;
+        M34 = m34;
     }
 
     public static readonly Matrix3X4 Identity = new(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0);

@@ -45,6 +45,7 @@ public static class RotationMath
             eulerDegrees.Z * Deg2Rad
         );
     }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3 QuaternionToEulerDegrees(in Quaternion q)
     {

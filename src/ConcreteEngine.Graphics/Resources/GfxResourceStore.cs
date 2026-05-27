@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
@@ -25,7 +24,7 @@ internal interface IGfxResourceStore : IDisposable
 }
 
 internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore
-     where TMeta : unmanaged, IResourceMeta
+    where TMeta : unmanaged, IResourceMeta
 {
     private NativeArray<TMeta> _meta;
     private NativeArray<GfxHandle> _handle;
@@ -100,7 +99,7 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore
 
     public GfxHandle Remove(GfxId id)
     {
-        if(!id.IsValid() || id.Kind != GraphicsKind) Throwers.InvalidOperation($"Invalid handle {id}");
+        if (!id.IsValid() || id.Kind != GraphicsKind) Throwers.InvalidOperation($"Invalid handle {id}");
         return Remove(new GfxId<TMeta>(id), out _);
     }
 

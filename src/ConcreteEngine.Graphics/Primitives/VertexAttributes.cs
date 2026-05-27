@@ -1,7 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Types;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Graphics.Primitives;

@@ -58,8 +58,7 @@ internal sealed class EngineGateway : IDisposable
 
         var engineContext = new EditorEngineContext
         {
-            Input = new InputLayerController(inputSystem, InputLayerKind.Ui),
-            Window = window,
+            Input = new InputLayerController(inputSystem, InputLayerKind.Ui), Window = window,
         };
 
         _editor = new EditorPortal(engineContext, engineBundle);

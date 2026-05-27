@@ -31,7 +31,7 @@ public sealed class ModelImportData(int meshCount)
 
         indices = block.Data;
         if (is16Bit) indices = indices.Slice(0, indices.Length / 2);
-        
+
         block = block.Next;
 
         if (mesh.Info.BoneCount > 0)

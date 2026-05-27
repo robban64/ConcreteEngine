@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Graphics.Gfx.Definitions;
+namespace ConcreteEngine.Graphics.Gfx;
 
 public enum DrawMeshKind : byte
 {
@@ -30,11 +30,11 @@ public enum DrawPrimitive : byte
 
 public enum VertexFormat : byte
 {
-    Invalid ,
-    Float ,
-    Int ,
-    UInt ,
-    UByte ,
-    UShort ,
-    Half ,
+    Invalid,
+    Float,
+    Int,
+    UInt,
+    UByte,
+    UShort,
+    Half,
 }

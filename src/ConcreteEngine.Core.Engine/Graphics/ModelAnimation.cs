@@ -1,7 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Editor;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
@@ -25,7 +24,7 @@ public sealed class ModelAnimation
         ArgumentOutOfRangeException.ThrowIfZero(boneMapping.Count);
         AnimationCount = animationCount;
         BoneMapping = boneMapping;
-        
+
         ParentIndices = new byte[boneMapping.Count];
         BindPose = new Matrix4x4[boneMapping.Count];
         InverseBindPose = new Matrix4x4[boneMapping.Count];

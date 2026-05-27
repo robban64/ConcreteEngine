@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Graphics.Gfx.Types;
+namespace ConcreteEngine.Graphics.Gfx;
 
 public readonly struct GfxPassClear
 {

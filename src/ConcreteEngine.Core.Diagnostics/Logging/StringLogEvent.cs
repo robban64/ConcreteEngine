@@ -22,7 +22,7 @@ public sealed record StringLogEvent
     public static StringLogEvent MakePlain(string message) => new(LogScope.Unknown, message, LogLevel.None);
     public static StringLogEvent MakeCommand(string command) => new(LogScope.Command, command, LogLevel.None);
     public static StringLogEvent MakeCommandError(string command) => new(LogScope.Command, command, LogLevel.Error);
-    
+
     public static StringLogEvent MakeResize(LogScope scope, string name, int oldLength, int newLength)
     {
         var message = $"{name} resized from {oldLength} to {newLength}";

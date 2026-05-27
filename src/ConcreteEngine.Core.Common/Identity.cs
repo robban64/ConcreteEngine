@@ -4,12 +4,12 @@ using System.Runtime.InteropServices;
 namespace ConcreteEngine.Core.Common;
 
 //?
-public readonly record struct Id16<T>(ushort Value): IComparable<ushort>, IComparable<Id16<T>> where T : class
+public readonly record struct Id16<T>(ushort Value) : IComparable<ushort>, IComparable<Id16<T>> where T : class
 {
     public Id16(int value) : this((ushort)value) { }
-    
+
     public readonly ushort Value = Value;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Value - 1;
 
@@ -18,7 +18,7 @@ public readonly record struct Id16<T>(ushort Value): IComparable<ushort>, ICompa
 
     public static implicit operator int(Id16<T> slot) => slot.Value;
     public static explicit operator Id16<T>(ushort i) => new(i);
-    
+
     public int CompareTo(ushort other) => Value.CompareTo(other);
     public int CompareTo(Id16<T> other) => Value.CompareTo(other.Value);
 
@@ -59,7 +59,7 @@ public readonly record struct Handle32<T>(int Value, ushort Gen)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsValid() => Value > 0;
-    
+
     public static implicit operator int(Handle32<T> id) => id.Value;
 
 

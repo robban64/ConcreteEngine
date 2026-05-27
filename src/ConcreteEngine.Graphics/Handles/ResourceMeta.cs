@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Types;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Graphics.Handles;
 
@@ -44,9 +43,8 @@ public readonly struct TextureMeta(
     public int GetArrayLength() => Kind == TextureKind.Texture2DArray ? Depth : 0;
     public Size2D AsSize2D() => new(Width, Height);
     public Size3D AsSize3D() => new(Width, Height, Depth);
-    
-    public static GraphicsKind ResourceKind => GraphicsKind.Texture;
 
+    public static GraphicsKind ResourceKind => GraphicsKind.Texture;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -54,7 +52,6 @@ public readonly struct ShaderMeta(int samplerSlots) : IResourceMeta
 {
     public readonly int SamplerSlots = samplerSlots;
     public static GraphicsKind ResourceKind => GraphicsKind.Shader;
-
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -68,7 +65,6 @@ public readonly struct MeshMeta : IResourceMeta
     public DrawMeshKind Kind { get; init; }
     public DrawElementSize ElementSize { get; init; }
     public static GraphicsKind ResourceKind => GraphicsKind.Mesh;
-
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -94,7 +90,7 @@ public readonly struct VertexBufferMeta(
 
     public static GraphicsKind ResourceKind => GraphicsKind.VertexBuffer;
 
-    
+
     public static VertexBufferMeta CreateCopy(in VertexBufferMeta m, int count, int stride, uint offset,
         BufferUsage usage) =>
         new(stride, count, offset, m.Divisor, usage, m.Storage, m.Access);
@@ -149,7 +145,6 @@ public readonly struct RenderBufferMeta(
     public readonly FrameBufferAttachmentSlot AttachmentSlot = attachmentSlot;
     public readonly RenderBufferMsaa Multisample = multisample;
     public static GraphicsKind ResourceKind => GraphicsKind.RenderBuffer;
-
 }
 
 [StructLayout(LayoutKind.Sequential)]

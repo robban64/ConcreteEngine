@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
@@ -57,7 +56,7 @@ internal static class ParticleProcessor
             particleSystem.GetMeshWriteData(emitter, out var gpuView, out var cpuView);
             ref readonly var param = ref emitter.VisualParams();
             ColorRgba startColor = param.StartColor.ToRgba(), endColor = param.EndColor.ToRgba();
-            ProcessEmitter(gpuView.Length,gpuView, cpuView, param.SizeStartEnd, startColor, endColor, timeOffset);
+            ProcessEmitter(gpuView.Length, gpuView, cpuView, param.SizeStartEnd, startColor, endColor, timeOffset);
 
             particleSystem.UploadEmitter(emitter);
         }

@@ -1,5 +1,3 @@
-using ConcreteEngine.Graphics.Handles;
-
 namespace ConcreteEngine.Core.Engine.Assets;
 
 public sealed class Shader(string name) : AssetObject(name)

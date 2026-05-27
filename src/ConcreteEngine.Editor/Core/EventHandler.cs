@@ -61,7 +61,7 @@ internal static class EventHandler
         {
             if (selection.SelectedSceneId == sceneObject) return;
             var isEmpty = sceneObject == SceneObjectId.Empty;
-            
+
             ctx.EmitChange(ctx.Context with
             {
                 Selection = selection with { SelectedSceneId = sceneObject },

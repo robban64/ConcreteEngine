@@ -158,7 +158,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void Dispose()
     {
-        if(Ptr != null) NativeArray.DisposeArray(Ptr, SizeInBytes, Alignment);
+        if (Ptr != null) NativeArray.DisposeArray(Ptr, SizeInBytes, Alignment);
         Ptr = null;
         Length = 0;
     }

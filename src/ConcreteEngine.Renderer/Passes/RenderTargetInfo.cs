@@ -1,7 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Types;
-using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Renderer.Passes;
 

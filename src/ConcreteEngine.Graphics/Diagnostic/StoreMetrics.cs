@@ -44,21 +44,21 @@ internal sealed class StoreMetrics<TMeta>(
     {
         return gfxStore switch
         {
-            GfxResourceStore<TextureMeta>  texStore =>
+            GfxResourceStore<TextureMeta> texStore =>
                 GetTextureMetric(texStore.GetMetaSpan()),
-            GfxResourceStore<ShaderMeta>  shaderStore =>
+            GfxResourceStore<ShaderMeta> shaderStore =>
                 GetShaderMetric(shaderStore.GetMetaSpan()),
-            GfxResourceStore<MeshMeta>  meshStore =>
+            GfxResourceStore<MeshMeta> meshStore =>
                 GetMeshMetric(meshStore.GetMetaSpan()),
-            GfxResourceStore<VertexBufferMeta>  vertexBufferStore =>
+            GfxResourceStore<VertexBufferMeta> vertexBufferStore =>
                 GetVboMetric(vertexBufferStore.GetMetaSpan()),
-            GfxResourceStore<IndexBufferMeta>   indexBufferStore =>
+            GfxResourceStore<IndexBufferMeta> indexBufferStore =>
                 GetIboMetric(indexBufferStore.GetMetaSpan()),
-            GfxResourceStore<UniformBufferMeta>  uniformBufferStore =>
+            GfxResourceStore<UniformBufferMeta> uniformBufferStore =>
                 GetUboMetric(uniformBufferStore.GetMetaSpan()),
-            GfxResourceStore<FrameBufferMeta>  frameBufferStore =>
+            GfxResourceStore<FrameBufferMeta> frameBufferStore =>
                 GetFboMetric(frameBufferStore.GetMetaSpan()),
-            GfxResourceStore<RenderBufferMeta>  renderBufferStore =>
+            GfxResourceStore<RenderBufferMeta> renderBufferStore =>
                 GetRboMetric(renderBufferStore.GetMetaSpan()),
             _ => throw new ArgumentOutOfRangeException()
         };

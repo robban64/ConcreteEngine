@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Internals;
-using ConcreteEngine.Graphics.Gfx.Types;
 
 namespace ConcreteEngine.Graphics.Utility;
 
@@ -10,7 +9,7 @@ public struct VertexAttributeMaker
     private int _offset;
 
     public void ResetOffset() => _offset = 0;
-    
+
     public VertexAttributeDef Make(
         int stride,
         byte location,

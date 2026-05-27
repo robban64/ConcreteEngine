@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
 

@@ -1,6 +1,4 @@
-using ConcreteEngine.Graphics.Gfx.Definitions;
-
-namespace ConcreteEngine.Graphics.Gfx.Types;
+namespace ConcreteEngine.Graphics.Gfx;
 
 public record struct GfxPassFunctions(
     BlendMode Blend = BlendMode.Unset,

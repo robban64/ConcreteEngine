@@ -11,7 +11,7 @@ using ConcreteEngine.Editor.Inspector;
 using ConcreteEngine.Editor.Inspector.Impl;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Graphics.Gfx.Types;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
 using Hexa.NET.ImGui;
 

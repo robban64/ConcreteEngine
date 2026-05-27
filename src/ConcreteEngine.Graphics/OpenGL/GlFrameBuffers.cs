@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
@@ -11,7 +11,7 @@ internal sealed class GlFrameBuffers
 {
     private readonly GL _gl = GlBackendDriver.Gl;
     private readonly BackendResourceStore _fboStore = GfxRegistry.GetBackendStore<FrameBufferMeta>();
-    private readonly BackendResourceStore _rboStore =  GfxRegistry.GetBackendStore<RenderBufferMeta>();
+    private readonly BackendResourceStore _rboStore = GfxRegistry.GetBackendStore<RenderBufferMeta>();
     private readonly BackendResourceStore _textureStore = GfxRegistry.GetBackendStore<TextureMeta>();
 
 

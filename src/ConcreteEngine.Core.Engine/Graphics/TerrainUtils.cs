@@ -10,7 +10,7 @@ public static class TerrainUtils
     {
         const int channels = 4;
         const byte threshold = 64;
-        
+
         x = int.Clamp(x, 0, dimension - 1);
         z = int.Clamp(z, 0, dimension - 1);
 
@@ -30,16 +30,19 @@ public static class TerrainUtils
             bestValue = r;
             bestLayer = 0;
         }
+
         if (g > bestValue)
         {
             bestValue = g;
             bestLayer = 1;
         }
+
         if (b > bestValue)
         {
             bestValue = b;
             bestLayer = 2;
         }
+
         if (w > bestValue)
         {
             bestValue = w;
@@ -64,7 +67,7 @@ public static class TerrainUtils
         byte r = data[idx];
         return r / 255f * maxHeight;
     }
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3 GetTangent(ReadOnlySpan<byte> data, int worldX, int worldZ, int step, int dimension,

@@ -1,10 +1,6 @@
 using System.Numerics;
-using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Primitives;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics.Primitives;
@@ -28,6 +24,7 @@ internal sealed unsafe partial class ModelImporter
             *ptr++ = face.MIndices[2];
         }
     }
+
     private static void WriteIndicesU16(AssimpMesh* mesh, NativeView<ushort> indices)
     {
         var faceLen = mesh->MNumFaces;
@@ -40,7 +37,6 @@ internal sealed unsafe partial class ModelImporter
             *ptr++ = (ushort)face.MIndices[1];
             *ptr++ = (ushort)face.MIndices[2];
         }
-
     }
 
     private static void WriteVertices(
@@ -101,7 +97,6 @@ internal sealed unsafe partial class ModelImporter
             boneIndices.Z = int.Max(boneIndices.Z, 0);
             boneIndices.W = int.Max(boneIndices.W, 0);
         }
-
     }
 
     private static void WriteWeightAndIndices(Bone* bone, int boneIndex, NativeView<SkinningData> skinningData)

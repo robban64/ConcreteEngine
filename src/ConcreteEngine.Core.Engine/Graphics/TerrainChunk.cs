@@ -10,7 +10,7 @@ public sealed class TerrainChunk(Vector2I gridStart)
     public const int ChunkSamples = ChunkQuads + 1;
 
     public bool IsDirty { get; internal set; }
-    
+
     public readonly Vector2I WorldStart = gridStart * ChunkQuads;
 
     private BoundingBox _bounds;
@@ -19,7 +19,7 @@ public sealed class TerrainChunk(Vector2I gridStart)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly BoundingBox GetBounds() => ref _bounds;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float GetHeight(int x, int z)
     {
@@ -27,14 +27,14 @@ public sealed class TerrainChunk(Vector2I gridStart)
         z = int.Clamp(z, 0, ChunkQuads);
         return _heights[z * ChunkSamples + x];
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void SetHeight(float height, int x, int z)
     {
         _heights[z * ChunkSamples + x] = height;
         IsDirty = true;
     }
-    
+
     internal void FillChunkHeights(ReadOnlySpan<byte> heightmap, int dimension, float maxHeight)
     {
         if (_heights.Length < ChunkSamples * ChunkSamples)
@@ -55,9 +55,8 @@ public sealed class TerrainChunk(Vector2I gridStart)
                 _heights[z * ChunkSamples + x] = height;
             }
         }
-        
+
         var end = start + ChunkQuads;
         _bounds = new BoundingBox(new Vector3(start.X, minY, start.Y), new Vector3(end.X, maxY, end.Y));
     }
-
 }

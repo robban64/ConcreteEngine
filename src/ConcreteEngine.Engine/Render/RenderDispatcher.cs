@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
@@ -23,7 +22,7 @@ internal sealed class RenderDispatcher : IDisposable
 
     private readonly RenderEntityCore _ecs;
     private readonly CameraSystem _cameraSystem;
-    
+
     private AnimatorProcessor _animatorProcessor = null!;
     private RenderUploadBuffers _uploadBuffers = null!;
 
@@ -97,7 +96,6 @@ internal sealed class RenderDispatcher : IDisposable
         ParticleProcessor.TagParticles(in ctx, _particleSystem);
         SpatialProcessor.TagDepthKeys(in ctx, _cameraSystem);
         _animatorProcessor.Tag(in ctx);
-
     }
 
     private void CollectEntities(in DrawEntityContext ctx)

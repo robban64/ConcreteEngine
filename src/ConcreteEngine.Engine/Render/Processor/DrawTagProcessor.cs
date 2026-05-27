@@ -14,7 +14,7 @@ namespace ConcreteEngine.Engine.Render.Processor;
 internal static class DrawTagProcessor
 {
     public static MaterialId BoundsMaterial;
-    
+
     public static void TagUploadSelectionEffect(in DrawEntityContext ctx, EffectBuffer effects)
     {
         if (Ecs.Render.Stores<SelectionComponent>.Store.Count == 0) return;

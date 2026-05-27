@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
 using Hexa.NET.ImGui;
 
@@ -53,5 +52,4 @@ internal sealed class StateManager(EventDispatcher eventDispatcher)
         texHandle.TexturePtr = ImGui.ImTextureRef(new ImTextureID(handle.Value));
         texHandle.Handle = handle;
     }
-
 }

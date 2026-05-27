@@ -8,11 +8,11 @@ namespace ConcreteEngine.Core.Common;
 public static class Throwers
 {
     // Basic
-    
+
     [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
-    public static void InvalidArgument(string paramName, string? message = null) 
-        => throw new ArgumentException(message, paramName);
-    
+    public static void InvalidArgument(string paramName, string? message = null) =>
+        throw new ArgumentException(message, paramName);
+
     [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
     public static void InvalidOperation(string? message = null) => throw new InvalidOperationException(message);
 

@@ -21,7 +21,7 @@ public static partial class Ecs
 
     internal static void Init()
     {
-        if(SceneLink != null!) throw new  InvalidOperationException("ECS already initialized");
+        if (SceneLink != null!) throw new InvalidOperationException("ECS already initialized");
         InitRenderEcs();
         InitGameEcs();
         SceneLink = new EntitySceneLink(Render.Core, Game.Core);

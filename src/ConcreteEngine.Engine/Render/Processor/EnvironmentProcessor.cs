@@ -18,7 +18,7 @@ internal static class EnvironmentProcessor
         var mainTerrain = terrain.MainTerrain;
         var material = mainTerrain.MaterialId;
         var foliageMaterial = mainTerrain.FoliageMaterialId;
-        
+
         ref readonly var transform = ref _terrainMatrixUniform;
         foreach (var it in terrain.TerrainMesh.GetMeshChunks())
         {
@@ -30,7 +30,7 @@ internal static class EnvironmentProcessor
             if (it.FoliageCount > 0)
             {
                 meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Transparent);
-                cmd = new DrawCommand(it.FoliageMeshId,foliageMaterial, instanceCount: (uint)it.FoliageCount);
+                cmd = new DrawCommand(it.FoliageMeshId, foliageMaterial, instanceCount: (uint)it.FoliageCount);
                 commandBuffer.Submit(cmd, meta, in transform);
             }
         }

@@ -7,7 +7,6 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Engine.Render;
 

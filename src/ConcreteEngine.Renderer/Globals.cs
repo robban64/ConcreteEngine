@@ -1,5 +1,4 @@
 global using static ConcreteEngine.Renderer.Registry.RenderFboRegistry;
-
 global using TextureId = ConcreteEngine.Graphics.Handles.GfxId<ConcreteEngine.Graphics.Handles.TextureMeta>;
 global using ShaderId = ConcreteEngine.Graphics.Handles.GfxId<ConcreteEngine.Graphics.Handles.ShaderMeta>;
 global using MeshId = ConcreteEngine.Graphics.Handles.GfxId<ConcreteEngine.Graphics.Handles.MeshMeta>;

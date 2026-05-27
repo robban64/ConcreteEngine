@@ -1,12 +1,9 @@
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internals;
-using ConcreteEngine.Graphics.Gfx.Types;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
@@ -104,7 +101,7 @@ public sealed class GfxTextures
 
         var meta = baseMeta with { Kind = TextureKind.Texture2DArray, Depth = (ushort)layerCount };
         var textureId = _textureStore.Add(in meta, handle);
-        
+
         ApplyProperties(textureId);
         return textureId;
     }
@@ -117,9 +114,9 @@ public sealed class GfxTextures
 
         var dstHandle = _textureStore.GetHandleAndMeta(arrayId, out var dstMeta);
         var srcHandle = _textureStore.GetHandleAndMeta(srcId, out var srcMeta);
-        
+
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(layer, dstMeta.GetArrayLength());
-        
+
         ValidateTexture2DArrayMeta(in dstMeta, in srcMeta);
 
         var size = dstMeta.AsSize2D();
@@ -135,7 +132,6 @@ public sealed class GfxTextures
                 srcSize: CalcMipSize(mip, size).ToSize3D(1),
                 dstPos: new Vector3I(0, 0, layer)
             );
-            
         }
     }
 
@@ -225,7 +221,7 @@ public sealed class GfxTextures
         if (meta.Lod != Half.Zero)
             _driver.SetLodBias(texRef, (float)meta.Lod);
 
-        if (meta.MipLevels > 1 && meta.Kind  != TextureKind.Texture2DArray)
+        if (meta.MipLevels > 1 && meta.Kind != TextureKind.Texture2DArray)
             _driver.GenerateMipMaps(texRef);
     }
 

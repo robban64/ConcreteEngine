@@ -1,22 +1,15 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Mesh;
-using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Handles;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Render;
 
 internal sealed class TerrainSystem
 {
     public bool IsDirty => MainTerrain.IsDirty;
-    
+
     private readonly GfxContext _gfx;
     public readonly Terrain MainTerrain;
     public readonly TerrainMesh TerrainMesh;
@@ -36,20 +29,20 @@ internal sealed class TerrainSystem
 
     public void OnTick()
     {
-        if(!IsDirty) return;
+        if (!IsDirty) return;
         MainTerrain.IsDirty = false;
         Allocate();
     }
 
     private void Allocate()
     {
-        if (!TerrainMesh.TerrainIboId.IsValid() && MainTerrain.Heightmap?.PixelData is {} heightmap)
+        if (!TerrainMesh.TerrainIboId.IsValid() && MainTerrain.Heightmap?.PixelData is { } heightmap)
         {
             TerrainMesh.Allocate(MainTerrain.GetChunks(), heightmap.Span, MainTerrain.Dimension, MainTerrain.MaxHeight);
             Logger.LogString(LogScope.Engine, "Terrain: allocated terrain");
         }
 
-        if (!TerrainMesh.HasFoliage && MainTerrain.Splatmap?.PixelData is {} splatMap)
+        if (!TerrainMesh.HasFoliage && MainTerrain.Splatmap?.PixelData is { } splatMap)
         {
             TerrainMesh.AllocateFoliage(MainTerrain, splatMap.Span);
             Logger.LogString(LogScope.Engine, "Terrain: allocated foliage");
@@ -57,20 +50,20 @@ internal sealed class TerrainSystem
 
         if (MainTerrain.GroundMaterial is { } material)
         {
-            if (MainTerrain.GroundAlbedoTextures.IsDirty )
+            if (MainTerrain.GroundAlbedoTextures.IsDirty)
             {
                 var textureId = MainTerrain.GroundAlbedoTextures.Compile(_gfx.Textures);
                 material.SetOverrideTexture(0, textureId);
                 Logger.LogString(LogScope.Engine, "Ground albedo texture changed");
             }
-        /*
-            if (MainTerrain.GroundNormalTextures.IsDirty)
-            {
-                var textureId = MainTerrain.GroundNormalTextures.Compile(_gfx.Textures);
-                material.SetOverrideTexture(1, textureId);
-                Logger.LogString(LogScope.Engine, "Ground normal texture changed");
-            }
-        */
+            /*
+                if (MainTerrain.GroundNormalTextures.IsDirty)
+                {
+                    var textureId = MainTerrain.GroundNormalTextures.Compile(_gfx.Textures);
+                    material.SetOverrideTexture(1, textureId);
+                    Logger.LogString(LogScope.Engine, "Ground normal texture changed");
+                }
+            */
         }
 
         if (MainTerrain.FoliageTextures.IsDirty && MainTerrain.FoliageMaterial is { } foliageMaterial)
@@ -79,9 +72,5 @@ internal sealed class TerrainSystem
             foliageMaterial.SetOverrideTexture(0, textureId);
             Logger.LogString(LogScope.Engine, "Foliage texture changed");
         }
-
     }
-    
-    
-
 }

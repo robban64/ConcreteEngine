@@ -1,8 +1,6 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
@@ -19,7 +17,7 @@ public abstract class CompositeTexture
 
         Textures = new Texture[length];
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool HasEmptyTextureSlot() => Textures.Contains(null);
 
@@ -30,11 +28,9 @@ public abstract class CompositeTexture
         Textures[index] = texture;
         IsDirty = true;
     }
-    
+
     internal abstract TextureId Compile(GfxTextures gfx);
-
 }
-
 
 public sealed class TextureArray(int length) : CompositeTexture(length)
 {
@@ -42,9 +38,9 @@ public sealed class TextureArray(int length) : CompositeTexture(length)
 
     internal override TextureId Compile(GfxTextures gfx)
     {
-        if(!IsDirty) return GfxId;
+        if (!IsDirty) return GfxId;
         IsDirty = false;
-        
+
         for (int i = 0; i < Textures.Length; i++)
         {
             if (Textures[i] == null) throw new InvalidOperationException($"Texture {i} is null");
@@ -57,5 +53,4 @@ public sealed class TextureArray(int length) : CompositeTexture(length)
 
         return GfxId = arrayId;
     }
-
 }

@@ -1,7 +1,7 @@
 ﻿using ConcreteEngine.Engine;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Demo;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 using Silk.NET.Windowing;
 
 var builder = new GameEngineBuilder()

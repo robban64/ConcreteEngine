@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Configuration;
 
-namespace ConcreteEngine.Core.Engine.Assets.Extensions;
+namespace ConcreteEngine.Core.Engine.Assets.Utils;
 
 public static class AssetEnumsExtensions
 {

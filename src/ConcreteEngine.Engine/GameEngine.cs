@@ -12,8 +12,7 @@ using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Gateway;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Types;
+using ConcreteEngine.Graphics.Gfx;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Engine;
@@ -126,7 +125,7 @@ public sealed class GameEngine : IDisposable
         _graphics.BeginFrame(new GfxFrameArgs(dt, vp));
         _renderSystem.Render(dt, vp, _inputSystem.MouseState.ViewPos);
         _graphics.EndFrame();
-        
+
         _gateway.RenderEditor(dt);
     }
 
@@ -144,7 +143,7 @@ public sealed class GameEngine : IDisposable
     private void OnSystemTick(float dt)
     {
         TerrainSystem.Instance.OnTick();
-        
+
         if (_systemStepper.Tick() && _window.Refresh())
         {
             var command = new FboCommandRecord(CommandFboAction.ScreenSize, _window.Viewport.Size);

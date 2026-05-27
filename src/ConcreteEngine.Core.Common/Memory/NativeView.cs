@@ -5,7 +5,8 @@ using ConcreteEngine.Core.Common.Collections;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
-public readonly unsafe struct NativeView<T>(T* ptr, int offset, int length) : IEquatable<NativeView<T>> where T : unmanaged
+public readonly unsafe struct NativeView<T>(T* ptr, int offset, int length)
+    : IEquatable<NativeView<T>> where T : unmanaged
 {
     public readonly T* Ptr = ptr;
     public readonly int Offset = offset;
@@ -76,8 +77,7 @@ public readonly unsafe struct NativeView<T>(T* ptr, int offset, int length) : IE
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(NativeView<T> other) =>
-        Ptr == other.Ptr && Offset == other.Offset && Length == other.Length;
+    public bool Equals(NativeView<T> other) => Ptr == other.Ptr && Offset == other.Offset && Length == other.Length;
 
     public override bool Equals(object? obj) => obj is NativeView<T> v && Equals(v);
     public override int GetHashCode() => HashCode.Combine((IntPtr)Ptr, Offset, Length);

@@ -103,8 +103,8 @@ internal sealed class SelectionManager
         var sceneObject = SceneStore.Get(id);
         foreach (var it in sceneObject.GetInstances())
             it.ToggleSelection(true);
-        
-        if(showDebugBounds)
+
+        if (showDebugBounds)
             ToggleDrawBounds(true);
 
         SelectedSceneObject = new InspectSceneObject(sceneObject);

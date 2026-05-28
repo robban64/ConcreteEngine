@@ -24,6 +24,43 @@ public struct MaterialPipeline(GfxPassState passState, GfxPassFunctions passFunc
     public GfxPassState PassState = passState;
     public GfxPassFunctions PassFunctions = passFunctions;
 
+    public static MaterialPipeline MakeModel(GfxStateFlags enabled = 0, GfxStateFlags disabled = 0)
+    {
+        return new MaterialPipeline
+        {
+            PassState = GfxPassState.Set(
+                GfxStateFlags.DepthTest | GfxStateFlags.DepthWrite | GfxStateFlags.Cull | enabled,
+                 GfxStateFlags.Blend | GfxStateFlags.SampleAlphaCoverage | disabled
+            ),
+            PassFunctions = new GfxPassFunctions(BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None)
+        };
+    }
+    /*
+    public static MaterialPipeline MakeTransparentModel(GfxStateFlags enabled = 0, GfxStateFlags disabled = 0)
+    {
+        return new MaterialPipeline
+        {
+            PassState = GfxPassState.Set(
+                GfxStateFlags.DepthTest | GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage | enabled,
+                 GfxStateFlags.Cull | GfxStateFlags.Blend | disabled
+            ),
+            PassFunctions = new GfxPassFunctions(Depth: DepthMode.Lequal)
+        };
+    }
+    
+    public static MaterialPipeline MakeTransparentEffect(GfxStateFlags enabled = 0, GfxStateFlags disabled = 0)
+    {
+        return new MaterialPipeline
+        {
+            PassState = GfxPassState.Set(
+                GfxStateFlags.DepthTest  | GfxStateFlags.SampleAlphaCoverage | enabled,
+                GfxStateFlags.DepthWrite |  GfxStateFlags.Blend | disabled
+            ),
+            PassFunctions = new GfxPassFunctions(Depth: DepthMode.Lequal)
+        };
+    }
+*/
+
     public static bool operator ==(MaterialPipeline left, MaterialPipeline right) => left.Equals(right);
     public static bool operator !=(MaterialPipeline left, MaterialPipeline right) => !left.Equals(right);
 

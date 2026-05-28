@@ -93,7 +93,7 @@ public sealed class Material : AssetObject
             field = value;
             MarkDirty();
         }
-    }
+    } = MaterialPipeline.MakeModel();
 
     public Color4 Color
     {

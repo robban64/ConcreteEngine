@@ -7,7 +7,7 @@ public record struct GfxPassFunctions(
     PolygonOffsetLevel PolygonOffset = PolygonOffsetLevel.Unset)
 {
     public static GfxPassFunctions MakeDefault() =>
-        new(BlendMode.Alpha, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None);
+        new(BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None);
 
     public static GfxPassFunctions MakeSky() =>
         new(BlendMode.Unset, CullMode.Unset, DepthMode.Lequal, PolygonOffsetLevel.Unset);

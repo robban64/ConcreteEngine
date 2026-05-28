@@ -67,7 +67,7 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
             () => (int)target.PassFunctions.Depth,
             value => target.Asset.SetPassFunction(target.PassFunctions with { Depth = (DepthMode)value.X })
         );
-        DepthCombo.Bind(
+        PolygonCombo.Bind(
             () => (int)target.PassFunctions.PolygonOffset,
             value => target.Asset.SetPassFunction(target.PassFunctions with
             {

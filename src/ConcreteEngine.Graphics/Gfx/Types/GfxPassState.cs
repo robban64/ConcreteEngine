@@ -3,20 +3,6 @@ using static ConcreteEngine.Graphics.Gfx.GfxStateFlags;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-[Flags]
-public enum GfxStateFlags : ushort
-{
-    None = 0,
-    DepthTest = 1 << 0,
-    DepthWrite = 1 << 1,
-    Cull = 1 << 2,
-    Blend = 1 << 3,
-    Scissor = 1 << 4,
-    FramebufferSrgb = 1 << 5,
-    ColorMask = 1 << 6,
-    PolygonOffset = 1 << 7,
-    SampleAlphaCoverage = 1 << 8
-}
 
 public readonly struct GfxPassState(GfxStateFlags enabled, GfxStateFlags defined) : IEquatable<GfxPassState>
 {

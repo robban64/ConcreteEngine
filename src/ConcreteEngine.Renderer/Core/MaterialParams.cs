@@ -3,6 +3,7 @@ using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Renderer.Core;
 
+
 public struct MaterialParams(Color4 color, float specular, float shininess, float uvRepeat)
 {
     public Color4 Color = color;

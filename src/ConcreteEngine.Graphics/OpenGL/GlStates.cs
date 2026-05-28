@@ -28,6 +28,18 @@ internal sealed class GlStates
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ColorMask(bool v) => _gl.ColorMask(v, v, v, v);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ToggleDepthMask(bool enabled) => _gl.DepthMask(enabled);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ToggleStateFlag(GfxStateFlags flags, bool enabled)
+    {
+        var enableCap = flags.ToGlEnableCap();
+        if (enabled) _gl.Enable(enableCap);
+        else _gl.Disable(enableCap);
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToggleSampleAlphaCoverage(bool enabled)
@@ -71,8 +83,6 @@ internal sealed class GlStates
         else _gl.Disable(EnableCap.CullFace);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ToggleDepthMask(bool enabled) => _gl.DepthMask(enabled);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToggleScissorTest(bool enabled)

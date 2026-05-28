@@ -49,6 +49,22 @@ internal static class GlEnumExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static EnableCap ToGlEnableCap(this GfxStateFlags flag)
+    {
+        return flag switch
+        {
+            GfxStateFlags.DepthTest => EnableCap.DepthTest,
+            GfxStateFlags.Cull => EnableCap.CullFace,
+            GfxStateFlags.Blend => EnableCap.Blend,
+            GfxStateFlags.Scissor => EnableCap.ScissorTest,
+            GfxStateFlags.FramebufferSrgb => EnableCap.FramebufferSrgb,
+            GfxStateFlags.PolygonOffset => EnableCap.PolygonOffsetFill,
+            GfxStateFlags.SampleAlphaCoverage => EnableCap.SampleAlphaToCoverage,
+            _ => Throwers.Unreachable<EnableCap>(nameof(flag))
+        };
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GLEnum ToGlEnum(this TextureKind textureKind)
     {
         return textureKind switch

@@ -139,6 +139,7 @@ public sealed class GfxCommands
         var e = state.Enabled;
 
         var states = _states;
+
         if ((d & GfxStateFlags.Scissor) != 0)
             states.ToggleScissorTest((e & GfxStateFlags.Scissor) != 0);
         if ((d & GfxStateFlags.Cull) != 0)

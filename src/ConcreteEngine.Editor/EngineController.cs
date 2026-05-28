@@ -13,7 +13,6 @@ public sealed class EditorEngineContext
 
 public sealed class EditorEngineBundle
 {
-    public required VisualManager Visuals;
     public required SceneStore SceneStore;
     public required SceneSpawner SceneSpawner;
     public required AssetStore Assets;

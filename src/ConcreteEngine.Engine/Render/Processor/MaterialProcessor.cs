@@ -17,8 +17,13 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
         if (materials.DirtyCount == 0 && _hasUploadedMaterial) return;
         if (materials.DirtyCount > 0) _hasUploadedMaterial = false;
 
-        materials.ClearDirty();
+
+        foreach (var id in materials.DirtyIds)
+            assetStore.GetUnsafe<Material>(id).Commit();
+        
         Submit(renderer.UploadBuffers.Materials);
+        
+        materials.ClearDirty();
     }
 
     private void Submit(MaterialBuffer materialBuffer)
@@ -40,8 +45,7 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
 
         material.FillParams(out var param);
 
-        data = new RenderMaterialPayload(material.MaterialId, shader, in param,
-            material.GetProperties(), material.Pipeline);
+        data = new RenderMaterialPayload(material.MaterialId, shader, in param, material.RenderProps, material.Pipeline);
 
         var textureSources = material.GetTextureSources();
         for (var i = 0; i < textureSources.Length; i++)

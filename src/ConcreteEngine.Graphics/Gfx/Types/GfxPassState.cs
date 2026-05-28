@@ -71,6 +71,22 @@ public readonly struct GfxPassState(GfxStateFlags enabled, GfxStateFlags defined
 
     // UTils
 
+    public static GfxPassState MakeDefined()
+    {
+        return new GfxPassState(
+            enabled: 0,
+            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset | SampleAlphaCoverage
+        );
+    }
+
+    public static GfxPassState MakeEnabled(GfxStateFlags enabled)
+    {
+       return new GfxPassState(
+            enabled: enabled,
+            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset | SampleAlphaCoverage
+        );
+    }
+
     public static GfxPassState MakeScene() =>
         new(
             enabled: DepthTest | DepthWrite | Cull | FramebufferSrgb | ColorMask | SampleAlphaCoverage,

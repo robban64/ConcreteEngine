@@ -2,12 +2,13 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Lib.Field;
-using static ConcreteEngine.Editor.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.Inspector.Impl;
 
 internal sealed class InspectLightningFields : InspectorFields<VisualManager>
 {
+    private static VisualManager Visuals => VisualManager.Instance;
+    
     public readonly FloatField<Float3> Direction;
     public readonly ColorField Diffuse;
     public readonly FloatField<Float1> Intensity;

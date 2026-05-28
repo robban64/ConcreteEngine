@@ -79,7 +79,7 @@ internal sealed class EngineBlueprintFactory(AssetStore assetStore) : BlueprintF
             var material = component.Materials[i];
 
             var queue = material.Transparency ? DrawCommandQueue.Transparent : DrawCommandQueue.Opaque;
-            var mask = material.HasShadowMap ? PassMask.Default : PassMask.Main;
+            var mask = material.RenderProps.HasShadowMap ? PassMask.Default : PassMask.Main;
             var meshIdx = mesh.Info.MeshIndex;
             var source = new SourceComponent(mesh.MeshId, material.MaterialId, meshIdx, kind, queue, mask);
 

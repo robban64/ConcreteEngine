@@ -1,12 +1,13 @@
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Editor.Lib.Field;
-using static ConcreteEngine.Editor.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.Inspector.Impl;
 
 internal sealed class InspectPostFxFields : InspectorFields<VisualManager>
 {
+    private static VisualManager Visuals => VisualManager.Instance;
+
     public readonly FloatCompositeField<Float4> GradeFields;
     public readonly FloatCompositeField<Float4> ImageFxFields;
     public readonly FloatCompositeField<Float3> BloomFields;

@@ -11,7 +11,7 @@ public struct MaterialParams(Color4 color, float specular, float shininess, floa
     public float UvRepeat = uvRepeat;
 }
 
-public struct MaterialProperties(bool hasTransparency, bool hasNormal, bool hasAlphaMask, bool hasShadowMap)
+public struct MaterialRenderProps(bool hasTransparency, bool hasNormal, bool hasAlphaMask, bool hasShadowMap)
 {
     public bool HasTransparency = hasTransparency;
     public bool HasNormal = hasNormal;

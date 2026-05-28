@@ -29,7 +29,7 @@ internal static class EnvironmentProcessor
 
             if (it.FoliageCount > 0)
             {
-                meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Transparent);
+                meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Transparent);
                 cmd = new DrawCommand(it.FoliageMeshId, foliageMaterial, instanceCount: (uint)it.FoliageCount);
                 commandBuffer.Submit(cmd, meta, in transform);
             }

@@ -47,7 +47,6 @@ internal sealed class EngineGateway : IDisposable
 
         var engineBundle = new EditorEngineBundle
         {
-            Visuals = VisualManager.Instance,
             SceneStore = coreSystem.Scene.SceneStore,
             SceneSpawner = coreSystem.Scene.SceneSpawner,
             Assets = coreSystem.Assets.Assets,

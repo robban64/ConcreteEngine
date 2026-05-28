@@ -16,7 +16,6 @@ internal sealed class GlStates
     private readonly BackendResourceStore _fboStore = GfxRegistry.GetBackendStore<FrameBufferMeta>();
     private readonly BackendResourceStore _shaderStore = GfxRegistry.GetBackendStore<ShaderMeta>();
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearColor(ColorRgba color)
     {
@@ -33,22 +32,22 @@ internal sealed class GlStates
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToggleSampleAlphaCoverage(bool enabled)
     {
-        if (enabled) _gl.Enable(GLEnum.SampleAlphaToCoverage);
-        else _gl.Disable(GLEnum.SampleAlphaToCoverage);
+        if (enabled) _gl.Enable(EnableCap.SampleAlphaToCoverage);
+        else _gl.Disable(EnableCap.SampleAlphaToCoverage);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void TogglePolygonOffset(bool enabled)
     {
-        if (enabled) _gl.Enable(GLEnum.PolygonOffsetFill);
-        else _gl.Disable(GLEnum.PolygonOffsetFill);
+        if (enabled) _gl.Enable(EnableCap.PolygonOffsetFill);
+        else _gl.Disable(EnableCap.PolygonOffsetFill);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToggleFrameBufferSrgb(bool enabled)
     {
-        if (enabled) _gl.Enable(GLEnum.FramebufferSrgb);
-        else _gl.Disable(GLEnum.FramebufferSrgb);
+        if (enabled) _gl.Enable(EnableCap.FramebufferSrgb);
+        else _gl.Disable(EnableCap.FramebufferSrgb);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

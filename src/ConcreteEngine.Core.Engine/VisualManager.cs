@@ -9,7 +9,7 @@ namespace ConcreteEngine.Core.Engine;
 
 public sealed class VisualManager
 {
-    internal static readonly VisualManager Instance = new();
+    public static readonly VisualManager Instance = new();
 
     public bool AnyWasDirty { get; private set; }
     public bool HasPendingOutputSize { get; private set; }

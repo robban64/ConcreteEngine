@@ -12,7 +12,9 @@ public sealed class Material : AssetObject
     public AssetId TemplateId { get; init; }
     public AssetId ShaderId { get; internal set; }
     public MaterialId MaterialId { get; internal set; }
+    
     public MaterialProfile Profile { get; internal set; }
+    public MaterialRenderProps RenderProps { get; private set; }
 
     private readonly TextureSource[] _textureSources;
 
@@ -48,7 +50,6 @@ public sealed class Material : AssetObject
 
 
     public ReadOnlySpan<TextureSource> GetTextureSources() => _textureSources;
-    public MaterialProperties GetProperties() => new(Transparency, HasNormal, HasAlphaMask, HasShadowMap);
 
     public void SetOverrideTexture(int slot, TextureId textureId)
     {
@@ -149,40 +150,6 @@ public sealed class Material : AssetObject
         }
     }
 
-    public bool HasAlphaMask
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            MarkDirty();
-        }
-    }
-
-    public bool HasNormal
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            MarkDirty();
-        }
-    }
-
-    public bool HasShadowMap
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            MarkDirty();
-        }
-    }
-
-
     public void FillParams(out MaterialParams param)
     {
         param.Color = Color;
@@ -205,15 +172,23 @@ public sealed class Material : AssetObject
         return new Material(newName, Id, ShaderId, Profile, in param, _textureSources) { Id = newId, GId = newGId };
     }
 
+    internal void Commit()
+    {
+        CalculateProperties();
+    }
+
     private void CalculateProperties()
     {
-        foreach (var slot in _textureSources)
+        var props = new MaterialRenderProps { HasTransparency = Transparency };
+        foreach (var source in _textureSources)
         {
-            if (!HasShadowMap) HasShadowMap = slot.Usage == TextureUsage.Shadowmap;
-            if (!slot.AssetTexture.IsValid()) continue;
-            if (!HasNormal) HasNormal = slot.Usage == TextureUsage.Normal;
-            if (!HasAlphaMask) HasAlphaMask = slot.Usage == TextureUsage.Mask;
+            if (!props.HasShadowMap) props.HasShadowMap = source.Usage == TextureUsage.Shadowmap;
+            if (!source.AssetTexture.IsValid()) continue;
+            if (!props.HasNormal) props.HasNormal = source.Usage == TextureUsage.Normal;
+            if (!props.HasAlphaMask) props.HasAlphaMask = source.Usage == TextureUsage.Mask;
         }
+
+        RenderProps = props;
     }
 
     private void FromParamRecord(MaterialParamsRecord param)

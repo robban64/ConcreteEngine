@@ -8,16 +8,14 @@ namespace ConcreteEngine.Renderer.Passes;
 public struct PassMutationState
 {
     private const byte LinearFilterBit = 1 << 0;
-    private const byte HasClearBit = 1 << 1;
-    private const byte HasStateBit = 1 << 2;
-    private const byte HasFboBit = 1 << 3;
-    private const byte HasShaderBit = 1 << 4;
+    private const byte HasStateBit = 1 << 1;
+    private const byte HasFboBit = 1 << 2;
+    private const byte HasShaderBit = 1 << 3;
 
 
     public FrameBufferId TargetFboId;
     public ShaderId ShaderId;
-    public GfxPassClear ClearColor;
-    public GfxStateFlags PassFlags;
+    public GfxPassState PassState;
 
     private byte _mask;
 
@@ -30,8 +28,7 @@ public struct PassMutationState
     }
 
     public readonly bool HasLinearFilter => (_mask & LinearFilterBit) != 0;
-    public readonly bool HasClear => (_mask & HasClearBit) != 0;
-    public readonly bool HasPassFlags => (_mask & HasStateBit) != 0;
+    public readonly bool HasState => (_mask & HasStateBit) != 0;
     public readonly bool HasTarget => (_mask & HasFboBit) != 0;
     public readonly bool HasShader => (_mask & HasShaderBit) != 0;
 
@@ -41,10 +38,10 @@ public struct PassMutationState
         set => _mask = value ? (byte)(_mask | LinearFilterBit) : (byte)(_mask & ~LinearFilterBit);
     }
 
-    public void WithClear(GfxPassClear clearColor)
+    public void WithState(GfxPassState stateColor)
     {
-        ClearColor = clearColor;
-        _mask |= HasClearBit;
+        PassState = stateColor;
+        _mask |= HasStateBit;
     }
 
     public void WithShader(ShaderId id)
@@ -62,23 +59,20 @@ public struct PassMutationState
 }
 
 public readonly struct RenderPassState(
-    GfxPassClear passClear,
-    GfxStateFlags passFlags,
+    GfxPassState passState,
     ShaderId shaderId = default,
     FrameBufferId targetFboId = default,
     bool linearFilter = false
 )
 {
-    public readonly GfxPassClear PassClear = passClear;
-    public readonly GfxStateFlags PassFlags = passFlags;
+    public readonly GfxPassState PassState = passState;
     public readonly ShaderId ShaderId = shaderId;
     public readonly FrameBufferId TargetFboId = targetFboId;
     public readonly bool LinearFilter = linearFilter;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderPassState FromMutation(in PassMutationState m) =>
-        new(passClear: m.HasClear ? m.ClearColor : PassClear,
-            passFlags: m.HasPassFlags ? m.PassFlags : PassFlags,
+        new(passState: m.HasState ? m.PassState : PassState,
             targetFboId: m.HasTarget ? m.TargetFboId : TargetFboId,
             shaderId: m.HasShader ? m.ShaderId : ShaderId,
             linearFilter: m.HasLinearFilter ? m.LinearFilter : LinearFilter
@@ -86,23 +80,23 @@ public readonly struct RenderPassState(
 
 
     public static RenderPassState MakeSceneMsaa() =>
-        new(passClear: GfxPassClear.MakeColorDepthClear(Color4.CornflowerBlue), DepthTest | DepthWrite | Cull | Srgb | ColorMask | Ac2);
+        new(passState: GfxPassState.MakeColorDepthClear(Color4.CornflowerBlue, DepthTest | DepthWrite | Cull | Srgb | ColorMask | Ac2));
 
     public static RenderPassState MakeResolve() =>
-        new(passClear: GfxPassClear.MakeNoClear(), ColorMask, linearFilter: true);
+        new(passState: GfxPassState.MakeNoClear(ColorMask), linearFilter: true);
 
     public static RenderPassState MakePostProcess(ShaderId shaderId) =>
-        new(passClear: GfxPassClear.MakeColorClear(Color4.Black), ColorMask | Srgb,
+        new(GfxPassState.MakeColorClear(Color4.Black, ColorMask | Srgb),
             shaderId: shaderId);
 
     public static RenderPassState MakeScreen(ShaderId shaderId) =>
-        new(passClear: GfxPassClear.MakeColorClear(Color4.Black), ColorMask | Srgb,
+        new(passState: GfxPassState.MakeColorClear(Color4.Black, ColorMask | Srgb),
             shaderId: shaderId);
 
     public static RenderPassState MakeShadow() =>
-        new(passClear: GfxPassClear.MakeDepthClear(), DepthTest | DepthWrite | Cull | Srgb | PolygonOffset | Ac2);
+        new(passState: GfxPassState.MakeDepthClear(DepthTest | DepthWrite | Cull | Srgb | PolygonOffset | Ac2));
 
     public static RenderPassState MakeSceneEffect() =>
-        new(passClear: GfxPassClear.MakeNoClear(), Blend | Cull | Srgb | ColorMask | Ac2);
+        new(passState: GfxPassState.MakeNoClear(Blend | Cull | Srgb | ColorMask | Ac2));
     
 }

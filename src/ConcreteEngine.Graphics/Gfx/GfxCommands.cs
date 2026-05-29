@@ -64,19 +64,19 @@ public sealed class GfxCommands
         Array.Clear(_boundTextures);
     }
 
-    public void BeginScreenPass(GfxPassClear passClear, GfxStateFlags stateFlags)
+    public void BeginScreenPass(GfxPassState passState)
     {
         BindFramebuffer(default);
         SetViewport(_activeOutputSize);
-        ApplyPassState(stateFlags);
+        ApplyPassState(passState.StateFlags);
 
-        Clear(passClear);
+        Clear(passState.ClearColor,passState.ClearBuffer);
 
         _activeOutputSize = _outputSize;
     }
 
 
-    public void BeginRenderPass(FrameBufferId fboId, GfxPassClear passClear, GfxStateFlags stateFlags)
+    public void BeginRenderPass(FrameBufferId fboId, GfxPassState passState)
     {
         ArgumentOutOfRangeException.ThrowIfZero(fboId.Id, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState("FBO is already bound.", fboId);
@@ -85,8 +85,8 @@ public sealed class GfxCommands
 
         BindFramebuffer(fboId);
         SetViewport(size);
-        ApplyPassState(stateFlags);
-        Clear(passClear);
+        ApplyPassState(passState.StateFlags);
+        Clear(passState.ClearColor,passState.ClearBuffer);
 
         _activeOutputSize = size;
     }
@@ -122,15 +122,15 @@ public sealed class GfxCommands
     }
 
 
-    public void Clear(GfxPassClear passClear)
+    public void Clear(ColorRgba clearColor, ClearBufferFlag clearFlag)
     {
-        switch (passClear.ClearBuffer)
+        switch (clearFlag)
         {
-            case ClearBufferFlag.Color: _cmdStates.ClearColor(passClear.ClearColor); break;
-            case ClearBufferFlag.Depth: _cmdStates.ClearBuffer(passClear.ClearBuffer); break;
+            case ClearBufferFlag.Color: _cmdStates.ClearColor(clearColor); break;
+            case ClearBufferFlag.Depth: _cmdStates.ClearBuffer(clearFlag); break;
             case ClearBufferFlag.ColorAndDepth:
-                _cmdStates.ClearColor(passClear.ClearColor);
-                _cmdStates.ClearBuffer(passClear.ClearBuffer);
+                _cmdStates.ClearColor(clearColor);
+                _cmdStates.ClearBuffer(clearFlag);
                 break;
         }
     }

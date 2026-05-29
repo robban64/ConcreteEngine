@@ -24,8 +24,7 @@ internal sealed class RenderPassPipeline
 
     internal void Initialize(RenderProgramContext ctx)
     {
-        _ctx = new RenderPassCtx(ctx.CommandPipeline.DrawContext, ctx.Gfx, ctx.CommandPipeline.UniformUploader);
-
+        _ctx = new RenderPassCtx(ctx.Gfx, ctx.CommandPipeline.UniformUploader);
     }
 
 

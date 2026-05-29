@@ -8,29 +8,20 @@ namespace ConcreteEngine.Renderer;
 internal sealed class DrawCommandPipeline(RenderUploadBuffers buffers)
 {
     public UniformUploader UniformUploader { get; private set; } = null!;
-    public DrawStateContext DrawContext { get; private set; } = null!;
-
     private DrawCommandProcessor _drawCmd = null!;
 
     public void Initialize(RenderProgramContext ctx)
     {
-        var drawCtx = new DrawStateContext(ctx.Registry);
-        var drawCtxPayload = new DrawStateContextPayload { Gfx = ctx.Gfx, Registry = ctx.Registry, };
-
         //
-        DrawContext = drawCtx;
-        UniformUploader = new UniformUploader(drawCtx, drawCtxPayload, buffers);
-        _drawCmd = new DrawCommandProcessor(drawCtx, drawCtxPayload, UniformUploader);
-
-        //
-        _drawCmd.Initialize();
+        UniformUploader = new UniformUploader(ctx.Gfx, ctx.Registry, buffers);
+        _drawCmd = new DrawCommandProcessor(ctx.Gfx, ctx.Registry, UniformUploader);
     }
 
     internal void Prepare()
     {
         buffers.Reset();
         _drawCmd.Prepare();
-        UniformUploader.ResetCursor();
+        UniformUploader.Prepare();
     }
 
     internal void PrepareDrawBuffers()
@@ -63,7 +54,7 @@ internal sealed class DrawCommandPipeline(RenderUploadBuffers buffers)
 
     internal void ExecuteDrawPass(PassId passId, bool defaultDraw)
     {
-        UniformUploader.ResetCursor();
+        UniformUploader.Prepare();
         _drawCmd.PrepareDrawPass();
 
         if (defaultDraw)

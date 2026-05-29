@@ -21,9 +21,8 @@ internal sealed class RenderPassCtx
     private readonly GfxDraw _gfxDraw;
 
     private readonly UniformUploader _uniformUploader;
-    private readonly DrawStateContext _ctx;
 
-    internal RenderPassCtx(DrawStateContext ctx, GfxContext gfx, UniformUploader uniformUploader)
+    internal RenderPassCtx( GfxContext gfx, UniformUploader uniformUploader)
     {
         PassQueue = new PassCommandQueue();
         _uniformUploader = uniformUploader;
@@ -31,7 +30,6 @@ internal sealed class RenderPassCtx
         _gfxTextures = gfx.Textures;
         _gfxDraw = gfx.Draw;
 
-        _ctx = ctx;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -73,13 +71,13 @@ internal sealed class RenderPassCtx
 
     public void ActivateDepthMode()
     {
-        _ctx.SetDepthMode();
+        VisualRenderContext.Instance.SetDepthMode();
         _uniformUploader.UploadViewUniforms();
     }
 
     public void RestoreMode()
     {
-        _ctx.ResetPassMode();
+        VisualRenderContext.Instance.ResetPassMode();
         _uniformUploader.UploadViewUniforms();
     }
 

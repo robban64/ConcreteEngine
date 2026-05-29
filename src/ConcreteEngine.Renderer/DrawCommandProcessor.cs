@@ -2,10 +2,12 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Passes;
+using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer;
 
@@ -14,31 +16,30 @@ internal sealed class DrawCommandProcessor
     private readonly GfxCommands _gfxCmd;
     private readonly GfxDraw _gfxDraw;
     private readonly UniformUploader _buffers;
-    private readonly DrawStateContext _ctx;
+    private readonly RenderShaderRegistry _shaderRegistry;
+
+    public TextureId DepthTexture { get; private set; }
 
     private int _lastAnimationSlot;
 
-    internal DrawCommandProcessor(
-        DrawStateContext ctx,
-        DrawStateContextPayload ctxPayload,
-        UniformUploader buffers)
+    private static PassStateMode PassMode => VisualRenderContext.Instance.PassMode;
+
+    internal DrawCommandProcessor(GfxContext gfx, RenderRegistry renderRegistry,UniformUploader buffers)
     {
-        _ctx = ctx;
         _buffers = buffers;
-        _gfxCmd = ctxPayload.Gfx.Commands;
-        _gfxDraw = ctxPayload.Gfx.Draw;
+        _gfxCmd = gfx.Commands;
+        _gfxDraw = gfx.Draw;
+        _shaderRegistry = renderRegistry.ShaderRegistry;
+        
+        var depthFbo = renderRegistry.FboRegistry.GetByKey(PassTags<ShadowPassTag>.FboKey(FboVariant.V0));
+        DepthTexture = depthFbo!.Attachments.DepthTexture;
     }
-
-
-    public void Initialize()
-    {
-    }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Prepare()
     {
         _lastAnimationSlot = 0;
-        _ctx.ResetState();
     }
 
 
@@ -46,17 +47,15 @@ internal sealed class DrawCommandProcessor
     public void PrepareDrawPass()
     {
         _lastAnimationSlot = 0;
-        _ctx.ResetMaterialState();
-        if (_ctx.IsDepth)
-        {
-            _gfxCmd.UseShader(_ctx.CoreShaders.DepthShader);
-            _gfxCmd.UnbindAllTextures();
-        }
+        if (PassMode != PassStateMode.Depth) return;
+
+        _gfxCmd.UseShader(_shaderRegistry.CoreShaders.DepthShader);
+        _gfxCmd.UnbindAllTextures();
     }
 
     public void DrawMesh(DrawCommand cmd, int submitIdx)
     {
-        if (_ctx.PrevMaterial != cmd.MaterialId) BindMaterial(cmd.MaterialId);
+        if (_buffers.PrevMaterial != cmd.MaterialId) BindMaterial(cmd.MaterialId);
 
         if (cmd.AnimationSlot > 0 && cmd.AnimationSlot != _lastAnimationSlot)
         {
@@ -70,7 +69,7 @@ internal sealed class DrawCommandProcessor
 
     public void DrawSpecialResolveMesh(DrawCommand cmd, DrawCommandResolver resolver, byte resolverSlot, int submitIdx)
     {
-        if (!_ctx.IsDepth)
+        if (PassMode != PassStateMode.Depth)
         {
             BindAndResolvedOverride(cmd, resolver, resolverSlot);
         }
@@ -85,12 +84,12 @@ internal sealed class DrawCommandProcessor
 
         if (!materialMeta.PassState.IsEmpty) BindPassState(in materialMeta);
 
-        if (_ctx.PassMode == PassStateMode.Main)
+        if (PassMode == PassStateMode.Main)
         {
             _gfxCmd.UseShader(materialMeta.ShaderId);
             if (texSlots.Length > 0) BindTextureSlots(texSlots);
         }
-        else if (_ctx.PassMode == PassStateMode.Depth && texSlots.Length > 0)
+        else if (PassMode == PassStateMode.Depth && texSlots.Length > 0)
         {
             BindDepthTextureSlots(texSlots);
         }
@@ -101,7 +100,7 @@ internal sealed class DrawCommandProcessor
         for (var i = 0; i < slots.Length; i++)
         {
             var value = slots[i];
-            var texture = value.SlotKind != TextureUsage.Shadowmap ? value.Texture : _ctx.DepthTexture;
+            var texture = value.SlotKind != TextureUsage.Shadowmap ? value.Texture : DepthTexture;
             _gfxCmd.BindTexture(texture, i);
         }
     }
@@ -141,11 +140,11 @@ internal sealed class DrawCommandProcessor
         switch (resolver)
         {
             case DrawCommandResolver.Highlight:
-                shader = _ctx.CoreShaders.HighlightShader;
+                shader = _shaderRegistry.CoreShaders.HighlightShader;
                 break;
             case DrawCommandResolver.BoundingVolume:
                 isAnimated = false;
-                shader = _ctx.CoreShaders.BoundingBoxShader;
+                shader = _shaderRegistry.CoreShaders.BoundingBoxShader;
                 break;
             case DrawCommandResolver.Wireframe:
             default:

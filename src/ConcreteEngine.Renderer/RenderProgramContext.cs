@@ -18,6 +18,8 @@ internal sealed class VisualRenderContext
 
     public static void Make(UniformUploaderCallbacks callbacks) => Instance = new VisualRenderContext(callbacks);
 
+    public PassStateMode PassMode { get; private set; }
+
     public Size2D OutputSize;
     public TextureId OutputTexture;
 
@@ -29,6 +31,11 @@ internal sealed class VisualRenderContext
         UniformCallbacks = callbacks;
         Instance = this;
     }
+    public bool IsMain => PassMode == PassStateMode.Main;
+    public bool IsDepth => PassMode == PassStateMode.Depth;
+    public void SetDepthMode() => PassMode = PassStateMode.Depth;
+    public void ResetPassMode() => PassMode = PassStateMode.Main;
+
 }
 
 internal sealed class RenderProgramContext

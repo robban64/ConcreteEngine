@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
@@ -14,10 +15,11 @@ internal sealed unsafe class UniformUploader
     private readonly RenderUbo _materialUbo;
     private readonly RenderUbo _animationUbo;
 
-    private readonly DrawStateContext _ctx;
     private readonly GfxBuffers _gfxBuffers;
     private readonly MaterialBuffer _materialBuffer;
     private readonly EffectBuffer _effectBuffer;
+    
+    public MaterialId PrevMaterial { get; private set; } = new(-1);
 
     private static VisualRenderContext RenderContext
     {
@@ -25,15 +27,14 @@ internal sealed unsafe class UniformUploader
         get => VisualRenderContext.Instance;
     }
 
-    internal UniformUploader(DrawStateContext ctx, DrawStateContextPayload ctxPayload, RenderUploadBuffers buffers)
+    internal UniformUploader( GfxContext gfx, RenderRegistry renderRegistry, RenderUploadBuffers buffers)
     {
-        _ctx = ctx;
         _materialBuffer = buffers.Materials;
         _effectBuffer = buffers.Effects;
 
-        _gfxBuffers = ctxPayload.Gfx.Buffers;
+        _gfxBuffers = gfx.Buffers;
 
-        var registry = ctxPayload.Registry.UboRegistry;
+        var registry = renderRegistry.UboRegistry;
 
         _drawUbo = registry.GetRenderUbo<DrawObjectUniform>();
         _materialUbo = registry.GetRenderUbo<MaterialUniform>();
@@ -46,11 +47,13 @@ internal sealed unsafe class UniformUploader
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void ResetCursor()
+    internal void Prepare()
     {
         _drawUbo.ResetCursor();
         _materialUbo.ResetCursor();
         _animationUbo.ResetCursor();
+        
+        PrevMaterial = default;
     }
 
     internal void EnsureDrawBuffers(uint drawCapacity, uint materialCapacity)
@@ -70,12 +73,12 @@ internal sealed unsafe class UniformUploader
 
     internal ReadOnlySpan<TextureBinding> ResolveMaterial(MaterialId materialId, out RenderMaterialMeta materialMeta)
     {
-        if (_ctx.ResolveMaterialBind(materialId))
+        if (PrevMaterial != materialId)
         {
+            PrevMaterial = materialId;
             BindMaterialObject(materialId);
             return _materialBuffer.GetMetaAndSlots(materialId, out materialMeta);
         }
-
         materialMeta = default;
         return ReadOnlySpan<TextureBinding>.Empty;
     }
@@ -134,7 +137,7 @@ internal sealed unsafe class UniformUploader
     {
         var ctx = GetUploadContext();
         var callbacks = RenderContext.UniformCallbacks;
-        if (_ctx.IsDepth)
+        if (RenderContext.IsDepth)
         {
             callbacks.UploadShadow(in ctx);
             callbacks.UploadLightView(in ctx);

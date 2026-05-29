@@ -82,10 +82,10 @@ internal sealed class RenderPassCtx
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ContinueFromRenderPass(FrameBufferId fboId, GfxPassState states)
+    public void ContinueFromRenderPass(FrameBufferId fboId, GfxStateFlags passFlags)
     {
         GfxCmd.BindFramebuffer(fboId);
-        GfxCmd.ApplyPassState(states);
+        GfxCmd.ApplyPassState(passFlags);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

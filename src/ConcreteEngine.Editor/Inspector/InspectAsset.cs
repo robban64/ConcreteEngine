@@ -20,7 +20,7 @@ internal class InspectMaterial : InspectAsset
 {
     public override Material Asset { get; }
     public GfxPassFunctions PassFunctions => Asset.Pipeline.PassFunctions;
-    public GfxPassState PassState => Asset.Pipeline.PassState;
+    public GfxDrawState DrawState => Asset.Pipeline.DrawState;
 
     internal override Icons GetIcon() => AssetIcons.GetMaterialIcon(Asset);
 

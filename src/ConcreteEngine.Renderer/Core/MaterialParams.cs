@@ -20,42 +20,42 @@ public struct MaterialRenderProps(bool hasTransparency, bool hasNormal, bool has
     public bool HasShadowMap = hasShadowMap;
 }
 
-public struct MaterialPipeline(GfxPassState passState, GfxPassFunctions passFunctions) : IEquatable<MaterialPipeline>
+public struct MaterialPipeline(GfxDrawState drawState, GfxPassFunctions passFunctions) : IEquatable<MaterialPipeline>
 {
-    public GfxPassState PassState = passState;
+    public GfxDrawState DrawState = drawState;
     public GfxPassFunctions PassFunctions = passFunctions;
 
-    public static MaterialPipeline MakeModel(GfxStateFlags enabled = 0, GfxStateFlags disabled = 0)
+    public static MaterialPipeline MakeModel(GfxDrawFlags enabled = 0, GfxDrawFlags disabled = 0)
     {
         return new MaterialPipeline
         {
-            PassState = GfxPassState.Set(
-                GfxStateFlags.DepthTest | GfxStateFlags.DepthWrite | GfxStateFlags.Cull | enabled,
-                 GfxStateFlags.Blend | GfxStateFlags.Ac2 | disabled
+            DrawState = GfxDrawState.Set(
+                GfxDrawFlags.DepthTest | GfxDrawFlags.DepthWrite | GfxDrawFlags.Cull | enabled,
+                 GfxDrawFlags.Blend | GfxDrawFlags.Ac2 | disabled
             ),
             PassFunctions = new GfxPassFunctions(BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None)
         };
     }
     /*
-    public static MaterialPipeline MakeTransparentModel(GfxStateFlags enabled = 0, GfxStateFlags disabled = 0)
+    public static MaterialPipeline MakeTransparentModel(GfxDrawFlags enabled = 0, GfxDrawFlags disabled = 0)
     {
         return new MaterialPipeline
         {
             PassState = GfxPassState.Set(
-                GfxStateFlags.DepthTest | GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage | enabled,
-                 GfxStateFlags.Cull | GfxStateFlags.Blend | disabled
+                GfxDrawFlags.DepthTest | GfxDrawFlags.DepthWrite | GfxDrawFlags.SampleAlphaCoverage | enabled,
+                 GfxDrawFlags.Cull | GfxDrawFlags.Blend | disabled
             ),
             PassFunctions = new GfxPassFunctions(Depth: DepthMode.Lequal)
         };
     }
     
-    public static MaterialPipeline MakeTransparentEffect(GfxStateFlags enabled = 0, GfxStateFlags disabled = 0)
+    public static MaterialPipeline MakeTransparentEffect(GfxDrawFlags enabled = 0, GfxDrawFlags disabled = 0)
     {
         return new MaterialPipeline
         {
             PassState = GfxPassState.Set(
-                GfxStateFlags.DepthTest  | GfxStateFlags.SampleAlphaCoverage | enabled,
-                GfxStateFlags.DepthWrite |  GfxStateFlags.Blend | disabled
+                GfxDrawFlags.DepthTest  | GfxDrawFlags.SampleAlphaCoverage | enabled,
+                GfxDrawFlags.DepthWrite |  GfxDrawFlags.Blend | disabled
             ),
             PassFunctions = new GfxPassFunctions(Depth: DepthMode.Lequal)
         };
@@ -66,8 +66,8 @@ public struct MaterialPipeline(GfxPassState passState, GfxPassFunctions passFunc
     public static bool operator !=(MaterialPipeline left, MaterialPipeline right) => !left.Equals(right);
 
     public bool Equals(MaterialPipeline other) =>
-        PassState.Equals(other.PassState) && PassFunctions.Equals(other.PassFunctions);
+        DrawState.Equals(other.DrawState) && PassFunctions.Equals(other.PassFunctions);
 
     public override bool Equals(object? obj) => obj is MaterialPipeline other && Equals(other);
-    public override readonly int GetHashCode() => HashCode.Combine(PassState, PassFunctions);
+    public override readonly int GetHashCode() => HashCode.Combine(DrawState, PassFunctions);
 }

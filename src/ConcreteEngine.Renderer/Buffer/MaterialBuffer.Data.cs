@@ -23,7 +23,7 @@ public readonly struct RenderMaterialPayload(
     [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void WriteTo(scoped ref RenderMaterialMeta meta, scoped ref MaterialUniform record)
     {
-        meta = new RenderMaterialMeta(MaterialId, ShaderId, Pipeline.PassState, Pipeline.PassFunctions);
+        meta = new RenderMaterialMeta(MaterialId, ShaderId, Pipeline.DrawState, Pipeline.PassFunctions);
 
         float transparency = Props.HasTransparency ? 1f : 0f;
         float normal = Props.HasNormal ? 1f : 0f;
@@ -39,10 +39,10 @@ public readonly struct RenderMaterialPayload(
 public readonly struct RenderMaterialMeta(
     MaterialId materialId,
     ShaderId shaderId,
-    GfxPassState passState,
+    GfxDrawState drawState,
     GfxPassFunctions passFunctions)
 {
-    public readonly GfxPassState PassState = passState;
+    public readonly GfxDrawState DrawState = drawState;
     public readonly GfxPassFunctions PassFunctions = passFunctions;
     public readonly ShaderId ShaderId = shaderId;
     public readonly MaterialId MaterialId = materialId;

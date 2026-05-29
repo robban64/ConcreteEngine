@@ -52,8 +52,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
         var mat = materialStore.CreateMaterial("EmptyMat", "EmptyMat1");
         mat.Pipeline = new MaterialPipeline
         {
-            PassState = GfxPassState.Set(GfxStateFlags.Blend,
-                GfxStateFlags.DepthWrite | GfxStateFlags.Ac2),
+            DrawState = GfxDrawState.Set(GfxDrawFlags.Blend, GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2),
             PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
 

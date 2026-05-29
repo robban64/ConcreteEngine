@@ -82,7 +82,7 @@ internal sealed class DrawCommandProcessor
     {
         var texSlots = _buffers.ResolveMaterial(materialId, out var materialMeta);
 
-        if (!materialMeta.PassState.IsEmpty) BindPassState(in materialMeta);
+        if (!materialMeta.DrawState.IsEmpty()) BindPassState(in materialMeta);
 
         if (PassMode == PassStateMode.Main)
         {
@@ -122,8 +122,8 @@ internal sealed class DrawCommandProcessor
 
     private void BindPassState(in RenderMaterialMeta material)
     {
-        _gfxCmd.ApplyState(!material.PassState.IsEmpty ? material.PassState : _gfxCmd.PassState);
-        _gfxCmd.ApplyStateFunctions(material.PassFunctions != default ? material.PassFunctions : _gfxCmd.PassFunctions);
+        _gfxCmd.ApplyState(material.DrawState);
+        _gfxCmd.ApplyStateFunctions(material.PassFunctions);
     }
 
     // allow for more flexible state management later on

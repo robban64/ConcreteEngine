@@ -78,10 +78,10 @@ public sealed class Material : AssetObject
     }
 
     public void SetPassFunction(GfxPassFunctions passFunctions) =>
-        Pipeline = new MaterialPipeline(Pipeline.PassState, passFunctions);
+        Pipeline = new MaterialPipeline(Pipeline.DrawState, passFunctions);
 
-    public void SetPassState(GfxPassState passState) =>
-        Pipeline = new MaterialPipeline(passState, Pipeline.PassFunctions);
+    public void SetPassState(GfxDrawState drawState) =>
+        Pipeline = new MaterialPipeline(drawState, Pipeline.PassFunctions);
 
 
     public MaterialPipeline Pipeline

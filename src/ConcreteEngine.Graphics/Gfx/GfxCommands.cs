@@ -30,7 +30,7 @@ public sealed class GfxCommands
     private FrameBufferId _boundFboId;
     private ShaderId _boundShaderId;
 
-    public GfxPassState PassState;
+    public GfxStateFlags PassState;
     public GfxPassFunctions PassFunctions;
 
 
@@ -64,11 +64,11 @@ public sealed class GfxCommands
         Array.Clear(_boundTextures);
     }
 
-    public void BeginScreenPass(GfxPassClear passClear, GfxPassState states)
+    public void BeginScreenPass(GfxPassClear passClear, GfxStateFlags stateFlags)
     {
         BindFramebuffer(default);
         SetViewport(_activeOutputSize);
-        ApplyPassState(states);
+        ApplyPassState(stateFlags);
 
         Clear(passClear);
 
@@ -76,7 +76,7 @@ public sealed class GfxCommands
     }
 
 
-    public void BeginRenderPass(FrameBufferId fboId, GfxPassClear passClear, GfxPassState states)
+    public void BeginRenderPass(FrameBufferId fboId, GfxPassClear passClear, GfxStateFlags stateFlags)
     {
         ArgumentOutOfRangeException.ThrowIfZero(fboId.Id, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState("FBO is already bound.", fboId);
@@ -85,7 +85,7 @@ public sealed class GfxCommands
 
         BindFramebuffer(fboId);
         SetViewport(size);
-        ApplyPassState(states);
+        ApplyPassState(stateFlags);
         Clear(passClear);
 
         _activeOutputSize = size;
@@ -135,10 +135,8 @@ public sealed class GfxCommands
         }
     }
 
-    public void ApplyPassState(GfxPassState state)
+    public void ApplyPassState(GfxStateFlags e)
     {
-        var e = state.Enabled;
-
         _cmdStates.ColorMask((e & ColorMask) != 0);
         _cmdStates.ToggleScissorTest((e & Scissor) != 0);
         _cmdStates.ToggleCullFace((e & Cull) != 0 );
@@ -149,16 +147,16 @@ public sealed class GfxCommands
         _cmdStates.TogglePolygonOffset((e & PolygonOffset) != 0 );
         _cmdStates.ToggleSampleAlphaCoverage((e & Ac2) != 0 );
 
-        PassState = state;
+        PassState = e;
     }
 
-    public void ApplyState(GfxPassState state)
+    public void ApplyState(GfxDrawState state)
     {
-        var d = state.Defined;
+        var d = (GfxStateFlags)state.Defined;
         if (d == 0) return;
-        var e = state.Enabled;
+        var e = (GfxStateFlags)state.Enabled;
 
-        var p = PassState.Enabled;
+        var p = PassState;
         _cmdStates.ToggleCullFace((d & Cull) != 0 ? (e & Cull) != 0 : (p & Cull) != 0);
         _cmdStates.ToggleDepthTest((d & DepthTest) != 0 ? (e & DepthTest) != 0 : (p & DepthTest) != 0);
         _cmdStates.ToggleDepthMask((d & DepthWrite) != 0 ? (e & DepthWrite) != 0 : (p & DepthWrite) != 0);

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
@@ -120,28 +121,10 @@ internal sealed class DrawCommandProcessor
         _gfxCmd.BindTexture(GfxTextures.Fallback.AlphaMaskId, 1);
     }
 
-    private void BindPassState(in RenderMaterialMeta materialMeta)
+    private void BindPassState(in RenderMaterialMeta material)
     {
-        var ctx = _ctx;
-        if (!materialMeta.PassState.IsEmpty)
-        {
-            _gfxCmd.ApplyState(ctx.OverridePassState = materialMeta.PassState);
-        }
-        else if (!ctx.OverridePassState.IsEmpty)
-        {
-            ctx.OverridePassState = default;
-            _gfxCmd.ApplyState(ctx.PassState);
-        }
-
-        if (materialMeta.PassFunctions != default)
-        {
-            _gfxCmd.ApplyStateFunctions(ctx.OverridePassFunctions = materialMeta.PassFunctions);
-        }
-        else if (ctx.OverridePassFunctions != default)
-        {
-            ctx.OverridePassFunctions = default;
-            _gfxCmd.ApplyStateFunctions(ctx.PassFunctions);
-        }
+        _gfxCmd.ApplyState(!material.PassState.IsEmpty ? material.PassState : _ctx.PassState);
+        _gfxCmd.ApplyStateFunctions(material.PassFunctions != default ? material.PassFunctions : _ctx.PassFunctions);
     }
 
     // allow for more flexible state management later on

@@ -49,18 +49,19 @@ internal static class GlEnumExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static EnableCap ToGlEnableCap(this GfxStateFlags flag)
+    public static GLEnum ToGlEnableCap(this GfxStateFlags flag)
     {
         return flag switch
         {
-            GfxStateFlags.DepthTest => EnableCap.DepthTest,
-            GfxStateFlags.Cull => EnableCap.CullFace,
-            GfxStateFlags.Blend => EnableCap.Blend,
-            GfxStateFlags.Scissor => EnableCap.ScissorTest,
-            GfxStateFlags.FramebufferSrgb => EnableCap.FramebufferSrgb,
-            GfxStateFlags.PolygonOffset => EnableCap.PolygonOffsetFill,
-            GfxStateFlags.SampleAlphaCoverage => EnableCap.SampleAlphaToCoverage,
-            _ => Throwers.Unreachable<EnableCap>(nameof(flag))
+            GfxStateFlags.ColorMask or GfxStateFlags.DepthWrite => GLEnum.None,
+            GfxStateFlags.DepthTest => GLEnum.DepthTest,
+            GfxStateFlags.Cull => GLEnum.CullFace,
+            GfxStateFlags.Blend => GLEnum.Blend,
+            GfxStateFlags.Scissor => GLEnum.ScissorTest,
+            GfxStateFlags.FramebufferSrgb => GLEnum.FramebufferSrgb,
+            GfxStateFlags.PolygonOffset => GLEnum.PolygonOffsetFill,
+            GfxStateFlags.SampleAlphaCoverage => GLEnum.SampleAlphaToCoverage,
+            _ => Throwers.Unreachable<GLEnum>(nameof(flag))
         };
     }
 

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Configuration;
@@ -86,7 +87,9 @@ public sealed class RenderProgram
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ExecutePass(PassId passId)
     {
+        DurationProfileTimer.Default.Begin();
         var passResult = _passPipeline.ApplyPass();
+        DurationProfileTimer.Default.EndPrint();
 
         switch (passResult.Op)
         {

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Error;
@@ -15,7 +16,7 @@ public sealed class GfxCommands
     private static Size2D _outputSize;
     private static Size2D _activeOutputSize;
 
-    private readonly GlStates _states;
+    private readonly GlStates _cmdStates;
     private readonly GlFrameBuffers _frameBuffers;
 
     private readonly FboStore _fboStore;
@@ -35,7 +36,7 @@ public sealed class GfxCommands
 
     internal GfxCommands(GfxContextInternal ctx)
     {
-        _states = ctx.Driver.States;
+        _cmdStates = ctx.Driver.States;
         _frameBuffers = ctx.Driver.FrameBuffers;
 
         _fboStore = GfxRegistry.GetGfxStore<FrameBufferMeta>();
@@ -51,6 +52,8 @@ public sealed class GfxCommands
     {
         _outputSize = args.OutputSize;
         _activeOutputSize = args.OutputSize;
+        _activeFlags = 0;
+        _passFunctions = default;
     }
 
     internal void EndFrame()
@@ -58,7 +61,6 @@ public sealed class GfxCommands
         UseShader(default);
         BindFramebuffer(default);
 
-        //_stateFunc = new GfxPassStateFunc(BlendMode.Unset, CullMode.Unset, DepthMode.Unset);
         Array.Clear(_boundTextures);
     }
 
@@ -66,7 +68,7 @@ public sealed class GfxCommands
     {
         BindFramebuffer(default);
         SetViewport(_activeOutputSize);
-        ApplyState(states);
+        ApplyPassState(states);
 
         Clear(passClear);
 
@@ -83,7 +85,7 @@ public sealed class GfxCommands
 
         BindFramebuffer(fboId);
         SetViewport(size);
-        ApplyState(states);
+        ApplyPassState(states);
         Clear(passClear);
 
         _activeOutputSize = size;
@@ -122,15 +124,28 @@ public sealed class GfxCommands
     {
         switch (passClear.ClearBuffer)
         {
-            case ClearBufferFlag.Color: _states.ClearColor(passClear.ClearColor); break;
-            case ClearBufferFlag.Depth: _states.ClearBuffer(passClear.ClearBuffer); break;
+            case ClearBufferFlag.Color: _cmdStates.ClearColor(passClear.ClearColor); break;
+            case ClearBufferFlag.Depth: _cmdStates.ClearBuffer(passClear.ClearBuffer); break;
             case ClearBufferFlag.ColorAndDepth:
-                _states.ClearColor(passClear.ClearColor);
-                _states.ClearBuffer(passClear.ClearBuffer);
+                _cmdStates.ClearColor(passClear.ClearColor);
+                _cmdStates.ClearBuffer(passClear.ClearBuffer);
                 break;
         }
     }
 
+    public void ApplyPassState(GfxPassState state)
+    {
+        var e = state.Enabled;
+
+        _cmdStates.ToggleDepthMask((e & GfxStateFlags.DepthWrite) != 0);
+        _cmdStates.ColorMask((e & GfxStateFlags.ColorMask) != 0);
+        foreach (var flag in EnumCache<GfxStateFlags>.Values.AsSpan(3))
+        {
+            _cmdStates.ToggleStateFlag(flag, (e & flag) != 0);
+        }
+
+        _activeFlags = state.Enabled;
+    }
 
     public void ApplyState(GfxPassState state)
     {
@@ -138,28 +153,16 @@ public sealed class GfxCommands
         if (d == 0) return;
         var e = state.Enabled;
 
-        var states = _states;
+        var activeFlags = _activeFlags;
 
-        if ((d & GfxStateFlags.Scissor) != 0)
-            states.ToggleScissorTest((e & GfxStateFlags.Scissor) != 0);
-        if ((d & GfxStateFlags.Cull) != 0)
-            states.ToggleCullFace((e & GfxStateFlags.Cull) != 0);
-        if ((d & GfxStateFlags.DepthTest) != 0)
-            states.ToggleDepthTest((e & GfxStateFlags.DepthTest) != 0);
-        if ((d & GfxStateFlags.DepthWrite) != 0)
-            states.ToggleDepthMask((e & GfxStateFlags.DepthWrite) != 0);
-        if ((d & GfxStateFlags.Blend) != 0)
-            states.ToggleBlendState((e & GfxStateFlags.Blend) != 0);
-        if ((d & GfxStateFlags.FramebufferSrgb) != 0)
-            states.ToggleFrameBufferSrgb((e & GfxStateFlags.FramebufferSrgb) != 0);
-        if ((d & GfxStateFlags.ColorMask) != 0)
-            states.ColorMask((e & GfxStateFlags.ColorMask) != 0);
-        if ((d & GfxStateFlags.PolygonOffset) != 0)
-            states.TogglePolygonOffset((e & GfxStateFlags.PolygonOffset) != 0);
-        if ((d & GfxStateFlags.SampleAlphaCoverage) != 0)
-            states.ToggleSampleAlphaCoverage((e & GfxStateFlags.SampleAlphaCoverage) != 0);
+        _cmdStates.ToggleDepthMask((d & GfxStateFlags.DepthWrite) != 0 ? (e & GfxStateFlags.DepthWrite) != 0 : (activeFlags & GfxStateFlags.DepthWrite) != 0);
+        _cmdStates.ColorMask((d & GfxStateFlags.ColorMask) != 0 ? (e & GfxStateFlags.ColorMask) != 0 : (activeFlags & GfxStateFlags.ColorMask) != 0);
 
-        _activeFlags = GfxPassState.Merge(_activeFlags, state);
+        foreach (var flag in EnumCache<GfxStateFlags>.Values.AsSpan(3))
+        {
+            var enabled = (d & flag) != 0 ? (e & flag) != 0 : (activeFlags & flag) != 0;
+            _cmdStates.ToggleStateFlag(flag, enabled);
+        }
     }
 
     public void ApplyStateFunctions(GfxPassFunctions cmdFunc)
@@ -176,7 +179,7 @@ public sealed class GfxCommands
     public void SetViewport(Size2D viewportSize)
     {
         _activeOutputSize = viewportSize;
-        _states.SetViewport(viewportSize);
+        _cmdStates.SetViewport(viewportSize);
     }
 
 
@@ -186,7 +189,7 @@ public sealed class GfxCommands
         if (_passFunctions.PolygonOffset != PolygonOffsetLevel.Unset && _passFunctions.PolygonOffset == polygon) return;
         var (factor, units) = polygon.ToFactorUnits();
         _passFunctions.PolygonOffset = polygon;
-        _states.SetPolygonOffset(factor, units);
+        _cmdStates.SetPolygonOffset(factor, units);
     }
 
 
@@ -195,7 +198,7 @@ public sealed class GfxCommands
     {
         if (_passFunctions.Blend != BlendMode.Unset && _passFunctions.Blend == blendMode) return;
         _passFunctions.Blend = blendMode;
-        _states.SetBlendMode(blendMode);
+        _cmdStates.SetBlendMode(blendMode);
     }
 
 
@@ -204,7 +207,7 @@ public sealed class GfxCommands
     {
         if (_passFunctions.Depth != DepthMode.Unset && _passFunctions.Depth == depthMode) return;
         _passFunctions.Depth = depthMode;
-        _states.SetDepthMode(depthMode);
+        _cmdStates.SetDepthMode(depthMode);
     }
 
 
@@ -213,7 +216,7 @@ public sealed class GfxCommands
     {
         if (_passFunctions.Cull != CullMode.Unset && _passFunctions.Cull == cullMode) return;
         _passFunctions.Cull = cullMode;
-        _states.SetCullMode(cullMode);
+        _cmdStates.SetCullMode(cullMode);
     }
 
     public void BindFramebuffer(FrameBufferId id)
@@ -221,12 +224,12 @@ public sealed class GfxCommands
         if (_boundFboId == id) return;
         if (id == default)
         {
-            _states.UnbindFrameBuffer();
+            _cmdStates.UnbindFrameBuffer();
             _boundFboId = default;
             return;
         }
 
-        _states.BindFrameBuffer(_fboStore.GetHandle(id));
+        _cmdStates.BindFrameBuffer(_fboStore.GetHandle(id));
         _boundFboId = id;
     }
 
@@ -239,19 +242,19 @@ public sealed class GfxCommands
 
         if (boundTexture == 0)
         {
-            _states.UnbindTextureSlot(slot);
+            _cmdStates.UnbindTextureSlot(slot);
             return;
         }
 
         var refHandle = _textureStore.GetHandle(boundTexture);
-        _states.BindTexture(refHandle, slot);
+        _cmdStates.BindTexture(refHandle, slot);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindAllTextures()
     {
         Array.Clear(_boundTextures);
-        _states.UnbindAllTextures();
+        _cmdStates.UnbindAllTextures();
     }
 
 
@@ -263,12 +266,12 @@ public sealed class GfxCommands
         if (id == default)
         {
             _boundShaderId = default;
-            _states.UnbindShader();
+            _cmdStates.UnbindShader();
             return;
         }
 
         var handle = _shaderStore.GetHandle(id);
-        _states.UseShader(handle);
+        _cmdStates.UseShader(handle);
         _boundShaderId = id;
     }
 }

@@ -11,14 +11,12 @@ public struct PassMutationState
     private const byte HasStateBit = 1 << 2;
     private const byte HasFboBit = 1 << 3;
     private const byte HasShaderBit = 1 << 4;
-    private const byte HasSamplesBit = 1 << 5;
 
 
     public FrameBufferId TargetFboId;
     public ShaderId ShaderId;
     public GfxPassClear ClearColor;
     public GfxPassState PassState;
-    public byte Samples;
 
     private byte _mask;
 
@@ -35,7 +33,6 @@ public struct PassMutationState
     public readonly bool HasPassState => (_mask & HasStateBit) != 0;
     public readonly bool HasTarget => (_mask & HasFboBit) != 0;
     public readonly bool HasShader => (_mask & HasShaderBit) != 0;
-    public readonly bool HasSample => (_mask & HasSamplesBit) != 0;
 
     public bool LinearFilter
     {
@@ -61,11 +58,6 @@ public struct PassMutationState
         _mask |= HasFboBit;
     }
 
-    public void WithSamples(byte count)
-    {
-        Samples = count;
-        _mask |= HasSamplesBit;
-    }
 }
 
 public readonly struct RenderPassState(
@@ -73,15 +65,13 @@ public readonly struct RenderPassState(
     GfxPassState passState,
     ShaderId shaderId = default,
     FrameBufferId targetFboId = default,
-    int samples = 0,
     bool linearFilter = false
 )
 {
+    public readonly GfxPassClear PassClear = passClear;
+    public readonly GfxPassState PassState = passState;
     public readonly ShaderId ShaderId = shaderId;
     public readonly FrameBufferId TargetFboId = targetFboId;
-    public readonly GfxPassState PassState = passState;
-    public readonly GfxPassClear PassClear = passClear;
-    public readonly byte Samples = (byte)samples;
     public readonly bool LinearFilter = linearFilter;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -90,14 +80,12 @@ public readonly struct RenderPassState(
             passState: m.HasPassState ? m.PassState : PassState,
             targetFboId: m.HasTarget ? m.TargetFboId : TargetFboId,
             shaderId: m.HasShader ? m.ShaderId : ShaderId,
-            samples: m.HasSample ? m.Samples : Samples,
             linearFilter: m.HasLinearFilter ? m.LinearFilter : LinearFilter
         );
 
 
-    public static RenderPassState MakeSceneMsaa(int samples) =>
-        new(passClear: GfxPassClear.MakeColorDepthClear(Color4.CornflowerBlue), passState: GfxPassState.MakeScene(),
-            samples: samples);
+    public static RenderPassState MakeSceneMsaa() =>
+        new(passClear: GfxPassClear.MakeColorDepthClear(Color4.CornflowerBlue), passState: GfxPassState.MakeScene());
 
     public static RenderPassState MakeResolve() =>
         new(passClear: GfxPassClear.MakeNoClear(), passState: GfxPassState.MakeOff(), linearFilter: true);
@@ -113,6 +101,6 @@ public readonly struct RenderPassState(
     public static RenderPassState MakeShadow() =>
         new(passClear: GfxPassClear.MakeDepthClear(), passState: GfxPassState.MakeShadow());
 
-    public static RenderPassState MakeSceneEffect(int samples) =>
-        new(passClear: GfxPassClear.MakeNoClear(), passState: GfxPassState.MakeSceneEffect(), samples: samples);
+    public static RenderPassState MakeSceneEffect() =>
+        new(passClear: GfxPassClear.MakeNoClear(), passState: GfxPassState.MakeSceneEffect());
 }

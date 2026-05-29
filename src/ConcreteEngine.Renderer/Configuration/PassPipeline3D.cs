@@ -26,7 +26,7 @@ internal static class PassPipeline3D
 
         // Scene 
         // Pass 1: draw scene 
-        passPipeline.Register<ScenePassTag>(FboVariant.V0, new PassId(1), PassOp.Draw, RenderPassState.MakeSceneMsaa(4))
+        passPipeline.Register<ScenePassTag>(FboVariant.V0, new PassId(1), PassOp.Draw, RenderPassState.MakeSceneMsaa())
             .OnPassBegin(static (ctx, in state) =>
             {
                 ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.PassClear, state.PassState);
@@ -36,7 +36,7 @@ internal static class PassPipeline3D
 
         // Pass 2: draw scene effects
         passPipeline.RegisterContinue<ScenePassTag>(FboVariant.V0, new PassId(2), PassOp.Draw,
-                RenderPassState.MakeSceneEffect(4))
+                RenderPassState.MakeSceneEffect())
             .OnPassBegin(static (ctx, in state) =>
             {
                 ctx.Ops.ContinueFromRenderPass(ctx.Target.FboId, state.PassState);

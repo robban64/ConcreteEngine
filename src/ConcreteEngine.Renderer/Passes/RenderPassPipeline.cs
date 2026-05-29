@@ -12,7 +12,6 @@ internal sealed class RenderPassPipeline
     private readonly List<RenderPassEntry> _entries = new(8);
 
     private RenderPassCtx _ctx = null!;
-    private PassCommandQueue _cmdQueue = null!;
 
     private int _activePassIndex;
 
@@ -25,8 +24,8 @@ internal sealed class RenderPassPipeline
 
     internal void Initialize(RenderProgramContext ctx)
     {
-        _cmdQueue = new PassCommandQueue();
-        _ctx = new RenderPassCtx(ctx.CommandPipeline.DrawStateOps, _cmdQueue);
+        _ctx = new RenderPassCtx(ctx.CommandPipeline.DrawContext, ctx.Gfx, ctx.CommandPipeline.UniformUploader);
+
     }
 
 
@@ -71,7 +70,7 @@ internal sealed class RenderPassPipeline
     internal void Prepare()
     {
         _activePassIndex = 0;
-        _cmdQueue.Prepare();
+        _ctx.PassQueue.Prepare();
     }
 
     internal bool NextPass(out PreparePassResult result)
@@ -98,8 +97,8 @@ internal sealed class RenderPassPipeline
         else
             kind = NextPassAction.Skip;
 
-        _cmdQueue.DequeueMutationTo(passEntry);
-        _cmdQueue.DequeuePassSources(passEntry);
+        _ctx.PassQueue.DequeueMutationTo(passEntry);
+        _ctx.PassQueue.DequeuePassSources(passEntry);
 
         result = new PreparePassResult(passEntry.PassKey.Pass, kind);
         return true;

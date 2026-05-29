@@ -8,19 +8,18 @@ namespace ConcreteEngine.Renderer.Registry;
 
 public sealed class RenderShaderRegistry
 {
+    private static CoreShaders _coreShaders;
+
     private int _count;
-    private CoreShaders _coreShaders;
 
     private RenderShader[] _shaderRegistry = [];
 
-    private readonly GfxShaders _gfxShaders;
 
-    internal RenderShaderRegistry(GfxContext gfx)
+    internal RenderShaderRegistry()
     {
-        _gfxShaders = gfx.Shaders;
     }
 
-    public ref readonly CoreShaders CoreShaders => ref _coreShaders;
+    public static ref readonly CoreShaders CoreShaders => ref _coreShaders;
 
     public RenderShader GetRenderShader(ShaderId shaderId) => _shaderRegistry[shaderId - 1];
 

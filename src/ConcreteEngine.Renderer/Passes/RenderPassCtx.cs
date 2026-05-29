@@ -71,13 +71,13 @@ internal sealed class RenderPassCtx
 
     public void ActivateDepthMode()
     {
-        VisualRenderContext.Instance.SetDepthMode();
+        RenderContext.Instance.SetDepthMode();
         _uniformUploader.UploadViewUniforms();
     }
 
     public void RestoreMode()
     {
-        VisualRenderContext.Instance.ResetPassMode();
+        RenderContext.Instance.ResetPassMode();
         _uniformUploader.UploadViewUniforms();
     }
 
@@ -104,6 +104,6 @@ internal sealed class RenderPassCtx
 
     public void SetOutputTexture(TextureId textureId)
     {
-        VisualRenderContext.Instance.OutputTexture = textureId;
+        RenderContext.Instance.OutputTexture = textureId;
     }
 }

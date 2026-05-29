@@ -25,7 +25,7 @@ public sealed class RenderProgram
 
     public RenderProgram(GraphicsRuntime graphics, UniformUploaderCallbacks uploaderCallbacks)
     {
-        VisualRenderContext.Make(uploaderCallbacks);
+        RenderContext.Make(uploaderCallbacks);
 
         Registry = new RenderRegistry(graphics.Gfx);
 
@@ -40,7 +40,7 @@ public sealed class RenderProgram
     }
 
     public int PassCount => _passPipeline.PassCount;
-    public TextureId OutputTexture => VisualRenderContext.Instance.OutputTexture;
+    public TextureId OutputTexture => RenderContext.Instance.OutputTexture;
     public UniformUploadContext GetUploadContext() => _drawPipeline.UniformUploader.GetUploadContext();
 
     //
@@ -51,14 +51,14 @@ public sealed class RenderProgram
     public void PrepareFrame()
     {
         Debug.Assert(Initialized);
-        VisualRenderContext.Instance.ResetPassMode();
+        RenderContext.Instance.ResetPassMode();
         _passPipeline.Prepare();
         _drawPipeline.Prepare();
     }
 
     public void ResizeFrameBuffers(Size2D outputSize, int shadowSize)
     {
-        VisualRenderContext.Instance.OutputSize = outputSize;
+        RenderContext.Instance.OutputSize = outputSize;
 
         var fboRegistry = Registry.FboRegistry;
 
@@ -129,7 +129,7 @@ public sealed class RenderProgram
         _drawPipeline.Initialize(_programContext);
         _passPipeline.Initialize(_programContext);
 
-        PassPipeline3D.RegisterPassPipeline(_passPipeline, in Registry.ShaderRegistry.CoreShaders);
+        PassPipeline3D.RegisterPassPipeline(_passPipeline, in RenderShaderRegistry.CoreShaders);
         Initialized = true;
     }
 }

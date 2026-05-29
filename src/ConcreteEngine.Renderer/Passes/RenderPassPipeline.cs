@@ -92,7 +92,7 @@ internal sealed class RenderPassPipeline
         if (_fboRegistry.TryGetRenderFbo(key, out var fbo))
             _ctx.AttachPass(fbo, passKey);
         else if (passEntry.PassOp == PassOp.Screen)
-            _ctx.AttachScreenPass(passKey, VisualRenderContext.Instance.OutputSize);
+            _ctx.AttachScreenPass(passKey, RenderContext.Instance.OutputSize);
         else
             kind = NextPassAction.Skip;
 

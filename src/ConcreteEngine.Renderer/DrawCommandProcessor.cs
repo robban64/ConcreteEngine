@@ -16,20 +16,18 @@ internal sealed class DrawCommandProcessor
     private readonly GfxCommands _gfxCmd;
     private readonly GfxDraw _gfxDraw;
     private readonly UniformUploader _buffers;
-    private readonly RenderShaderRegistry _shaderRegistry;
 
     public TextureId DepthTexture { get; private set; }
 
     private int _lastAnimationSlot;
 
-    private static PassStateMode PassMode => VisualRenderContext.Instance.PassMode;
+    private static PassStateMode PassMode => RenderContext.Instance.PassMode;
 
     internal DrawCommandProcessor(GfxContext gfx, RenderRegistry renderRegistry,UniformUploader buffers)
     {
         _buffers = buffers;
         _gfxCmd = gfx.Commands;
         _gfxDraw = gfx.Draw;
-        _shaderRegistry = renderRegistry.ShaderRegistry;
         
         var depthFbo = renderRegistry.FboRegistry.GetByKey(PassTags<ShadowPassTag>.FboKey(FboVariant.V0));
         DepthTexture = depthFbo!.Attachments.DepthTexture;
@@ -49,7 +47,7 @@ internal sealed class DrawCommandProcessor
         _lastAnimationSlot = 0;
         if (PassMode != PassStateMode.Depth) return;
 
-        _gfxCmd.UseShader(_shaderRegistry.CoreShaders.DepthShader);
+        _gfxCmd.UseShader(RenderShaderRegistry.CoreShaders.DepthShader);
         _gfxCmd.UnbindAllTextures();
     }
 
@@ -82,7 +80,11 @@ internal sealed class DrawCommandProcessor
     {
         var texSlots = _buffers.ResolveMaterial(materialId, out var materialMeta);
 
-        if (!materialMeta.DrawState.IsEmpty()) BindPassState(in materialMeta);
+        if (!materialMeta.DrawState.IsEmpty())
+        {
+            _gfxCmd.ApplyState(materialMeta.DrawState);
+            _gfxCmd.ApplyStateFunctions(materialMeta.PassFunctions);
+        }
 
         if (PassMode == PassStateMode.Main)
         {
@@ -120,11 +122,6 @@ internal sealed class DrawCommandProcessor
         _gfxCmd.BindTexture(GfxTextures.Fallback.AlphaMaskId, 1);
     }
 
-    private void BindPassState(in RenderMaterialMeta material)
-    {
-        _gfxCmd.ApplyState(material.DrawState);
-        _gfxCmd.ApplyStateFunctions(material.PassFunctions);
-    }
 
     // allow for more flexible state management later on
     private void BindAndResolvedOverride(DrawCommand cmd, DrawCommandResolver resolver, byte resolverSlot)
@@ -140,11 +137,11 @@ internal sealed class DrawCommandProcessor
         switch (resolver)
         {
             case DrawCommandResolver.Highlight:
-                shader = _shaderRegistry.CoreShaders.HighlightShader;
+                shader = RenderShaderRegistry.CoreShaders.HighlightShader;
                 break;
             case DrawCommandResolver.BoundingVolume:
                 isAnimated = false;
-                shader = _shaderRegistry.CoreShaders.BoundingBoxShader;
+                shader = RenderShaderRegistry.CoreShaders.BoundingBoxShader;
                 break;
             case DrawCommandResolver.Wireframe:
             default:

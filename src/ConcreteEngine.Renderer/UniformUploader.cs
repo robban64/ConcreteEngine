@@ -21,11 +21,6 @@ internal sealed unsafe class UniformUploader
     
     public MaterialId PrevMaterial { get; private set; } = new(-1);
 
-    private static VisualRenderContext RenderContext
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => VisualRenderContext.Instance;
-    }
 
     internal UniformUploader( GfxContext gfx, RenderRegistry renderRegistry, RenderUploadBuffers buffers)
     {
@@ -136,8 +131,8 @@ internal sealed unsafe class UniformUploader
     internal void UploadViewUniforms()
     {
         var ctx = GetUploadContext();
-        var callbacks = RenderContext.UniformCallbacks;
-        if (RenderContext.IsDepth)
+        var callbacks = RenderContext.Instance.UniformCallbacks;
+        if (RenderContext.Instance.IsDepth)
         {
             callbacks.UploadShadow(in ctx);
             callbacks.UploadLightView(in ctx);

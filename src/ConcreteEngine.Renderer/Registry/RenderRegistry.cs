@@ -12,7 +12,7 @@ public sealed class RenderRegistry
 
     internal RenderRegistry(GfxContext gfx)
     {
-        ShaderRegistry = new RenderShaderRegistry(gfx);
+        ShaderRegistry = new RenderShaderRegistry();
         UboRegistry = new RenderUboRegistry(gfx);
         FboRegistry = new RenderFboRegistry(gfx);
     }

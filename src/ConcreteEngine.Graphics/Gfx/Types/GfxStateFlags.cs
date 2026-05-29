@@ -10,20 +10,21 @@ public enum GfxDrawFlags : byte
     Cull = 1 << 2,
     Blend = 1 << 3,
     PolygonOffset = 1 << 4,
-    SampleAlphaCoverage = 1 << 5,
+    Ac2 = 1 << 5,
 }
 
 [Flags]
 public enum GfxStateFlags : ushort
 {
     None = 0,
-    ColorMask = 1 << 0,
+    DepthTest = 1 << 0,
     DepthWrite = 1 << 1,
-    Scissor = 1 << 2,
-    DepthTest = 1 << 3,
-    Cull = 1 << 4,
-    Blend = 1 << 5,
-    PolygonOffset = 1 << 6,
-    SampleAlphaCoverage = 1 << 7,
-    FramebufferSrgb = 1 << 8,
+    Cull = 1 << 2,
+    Blend = 1 << 3,
+    PolygonOffset = 1 << 4,
+    Ac2 = 1 << 5,
+    Srgb = 1 << 6,
+    ColorMask = 1 << 7,
+    Scissor = 1 << 8,
+
 }

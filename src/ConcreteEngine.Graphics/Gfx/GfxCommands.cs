@@ -8,6 +8,7 @@ using ConcreteEngine.Graphics.Gfx.Internals;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
+using static ConcreteEngine.Graphics.Gfx.GfxStateFlags;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -29,9 +30,8 @@ public sealed class GfxCommands
     private FrameBufferId _boundFboId;
     private ShaderId _boundShaderId;
 
-    //
-    private GfxStateFlags _activeFlags;
-    private GfxPassFunctions _passFunctions;
+    public GfxPassState PassState;
+    public GfxPassFunctions PassFunctions;
 
 
     internal GfxCommands(GfxContextInternal ctx)
@@ -52,8 +52,8 @@ public sealed class GfxCommands
     {
         _outputSize = args.OutputSize;
         _activeOutputSize = args.OutputSize;
-        _activeFlags = 0;
-        _passFunctions = default;
+        PassState = default;
+        PassFunctions = default;
     }
 
     internal void EndFrame()
@@ -94,6 +94,8 @@ public sealed class GfxCommands
     public void EndRenderPass()
     {
         if (_boundFboId == default) GraphicsException.ResourceNotBound(nameof(_boundFboId));
+        PassState = default;
+        PassFunctions = default;
 
         BindFramebuffer(default);
 
@@ -137,14 +139,17 @@ public sealed class GfxCommands
     {
         var e = state.Enabled;
 
-        _cmdStates.ToggleDepthMask((e & GfxStateFlags.DepthWrite) != 0);
-        _cmdStates.ColorMask((e & GfxStateFlags.ColorMask) != 0);
-        foreach (var flag in EnumCache<GfxStateFlags>.Values.AsSpan(3))
-        {
-            _cmdStates.ToggleStateFlag(flag, (e & flag) != 0);
-        }
+        _cmdStates.ColorMask((e & ColorMask) != 0);
+        _cmdStates.ToggleScissorTest((e & Scissor) != 0);
+        _cmdStates.ToggleCullFace((e & Cull) != 0 );
+        _cmdStates.ToggleDepthTest((e & DepthTest) != 0 );
+        _cmdStates.ToggleDepthMask((e & DepthWrite) != 0 );
+        _cmdStates.ToggleBlendState((e & Blend) != 0 );
+        _cmdStates.ToggleFrameBufferSrgb((e & Srgb) != 0 );
+        _cmdStates.TogglePolygonOffset((e & PolygonOffset) != 0 );
+        _cmdStates.ToggleSampleAlphaCoverage((e & Ac2) != 0 );
 
-        _activeFlags = state.Enabled;
+        PassState = state;
     }
 
     public void ApplyState(GfxPassState state)
@@ -153,16 +158,14 @@ public sealed class GfxCommands
         if (d == 0) return;
         var e = state.Enabled;
 
-        var activeFlags = _activeFlags;
+        var p = PassState.Enabled;
+        _cmdStates.ToggleCullFace((d & Cull) != 0 ? (e & Cull) != 0 : (p & Cull) != 0);
+        _cmdStates.ToggleDepthTest((d & DepthTest) != 0 ? (e & DepthTest) != 0 : (p & DepthTest) != 0);
+        _cmdStates.ToggleDepthMask((d & DepthWrite) != 0 ? (e & DepthWrite) != 0 : (p & DepthWrite) != 0);
+        _cmdStates.ToggleBlendState((d & Blend) != 0 ? (e & Blend) != 0 : (p & Blend) != 0);
+        _cmdStates.TogglePolygonOffset((d & PolygonOffset) != 0 ? (e & PolygonOffset) != 0 : (p & PolygonOffset) != 0);
+        _cmdStates.ToggleSampleAlphaCoverage((d & Ac2) != 0 ? (e & Ac2) != 0 : (p & Ac2) != 0);
 
-        _cmdStates.ToggleDepthMask((d & GfxStateFlags.DepthWrite) != 0 ? (e & GfxStateFlags.DepthWrite) != 0 : (activeFlags & GfxStateFlags.DepthWrite) != 0);
-        _cmdStates.ColorMask((d & GfxStateFlags.ColorMask) != 0 ? (e & GfxStateFlags.ColorMask) != 0 : (activeFlags & GfxStateFlags.ColorMask) != 0);
-
-        foreach (var flag in EnumCache<GfxStateFlags>.Values.AsSpan(3))
-        {
-            var enabled = (d & flag) != 0 ? (e & flag) != 0 : (activeFlags & flag) != 0;
-            _cmdStates.ToggleStateFlag(flag, enabled);
-        }
     }
 
     public void ApplyStateFunctions(GfxPassFunctions cmdFunc)
@@ -171,7 +174,7 @@ public sealed class GfxCommands
         SetCullMode(cmdFunc.Cull);
         SetDepthMode(cmdFunc.Depth);
         SetPolygonOffset(cmdFunc.PolygonOffset);
-        _passFunctions = cmdFunc;
+        PassFunctions = cmdFunc;
     }
 
 
@@ -186,9 +189,9 @@ public sealed class GfxCommands
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetPolygonOffset(PolygonOffsetLevel polygon)
     {
-        if (_passFunctions.PolygonOffset != PolygonOffsetLevel.Unset && _passFunctions.PolygonOffset == polygon) return;
+        if (PassFunctions.PolygonOffset != PolygonOffsetLevel.Unset && PassFunctions.PolygonOffset == polygon) return;
         var (factor, units) = polygon.ToFactorUnits();
-        _passFunctions.PolygonOffset = polygon;
+        PassFunctions.PolygonOffset = polygon;
         _cmdStates.SetPolygonOffset(factor, units);
     }
 
@@ -196,8 +199,8 @@ public sealed class GfxCommands
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetBlendMode(BlendMode blendMode)
     {
-        if (_passFunctions.Blend != BlendMode.Unset && _passFunctions.Blend == blendMode) return;
-        _passFunctions.Blend = blendMode;
+        if (PassFunctions.Blend != BlendMode.Unset && PassFunctions.Blend == blendMode) return;
+        PassFunctions.Blend = blendMode;
         _cmdStates.SetBlendMode(blendMode);
     }
 
@@ -205,8 +208,8 @@ public sealed class GfxCommands
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetDepthMode(DepthMode depthMode)
     {
-        if (_passFunctions.Depth != DepthMode.Unset && _passFunctions.Depth == depthMode) return;
-        _passFunctions.Depth = depthMode;
+        if (PassFunctions.Depth != DepthMode.Unset && PassFunctions.Depth == depthMode) return;
+        PassFunctions.Depth = depthMode;
         _cmdStates.SetDepthMode(depthMode);
     }
 
@@ -214,8 +217,8 @@ public sealed class GfxCommands
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetCullMode(CullMode cullMode)
     {
-        if (_passFunctions.Cull != CullMode.Unset && _passFunctions.Cull == cullMode) return;
-        _passFunctions.Cull = cullMode;
+        if (PassFunctions.Cull != CullMode.Unset && PassFunctions.Cull == cullMode) return;
+        PassFunctions.Cull = cullMode;
         _cmdStates.SetCullMode(cullMode);
     }
 

@@ -58,46 +58,46 @@ public readonly struct GfxPassState(GfxStateFlags enabled, GfxStateFlags defined
     // UTils
     public static GfxPassState MakeScene() =>
         new(
-            enabled: DepthTest | DepthWrite | Cull | FramebufferSrgb | ColorMask | SampleAlphaCoverage,
-            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask |
-                     PolygonOffset | SampleAlphaCoverage
+            enabled: DepthTest | DepthWrite | Cull | Srgb | ColorMask | Ac2,
+            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | Srgb | ColorMask |
+                     PolygonOffset | Ac2
         );
 
     public static GfxPassState MakeSceneEffect() =>
         new(
-            enabled: Blend | Cull | FramebufferSrgb | ColorMask | SampleAlphaCoverage,
-            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask |
-                     PolygonOffset | SampleAlphaCoverage
+            enabled: Blend | Cull | Srgb | ColorMask | Ac2,
+            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | Srgb | ColorMask |
+                     PolygonOffset | Ac2
         );
 
     public static GfxPassState MakeShadow() =>
         new(
-            enabled: DepthTest | DepthWrite | Cull | FramebufferSrgb | PolygonOffset,
-            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset |
-                     SampleAlphaCoverage
+            enabled: DepthTest | DepthWrite | Cull | Srgb | PolygonOffset,
+            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | Srgb | ColorMask | PolygonOffset |
+                     Ac2
         );
 
     public static GfxPassState MakeLighting() =>
         new(
-            enabled: DepthTest | DepthWrite | Cull | Blend | FramebufferSrgb | PolygonOffset,
-            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
+            enabled: DepthTest | DepthWrite | Cull | Blend | Srgb | PolygonOffset,
+            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | Srgb | ColorMask | PolygonOffset
         );
 
     public static GfxPassState MakePostProcess() =>
         new(
-            enabled: ColorMask | FramebufferSrgb,
-            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
+            enabled: ColorMask | Srgb,
+            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | Srgb | ColorMask | PolygonOffset
         );
 
     public static GfxPassState MakeScreen() =>
         new(
-            enabled: ColorMask | FramebufferSrgb,
-            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
+            enabled: ColorMask | Srgb,
+            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | Srgb | ColorMask | PolygonOffset
         );
 
     public static GfxPassState MakeOff() =>
         new(
             enabled: ColorMask,
-            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
+            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | Srgb | ColorMask | PolygonOffset
         );
 }

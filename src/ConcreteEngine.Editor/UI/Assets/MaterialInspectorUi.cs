@@ -70,7 +70,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         DrawFlagToggle("Depth Write"u8, GfxStateFlags.DepthWrite, ref passState, sw);
         DrawFlagToggle("Polygon Offset"u8, GfxStateFlags.PolygonOffset, ref passState, sw);
         ImGui.Separator();
-        DrawFlagToggle("A2C"u8, GfxStateFlags.SampleAlphaCoverage, ref passState, sw);
+        DrawFlagToggle("A2C"u8, GfxStateFlags.Ac2, ref passState, sw);
 
         if (editMaterial.PassState != passState)
             editMaterial.Asset.SetPassState(passState);

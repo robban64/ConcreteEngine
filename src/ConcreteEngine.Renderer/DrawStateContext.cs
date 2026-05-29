@@ -18,15 +18,9 @@ internal sealed class DrawStateContext
     private readonly RenderShaderRegistry _shaderRegistry;
 
     public PassStateMode PassMode { get; private set; }
-
     public TextureId DepthTexture { get; private set; }
     public MaterialId PrevMaterial { get; private set; } = new(-1);
 
-    public GfxPassState PassState;
-    public GfxPassFunctions PassFunctions;
-
-    public GfxPassState OverridePassState;
-    public GfxPassFunctions OverridePassFunctions;
 
     internal DrawStateContext(RenderRegistry registry)
     {
@@ -51,11 +45,6 @@ internal sealed class DrawStateContext
     {
         PrevMaterial = default;
         PassMode = PassStateMode.Main;
-
-        PassState = default;
-        PassFunctions = default;
-        OverridePassState = default;
-        OverridePassFunctions = default;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -35,9 +35,17 @@ internal sealed class GlStates
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToggleStateFlag(GfxStateFlags flag, bool enabled)
     {
-        var enableCap = flag.ToGlEnableCap();
-        if (enabled) _gl.Enable(enableCap);
-        else _gl.Disable(enableCap);
+        if (flag == GfxStateFlags.DepthWrite)
+            _gl.DepthMask(enabled);
+        else if(flag == GfxStateFlags.ColorMask)
+            _gl.ColorMask(enabled, enabled, enabled, enabled);
+        else
+        {
+            var enableCap = flag.ToGlEnableCap();
+            if (enabled) _gl.Enable(enableCap);
+            else _gl.Disable(enableCap);
+        }
+        
     }
 
 

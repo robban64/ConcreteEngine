@@ -123,8 +123,8 @@ internal sealed class DrawCommandProcessor
 
     private void BindPassState(in RenderMaterialMeta material)
     {
-        _gfxCmd.ApplyState(!material.PassState.IsEmpty ? material.PassState : _ctx.PassState);
-        _gfxCmd.ApplyStateFunctions(material.PassFunctions != default ? material.PassFunctions : _ctx.PassFunctions);
+        _gfxCmd.ApplyState(!material.PassState.IsEmpty ? material.PassState : _gfxCmd.PassState);
+        _gfxCmd.ApplyStateFunctions(material.PassFunctions != default ? material.PassFunctions : _gfxCmd.PassFunctions);
     }
 
     // allow for more flexible state management later on
@@ -166,29 +166,5 @@ internal sealed class DrawCommandProcessor
             else if (slot.SlotKind == TextureUsage.Mask) _gfxCmd.BindTexture(slot.Texture, 1);
         }
 
-        if (materialMeta.PassState.IsEmpty)
-        {
-            _ctx.OverridePassState = default;
-        }
-        else
-        {
-            var filtered = materialMeta.PassState.Filter(allowMaterialOverride);
-            _ctx.OverridePassState = GfxPassState.PatchWith(_ctx.PassState, filtered);
-        }
-
-        if (materialMeta.PassFunctions == default)
-        {
-            _ctx.OverridePassFunctions = default;
-        }
-        else if (_ctx.OverridePassFunctions != materialMeta.PassFunctions)
-        {
-            var f = _ctx.PassFunctions;
-            var m = materialMeta.PassFunctions;
-            _ctx.OverridePassFunctions = f with
-            {
-                PolygonOffset = m.PolygonOffset == PolygonOffsetLevel.Unset ? f.PolygonOffset : m.PolygonOffset,
-                Cull = m.Cull == CullMode.Unset ? f.Cull : m.Cull
-            };
-        }
     }
 }

@@ -58,9 +58,9 @@ internal static class GlEnumExtensions
             GfxStateFlags.Cull => GLEnum.CullFace,
             GfxStateFlags.Blend => GLEnum.Blend,
             GfxStateFlags.Scissor => GLEnum.ScissorTest,
-            GfxStateFlags.FramebufferSrgb => GLEnum.FramebufferSrgb,
+            GfxStateFlags.Srgb => GLEnum.FramebufferSrgb,
             GfxStateFlags.PolygonOffset => GLEnum.PolygonOffsetFill,
-            GfxStateFlags.SampleAlphaCoverage => GLEnum.SampleAlphaToCoverage,
+            GfxStateFlags.Ac2 => GLEnum.SampleAlphaToCoverage,
             _ => Throwers.Unreachable<GLEnum>(nameof(flag))
         };
     }

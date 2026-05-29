@@ -31,7 +31,7 @@ public struct MaterialPipeline(GfxPassState passState, GfxPassFunctions passFunc
         {
             PassState = GfxPassState.Set(
                 GfxStateFlags.DepthTest | GfxStateFlags.DepthWrite | GfxStateFlags.Cull | enabled,
-                 GfxStateFlags.Blend | GfxStateFlags.SampleAlphaCoverage | disabled
+                 GfxStateFlags.Blend | GfxStateFlags.Ac2 | disabled
             ),
             PassFunctions = new GfxPassFunctions(BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None)
         };

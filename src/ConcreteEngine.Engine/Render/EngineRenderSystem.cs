@@ -53,7 +53,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
         mat.Pipeline = new MaterialPipeline
         {
             PassState = GfxPassState.Set(GfxStateFlags.Blend,
-                GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
+                GfxStateFlags.DepthWrite | GfxStateFlags.Ac2),
             PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
 

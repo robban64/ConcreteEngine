@@ -40,29 +40,25 @@ public sealed class DrawStateOps
     public void ApplyStateFunctions(GfxPassFunctions passFunc)
     {
         _gfxCmd.ApplyStateFunctions(passFunc);
-        _ctx.PassFunctions = passFunc;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginScreenPass(GfxPassClear passClear, GfxPassState states)
     {
         _gfxCmd.BeginScreenPass(passClear, states);
-        _ctx.PassState = states;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginRenderPass(FrameBufferId fboId, GfxPassClear passClear, GfxPassState states)
     {
         _gfxCmd.BeginRenderPass(fboId, passClear, states);
-        _ctx.PassState = states;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ContinueFromRenderPass(FrameBufferId fboId, GfxPassState states)
     {
         _gfxCmd.BindFramebuffer(fboId);
-        _gfxCmd.ApplyState(states);
-        _ctx.PassState = states;
+        _gfxCmd.ApplyPassState(states);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -73,8 +69,7 @@ public sealed class DrawStateOps
         _gfxCmd.BlitFramebuffer(from, target, linear);
 
     public void ClearColor(GfxPassClear clear) => _gfxCmd.Clear(clear);
-
-    public void ToggleStates(GfxPassState states) => _gfxCmd.ApplyState(states);
+    public void ApplyPassState(GfxPassState states) => _gfxCmd.ApplyPassState(states);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void GenerateMips(TextureId textureId) => _gfxTextures.GenerateMipMaps(textureId);

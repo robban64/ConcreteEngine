@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using Silk.NET.Assimp;
 using AssimpScene = Silk.NET.Assimp.Scene;
 
@@ -41,16 +42,7 @@ internal static class AssimpUtils
     public const int BoneLimit = 64;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe uint GetNameHash(AssimpString str) => GetNameHash(str.Data, str.Length);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe uint GetNameHash(byte* data, uint length)
-    {
-        uint hash = 2166136261;
-        for (int i = 0; i < length; i++)
-            hash = (hash ^ data[i]) * 16777619;
-        return hash;
-    }
+    public static unsafe uint GetNameHash(AssimpString str) => HashMath.HashFnv(str.Data, str.Length);
 
     public static float DecideScale(in BoundingBox bounds, float unitScale)
     {

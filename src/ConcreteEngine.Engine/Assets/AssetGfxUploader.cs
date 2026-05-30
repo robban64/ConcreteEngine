@@ -59,18 +59,21 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void UploadShader(NativeView<byte> vs, NativeView<byte> fs, out ShaderCreationInfo info)
+    public ShaderId UploadShader(NativeView<byte> vs, NativeView<byte> fs, out UniformSamplerInfo[] samplers)
     {
-        var shaderId = gfx.Shaders.CreateShader(vs, fs, out var samplers);
-        info = new ShaderCreationInfo(shaderId, samplers);
+        Span<UniformSamplerInfo> result = stackalloc UniformSamplerInfo[32];
+        var shaderId = gfx.Shaders.CreateShader(vs, fs, out var samplerCount, result);
+        samplers = samplerCount > 0 ? result.Slice(0, samplerCount).ToArray() : [];
+        return shaderId;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void RecreateShader(ShaderId shaderId, NativeView<byte> vs, NativeView<byte> fs,
-        out ShaderCreationInfo info)
+        out UniformSamplerInfo[] samplers)
     {
-        gfx.Shaders.RecreateShader(shaderId, vs, fs, out var samplers);
-        info = new ShaderCreationInfo(shaderId, samplers);
+        Span<UniformSamplerInfo> result = stackalloc UniformSamplerInfo[32];
+        gfx.Shaders.RecreateShader(shaderId, vs, fs, out var samplerCount, result);
+        samplers = samplerCount > 0 ? result.Slice(0, samplerCount).ToArray() : [];
     }
 /*
     [MethodImpl(MethodImplOptions.NoInlining)]

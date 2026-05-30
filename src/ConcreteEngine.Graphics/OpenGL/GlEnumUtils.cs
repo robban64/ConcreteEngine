@@ -32,6 +32,25 @@ internal static class GlEnumUtils
     }
 }
 
+internal static class GfxGlEnumExtensions
+{
+    public static GfxUniformType ToGfxUniformType(this GLEnum uniform)
+    {
+        return uniform switch
+        {
+            GLEnum.Sampler2D => GfxUniformType.Sampler2D,
+            GLEnum.IntSampler2D => GfxUniformType.IntSampler2D,
+            GLEnum.Sampler2DArray => GfxUniformType.Sampler2DArray,
+            GLEnum.Sampler2DShadow => GfxUniformType.Sampler2DShadow,
+            GLEnum.Sampler2DMultisample => GfxUniformType.Sampler2DMultisample,
+            GLEnum.Sampler3D => GfxUniformType.Sampler3D,
+            GLEnum.IntSampler3D => GfxUniformType.IntSampler3D,
+            _ => GfxUniformType.Unknown
+        };
+    }
+
+}
+
 internal static class GlEnumExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -47,6 +66,7 @@ internal static class GlEnumExtensions
             _ => (0.0f, 0.0f)
         };
     }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GLEnum ToGlEnableCap(this GfxStateFlags flag)

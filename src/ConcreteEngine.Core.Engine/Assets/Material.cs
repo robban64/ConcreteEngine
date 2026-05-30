@@ -7,6 +7,88 @@ using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
+public sealed class MaterialState
+{
+    private void MarkDirty(){}
+    public GfxDrawState DrawState
+    {
+        get;
+        set
+        {
+            if (value == field) return;
+            field = value;
+            MarkDirty();
+        }
+    }
+    
+    public GfxPassFunctions PassFunctions
+    {
+        get;
+        set
+        {
+            if (value == field) return;
+            field = value;
+            MarkDirty();
+        }
+    }
+    
+    public Color4 Color
+    {
+        get;
+        set
+        {
+            if (value == field) return;
+            field = value;
+            MarkDirty();
+        }
+    } = Color4.White;
+
+    public float Shininess
+    {
+        get;
+        set
+        {
+            if (FloatMath.NearlyEqual(field, value)) return;
+            field = float.Max(value, 0f);
+            MarkDirty();
+        }
+    } = 12f;
+
+    public float Specular
+    {
+        get;
+        set
+        {
+            if (FloatMath.NearlyEqual(field, value)) return;
+            field = float.Max(value, 0f);
+            MarkDirty();
+        }
+    } = 0.12f;
+
+    public float UvRepeat
+    {
+        get;
+        set
+        {
+            if (FloatMath.NearlyEqual(field, value)) return;
+            field = float.Max(value, 1f);
+            MarkDirty();
+        }
+    } = 1f;
+
+    public bool Transparency
+    {
+        get;
+        set
+        {
+            if (field == value) return;
+            field = value;
+            MarkDirty();
+        }
+    }
+
+}
+
 public sealed class Material : AssetObject
 {
     public AssetId TemplateId { get; init; }
@@ -149,6 +231,18 @@ public sealed class Material : AssetObject
             MarkDirty();
         }
     }
+    
+    public bool HasShadow
+    {
+        get;
+        set
+        {
+            if (field == value) return;
+            field = value;
+            MarkDirty();
+        }
+    }
+
 
     public void FillParams(out MaterialParams param)
     {

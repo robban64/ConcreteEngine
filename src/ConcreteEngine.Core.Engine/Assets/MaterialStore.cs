@@ -30,7 +30,7 @@ public sealed class MaterialStore
 
     internal void InitializeStore()
     {
-        FallbackMaterial.ShaderId = _assetStore.GetByName<Shader>("Model").Id;
+        FallbackMaterial.BoundShader = _assetStore.GetByName<Shader>("Model");
         foreach (var it in _assetStore.GetAssetEnumerator<Material>())
             RegisterMaterial(it);
     }

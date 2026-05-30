@@ -31,7 +31,9 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
         Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
         foreach (var material in assetStore.GetAssetEnumerator<Material>())
         {
-            int slotLength = GetMaterialUploadData(material, slots, out var payload);
+            if(material.BoundShader is not {} shader) continue;
+
+            int slotLength = GetMaterialUploadData(material, shader, slots, out var payload);
             materialBuffer.Submit(in payload, slots.Slice(0, slotLength));
         }
 
@@ -39,13 +41,11 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
     }
 
 
-    private int GetMaterialUploadData(Material material, Span<TextureBinding> slots, out RenderMaterialPayload data)
+    private int GetMaterialUploadData(Material material, Shader shader, Span<TextureBinding> slots, out RenderMaterialPayload data)
     {
-        var shader = assetStore.Get<Shader>(material.ShaderId).GfxId;
-
         material.FillParams(out var param);
 
-        data = new RenderMaterialPayload(material.MaterialId, shader, in param, material.RenderProps, material.Pipeline);
+        data = new RenderMaterialPayload(material.MaterialId, shader.GfxId, in param, material.RenderProps, material.Pipeline);
 
         var textureSources = material.GetTextureSources();
         for (var i = 0; i < textureSources.Length; i++)

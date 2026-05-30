@@ -54,7 +54,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
     {
         TextureSource[] slots = [new(AssetId.Empty, TextureUsage.Albedo)];
         var param = new MaterialParams(Color4.White, 0, 0, 1);
-        return new Material("Fallback", AssetId.Empty, AssetId.Empty, MaterialProfile.None, in param, slots)
+        return new Material("Fallback", AssetId.Empty, null, MaterialProfile.None, in param, slots)
         {
             Id = assetId, GId = gId,
         };
@@ -83,11 +83,11 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         if (string.IsNullOrEmpty(shaderName))
             throw new InvalidOperationException($"Missing shader name for material {record.Name}");
 
-        var shader = _store.GetByName<Shader>(shaderName).Id;
+        var shader = _store.GetByName<Shader>(shaderName);
 
         return new Material(record.Name, AssetId.Empty, shader, record.Profile, record.Parameters, slots)
         {
-            Id = ctx.Id, GId = record.GId, ShaderId = shader,
+            Id = ctx.Id, GId = record.GId,
         };
     }
 
@@ -119,7 +119,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
         var matProfile = embedded.IsAnimated ? MaterialProfile.AnimatedModel : MaterialProfile.StaticModel;
         var profile = _profiles[(int)matProfile];
-        var shader = _store.GetByName<Shader>(profile.Shader).Id;
+        var shader = _store.GetByName<Shader>(profile.Shader);
 
         return new Material(embedded.Name, AssetId.Empty, shader, matProfile, in embedded.Params, slots)
         {

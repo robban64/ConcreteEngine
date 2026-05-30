@@ -92,38 +92,38 @@ public sealed class MaterialState
 public sealed class Material : AssetObject
 {
     public AssetId TemplateId { get; init; }
-    public AssetId ShaderId { get; internal set; }
     public MaterialId MaterialId { get; internal set; }
-    
     public MaterialProfile Profile { get; internal set; }
     public MaterialRenderProps RenderProps { get; private set; }
+
+    public Shader? BoundShader { get; internal set; }
 
     private readonly TextureSource[] _textureSources;
 
     public override AssetCategory Category => AssetCategory.Renderer;
     public override AssetKind Kind => AssetKind.Material;
 
-    private Material(string name, AssetId templateId, AssetId shaderId, MaterialProfile profile,
+    private Material(string name, AssetId templateId, Shader? boundShader, MaterialProfile profile,
         TextureSource[] sources) : base(name)
     {
         ArgumentNullException.ThrowIfNull(sources);
 
         TemplateId = templateId;
-        ShaderId = shaderId;
+        BoundShader = boundShader;
         _textureSources = sources;
         Profile = profile;
 
         CalculateProperties();
     }
 
-    public Material(string name, AssetId templateId, AssetId shaderId, MaterialProfile profile, in MaterialParams param,
-        TextureSource[] sources) : this(name, templateId, shaderId, profile, sources)
+    public Material(string name, AssetId templateId, Shader? boundShader, MaterialProfile profile, in MaterialParams param,
+        TextureSource[] sources) : this(name, templateId, boundShader, profile, sources)
     {
         SetParams(in param);
     }
 
-    public Material(string name, AssetId templateId, AssetId shaderId, MaterialProfile profile,
-        MaterialParamsRecord param, TextureSource[] sources) : this(name, templateId, shaderId, profile, sources)
+    public Material(string name, AssetId templateId, Shader? boundShader, MaterialProfile profile,
+        MaterialParamsRecord param, TextureSource[] sources) : this(name, templateId, boundShader, profile, sources)
     {
         ArgumentNullException.ThrowIfNull(param);
 
@@ -263,7 +263,7 @@ public sealed class Material : AssetObject
     internal Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
     {
         FillParams(out var param);
-        return new Material(newName, Id, ShaderId, Profile, in param, _textureSources) { Id = newId, GId = newGId };
+        return new Material(newName, Id, BoundShader, Profile, in param, _textureSources) { Id = newId, GId = newGId };
     }
 
     internal void Commit()

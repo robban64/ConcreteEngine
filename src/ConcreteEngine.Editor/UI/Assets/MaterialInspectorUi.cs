@@ -34,17 +34,14 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
             var template = EngineObjectStore.Assets.Get<Material>(material.Asset.TemplateId);
             ImGui.TextUnformatted("Template: "u8);
             ImGui.SameLine();
-            //ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Material), sw.Write(template.Name));
             ImGui.TextColored(Color4.White, sw.Write(template.Name));
         }
 
-        if (material.Asset.ShaderId.IsValid())
+        if (material.Asset.BoundShader is {} shader)
         {
-            var shader = EngineObjectStore.Assets.Get<Shader>(material.Asset.ShaderId);
             ImGui.TextUnformatted("Shader: "u8);
             ImGui.SameLine();
             ImGui.TextColored(Color4.White, sw.Write(shader.Name));
-            //ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Shader), sw.Write(shader.Name));
         }
 
         ImGui.EndGroup();

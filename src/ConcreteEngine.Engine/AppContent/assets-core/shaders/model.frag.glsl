@@ -23,7 +23,7 @@ out vec4 FragColor;
 
 
 layout(binding = 0) uniform sampler2D uTexture;
-layout(binding = 1) uniform sampler2D uNormalTex;
+layout(binding = 1) uniform sampler2D uNormal;
 layout(binding = 2) uniform sampler2D uAlpha;
 layout(binding = 3) uniform sampler2DShadow uShadowMap;
 
@@ -156,7 +156,7 @@ void main()
         vec3 Bw = normalize(fs_in.B_world);
         mat3 TBN = mat3(Tw, Bw, N_geo);
 
-        vec3 nTex = texture(uNormalTex, fs_in.TexCoord).rgb * 2.0 - 1.0;
+        vec3 nTex = texture(uNormal, fs_in.TexCoord).rgb * 2.0 - 1.0;
         N_vis = normalize(TBN * nTex);
     }
 

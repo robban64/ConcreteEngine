@@ -21,7 +21,7 @@ out vec4 FragColor;
 @import ubo:MaterialUniform
 @import ubo:DrawUniform
 
-layout(binding = 0) uniform sampler2DArray uGroundTexture;
+layout(binding = 0) uniform sampler2DArray uTexture;
 layout(binding = 1) uniform sampler2D uWeightMap;
 
 // depth
@@ -128,10 +128,10 @@ vec3 terrainAlbedo(vec2 texCoords, float uvRepeat) {
     
     float w3 = max(1.0 - (wrgb.r + wrgb.g + wrgb.b), 0.0);
     
-    vec3 c0 = texture(uGroundTexture, vec3(uv, 0)).rgb;
-    vec3 c1 = texture(uGroundTexture, vec3(uv, 1)).rgb;
-    vec3 c2 = texture(uGroundTexture, vec3(uv, 2)).rgb;
-    vec3 c3 = texture(uGroundTexture, vec3(uv, 3)).rgb;
+    vec3 c0 = texture(uTexture, vec3(uv, 0)).rgb;
+    vec3 c1 = texture(uTexture, vec3(uv, 1)).rgb;
+    vec3 c2 = texture(uTexture, vec3(uv, 2)).rgb;
+    vec3 c3 = texture(uTexture, vec3(uv, 3)).rgb;
     
     vec3 totalColor = c0 * w3 + c1 * wrgb.r + c2 * wrgb.g + c3 * wrgb.b;
     //if(totalColor.a == 0.0) totalColor = vec4(1.0);

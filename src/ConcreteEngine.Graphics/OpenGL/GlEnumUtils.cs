@@ -43,6 +43,7 @@ internal static class GfxGlEnumExtensions
             GLEnum.Sampler2DArray => GfxUniformType.Sampler2DArray,
             GLEnum.Sampler2DShadow => GfxUniformType.Sampler2DShadow,
             GLEnum.Sampler2DMultisample => GfxUniformType.Sampler2DMultisample,
+            GLEnum.SamplerCube => GfxUniformType.SamplerCube,
             GLEnum.Sampler3D => GfxUniformType.Sampler3D,
             GLEnum.IntSampler3D => GfxUniformType.IntSampler3D,
             _ => GfxUniformType.Unknown

@@ -14,6 +14,8 @@ internal sealed class GlShaders
 {
     private static GL Gl => GlBackendDriver.Gl;
 
+    private static readonly Dictionary<uint, string> UniformSamplerByHash = new (16);
+
     private readonly BackendResourceStore _shaderStore = GfxRegistry.GetBackendStore<ShaderMeta>();
 
     public GfxHandle CreateShader(NativeView<byte> vertexSource, NativeView<byte> fragmentSource)
@@ -53,42 +55,6 @@ internal sealed class GlShaders
         return _shaderStore.Add(handle);
     }
 
-    public int GetSamplersFromProgram(GfxHandle shaderRef, Dictionary<uint, string> uniformByHash,
-        Span<UniformSamplerInfo> dst)
-    {
-        Span<byte> buffer = stackalloc byte[128];
-        Span<uint> length = stackalloc uint[1];
-        Span<int> size = stackalloc int[1];
-        Span<GLEnum> types = stackalloc GLEnum[1];
-
-
-        byte samplers = 0;
-
-        var handle = _shaderStore.Get(shaderRef);
-        Gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
-
-        for (uint idx = 0; idx < uniformsLength; idx++)
-        {
-            Gl.GetActiveUniform(handle, idx, (uint)buffer.Length, length, size, types, buffer);
-
-            var uniformType = types[0].ToGfxUniformType();
-            if (uniformType == GfxUniformType.Unknown) continue;
-            var nameSpan = buffer.Slice(0, (int)length[0]);
-            var hash = HashMath.HashFnv(nameSpan);
-
-            if (!uniformByHash.TryGetValue(hash, out var strName))
-            {
-                strName = Encoding.UTF8.GetString(nameSpan);
-                uniformByHash.Add(hash, strName);
-            }
-
-            if (samplers >= dst.Length) Throwers.BufferOverflow(nameof(dst), samplers, dst.Length);
-            dst[samplers++] = new UniformSamplerInfo { NameHash = hash, Binding = samplers, UniformType = uniformType };
-        }
-
-        return samplers;
-    }
-
     private static NativeHandle CreateShaderProgram(uint vertexShader, uint fragmentShader)
     {
         var program = Gl.CreateProgram();
@@ -119,25 +85,41 @@ internal sealed class GlShaders
 
         return shader;
     }
-
-    public List<(string, int)> GetUniformsFromProgram(GfxHandle shaderRef)
+    
+    
+    public void GetSamplersFromProgram(GfxHandle shaderRef, List<GfxUniformSampler> result)
     {
-        var handle = _shaderStore.Get(shaderRef);
-        Gl.UseProgram(handle);
-        Gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
-        var uniforms = new List<(string, int)>(uniformsLength);
-        for (int i = 0; i < uniformsLength; i++)
-        {
-            var uniformName = Gl.GetActiveUniform(handle, (uint)i, out _, out var type);
-            var uniformLocation = Gl.GetUniformLocation(handle, uniformName);
-            if (((GLEnum)type).ToGfxUniformType() != GfxUniformType.Unknown) continue;
-            if (uniformLocation >= 0)
-            {
-                uniforms.Add((uniformName, uniformLocation));
-            }
-        }
+        if(!shaderRef.IsValid) Throwers.InvalidArgument(nameof(shaderRef));
+        
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(result.Count, 1, nameof(result));
+        
+        Span<byte> buffer = stackalloc byte[128];
+        Span<uint> length = stackalloc uint[1];
+        Span<int> size = stackalloc int[1];
+        Span<GLEnum> types = stackalloc GLEnum[1];
 
-        Gl.UseProgram(0);
-        return uniforms;
+        var handle = _shaderStore.Get(shaderRef);
+        Gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
+        for (uint i = 0; i < uniformsLength; i++)
+        {
+            Gl.GetActiveUniform(handle, i, (uint)buffer.Length, length, size, types, buffer);
+
+            var uniformType = types[0].ToGfxUniformType();
+            if (uniformType == GfxUniformType.Unknown) continue;
+            var nameSpan = buffer.Slice(0, (int)length[0]);
+            var hash = HashMath.HashFnv(nameSpan);
+
+            if (!UniformSamplerByHash.TryGetValue(hash, out var strName))
+            {
+                strName = Encoding.UTF8.GetString(nameSpan);
+                UniformSamplerByHash.Add(hash, strName);
+            }
+
+            result.Add(new GfxUniformSampler(strName, (byte)result.Count, uniformType));
+        }
+        
     }
+
+
 }

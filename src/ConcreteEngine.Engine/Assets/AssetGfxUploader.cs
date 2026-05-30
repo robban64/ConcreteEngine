@@ -9,6 +9,8 @@ namespace ConcreteEngine.Engine.Assets;
 
 internal sealed class AssetGfxUploader(GfxContext gfx)
 {
+    public GfxShaders Shaders => gfx.Shaders;
+    
     [MethodImpl(MethodImplOptions.NoInlining)]
     public MeshId UploadMesh(NativeView<Vertex3D> vertices, NativeView<byte> indices, bool is16Bit)
     {
@@ -58,23 +60,6 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
         info = new TextureCreationInfo(textureId, meta.Size);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public ShaderId UploadShader(NativeView<byte> vs, NativeView<byte> fs, out UniformSamplerInfo[] samplers)
-    {
-        Span<UniformSamplerInfo> result = stackalloc UniformSamplerInfo[32];
-        var shaderId = gfx.Shaders.CreateShader(vs, fs, out var samplerCount, result);
-        samplers = samplerCount > 0 ? result.Slice(0, samplerCount).ToArray() : [];
-        return shaderId;
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public void RecreateShader(ShaderId shaderId, NativeView<byte> vs, NativeView<byte> fs,
-        out UniformSamplerInfo[] samplers)
-    {
-        Span<UniformSamplerInfo> result = stackalloc UniformSamplerInfo[32];
-        gfx.Shaders.RecreateShader(shaderId, vs, fs, out var samplerCount, result);
-        samplers = samplerCount > 0 ? result.Slice(0, samplerCount).ToArray() : [];
-    }
 /*
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void FillAttributes(Span<VertexAttributeDef> attrib)

@@ -6,36 +6,16 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-public enum GfxUniformType : byte
-{
-    Unknown,
-    Sampler2D,
-    IntSampler2D,
-    Sampler2DArray,
-    Sampler2DShadow,
-    Sampler2DMultisample,
-    
-    Sampler3D,
-    IntSampler3D,
-}
-
-public struct UniformSamplerInfo
-{
-    public uint NameHash;
-    public byte Binding;
-    public GfxUniformType UniformType;
-}
-
 public sealed class GfxShaders
 {
-    public static readonly Dictionary<uint, string> UniformSamplerByHash = new (16);
+    public static readonly Dictionary<uint, string> UniformSamplerByHash = new(16);
 
     private readonly GfxResourceDisposer _disposer;
     private readonly IDriverDebugger _debugger;
 
     private readonly ShaderStore _store;
     private readonly GlShaders _driver;
-    
+
     internal GfxShaders(GfxContextInternal context)
     {
         _store = GfxRegistry.GetGfxStore<ShaderMeta>();
@@ -44,41 +24,45 @@ public sealed class GfxShaders
         _debugger = context.Driver.Debugger;
     }
 
-    public ShaderId CreateShader(NativeView<byte> vs, NativeView<byte> fs, out int samplers, Span<UniformSamplerInfo> dst)
+    public ShaderId CreateShader(NativeView<byte> vs, NativeView<byte> fs, out GfxUniformSampler[] samplerInfo)
     {
         var programRef = _driver.CreateShader(vs, fs);
-        samplers = _driver.GetSamplersFromProgram(programRef, UniformSamplerByHash, dst);
-        var meta = new ShaderMeta(samplers);
+
+        var samplerList = new List<GfxUniformSampler>(4);
+        _driver.GetSamplersFromProgram(programRef, samplerList);
+        samplerInfo = samplerList.ToArray();
+        
+        var meta = new ShaderMeta(samplerInfo.Length);
         return _store.Add(in meta, programRef);
     }
 
-    public void RecreateShader(ShaderId shaderId, NativeView<byte> vs, NativeView<byte> fs, out int samplers, Span<UniformSamplerInfo> dst)
+    public void RecreateShader(ShaderId shaderId, NativeView<byte> vs, NativeView<byte> fs, out GfxUniformSampler[] samplers)
     {
         ArgumentOutOfRangeException.ThrowIfZero(shaderId.Id, nameof(shaderId));
         if (vs.IsNull || vs.Length == 0) throw new ArgumentOutOfRangeException(nameof(vs));
         if (fs.IsNull || fs.Length == 0) throw new ArgumentOutOfRangeException(nameof(fs));
 
         _debugger.ToggleDebug(false);
-        GfxHandle oldRef = default, newRef = default;
+        GfxHandle oldRef, newRef;
+        int samplerCount = 0;
         try
         {
-            oldRef = _store.GetHandleAndMeta(shaderId, out _);
+            oldRef = _store.GetHandleAndMeta(shaderId, out var oldMeta);
             newRef = _driver.CreateShader(vs, fs);
+            samplerCount = oldMeta.SamplerSlots;
         }
         finally
         {
             _debugger.ToggleDebug(true);
         }
 
-        samplers = _driver.GetSamplersFromProgram(newRef, UniformSamplerByHash, dst);
-        var meta = new ShaderMeta(samplers);
-        _store.Replace(shaderId, in meta, newRef, out _);
-        _disposer.EnqueueReplace(oldRef);
-    }
+        var samplerList = new List<GfxUniformSampler>(samplerCount);
+        _driver.GetSamplersFromProgram(newRef, samplerList);
+        samplers = samplerList.ToArray();
 
-    public List<(string, int)> GetUniformList(ShaderId shaderId)
-    {
-        var programRef = _store.GetHandle(shaderId);
-        return _driver.GetUniformsFromProgram(programRef);
+        var meta = new ShaderMeta(samplers.Length);
+        _store.Replace(shaderId, in meta, newRef, out _);
+
+        _disposer.EnqueueReplace(oldRef);
     }
 }

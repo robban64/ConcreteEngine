@@ -23,7 +23,6 @@ public abstract class AssetObject : IComparable<AssetObject>
     }
 
     public ulong PackedName { get; private set; }
-    public bool IsCoreAsset { get; init; }
 
     protected AssetObject(string name)
     {

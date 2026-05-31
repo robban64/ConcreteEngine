@@ -1,3 +1,4 @@
+using System.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Graphics.Gfx;
@@ -17,12 +18,11 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
         if (materials.DirtyCount == 0 && _hasUploadedMaterial) return;
         if (materials.DirtyCount > 0) _hasUploadedMaterial = false;
 
-
         foreach (var id in materials.DirtyIds)
             assetStore.GetUnsafe<Material>(id).Commit();
-        
+
         Submit(renderer.UploadBuffers.Materials);
-        
+
         materials.ClearDirty();
     }
 
@@ -31,33 +31,39 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
         Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
         foreach (var material in assetStore.GetAssetEnumerator<Material>())
         {
-            if(material.BoundShader is not {} shader) continue;
+            if (material.BoundShader is not { } shader) continue;
 
-            int slotLength = GetMaterialUploadData(material, shader, slots, out var payload);
-            materialBuffer.Submit(in payload, slots.Slice(0, slotLength));
+            var textureSources = material.GetTextureSources();
+            for (var i = 0; i < textureSources.Length; i++)
+            {
+                var source = textureSources[i];
+                if (!ResolveFallbackTextureId(source, out var textureId))
+                    textureId = assetStore.Get<Texture>(source.AssetTexture).GfxId;
+
+                slots[i] = new TextureBinding(textureId, source.Usage, source.TextureKind);
+            }
+
+            var props = material.RenderProps;
+            float transparency = props.HasTransparency ? 1f : 0f;
+            float normal = props.HasNormal ? 1f : 0f;
+            float alpha = props.HasAlphaMask ? 1f : 0f;
+
+            var meta = new RenderMaterialMeta(
+                material.MaterialId, 
+                shader.GfxId, 
+                material.Pipeline.DrawState,
+                material.Pipeline.PassFunctions, 
+                material.HasShadow
+            );
+            
+            ref var uniform = ref materialBuffer.Submit(in meta, slots.Slice(0, textureSources.Length));
+
+            uniform.MatColor = material.Color;
+            uniform.MatParams0 = new Vector4(material.Specular, material.UvRepeat, 1.0f, 1.0f);
+            uniform.MatParams1 = new Vector4(material.Shininess, normal, transparency, alpha);
         }
 
         _hasUploadedMaterial = true;
-    }
-
-
-    private int GetMaterialUploadData(Material material, Shader shader, Span<TextureBinding> slots, out RenderMaterialPayload data)
-    {
-        material.FillParams(out var param);
-
-        data = new RenderMaterialPayload(material.MaterialId, shader.GfxId, in param, material.RenderProps, material.Pipeline);
-
-        var textureSources = material.GetTextureSources();
-        for (var i = 0; i < textureSources.Length; i++)
-        {
-            var source = textureSources[i];
-            if (!ResolveFallbackTextureId(source, out var textureId))
-                textureId = assetStore.Get<Texture>(source.AssetTexture).GfxId;
-
-            slots[i] = new TextureBinding(textureId, source.Usage, source.TextureKind);
-        }
-
-        return textureSources.Length;
     }
 
     private static bool ResolveFallbackTextureId(TextureSource source, out TextureId textureId)

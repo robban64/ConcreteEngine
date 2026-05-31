@@ -9,4 +9,6 @@ public struct SkinningData
 {
     public Int4 BoneIndices;
     public Vector4 BoneWeights;
+
+    public static readonly SkinningData Identity = new() { BoneIndices = Int4.NegativeOne, BoneWeights = default };
 }

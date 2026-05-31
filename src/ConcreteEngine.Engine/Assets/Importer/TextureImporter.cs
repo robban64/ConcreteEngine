@@ -6,8 +6,7 @@ using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.Loader.Data;
-using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 using StbImageSharp;
 
 namespace ConcreteEngine.Engine.Assets.Importer;
@@ -121,9 +120,8 @@ internal static unsafe class TextureImporter
         TextureAnisotropy anisotropy,
         float lodBias)
     {
-        var desc = new CreateTextureInfo(size.Width, size.Height, kind, format);
-        var props = new CreateTextureProps(lodBias, preset, anisotropy);
-        return new TextureUploadMeta(desc, props);
+        var props = new CreateTextureProps(lodBias, kind, format, preset, anisotropy);
+        return new TextureUploadMeta(size.ToSize3D(1), props);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

@@ -5,7 +5,6 @@ namespace ConcreteEngine.Graphics;
 
 public sealed class GfxContext
 {
-    public required IGfxResourceManager ResourceManager { get; init; }
     public required IGfxResourceDisposer Disposer { get; init; }
 
     public required GfxCommands Commands { get; init; }

@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Engine.Assets.Loader.Data;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Assets.ImporterAssimp;
 
@@ -42,7 +42,7 @@ internal sealed class ModelImportContext(
         {
             for (var i = 0; i < clip.Channels.Length; i++)
             {
-                if (clip.Channels[i] == null!) clip.Channels[i] = new AnimationChannel(0, 0);
+                if (clip.Channels[i] == null!) clip.Channels[i] = new AnimationClip.Channel(0, 0);
             }
         }
     }

@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text.Unicode;
+using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Core.Common.Text;
@@ -111,7 +111,7 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
         }
 
         var dest = MemoryMarshal.CreateSpan(ref *Buffer, Capacity - 1);
-        Utf8.FromUtf16(value, dest, out _, out var written);
+        var written = Encoding.UTF8.GetBytes(value, dest);
         Buffer[written] = 0;
         return new NativeView<byte>(Buffer, written);
     }
@@ -150,7 +150,7 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
     {
         if (value.IsEmpty) return ref this;
         var dest = MemoryMarshal.CreateSpan(ref *(Buffer + _cursor), Capacity - _cursor);
-        Utf8.FromUtf16(value, dest, out _, out var written);
+        var written = Encoding.UTF8.GetBytes(value, dest);
         _cursor += written;
         return ref this;
     }

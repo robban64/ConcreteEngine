@@ -18,7 +18,7 @@ internal interface IAssetTypeLoader<in TAsset> : IAssetTypeLoader where TAsset :
     void Reload(TAsset asset, AssetFile[] files);
 }
 
-internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader uploader) : IAssetTypeLoader<TAsset>
+internal abstract class AssetTypeLoader<TAsset, TRecord> : IAssetTypeLoader<TAsset>
     where TAsset : AssetObject where TRecord : AssetRecord
 {
     public AssetKind Kind => AssetKindUtils.ToAssetKind(typeof(TAsset));
@@ -29,8 +29,6 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
     public bool IsSetup { get; private set; }
 
     public readonly List<IEmbeddedAsset> EmbeddedAssets = [];
-
-    protected readonly AssetGfxUploader Uploader = uploader;
 
     private ArenaAllocator? _allocator;
 
@@ -57,7 +55,7 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
         if (SetupAllocSize > 0 && DefaultAllocSize > 0)
         {
             var capacity = isSetup ? SetupAllocSize : DefaultAllocSize;
-            _allocator = new ArenaAllocator(capacity, false);
+            _allocator = new ArenaAllocator(capacity, zeroed: false);
         }
 
         OnSetup();

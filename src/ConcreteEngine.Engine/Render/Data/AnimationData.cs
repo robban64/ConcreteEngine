@@ -6,77 +6,47 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Engine.Render.Data;
 
-internal readonly struct SkeletonMatrices
+internal readonly ref struct SkinningContext
 {
-    public readonly byte[] ParentIndices;
-    public readonly Matrix4x4[] BindPose;
-    public readonly Matrix4x4[] InverseBindPose;
+    public readonly ReadOnlySpan<byte> ParentIndices;
+    public readonly ReadOnlySpan<Matrix4x4> BindPose;
+    public readonly ReadOnlySpan<Matrix4x4> InverseBindPose;
+    public readonly ReadOnlySpan<AnimationChannel> Channels;
 
-    public int Length => ParentIndices.Length;
-
-    public SkeletonMatrices(Skeleton s)
+    public SkinningContext(
+        ReadOnlySpan<byte> parentIndices,
+        ReadOnlySpan<Matrix4x4> bindPose,
+        ReadOnlySpan<Matrix4x4> inverseBindPose,
+        ReadOnlySpan<AnimationChannel> channels)
     {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(s.BindPose.Length, s.InverseBindPose.Length, nameof(s));
-        ArgumentOutOfRangeException.ThrowIfNotEqual(s.BindPose.Length, s.ParentIndices.Length, nameof(s));
+        if (parentIndices.Length != channels.Length || parentIndices.Length != bindPose.Length ||
+            parentIndices.Length != inverseBindPose.Length)
+            Throwers.InvalidOperation("Length mismatch");
 
-        ParentIndices = new byte[s.ParentIndices.Length];
-        for (int i = 0; i < ParentIndices.Length; i++)
-        {
-            var value = s.ParentIndices[i];
-            ParentIndices[i] = value == -1 ? (byte)0 : (byte)s.ParentIndices[i];
-        }
-
-        BindPose = s.BindPose;
-        InverseBindPose = s.InverseBindPose;
+        ParentIndices = parentIndices;
+        BindPose = bindPose;
+        InverseBindPose = inverseBindPose;
+        Channels = channels;
     }
 }
 
-internal readonly struct AnimationClipChannel
+internal readonly struct AnimationChannel(AnimationClip.Channel channels)
 {
-    public readonly float[] PositionTimes;
-    public readonly float[] RotationTimes;
+    public readonly float[] PositionTimes = channels.PositionTimes;
+    public readonly float[] RotationTimes = channels.RotationTimes;
 
-    public readonly Vector3[] Positions;
-    public readonly Quaternion[] Rotations;
+    public readonly Vector3[] Positions = channels.Positions;
+    public readonly Quaternion[] Rotations = channels.Rotations;
 
-    public readonly int MaxLength;
+    public int MaxLength
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => int.Max(PositionTimes.Length, RotationTimes.Length);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UnsafeSpan<float> GetPositionTimes() => new(PositionTimes);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UnsafeSpan<float> GetRotationTimes() => new(RotationTimes);
-
-    public AnimationClipChannel(AnimationChannel channels)
-    {
-        PositionTimes = channels.PositionTimes;
-        RotationTimes = channels.RotationTimes;
-
-        Positions = channels.Positions;
-        Rotations = channels.Rotations;
-        MaxLength = channels.MaxLength;
-    }
-}
-
-internal readonly struct AnimationEntry
-{
-    public readonly SkeletonMatrices Skeleton;
-    public readonly AnimationClipChannel[] Clips;
-
-    public AnimationEntry(Skeleton skeleton, AnimationClipChannel[] clips)
-    {
-        Skeleton = new SkeletonMatrices(skeleton);
-        Clips = clips;
-    }
-
-    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<AnimationClipChannel> GetClip(int clip)
-    {
-        var len = Skeleton.Length;
-        var start = clip * len;
-        if ((uint)start + (uint)len > (uint)Clips.Length)
-            Throwers.BufferOverflow(nameof(AnimationClipChannel), Clips.Length, start + len);
-
-        return Clips.AsSpan(start, len);
-    }
 }

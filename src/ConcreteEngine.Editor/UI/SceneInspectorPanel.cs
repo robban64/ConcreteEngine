@@ -2,7 +2,6 @@ using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -127,16 +126,13 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         ImGui.Spacing();
         if (ImGui.CollapsingHeader("Model Material"u8, CollapseFlags))
         {
-            Shader? shader = null;
             var mats = modelInstance.GetMaterials();
             for (var i = 0; i < mats.Length; i++)
             {
                 var mat = mats[i];
-                if (shader is null || shader.Id != mat.ShaderId)
-                    shader = EngineObjectStore.Assets.Get<Shader>(mat.ShaderId);
-
+                var shaderName = mat.BoundShader?.Name ?? "No Shader";
                 AppDraw.Text(sw.Append('[').Append(i).Append(']').PadRight(2).Append(mat.Name)
-                    .Append(" ("u8).Append(shader.Name).Append(')').End());
+                    .Append(" ("u8).Append(shaderName).Append(')').End());
             }
         }
     }

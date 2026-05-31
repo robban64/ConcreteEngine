@@ -15,19 +15,19 @@ namespace ConcreteEngine.Engine.Render;
 
 internal sealed class RenderDispatcher : IDisposable
 {
+    public int VisibleCount { get; private set; }
+
     private RenderEntityId[] _visibleEntities;
     private int[] _visibleByIndices;
-
-    public int VisibleCount { get; private set; }
 
     private readonly RenderEntityCore _ecs;
     private readonly CameraSystem _cameraSystem;
 
-    private readonly AnimationTable _animationTable;
-    private readonly ParticleSystem _particleSystem;
-
     private AnimatorProcessor _animatorProcessor = null!;
     private RenderUploadBuffers _uploadBuffers = null!;
+
+    private readonly AnimationTable _animationTable;
+    private readonly ParticleSystem _particleSystem;
 
     internal RenderDispatcher(AnimationTable animations, ParticleSystem particleSystem)
     {
@@ -77,15 +77,14 @@ internal sealed class RenderDispatcher : IDisposable
         var submitOffset = _uploadBuffers.Commands.Count;
 
         ProcessEntities(submitOffset, visibleEntities, visibleByIndices);
+        _animatorProcessor.Execute();
 
         UploadDrawCommands(visibleEntities);
         DrawTagProcessor.UploadDebugBounds(submitOffset, visibleByIndices, _uploadBuffers.Commands,
             _uploadBuffers.Effects);
 
-        _animatorProcessor.Execute();
         ParticleProcessor.Execute(_particleSystem);
     }
-
 
     private void ProcessEntities(int submitOffset, Span<RenderEntityId> visibleEntities, Span<int> visibleByIndices)
     {
@@ -93,10 +92,10 @@ internal sealed class RenderDispatcher : IDisposable
         var ctx = new DrawEntityContext(visibleEntities, visibleByIndices, drawCommands);
 
         CollectEntities(in ctx);
-        DrawTagProcessor.TagAnimationEntities(in ctx);
-        ParticleProcessor.TagParticles(in ctx, _particleSystem);
         DrawTagProcessor.TagUploadSelectionEffect(in ctx, _uploadBuffers.Effects);
+        ParticleProcessor.TagParticles(in ctx, _particleSystem);
         SpatialProcessor.TagDepthKeys(in ctx, _cameraSystem);
+        _animatorProcessor.Tag(in ctx);
     }
 
     private void CollectEntities(in DrawEntityContext ctx)
@@ -120,7 +119,7 @@ internal sealed class RenderDispatcher : IDisposable
             ref readonly var world = ref parentMatrices[visibleEntities[i].Index()];
             ref var bufferData = ref buffer.SubmitDraw();
             bufferData.Model = world;
-            MatrixMath.CreateNormalMatrix(in world, out bufferData.Normal);
+            MatrixMath.CreateNormalMatrix(ref bufferData.Normal, in world);
         }
     }
 
@@ -132,7 +131,7 @@ internal sealed class RenderDispatcher : IDisposable
         const int extraAnimations = 8;
 
         var entityLen = Ecs.Render.Core.Count + extraEntities;
-        var animationLen = Ecs.Render.Stores<RenderAnimationComponent>.Store.Count + extraAnimations;
+        var animationLen = Ecs.Render.Stores<SkinningComponent>.Store.Count + extraAnimations;
 
         _uploadBuffers.Commands.EnsureCapacity(entityLen);
         _uploadBuffers.Skinning.EnsureCapacity(animationLen);

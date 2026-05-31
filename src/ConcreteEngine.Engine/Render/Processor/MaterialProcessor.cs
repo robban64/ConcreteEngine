@@ -1,7 +1,7 @@
+using System.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
@@ -18,62 +18,85 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
         if (materials.DirtyCount == 0 && _hasUploadedMaterial) return;
         if (materials.DirtyCount > 0) _hasUploadedMaterial = false;
 
+        foreach (var id in materials.DirtyIds)
+            assetStore.GetUnsafe<Material>(id).Commit();
+
+        Submit(renderer.UploadBuffers.Materials);
+
         materials.ClearDirty();
+    }
 
-        var materialBuffer = renderer.UploadBuffers.Materials;
-
+    private void Submit(MaterialBuffer materialBuffer)
+    {
         Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
         foreach (var material in assetStore.GetAssetEnumerator<Material>())
         {
-            int slotLength = GetMaterialUploadData(material, slots, out var payload);
-            materialBuffer.Submit(in payload, slots.Slice(0, slotLength));
+            if (material.BoundShader is not { } shader) continue;
+
+            var textureSources = material.GetTextureSources();
+            for (var i = 0; i < textureSources.Length; i++)
+            {
+                var source = textureSources[i];
+                if (!ResolveFallbackTextureId(source, out var textureId))
+                    textureId = assetStore.Get<Texture>(source.AssetTexture).GfxLink.GfxId;
+
+                slots[i] = new TextureBinding(textureId, source.Usage, (sbyte)i);
+            }
+
+            var props = material.RenderProps;
+            float transparency = props.HasTransparency ? 1f : 0f;
+            float normal = props.HasNormal ? 1f : 0f;
+            float alpha = props.HasAlphaMask ? 1f : 0f;
+
+            var meta = new RenderMaterialMeta(
+                material.MaterialId,
+                shader.GfxId,
+                material.Pipeline.DrawState,
+                material.Pipeline.PassFunctions,
+                shader.DefaultBindings.ShadowMapBinding
+            );
+
+            ref var uniform = ref materialBuffer.Submit(in meta, slots.Slice(0, textureSources.Length));
+
+            uniform.MatColor = material.Color;
+            uniform.MatParams0 = new Vector4(material.Specular, material.UvRepeat, 1.0f, 1.0f);
+            uniform.MatParams1 = new Vector4(material.Shininess, normal, transparency, alpha);
         }
 
         _hasUploadedMaterial = true;
     }
 
-
-    private int GetMaterialUploadData(Material material, Span<TextureBinding> slots, out RenderMaterialPayload data)
+    private static bool ResolveFallbackTextureId(TextureSource source, out TextureId textureId)
     {
-        var shader = assetStore.Get<Shader>(material.ShaderId).GfxId;
-
-        material.FillParams(out var param);
-
-        data = new RenderMaterialPayload(material.MaterialId, shader, in param,
-            material.GetProperties(), material.Pipeline);
-
-        var textureSlots = material.GetTextureSources();
-        for (var i = 0; i < textureSlots.Length; i++)
+        if (source.TextureKind == TextureKind.Texture2DArray)
         {
-            var slot = textureSlots[i];
-            var textureId = ResolveTextureId(slot);
-            slots[i] = new TextureBinding(textureId, slot.Usage, slot.TextureKind);
+            textureId = source.OverrideTextureId;
+            return true;
         }
 
-        return textureSlots.Length;
-    }
-
-    private TextureId ResolveTextureId(TextureSource source)
-    {
         if (source.IsFallback)
         {
-            var texId = GfxTextures.Fallback.AlbedoId;
-            if (source.Usage == TextureUsage.Normal) texId = GfxTextures.Fallback.NormalId;
-            return texId;
-        }
-
-        if (source.Usage == TextureUsage.Shadowmap) return default;
-
-        if (!source.Texture.IsValid())
-        {
-            switch (source.Usage)
+            textureId = source.Usage switch
             {
-                case TextureUsage.Albedo: return GfxTextures.Fallback.AlbedoId;
-                case TextureUsage.Normal: return GfxTextures.Fallback.NormalId;
-                case TextureUsage.Mask: return GfxTextures.Fallback.AlphaMaskId;
-            }
+                TextureUsage.Normal => GfxTextures.Fallback.NormalId,
+                _ => GfxTextures.Fallback.AlbedoId
+            };
+            return true;
         }
 
-        return assetStore.Get<Texture>(source.Texture).GfxId;
+        if (!source.AssetTexture.IsValid())
+        {
+            textureId = source.Usage switch
+            {
+                TextureUsage.Albedo => GfxTextures.Fallback.AlbedoId,
+                TextureUsage.Normal => GfxTextures.Fallback.NormalId,
+                TextureUsage.Mask => GfxTextures.Fallback.AlphaMaskId,
+                _ => default
+            };
+            return true;
+        }
+
+        textureId = default;
+        return false;
     }
 }

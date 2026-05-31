@@ -14,21 +14,24 @@ public sealed class ModelImportData(int meshCount)
     public int TotalVertexCount;
     public int TotalFaceCount;
 
-    public void GetMeshData(
+    public bool GetMeshData(
         int meshIndex,
         out NativeView<Vertex3D> vertices,
         out NativeView<SkinningData> skinned,
-        out NativeView<uint> indices)
+        out NativeView<byte> indices)
     {
         var mesh = Meshes[meshIndex];
         var block = Blocks[meshIndex];
+        var is16Bit = mesh.Info.VertexCount < ushort.MaxValue;
 
         vertices = block.Data.Reinterpret<Vertex3D>();
         block = block.Next;
 
         if (block.IsNull) throw new InvalidOperationException("Index block is null");
 
-        indices = block.Data.Reinterpret<uint>();
+        indices = block.Data;
+        if (is16Bit) indices = indices.Slice(0, indices.Length / 2);
+
         block = block.Next;
 
         if (mesh.Info.BoneCount > 0)
@@ -40,5 +43,7 @@ public sealed class ModelImportData(int meshCount)
         {
             skinned = default;
         }
+
+        return is16Bit;
     }
 }

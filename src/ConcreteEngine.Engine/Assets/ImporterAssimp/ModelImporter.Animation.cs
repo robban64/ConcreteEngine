@@ -57,7 +57,7 @@ internal sealed unsafe partial class ModelImporter
             var rotKeys = aiChannel->MRotationKeys;
             var rotCount = (int)aiChannel->MNumRotationKeys;
 
-            var channel = new AnimationChannel(posCount, rotCount);
+            var channel = new AnimationClip.Channel(posCount, rotCount);
 
             for (var k = 0; k < posCount; k++)
             {

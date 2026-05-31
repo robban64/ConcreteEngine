@@ -1,7 +1,7 @@
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Graphics.Gfx.Internal;
+namespace ConcreteEngine.Graphics.Gfx.Internals;
 
 internal sealed class GfxContextInternal(
     GlBackendDriver driver,

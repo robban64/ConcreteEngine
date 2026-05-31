@@ -1,9 +1,9 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Configuration;
-using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.Gfx.Internals;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
+using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Graphics.Gfx;
@@ -31,9 +31,9 @@ public sealed class GfxMeshes
     {
         _driver = context.Driver;
         _buffers = buffers;
-        _meshStore = context.Resources.GfxStoreHub.MeshStore;
-        _vboStore = context.Resources.GfxStoreHub.VboStore;
-        _iboStore = context.Resources.GfxStoreHub.IboStore;
+        _meshStore = GfxRegistry.GetGfxStore<MeshMeta>();
+        _vboStore = GfxRegistry.GetGfxStore<VertexBufferMeta>();
+        _iboStore = GfxRegistry.GetGfxStore<IndexBufferMeta>();
 
         _meshAttributes = new Dictionary<int, MeshLayout>(int.Max(64, _meshStore.Capacity));
         CreatePrimitives(this);
@@ -87,7 +87,7 @@ public sealed class GfxMeshes
     public VertexBufferId CreateAttachVertexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateVboArgs args)
         where T : unmanaged
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(meshId.Value);
+        ArgumentOutOfRangeException.ThrowIfZero(meshId.Id);
         var offset = (uint)args.Offset;
         var vbo = _buffers.CreateVertexBuffer(data, args.Divisor, offset, args.Storage, args.Access, args.Length);
         AttachVertexBuffer(meshId, vbo, args.Binding);
@@ -98,7 +98,7 @@ public sealed class GfxMeshes
     public IndexBufferId CreateAttachIndexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateIboArgs args)
         where T : unmanaged
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(meshId.Value);
+        ArgumentOutOfRangeException.ThrowIfZero(meshId.Id);
         var ibo = _buffers.CreateIndexBuffer(data, args.Storage, args.Access, args.Length);
         AttachIndexBuffer(meshId, ibo);
         return ibo;
@@ -122,7 +122,7 @@ public sealed class GfxMeshes
         var iboRef = _iboStore.GetHandleAndMeta(iboId, out var iboMeta);
         _driver.Meshes.AttachIndexBuffer(meshRef, iboRef);
 
-        var elementSize = GfxUtilsEnum.ToDrawElementSize(iboMeta.Stride);
+        var elementSize = GfxEnumUtils.ToDrawElementSize(iboMeta.Stride);
         _meshStore.ReplaceMeta(meshId, meta with { ElementSize = elementSize }, out _);
 
         _meshAttributes[meshId].IboId = iboId;

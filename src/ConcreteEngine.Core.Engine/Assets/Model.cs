@@ -1,10 +1,7 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Graphics.Handles;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
@@ -54,15 +51,5 @@ public sealed class Model : AssetObject
         Meshes = meshes;
         Animation = animation;
         AssetRefs = assetRefs;
-    }
-
-
-    public void AttachAnimation(AnimationId animationId)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(animationId.Value, 0, nameof(animationId));
-        if (Animation is null) throw new InvalidOperationException("Animation is null");
-        InvalidOpThrower.ThrowIf(Animation.AnimationId.Value > 0, nameof(Animation.AnimationId));
-
-        Animation.AnimationId = animationId;
     }
 }

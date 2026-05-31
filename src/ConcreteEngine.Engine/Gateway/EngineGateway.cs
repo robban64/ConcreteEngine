@@ -43,24 +43,19 @@ internal sealed class EngineGateway : IDisposable
 
         Enabled = true;
 
-        var store = coreSystem.GetSystem<SceneSystem>().SceneStore;
         var inputSystem = coreSystem.GetSystem<InputSystem>();
 
         var engineBundle = new EditorEngineBundle
         {
-            Camera = CameraSystem.Instance.Camera,
-            Visuals = VisualManager.Instance,
-            RayCaster = CameraSystem.Instance.RayCaster,
-            SceneStore = store,
-            Assets = coreSystem.AssetSystem.Assets,
-            FileRegistry = coreSystem.AssetSystem.Files,
+            SceneStore = coreSystem.Scene.SceneStore,
+            SceneSpawner = coreSystem.Scene.SceneSpawner,
+            Assets = coreSystem.Assets.Assets,
+            FileRegistry = coreSystem.Assets.Files,
         };
 
         var engineContext = new EditorEngineContext
         {
-            GfxApi = gfxContext.ResourceManager.GetGfxApi(),
-            Input = new InputLayerController(inputSystem, InputLayerKind.Ui),
-            Window = window,
+            Input = new InputLayerController(inputSystem, InputLayerKind.Ui), Window = window,
         };
 
         _editor = new EditorPortal(engineContext, engineBundle);

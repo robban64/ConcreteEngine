@@ -2,13 +2,12 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceApi gfxApi)
+internal sealed class StateManager(EventDispatcher eventDispatcher)
 {
     public event Action<EditorContext, EditorContext>? ContextChanged;
 
@@ -45,25 +44,12 @@ internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceA
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void GetOrSetTextureHandle(TextureId id, scoped ref TexturePtrHandle texHandle)
     {
-        var handle = gfxApi.GetNativeHandle<TextureId, TextureMeta>(id);
+        ArgumentOutOfRangeException.ThrowIfZero(id.Value, nameof(id));
+        var handle = GfxResourceApi.GetNativeHandle(id);
         if (texHandle.Handle == handle) return;
 
         if (!texHandle.TexturePtr.IsNull) texHandle.TexturePtr.Destroy();
         texHandle.TexturePtr = ImGui.ImTextureRef(new ImTextureID(handle.Value));
         texHandle.Handle = handle;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetTextureRefPtr(TextureId id, out ImTextureRefPtr refPtr)
-    {
-        if (!id.IsValid())
-        {
-            refPtr = default;
-            return false;
-        }
-
-        var handle = gfxApi.GetNativeHandle<TextureId, TextureMeta>(id);
-        refPtr = ImGui.ImTextureRef(new ImTextureID(handle.Value));
-        return true;
     }
 }

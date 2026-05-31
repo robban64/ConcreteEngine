@@ -73,7 +73,7 @@ internal sealed class GameSystem(SceneStore store)
     {
         var renderEcs = Ecs.Render.Core;
         var particleEcs = Ecs.GetRenderStore<ParticleComponent>();
-        var animationEcs = Ecs.GetRenderStore<RenderAnimationComponent>();
+        var skinnedEcs = Ecs.GetRenderStore<SkinLinkComponent>();
 
         MatrixMath.CreateModelMatrix(in sceneObject.Transform.GetTransform(), out var rootMatrix);
         foreach (var entity in sceneObject.GetRenderEntities())
@@ -81,8 +81,10 @@ internal sealed class GameSystem(SceneStore store)
             ref readonly var entityTransform = ref Ecs.Render.Core.GetTransform(entity);
             ref var finalMatrix = ref renderEcs.GetMatrix(entity);
 
-            MatrixMath.CreateModelMatrix(in entityTransform, out var entityMatrix);
-            MatrixMath.MultiplyAffine(in entityMatrix, in rootMatrix, out var worldMatrix);
+            MatrixMath.CreateModelMatrix(in entityTransform, out var worldMatrix);
+            MatrixMath.MultiplyAffine(ref worldMatrix, in rootMatrix);
+
+            //MatrixMath.MultiplyAffine(in entityMatrix, in rootMatrix, out var worldMatrix);
 
             var particleComp = particleEcs.TryGet(entity);
             if (!particleComp.IsNull)
@@ -93,7 +95,7 @@ internal sealed class GameSystem(SceneStore store)
                 continue;
             }
 
-            if (animationEcs.Has(entity))
+            if (skinnedEcs.Has(entity))
             {
                 finalMatrix = worldMatrix;
                 continue;
@@ -102,8 +104,9 @@ internal sealed class GameSystem(SceneStore store)
             var instance = sceneObject.GetInstance<ModelInstance>();
             ref readonly var source = ref renderEcs.GetSource(entity);
             ref readonly var meshMatrix = ref instance.Asset.Meshes[source.MeshIndex].WorldTransform;
-            finalMatrix = meshMatrix * worldMatrix;
-            //MatrixMath.WriteMultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
+            MatrixMath.MultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
+
+            //finalMatrix = meshMatrix * worldMatrix;
         }
     }
 }

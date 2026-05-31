@@ -1,11 +1,13 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Graphics.Handles;
 
-public interface IResourceMeta;
+public interface IResourceMeta
+{
+    static abstract GraphicsKind ResourceKind { get; }
+}
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct TextureMeta(
@@ -13,7 +15,7 @@ public readonly struct TextureMeta(
     int height,
     ushort depth,
     Half lod,
-    byte levels,
+    byte mipLevels,
     byte samples,
     TexturePreset preset,
     TextureKind kind,
@@ -22,35 +24,34 @@ public readonly struct TextureMeta(
     DepthMode compareTextureFunc,
     GpuTextureBorder borderColor) : IResourceMeta
 {
-    public readonly int Width = width;
-    public readonly int Height = height;
-    public readonly ushort Depth = depth;
-    public readonly Half Lod = lod;
-    public readonly byte Levels = levels;
-    public readonly byte Samples = samples;
-    public readonly TexturePreset Preset = preset;
-    public readonly TextureKind Kind = kind;
-    public readonly TextureAnisotropy Anisotropy = anisotropy;
-    public readonly TexturePixelFormat PixelFormat = pixelFormat;
-    public readonly DepthMode CompareTextureFunc = compareTextureFunc;
-    public readonly GpuTextureBorder BorderColor = borderColor;
+    public int Width { get; init; } = width;
+    public int Height { get; init; } = height;
+    public ushort Depth { get; init; } = depth;
+    public Half Lod { get; init; } = lod;
+    public GpuTextureBorder BorderColor { get; init; } = borderColor;
+    public byte MipLevels { get; init; } = mipLevels;
+    public byte Samples { get; init; } = samples;
+    public TexturePreset Preset { get; init; } = preset;
+    public TextureKind Kind { get; init; } = kind;
+    public TextureAnisotropy Anisotropy { get; init; } = anisotropy;
+    public TexturePixelFormat PixelFormat { get; init; } = pixelFormat;
+    public DepthMode CompareTextureFunc { get; init; } = compareTextureFunc;
 
-    public bool IsMipMapped => Levels > 1;
+    public bool IsMipMapped => MipLevels > 1;
     public bool IsMsaa => Kind == TextureKind.Multisample2D && Samples > 0;
 
-    internal static TextureMeta CopyWithNewSize(in TextureMeta m) =>
-        new(width: m.Width, height: m.Height, depth: m.Depth,
-            levels: m.Levels, samples: m.Samples,
-            preset: m.Preset, kind: m.Kind, anisotropy: m.Anisotropy,
-            pixelFormat: m.PixelFormat, lod: m.Lod,
-            compareTextureFunc: m.CompareTextureFunc, borderColor: m.BorderColor
-        );
+    public int GetArrayLength() => Kind == TextureKind.Texture2DArray ? Depth : 0;
+    public Size2D AsSize2D() => new(Width, Height);
+    public Size3D AsSize3D() => new(Width, Height, Depth);
+
+    public static GraphicsKind ResourceKind => GraphicsKind.Texture;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct ShaderMeta(int samplerSlots) : IResourceMeta
 {
     public readonly int SamplerSlots = samplerSlots;
+    public static GraphicsKind ResourceKind => GraphicsKind.Shader;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -63,6 +64,7 @@ public readonly struct MeshMeta : IResourceMeta
     public DrawPrimitive Primitive { get; init; }
     public DrawMeshKind Kind { get; init; }
     public DrawElementSize ElementSize { get; init; }
+    public static GraphicsKind ResourceKind => GraphicsKind.Mesh;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -86,6 +88,9 @@ public readonly struct VertexBufferMeta(
 
     public long Capacity => Stride * ElementCount;
 
+    public static GraphicsKind ResourceKind => GraphicsKind.VertexBuffer;
+
+
     public static VertexBufferMeta CreateCopy(in VertexBufferMeta m, int count, int stride, uint offset,
         BufferUsage usage) =>
         new(stride, count, offset, m.Divisor, usage, m.Storage, m.Access);
@@ -107,6 +112,7 @@ public readonly struct IndexBufferMeta(
     public readonly BufferAccess Access = access;
 
     public nint Capacity => Stride * ElementCount;
+    public static GraphicsKind ResourceKind => GraphicsKind.IndexBuffer;
 
     public static IndexBufferMeta CreateCopy(in IndexBufferMeta meta, int count, int stride, BufferUsage usage) =>
         new(count, stride, usage, meta.Storage, meta.Access);
@@ -122,6 +128,7 @@ public readonly struct FrameBufferMeta(
     public readonly Size2D Size = size;
     public readonly FboAttachmentIds Attachments = attachments;
     public readonly RenderBufferMsaa MultiSample = multiSample;
+    public static GraphicsKind ResourceKind => GraphicsKind.FrameBuffer;
 
     internal static FrameBufferMeta MakeResizeCopy(in FrameBufferMeta meta, Size2D size) =>
         new(size, meta.Attachments, meta.MultiSample);
@@ -137,6 +144,7 @@ public readonly struct RenderBufferMeta(
     public readonly Size2D Size = size;
     public readonly FrameBufferAttachmentSlot AttachmentSlot = attachmentSlot;
     public readonly RenderBufferMsaa Multisample = multisample;
+    public static GraphicsKind ResourceKind => GraphicsKind.RenderBuffer;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -155,6 +163,7 @@ public readonly struct UniformBufferMeta(
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;
+    public static GraphicsKind ResourceKind => GraphicsKind.UniformBuffer;
 
     public static UniformBufferMeta MakeResizeCopy(in UniformBufferMeta meta, uint capacity) =>
         new(meta.Slot, meta.Stride, capacity, meta.Usage, meta.Storage, meta.Access);

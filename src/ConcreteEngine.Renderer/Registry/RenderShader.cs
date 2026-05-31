@@ -20,7 +20,7 @@ public sealed class RenderShader : IComparable<ShaderId>
 
     internal RenderShader(ShaderId id, ShaderMeta meta)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0, nameof(id));
+        ArgumentOutOfRangeException.ThrowIfZero(id.Id, nameof(id));
         Id = id;
         SamplerSlots = meta.SamplerSlots;
     }
@@ -43,5 +43,5 @@ public sealed class RenderShader : IComparable<ShaderId>
         }
     }
 */
-    public int CompareTo(ShaderId other) => Id.Value.CompareTo(other.Value);
+    public int CompareTo(ShaderId other) => Id.CompareTo(other);
 }

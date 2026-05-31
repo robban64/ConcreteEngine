@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
@@ -14,7 +13,7 @@ namespace ConcreteEngine.Graphics.Resources;
 internal interface IBackendResourceStore : IDisposable
 {
     GraphicsKind Kind { get; }
-    NativeHandle GetNativeHandle(GfxHandle handle);
+    NativeHandle GetSafe(GfxHandle handle);
     void Remove(GfxHandle handle);
 
     int Count { get; }
@@ -24,9 +23,9 @@ internal interface IBackendResourceStore : IDisposable
     int GetAliveCount();
 }
 
-internal sealed class BackendResourceStore<THandle> : IBackendResourceStore where THandle : unmanaged, IGraphicsHandle
+internal sealed class BackendResourceStore : IBackendResourceStore
 {
-    private NativeArray<BkHandle> _handles;
+    private NativeArray<NativeHandle> _handles;
 
     private readonly Stack<int> _free = new();
     public int Count { get; private set; }
@@ -35,7 +34,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
     public BackendResourceStore(int capacity, GraphicsKind kind)
     {
         Kind = kind;
-        _handles = NativeArray.Allocate<BkHandle>(capacity);
+        _handles = NativeArray.Allocate<NativeHandle>(capacity);
     }
 
     public int ActiveCount => Count - _free.Count;
@@ -43,28 +42,27 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
     public int Capacity => _handles.Length;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public THandle GetHandle(GfxHandle gfxHandle)
+    public NativeHandle Get(GfxHandle gfxHandle)
     {
         Debug.Assert(gfxHandle.Kind == Kind);
-        var handle = _handles[gfxHandle.Slot].Handle;
-        return Unsafe.As<uint, THandle>(ref handle);
+        return _handles[gfxHandle.Slot];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeHandle GetNativeHandle(GfxHandle handle)
+    public NativeHandle GetSafe(GfxHandle handle)
     {
         if (!handle.IsValid || handle.Kind != Kind) Throwers.InvalidOperation(nameof(handle));
         var record = _handles[handle.Slot];
         if (!record.IsValid()) Throwers.InvalidOperation(nameof(record));
-        return new NativeHandle(record.Handle);
+        return record;
     }
 
-    public GfxHandle Add(THandle handle)
+    public GfxHandle Add(NativeHandle handle)
     {
         ArgumentOutOfRangeException.ThrowIfZero(handle.Value);
         var idx = AllocateNext();
-        var newHandle = _handles[idx] = new BkHandle(handle.Value);
-        GfxLog.LogBkStore(newHandle.Handle, idx, Kind.ToLogTopic(), LogAction.Add);
+        _handles[idx] = handle;
+        GfxLog.LogBkStore(handle, idx, Kind.ToLogTopic(), LogAction.Add);
         return new GfxHandle(idx, 1, Kind);
     }
 
@@ -99,9 +97,9 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
     public void EnsureCapacity(int capacity)
     {
         if (capacity <= _handles.Length) return;
-        var newCap = CapacityUtils.CapacityGrowthSafe(_handles.Length, IntMath.AlignUp(64, capacity));
+        var newCap = CapacityUtils.CapacityGrowthToFit(_handles.Length, capacity);
         if (newCap > GfxLimits.StoreLimit)
-            Throwers.BufferOverflow(typeof(BackendResourceStore<THandle>).Name, newCap, GfxLimits.StoreLimit);
+            Throwers.BufferOverflow(nameof(BackendResourceStore), newCap, GfxLimits.StoreLimit);
 
         _handles.Resize(newCap, true);
     }

@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Renderer.Buffer;
@@ -12,8 +11,8 @@ public struct DrawCommand(
     uint instanceCount = 0,
     ushort animationSlot = 0)
 {
-    public MeshId MeshId = meshId;
     public uint InstanceCount = instanceCount;
+    public MeshId MeshId = meshId;
     public MaterialId MaterialId = materialId;
     public ushort AnimationSlot = animationSlot;
 }

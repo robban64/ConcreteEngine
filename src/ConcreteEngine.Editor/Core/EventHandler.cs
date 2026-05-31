@@ -60,13 +60,14 @@ internal static class EventHandler
         else if (evt.SceneObject is { } sceneObject)
         {
             if (selection.SelectedSceneId == sceneObject) return;
+            var isEmpty = sceneObject == SceneObjectId.Empty;
 
             ctx.EmitChange(ctx.Context with
             {
                 Selection = selection with { SelectedSceneId = sceneObject },
                 Tool = tool with
                 {
-                    Enabled = sceneObject != SceneObjectId.Empty,
+                    Enabled = !isEmpty,
                     GizmoOp = tool.GizmoOp == TransformGizmoOp.None ? TransformGizmoOp.Translate : tool.GizmoOp,
                     IsWorldGizmo = true
                 }

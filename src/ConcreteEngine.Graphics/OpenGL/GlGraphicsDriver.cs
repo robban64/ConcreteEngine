@@ -25,22 +25,14 @@ internal sealed class GlBackendDriver
         Gl = config.DriverContext;
         Capabilities = new GlCapabilities();
 
-        var ctx = new GlCtx
-        {
-            Capabilities = Capabilities,
-            Gl = Gl,
-            Store = resource.BackendStoreHub,
-            Dispatcher = resource.BackendDispatcher
-        };
-
         Debugger = new GlDebugger();
-        Disposer = new GlDisposer(ctx);
-        Buffers = new GlBuffers(ctx);
-        Textures = new GlTextures(ctx);
-        Meshes = new GlMeshes(ctx);
-        Shaders = new GlShaders(ctx);
-        States = new GlStates(ctx);
-        FrameBuffers = new GlFrameBuffers(ctx);
+        Disposer = new GlDisposer(resource.BackendDispatcher);
+        Buffers = new GlBuffers();
+        Textures = new GlTextures();
+        Meshes = new GlMeshes();
+        Shaders = new GlShaders();
+        States = new GlStates();
+        FrameBuffers = new GlFrameBuffers();
     }
 
 

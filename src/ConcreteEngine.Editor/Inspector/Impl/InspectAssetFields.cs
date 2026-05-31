@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Editor.Lib.Field;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Editor.Inspector.Impl;
@@ -67,7 +67,7 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
             () => (int)target.PassFunctions.Depth,
             value => target.Asset.SetPassFunction(target.PassFunctions with { Depth = (DepthMode)value.X })
         );
-        DepthCombo.Bind(
+        PolygonCombo.Bind(
             () => (int)target.PassFunctions.PolygonOffset,
             value => target.Asset.SetPassFunction(target.PassFunctions with
             {

@@ -8,8 +8,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Utility;
@@ -129,7 +128,7 @@ internal sealed class ParticleMesh : IDisposable
         if (_handles != null)
         {
             foreach (var handle in _handles)
-                _gfx.Disposer.EnqueueRemoval(handle.MeshId);
+                _gfx.Disposer.EnqueueRemoval(new GfxId<TextureMeta>(handle.MeshId));
         }
 
         _particleData.Dispose();
@@ -143,7 +142,7 @@ internal sealed class ParticleMesh : IDisposable
     {
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);
         if (capacity <= _particleData.Length) return;
-        var newCap = CapacityUtils.CapacityGrowthSafe(_particleData.Length, capacity, MaxParticleInstanceCap);
+        var newCap = CapacityUtils.CapacityGrowthToFit(_particleData.Length, capacity);
         _particleData.Resize(newCap, true);
         Logger.LogString(LogScope.Engine, $"{nameof(_particleData)} resize");
     }
@@ -151,9 +150,10 @@ internal sealed class ParticleMesh : IDisposable
     private void EnsureHandleCapacity(int delta)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(delta);
-        var index = Count + delta;
-        if (index <= _handles.Length) return;
-        var newCap = int.Min(_handles.Length * 2, MaxMeshHandleCap);
+        var len = Count + delta;
+        if (len <= _handles.Length) return;
+        var newCap = CapacityUtils.CapacityGrowthToFit(_handles.Length, len);
+
         if (newCap >= MaxMeshHandleCap)
             throw new InvalidOperationException("Maximum particle handle capacity exceeded");
         Array.Resize(ref _handles, newCap);

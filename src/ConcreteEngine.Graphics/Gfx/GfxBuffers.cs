@@ -4,11 +4,10 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.Gfx.Internals;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
+using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Graphics.Gfx;
@@ -28,9 +27,9 @@ public sealed class GfxBuffers
     internal GfxBuffers(GfxContextInternal context)
     {
         _driverBuffer = context.Driver.Buffers;
-        _vboStore = context.Resources.GfxStoreHub.VboStore;
-        _iboStore = context.Resources.GfxStoreHub.IboStore;
-        _uboStore = context.Resources.GfxStoreHub.UboStore;
+        _vboStore = GfxRegistry.GetGfxStore<VertexBufferMeta>();
+        _iboStore = GfxRegistry.GetGfxStore<IndexBufferMeta>();
+        _uboStore = GfxRegistry.GetGfxStore<UniformBufferMeta>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

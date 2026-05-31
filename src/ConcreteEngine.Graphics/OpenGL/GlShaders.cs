@@ -1,5 +1,9 @@
+using System.Text;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
@@ -10,13 +14,9 @@ internal sealed class GlShaders
 {
     private static GL Gl => GlBackendDriver.Gl;
 
-    private readonly BackendResourceStore<GlHandle> _shaderStore;
+    private static readonly Dictionary<uint, string> UniformSamplerByHash = new(16);
 
-    internal GlShaders(GlCtx ctx)
-    {
-        _shaderStore = ctx.Store.ShaderStore;
-    }
-
+    private readonly BackendResourceStore _shaderStore = GfxRegistry.GetBackendStore<ShaderMeta>();
 
     public GfxHandle CreateShader(NativeView<byte> vertexSource, NativeView<byte> fragmentSource)
     {
@@ -34,7 +34,7 @@ internal sealed class GlShaders
             throw;
         }
 
-        GlHandle handle = default;
+        NativeHandle handle = default;
         try
         {
             handle = CreateShaderProgram(vertexShader, fragmentShader);
@@ -52,31 +52,10 @@ internal sealed class GlShaders
             Gl.DeleteShader(fragmentShader);
         }
 
-        return _shaderStore.Add(new GlHandle(handle));
+        return _shaderStore.Add(handle);
     }
 
-    public int GetSamplersFromProgram(GfxHandle shaderRef)
-    {
-        var handle = _shaderStore.GetHandle(shaderRef).Value;
-        Gl.UseProgram(handle);
-
-        Gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
-        var samplers = 0;
-        for (uint idx = 0; idx < uniformsLength; idx++)
-        {
-            Gl.GetActiveUniform(handle, idx, out _, out var type);
-            //var uniformLocation = _gl.GetUniformLocation(handle, uniformName);
-            if (IsSamplerUniform(type))
-            {
-                samplers++;
-            }
-        }
-
-        Gl.UseProgram(0);
-        return samplers;
-    }
-
-    private GlHandle CreateShaderProgram(uint vertexShader, uint fragmentShader)
+    private static NativeHandle CreateShaderProgram(uint vertexShader, uint fragmentShader)
     {
         var program = Gl.CreateProgram();
         Gl.AttachShader(program, vertexShader);
@@ -87,10 +66,10 @@ internal sealed class GlShaders
         if (status != (int)GLEnum.True)
             throw GraphicsException.ShaderLinkFailed(program.ToString(), Gl.GetProgramInfoLog(program));
 
-        return new GlHandle(program);
+        return new NativeHandle(program);
     }
 
-    private unsafe uint CompileShader(ShaderType shaderType, NativeView<byte> source)
+    private static unsafe uint CompileShader(ShaderType shaderType, NativeView<byte> source)
     {
         var shader = Gl.CreateShader(shaderType);
 
@@ -107,28 +86,37 @@ internal sealed class GlShaders
         return shader;
     }
 
-    public List<(string, int)> GetUniformsFromProgram(GfxHandle shaderRef)
+
+    public void GetSamplersFromProgram(GfxHandle shaderRef, List<GfxUniformSampler> result)
     {
-        var handle = _shaderStore.GetHandle(shaderRef).Value;
-        Gl.UseProgram(handle);
+        if (!shaderRef.IsValid) Throwers.InvalidArgument(nameof(shaderRef));
+
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(result.Count, 1, nameof(result));
+
+        Span<byte> buffer = stackalloc byte[128];
+        Span<uint> length = stackalloc uint[1];
+        Span<int> size = stackalloc int[1];
+        Span<GLEnum> types = stackalloc GLEnum[1];
+
+        var handle = _shaderStore.Get(shaderRef);
         Gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
-        var uniforms = new List<(string, int)>(uniformsLength);
-        for (int i = 0; i < uniformsLength; i++)
+        for (uint i = 0; i < uniformsLength; i++)
         {
-            var uniformName = Gl.GetActiveUniform(handle, (uint)i, out _, out var type);
-            var uniformLocation = Gl.GetUniformLocation(handle, uniformName);
-            if (IsSamplerUniform(type)) continue;
-            if (uniformLocation >= 0)
+            Gl.GetActiveUniform(handle, i, (uint)buffer.Length, length, size, types, buffer);
+
+            var uniformType = types[0].ToGfxUniformType();
+            if (uniformType == GfxUniformType.Unknown) continue;
+            var nameSpan = buffer.Slice(0, (int)length[0]);
+            var hash = HashMath.HashFnv(nameSpan);
+
+            if (!UniformSamplerByHash.TryGetValue(hash, out var strName))
             {
-                uniforms.Add((uniformName, uniformLocation));
+                strName = Encoding.UTF8.GetString(nameSpan);
+                UniformSamplerByHash.Add(hash, strName);
             }
+
+            result.Add(new GfxUniformSampler(strName, (byte)result.Count, uniformType));
         }
-
-        Gl.UseProgram(0);
-        return uniforms;
     }
-
-    private static bool IsSamplerUniform(UniformType type) =>
-        type is UniformType.Sampler2D or UniformType.SamplerCube
-            or UniformType.IntSampler2D or UniformType.Sampler2DShadow or UniformType.Sampler2DMultisample;
 }

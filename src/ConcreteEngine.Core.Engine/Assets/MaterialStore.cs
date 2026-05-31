@@ -30,7 +30,7 @@ public sealed class MaterialStore
 
     internal void InitializeStore()
     {
-        FallbackMaterial.ShaderId = _assetStore.GetByName<Shader>("Model").Id;
+        FallbackMaterial.BoundShader = _assetStore.GetByName<Shader>("Model");
         foreach (var it in _assetStore.GetAssetEnumerator<Material>())
             RegisterMaterial(it);
     }
@@ -95,7 +95,7 @@ public sealed class MaterialStore
         var len = _byMaterialId.Length;
         if (Count >= len)
         {
-            var newCap = CapacityUtils.CapacityGrowthLinear(len, len * 2, step: 32);
+            var newCap = CapacityUtils.CapacityGrowthToFit(len, len * 2);
 
             if (newCap > RenderLimits.MaxMaterialCount)
                 throw new InvalidOperationException("Material limit exceeded");

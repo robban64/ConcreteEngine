@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Renderer.Passes;
 

@@ -25,47 +25,72 @@ public sealed class Terrain
     private const int ChunkQuads = TerrainChunk.ChunkQuads;
     private const int ChunkSamples = TerrainChunk.ChunkSamples;
 
-    public static Terrain Main { get; internal set; }
+    public static Terrain Main { get; internal set; } = null!;
 
     private TerrainChunk[] _chunks = [];
 
-    public Material? Material { get; private set; }
-    public Texture? Heightmap { get; private set; }
+    public bool IsDirty { get; internal set; } = true;
 
-    public bool IsDirty { get; private set; }
     public float MaxHeight { get; private set; } = DefaultMaxHeight;
-
     public int Dimension { get; private set; }
     public int GridDimension { get; private set; }
 
+    public readonly TextureArray GroundAlbedoTextures = new(4);
+    public readonly TextureArray GroundNormalTextures = new(4);
+    public readonly TextureArray FoliageTextures = new(4);
+
+    public Material? GroundMaterial { get; private set; }
+    public Material? FoliageMaterial { get; private set; }
+
+    public Texture? Heightmap { get; private set; }
+    public Texture? Splatmap { get; private set; }
 
     internal Terrain()
     {
     }
 
-    public bool TryGetHeightMapSpan(out ReadOnlySpan<byte> heightMap)
-    {
-        heightMap = default;
-        if (Heightmap == null || !Heightmap.PixelData.HasValue) return false;
-        heightMap = Heightmap.PixelData.Value.Span;
-        return true;
-    }
+    public bool HasHeightmap => _chunks.Length > 0 && Heightmap is { PixelData: not null };
 
     public ReadOnlySpan<TerrainChunk> GetChunks() => _chunks;
-    public bool HasHeightmap => _chunks.Length > 0 && Heightmap != null;
 
-    public MaterialId MaterialId => Material?.MaterialId ?? MaterialId.Empty;
-    public void SetMaterial(Material material) => Material = material;
+    public MaterialId MaterialId => GroundMaterial?.MaterialId ?? MaterialStore.FallbackMaterial.MaterialId;
+    public MaterialId FoliageMaterialId => FoliageMaterial?.MaterialId ?? MaterialStore.FallbackMaterial.MaterialId;
 
-    public void CreateFrom(Texture heightmap)
+    public void SetTexture(int slot, Texture texture)
     {
-        ArgumentNullException.ThrowIfNull(heightmap);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, 4);
+        GroundAlbedoTextures.SetTexture(slot, texture);
+        IsDirty = true;
+    }
 
-        if (!heightmap.PixelData.HasValue)
-            throw new ArgumentNullException(nameof(heightmap));
+    public void SetFoliageTexture(int slot, Texture texture)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, 4);
+        FoliageTextures.SetTexture(slot, texture);
+        IsDirty = true;
+    }
 
+
+    public void SetMaterial(Material material)
+    {
+        GroundMaterial = material;
+        IsDirty = true;
+    }
+
+    public void SetFoliageMaterial(Material material)
+    {
+        FoliageMaterial = material;
+        IsDirty = true;
+    }
+
+    public void CreateFrom(Texture heightmap, Texture? splatMap = null)
+    {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(heightmap.Size.Width, 128, nameof(heightmap));
         ArgumentOutOfRangeException.ThrowIfNotEqual(heightmap.Size.Width, heightmap.Size.Height, nameof(heightmap));
+
+        ArgumentNullException.ThrowIfNull(heightmap);
+        if (!heightmap.PixelData.HasValue) throw new ArgumentNullException(nameof(heightmap));
+
         var dimension = heightmap.Size.Width;
 
         var powDim = dimension - 1;
@@ -75,11 +100,15 @@ public sealed class Terrain
         Heightmap = heightmap;
         Dimension = dimension;
         GridDimension = powDim / ChunkQuads;
+        Splatmap = splatMap;
 
         _chunks = new TerrainChunk[GridDimension * GridDimension];
 
         CreateTerrainChunks(heightmap.PixelData.Value.Span);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TerrainChunk GetChunk(int slot) => _chunks[slot];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public TerrainChunk GetChunk(float worldX, float worldZ)
@@ -103,9 +132,11 @@ public sealed class Terrain
 
         height = float.Clamp(height, 0, MaxHeight);
         chunk.SetHeight(height, lx, lz);
+
+        IsDirty = true;
     }
 
-    public float GetGlobalHeight(float worldX, float worldZ)
+    public float GetHeight(float worldX, float worldZ)
     {
         worldX = float.Clamp(worldX, 0, Dimension - 1);
         worldZ = float.Clamp(worldZ, 0, Dimension - 1);
@@ -125,10 +156,10 @@ public sealed class Terrain
         float dx = worldX - ix;
         float dz = worldZ - iz;
 
-        float h00 = GetGlobalHeight(ix, iz);
-        float h10 = GetGlobalHeight(ix + 1, iz);
-        float h01 = GetGlobalHeight(ix, iz + 1);
-        float h11 = GetGlobalHeight(ix + 1, iz + 1);
+        float h00 = GetHeight(ix, iz);
+        float h10 = GetHeight(ix + 1, iz);
+        float h01 = GetHeight(ix, iz + 1);
+        float h11 = GetHeight(ix + 1, iz + 1);
 
         if (dx <= 1.0f - dz)
         {
@@ -173,7 +204,8 @@ public sealed class Terrain
         return pointOnPlane with { Y = terrainHeight };
     }
 
-    private void CreateTerrainChunks(ReadOnlySpan<byte> data)
+
+    private void CreateTerrainChunks(ReadOnlySpan<byte> heightmap)
     {
         int chunkCount = GridDimension;
         for (int z = 0; z < chunkCount; z++)
@@ -181,28 +213,9 @@ public sealed class Terrain
             int rowStart = z * chunkCount;
             for (int x = 0; x < chunkCount; x++)
             {
-                var chunk = new TerrainChunk(new Vector2I(x, z), MaxHeight);
+                var chunk = new TerrainChunk(new Vector2I(x, z));
+                chunk.FillChunkHeights(heightmap, Dimension, MaxHeight);
                 _chunks[rowStart + x] = chunk;
-
-                FillChunkHeights(chunk, data);
-            }
-        }
-    }
-
-    private void FillChunkHeights(TerrainChunk chunk, ReadOnlySpan<byte> data)
-    {
-        var start = chunk.WorldStart;
-        var heights = chunk.Heights;
-
-        if (heights.Length < ChunkSamples * ChunkSamples)
-            throw new InvalidOperationException("Height map length is less than chunk samples");
-
-        for (int z = 0; z < ChunkSamples; z++)
-        {
-            for (int x = 0; x < ChunkSamples; x++)
-            {
-                var heightCoords = new Vector2I(start.X + x, start.Y + z);
-                heights[z * ChunkSamples + x] = TerrainUtils.SampleHeight(data, heightCoords, Dimension, MaxHeight);
             }
         }
     }

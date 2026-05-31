@@ -1,10 +1,10 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.Gfx.Internals;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
+using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -26,15 +26,16 @@ public sealed unsafe class GfxDraw : IDisposable
         if (!_tableMemory.IsNull) throw new InvalidOperationException("DrawTable is already initialized.");
 
         _states = ctx.Driver.States;
-        _meshStore = ctx.Resources.GfxStoreHub.MeshStore;
+        _meshStore = GfxRegistry.GetGfxStore<MeshMeta>();
 
         _tableMemory = NativeArray.Allocate<byte>(sizeof(nint) * 4);
 
         _drawTable = (delegate*<DrawPrimitive, DrawElementSize, uint, uint, void>*)_tableMemory.Ptr;
-        _drawTable[0] = &GlDraw.DrawInvalid;
-        _drawTable[1] = &GlDraw.DrawArrays;
-        _drawTable[2] = &GlDraw.DrawElements;
-        _drawTable[3] = &GlDraw.DrawInstanced;
+        _drawTable[(int)DrawMeshKind.Invalid] = &GlDraw.DrawInvalid;
+        _drawTable[(int)DrawMeshKind.Arrays] = &GlDraw.DrawArrays;
+        _drawTable[(int)DrawMeshKind.Elements] = &GlDraw.DrawElements;
+        _drawTable[(int)DrawMeshKind.ArraysInstanced] = &GlDraw.DrawInstanced;
+        _drawTable[(int)DrawMeshKind.ElementsInstanced] = &GlDraw.DrawElementsInstanced;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

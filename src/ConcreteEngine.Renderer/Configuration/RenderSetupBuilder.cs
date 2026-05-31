@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Passes;
 

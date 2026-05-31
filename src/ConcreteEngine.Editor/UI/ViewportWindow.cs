@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Inspector;
@@ -63,8 +64,8 @@ internal static unsafe class ViewportWindow
         var proj = &matrices[1];
         var model = &matrices[2];
 
-        *view = EngineObjectStore.Camera.ViewMatrix;
-        *proj = EngineObjectStore.Camera.ProjectionMatrix;
+        *view = CameraSystem.Instance.Camera.ViewMatrix;
+        *proj = CameraSystem.Instance.Camera.ProjectionMatrix;
         MatrixMath.CreateModelMatrix(in inspector.Transform.GetTransform(), out *model);
 
         var changed = ImGuizmo.Manipulate(

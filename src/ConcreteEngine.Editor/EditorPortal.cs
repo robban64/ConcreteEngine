@@ -7,7 +7,6 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Graphics.Handles;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
@@ -47,7 +46,7 @@ public sealed class EditorPortal : IDisposable
         ConsoleGateway.Service.Setup();
 
         InspectorFieldProvider.Create();
-        _service = new EditorService(_engineContext.Window, _engineContext.GfxApi);
+        _service = new EditorService(_engineContext.Window);
         Initialized = true;
     }
 

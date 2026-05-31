@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
@@ -27,5 +27,11 @@ internal static unsafe class GlDraw
     public static void DrawInstanced(DrawPrimitive primitive, DrawElementSize size, uint count, uint instances)
     {
         Gl.DrawArraysInstanced(primitive.ToGlEnum(), 0, count, instances);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void DrawElementsInstanced(DrawPrimitive primitive, DrawElementSize size, uint count, uint instances)
+    {
+        Gl.DrawElementsInstanced(primitive.ToGlEnum(), count, size.ToGlEnum(), (void*)0, instances);
     }
 }

@@ -3,7 +3,7 @@
 in vec2 TexCoord;
 out vec4 FragColor;
 
-layout(binding = 0) uniform sampler2D uSceneTex;
+layout(binding = 0) uniform sampler2D uTexture;
 
 @import ubo:EngineUniform
 @import ubo:PostUniform
@@ -44,15 +44,15 @@ vec3 sample_bloom(in vec2 uv, float lodBase){
     vec2 px = uInvResolution;
     vec3 sum = vec3(0.0);
 
-    sum += textureLod(uSceneTex, uv, lodBase+0.0).rgb * 0.25;
-    sum += textureLod(uSceneTex, uv + vec2(+2, 0)*px, lodBase+0.5).rgb * 0.125;
-    sum += textureLod(uSceneTex, uv + vec2(-2, 0)*px, lodBase+0.5).rgb * 0.125;
-    sum += textureLod(uSceneTex, uv + vec2(0, +2)*px, lodBase+0.5).rgb * 0.125;
-    sum += textureLod(uSceneTex, uv + vec2(0, -2)*px, lodBase+0.5).rgb * 0.125;
-    sum += textureLod(uSceneTex, uv + vec2(+4, +4)*px, lodBase+1.0).rgb * 0.0625;
-    sum += textureLod(uSceneTex, uv + vec2(-4, +4)*px, lodBase+1.0).rgb * 0.0625;
-    sum += textureLod(uSceneTex, uv + vec2(+4, -4)*px, lodBase+1.0).rgb * 0.0625;
-    sum += textureLod(uSceneTex, uv + vec2(-4, -4)*px, lodBase+1.0).rgb * 0.0625;
+    sum += textureLod(uTexture, uv, lodBase+0.0).rgb * 0.25;
+    sum += textureLod(uTexture, uv + vec2(+2, 0)*px, lodBase+0.5).rgb * 0.125;
+    sum += textureLod(uTexture, uv + vec2(-2, 0)*px, lodBase+0.5).rgb * 0.125;
+    sum += textureLod(uTexture, uv + vec2(0, +2)*px, lodBase+0.5).rgb * 0.125;
+    sum += textureLod(uTexture, uv + vec2(0, -2)*px, lodBase+0.5).rgb * 0.125;
+    sum += textureLod(uTexture, uv + vec2(+4, +4)*px, lodBase+1.0).rgb * 0.0625;
+    sum += textureLod(uTexture, uv + vec2(-4, +4)*px, lodBase+1.0).rgb * 0.0625;
+    sum += textureLod(uTexture, uv + vec2(+4, -4)*px, lodBase+1.0).rgb * 0.0625;
+    sum += textureLod(uTexture, uv + vec2(-4, -4)*px, lodBase+1.0).rgb * 0.0625;
 
     return sum;
 }
@@ -76,10 +76,10 @@ float grain(vec2 uv){
 
 vec3 sharpen(vec2 uv, vec3 c, float amount){
     vec2 px = uInvResolution;
-    vec3 blur = texture(uSceneTex, uv + vec2(1, 0)*px).rgb
-    + texture(uSceneTex, uv + vec2(-1, 0)*px).rgb
-    + texture(uSceneTex, uv + vec2(0, 1)*px).rgb
-    + texture(uSceneTex, uv + vec2(0, -1)*px).rgb;
+    vec3 blur = texture(uTexture, uv + vec2(1, 0)*px).rgb
+    + texture(uTexture, uv + vec2(-1, 0)*px).rgb
+    + texture(uTexture, uv + vec2(0, 1)*px).rgb
+    + texture(uTexture, uv + vec2(0, -1)*px).rgb;
     blur *= 0.25;
     // Simple Unsharp Mask
     return c + (c - blur) * amount;
@@ -88,7 +88,7 @@ vec3 sharpen(vec2 uv, vec3 c, float amount){
 
 void main(){
     vec2 uv = TexCoord;
-    vec3 color = texture(uSceneTex, uv).rgb;
+    vec3 color = texture(uTexture, uv).rgb;
 
     color *= max(uGrade.x, 0.0);
 

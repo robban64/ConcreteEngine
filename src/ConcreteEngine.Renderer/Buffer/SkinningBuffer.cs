@@ -9,7 +9,7 @@ namespace ConcreteEngine.Renderer.Buffer;
 
 public sealed class SkinningBuffer : IDisposable
 {
-    private const int DefaultBoneBufferCap = BoneCapacity * 64 * 10;
+    private const int DefaultBoneBufferCap = BoneCapacity * 64;
 
     public int Count { get; private set; }
 
@@ -17,15 +17,20 @@ public sealed class SkinningBuffer : IDisposable
 
     internal SkinningBuffer()
     {
-        _matrices = NativeArray.Allocate<Matrix4x4>(DefaultBoneBufferCap);
+        _matrices = NativeArray.AlignedAllocate<Matrix4x4>(DefaultBoneBufferCap, alignment: 16);
         Count = 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<Matrix4x4> NextWriteView()
+    public ushort NextSlot()
     {
-        var index = Count++;
-        return _matrices.Slice(index * BoneCapacity, BoneCapacity);
+        return (ushort)(++Count);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<Matrix4x4> GetWriteView(ushort slot)
+    {
+        return _matrices.Slice((slot - 1) * BoneCapacity, BoneCapacity);
     }
 
     internal NativeView<Matrix4x4> DrainBuffer()
@@ -43,7 +48,7 @@ public sealed class SkinningBuffer : IDisposable
     {
         var len = index * BoneCapacity;
         if (_matrices.Length >= len) return;
-        var newSize = CapacityUtils.CapacityGrowthSafe(_matrices.Length, len);
+        var newSize = CapacityUtils.CapacityGrowthToFit(_matrices.Length, len);
         _matrices.Resize(newSize, false);
         Console.WriteLine("BoneBuffer buffer resize");
     }

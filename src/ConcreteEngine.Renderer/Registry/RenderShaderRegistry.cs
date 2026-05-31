@@ -1,7 +1,4 @@
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Renderer.Core;
 
@@ -9,21 +6,18 @@ namespace ConcreteEngine.Renderer.Registry;
 
 public sealed class RenderShaderRegistry
 {
+    private static CoreShaders _coreShaders;
+
     private int _count;
-    private CoreShaders _coreShaders;
 
     private RenderShader[] _shaderRegistry = [];
 
-    private readonly GfxResourceApi _gfxApi;
-    private readonly GfxShaders _gfxShaders;
 
-    internal RenderShaderRegistry(GfxContext gfx)
+    internal RenderShaderRegistry()
     {
-        _gfxApi = gfx.ResourceManager.GetGfxApi();
-        _gfxShaders = gfx.Shaders;
     }
 
-    public ref readonly CoreShaders CoreShaders => ref _coreShaders;
+    public static ref readonly CoreShaders CoreShaders => ref _coreShaders;
 
     public RenderShader GetRenderShader(ShaderId shaderId) => _shaderRegistry[shaderId - 1];
 
@@ -41,7 +35,7 @@ public sealed class RenderShaderRegistry
             if (_shaderRegistry[shaderId - 1] != null)
                 throw new InvalidOperationException(nameof(_shaderRegistry));
 
-            var meta = _gfxApi.GetMeta<ShaderId, ShaderMeta>(shaderId);
+            var meta = GfxResourceApi.GetMeta(shaderId);
             _shaderRegistry[shaderId - 1] = new RenderShader(shaderId, meta);
         }
     }

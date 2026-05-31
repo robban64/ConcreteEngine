@@ -1,25 +1,21 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
 public struct TextureProperties(
-    float lodBias,
-    int mipLevels,
+    float lod,
     TextureKind kind = TextureKind.Texture2D,
-    TextureUsage Usage = TextureUsage.Albedo,
     TexturePreset preset = TexturePreset.LinearClamp,
     AnisotropyLevel anisotropy = AnisotropyLevel.Off,
     TexturePixelFormat pixelFormat = TexturePixelFormat.SrgbAlpha)
 {
-    public float LodBias = lodBias;
-    public int MipLevels = mipLevels;
+    public float Lod = lod;
     public TextureKind Kind = kind;
-    public TextureUsage Usage = Usage;
     public TexturePreset Preset = preset;
     public AnisotropyLevel Anisotropy = anisotropy;
     public TexturePixelFormat PixelFormat = pixelFormat;
@@ -27,7 +23,9 @@ public struct TextureProperties(
 
 public sealed class Texture(string name, TextureId gfxId, Size2D size, TextureProperties properties) : AssetObject(name)
 {
-    public TextureId GfxId { get; } = gfxId;
+    // WIP
+    public GfxAssetLink<TextureMeta> GfxLink { get; } = new(gfxId);
+
     public Size2D Size { get; } = size;
 
     private TextureProperties _properties = properties;
@@ -41,15 +39,13 @@ public sealed class Texture(string name, TextureId gfxId, Size2D size, TexturePr
     public void SetPixelData(ReadOnlyMemory<byte> pixelData) => PixelData = pixelData;
 
     //
-    public int MipLevels => _properties.MipLevels;
-
     public float LodBias
     {
-        get => _properties.LodBias;
+        get => _properties.Lod;
         set
         {
-            if (FloatMath.NearlyEqual(_properties.LodBias, value)) return;
-            _properties.LodBias = value;
+            if (FloatMath.NearlyEqual(_properties.Lod, value)) return;
+            _properties.Lod = value;
             MarkDirty();
         }
     }
@@ -97,10 +93,11 @@ public sealed class Texture(string name, TextureId gfxId, Size2D size, TexturePr
 
     public TextureUsage Usage
     {
-        get => _properties.Usage;
+        get;
         set
         {
-            _properties.Usage = value;
+            if (field == value) return;
+            field = value;
             MarkDirty();
         }
     }

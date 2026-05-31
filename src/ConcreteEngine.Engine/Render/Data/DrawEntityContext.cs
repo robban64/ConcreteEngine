@@ -50,6 +50,14 @@ internal readonly ref struct DrawEntityContext(
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public DrawEntityItem Get(RenderEntityId entity)
+    {
+        var index = VisibleIndices[entity.Index()];
+        return new DrawEntityItem(index, entity, ref DrawCommands.Ref1, ref DrawCommands.Ref2);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public DrawEntityEnumerator GetEnumerator() => new(VisibleEntities, DrawCommands);
 
 

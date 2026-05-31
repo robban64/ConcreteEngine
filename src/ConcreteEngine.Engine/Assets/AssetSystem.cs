@@ -45,12 +45,10 @@ public sealed class AssetSystem : IGameEngineSystem
         _pendingQueue.Enqueue(new AssetRecreateRequest(command.Asset, command.Kind));
     }
 
-    internal void ProcessPendingQueue(long frameId)
+    internal void ProcessPendingQueue()
     {
-        _pendingQueue.OnFrameStart(frameId);
         _pendingQueue.TryDrain(_loader!, Assets);
     }
-
 
     internal bool ProcessLoader() => _loader!.ProcessLoader();
 

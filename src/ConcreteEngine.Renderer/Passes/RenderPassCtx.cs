@@ -1,40 +1,52 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer.Passes;
 
 internal sealed class RenderPassCtx
 {
-    private readonly PassCommandQueue _cmdQueue;
-
-    public DrawStateOps Ops { get; private set; }
-    public RenderTargetInfo Target { get; private set; }
+    private RenderTargetInfo _target;
+    public ref readonly RenderTargetInfo Target => ref _target;
     public PassTagKey CurrentPassKey { get; private set; }
 
+    public readonly PassCommandQueue PassQueue;
 
-    internal RenderPassCtx(DrawStateOps cmdOps, PassCommandQueue cmdQueue)
+    public readonly GfxCommands GfxCmd;
+
+    private readonly GfxTextures _gfxTextures;
+    private readonly GfxDraw _gfxDraw;
+
+    private readonly UniformUploader _uniformUploader;
+
+    internal RenderPassCtx(GfxContext gfx, UniformUploader uniformUploader)
     {
-        Ops = cmdOps;
-        _cmdQueue = cmdQueue;
+        PassQueue = new PassCommandQueue();
+        _uniformUploader = uniformUploader;
+        GfxCmd = gfx.Commands;
+        _gfxTextures = gfx.Textures;
+        _gfxDraw = gfx.Draw;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void AttachScreenPass(PassTagKey tagKey, Size2D outputSize)
     {
-        Target = new RenderTargetInfo(default, outputSize, default, default);
+        _target = new RenderTargetInfo(default, outputSize, default, default);
         CurrentPassKey = tagKey;
     }
 
-    [SkipLocalsInit]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void AttachPass(RenderFbo fbo, PassTagKey tagKey)
     {
-        Target = new RenderTargetInfo(fbo.FboId, fbo.Size, fbo.Attachments, fbo.MultiSample);
+        _target = new RenderTargetInfo(fbo.FboId, fbo.Size, fbo.Attachments, fbo.MultiSample);
         CurrentPassKey = tagKey;
     }
 
-    public ReadOnlySpan<TextureId> GetPassSources() => _cmdQueue.GetPassSources();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<TextureId> GetPassSources() => PassQueue.GetPassSources();
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -44,13 +56,53 @@ internal sealed class RenderPassCtx
 
         var passKey = PassTags<TTag>.PassKey(variant);
         var key = new PassTextureSlotKey(passKey.TagIndex, passKey.Variant, passKey.Pass, (byte)texSlot.Slot);
-        _cmdQueue.SampleTo(key, texSlot.Texture);
+        PassQueue.SampleTo(key, texSlot.Texture);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void MutateStatePass<TTag>(FboVariant variant, in PassMutationState newState) where TTag : class
     {
         var key = PassTags<TTag>.PassKey(variant);
-        _cmdQueue.EnqueueMutation(key, in newState);
+        PassQueue.EnqueueMutation(key, in newState);
+    }
+
+    //
+
+    public void ActivateDepthMode()
+    {
+        RenderContext.Instance.SetDepthMode();
+        _uniformUploader.UploadViewUniforms();
+    }
+
+    public void RestoreMode()
+    {
+        RenderContext.Instance.ResetPassMode();
+        _uniformUploader.UploadViewUniforms();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ContinueFromRenderPass(FrameBufferId fboId, GfxStateFlags passFlags)
+    {
+        GfxCmd.BindFramebuffer(fboId);
+        GfxCmd.ApplyPassState(passFlags);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void GenerateMips(TextureId textureId) => _gfxTextures.GenerateMipMaps(textureId);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawFullscreenQuad(ShaderId shaderId, ReadOnlySpan<TextureId> sources)
+    {
+        GfxCmd.UseShader(shaderId);
+
+        for (var i = 0; i < sources.Length; i++)
+            GfxCmd.BindTexture(sources[i], i);
+
+        _gfxDraw.BindDraw(GfxMeshes.FsqQuad);
+    }
+
+    public void SetOutputTexture(TextureId textureId)
+    {
+        RenderContext.Instance.OutputTexture = textureId;
     }
 }

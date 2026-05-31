@@ -1,10 +1,9 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Graphics.Gfx.Internal;
+namespace ConcreteEngine.Graphics.Gfx.Internals;
 
-internal static class GfxUtilsEnum
+internal static class GfxEnumUtils
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasBufferAccess(this BufferAccess a, BufferAccess b) => (a & b) != 0;
@@ -13,10 +12,12 @@ internal static class GfxUtilsEnum
     public static int SizeInBytes(this VertexFormat fmt) =>
         fmt switch
         {
+            VertexFormat.Float => 4,
+            VertexFormat.Int => 4,
+            VertexFormat.UInt => 4,
             VertexFormat.UByte => 1,
             VertexFormat.UShort => 2,
-            VertexFormat.Float => 4,
-            VertexFormat.Integer => 4,
+            VertexFormat.Half => 2,
             _ => Throwers.Unreachable<int>(nameof(fmt))
         };
 

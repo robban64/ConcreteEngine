@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Graphics.Gfx.Definitions;
+namespace ConcreteEngine.Graphics.Gfx;
 
 public enum TextureFilter : byte
 {
@@ -36,7 +36,8 @@ public enum TextureKind : byte
     Texture2D = 1,
     Texture3D = 2,
     CubeMap = 3,
-    Multisample2D = 4
+    Texture2DArray = 4,
+    Multisample2D = 5
 }
 
 public enum TexturePreset : byte

@@ -12,7 +12,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
 {
     private static Vector2 MousePos => EditorInput.Input.Mouse.ViewPos;
 
-    private static RayCaster RayCaster => EngineObjectStore.RayCaster;
+    private static RayCaster RayCaster => CameraSystem.Instance.RayCaster;
 
     public Vector3 DragStart;
     public bool WasDragging;

@@ -14,13 +14,17 @@ public sealed unsafe class ArenaAllocator : IDisposable
     public MemoryBlock* Tail;
     public MemoryBlock* Head;
 
-    public ArenaAllocator(int capacity = 1024, bool zeroed = true)
+    public ArenaAllocator(int capacity, int alignment = 0, bool zeroed = true)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 1024);
         if (IntMath.AlignUp(capacity, 64) != IntMath.AlignDown(capacity, 64))
             throw new ArgumentOutOfRangeException(nameof(capacity));
 
-        _buffer = NativeArray.Allocate<byte>(capacity, zeroed);
+        if (alignment == 0)
+            _buffer = NativeArray.Allocate<byte>(capacity, zeroed);
+        else
+            _buffer = NativeArray.AlignedAllocate<byte>(capacity, alignment, zeroed);
+
         Capacity = capacity;
     }
 

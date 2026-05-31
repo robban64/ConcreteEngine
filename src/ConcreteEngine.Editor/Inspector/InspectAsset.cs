@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Editor.Inspector;
 
@@ -20,7 +20,7 @@ internal class InspectMaterial : InspectAsset
 {
     public override Material Asset { get; }
     public GfxPassFunctions PassFunctions => Asset.Pipeline.PassFunctions;
-    public GfxPassState PassState => Asset.Pipeline.PassState;
+    public GfxDrawState DrawState => Asset.Pipeline.DrawState;
 
     internal override Icons GetIcon() => AssetIcons.GetMaterialIcon(Asset);
 

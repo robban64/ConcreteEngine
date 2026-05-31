@@ -25,7 +25,7 @@ internal static class MetaMetricController
             ref readonly var m = ref metas[i];
             long dim = m.Width >= m.Height ? m.Width : m.Height;
             if (!UpdateMax(ref max, ref maxIdx, dim, i)) continue;
-            var mip = (byte)(m.Levels > 1 ? 1 : 0);
+            var mip = (byte)(m.MipLevels > 1 ? 1 : 0);
             p2 = (ushort)(mip | (m.Samples << 1));
         }
 

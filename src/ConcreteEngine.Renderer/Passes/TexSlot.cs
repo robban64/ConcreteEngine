@@ -1,5 +1,3 @@
-using ConcreteEngine.Graphics.Handles;
-
 namespace ConcreteEngine.Renderer.Passes;
 
 internal readonly struct TexSlot(TextureId texture, int slot)

@@ -43,8 +43,7 @@ internal static class SpatialProcessor
         var transformView = Ecs.Render.Core.GetTransformView();
         foreach (var it in ctx)
         {
-            ref readonly var transform = ref transformView[it.Entity.Index()];
-            var depthKey = MakeDepthKey(in viewDepth, in transform.Translation, nearFar);
+            var depthKey = MakeDepthKey(in viewDepth, in transformView[it.Entity.Index()].Translation, nearFar);
 
             it.Meta.DepthKey = it.Meta.Queue < DrawCommandQueue.Transparent
                 ? depthKey

@@ -1,8 +1,8 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib.Field;
-using static ConcreteEngine.Editor.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.Inspector.Impl;
 
@@ -12,6 +12,8 @@ internal sealed class InspectCameraFields : InspectorFields<EditorCamera>
     public readonly FloatField<Float2> Orientation;
     public readonly FloatField<Float2> NearFar;
     public readonly FloatField<Float1> Fov;
+
+    private static Camera Camera => CameraSystem.Instance.Camera;
 
     public InspectCameraFields() : base(segmentCount: 2)
     {

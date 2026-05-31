@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 
@@ -23,9 +24,14 @@ public sealed class AssetFileRegistry
     private readonly List<AssetFileId> _dependentFiles = new(64);
     private readonly List<AssetFileId> _unboundFiles = new(64);
 
+    internal AssetFileRegistry()
+    {
+        _files.OnResize = static (oldSize, newSize) =>
+            Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetFileRegistry), oldSize, newSize));
+    }
+
     public int Count => _files.Count;
     public int Capacity => _files.Capacity;
-
 
     public bool HasFilePath(string relativePath) => _fileByPath.ContainsKey(relativePath);
     public bool HasBinding(AssetId assetId) => _fileBindings.ContainsKey(assetId);
@@ -126,8 +132,12 @@ public sealed class AssetFileRegistry
         return _fileByPath.TryGetValue(relativePath, out var fileId) && TryGetFile(fileId, out entry);
     }
 
-    public bool TryGetByRootFileId(AssetFileId fileId, out AssetId assetId) =>
-        _rootBindings.TryGetValue(fileId, out assetId);
+    public bool TryGetByRootFileId(AssetFileId fileId, out AssetId assetId)
+    {
+        var res = _rootBindings.TryGetValue(fileId, out var handle);
+        assetId = res ? handle : default;
+        return res;
+    }
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

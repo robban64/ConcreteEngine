@@ -7,8 +7,7 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Core;
 
@@ -53,8 +52,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
         var mat = materialStore.CreateMaterial("EmptyMat", "EmptyMat1");
         mat.Pipeline = new MaterialPipeline
         {
-            PassState = GfxPassState.Set(GfxStateFlags.Blend,
-                GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
+            DrawState = GfxDrawState.Set(GfxDrawFlags.Blend, GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2),
             PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
 
@@ -71,7 +69,6 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     {
         _visualManager.Ensure();
         _cameraSystem.CommitUpdate(_visualManager);
-        TerrainSystem.Instance.Update();
     }
 
 

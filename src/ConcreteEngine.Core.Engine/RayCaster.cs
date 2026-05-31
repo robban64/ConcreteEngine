@@ -58,7 +58,7 @@ public sealed class RayCaster
 
     public Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)
     {
-        if (Terrain == null) Throwers.InvalidOperation("Terrain is not set");
+        if (Terrain == null!) Throwers.InvalidOperation("Terrain is not set");
 
         var hit = GetPointOnPlane(mousePos, origin.Y, out var ray);
         if (hit == default) return default;

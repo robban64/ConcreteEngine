@@ -58,54 +58,78 @@ internal sealed class EngineBlueprintFactory(AssetStore assetStore) : BlueprintF
             instance.Materials.Add(material);
         }
 
-        BuildModelEntities(instance);
+        var modelRootEntity = BuildModelEntities(instance);
 
         if (model.Animation != null)
-            BuildAnimationEntities(instance, model.Animation);
+            BuildAnimationEntities(modelRootEntity, instance, model.Animation);
 
         return instance;
     }
 
-    private static void BuildModelEntities(ModelInstance component)
+    private static RenderEntityId BuildModelEntities(ModelInstance component)
     {
         const EntitySourceKind kind = EntitySourceKind.Model;
 
+        var rootEntity = new RenderEntityId(0);
         var meshes = component.Asset.Meshes;
+        var isAnimated = component.Asset.Animation != null;
         for (int i = 0; i < meshes.Length; i++)
         {
             var mesh = meshes[i];
             var material = component.Materials[i];
 
             var queue = material.Transparency ? DrawCommandQueue.Transparent : DrawCommandQueue.Opaque;
-            var mask = material.HasShadowMap ? PassMask.Default : PassMask.Main;
+            var pass = material.RenderProps.HasShadowMap ? PassMask.Default : PassMask.Main;
             var meshIdx = mesh.Info.MeshIndex;
-            var source = new SourceComponent(mesh.MeshId, material.MaterialId, meshIdx, kind, queue, mask);
+            var source = new SourceComponent(mesh.MeshId, material.MaterialId, meshIdx, kind, queue, pass);
 
-            var entity = RenderEcs.AddEntity(source, in component.LocalTransform, in mesh.LocalBounds);
+            ref readonly var bounds = ref (isAnimated ? ref component.LocalBounds : ref mesh.LocalBounds);
+            var entity = RenderEcs.AddEntity(source, in component.LocalTransform, in bounds);
             component.RenderEntityIds.Add(entity);
+
+            if (i == 0) rootEntity = entity;
         }
+
+        return rootEntity;
     }
 
-    private static void BuildAnimationEntities(ModelInstance instance, ModelAnimation animation)
+    private static void BuildAnimationEntities(RenderEntityId rootEntity, ModelInstance instance,
+        ModelAnimation animation)
     {
         var clip = animation.Clips[0];
-        var component = new RenderAnimationComponent(animation.AnimationId);
-        var renderEntityIds = instance.GetRenderEntities();
-        for (var i = 0; i < renderEntityIds.Length; i++)
+
+        var renderComponent = new SkinningComponent(animation.AnimationId, instance: 0);
+        var gameComponent = new AnimationComponent { Duration = clip.Duration, Speed = clip.TicksPerSecond };
+        var animationStore = Ecs.GetRenderStore<SkinningComponent>();
+
+        var existing = false;
+        foreach (var query in animationStore.Query())
         {
-            var renderEntity = renderEntityIds[i];
-            Ecs.GetRenderStore<RenderAnimationComponent>().Add(renderEntity, component);
+            ref readonly var c = ref query.Component;
+            if (renderComponent.AnimationId != c.AnimationId || renderComponent.Instance != c.Instance)
+                continue;
+
+            existing = true;
+            rootEntity = query.Entity;
+            break;
+        }
+
+        if (!existing)
+        {
+            animationStore.Add(rootEntity, renderComponent);
 
             var gameEntity = GameEcs.AddEntity();
-
             instance.GameEntityIds.Add(gameEntity);
-
-            var gameComponent = new AnimationComponent { Duration = clip.Duration, Speed = clip.TicksPerSecond };
             Ecs.GetGameStore<AnimationComponent>().Add(gameEntity, gameComponent);
-            Ecs.GetGameStore<RenderLink>().Add(gameEntity, new RenderLink(renderEntity));
+            Ecs.GetGameStore<RenderLink>().Add(gameEntity, new RenderLink(rootEntity));
+        }
+
+        var skinLinkComponent = new SkinLinkComponent { EntityId = rootEntity };
+        foreach (var entity in instance.GetRenderEntities())
+        {
+            Ecs.GetRenderStore<SkinLinkComponent>().Add(entity, skinLinkComponent);
         }
     }
-
 
     private ParticleInstance BuildParticle(ParticleBlueprint bp)
     {

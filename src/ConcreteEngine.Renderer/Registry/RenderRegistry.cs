@@ -12,16 +12,15 @@ public sealed class RenderRegistry
 
     internal RenderRegistry(GfxContext gfx)
     {
-        ShaderRegistry = new RenderShaderRegistry(gfx);
+        ShaderRegistry = new RenderShaderRegistry();
         UboRegistry = new RenderUboRegistry(gfx);
         FboRegistry = new RenderFboRegistry(gfx);
-        SetupGateway(gfx.ResourceManager.GetGfxApi());
     }
 
-    internal void SetupGateway(GfxResourceApi gfxApi)
+    private void SetupGateway()
     {
-        gfxApi.BindMetaChanged(GraphicsKind.FrameBuffer, FboRegistry.OnFboChange);
-        gfxApi.BindMetaChanged(GraphicsKind.UniformBuffer, UboRegistry.OnUboChanged);
+        GfxResourceApi.BindMetaChanged(GraphicsKind.FrameBuffer, FboRegistry.OnFboChange);
+        GfxResourceApi.BindMetaChanged(GraphicsKind.UniformBuffer, UboRegistry.OnUboChanged);
     }
 
     internal void BeginRegistration(Size2D outputSize)

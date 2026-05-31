@@ -6,6 +6,52 @@ namespace ConcreteEngine.Core.Engine.Graphics;
 
 public static class TerrainUtils
 {
+    public static int SampleLayer(ReadOnlySpan<byte> pixelData, int x, int z, int dimension)
+    {
+        const int channels = 4;
+        const byte threshold = 64;
+
+        x = int.Clamp(x, 0, dimension - 1);
+        z = int.Clamp(z, 0, dimension - 1);
+
+        var rowStrideBytes = pixelData.Length / dimension;
+
+        var idx = z * rowStrideBytes + x * channels;
+        if ((uint)(idx + channels - 1) >= (uint)pixelData.Length) return -1;
+
+        byte r = pixelData[idx], g = pixelData[idx + 1], b = pixelData[idx + 2];
+        byte w = (byte)((r + g + b) / 3);
+
+        int bestLayer = -1;
+        byte bestValue = threshold;
+
+        if (r > bestValue)
+        {
+            bestValue = r;
+            bestLayer = 0;
+        }
+
+        if (g > bestValue)
+        {
+            bestValue = g;
+            bestLayer = 1;
+        }
+
+        if (b > bestValue)
+        {
+            bestValue = b;
+            bestLayer = 2;
+        }
+
+        if (w > bestValue)
+        {
+            bestValue = w;
+            bestLayer = 3;
+        }
+
+        return bestLayer;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float SampleHeight(ReadOnlySpan<byte> data, Vector2I coords, int dimension, float maxHeight)
     {
@@ -21,6 +67,7 @@ public static class TerrainUtils
         byte r = data[idx];
         return r / 255f * maxHeight;
     }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3 GetTangent(ReadOnlySpan<byte> data, int worldX, int worldZ, int step, int dimension,

@@ -1,19 +1,56 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Render.Data;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Render;
 
+internal sealed class AnimationRig
+{
+    public readonly byte[] ParentIndices;
+    public readonly Matrix4x4[] BindPose;
+    public readonly Matrix4x4[] InverseBindPose;
+    public readonly AnimationChannel[] Channels;
+
+    public readonly Id16<ModelAnimation> AnimationId;
+
+    public AnimationRig(ModelAnimation source, AnimationChannel[] channels)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(channels);
+        ArgumentOutOfRangeException.ThrowIfZero(source.AnimationId.Value, nameof(source.AnimationId));
+
+        AnimationId = source.AnimationId;
+
+        ParentIndices = source.ParentIndices;
+        BindPose = source.BindPose;
+        InverseBindPose = source.InverseBindPose;
+        Channels = channels;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public SkinningContext GetSkinningContext(int clip)
+    {
+        var len = ParentIndices.Length;
+        var start = clip * len;
+        if ((uint)start + (uint)len > (uint)Channels.Length)
+            Throwers.BufferOverflow(nameof(AnimationChannel), start, start + len);
+
+        var channels = Channels.AsSpan(start, len);
+        return new SkinningContext(ParentIndices, BindPose, InverseBindPose, channels);
+    }
+}
+
 internal sealed class AnimationTable
 {
-    private static AnimationId MakeId() => new(++_idx);
-    private static int _idx;
-
     public static AnimationTable Instance { get; private set; } = null!;
     public static AnimationTable Make() => Instance = new AnimationTable();
 
-    private AnimationEntry[] _animations = [];
+    private AnimationRig[] _animations = [];
+
+    public int Count { get; private set; }
 
     private AnimationTable()
     {
@@ -21,60 +58,56 @@ internal sealed class AnimationTable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<AnimationClipChannel> GetAnimationData(AnimationId id, int clip, out SkeletonMatrices skeleton)
+    public SkinningContext GetSkinningContext(Id16<ModelAnimation> id, int clip)
     {
         var index = id.Index();
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_animations.Length, nameof(id));
-
-        ref readonly var it = ref _animations[index];
-        skeleton = it.Skeleton;
-        return it.GetClip(clip);
+        if ((uint)index >= (uint)_animations.Length)
+            Throwers.BufferOverflow(nameof(AnimationChannel), index, _animations.Length);
+        return _animations[index].GetSkinningContext(clip);
     }
 
-
-    public ref readonly AnimationEntry GetAnimation(AnimationId id)
-    {
-        var index = id.Index();
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_animations.Length, nameof(id));
-        return ref _animations[index];
-    }
 
     public void Setup(AssetStore assets)
     {
-        var count = 0;
+        ushort count = 0, idHeigh = 0;
         foreach (var model in assets.GetAssetEnumerator<Model>())
         {
-            if (!model.Info.IsAnimated) continue;
+            if (model.Animation is null) continue;
             count++;
+            idHeigh = ushort.Max(idHeigh, model.Animation.AnimationId.Value);
         }
 
-        _animations = new AnimationEntry[count];
+        _animations = new AnimationRig[ushort.Max(idHeigh, count)];
 
         foreach (var model in assets.GetAssetEnumerator<Model>())
         {
-            if (!model.Info.IsAnimated) continue;
-
+            if (model.Animation is null) continue;
             var animation = model.Animation!;
-            var animationId = MakeId();
-            model.AttachAnimation(animationId);
+            var index = animation.AnimationId.Index();
+            var clips = CreateClipChannels(animation);
 
-            var clips = new AnimationClipChannel[animation.Clips.Count * animation.BoneCount];
-            var len = animation.Clips.Count;
-            for (var c = 0; c < len; c++)
-            {
-                var animationClip = animation.Clips[c];
-                var clip = clips.AsSpan(c * animation.BoneCount, animation.BoneCount);
-
-                for (int b = 0; b < animation.BoneCount; b++)
-                {
-                    if (b >= animationClip.Channels.Length)
-                        clip[b] = new AnimationClipChannel();
-                    else
-                        clip[b] = new AnimationClipChannel(animationClip.Channels[b]);
-                }
-            }
-
-            _animations[animationId.Index()] = new AnimationEntry(animation.Skeleton, clips);
+            _animations[index] = new AnimationRig(animation, clips);
         }
+    }
+
+    private static AnimationChannel[] CreateClipChannels(ModelAnimation animation)
+    {
+        var clips = new AnimationChannel[animation.Clips.Count * animation.BoneCount];
+        var len = animation.Clips.Count;
+        for (var c = 0; c < len; c++)
+        {
+            var animationClip = animation.Clips[c];
+            var clip = clips.AsSpan(c * animation.BoneCount, animation.BoneCount);
+
+            for (int b = 0; b < animation.BoneCount; b++)
+            {
+                if (b >= animationClip.Channels.Length)
+                    clip[b] = new AnimationChannel();
+                else
+                    clip[b] = new AnimationChannel(animationClip.Channels[b]);
+            }
+        }
+
+        return clips;
     }
 }

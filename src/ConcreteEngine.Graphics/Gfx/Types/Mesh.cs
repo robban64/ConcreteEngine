@@ -1,7 +1,6 @@
-using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Handles;
 
-namespace ConcreteEngine.Graphics.Gfx.Contracts;
+namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class MeshLayout(
     MeshId meshId,
@@ -80,6 +79,9 @@ public readonly struct MeshDrawProperties(
     public static MeshDrawProperties MakeInstance(DrawPrimitive primitive, int drawCount, int instances) =>
         new(primitive, DrawMeshKind.ArraysInstanced, DrawElementSize.None, drawCount, instanceCount: instances);
 
+    public static MeshDrawProperties MakeElementalInstance(DrawPrimitive primitive, DrawElementSize size, int drawCount,
+        int instances) =>
+        new(primitive, DrawMeshKind.ElementsInstanced, size, drawCount, instanceCount: instances);
 
     public static MeshDrawProperties MakeElemental(DrawMeshKind kind = DrawMeshKind.Elements,
         DrawElementSize size = DrawElementSize.UnsignedInt, int drawCount = 0) =>

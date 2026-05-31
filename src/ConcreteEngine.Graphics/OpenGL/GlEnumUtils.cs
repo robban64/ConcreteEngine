@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Internals;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
@@ -32,6 +32,25 @@ internal static class GlEnumUtils
     }
 }
 
+internal static class GfxGlEnumExtensions
+{
+    public static GfxUniformType ToGfxUniformType(this GLEnum uniform)
+    {
+        return uniform switch
+        {
+            GLEnum.Sampler2D => GfxUniformType.Sampler2D,
+            GLEnum.IntSampler2D => GfxUniformType.IntSampler2D,
+            GLEnum.Sampler2DArray => GfxUniformType.Sampler2DArray,
+            GLEnum.Sampler2DShadow => GfxUniformType.Sampler2DShadow,
+            GLEnum.Sampler2DMultisample => GfxUniformType.Sampler2DMultisample,
+            GLEnum.SamplerCube => GfxUniformType.SamplerCube,
+            GLEnum.Sampler3D => GfxUniformType.Sampler3D,
+            GLEnum.IntSampler3D => GfxUniformType.IntSampler3D,
+            _ => GfxUniformType.Unknown
+        };
+    }
+}
+
 internal static class GlEnumExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -48,6 +67,24 @@ internal static class GlEnumExtensions
         };
     }
 
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static GLEnum ToGlEnableCap(this GfxStateFlags flag)
+    {
+        return flag switch
+        {
+            GfxStateFlags.ColorMask or GfxStateFlags.DepthWrite => GLEnum.None,
+            GfxStateFlags.DepthTest => GLEnum.DepthTest,
+            GfxStateFlags.Cull => GLEnum.CullFace,
+            GfxStateFlags.Blend => GLEnum.Blend,
+            GfxStateFlags.Scissor => GLEnum.ScissorTest,
+            GfxStateFlags.Srgb => GLEnum.FramebufferSrgb,
+            GfxStateFlags.PolygonOffset => GLEnum.PolygonOffsetFill,
+            GfxStateFlags.Ac2 => GLEnum.SampleAlphaToCoverage,
+            _ => Throwers.Unreachable<GLEnum>(nameof(flag))
+        };
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GLEnum ToGlEnum(this TextureKind textureKind)
     {
@@ -56,6 +93,7 @@ internal static class GlEnumExtensions
             TextureKind.Texture2D => GLEnum.Texture2D,
             TextureKind.Texture3D => GLEnum.Texture3D,
             TextureKind.CubeMap => GLEnum.TextureCubeMap,
+            TextureKind.Texture2DArray => GLEnum.Texture2DArray,
             TextureKind.Multisample2D => GLEnum.Texture2DMultisample,
             _ => Throwers.Unreachable<GLEnum>(nameof(textureKind))
         };
@@ -206,9 +244,12 @@ internal static class GlEnumExtensions
         return value switch
         {
             VertexFormat.Float => GLEnum.Float,
-            VertexFormat.Integer => GLEnum.Int,
+            VertexFormat.Int => GLEnum.Int,
+            VertexFormat.UInt => GLEnum.UnsignedInt,
             VertexFormat.UByte => GLEnum.UnsignedByte,
             VertexFormat.UShort => GLEnum.UnsignedShort,
+            VertexFormat.Half => GLEnum.HalfFloat,
+
             _ => Throwers.Unreachable<GLEnum>(nameof(value))
         };
     }

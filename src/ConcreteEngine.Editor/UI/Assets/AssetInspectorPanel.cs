@@ -2,7 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Assets.Extensions;
+using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Inspector;
@@ -18,6 +18,8 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
     private static readonly char[] ValidNoneAlphaNumericChars = [':', '/', '_', '-', '.'];
 
     private static SelectionManager Selection => SelectionManager.Instance;
+
+    public static TexturePtrHandle PopupTextureHandle;
 
     private AssetId _previousId = AssetId.Empty;
 

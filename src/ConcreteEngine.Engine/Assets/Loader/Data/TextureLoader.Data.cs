@@ -1,17 +1,10 @@
-using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Assets.Loader.Data;
 
-internal readonly struct TextureCreationInfo(TextureId textureId, int width, int height)
+internal readonly struct TextureUploadMeta(Size3D size, CreateTextureProps textureProps)
 {
-    public readonly TextureId TextureId = textureId;
-    public readonly int Width = width;
-    public readonly int Height = height;
-}
-
-internal readonly struct TextureUploadMeta(CreateTextureInfo textureDesc, CreateTextureProps textureProps)
-{
-    public readonly CreateTextureInfo TextureDesc = textureDesc;
+    public readonly Size3D Size = size;
     public readonly CreateTextureProps TextureProps = textureProps;
 }

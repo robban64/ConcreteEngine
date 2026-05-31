@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Graphics.Gfx.Definitions;
+namespace ConcreteEngine.Graphics.Gfx;
 
 public enum BlendMode : byte
 {

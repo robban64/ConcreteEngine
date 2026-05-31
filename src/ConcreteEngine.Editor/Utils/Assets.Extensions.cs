@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Inspector;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Editor.Utils;
 
@@ -65,6 +65,7 @@ internal static class AssetsExtensions
                 TextureKind.Texture2D => "Texture2D",
                 TextureKind.Texture3D => "Texture3D",
                 TextureKind.CubeMap => "CubeMap",
+                TextureKind.Texture2DArray => "CubeMap",
                 TextureKind.Multisample2D => "Multisample",
                 _ => Throwers.Unreachable<string>(nameof(kind))
             };

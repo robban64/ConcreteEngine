@@ -40,7 +40,7 @@ internal sealed class SelectionManager
             DeselectSceneObject();
 
         if (SelectedSceneObject is null && selection.HasSceneObject)
-            SelectSceneObject(selection.SelectedSceneId);
+            SelectSceneObject(selection.SelectedSceneId, tool.ShowDebugBounds);
 
         if (SelectedAsset is not null && SelectedAsset.Id != selection.SelectedAssetId)
             DeselectAsset();
@@ -88,7 +88,7 @@ internal sealed class SelectionManager
         InspectorFieldProvider.Instance.MaterialFields.Unbind();
     }
 
-    private void SelectSceneObject(SceneObjectId id)
+    private void SelectSceneObject(SceneObjectId id, bool showDebugBounds)
     {
         if (id == SelectedSceneObject?.Id) return;
         if (!id.IsValid())
@@ -103,6 +103,9 @@ internal sealed class SelectionManager
         var sceneObject = SceneStore.Get(id);
         foreach (var it in sceneObject.GetInstances())
             it.ToggleSelection(true);
+
+        if (showDebugBounds)
+            ToggleDrawBounds(true);
 
         SelectedSceneObject = new InspectSceneObject(sceneObject);
     }

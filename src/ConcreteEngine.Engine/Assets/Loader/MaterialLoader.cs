@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
@@ -31,7 +31,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
     private AssetStore _store;
 
-    internal MaterialLoader(AssetStore store, AssetGfxUploader gfxUploader) : base(gfxUploader)
+    internal MaterialLoader(AssetStore store)
     {
         _store = store;
         _profiles = CreateSlotProfiles();
@@ -54,7 +54,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
     {
         TextureSource[] slots = [new(AssetId.Empty, TextureUsage.Albedo)];
         var param = new MaterialParams(Color4.White, 0, 0, 1);
-        return new Material("Fallback", AssetId.Empty, AssetId.Empty, MaterialProfile.None, in param, slots)
+        return new Material("Fallback", AssetId.Empty, null, MaterialProfile.None, in param, slots)
         {
             Id = assetId, GId = gId,
         };
@@ -70,7 +70,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         string? shaderName = null;
 
         if (record.TextureSlots.Length > 0)
-            slots = CreateSlots(record);
+            slots = CreateSources(record);
         else if (record.Profile != MaterialProfile.None)
         {
             var profile = _profiles[(int)record.Profile];
@@ -83,11 +83,11 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         if (string.IsNullOrEmpty(shaderName))
             throw new InvalidOperationException($"Missing shader name for material {record.Name}");
 
-        var shader = _store.GetByName<Shader>(shaderName).Id;
+        var shader = _store.GetByName<Shader>(shaderName);
 
         return new Material(record.Name, AssetId.Empty, shader, record.Profile, record.Parameters, slots)
         {
-            Id = ctx.Id, GId = record.GId, ShaderId = shader,
+            Id = ctx.Id, GId = record.GId,
         };
     }
 
@@ -101,12 +101,11 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             new(default, TextureUsage.Albedo),
             new(default, TextureUsage.Normal),
             new(default, TextureUsage.Mask),
-            new(default, TextureUsage.Shadowmap),
         ];
 
         foreach (var (textureGId, textureIndex) in embedded.Textures)
         {
-            if (!_store.TryGetByGuid(textureGId, out Texture texture))
+            if (!_store.TryGetByGuid<Texture>(textureGId, out var texture))
                 throw new InvalidOperationException($"Embedded texture [{textureIndex}] not found: {textureGId}");
 
             if (texture.Usage == TextureUsage.Albedo)
@@ -119,7 +118,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
         var matProfile = embedded.IsAnimated ? MaterialProfile.AnimatedModel : MaterialProfile.StaticModel;
         var profile = _profiles[(int)matProfile];
-        var shader = _store.GetByName<Shader>(profile.Shader).Id;
+        var shader = _store.GetByName<Shader>(profile.Shader);
 
         return new Material(embedded.Name, AssetId.Empty, shader, matProfile, in embedded.Params, slots)
         {
@@ -128,22 +127,22 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
     }
 
 
-    private TextureSource[] CreateSlots(MaterialRecord embedded)
+    private TextureSource[] CreateSources(MaterialRecord embedded)
     {
         if (embedded.TextureSlots.Length == 0)
         {
             return [new TextureSource(default, TextureUsage.Albedo)];
         }
 
-        var slotInfo = new TextureSource[embedded.TextureSlots.Length];
-        for (int i = 0; i < slotInfo.Length; i++)
+        var sources = new TextureSource[embedded.TextureSlots.Length];
+        for (int i = 0; i < sources.Length; i++)
         {
             var slot = embedded.TextureSlots[i];
             AssetId? slotAsset = null;
 
-            if (slot.SlotKind == TextureUsage.Shadowmap)
+            if (slot.TextureKind == TextureKind.Texture2DArray)
             {
-                slotInfo[i] = new TextureSource(default, slot.SlotKind, slot.TextureKind);
+                sources[i] = new TextureSource(default, slot.SlotKind, slot.TextureKind);
                 continue;
             }
 
@@ -153,10 +152,10 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             if (slotAsset is not { } slotAssetId)
                 throw new InvalidOperationException($"Texture {slot.Name} does not exists for {embedded.Name}");
 
-            slotInfo[i] = new TextureSource(slotAssetId, slot.SlotKind, slot.TextureKind);
+            sources[i] = new TextureSource(slotAssetId, slot.SlotKind, slot.TextureKind);
         }
 
-        return slotInfo;
+        return sources;
     }
 
     private TextureSource[] CreateSlotsFromProfile(ProfileSlot[] profile, MaterialRecord desc)
@@ -185,28 +184,19 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         new()
         {
             [(int)MaterialProfile.None] = new MatProfileInfo("Model"),
+            [(int)MaterialProfile.Foliage] = new MatProfileInfo("Foliage", new ProfileSlot(TextureUsage.Albedo)),
             [(int)MaterialProfile.Particle] = new MatProfileInfo("Particle", new ProfileSlot(TextureUsage.Albedo)),
             [(int)MaterialProfile.Sky] =
                 new MatProfileInfo("Skybox", new ProfileSlot(TextureUsage.Albedo, TextureKind.CubeMap)),
             [(int)MaterialProfile.StaticModel] = new MatProfileInfo("Model",
                 new ProfileSlot(TextureUsage.Albedo),
                 new ProfileSlot(TextureUsage.Normal),
-                new ProfileSlot(TextureUsage.Mask),
-                new ProfileSlot(TextureUsage.Shadowmap)
+                new ProfileSlot(TextureUsage.Mask)
             ),
             [(int)MaterialProfile.AnimatedModel] = new MatProfileInfo("ModelAnimated",
                 new ProfileSlot(TextureUsage.Albedo),
                 new ProfileSlot(TextureUsage.Normal),
-                new ProfileSlot(TextureUsage.Mask),
-                new ProfileSlot(TextureUsage.Shadowmap)
-            ),
-            [(int)MaterialProfile.Terrain] = new MatProfileInfo("Terrain",
-                new ProfileSlot(TextureUsage.Environment),
-                new ProfileSlot(TextureUsage.Environment),
-                new ProfileSlot(TextureUsage.Environment),
-                new ProfileSlot(TextureUsage.Environment),
-                new ProfileSlot(TextureUsage.Splatmap),
-                new ProfileSlot(TextureUsage.Shadowmap)
+                new ProfileSlot(TextureUsage.Mask)
             )
         };
 }

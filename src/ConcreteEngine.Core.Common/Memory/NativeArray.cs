@@ -100,6 +100,13 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         Alignment = alignment;
     }
 
+    public static NativeArray<T> MakeNull()
+    {
+        NativeArray<T> array = default;
+        array.Ptr = null;
+        return array;
+    }
+
     public readonly bool IsNull => Ptr == null;
     public readonly int SizeInBytes => Length * Unsafe.SizeOf<T>();
 
@@ -151,7 +158,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void Dispose()
     {
-        NativeArray.DisposeArray(Ptr, SizeInBytes, Alignment);
+        if (Ptr != null) NativeArray.DisposeArray(Ptr, SizeInBytes, Alignment);
         Ptr = null;
         Length = 0;
     }

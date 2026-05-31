@@ -9,7 +9,7 @@ namespace ConcreteEngine.Graphics.Resources;
 public interface IGfxResourceDisposer
 {
     int PendingCount { get; }
-    void EnqueueRemoval<TId>(TId id) where TId : unmanaged, IResourceId;
+    void EnqueueRemoval<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta;
 }
 
 internal sealed class GfxResourceDisposer : IGfxResourceDisposer
@@ -17,17 +17,12 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
     private const int DrainPerFrame = 6;
     private const int DrainDelayTicks = 2;
 
-    private readonly BackendStoreHub _backendStoreHub;
-    private readonly GfxStoreHub _gfxStoreHub;
-
     private readonly ResourceDisposeQueue _disposeQueue;
 
     public int PendingCount => _disposeQueue.PendingCount;
 
-    internal GfxResourceDisposer(GfxResourceManager resources)
+    internal GfxResourceDisposer()
     {
-        _backendStoreHub = resources.BackendStoreHub;
-        _gfxStoreHub = resources.GfxStoreHub;
         _disposeQueue = new ResourceDisposeQueue();
     }
 
@@ -37,38 +32,36 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         while (drainCount < DrainPerFrame && _disposeQueue.TryGetNext(DrainDelayTicks, out var cmd))
         {
             driver.Disposer.DeleteGlResource(cmd);
-            _backendStoreHub.GetStore(cmd.Handle.Kind).Remove(cmd.Handle);
+            GfxRegistry.GetBackendStore(cmd.Handle.Kind).Remove(cmd.Handle);
             if (!cmd.Replace)
             {
-                _gfxStoreHub.RemoveResource(cmd.GfxId, cmd.Handle.Kind);
+                GfxRegistry.GetGfxStore(cmd.Handle.Kind).Remove(new GfxId(cmd.GfxId, cmd.Handle.Kind));
             }
 
             drainCount++;
         }
     }
 
-    public void EnqueueRemoval<TId>(TId id) where TId : unmanaged, IResourceId
+    public void EnqueueRemoval<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
-        var resourceKind = TId.Kind;
-        var fStore = _gfxStoreHub.GetHandleStore<TId>();
+        ArgumentOutOfRangeException.ThrowIfZero(id.Id);
+        var resourceKind = TMeta.ResourceKind;
+        var fStore = GfxRegistry.GetGfxStore<TMeta>();
         var gfxHandle = fStore.GetHandle(id);
 
-        var bStore = _backendStoreHub.GetStore(resourceKind);
-        var native = bStore.GetNativeHandle(gfxHandle);
+        var bkHandle = GfxRegistry.GetBackendStore<TMeta>().GetSafe(gfxHandle);
 
-        var cmd = DeleteResourceCommand.MakeDelete(gfxHandle, native, id.Value);
+        var cmd = DeleteResourceCommand.MakeDelete(gfxHandle, bkHandle, id);
         _disposeQueue.Enqueue(cmd);
 
-        GfxLog.LogBackend(native, gfxHandle, TId.Kind.ToLogTopic(), LogAction.Evict);
+        GfxLog.LogBackend(bkHandle, gfxHandle, resourceKind.ToLogTopic(), LogAction.Evict);
     }
 
     public void EnqueueReplace(GfxHandle handle)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(handle.IsValid, false);
 
-        var bkStore = _backendStoreHub.GetStore(handle.Kind);
-        var bkHandle = bkStore.GetNativeHandle(handle);
+        var bkHandle = GfxRegistry.GetBackendStore(handle.Kind).GetSafe(handle);
         var cmd = DeleteResourceCommand.MakeReplace(handle, bkHandle);
         _disposeQueue.Enqueue(cmd);
 
@@ -79,7 +72,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
     private sealed class ResourceDisposeQueue
     {
         private readonly Queue<DeleteResourceCommand> _disposeQueue = new(8);
-        private readonly HashSet<DeleteResourceCommand> _disposeSet = new(8);
+        private readonly HashSet<int> _disposeSet = new(8);
         public int PendingCount => _disposeQueue.Count;
 
         private bool _isDisposing;
@@ -89,7 +82,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         public void Enqueue(DeleteResourceCommand cmd)
         {
             InvalidOpThrower.ThrowIf(_isDisposing);
-            InvalidOpThrower.ThrowIfNot(_disposeSet.Add(cmd));
+            InvalidOpThrower.ThrowIfNot(_disposeSet.Add(cmd.GetHashCode()));
 
             _disposeQueue.Enqueue(cmd);
         }

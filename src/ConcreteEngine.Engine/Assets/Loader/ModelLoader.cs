@@ -1,15 +1,17 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets.ImporterAssimp;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
-internal sealed class ModelLoader(TextureLoader textureLoader, AssetGfxUploader uploader)
-    : AssetTypeLoader<Model, ModelRecord>(uploader)
+internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
+    : AssetTypeLoader<Model, ModelRecord>()
 {
     private const int DefaultLength = 4096 * 32;
 
@@ -57,7 +59,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, AssetGfxUploader 
         _importer.ImportSceneData(modelContext);
 
         // upload
-        _importer.Upload(modelContext, Uploader);
+        _importer.Upload(modelContext, this);
 
         // store
         var modelData = modelContext.Model;
@@ -141,4 +143,38 @@ internal sealed class ModelLoader(TextureLoader textureLoader, AssetGfxUploader 
 
 
     protected override Model LoadInMemory(ModelRecord record, LoaderContext ctx) => throw new NotImplementedException();
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public MeshId UploadMesh(NativeView<Vertex3D> vertices, NativeView<byte> indices, bool is16Bit)
+    {
+        var drawSize = is16Bit ? DrawElementSize.UnsignedShort : DrawElementSize.UnsignedInt;
+        var properties = MeshDrawProperties.MakeElemental(drawCount: indices.Length, size: drawSize);
+        var iboArgs = CreateIboArgs.MakeDefault();
+
+        var meshId = gfx.CreateEmptyMesh(in properties, 1, VertexAttributes.GetVertex3DAttributes());
+        gfx.CreateAttachVertexBuffer(meshId, vertices.AsReadOnlySpan(), CreateVboArgs.MakeDefault(0));
+        if (is16Bit)
+            gfx.CreateAttachIndexBuffer(meshId, indices.Reinterpret<ushort>().AsReadOnlySpan(), iboArgs);
+        else
+            gfx.CreateAttachIndexBuffer(meshId, indices.Reinterpret<uint>().AsReadOnlySpan(), iboArgs);
+        return meshId;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public MeshId UploadAnimatedMesh(NativeView<Vertex3D> vertices, NativeView<SkinningData> skinned,
+        NativeView<byte> indices, bool is16Bit)
+    {
+        var drawSize = is16Bit ? DrawElementSize.UnsignedShort : DrawElementSize.UnsignedInt;
+        var properties = MeshDrawProperties.MakeElemental(drawCount: indices.Length, size: drawSize);
+        var iboArgs = CreateIboArgs.MakeDefault();
+
+        var meshId = gfx.CreateEmptyMesh(in properties, 2, VertexAttributes.GetSkinnedAttributes());
+        gfx.CreateAttachVertexBuffer(meshId, vertices.AsReadOnlySpan(), CreateVboArgs.MakeDefault(0));
+        gfx.CreateAttachVertexBuffer(meshId, skinned.AsReadOnlySpan(), CreateVboArgs.MakeDefault(1));
+        if (is16Bit)
+            gfx.CreateAttachIndexBuffer(meshId, indices.Reinterpret<ushort>().AsReadOnlySpan(), iboArgs);
+        else
+            gfx.CreateAttachIndexBuffer(meshId, indices.Reinterpret<uint>().AsReadOnlySpan(), iboArgs);
+        return meshId;
+    }
 }

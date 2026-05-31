@@ -1,5 +1,3 @@
-using ConcreteEngine.Graphics.Handles;
-
 namespace ConcreteEngine.Engine.Assets.Loader.Data;
 
 internal readonly struct ShaderCreationInfo(ShaderId shaderId, int samplers)

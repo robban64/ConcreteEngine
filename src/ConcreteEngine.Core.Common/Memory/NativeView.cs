@@ -5,17 +5,18 @@ using ConcreteEngine.Core.Common.Collections;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
-public unsafe struct NativeView<T>(T* ptr, int offset, int length) : IEquatable<NativeView<T>> where T : unmanaged
+public readonly unsafe struct NativeView<T>(T* ptr, int offset, int length)
+    : IEquatable<NativeView<T>> where T : unmanaged
 {
-    public T* Ptr = ptr;
+    public readonly T* Ptr = ptr;
     public readonly int Offset = offset;
     public readonly int Length = length;
 
     public NativeView(T* ptr, int length) : this(ptr, 0, length) { }
 
-    public readonly int End => Offset + Length;
-    public readonly bool IsNull => Ptr == null;
-    public readonly int SizeInBytes => Length * Unsafe.SizeOf<T>();
+    public int End => Offset + Length;
+    public bool IsNull => Ptr == null;
+    public int SizeInBytes => Length * Unsafe.SizeOf<T>();
 
     public static bool operator ==(NativeView<T> left, NativeView<T> right) => left.Equals(right);
     public static bool operator !=(NativeView<T> left, NativeView<T> right) => !(left == right);
@@ -32,62 +33,55 @@ public unsafe struct NativeView<T>(T* ptr, int offset, int length) : IEquatable<
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T* operator -(NativeView<T> a, int b) => a.Ptr - b;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void operator ++() => Ptr++;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void operator --() => Ptr--;
-
-    public readonly ref T this[int index]
+    public ref T this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref Ptr[index];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly NativeView<T> Slice(int offset, int length)
+    public NativeView<T> Slice(int offset, int length)
     {
         Debug.Assert((uint)offset + (uint)length <= (uint)Length);
         return new NativeView<T>(Ptr + offset, Offset + offset, length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly NativeView<T> SliceFrom(int offset)
+    public NativeView<T> SliceFrom(int offset)
     {
         Debug.Assert((uint)offset <= (uint)Length);
         return new NativeView<T>(Ptr + offset, offset, Length - offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Span<T> AsSpan(int offset = 0)
+    public Span<T> AsSpan(int offset = 0)
     {
         Debug.Assert((uint)offset <= (uint)Length);
         return new Span<T>(Ptr + offset, Length - offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Span<T> AsSpan(int offset, int length)
+    public Span<T> AsSpan(int offset, int length)
     {
         Debug.Assert((uint)offset + (uint)length <= (uint)Length);
         return new Span<T>(Ptr + offset, length);
     }
 
 
-    public readonly void Clear() => NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
+    public void Clear() => NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
 
-    public readonly NativeView<U> Reinterpret<U>() where U : unmanaged
+    public NativeView<U> Reinterpret<U>() where U : unmanaged
     {
         Debug.Assert(SizeInBytes % Unsafe.SizeOf<U>() == 0);
         return new NativeView<U>((U*)Ptr, Offset, SizeInBytes / Unsafe.SizeOf<U>());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool Equals(NativeView<T> other) =>
-        Ptr == other.Ptr && Offset == other.Offset && Length == other.Length;
+    public bool Equals(NativeView<T> other) => Ptr == other.Ptr && Offset == other.Offset && Length == other.Length;
 
-    public override readonly bool Equals(object? obj) => obj is NativeView<T> v && Equals(v);
-    public override readonly int GetHashCode() => HashCode.Combine((IntPtr)Ptr, Offset, Length);
+    public override bool Equals(object? obj) => obj is NativeView<T> v && Equals(v);
+    public override int GetHashCode() => HashCode.Combine((IntPtr)Ptr, Offset, Length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly RefEnumerator<T> GetEnumerator() => new(ref *Ptr, Length);
+    public RefEnumerator<T> GetEnumerator() => new(ref *Ptr, Length);
 }

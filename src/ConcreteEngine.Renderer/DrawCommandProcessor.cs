@@ -1,13 +1,12 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Passes;
+using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer;
 
@@ -16,44 +15,50 @@ internal sealed class DrawCommandProcessor
     private readonly GfxCommands _gfxCmd;
     private readonly GfxDraw _gfxDraw;
     private readonly UniformUploader _buffers;
-    private readonly DrawStateContext _ctx;
 
-    internal DrawCommandProcessor(
-        DrawStateContext ctx,
-        DrawStateContextPayload ctxPayload,
-        UniformUploader buffers)
+    public TextureId DepthTexture { get; private set; }
+
+    private int _lastAnimationSlot;
+
+    private static PassStateMode PassMode => RenderContext.Instance.PassMode;
+
+    internal DrawCommandProcessor(GfxContext gfx, RenderRegistry renderRegistry, UniformUploader buffers)
     {
-        _ctx = ctx;
         _buffers = buffers;
-        _gfxCmd = ctxPayload.Gfx.Commands;
-        _gfxDraw = ctxPayload.Gfx.Draw;
+        _gfxCmd = gfx.Commands;
+        _gfxDraw = gfx.Draw;
+
+        var depthFbo = renderRegistry.FboRegistry.GetByKey(PassTags<ShadowPassTag>.FboKey(FboVariant.V0));
+        DepthTexture = depthFbo!.Attachments.DepthTexture;
     }
 
-
-    public void Initialize()
-    {
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Prepare() => _ctx.ResetState();
+    public void Prepare()
+    {
+        _lastAnimationSlot = 0;
+    }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PrepareDrawPass()
     {
-        _ctx.ResetMaterialState();
-        if (_ctx.IsDepth)
-        {
-            _gfxCmd.UseShader(_ctx.CoreShaders.DepthShader);
-            _gfxCmd.UnbindAllTextures();
-        }
+        _lastAnimationSlot = 0;
+        if (PassMode != PassStateMode.Depth) return;
+
+        _gfxCmd.UseShader(RenderShaderRegistry.CoreShaders.DepthShader);
+        _gfxCmd.UnbindAllTextures();
     }
 
     public void DrawMesh(DrawCommand cmd, int submitIdx)
     {
-        if (_ctx.PrevMaterial != cmd.MaterialId) BindMaterial(cmd.MaterialId);
+        if (_buffers.PrevMaterial != cmd.MaterialId) BindMaterial(cmd.MaterialId);
 
-        if (cmd.AnimationSlot > 0) _buffers.BindAnimation(cmd.AnimationSlot - 1);
+        if (cmd.AnimationSlot > 0 && cmd.AnimationSlot != _lastAnimationSlot)
+        {
+            _lastAnimationSlot = cmd.AnimationSlot;
+            _buffers.BindAnimation(cmd.AnimationSlot - 1);
+        }
 
         _buffers.BindDrawObject(submitIdx);
         _gfxDraw.BindDraw(cmd.MeshId, cmd.InstanceCount);
@@ -61,7 +66,7 @@ internal sealed class DrawCommandProcessor
 
     public void DrawSpecialResolveMesh(DrawCommand cmd, DrawCommandResolver resolver, byte resolverSlot, int submitIdx)
     {
-        if (!_ctx.IsDepth)
+        if (PassMode != PassStateMode.Depth)
         {
             BindAndResolvedOverride(cmd, resolver, resolverSlot);
         }
@@ -74,67 +79,48 @@ internal sealed class DrawCommandProcessor
     {
         var texSlots = _buffers.ResolveMaterial(materialId, out var materialMeta);
 
-        if (!materialMeta.PassState.IsEmpty) BindPassState(in materialMeta);
-
-        if (_ctx.PassMode == PassStateMode.Main)
+        if (!materialMeta.DrawState.IsEmpty())
         {
-            _gfxCmd.UseShader(materialMeta.ShaderId);
-            if (texSlots.Length > 0) BindTextureSlots(texSlots);
+            _gfxCmd.ApplyState(materialMeta.DrawState);
+            _gfxCmd.ApplyStateFunctions(materialMeta.PassFunctions);
         }
-        else if (_ctx.PassMode == PassStateMode.Depth && texSlots.Length > 0)
+
+        if (PassMode == PassStateMode.Depth && texSlots.Length > 0)
         {
             BindDepthTextureSlots(texSlots);
+            return;
         }
+
+        _gfxCmd.UseShader(materialMeta.ShaderId);
+        if (texSlots.Length > 0)
+            BindTextureSlots(texSlots, materialMeta.ShadowMapBinding);
     }
 
-    private void BindTextureSlots(ReadOnlySpan<TextureBinding> slots)
+    private void BindTextureSlots(ReadOnlySpan<TextureBinding> slots, sbyte shadowMapBinding)
     {
-        for (var i = 0; i < slots.Length; i++)
+        if (shadowMapBinding >= 0)
+            _gfxCmd.BindTexture(DepthTexture, shadowMapBinding);
+
+        foreach (var value in slots)
         {
-            var value = slots[i];
-            var texture = value.SlotKind != TextureUsage.Shadowmap ? value.Texture : _ctx.DepthTexture;
-            _gfxCmd.BindTexture(texture, i);
+            if (value.Slot < 0) continue;
+            _gfxCmd.BindTexture(value.Texture, value.Slot);
         }
     }
 
     private void BindDepthTextureSlots(ReadOnlySpan<TextureBinding> slots)
     {
-        _gfxCmd.BindTexture(slots[0].Texture, 0);
+        //_gfxCmd.BindTexture(GfxTextures.Fallback.AlphaMaskId, 1);
 
-        for (var i = 1; i < slots.Length; i++)
+        foreach (var value in slots)
         {
-            var value = slots[i];
-            if (value.SlotKind != TextureUsage.Mask) continue;
-            _gfxCmd.BindTexture(value.Texture, 1);
-            return;
+            if (value.SlotKind == TextureUsage.Albedo)
+                _gfxCmd.BindTexture(value.Texture, 0);
+            else if (value.SlotKind == TextureUsage.Mask)
+                _gfxCmd.BindTexture(value.Texture, 1);
         }
-
-        _gfxCmd.BindTexture(GfxTextures.Fallback.AlphaMaskId, 1);
     }
 
-    private void BindPassState(in RenderMaterialMeta materialMeta)
-    {
-        var ctx = _ctx;
-        if (!materialMeta.PassState.IsEmpty)
-        {
-            _gfxCmd.ApplyState(ctx.OverridePassState = materialMeta.PassState);
-        }
-        else if (!ctx.OverridePassState.IsEmpty)
-        {
-            ctx.OverridePassState = default;
-            _gfxCmd.ApplyState(ctx.PassState);
-        }
-
-        if (materialMeta.PassFunctions != default)
-        {
-            _gfxCmd.ApplyStateFunctions(ctx.OverridePassFunctions = materialMeta.PassFunctions);
-        }
-        else if (ctx.OverridePassFunctions != default)
-        {
-            ctx.OverridePassFunctions = default;
-            _gfxCmd.ApplyStateFunctions(ctx.PassFunctions);
-        }
-    }
 
     // allow for more flexible state management later on
     private void BindAndResolvedOverride(DrawCommand cmd, DrawCommandResolver resolver, byte resolverSlot)
@@ -150,11 +136,11 @@ internal sealed class DrawCommandProcessor
         switch (resolver)
         {
             case DrawCommandResolver.Highlight:
-                shader = _ctx.CoreShaders.HighlightShader;
+                shader = RenderShaderRegistry.CoreShaders.HighlightShader;
                 break;
             case DrawCommandResolver.BoundingVolume:
                 isAnimated = false;
-                shader = _ctx.CoreShaders.BoundingBoxShader;
+                shader = RenderShaderRegistry.CoreShaders.BoundingBoxShader;
                 break;
             case DrawCommandResolver.Wireframe:
             default:
@@ -173,31 +159,6 @@ internal sealed class DrawCommandProcessor
         {
             if (slot.SlotKind == TextureUsage.Albedo) _gfxCmd.BindTexture(slot.Texture, 0);
             else if (slot.SlotKind == TextureUsage.Mask) _gfxCmd.BindTexture(slot.Texture, 1);
-        }
-
-        if (materialMeta.PassState.IsEmpty)
-        {
-            _ctx.OverridePassState = default;
-        }
-        else
-        {
-            var filtered = materialMeta.PassState.Filter(allowMaterialOverride);
-            _ctx.OverridePassState = GfxPassState.PatchWith(_ctx.PassState, filtered);
-        }
-
-        if (materialMeta.PassFunctions == default)
-        {
-            _ctx.OverridePassFunctions = default;
-        }
-        else if (_ctx.OverridePassFunctions != materialMeta.PassFunctions)
-        {
-            var f = _ctx.PassFunctions;
-            var m = materialMeta.PassFunctions;
-            _ctx.OverridePassFunctions = f with
-            {
-                PolygonOffset = m.PolygonOffset == PolygonOffsetLevel.Unset ? f.PolygonOffset : m.PolygonOffset,
-                Cull = m.Cull == CullMode.Unset ? f.Cull : m.Cull
-            };
         }
     }
 }

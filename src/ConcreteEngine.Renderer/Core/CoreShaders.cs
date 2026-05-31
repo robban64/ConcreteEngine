@@ -1,5 +1,3 @@
-using ConcreteEngine.Graphics.Handles;
-
 namespace ConcreteEngine.Renderer.Core;
 
 public readonly struct CoreShaders
@@ -10,5 +8,4 @@ public readonly struct CoreShaders
     public required ShaderId PresentShader { get; init; }
     public required ShaderId HighlightShader { get; init; }
     public required ShaderId BoundingBoxShader { get; init; }
-    public required ShaderId ParticleShader { get; init; }
 }

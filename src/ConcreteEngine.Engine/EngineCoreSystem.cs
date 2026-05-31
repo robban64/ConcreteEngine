@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Engine.Assets;
@@ -10,20 +9,26 @@ public sealed class EngineCoreSystem : IEngineSystemManager
 {
     private readonly Dictionary<Type, IGameEngineSystem> _systems = new(4);
 
-    internal readonly AssetSystem AssetSystem;
+    internal readonly InputSystem Input;
+    internal readonly AssetSystem Assets;
+    internal readonly SceneSystem Scene;
+    internal readonly EngineRenderSystem Render;
 
     internal EngineCoreSystem(InputSystem inputSystem, AssetSystem assets, SceneSystem sceneSystem,
         EngineRenderSystem renderSystem)
     {
+        Input = inputSystem;
+        Scene = sceneSystem;
+        Render = renderSystem;
+        Assets = assets;
+
         Register(inputSystem);
         Register(assets);
         Register(sceneSystem);
         Register(renderSystem);
-        AssetSystem = assets;
     }
 
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     private void Register<T>(T system) where T : class, IGameEngineSystem
     {
         if (!_systems.TryAdd(typeof(T), system))

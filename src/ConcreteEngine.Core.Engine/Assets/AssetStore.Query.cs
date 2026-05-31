@@ -18,6 +18,8 @@ public sealed partial class AssetStore
         return (uint)index < (uint)_assets.Capacity && _assets[index]?.Id == id;
     }
 
+    internal T GetUnsafe<T>(int id) where T : AssetObject => (T)_assets[id - 1]!;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetObject Get(AssetId id)
     {

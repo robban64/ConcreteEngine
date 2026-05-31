@@ -23,8 +23,8 @@ public static partial class Ecs
             _ = Render.Core.GetMatrix(new RenderEntityId(1));
             _ = Render.Core.IsVisible(new RenderEntityId(1));
 
-            _ = Render.Stores<RenderAnimationComponent>.Store.Has(new RenderEntityId(1));
-            _ = Render.Stores<RenderAnimationComponent>.Store.TryGet(new RenderEntityId(0));
+            _ = Render.Stores<SkinningComponent>.Store.Has(new RenderEntityId(1));
+            _ = Render.Stores<SkinningComponent>.Store.TryGet(new RenderEntityId(0));
 
             _ = Render.Stores<ParticleComponent>.Store.Has(new RenderEntityId(0));
             _ = Render.Stores<ParticleComponent>.Store.TryGet(new RenderEntityId(1));

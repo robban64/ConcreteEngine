@@ -24,6 +24,10 @@ public readonly record struct Size2D(int Width, int Height)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Size2D(Vector2 v) => new(v.X, v.Y);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator Size2D(Size3D v) => new(v.Width, v.Height);
+
+
     public Size2D ScaleUniform(float factor) => new((int)(Width * factor), (int)(Height * factor));
     public Size2D Scale(float fx, float fy) => new((int)(Width * fx), (int)(Height * fy));
     public Size2D Scale(Vector2 v) => new((int)(Width * v.X), (int)(Height * v.Y));
@@ -35,6 +39,9 @@ public readonly record struct Size2D(int Width, int Height)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2 ToVector2() => new(Width, Height);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Size3D ToSize3D(int depth) => Size3D.From(this, depth);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Size2D Clamp(Size2D min, Size2D max) =>

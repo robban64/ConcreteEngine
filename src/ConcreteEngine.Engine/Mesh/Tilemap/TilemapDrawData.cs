@@ -1,5 +1,3 @@
-using ConcreteEngine.Graphics.Handles;
-
 namespace ConcreteEngine.Engine.Mesh.Tilemap;
 
 public readonly struct TileDrawItem(ushort textureIndex)

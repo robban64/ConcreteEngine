@@ -17,100 +17,124 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
 {
     private NativeArray<Matrix4x4> _globals;
 
+    private readonly RenderEntityStore<SkinningComponent> _skinningEcs;
     private readonly AnimationTable _animations;
-    private readonly RenderEntityCore _ecs;
-
     private readonly SkinningBuffer _skinningBuffer;
+
+    private readonly List<RenderEntityId> _entityIds = new(8);
 
     public AnimatorProcessor(AnimationTable animations, SkinningBuffer skinningBuffer)
     {
-        _globals = NativeArray.Allocate<Matrix4x4>(RenderLimits.BoneCapacity);
+        _globals = NativeArray.AlignedAllocate<Matrix4x4>(RenderLimits.BoneCapacity, alignment: 16);
+        _skinningEcs = Ecs.GetRenderStore<SkinningComponent>();
         _animations = animations;
         _skinningBuffer = skinningBuffer;
-        _ecs = Ecs.Render.Core;
     }
 
     public void Dispose() => _globals.Dispose();
 
 
-    public void Execute()
+    public void Tag(in DrawEntityContext ctx)
     {
-        UpdateInterpolate(EngineTime.GameAlpha);
-
-        foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
+        foreach (var query in _skinningEcs.Query())
         {
-            if (!_ecs.IsVisible(query.Entity)) continue;
-            var it = query.Component;
-            var clip = _animations.GetAnimationData(it.Animation, it.Clip, out var skeleton);
-            ExecuteInner(it.Time, skeleton, clip);
+            var drawItem = ctx.TryGetVisible(query.Entity);
+            if (drawItem.Entity.Id == 0) continue;
+            query.Component.AnimationSlot = _skinningBuffer.NextSlot();
+            _entityIds.Add(query.Entity);
+        }
+
+        foreach (var query in Ecs.Render.Query<SkinLinkComponent>())
+        {
+            var drawItem = ctx.TryGetVisible(query.Entity);
+            if (drawItem.Entity.Id == 0) continue;
+            var slot = _skinningEcs.Get(query.Component.EntityId).AnimationSlot;
+            drawItem.Command.AnimationSlot = slot;
         }
     }
 
-    private void UpdateInterpolate(float alpha)
+    public void Execute()
     {
-        var ecs = Ecs.GetRenderStore<RenderAnimationComponent>();
+        UpdateInterpolate();
+        for (var i = 0; i < _entityIds.Count; i++)
+        {
+            var entityId = _entityIds[i];
+            var it = _skinningEcs.Get(entityId);
+            var skinningContext = _animations.GetSkinningContext(it.AnimationId, it.Clip);
+            ExecuteInner(it.Time, skinningContext, _skinningBuffer.GetWriteView(it.AnimationSlot));
+        }
+
+        _entityIds.Clear();
+    }
+
+    private void UpdateInterpolate()
+    {
+        var alpha = EngineTime.GameAlpha;
+
         foreach (var query in Ecs.Game.Query<AnimationComponent, RenderLink>())
         {
             var renderEntity = query.Component2.RenderEntityId;
             if (renderEntity == default) continue;
 
-            var animationPtr = ecs.TryGet(renderEntity);
-            if (animationPtr.IsNull) continue;
+            var animationRef = _skinningEcs.TryGet(renderEntity);
+            if (animationRef.IsNull) continue;
 
             ref readonly var a = ref query.Component1;
 
             if (a.Time < a.PrevTime)
-                animationPtr.Value.Time = float.Lerp(a.PrevTime, a.Time + a.Duration, alpha) % a.Duration;
+                animationRef.Value.Time = float.Lerp(a.PrevTime, a.Time + a.Duration, alpha) % a.Duration;
             else
-                animationPtr.Value.Time = float.Lerp(a.PrevTime, a.Time, alpha);
+                animationRef.Value.Time = float.Lerp(a.PrevTime, a.Time, alpha);
         }
     }
 
-    private void ExecuteInner(float time, SkeletonMatrices skeleton, ReadOnlySpan<AnimationClipChannel> clips)
+    private void ExecuteInner(float time, SkinningContext ctx, NativeView<Matrix4x4> writer)
     {
-        var writer = _skinningBuffer.NextWriteView();
         var globals = _globals.Ptr;
 
-        var len = int.Min(skeleton.ParentIndices.Length, clips.Length);
+        var len = ctx.ParentIndices.Length;
+
         for (var i = 0; i < len; i++)
         {
-            ref readonly var clip = ref clips[i];
-            if (clip.MaxLength == 0)
+            ref readonly var channel = ref ctx.Channels[i];
+            if (channel.MaxLength == 0)
             {
-                globals[i] = skeleton.BindPose[i];
+                globals[i] = ctx.BindPose[i];
                 continue;
             }
 
-            var pos = GetPosition(time, clip);
-            var rot = GetRotation(time, clip);
-            MatrixMath.CreateFixedSizeModelMatrix(pos, rot, out globals[i]);
+            var posIndex = GetIndexFactor(time, channel.GetPositionTimes(), out var posFactor);
+            var rotIndex = GetIndexFactor(time, channel.GetRotationTimes(), out var rotFactor);
+
+            var pos = GetPosition(posIndex, posFactor, channel.Positions);
+            var rot = GetRotation(rotIndex, rotFactor, channel.Rotations);
+
+            MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out globals[i]);
         }
 
-        writer[0] = skeleton.InverseBindPose[0] * globals[0];
+        MatrixMath.MultiplyAffine(ref writer[0], in ctx.InverseBindPose[0], in globals[0]);
         for (var i = 1; i < len; i++)
         {
-            var p = skeleton.ParentIndices[i];
-            globals[i] *= globals[p];
-            writer[i] = skeleton.InverseBindPose[i] * globals[i];
+            var p = ctx.ParentIndices[i];
+            MatrixMath.MultiplyAffine(ref globals[i], in globals[p]);
+            MatrixMath.MultiplyAffine(ref writer[i], in ctx.InverseBindPose[i], in globals[i]);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector3 GetPosition(float time, in AnimationClipChannel clip)
+    private static Vector3 GetPosition(int posIndex, float posFactor, ReadOnlySpan<Vector3> positions)
     {
-        var posIndex = GetIndexFactor(time, clip.GetPositionTimes(), out var posFactor);
         return posIndex > 0
-            ? Vector3.Lerp(clip.Positions[posIndex], clip.Positions[posIndex + 1], posFactor)
-            : clip.Positions[0];
+            ? Vector3.Lerp(positions[posIndex], positions[posIndex + 1], posFactor)
+            : positions[0];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Quaternion GetRotation(float time, in AnimationClipChannel clip)
+    private static Quaternion GetRotation(int rotIndex, float rotFactor, ReadOnlySpan<Quaternion> rotation)
     {
-        var rotIndex = GetIndexFactor(time, clip.GetRotationTimes(), out var rotFactor);
         return rotIndex > 0
-            ? Quaternion.Slerp(clip.Rotations[rotIndex], clip.Rotations[rotIndex + 1], rotFactor)
-            : clip.Rotations[0];
+            ? Quaternion.Slerp(rotation[rotIndex], rotation[rotIndex + 1], rotFactor)
+            : rotation[0];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -48,6 +48,9 @@ public static class Logger
     public static void LogString(LogScope scope, string message, LogLevel level = LogLevel.Info) =>
         _boundLogger(new StringLogEvent(scope, message, level));
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Log(StringLogEvent log) => _boundLogger(log);
+
 
     private static void ConsoleLogger(StringLogEvent log)
     {

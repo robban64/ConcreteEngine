@@ -19,13 +19,12 @@ public static class GfxMetrics
     }
 
 
-    internal static void BindStore<TMeta>(
-        IGfxMetaResourceStore<TMeta> gfxStore,
-        IBackendResourceStore backendStore)
-        where TMeta : unmanaged, IResourceMeta
+    internal static void BindStore<TMeta>() where TMeta : unmanaged, IResourceMeta
     {
-        var kind = gfxStore.GraphicsKind;
+        var kind = TMeta.ResourceKind;
         ArgumentOutOfRangeException.ThrowIfLessThan((int)kind, 1, nameof(kind));
-        StoreMetrics[(int)kind - 1] = new StoreMetrics<TMeta>(kind, gfxStore, backendStore);
+
+        StoreMetrics[(int)kind - 1] =
+            new StoreMetrics<TMeta>(kind, GfxRegistry.GetGfxStore<TMeta>(), GfxRegistry.GetBackendStore<TMeta>());
     }
 }

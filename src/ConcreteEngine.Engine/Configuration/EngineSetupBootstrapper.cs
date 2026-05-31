@@ -3,16 +3,13 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Gateway;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Configuration;
 using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Passes;
@@ -92,7 +89,6 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnSetupInternal(EngineSetupCtx ctx)
     {
-        Ecs.Init();
         Logger.BindLogger(ConsoleGateway.Log);
         unsafe { Logger.BindGfxLogger(&ConsoleGateway.LogStruct); }
 
@@ -187,6 +183,5 @@ file static class SetupUtils
             PresentShader = store.GetByName<Shader>("Present").GfxId,
             HighlightShader = store.GetByName<Shader>("Highlight").GfxId,
             BoundingBoxShader = store.GetByName<Shader>("BoundingBox").GfxId,
-            ParticleShader = store.GetByName<Shader>("Particle").GfxId,
         };
 }

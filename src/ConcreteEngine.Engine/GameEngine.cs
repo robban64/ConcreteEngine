@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
@@ -11,8 +12,7 @@ using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Gateway;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Engine;
@@ -49,6 +49,8 @@ public sealed class GameEngine : IDisposable
 
         EngineSettings.Current.LoadGraphicsSettings(version, gpuCapabilities);
 
+        Ecs.Init();
+
         // systems
         var assets = new AssetSystem();
         _inputSystem = new InputSystem(input);
@@ -84,7 +86,7 @@ public sealed class GameEngine : IDisposable
         var isDone = runner.Run();
         EngineHost.IsSetupSimulation = runner.CurrentStep >= EngineSetupState.LoadEditor;
 
-        _graphics.Gfx.Commands.Clear(new GfxPassClear(ColorRgba.Black, ClearBufferFlag.ColorAndDepth));
+        _graphics.Gfx.Commands.Clear(ColorRgba.Black, ClearBufferFlag.ColorAndDepth);
         if (!isDone) return;
 
         Console.WriteLine("Engine Setup Complete. Swapping to Game Loop.");
@@ -92,6 +94,7 @@ public sealed class GameEngine : IDisposable
         runner.Teardown();
 
         _systemStepper.SetIntervalTicks(8, 8);
+        OnSystemTick(0);
     }
 
     internal void Render(double delta)
@@ -121,8 +124,9 @@ public sealed class GameEngine : IDisposable
         var vp = _window.Viewport.Size;
         _graphics.BeginFrame(new GfxFrameArgs(dt, vp));
         _renderSystem.Render(dt, vp, _inputSystem.MouseState.ViewPos);
-        _gateway.RenderEditor(dt);
         _graphics.EndFrame();
+
+        _gateway.RenderEditor(dt);
     }
 
 
@@ -138,14 +142,16 @@ public sealed class GameEngine : IDisposable
 
     private void OnSystemTick(float dt)
     {
+        TerrainSystem.Instance.OnTick();
+
         if (_systemStepper.Tick() && _window.Refresh())
         {
             var command = new FboCommandRecord(CommandFboAction.ScreenSize, _window.Viewport.Size);
             _commandQueues.Enqueue(command);
         }
 
-        if (_coreSystems.AssetSystem.PendingAssetCount > 0)
-            _coreSystems.AssetSystem.ProcessPendingQueue(EngineTime.GameTickId);
+        if (_coreSystems.Assets.PendingAssetCount > 0)
+            _coreSystems.Assets.ProcessPendingQueue();
 
         if (_commandQueues.QueuesCount > 0)
             _commandQueues.DrainDispatch();
@@ -171,7 +177,7 @@ public sealed class GameEngine : IDisposable
     {
         _gateway.Dispose();
         _sceneSystem.Current?.Unload();
-        _coreSystems.AssetSystem.Shutdown();
+        _coreSystems.Assets.Shutdown();
         _coreSystems.GetSystem<EngineRenderSystem>().Shutdown();
         _graphics.Dispose();
     }

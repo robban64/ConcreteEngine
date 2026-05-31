@@ -1,11 +1,12 @@
-namespace ConcreteEngine.Graphics.Gfx.Definitions;
+namespace ConcreteEngine.Graphics.Gfx;
 
 public enum DrawMeshKind : byte
 {
     Invalid = 0,
     Arrays = 1,
     Elements = 2,
-    ArraysInstanced = 3
+    ArraysInstanced = 3,
+    ElementsInstanced = 4,
 }
 
 public enum DrawElementSize : byte
@@ -29,8 +30,11 @@ public enum DrawPrimitive : byte
 
 public enum VertexFormat : byte
 {
-    Float = 0,
-    Integer = 1,
-    UByte = 2,
-    UShort = 3
+    Invalid,
+    Float,
+    Int,
+    UInt,
+    UByte,
+    UShort,
+    Half,
 }

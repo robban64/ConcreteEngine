@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Configuration;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
@@ -10,21 +10,11 @@ namespace ConcreteEngine.Graphics.OpenGL;
 
 internal sealed class GlStates
 {
-    private readonly GL _gl;
-
-    private readonly BackendResourceStore<GlHandle> _meshStore;
-    private readonly BackendResourceStore<GlHandle> _textureStore;
-    private readonly BackendResourceStore<GlHandle> _fboStore;
-    private readonly BackendResourceStore<GlHandle> _shaderStore;
-
-    internal GlStates(GlCtx ctx)
-    {
-        _gl = ctx.Gl;
-        _meshStore = ctx.Store.MeshStore;
-        _textureStore = ctx.Store.TextureStore;
-        _fboStore = ctx.Store.FboStore;
-        _shaderStore = ctx.Store.ShaderStore;
-    }
+    private readonly GL _gl = GlBackendDriver.Gl;
+    private readonly BackendResourceStore _meshStore = GfxRegistry.GetBackendStore<MeshMeta>();
+    private readonly BackendResourceStore _textureStore = GfxRegistry.GetBackendStore<TextureMeta>();
+    private readonly BackendResourceStore _fboStore = GfxRegistry.GetBackendStore<FrameBufferMeta>();
+    private readonly BackendResourceStore _shaderStore = GfxRegistry.GetBackendStore<ShaderMeta>();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearColor(ColorRgba color)
@@ -40,24 +30,43 @@ internal sealed class GlStates
     public void ColorMask(bool v) => _gl.ColorMask(v, v, v, v);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ToggleDepthMask(bool enabled) => _gl.DepthMask(enabled);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ToggleStateFlag(GfxStateFlags flag, bool enabled)
+    {
+        if (flag == GfxStateFlags.DepthWrite)
+            _gl.DepthMask(enabled);
+        else if (flag == GfxStateFlags.ColorMask)
+            _gl.ColorMask(enabled, enabled, enabled, enabled);
+        else
+        {
+            var enableCap = flag.ToGlEnableCap();
+            if (enabled) _gl.Enable(enableCap);
+            else _gl.Disable(enableCap);
+        }
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToggleSampleAlphaCoverage(bool enabled)
     {
-        if (enabled) _gl.Enable(GLEnum.SampleAlphaToCoverage);
-        else _gl.Disable(GLEnum.SampleAlphaToCoverage);
+        if (enabled) _gl.Enable(EnableCap.SampleAlphaToCoverage);
+        else _gl.Disable(EnableCap.SampleAlphaToCoverage);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void TogglePolygonOffset(bool enabled)
     {
-        if (enabled) _gl.Enable(GLEnum.PolygonOffsetFill);
-        else _gl.Disable(GLEnum.PolygonOffsetFill);
+        if (enabled) _gl.Enable(EnableCap.PolygonOffsetFill);
+        else _gl.Disable(EnableCap.PolygonOffsetFill);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToggleFrameBufferSrgb(bool enabled)
     {
-        if (enabled) _gl.Enable(GLEnum.FramebufferSrgb);
-        else _gl.Disable(GLEnum.FramebufferSrgb);
+        if (enabled) _gl.Enable(EnableCap.FramebufferSrgb);
+        else _gl.Disable(EnableCap.FramebufferSrgb);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -81,8 +90,6 @@ internal sealed class GlStates
         else _gl.Disable(EnableCap.CullFace);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ToggleDepthMask(bool enabled) => _gl.DepthMask(enabled);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToggleScissorTest(bool enabled)
@@ -131,27 +138,26 @@ internal sealed class GlStates
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindTexture(GfxHandle texRef, int slot) =>
-        _gl.BindTextureUnit((uint)slot, _textureStore.GetHandle(texRef));
+    public void BindTexture(GfxHandle texRef, int slot) => _gl.BindTextureUnit((uint)slot, _textureStore.Get(texRef));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindTextureSlot(int slot) => _gl.BindTextureUnit((uint)slot, 0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindFrameBuffer(GfxHandle fboRef) =>
-        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _fboStore.GetHandle(fboRef));
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _fboStore.Get(fboRef));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindFrameBuffer() => _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindMesh(GfxHandle mesh) => _gl.BindVertexArray(_meshStore.GetHandle(mesh));
+    public void BindMesh(GfxHandle mesh) => _gl.BindVertexArray(_meshStore.Get(mesh));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindMesh() => _gl.BindVertexArray(0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UseShader(GfxHandle shaderRef) => _gl.UseProgram(_shaderStore.GetHandle(shaderRef));
+    public void UseShader(GfxHandle shaderRef) => _gl.UseProgram(_shaderStore.Get(shaderRef));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindShader() => _gl.UseProgram(0);

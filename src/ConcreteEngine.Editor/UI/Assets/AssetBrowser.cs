@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Assets.Extensions;
+using ConcreteEngine.Core.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Editor.UI.Assets;
 
@@ -140,7 +140,7 @@ internal sealed class AssetBrowser
     {
         var fileRegistry = EngineObjectStore.FileRegistry;
 
-        var addedFiles = new HashSet<AssetFileId>(fileRegistry.Count);
+        var addedFiles = new HashSet<int>(fileRegistry.Count);
 
         for (var i = 1; i < EnumCache<AssetKind>.Count; i++)
             AddAssetFilesFor((AssetKind)i, fileRegistry, addedFiles);
@@ -153,7 +153,7 @@ internal sealed class AssetBrowser
 
         return;
 
-        void AddAssetFilesFor(AssetKind kind, AssetFileRegistry provider, HashSet<AssetFileId> filesAdded)
+        void AddAssetFilesFor(AssetKind kind, AssetFileRegistry provider, HashSet<int> filesAdded)
         {
             var assets = EngineObjectStore.Assets;
 

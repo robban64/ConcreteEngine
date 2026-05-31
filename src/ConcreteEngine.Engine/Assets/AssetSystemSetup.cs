@@ -7,7 +7,6 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -60,8 +59,7 @@ internal static class AssetSystemSetup
                 GfxTextures.Fallback.AlbedoId,
                 new Size2D(1),
                 new TextureProperties(
-                    lodBias: 0,
-                    mipLevels: 0,
+                    lod: 0,
                     kind: TextureKind.Texture2D,
                     preset: TexturePreset.NearestClamp,
                     anisotropy: AnisotropyLevel.Off,

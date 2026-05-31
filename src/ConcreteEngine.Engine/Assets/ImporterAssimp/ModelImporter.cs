@@ -1,12 +1,12 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Engine.Assets.Loader.Data;
-using ConcreteEngine.Graphics.Handles;
 using Silk.NET.Assimp;
 using static ConcreteEngine.Engine.Assets.ImporterAssimp.AssimpUtils;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
@@ -113,21 +113,22 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void Upload(ModelImportContext ctx, AssetGfxUploader gfxUploader)
+    public void Upload(ModelImportContext ctx, ModelLoader gfxUploader)
     {
         var model = ctx.Model;
         var animation = ctx.Animation;
         var meshes = model.Meshes;
         foreach (var mesh in meshes)
         {
-            ctx.Model.GetMeshData(mesh.Info.MeshIndex, out var vertices, out var skinned, out var indices);
+            var meshIndex = mesh.Info.MeshIndex;
+            var is16Bit = ctx.Model.GetMeshData(meshIndex, out var vertices, out var skinned, out var indices);
 
             var meshId = animation != null
-                ? gfxUploader.UploadAnimatedMesh(vertices, skinned, indices)
-                : gfxUploader.UploadMesh(vertices, indices);
+                ? gfxUploader.UploadAnimatedMesh(vertices, skinned, indices, is16Bit)
+                : gfxUploader.UploadMesh(vertices, indices, is16Bit);
 
             if (!meshId.IsValid())
-                throw new InvalidOperationException("Upload returned invalid MeshId");
+                Throwers.InvalidOperation("Upload returned invalid MeshId");
 
             mesh.MeshId = meshId;
         }
@@ -240,7 +241,8 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     {
         if (node == null) return;
 
-        MatrixMath.MultiplyAffine(in node->MTransformation, in parentWorld, out var world);
+        var world = node->MTransformation * parentWorld;
+        //MatrixMath.MultiplyAffine(in node->MTransformation, in parentWorld, out var world);
 
         for (var i = 0; i < node->MNumMeshes; i++)
         {
@@ -256,14 +258,14 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
         if (ctx.Animation is { } animation && TryGetBoneIndex(GetNameHash(node->MName), out var boneIndex))
         {
-            animation.Skeleton.BindPose[boneIndex] = node->MTransformation;
+            animation.BindPose[boneIndex] = node->MTransformation;
             //Matrix4x4.Invert(local, out skeleton.InverseBindPose[boneIndex]); // OffsetMatrix
 
             var parent = node->MParent;
             if (parent != null && TryGetBoneIndex(GetNameHash(parent->MName), out var parentIdx))
-                animation.Skeleton.ParentIndices[boneIndex] = parentIdx;
+                animation.ParentIndices[boneIndex] = (byte)parentIdx;
             else
-                animation.Skeleton.ParentIndices[boneIndex] = -1;
+                animation.ParentIndices[boneIndex] = 0;
             //skeleton.InverseBindPose[boneIndex] = local;
         }
     }
@@ -271,17 +273,16 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ProcessMeshVertices(AssimpMesh* aiMesh, int meshIndex, ModelImportContext ctx)
     {
-        ctx.Model.GetMeshData(meshIndex, out var vertices, out var skinned, out var indices);
-        if (ctx.Animation == null)
-        {
-            WriteIndices(aiMesh, indices);
-            WriteVertices(aiMesh, meshIndex, ctx.Model, vertices);
-        }
+        var is16Bit = ctx.Model.GetMeshData(meshIndex, out var vertices, out var skinned, out var indices);
+
+        if (is16Bit)
+            WriteIndicesU16(aiMesh, indices.Reinterpret<ushort>());
         else
-        {
-            WriteIndices(aiMesh, indices);
+            WriteIndicesU32(aiMesh, indices.Reinterpret<uint>());
+
+        WriteVertices(aiMesh, meshIndex, ctx.Model, vertices);
+
+        if (ctx.Animation != null)
             WriteSkinningData(aiMesh, ctx.Animation, skinned);
-            WriteVerticesSkinned(aiMesh, meshIndex, ctx.Model, vertices);
-        }
     }
 }

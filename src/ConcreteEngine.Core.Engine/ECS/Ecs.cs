@@ -21,6 +21,7 @@ public static partial class Ecs
 
     internal static void Init()
     {
+        if (SceneLink != null!) throw new InvalidOperationException("ECS already initialized");
         InitRenderEcs();
         InitGameEcs();
         SceneLink = new EntitySceneLink(Render.Core, Game.Core);
@@ -32,7 +33,8 @@ public static partial class Ecs
         if (Render.StoreCount > 0)
             throw new InvalidOperationException("Ecs.Render already initialized");
 
-        Render.Stores<RenderAnimationComponent>.CreateStore(64);
+        Render.Stores<SkinningComponent>.CreateStore(16);
+        Render.Stores<SkinLinkComponent>.CreateStore(64);
         Render.Stores<ParticleComponent>.CreateStore(16);
         Render.Stores<SelectionComponent>.CreateStore(16);
         Render.Stores<DebugBoundsComponent>.CreateStore(16);

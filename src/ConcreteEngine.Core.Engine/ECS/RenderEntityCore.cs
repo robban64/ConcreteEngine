@@ -26,7 +26,8 @@ public sealed class RenderEntityCore : EcsStore
         _sources = NativeArray.Allocate<SourceComponent>(initialCapacity);
         _transforms = NativeArray.Allocate<Transform>(initialCapacity);
         _bounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
-        _matrices = NativeArray.Allocate<Matrix4x4>(initialCapacity);
+
+        _matrices = NativeArray.AlignedAllocate<Matrix4x4>(initialCapacity, alignment: 16);
 
         StoreMeta.Listeners.EnsureCapacity(128);
     }
@@ -162,8 +163,8 @@ public sealed class RenderEntityCore : EcsStore
     private static void ValidateSource(SourceComponent source)
     {
         if (source.Kind == EntitySourceKind.Particle) return;
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(source.Mesh.Value, nameof(source.Mesh));
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(source.Material.Id, nameof(source.Material));
+        ArgumentOutOfRangeException.ThrowIfZero(source.Mesh.Id, nameof(source.Mesh));
+        ArgumentOutOfRangeException.ThrowIfZero(source.Material.Id, nameof(source.Material));
         ArgumentOutOfRangeException.ThrowIfEqual((int)source.Kind, (int)EntitySourceKind.Unknown, nameof(source.Kind));
     }
 }

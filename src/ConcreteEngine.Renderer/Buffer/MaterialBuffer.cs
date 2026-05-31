@@ -37,7 +37,7 @@ public sealed class MaterialBuffer : IDisposable
         return _textureSlots.AsSpan(range.Offset, range.Length);
     }
 
-    public void Submit(in RenderMaterialPayload payload, ReadOnlySpan<TextureBinding> slots)
+    public ref MaterialUniform Submit(in RenderMaterialMeta payload, ReadOnlySpan<TextureBinding> slots)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(slots.Length, TextureSlots);
 
@@ -46,7 +46,7 @@ public sealed class MaterialBuffer : IDisposable
         EnsureCapacity(index + 1);
         EnsureTextureSlotCapacity(slots.Length);
 
-        payload.WriteTo(ref _metas[index], ref _buffer[index]);
+        _metas[index] = payload;
 
         var slotIdx = _slotCount;
         for (var i = 0; i < slots.Length; i++, slotIdx++)
@@ -54,9 +54,12 @@ public sealed class MaterialBuffer : IDisposable
 
         _slotRanges[index] = new RangeU16((ushort)_slotCount, (ushort)slots.Length);
 
-        Count++;
+        Count = int.Max(Count, index);
         _slotCount = slotIdx;
+
+        return ref _buffer[index];
     }
+
 
     internal NativeView<MaterialUniform> DrainBuffer()
     {
@@ -79,7 +82,7 @@ public sealed class MaterialBuffer : IDisposable
     private void EnsureCapacity(int amount)
     {
         if (_metas.Length > amount) return;
-        var newCap = CapacityUtils.CapacityGrowthSafe(_metas.Length, amount, MaxTextureSlotBuffCapacity);
+        var newCap = CapacityUtils.CapacityGrowthToFit(_metas.Length, amount);
 
         if (newCap > MaxMaterialBufferCapacity)
             Throwers.BufferOverflow(nameof(MaterialBuffer), newCap, MaxMaterialBufferCapacity);
@@ -93,7 +96,7 @@ public sealed class MaterialBuffer : IDisposable
     private void EnsureTextureSlotCapacity(int amount)
     {
         if (_textureSlots.Length > amount) return;
-        var newCap = CapacityUtils.CapacityGrowthSafe(_textureSlots.Length, amount, MaxTextureSlotBuffCapacity);
+        var newCap = CapacityUtils.CapacityGrowthToFit(_textureSlots.Length, amount);
         if (newCap > MaxTextureSlotBuffCapacity)
             Throwers.BufferOverflow("MaterialTextureBuffer", newCap, MaxMaterialBufferCapacity);
 

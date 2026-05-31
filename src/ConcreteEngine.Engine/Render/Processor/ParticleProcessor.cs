@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
@@ -17,15 +16,15 @@ namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class ParticleProcessor
 {
-    private static readonly HashSet<Id32<ParticleEmitter>> ActiveEmitters = new(16);
+    private static readonly HashSet<int> ProcessedEmitters = new(16);
 
     internal static void Simulate(float simDt)
     {
-        ActiveEmitters.Clear();
+        ProcessedEmitters.Clear();
         var particleSystem = ParticleSystem.Instance;
         foreach (var it in Ecs.Render.Query<ParticleComponent>())
         {
-            if (!ActiveEmitters.Add(it.Component.Emitter)) continue;
+            if (!ProcessedEmitters.Add(it.Component.Emitter)) continue;
 
             var emitter = particleSystem.GetEmitter(it.Component.Emitter);
             ParticleSystem.SimulateEmitter(emitter, simDt);
@@ -48,16 +47,16 @@ internal static class ParticleProcessor
         }
     }
 
-    internal static void Execute(ParticleSystem particleSystem)
+    internal static unsafe void Execute(ParticleSystem particleSystem)
     {
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
-        foreach (var emitterId in ActiveEmitters)
+        foreach (var emitterId in ProcessedEmitters)
         {
-            var emitter = particleSystem.GetEmitter(emitterId);
+            var emitter = particleSystem.GetEmitter((Id16<ParticleEmitter>)emitterId);
             particleSystem.GetMeshWriteData(emitter, out var gpuView, out var cpuView);
             ref readonly var param = ref emitter.VisualParams();
             ColorRgba startColor = param.StartColor.ToRgba(), endColor = param.EndColor.ToRgba();
-            ProcessEmitter(gpuView, cpuView, param.SizeStartEnd, startColor, endColor, timeOffset);
+            ProcessEmitter(gpuView.Length, gpuView, cpuView, param.SizeStartEnd, startColor, endColor, timeOffset);
 
             particleSystem.UploadEmitter(emitter);
         }
@@ -65,28 +64,29 @@ internal static class ParticleProcessor
 
     [SkipLocalsInit]
     private static unsafe void ProcessEmitter(
-        NativeView<ParticleGpuInstance> gpuView,
-        NativeView<ParticleCpuInstance> cpuView,
+        int length,
+        ParticleGpuInstance* gpuView,
+        ParticleCpuInstance* cpuView,
         Vector2 sizeStartEnd,
         ColorRgba colorStart,
         ColorRgba colorEnd,
         float timeOffset)
     {
-        var end = gpuView.Ptr + gpuView.Length;
+        var end = gpuView + length;
 
-        while (gpuView.Ptr < end)
+        while (gpuView < end)
         {
             //var color = Color4.Lerp(in param.StartColor, in param.EndColor, t);
             //color.A = 4.0f * t * (1.0f - t);
 
-            var t = 1f - cpuView.Ptr->Life / cpuView.Ptr->MaxLife;
+            var t = 1f - cpuView->Life / cpuView->MaxLife;
             var newSize = float.Lerp(sizeStartEnd.X, sizeStartEnd.Y, t);
 
-            gpuView.Ptr->PositionSize = new Vector4(
-                cpuView.Ptr->Position + cpuView.Ptr->Velocity * timeOffset,
+            gpuView->PositionSize = new Vector4(
+                cpuView->Position + cpuView->Velocity * timeOffset,
                 newSize
             );
-            gpuView.Ptr->Color = LerpSse(colorStart, colorEnd, (byte)(t * 255f));
+            gpuView->Color = LerpSse(colorStart, colorEnd, (byte)(t * 255f));
 
             ++gpuView;
             ++cpuView;

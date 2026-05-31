@@ -11,8 +11,8 @@ public static class RotationMath
         const float pitchLimit = 89f;
 
         var forward = Vector3.Transform(new Vector3(0f, 0f, -1f), q);
-        float pitchRad = (float)Math.Asin(Clamp1N1(forward.Y));
-        float yawRad = (float)Math.Atan2(forward.X, forward.Z);
+        float pitchRad = float.Asin(Clamp1N1(forward.Y));
+        float yawRad = float.Atan2(forward.X, forward.Z);
 
         float yawDeg = yawRad * Rad2Deg;
         float pitchDeg = pitchRad * Rad2Deg;
@@ -44,18 +44,6 @@ public static class RotationMath
             eulerDegrees.X * Deg2Rad,
             eulerDegrees.Z * Deg2Rad
         );
-        /*
-        var rx = eulerDegrees.X * Deg2Rad; // pitch
-        var ry = eulerDegrees.Y * Deg2Rad; // yaw
-        var rz = eulerDegrees.Z * Deg2Rad; // roll
-
-        var qx = Quaternion.CreateFromAxisAngle(Vector3.UnitX, rx);
-        var qy = Quaternion.CreateFromAxisAngle(Vector3.UnitY, ry);
-        var qz = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, rz);
-
-        var q = Quaternion.Multiply(Quaternion.Multiply(qy, qx), qz);
-        return q;
-        */
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -75,33 +63,31 @@ public static class RotationMath
         float m11 = 1f - 2f * (xx + zz);
         float m12 = 2f * (yz - wx);
 
-        float m20 = 2f * (xz - wy);
-        float m21 = 2f * (yz + wx);
         float m22 = 1f - 2f * (xx + yy);
 
-        float pitchRad = (float)Math.Asin(Math.Clamp(-m12, -1f, 1f));
-        float cosPitch = (float)Math.Cos(pitchRad);
+        float pitchRad = float.Asin(float.Clamp(-m12, -1f, 1f));
+        float cosPitch = float.Cos(pitchRad);
 
         float yawRad, rollRad;
 
-        if (Math.Abs(cosPitch) > SingularEpsilon)
+        if (float.Abs(cosPitch) > SingularEpsilon)
         {
-            yawRad = (float)Math.Atan2(m02, m22);
-            rollRad = (float)Math.Atan2(m10, m11);
+            yawRad = float.Atan2(m02, m22);
+            rollRad = float.Atan2(m10, m11);
         }
         else
         {
             // Gimbal singularity
             if (m12 <= -1f + 1e-5f) // pitch near +90 deg
             {
-                pitchRad = (float)(Math.PI / 2.0);
-                yawRad = (float)Math.Atan2(m01, m00);
+                pitchRad = MathF.PI / 2.0f;
+                yawRad = float.Atan2(m01, m00);
                 rollRad = 0f;
             }
             else // m12 >= +1 -> pitch near -90 deg
             {
-                pitchRad = (float)(-Math.PI / 2.0);
-                yawRad = (float)Math.Atan2(-m01, m00);
+                pitchRad = -MathF.PI / 2.0f;
+                yawRad = float.Atan2(-m01, m00);
                 rollRad = 0f;
             }
         }

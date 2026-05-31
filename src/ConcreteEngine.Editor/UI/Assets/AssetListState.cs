@@ -1,10 +1,11 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Assets.Extensions;
+using ConcreteEngine.Core.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Editor.UI.Assets;
 
@@ -62,9 +63,9 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero((int)kind, nameof(kind));
         if (PendingKind != AssetKind.Unknown)
-            throw new InvalidOperationException($"Already pending. Pending kind: {PendingKind.ToText()}");
+            Throwers.InvalidOperation($"Already pending. Pending kind: {PendingKind.ToText()}");
         if (PendingDirectory != null)
-            throw new InvalidOperationException($"Already pending. Pending directory: {PendingDirectory}");
+            Throwers.InvalidOperation($"Already pending. Pending directory: {PendingDirectory}");
 
         PendingKind = kind;
     }
@@ -73,9 +74,9 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     {
         ArgumentException.ThrowIfNullOrEmpty(directory);
         if (PendingKind != AssetKind.Unknown)
-            throw new InvalidOperationException($"Already pending. Pending kind: {PendingKind.ToText()}");
+            Throwers.InvalidOperation($"Already pending. Pending kind: {PendingKind.ToText()}");
         if (PendingDirectory != null)
-            throw new InvalidOperationException($"Already pending. Pending directory: {PendingDirectory}");
+            Throwers.InvalidOperation($"Already pending. Pending directory: {PendingDirectory}");
 
         PendingDirectory = directory;
     }
@@ -155,7 +156,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
 
         int folderCount = currentNode.FolderCount, fileCount = currentNode.FileCount;
         if (folderCount + fileCount > MaxItems)
-            throw new InvalidOperationException("Overflow, fix size management");
+            Throwers.InvalidOperation("Overflow, fix size management");
 
         var displayItems = _displayItems;
         for (var i = 0; i < folderCount; i++)

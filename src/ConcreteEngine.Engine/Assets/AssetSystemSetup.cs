@@ -59,7 +59,7 @@ internal static class AssetSystemSetup
                 GfxTextures.Fallback.AlbedoId,
                 new Size2D(1),
                 new TextureProperties(
-                    lodBias: 0,
+                    lod: 0,
                     kind: TextureKind.Texture2D,
                     preset: TexturePreset.NearestClamp,
                     anisotropy: AnisotropyLevel.Off,

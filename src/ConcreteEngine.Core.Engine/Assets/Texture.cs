@@ -8,26 +8,27 @@ using ConcreteEngine.Renderer.Core;
 namespace ConcreteEngine.Core.Engine.Assets;
 
 public struct TextureProperties(
-    float lodBias,
+    float lod,
     TextureKind kind = TextureKind.Texture2D,
-    TextureUsage usage = TextureUsage.Albedo,
     TexturePreset preset = TexturePreset.LinearClamp,
     AnisotropyLevel anisotropy = AnisotropyLevel.Off,
     TexturePixelFormat pixelFormat = TexturePixelFormat.SrgbAlpha)
 {
-    public float LodBias = lodBias;
+    public float Lod = lod;
     public TextureKind Kind = kind;
-    public TextureUsage Usage = usage;
     public TexturePreset Preset = preset;
     public AnisotropyLevel Anisotropy = anisotropy;
     public TexturePixelFormat PixelFormat = pixelFormat;
 }
 
+
 public sealed class Texture(string name, TextureId gfxId, Size2D size, TextureProperties properties) : AssetObject(name)
 {
+    // WIP
     public GfxAssetLink<TextureMeta> GfxLink { get; } = new(gfxId);
-    public Size2D Size { get; } = size;
     
+    public Size2D Size { get; } = size;
+
     private TextureProperties _properties = properties;
 
     //
@@ -41,11 +42,11 @@ public sealed class Texture(string name, TextureId gfxId, Size2D size, TexturePr
     //
     public float LodBias
     {
-        get => _properties.LodBias;
+        get => _properties.Lod;
         set
         {
-            if (FloatMath.NearlyEqual(_properties.LodBias, value)) return;
-            _properties.LodBias = value;
+            if (FloatMath.NearlyEqual(_properties.Lod, value)) return;
+            _properties.Lod = value;
             MarkDirty();
         }
     }
@@ -93,10 +94,11 @@ public sealed class Texture(string name, TextureId gfxId, Size2D size, TexturePr
 
     public TextureUsage Usage
     {
-        get => _properties.Usage;
+        get;
         set
         {
-            _properties.Usage = value;
+            if(field == value) return;
+            field = value;
             MarkDirty();
         }
     }

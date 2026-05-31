@@ -28,7 +28,6 @@ public enum TextureUsage : byte
     Mask ,
     Specular ,
     Emissive ,
-    Environment ,
     Splatmap ,
     Heightmap ,
 }

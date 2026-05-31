@@ -197,13 +197,6 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
                 new ProfileSlot(TextureUsage.Albedo),
                 new ProfileSlot(TextureUsage.Normal),
                 new ProfileSlot(TextureUsage.Mask)
-            ),
-            [(int)MaterialProfile.Terrain] = new MatProfileInfo("Terrain",
-                new ProfileSlot(TextureUsage.Environment),
-                new ProfileSlot(TextureUsage.Environment),
-                new ProfileSlot(TextureUsage.Environment),
-                new ProfileSlot(TextureUsage.Environment),
-                new ProfileSlot(TextureUsage.Splatmap)
             )
         };
 }

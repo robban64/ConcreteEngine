@@ -129,14 +129,13 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
             textureId,
             meta.Size,
             new TextureProperties(
-                lodBias: 0,
+                lod: 0,
                 kind: TextureKind.Texture2D,
-                usage: embedded.SlotKind,
                 preset: embedded.Preset,
                 anisotropy: anisotropy,
                 pixelFormat: embedded.PixelFormat
             )
-        ) { Id = assetId, GId = embedded.GId };
+        ) { Id = assetId, GId = embedded.GId, Usage = embedded.SlotKind};
 
         embedded.PixelDataBlock = null;
 
@@ -154,13 +153,12 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
             textureId,
             size,
             new TextureProperties(
-                lodBias: record.LodBias,
+                lod: record.LodBias,
                 kind: record.TextureKind,
-                usage: usage,
                 preset: record.Preset,
                 anisotropy: record.Anisotropy,
                 pixelFormat: record.PixelFormat
             )
-        ) { Id = id, GId = record.GId };
+        ) { Id = id, GId = record.GId, Usage = usage};
     }
 }

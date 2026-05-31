@@ -56,14 +56,6 @@ internal sealed class TerrainSystem
                 material.SetOverrideTexture(0, textureId);
                 Logger.LogString(LogScope.Engine, "Ground albedo texture changed");
             }
-            /*
-                if (MainTerrain.GroundNormalTextures.IsDirty)
-                {
-                    var textureId = MainTerrain.GroundNormalTextures.Compile(_gfx.Textures);
-                    material.SetOverrideTexture(1, textureId);
-                    Logger.LogString(LogScope.Engine, "Ground normal texture changed");
-                }
-            */
         }
 
         if (MainTerrain.FoliageTextures.IsDirty && MainTerrain.FoliageMaterial is { } foliageMaterial)

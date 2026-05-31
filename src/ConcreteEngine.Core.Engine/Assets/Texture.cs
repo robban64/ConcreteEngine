@@ -28,7 +28,7 @@ public sealed class Texture(string name, TextureId gfxId, Size2D size, TexturePr
 {
     public TextureId GfxId { get; } = gfxId;
     public Size2D Size { get; } = size;
-
+    
     private TextureProperties _properties = properties;
 
     //

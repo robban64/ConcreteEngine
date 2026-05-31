@@ -11,7 +11,7 @@ public readonly record struct TextureSource(
     TextureId OverrideTextureId = default
 )
 {
-    public readonly bool IsFallback = !AssetTexture.IsValid() && HasFallbackArgs(Usage, TextureKind);
+    public readonly bool IsFallback = !AssetTexture.IsValid() && HasFallbackArgs( TextureKind);
 
     public TextureSource WithAssetId(AssetId assetId) => this with { AssetTexture = assetId };
 
@@ -20,16 +20,11 @@ public readonly record struct TextureSource(
         if (TextureKind == TextureKind.Multisample2D)
             return nameof(TextureKind.Multisample2D);
 
-        return Usage switch
-        {
-            TextureUsage.Shadowmap => nameof(TextureUsage.Shadowmap),
-            TextureUsage.Lightmap => nameof(TextureUsage.Lightmap),
-            _ => "Unknown"
-        };
+        return "Unknown";
     }
 
-    private static bool HasFallbackArgs(TextureUsage usage, TextureKind textureKind)
+    private static bool HasFallbackArgs( TextureKind textureKind)
     {
-        return usage is TextureUsage.Shadowmap or TextureUsage.Lightmap || textureKind == TextureKind.Multisample2D;
+        return textureKind == TextureKind.Multisample2D;
     }
 }

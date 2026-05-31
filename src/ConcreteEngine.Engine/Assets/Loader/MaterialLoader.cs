@@ -101,7 +101,6 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             new(default, TextureUsage.Albedo),
             new(default, TextureUsage.Normal),
             new(default, TextureUsage.Mask),
-            new(default, TextureUsage.Shadowmap),
         ];
 
         foreach (var (textureGId, textureIndex) in embedded.Textures)
@@ -141,7 +140,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             var slot = embedded.TextureSlots[i];
             AssetId? slotAsset = null;
 
-            if (slot.SlotKind == TextureUsage.Shadowmap || slot.TextureKind == TextureKind.Texture2DArray)
+            if (slot.TextureKind == TextureKind.Texture2DArray)
             {
                 sources[i] = new TextureSource(default, slot.SlotKind, slot.TextureKind);
                 continue;
@@ -185,31 +184,26 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         new()
         {
             [(int)MaterialProfile.None] = new MatProfileInfo("Model"),
-            [(int)MaterialProfile.Foliage] =
-                new MatProfileInfo("Foliage", new ProfileSlot(TextureUsage.Albedo),
-                    new ProfileSlot(TextureUsage.Shadowmap)),
+            [(int)MaterialProfile.Foliage] = new MatProfileInfo("Foliage", new ProfileSlot(TextureUsage.Albedo)),
             [(int)MaterialProfile.Particle] = new MatProfileInfo("Particle", new ProfileSlot(TextureUsage.Albedo)),
             [(int)MaterialProfile.Sky] =
                 new MatProfileInfo("Skybox", new ProfileSlot(TextureUsage.Albedo, TextureKind.CubeMap)),
             [(int)MaterialProfile.StaticModel] = new MatProfileInfo("Model",
                 new ProfileSlot(TextureUsage.Albedo),
                 new ProfileSlot(TextureUsage.Normal),
-                new ProfileSlot(TextureUsage.Mask),
-                new ProfileSlot(TextureUsage.Shadowmap)
+                new ProfileSlot(TextureUsage.Mask)
             ),
             [(int)MaterialProfile.AnimatedModel] = new MatProfileInfo("ModelAnimated",
                 new ProfileSlot(TextureUsage.Albedo),
                 new ProfileSlot(TextureUsage.Normal),
-                new ProfileSlot(TextureUsage.Mask),
-                new ProfileSlot(TextureUsage.Shadowmap)
+                new ProfileSlot(TextureUsage.Mask)
             ),
             [(int)MaterialProfile.Terrain] = new MatProfileInfo("Terrain",
                 new ProfileSlot(TextureUsage.Environment),
                 new ProfileSlot(TextureUsage.Environment),
                 new ProfileSlot(TextureUsage.Environment),
                 new ProfileSlot(TextureUsage.Environment),
-                new ProfileSlot(TextureUsage.Splatmap),
-                new ProfileSlot(TextureUsage.Shadowmap)
+                new ProfileSlot(TextureUsage.Splatmap)
             )
         };
 }

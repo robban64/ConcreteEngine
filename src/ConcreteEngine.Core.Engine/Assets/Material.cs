@@ -9,7 +9,8 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 public sealed class MaterialState
 {
-    private void MarkDirty(){}
+    private void MarkDirty() { }
+
     public GfxDrawState DrawState
     {
         get;
@@ -20,7 +21,7 @@ public sealed class MaterialState
             MarkDirty();
         }
     }
-    
+
     public GfxPassFunctions PassFunctions
     {
         get;
@@ -31,7 +32,7 @@ public sealed class MaterialState
             MarkDirty();
         }
     }
-    
+
     public Color4 Color
     {
         get;
@@ -86,7 +87,6 @@ public sealed class MaterialState
             MarkDirty();
         }
     }
-
 }
 
 public sealed class Material : AssetObject
@@ -116,7 +116,8 @@ public sealed class Material : AssetObject
         CalculateProperties();
     }
 
-    public Material(string name, AssetId templateId, Shader? boundShader, MaterialProfile profile, in MaterialParams param,
+    public Material(string name, AssetId templateId, Shader? boundShader, MaterialProfile profile,
+        in MaterialParams param,
         TextureSource[] sources) : this(name, templateId, boundShader, profile, sources)
     {
         SetParams(in param);
@@ -231,17 +232,6 @@ public sealed class Material : AssetObject
             MarkDirty();
         }
     }
-    
-    public bool HasShadow
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            MarkDirty();
-        }
-    }
 
 
     public void FillParams(out MaterialParams param)
@@ -273,10 +263,13 @@ public sealed class Material : AssetObject
 
     private void CalculateProperties()
     {
-        var props = new MaterialRenderProps { HasTransparency = Transparency };
+        var props = new MaterialRenderProps
+        {
+            HasTransparency = Transparency, 
+            HasShadowMap = BoundShader?.DefaultBindings.ShadowMapBinding >= 0
+        };
         foreach (var source in _textureSources)
         {
-            if (!props.HasShadowMap) props.HasShadowMap = source.Usage == TextureUsage.Shadowmap;
             if (!source.AssetTexture.IsValid()) continue;
             if (!props.HasNormal) props.HasNormal = source.Usage == TextureUsage.Normal;
             if (!props.HasAlphaMask) props.HasAlphaMask = source.Usage == TextureUsage.Mask;

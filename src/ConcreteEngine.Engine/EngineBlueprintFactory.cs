@@ -79,9 +79,9 @@ internal sealed class EngineBlueprintFactory(AssetStore assetStore) : BlueprintF
             var material = component.Materials[i];
 
             var queue = material.Transparency ? DrawCommandQueue.Transparent : DrawCommandQueue.Opaque;
-            var mask = material.RenderProps.HasShadowMap ? PassMask.Default : PassMask.Main;
+            var pass = material.RenderProps.HasShadowMap ? PassMask.Default : PassMask.Main;
             var meshIdx = mesh.Info.MeshIndex;
-            var source = new SourceComponent(mesh.MeshId, material.MaterialId, meshIdx, kind, queue, mask);
+            var source = new SourceComponent(mesh.MeshId, material.MaterialId, meshIdx, kind, queue, pass);
 
             ref readonly var bounds = ref (isAnimated ? ref component.LocalBounds : ref mesh.LocalBounds);
             var entity = RenderEcs.AddEntity(source, in component.LocalTransform, in bounds);

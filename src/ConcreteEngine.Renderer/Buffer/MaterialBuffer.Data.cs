@@ -12,11 +12,11 @@ public readonly struct RenderMaterialMeta(
     ShaderId shaderId,
     GfxDrawState drawState,
     GfxPassFunctions passFunctions,
-    bool shadowMapping)
+    sbyte shadowMapBinding)
 {
     public readonly GfxDrawState DrawState = drawState;
     public readonly GfxPassFunctions PassFunctions = passFunctions;
     public readonly ShaderId ShaderId = shaderId;
     public readonly MaterialId MaterialId = materialId;
-    public readonly bool ShadowMapping = shadowMapping;
+    public readonly sbyte ShadowMapBinding = shadowMapBinding;
 }

@@ -40,7 +40,7 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
                 if (!ResolveFallbackTextureId(source, out var textureId))
                     textureId = assetStore.Get<Texture>(source.AssetTexture).GfxId;
 
-                slots[i] = new TextureBinding(textureId, source.Usage, source.TextureKind);
+                slots[i] = new TextureBinding(textureId, source.Usage, (sbyte)i);
             }
 
             var props = material.RenderProps;
@@ -53,7 +53,7 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
                 shader.GfxId, 
                 material.Pipeline.DrawState,
                 material.Pipeline.PassFunctions, 
-                material.HasShadow
+                shader.DefaultBindings.ShadowMapBinding
             );
             
             ref var uniform = ref materialBuffer.Submit(in meta, slots.Slice(0, textureSources.Length));
@@ -79,7 +79,6 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
             textureId = source.Usage switch
             {
                 TextureUsage.Normal => GfxTextures.Fallback.NormalId,
-                TextureUsage.Shadowmap => default,
                 _ => GfxTextures.Fallback.AlbedoId
             };
             return true;

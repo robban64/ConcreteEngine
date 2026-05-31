@@ -85,41 +85,43 @@ internal sealed class DrawCommandProcessor
             _gfxCmd.ApplyState(materialMeta.DrawState);
             _gfxCmd.ApplyStateFunctions(materialMeta.PassFunctions);
         }
-
-        if (PassMode == PassStateMode.Main)
-        {
-            _gfxCmd.UseShader(materialMeta.ShaderId);
-            if (texSlots.Length > 0) BindTextureSlots(texSlots);
-        }
-        else if (PassMode == PassStateMode.Depth && texSlots.Length > 0)
+        
+        if (PassMode == PassStateMode.Depth && texSlots.Length > 0)
         {
             BindDepthTextureSlots(texSlots);
+            return;
         }
+        
+        _gfxCmd.UseShader(materialMeta.ShaderId);
+        if (texSlots.Length > 0) 
+            BindTextureSlots(texSlots, materialMeta.ShadowMapBinding);
+
     }
 
-    private void BindTextureSlots(ReadOnlySpan<TextureBinding> slots)
+    private void BindTextureSlots(ReadOnlySpan<TextureBinding> slots, sbyte shadowMapBinding)
     {
-        for (var i = 0; i < slots.Length; i++)
+        if(shadowMapBinding >= 0)
+            _gfxCmd.BindTexture(DepthTexture, shadowMapBinding);
+
+        foreach (var value in slots)
         {
-            var value = slots[i];
-            var texture = value.SlotKind != TextureUsage.Shadowmap ? value.Texture : DepthTexture;
-            _gfxCmd.BindTexture(texture, i);
+            if(value.Slot < 0) continue;
+            _gfxCmd.BindTexture(value.Texture, value.Slot);
         }
     }
 
     private void BindDepthTextureSlots(ReadOnlySpan<TextureBinding> slots)
     {
-        _gfxCmd.BindTexture(slots[0].Texture, 0);
+        //_gfxCmd.BindTexture(GfxTextures.Fallback.AlphaMaskId, 1);
 
-        for (var i = 1; i < slots.Length; i++)
+        foreach (var value in slots)
         {
-            var value = slots[i];
-            if (value.SlotKind != TextureUsage.Mask) continue;
-            _gfxCmd.BindTexture(value.Texture, 1);
-            return;
+            if(value.SlotKind == TextureUsage.Albedo)
+                _gfxCmd.BindTexture(value.Texture, 0);
+            else if(value.SlotKind == TextureUsage.Mask)
+                _gfxCmd.BindTexture(value.Texture, 1);
         }
 
-        _gfxCmd.BindTexture(GfxTextures.Fallback.AlphaMaskId, 1);
     }
 
 

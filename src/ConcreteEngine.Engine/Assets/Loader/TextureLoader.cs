@@ -12,7 +12,7 @@ using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
-internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader<Texture, TextureRecord>(uploader)
+internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, TextureRecord>
 {
     private const int SizeHigh = 1024 * 1024 * 48;
     private const int SizeLow = 1024 * 1024 * 24;
@@ -22,7 +22,6 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
 
     private int _storedEmbeddedBlocks;
 
-    private readonly GfxTextures _gfxTextures = uploader.Textures;
 
     public unsafe MemoryBlockPtr StoreEmbedded(byte* data, int length, TexturePixelFormat format, out Size2D size)
     {
@@ -59,7 +58,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
             return LoadCubeMap(record, ctx);
 
         var block = TextureImporter.LoadTexture(record, EnginePath.TexturePath, Allocator, out var meta);
-        var textureId = _gfxTextures.CreateTexture2D(meta.Size, in meta.TextureProps, block.Data.AsSpan());
+        var textureId = gfx.CreateTexture2D(meta.Size, in meta.TextureProps, block.Data.AsSpan());
         var texture = CreateTexture(ctx.Id, textureId, meta.Size, record);
 
         if (record.InMemory)
@@ -96,7 +95,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
             currentBlock = currentBlock.Next;
         }
 
-        var textureId = _gfxTextures.CreateCubeMap(meta.Size, meta.TextureProps, data);
+        var textureId = gfx.CreateCubeMap(meta.Size, meta.TextureProps, data);
 
         return CreateTexture(ctx.Id, textureId, meta.Size, record);
     }
@@ -123,7 +122,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
         var meta = TextureImporter.CreateMeta(embedded.Dimensions, embedded.PixelFormat, TextureKind.Texture2D,
             embedded.Preset, TextureImporter.GetAnisotropy(anisotropy), 0);
 
-        var textureId = _gfxTextures.CreateTexture2D(meta.Size, in meta.TextureProps, currentBlock.Data.AsSpan());
+        var textureId = gfx.CreateTexture2D(meta.Size, in meta.TextureProps, currentBlock.Data.AsSpan());
 
         var texture = new Texture(
             embedded.Name,

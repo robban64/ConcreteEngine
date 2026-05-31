@@ -31,7 +31,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
     private AssetStore _store;
 
-    internal MaterialLoader(AssetStore store, AssetGfxUploader gfxUploader) : base(gfxUploader)
+    internal MaterialLoader(AssetStore store)
     {
         _store = store;
         _profiles = CreateSlotProfiles();

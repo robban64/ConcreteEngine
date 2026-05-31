@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using Silk.NET.Assimp;
 using static ConcreteEngine.Engine.Assets.ImporterAssimp.AssimpUtils;
@@ -112,7 +113,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void Upload(ModelImportContext ctx, AssetGfxUploader gfxUploader)
+    public void Upload(ModelImportContext ctx, ModelLoader gfxUploader)
     {
         var model = ctx.Model;
         var animation = ctx.Animation;

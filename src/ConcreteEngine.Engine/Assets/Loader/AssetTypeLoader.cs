@@ -2,6 +2,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Assets.Utils;
+using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
@@ -18,7 +19,7 @@ internal interface IAssetTypeLoader<in TAsset> : IAssetTypeLoader where TAsset :
     void Reload(TAsset asset, AssetFile[] files);
 }
 
-internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader uploader) : IAssetTypeLoader<TAsset>
+internal abstract class AssetTypeLoader<TAsset, TRecord> : IAssetTypeLoader<TAsset>
     where TAsset : AssetObject where TRecord : AssetRecord
 {
     public AssetKind Kind => AssetKindUtils.ToAssetKind(typeof(TAsset));
@@ -29,8 +30,6 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
     public bool IsSetup { get; private set; }
 
     public readonly List<IEmbeddedAsset> EmbeddedAssets = [];
-
-    protected readonly AssetGfxUploader Uploader = uploader;
 
     private ArenaAllocator? _allocator;
 

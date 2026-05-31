@@ -9,13 +9,12 @@ using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
-internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<Shader, ShaderRecord>(uploader)
+internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shader, ShaderRecord>
 {
     protected override int SetupAllocSize => ShaderImporter.ShaderBlockSize * 8;
     protected override int DefaultAllocSize => ShaderImporter.ShaderBlockSize * 2;
 
     private ShaderImporter? _shaderImporter;
-    private readonly GfxShaders _gfxShaders = uploader.Shaders;
 
     private readonly Dictionary<string, IntPtr> _blocks = new(16);
 
@@ -87,7 +86,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         if (vsPtr.IsNull || vsPtr.Length <= 0) throw new InvalidOperationException("Vertex Shader pointer is null");
         if (fsPtr.IsNull || fsPtr.Length <= 0) throw new InvalidOperationException("Fragment Shader pointer is null");
 
-        var shaderId = _gfxShaders.CreateShader(vsPtr.Data, fsPtr.Data, out var samplers);
+        var shaderId = gfxShaders.CreateShader(vsPtr.Data, fsPtr.Data, out var samplers);
 
         return new Shader(record.Name, shaderId, samplers)
         {
@@ -116,7 +115,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         _shaderImporter.ImportShader(vsPath, _vsBlock.Data, out var vsLength);
         _shaderImporter.ImportShader(fsPath, _fsBlock.Data, out var fsLength);
 
-        _gfxShaders.RecreateShader(asset.GfxId, _vsBlock.Data, _fsBlock.Data, out var samplers);
+        gfxShaders.RecreateShader(asset.GfxId, _vsBlock.Data, _fsBlock.Data, out var samplers);
         asset.SetSamplers(samplers);
 
         files[1] = vsFile with { LastWriteTime = File.GetLastWriteTime(vsPath), SizeBytes = vsLength };

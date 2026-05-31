@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
@@ -23,16 +22,16 @@ internal sealed class DrawCommandProcessor
 
     private static PassStateMode PassMode => RenderContext.Instance.PassMode;
 
-    internal DrawCommandProcessor(GfxContext gfx, RenderRegistry renderRegistry,UniformUploader buffers)
+    internal DrawCommandProcessor(GfxContext gfx, RenderRegistry renderRegistry, UniformUploader buffers)
     {
         _buffers = buffers;
         _gfxCmd = gfx.Commands;
         _gfxDraw = gfx.Draw;
-        
+
         var depthFbo = renderRegistry.FboRegistry.GetByKey(PassTags<ShadowPassTag>.FboKey(FboVariant.V0));
         DepthTexture = depthFbo!.Attachments.DepthTexture;
     }
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Prepare()
@@ -85,27 +84,26 @@ internal sealed class DrawCommandProcessor
             _gfxCmd.ApplyState(materialMeta.DrawState);
             _gfxCmd.ApplyStateFunctions(materialMeta.PassFunctions);
         }
-        
+
         if (PassMode == PassStateMode.Depth && texSlots.Length > 0)
         {
             BindDepthTextureSlots(texSlots);
             return;
         }
-        
-        _gfxCmd.UseShader(materialMeta.ShaderId);
-        if (texSlots.Length > 0) 
-            BindTextureSlots(texSlots, materialMeta.ShadowMapBinding);
 
+        _gfxCmd.UseShader(materialMeta.ShaderId);
+        if (texSlots.Length > 0)
+            BindTextureSlots(texSlots, materialMeta.ShadowMapBinding);
     }
 
     private void BindTextureSlots(ReadOnlySpan<TextureBinding> slots, sbyte shadowMapBinding)
     {
-        if(shadowMapBinding >= 0)
+        if (shadowMapBinding >= 0)
             _gfxCmd.BindTexture(DepthTexture, shadowMapBinding);
 
         foreach (var value in slots)
         {
-            if(value.Slot < 0) continue;
+            if (value.Slot < 0) continue;
             _gfxCmd.BindTexture(value.Texture, value.Slot);
         }
     }
@@ -116,12 +114,11 @@ internal sealed class DrawCommandProcessor
 
         foreach (var value in slots)
         {
-            if(value.SlotKind == TextureUsage.Albedo)
+            if (value.SlotKind == TextureUsage.Albedo)
                 _gfxCmd.BindTexture(value.Texture, 0);
-            else if(value.SlotKind == TextureUsage.Mask)
+            else if (value.SlotKind == TextureUsage.Mask)
                 _gfxCmd.BindTexture(value.Texture, 1);
         }
-
     }
 
 
@@ -163,6 +160,5 @@ internal sealed class DrawCommandProcessor
             if (slot.SlotKind == TextureUsage.Albedo) _gfxCmd.BindTexture(slot.Texture, 0);
             else if (slot.SlotKind == TextureUsage.Mask) _gfxCmd.BindTexture(slot.Texture, 1);
         }
-
     }
 }

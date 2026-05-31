@@ -88,11 +88,7 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
 
         var shaderId = gfxShaders.CreateShader(vsPtr.Data, fsPtr.Data, out var samplers);
 
-        return new Shader(record.Name, shaderId, samplers)
-        {
-            Id = ctx.Id,
-            GId = record.GId,
-        };
+        return new Shader(record.Name, shaderId, samplers) { Id = ctx.Id, GId = record.GId, };
     }
 
     protected override Shader LoadInMemory(ShaderRecord record, LoaderContext ctx) =>
@@ -121,5 +117,4 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
         files[1] = vsFile with { LastWriteTime = File.GetLastWriteTime(vsPath), SizeBytes = vsLength };
         files[2] = fsFile with { LastWriteTime = File.GetLastWriteTime(fsPath), SizeBytes = fsLength };
     }
-    
 }

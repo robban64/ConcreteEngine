@@ -3,7 +3,6 @@ using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Renderer.Core;
 
-
 public struct MaterialParams(Color4 color, float specular, float shininess, float uvRepeat)
 {
     public Color4 Color = color;
@@ -31,9 +30,10 @@ public struct MaterialPipeline(GfxDrawState drawState, GfxPassFunctions passFunc
         {
             DrawState = GfxDrawState.Set(
                 GfxDrawFlags.DepthTest | GfxDrawFlags.DepthWrite | GfxDrawFlags.Cull | enabled,
-                 GfxDrawFlags.Blend | GfxDrawFlags.Ac2 | disabled
+                GfxDrawFlags.Blend | GfxDrawFlags.Ac2 | disabled
             ),
-            PassFunctions = new GfxPassFunctions(BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None)
+            PassFunctions =
+                new GfxPassFunctions(BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None)
         };
     }
     /*
@@ -48,7 +48,7 @@ public struct MaterialPipeline(GfxDrawState drawState, GfxPassFunctions passFunc
             PassFunctions = new GfxPassFunctions(Depth: DepthMode.Lequal)
         };
     }
-    
+
     public static MaterialPipeline MakeTransparentEffect(GfxDrawFlags enabled = 0, GfxDrawFlags disabled = 0)
     {
         return new MaterialPipeline

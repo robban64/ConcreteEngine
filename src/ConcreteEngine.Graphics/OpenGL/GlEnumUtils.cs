@@ -49,7 +49,6 @@ internal static class GfxGlEnumExtensions
             _ => GfxUniformType.Unknown
         };
     }
-
 }
 
 internal static class GlEnumExtensions
@@ -67,7 +66,7 @@ internal static class GlEnumExtensions
             _ => (0.0f, 0.0f)
         };
     }
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GLEnum ToGlEnableCap(this GfxStateFlags flag)

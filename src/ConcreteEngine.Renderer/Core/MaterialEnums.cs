@@ -23,11 +23,11 @@ public enum ShadingModelMode : byte
 
 public enum TextureUsage : byte
 {
-    Albedo ,
-    Normal ,
-    Mask ,
-    Specular ,
-    Emissive ,
-    Splatmap ,
-    Heightmap ,
+    Albedo,
+    Normal,
+    Mask,
+    Specular,
+    Emissive,
+    Splatmap,
+    Heightmap,
 }

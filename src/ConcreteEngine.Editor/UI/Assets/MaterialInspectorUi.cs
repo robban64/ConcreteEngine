@@ -37,7 +37,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
             ImGui.TextColored(Color4.White, sw.Write(template.Name));
         }
 
-        if (material.Asset.BoundShader is {} shader)
+        if (material.Asset.BoundShader is { } shader)
         {
             ImGui.TextUnformatted("Shader: "u8);
             ImGui.SameLine();

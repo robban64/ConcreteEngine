@@ -1,10 +1,3 @@
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Core;
-
 namespace ConcreteEngine.Core.Engine.Graphics;
 /*
 public sealed class MaterialManager
@@ -14,9 +7,9 @@ public sealed class MaterialManager
     public static Material FallbackMaterial { get; private set; } = null!;
 
     private AssetId[] _byMaterialId = new AssetId[DefaultCapacity];
-    
+
     private readonly AssetStore _assetStore;
-    
+
     public MaterialId MaxId { get; private set; }
 
     internal MaterialManager(AssetStore assetStore)
@@ -61,7 +54,7 @@ public sealed class MaterialManager
             EnsureCapacity(index + 1);
 
         if (material.MaterialId > MaxId) MaxId = material.MaterialId;
-        
+
         _byMaterialId[index] = material.Id;
         return material;
     }
@@ -70,7 +63,7 @@ public sealed class MaterialManager
     {
         ArgumentOutOfRangeException.ThrowIfZero(materialId.Value, nameof(materialId));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(materialId.Value, MaxId.Value);
-        
+
         var index = materialId.Index();
         var assetId = _byMaterialId[index];
         if (!assetId.IsValid()) return false;

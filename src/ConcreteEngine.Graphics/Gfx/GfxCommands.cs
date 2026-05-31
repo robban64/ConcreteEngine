@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Error;
@@ -32,7 +31,7 @@ public sealed class GfxCommands
 
     private GfxStateFlags _passFlags;
     private GfxPassFunctions _stateFunctions;
-    
+
     private GfxDrawState _lastDrawState;
 
 
@@ -73,7 +72,7 @@ public sealed class GfxCommands
         SetViewport(_activeOutputSize);
         ApplyPassState(passState.StateFlags);
 
-        Clear(passState.ClearColor,passState.ClearBuffer);
+        Clear(passState.ClearColor, passState.ClearBuffer);
 
         _activeOutputSize = _outputSize;
         _lastDrawState = default;
@@ -90,11 +89,10 @@ public sealed class GfxCommands
         BindFramebuffer(fboId);
         SetViewport(size);
         ApplyPassState(passState.StateFlags);
-        Clear(passState.ClearColor,passState.ClearBuffer);
+        Clear(passState.ClearColor, passState.ClearBuffer);
 
         _activeOutputSize = size;
         _lastDrawState = default;
-
     }
 
     public void EndRenderPass()
@@ -143,14 +141,14 @@ public sealed class GfxCommands
 
     public void ApplyPassState(GfxStateFlags e)
     {
-        _cmdStates.ToggleDepthTest((e & DepthTest) != 0 );
-        _cmdStates.ToggleDepthMask((e & DepthWrite) != 0 );
-        _cmdStates.ToggleCullFace((e & Cull) != 0 );
-        _cmdStates.ToggleBlendState((e & Blend) != 0 );
-        _cmdStates.TogglePolygonOffset((e & PolygonOffset) != 0 );
-        _cmdStates.ToggleSampleAlphaCoverage((e & Ac2) != 0 );
+        _cmdStates.ToggleDepthTest((e & DepthTest) != 0);
+        _cmdStates.ToggleDepthMask((e & DepthWrite) != 0);
+        _cmdStates.ToggleCullFace((e & Cull) != 0);
+        _cmdStates.ToggleBlendState((e & Blend) != 0);
+        _cmdStates.TogglePolygonOffset((e & PolygonOffset) != 0);
+        _cmdStates.ToggleSampleAlphaCoverage((e & Ac2) != 0);
 
-        _cmdStates.ToggleFrameBufferSrgb((e & Srgb) != 0 );
+        _cmdStates.ToggleFrameBufferSrgb((e & Srgb) != 0);
         _cmdStates.ColorMask((e & ColorMask) != 0);
         _cmdStates.ToggleScissorTest((e & Scissor) != 0);
 
@@ -159,9 +157,9 @@ public sealed class GfxCommands
 
     public void ApplyState(GfxDrawState state)
     {
-        if(_lastDrawState == state) return;
+        if (_lastDrawState == state) return;
         _lastDrawState = state;
-        
+
         var d = (GfxStateFlags)state.Defined;
         if (d == 0) return;
         var e = (GfxStateFlags)state.Enabled;
@@ -173,13 +171,12 @@ public sealed class GfxCommands
         _cmdStates.ToggleBlendState((d & Blend) != 0 ? (e & Blend) != 0 : (p & Blend) != 0);
         _cmdStates.TogglePolygonOffset((d & PolygonOffset) != 0 ? (e & PolygonOffset) != 0 : (p & PolygonOffset) != 0);
         _cmdStates.ToggleSampleAlphaCoverage((d & Ac2) != 0 ? (e & Ac2) != 0 : (p & Ac2) != 0);
-
     }
 
     public void ApplyStateFunctions(GfxPassFunctions stateFunctions)
     {
-        if(_stateFunctions == stateFunctions) return;
-        
+        if (_stateFunctions == stateFunctions) return;
+
         SetBlendMode(stateFunctions.Blend);
         SetCullMode(stateFunctions.Cull);
         SetDepthMode(stateFunctions.Depth);
@@ -199,7 +196,8 @@ public sealed class GfxCommands
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetPolygonOffset(PolygonOffsetLevel polygon)
     {
-        if (_stateFunctions.PolygonOffset != PolygonOffsetLevel.Unset && _stateFunctions.PolygonOffset == polygon) return;
+        if (_stateFunctions.PolygonOffset != PolygonOffsetLevel.Unset &&
+            _stateFunctions.PolygonOffset == polygon) return;
         var (factor, units) = polygon.ToFactorUnits();
         _stateFunctions.PolygonOffset = polygon;
         _cmdStates.SetPolygonOffset(factor, units);

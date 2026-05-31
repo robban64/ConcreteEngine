@@ -22,8 +22,14 @@ public readonly struct GfxPassState
         StateFlags = stateFlags;
     }
 
-    public static GfxPassState MakeColorClear(Color4 clearColor,GfxStateFlags flags) => new(in clearColor, ClearBufferFlag.Color,flags);
-    public static GfxPassState MakeColorDepthClear(Color4 clearColor,GfxStateFlags flags) => new(in clearColor, ClearBufferFlag.ColorAndDepth,flags);
-    public static GfxPassState MakeDepthClear(GfxStateFlags flags) => new(ColorRgba.Black, ClearBufferFlag.Depth,flags);
+    public static GfxPassState MakeColorClear(Color4 clearColor, GfxStateFlags flags) =>
+        new(in clearColor, ClearBufferFlag.Color, flags);
+
+    public static GfxPassState MakeColorDepthClear(Color4 clearColor, GfxStateFlags flags) =>
+        new(in clearColor, ClearBufferFlag.ColorAndDepth, flags);
+
+    public static GfxPassState MakeDepthClear(GfxStateFlags flags) =>
+        new(ColorRgba.Black, ClearBufferFlag.Depth, flags);
+
     public static GfxPassState MakeNoClear(GfxStateFlags flags) => new(ColorRgba.Black, ClearBufferFlag.None, flags);
 }

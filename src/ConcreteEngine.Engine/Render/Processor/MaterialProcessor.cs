@@ -49,13 +49,13 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
             float alpha = props.HasAlphaMask ? 1f : 0f;
 
             var meta = new RenderMaterialMeta(
-                material.MaterialId, 
-                shader.GfxId, 
+                material.MaterialId,
+                shader.GfxId,
                 material.Pipeline.DrawState,
-                material.Pipeline.PassFunctions, 
+                material.Pipeline.PassFunctions,
                 shader.DefaultBindings.ShadowMapBinding
             );
-            
+
             ref var uniform = ref materialBuffer.Submit(in meta, slots.Slice(0, textureSources.Length));
 
             uniform.MatColor = material.Color;

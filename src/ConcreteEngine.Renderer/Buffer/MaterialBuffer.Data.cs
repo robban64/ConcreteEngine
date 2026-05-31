@@ -1,5 +1,3 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;

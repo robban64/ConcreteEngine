@@ -18,11 +18,11 @@ internal sealed unsafe class UniformUploader
     private readonly GfxBuffers _gfxBuffers;
     private readonly MaterialBuffer _materialBuffer;
     private readonly EffectBuffer _effectBuffer;
-    
+
     public MaterialId PrevMaterial { get; private set; } = new(-1);
 
 
-    internal UniformUploader( GfxContext gfx, RenderRegistry renderRegistry, RenderUploadBuffers buffers)
+    internal UniformUploader(GfxContext gfx, RenderRegistry renderRegistry, RenderUploadBuffers buffers)
     {
         _materialBuffer = buffers.Materials;
         _effectBuffer = buffers.Effects;
@@ -47,7 +47,7 @@ internal sealed unsafe class UniformUploader
         _drawUbo.ResetCursor();
         _materialUbo.ResetCursor();
         _animationUbo.ResetCursor();
-        
+
         PrevMaterial = default;
     }
 
@@ -74,6 +74,7 @@ internal sealed unsafe class UniformUploader
             BindMaterialObject(materialId);
             return _materialBuffer.GetMetaAndSlots(materialId, out materialMeta);
         }
+
         materialMeta = default;
         return ReadOnlySpan<TextureBinding>.Empty;
     }

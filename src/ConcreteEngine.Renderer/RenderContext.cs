@@ -3,7 +3,6 @@ using ConcreteEngine.Renderer.Passes;
 
 namespace ConcreteEngine.Renderer;
 
-
 public sealed unsafe class UniformUploaderCallbacks
 {
     public required delegate*<in UniformUploadContext, void> UploadMainView;
@@ -27,10 +26,9 @@ internal sealed class RenderContext
         UniformCallbacks = callbacks;
         Instance = this;
     }
-    
+
     public bool IsMain => PassMode == PassStateMode.Main;
     public bool IsDepth => PassMode == PassStateMode.Depth;
     public void SetDepthMode() => PassMode = PassStateMode.Depth;
     public void ResetPassMode() => PassMode = PassStateMode.Main;
-
 }

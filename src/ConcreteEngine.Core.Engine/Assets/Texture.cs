@@ -21,12 +21,11 @@ public struct TextureProperties(
     public TexturePixelFormat PixelFormat = pixelFormat;
 }
 
-
 public sealed class Texture(string name, TextureId gfxId, Size2D size, TextureProperties properties) : AssetObject(name)
 {
     // WIP
     public GfxAssetLink<TextureMeta> GfxLink { get; } = new(gfxId);
-    
+
     public Size2D Size { get; } = size;
 
     private TextureProperties _properties = properties;
@@ -97,7 +96,7 @@ public sealed class Texture(string name, TextureId gfxId, Size2D size, TexturePr
         get;
         set
         {
-            if(field == value) return;
+            if (field == value) return;
             field = value;
             MarkDirty();
         }

@@ -3,7 +3,6 @@ using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Assets.Loader.Data;
 
-
 internal readonly struct TextureUploadMeta(Size3D size, CreateTextureProps textureProps)
 {
     public readonly Size3D Size = size;

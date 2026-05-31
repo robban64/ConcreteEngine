@@ -59,15 +59,15 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore
     public GfxHandle GetHandleRaw(int id) => _handle[id - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxHandle GetHandle(GfxId<TMeta> id) => _handle[(int)id - 1];
+    public GfxHandle GetHandle(GfxId<TMeta> id) => _handle[id - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly TMeta GetMeta(GfxId<TMeta> id) => ref _meta[(int)id - 1];
+    public ref readonly TMeta GetMeta(GfxId<TMeta> id) => ref _meta[id - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxHandle GetHandleAndMeta(GfxId<TMeta> id, out TMeta meta)
     {
-        var idx = (int)id - 1;
+        var idx = id - 1;
         meta = _meta[idx];
         return _handle[idx];
     }
@@ -106,8 +106,8 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore
     [MethodImpl(MethodImplOptions.NoInlining)]
     public GfxHandle Remove(GfxId<TMeta> id, out TMeta oldMeta)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(id, 0, nameof(id));
-        var index = (int)id - 1;
+        ArgumentOutOfRangeException.ThrowIfEqual(id, 0);
+        var index = id - 1;
         var handle = _handle[index];
         oldMeta = _meta[index];
         _meta[index] = default!;
@@ -115,34 +115,34 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore
 
         Count = SlotHelper.FreeSlot(_free, index, Count);
 
-        GfxLog.LogGfxStore((int)id, handle, GraphicsKind.ToLogTopic(), LogAction.Remove);
+        GfxLog.LogGfxStore(id, handle, GraphicsKind.ToLogTopic(), LogAction.Remove);
         return handle;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public GfxId<TMeta> Replace(GfxId<TMeta> id, in TMeta newMeta, in GfxHandle incRef, out GfxHandle oldRef)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(id, 0, nameof(id));
+        ArgumentOutOfRangeException.ThrowIfEqual(id, 0);
 
-        var idx = (int)id - 1;
+        var idx = id - 1;
         oldRef = _handle[idx];
         var newRef = new GfxHandle(incRef.Slot, (ushort)(oldRef.Gen + 1), GraphicsKind);
 
         _meta[idx] = newMeta;
         _handle[idx] = newRef;
 
-        GfxLog.LogGfxStore((int)id, newRef, GraphicsKind.ToLogTopic(), LogAction.Replace);
-        _onUpdate?.Invoke((int)id);
+        GfxLog.LogGfxStore(id, newRef, GraphicsKind.ToLogTopic(), LogAction.Replace);
+        _onUpdate?.Invoke(id);
         return id;
     }
 
     public void ReplaceMeta(GfxId<TMeta> id, in TMeta newMeta, out TMeta oldMeta)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual((int)id, 0, nameof(id));
-        int idx = (int)id - 1;
+        ArgumentOutOfRangeException.ThrowIfEqual(id, 0);
+        int idx = id - 1;
         oldMeta = _meta[idx];
         _meta[idx] = newMeta;
-        _onUpdate?.Invoke((int)id);
+        _onUpdate?.Invoke(id);
     }
 
     public int GetAliveCount()

@@ -6,7 +6,6 @@ using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.Importer;
-using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
 
@@ -135,7 +134,7 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
                 anisotropy: anisotropy,
                 pixelFormat: embedded.PixelFormat
             )
-        ) { Id = assetId, GId = embedded.GId, Usage = embedded.SlotKind};
+        ) { Id = assetId, GId = embedded.GId, Usage = embedded.SlotKind };
 
         embedded.PixelDataBlock = null;
 
@@ -159,6 +158,6 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
                 anisotropy: record.Anisotropy,
                 pixelFormat: record.PixelFormat
             )
-        ) { Id = id, GId = record.GId, Usage = usage};
+        ) { Id = id, GId = record.GId, Usage = usage };
     }
 }

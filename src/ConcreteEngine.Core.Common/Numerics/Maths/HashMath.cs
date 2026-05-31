@@ -21,5 +21,4 @@ public static class HashMath
             hash = (hash ^ data[i]) * 16777619;
         return hash;
     }
-
 }

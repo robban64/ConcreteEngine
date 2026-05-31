@@ -2,7 +2,6 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Assets.Utils;
-using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 

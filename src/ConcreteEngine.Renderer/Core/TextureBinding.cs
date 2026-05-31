@@ -1,5 +1,3 @@
-using ConcreteEngine.Graphics.Gfx;
-
 namespace ConcreteEngine.Renderer.Core;
 
 public readonly struct TextureBinding(TextureId texture, TextureUsage slotKind, sbyte slot)

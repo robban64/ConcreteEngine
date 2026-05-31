@@ -19,7 +19,7 @@ internal sealed class CameraPanel(StateManager state) : EditorPanel(StateEnums.C
     private static readonly InspectCameraFields InspectFields = InspectorFieldProvider.Instance.CameraFields;
 
     private Camera MainCamera => CameraSystem.Instance.Camera;
-    
+
     private void UpdateText()
     {
         var viewport = MainCamera.Viewport;

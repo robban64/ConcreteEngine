@@ -59,7 +59,7 @@ public sealed class MaterialBuffer : IDisposable
 
         return ref _buffer[index];
     }
-    
+
 
     internal NativeView<MaterialUniform> DrainBuffer()
     {

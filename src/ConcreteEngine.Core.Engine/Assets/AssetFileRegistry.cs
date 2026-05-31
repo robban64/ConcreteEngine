@@ -16,8 +16,8 @@ public sealed class AssetFileRegistry
     private AssetFileId MakeAssetFileId() => new(_files.AllocateNext() + 1);
 
     private readonly SlotArray<AssetFile> _files = new(DefaultCap);
-    private readonly Dictionary<Handle32<AssetObject>, AssetFileId[]> _fileBindings = new(DefaultCap);
-    private readonly Dictionary<AssetFileId, Handle32<AssetObject>> _rootBindings = new(DefaultCap);
+    private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = new(DefaultCap);
+    private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultCap);
 
     private readonly Dictionary<string, AssetFileId> _fileByPath = new(DefaultCap); // string, AssetFileId
 
@@ -135,7 +135,7 @@ public sealed class AssetFileRegistry
     public bool TryGetByRootFileId(AssetFileId fileId, out AssetId assetId)
     {
         var res = _rootBindings.TryGetValue(fileId, out var handle);
-        assetId = res ? (AssetId)handle : default;
+        assetId = res ? handle : default;
         return res;
     }
 

@@ -11,7 +11,7 @@ public readonly record struct TextureSource(
     TextureId OverrideTextureId = default
 )
 {
-    public readonly bool IsFallback = !AssetTexture.IsValid() && HasFallbackArgs( TextureKind);
+    public readonly bool IsFallback = !AssetTexture.IsValid() && HasFallbackArgs(TextureKind);
 
     public TextureSource WithAssetId(AssetId assetId) => this with { AssetTexture = assetId };
 
@@ -23,7 +23,7 @@ public readonly record struct TextureSource(
         return "Unknown";
     }
 
-    private static bool HasFallbackArgs( TextureKind textureKind)
+    private static bool HasFallbackArgs(TextureKind textureKind)
     {
         return textureKind == TextureKind.Multisample2D;
     }

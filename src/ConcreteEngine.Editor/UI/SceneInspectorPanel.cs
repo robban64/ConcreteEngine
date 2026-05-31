@@ -2,7 +2,6 @@ using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;

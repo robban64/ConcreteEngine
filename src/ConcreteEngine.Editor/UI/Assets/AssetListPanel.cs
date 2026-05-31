@@ -186,9 +186,9 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             if (ImGui.Selectable("##select"u8, selected, selectFlags, ListItemSelectSize))
                 OnListItemClick(it);
 
-            if (isModel && binding == FileBinding.RootFile  && ImGui.BeginDragDropSource())
+            if (isModel && binding == FileBinding.RootFile && ImGui.BeginDragDropSource())
             {
-                FileRegistry.TryGetByRootFileId(it.FileId, out var  modelId);
+                FileRegistry.TryGetByRootFileId(it.FileId, out var modelId);
                 ImGui.SetDragDropPayload("ASSET_MODEL"u8, &modelId, (nuint)Unsafe.SizeOf<AssetId>());
                 AppDraw.Text(name);
                 ImGui.EndDragDropSource();
@@ -234,7 +234,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         {
             var modelId = *(AssetId*)payload.Data;
             if (!modelId.IsValid()) return;
-            
+
             var model = Assets.Get<Model>(modelId);
             var camera = EditorCamera.Instance.Camera;
             var transform = new Transform(camera.Translation + camera.Forward * 10);

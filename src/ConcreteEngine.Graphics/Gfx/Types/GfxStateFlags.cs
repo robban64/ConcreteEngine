@@ -1,6 +1,5 @@
 namespace ConcreteEngine.Graphics.Gfx;
 
-
 [Flags]
 public enum GfxDrawFlags : byte
 {
@@ -26,5 +25,4 @@ public enum GfxStateFlags : ushort
     Srgb = 1 << 6,
     ColorMask = 1 << 7,
     Scissor = 1 << 8,
-
 }

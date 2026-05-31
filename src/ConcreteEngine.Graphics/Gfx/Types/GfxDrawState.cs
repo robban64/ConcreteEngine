@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using static ConcreteEngine.Graphics.Gfx.GfxDrawFlags;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -13,7 +12,7 @@ public readonly record struct GfxDrawState(GfxDrawFlags Enabled, GfxDrawFlags De
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsSet(GfxDrawFlags flag) => (Defined & flag) != 0;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsEnabled(GfxDrawFlags flag) => (Enabled & flag) != 0;
 

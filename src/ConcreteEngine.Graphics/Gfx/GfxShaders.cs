@@ -31,12 +31,13 @@ public sealed class GfxShaders
         var samplerList = new List<GfxUniformSampler>(4);
         _driver.GetSamplersFromProgram(programRef, samplerList);
         samplerInfo = samplerList.ToArray();
-        
+
         var meta = new ShaderMeta(samplerInfo.Length);
         return _store.Add(in meta, programRef);
     }
 
-    public void RecreateShader(ShaderId shaderId, NativeView<byte> vs, NativeView<byte> fs, out GfxUniformSampler[] samplers)
+    public void RecreateShader(ShaderId shaderId, NativeView<byte> vs, NativeView<byte> fs,
+        out GfxUniformSampler[] samplers)
     {
         ArgumentOutOfRangeException.ThrowIfZero(shaderId.Id, nameof(shaderId));
         if (vs.IsNull || vs.Length == 0) throw new ArgumentOutOfRangeException(nameof(vs));

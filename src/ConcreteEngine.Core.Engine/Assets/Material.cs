@@ -265,8 +265,7 @@ public sealed class Material : AssetObject
     {
         var props = new MaterialRenderProps
         {
-            HasTransparency = Transparency, 
-            HasShadowMap = BoundShader?.DefaultBindings.ShadowMapBinding >= 0
+            HasTransparency = Transparency, HasShadowMap = BoundShader?.DefaultBindings.ShadowMapBinding >= 0
         };
         foreach (var source in _textureSources)
         {

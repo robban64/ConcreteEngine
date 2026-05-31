@@ -14,7 +14,7 @@ internal sealed class GlShaders
 {
     private static GL Gl => GlBackendDriver.Gl;
 
-    private static readonly Dictionary<uint, string> UniformSamplerByHash = new (16);
+    private static readonly Dictionary<uint, string> UniformSamplerByHash = new(16);
 
     private readonly BackendResourceStore _shaderStore = GfxRegistry.GetBackendStore<ShaderMeta>();
 
@@ -85,15 +85,15 @@ internal sealed class GlShaders
 
         return shader;
     }
-    
-    
+
+
     public void GetSamplersFromProgram(GfxHandle shaderRef, List<GfxUniformSampler> result)
     {
-        if(!shaderRef.IsValid) Throwers.InvalidArgument(nameof(shaderRef));
-        
+        if (!shaderRef.IsValid) Throwers.InvalidArgument(nameof(shaderRef));
+
         ArgumentNullException.ThrowIfNull(result);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(result.Count, 1, nameof(result));
-        
+
         Span<byte> buffer = stackalloc byte[128];
         Span<uint> length = stackalloc uint[1];
         Span<int> size = stackalloc int[1];
@@ -118,8 +118,5 @@ internal sealed class GlShaders
 
             result.Add(new GfxUniformSampler(strName, (byte)result.Count, uniformType));
         }
-        
     }
-
-
 }

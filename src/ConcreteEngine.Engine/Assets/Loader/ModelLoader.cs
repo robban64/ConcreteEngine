@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets.ImporterAssimp;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Primitives;
 
@@ -144,7 +143,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
 
 
     protected override Model LoadInMemory(ModelRecord record, LoaderContext ctx) => throw new NotImplementedException();
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public MeshId UploadMesh(NativeView<Vertex3D> vertices, NativeView<byte> indices, bool is16Bit)
     {

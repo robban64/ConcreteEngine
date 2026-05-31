@@ -22,14 +22,13 @@ internal sealed class RenderPassCtx
 
     private readonly UniformUploader _uniformUploader;
 
-    internal RenderPassCtx( GfxContext gfx, UniformUploader uniformUploader)
+    internal RenderPassCtx(GfxContext gfx, UniformUploader uniformUploader)
     {
         PassQueue = new PassCommandQueue();
         _uniformUploader = uniformUploader;
         GfxCmd = gfx.Commands;
         _gfxTextures = gfx.Textures;
         _gfxDraw = gfx.Draw;
-
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

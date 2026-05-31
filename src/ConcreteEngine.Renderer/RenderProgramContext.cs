@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;

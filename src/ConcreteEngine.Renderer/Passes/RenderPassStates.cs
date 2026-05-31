@@ -55,7 +55,6 @@ public struct PassMutationState
         TargetFboId = id;
         _mask |= HasFboBit;
     }
-
 }
 
 public readonly struct RenderPassState(
@@ -80,7 +79,8 @@ public readonly struct RenderPassState(
 
 
     public static RenderPassState MakeSceneMsaa() =>
-        new(passState: GfxPassState.MakeColorDepthClear(Color4.CornflowerBlue, DepthTest | DepthWrite | Cull | Srgb | ColorMask | Ac2));
+        new(passState: GfxPassState.MakeColorDepthClear(Color4.CornflowerBlue,
+            DepthTest | DepthWrite | Cull | Srgb | ColorMask | Ac2));
 
     public static RenderPassState MakeResolve() =>
         new(passState: GfxPassState.MakeNoClear(ColorMask), linearFilter: true);
@@ -98,5 +98,4 @@ public readonly struct RenderPassState(
 
     public static RenderPassState MakeSceneEffect() =>
         new(passState: GfxPassState.MakeNoClear(Blend | Cull | Srgb | ColorMask | Ac2));
-    
 }

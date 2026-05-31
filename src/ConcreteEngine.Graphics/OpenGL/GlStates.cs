@@ -28,16 +28,16 @@ internal sealed class GlStates
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ColorMask(bool v) => _gl.ColorMask(v, v, v, v);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToggleDepthMask(bool enabled) => _gl.DepthMask(enabled);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToggleStateFlag(GfxStateFlags flag, bool enabled)
     {
         if (flag == GfxStateFlags.DepthWrite)
             _gl.DepthMask(enabled);
-        else if(flag == GfxStateFlags.ColorMask)
+        else if (flag == GfxStateFlags.ColorMask)
             _gl.ColorMask(enabled, enabled, enabled, enabled);
         else
         {
@@ -45,7 +45,6 @@ internal sealed class GlStates
             if (enabled) _gl.Enable(enableCap);
             else _gl.Disable(enableCap);
         }
-        
     }
 
 

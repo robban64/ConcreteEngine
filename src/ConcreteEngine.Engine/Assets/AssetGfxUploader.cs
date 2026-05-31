@@ -10,7 +10,8 @@ namespace ConcreteEngine.Engine.Assets;
 internal sealed class AssetGfxUploader(GfxContext gfx)
 {
     public GfxShaders Shaders => gfx.Shaders;
-    
+    public GfxTextures Textures => gfx.Textures;
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public MeshId UploadMesh(NativeView<Vertex3D> vertices, NativeView<byte> indices, bool is16Bit)
     {
@@ -43,21 +44,6 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
         else
             gfx.Meshes.CreateAttachIndexBuffer(meshId, indices.Reinterpret<uint>().AsReadOnlySpan(), iboArgs);
         return meshId;
-    }
-
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public void UploadTexture(ReadOnlySpan<byte> data, in TextureUploadMeta meta, out TextureCreationInfo info)
-    {
-        var textureId = gfx.Textures.CreateTexture2D(meta.Size, meta.TextureProps, data);
-        info = new TextureCreationInfo(textureId, meta.Size);
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public unsafe void UploadCubeMap(NativeView<byte>* data, in TextureUploadMeta meta, out TextureCreationInfo info)
-    {
-        var textureId = gfx.Textures.CreateCubeMap(meta.Size, meta.TextureProps, data);
-        info = new TextureCreationInfo(textureId, meta.Size);
     }
 
 /*

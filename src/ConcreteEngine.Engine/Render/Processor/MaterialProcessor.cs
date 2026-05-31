@@ -38,7 +38,7 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
             {
                 var source = textureSources[i];
                 if (!ResolveFallbackTextureId(source, out var textureId))
-                    textureId = assetStore.Get<Texture>(source.AssetTexture).GfxId;
+                    textureId = assetStore.Get<Texture>(source.AssetTexture).GfxLink.GfxId;
 
                 slots[i] = new TextureBinding(textureId, source.Usage, (sbyte)i);
             }

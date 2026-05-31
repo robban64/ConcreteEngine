@@ -2,23 +2,22 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
 public struct TextureProperties(
     float lodBias,
-    int mipLevels,
     TextureKind kind = TextureKind.Texture2D,
-    TextureUsage Usage = TextureUsage.Albedo,
+    TextureUsage usage = TextureUsage.Albedo,
     TexturePreset preset = TexturePreset.LinearClamp,
     AnisotropyLevel anisotropy = AnisotropyLevel.Off,
     TexturePixelFormat pixelFormat = TexturePixelFormat.SrgbAlpha)
 {
     public float LodBias = lodBias;
-    public int MipLevels = mipLevels;
     public TextureKind Kind = kind;
-    public TextureUsage Usage = Usage;
+    public TextureUsage Usage = usage;
     public TexturePreset Preset = preset;
     public AnisotropyLevel Anisotropy = anisotropy;
     public TexturePixelFormat PixelFormat = pixelFormat;
@@ -26,7 +25,7 @@ public struct TextureProperties(
 
 public sealed class Texture(string name, TextureId gfxId, Size2D size, TextureProperties properties) : AssetObject(name)
 {
-    public TextureId GfxId { get; } = gfxId;
+    public GfxAssetLink<TextureMeta> GfxLink { get; } = new(gfxId);
     public Size2D Size { get; } = size;
     
     private TextureProperties _properties = properties;
@@ -40,8 +39,6 @@ public sealed class Texture(string name, TextureId gfxId, Size2D size, TexturePr
     public void SetPixelData(ReadOnlyMemory<byte> pixelData) => PixelData = pixelData;
 
     //
-    public int MipLevels => _properties.MipLevels;
-
     public float LodBias
     {
         get => _properties.LodBias;

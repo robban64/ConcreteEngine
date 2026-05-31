@@ -60,7 +60,6 @@ internal static class AssetSystemSetup
                 new Size2D(1),
                 new TextureProperties(
                     lodBias: 0,
-                    mipLevels: 0,
                     kind: TextureKind.Texture2D,
                     preset: TexturePreset.NearestClamp,
                     anisotropy: AnisotropyLevel.Off,

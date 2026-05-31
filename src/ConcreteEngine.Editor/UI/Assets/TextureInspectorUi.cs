@@ -18,17 +18,17 @@ internal sealed class TextureInspectorUi(StateManager state)
     {
         var sw = TextBuffers.GetWriter();
         var texture = editTexture.Asset;
-        var size = texture.Size;
+        var gfxLink = editTexture.Asset.GfxLink;
 
         ImGui.SeparatorText("Texture Info"u8);
 
-        AppDraw.DrawTextProperty("Size:"u8, sw.Append(size.Width).Append('x').Append(size.Height).End());
+        AppDraw.DrawTextProperty("Size:"u8, sw.Append(texture.Size.Width).Append('x').Append(texture.Size.Height).End());
 
-        AppDraw.DrawTextProperty("Kind:"u8, sw.Write(texture.TextureKind.ToText()));
+        AppDraw.DrawTextProperty("Kind:"u8, sw.Write(gfxLink.Meta.Kind.ToText()));
         AppDraw.DrawSameLineProperty();
-        AppDraw.DrawTextProperty("Format:"u8, sw.Write(texture.PixelFormat.ToText()));
+        AppDraw.DrawTextProperty("Format:"u8, sw.Write(gfxLink.Meta.PixelFormat.ToText()));
 
-        AppDraw.DrawTextProperty("Mips:"u8, sw.Write(texture.MipLevels));
+        AppDraw.DrawTextProperty("Mips:"u8, sw.Write(gfxLink.Meta.MipLevels));
 
         InspectFields.Draw();
 
@@ -41,7 +41,7 @@ internal sealed class TextureInspectorUi(StateManager state)
 
         if (ImGui.BeginPopup("##image-popup"u8))
         {
-            state.GetOrSetTextureHandle(texture.GfxId, ref AssetInspectorPanel.PopupTextureHandle);
+            state.GetOrSetTextureHandle(gfxLink.GfxId, ref AssetInspectorPanel.PopupTextureHandle);
             ImGui.Image(AssetInspectorPanel.PopupTextureHandle, new Vector2(256, 256));
 
             if (ImGui.Button("Close"u8)) ImGui.CloseCurrentPopup();

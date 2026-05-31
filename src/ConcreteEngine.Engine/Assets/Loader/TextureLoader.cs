@@ -22,6 +22,8 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
 
     private int _storedEmbeddedBlocks;
 
+    private readonly GfxTextures _gfxTextures = uploader.Textures;
+
     public unsafe MemoryBlockPtr StoreEmbedded(byte* data, int length, TexturePixelFormat format, out Size2D size)
     {
         var block = TextureImporter.ImportUnmanagedTexture(data, Allocator, length, format, out size);
@@ -57,8 +59,8 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
             return LoadCubeMap(record, ctx);
 
         var block = TextureImporter.LoadTexture(record, EnginePath.TexturePath, Allocator, out var meta);
-        Uploader.UploadTexture(block.Data.AsSpan(), in meta, out var result);
-        var texture = CreateTexture(ctx.Id, record, result);
+        var textureId = _gfxTextures.CreateTexture2D(meta.Size, in meta.TextureProps, block.Data.AsSpan());
+        var texture = CreateTexture(ctx.Id, textureId, meta.Size, record);
 
         if (record.InMemory)
             texture.SetPixelData(block.Data.AsSpan().ToArray());
@@ -69,7 +71,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
 
     protected override Texture LoadInMemory(TextureRecord record, LoaderContext ctx)
     {
-        var texture = CreateTexture(ctx.Id, record, default);
+        var texture = CreateTexture(ctx.Id, default, default, record);
 
         if (record.InMemory)
             texture.SetPixelData(TextureImporter.LoadInMemory(EnginePath.TexturePath, record, out _));
@@ -94,9 +96,9 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
             currentBlock = currentBlock.Next;
         }
 
-        Uploader.UploadCubeMap(data, in meta, out var result);
+        var textureId = _gfxTextures.CreateCubeMap(meta.Size, meta.TextureProps, data);
 
-        return CreateTexture(ctx.Id, record, result);
+        return CreateTexture(ctx.Id, textureId, meta.Size, record);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -121,17 +123,16 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
         var meta = TextureImporter.CreateMeta(embedded.Dimensions, embedded.PixelFormat, TextureKind.Texture2D,
             embedded.Preset, TextureImporter.GetAnisotropy(anisotropy), 0);
 
-        Uploader.UploadTexture(currentBlock.Data.AsSpan(), in meta, out var result);
+        var textureId = _gfxTextures.CreateTexture2D(meta.Size, in meta.TextureProps, currentBlock.Data.AsSpan());
 
         var texture = new Texture(
             embedded.Name,
-            result.TextureId,
-            result.Size,
+            textureId,
+            meta.Size,
             new TextureProperties(
                 lodBias: 0,
-                mipLevels: 0,
                 kind: TextureKind.Texture2D,
-                Usage: embedded.SlotKind,
+                usage: embedded.SlotKind,
                 preset: embedded.Preset,
                 anisotropy: anisotropy,
                 pixelFormat: embedded.PixelFormat
@@ -146,18 +147,17 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static Texture CreateTexture(AssetId id, TextureRecord record, TextureCreationInfo result,
+    private static Texture CreateTexture(AssetId id, TextureId textureId, Size2D size, TextureRecord record,
         TextureUsage usage = TextureUsage.Albedo)
     {
         return new Texture(
             record.Name,
-            result.TextureId,
-            result.Size,
+            textureId,
+            size,
             new TextureProperties(
                 lodBias: record.LodBias,
-                mipLevels: 0,
                 kind: record.TextureKind,
-                Usage: usage,
+                usage: usage,
                 preset: record.Preset,
                 anisotropy: record.Anisotropy,
                 pixelFormat: record.PixelFormat

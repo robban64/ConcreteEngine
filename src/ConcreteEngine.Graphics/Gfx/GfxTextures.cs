@@ -67,9 +67,10 @@ public sealed class GfxTextures
         ApplyProperties(textureId);
         return textureId;
     }
-    
-    public  TextureId CreateCubeMap(Size2D size, in CreateTextureProps props)
+
+    public TextureId CreateCubeMap(Size2D size, in CreateTextureProps props)
     {
+        ArgumentOutOfRangeException.ThrowIfNotEqual(props.Kind, TextureKind.CubeMap, nameof(props.Kind));
         var textureId = CreateTexture(size.ToSize3D(1), in props);
         ApplyProperties(textureId);
         return textureId;

@@ -36,15 +36,15 @@ internal sealed class TerrainSystem
 
     private void Allocate()
     {
-        if (!TerrainMesh.TerrainIboId.IsValid() && MainTerrain.Heightmap?.PixelData is { } heightmap)
+        if (!TerrainMesh.TerrainIboId.IsValid() && MainTerrain.Heightmap?.TryGetPixelSpan(out var heightData) == true)
         {
-            TerrainMesh.Allocate(MainTerrain.GetChunks(), heightmap.Span, MainTerrain.Dimension, MainTerrain.MaxHeight);
+            TerrainMesh.Allocate(MainTerrain.GetChunks(), heightData, MainTerrain.Dimension, MainTerrain.MaxHeight);
             Logger.LogString(LogScope.Engine, "Terrain: allocated terrain");
         }
 
-        if (!TerrainMesh.HasFoliage && MainTerrain.Splatmap?.PixelData is { } splatMap)
+        if (!TerrainMesh.HasFoliage && MainTerrain.Splatmap?.TryGetPixelSpan(out var splatMapData) == true)
         {
-            TerrainMesh.AllocateFoliage(MainTerrain, splatMap.Span);
+            TerrainMesh.AllocateFoliage(MainTerrain, splatMapData);
             Logger.LogString(LogScope.Engine, "Terrain: allocated foliage");
         }
 

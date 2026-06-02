@@ -35,8 +35,23 @@ public sealed class Texture(string name, TextureId gfxId, Size2D size, TexturePr
     public override AssetKind Kind => AssetKind.Texture;
 
     //TODO remove
-    public ReadOnlyMemory<byte>? PixelData { get; private set; }
-    public void SetPixelData(ReadOnlyMemory<byte> pixelData) => PixelData = pixelData;
+    private TextureData? _textureData;
+    
+    public bool HasPixelData => _textureData is not null;
+    
+    public bool TryGetPixelSpan(out ReadOnlySpan<byte> pixelData)
+    {
+        pixelData = Span<byte>.Empty;
+        if(_textureData is not {} textureData) return false;
+        pixelData = textureData.GetPixelData();
+        return true;
+    }
+    
+    internal void SetPixelData(TextureData textureData)
+    {
+        if(_textureData is not null) throw new InvalidOperationException("Texture already has a data entry.");
+        _textureData = textureData;
+    }
 
     //
     public float LodBias

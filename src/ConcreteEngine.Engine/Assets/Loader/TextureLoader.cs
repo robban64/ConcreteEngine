@@ -14,7 +14,7 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, TextureRecord>
 {
-    private readonly Dictionary<Guid, TextureDataEntry> _embeddedTextures = new(8);
+    private readonly Dictionary<Guid, TextureData> _embeddedTextures = new(8);
     
     public int StoredEmbeddedCount => _embeddedTextures.Count;
     
@@ -34,7 +34,7 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
     {
         ArgumentOutOfRangeException.ThrowIfEqual(guid, Guid.Empty);
         var textureData = TextureImporter.ImportUnmanagedTexture(rawData, length, format, out size);
-        _embeddedTextures.Add(guid, new TextureDataEntry(guid, in textureData));
+        _embeddedTextures.Add(guid, new TextureData(guid, in textureData));
     }
     
     protected override Texture Load(TextureRecord record, LoaderContext ctx)
@@ -48,20 +48,17 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
         {
             textureData = TextureImporter.LoadTexture(record, EnginePath.TexturePath, filename, out var size);
             var props = TextureImporter.CreateTextureProps(record);
+            
             var textureId = gfx.CreateTexture2D(size, in props, textureData.AsSpan());
             var texture = CreateTexture(ctx.Id, textureId, size, record);
-            if (record.InMemory)
-            {
-                TextureDataProvider.Persist(texture, in textureData);
-                texture.SetPixelData(textureData.AsSpan().ToArray());
-            }
+            
+            if (record.InMemory) texture.SetPixelData( new TextureData(texture.GId, in textureData));
             
             return texture;
         }
         finally
         {
-            if(!record.InMemory && !textureData.IsNull) 
-                textureData.Dispose();
+            if(!record.InMemory) textureData.Dispose();
         }
 
 
@@ -70,12 +67,15 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
     //?
     protected override Texture LoadInMemory(TextureRecord record, LoaderContext ctx)
     {
+        throw new NotImplementedException();
+        /*
         var texture = CreateTexture(ctx.Id, default, default, record);
 
         if (record.InMemory)
             texture.SetPixelData(TextureImporter.LoadInMemory(EnginePath.TexturePath, record));
 
         return texture;
+        */
     }
 
 

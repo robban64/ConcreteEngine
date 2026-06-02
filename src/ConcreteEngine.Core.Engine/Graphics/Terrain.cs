@@ -49,7 +49,7 @@ public sealed class Terrain
     {
     }
 
-    public bool HasHeightmap => _chunks.Length > 0 && Heightmap is { PixelData: not null };
+    public bool HasHeightmap => _chunks.Length > 0 && Heightmap is { HasPixelData: true };
 
     public ReadOnlySpan<TerrainChunk> GetChunks() => _chunks;
 
@@ -89,13 +89,14 @@ public sealed class Terrain
         ArgumentOutOfRangeException.ThrowIfNotEqual(heightmap.Size.Width, heightmap.Size.Height, nameof(heightmap));
 
         ArgumentNullException.ThrowIfNull(heightmap);
-        if (!heightmap.PixelData.HasValue) throw new ArgumentNullException(nameof(heightmap));
 
         var dimension = heightmap.Size.Width;
 
         var powDim = dimension - 1;
         if (!IntMath.IsPowerOfTwo(powDim))
             throw new ArgumentOutOfRangeException(nameof(heightmap.Size), "Heightmap dimension must be pow2 + 1");
+
+        if (!heightmap.TryGetPixelSpan(out var pixelData)) throw new ArgumentNullException(nameof(heightmap));
 
         Heightmap = heightmap;
         Dimension = dimension;
@@ -104,7 +105,7 @@ public sealed class Terrain
 
         _chunks = new TerrainChunk[GridDimension * GridDimension];
 
-        CreateTerrainChunks(heightmap.PixelData.Value.Span);
+        CreateTerrainChunks(pixelData);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

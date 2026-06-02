@@ -19,7 +19,6 @@ namespace ConcreteEngine.Editor.UI.Assets;
 
 internal sealed unsafe class MaterialInspectorUi(StateManager state)
 {
-    private static AssetStore Assets => EngineObjectStore.Assets;
 
     public readonly InspectMaterialFields InspectFields = InspectorFieldProvider.Instance.MaterialFields;
 
@@ -31,7 +30,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         ImGui.BeginGroup();
         if (material.Asset.TemplateId.IsValid())
         {
-            var template = EngineObjectStore.Assets.Get<Material>(material.Asset.TemplateId);
+            var template = AssetStore.Instance.Get<Material>(material.Asset.TemplateId);
             ImGui.TextUnformatted("Template: "u8);
             ImGui.SameLine();
             ImGui.TextColored(Color4.White, sw.Write(template.Name));
@@ -120,7 +119,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
 
             ImGui.TableNextColumn();
             if (binding.AssetTexture.IsValid())
-                DrawAssetSlot(asset, i, Assets.Get<Texture>(binding.AssetTexture), sw);
+                DrawAssetSlot(asset, i, AssetStore.Instance.Get<Texture>(binding.AssetTexture), sw);
             else
                 DrawAssetSlotEmptyTexture(asset, i, binding, sw);
 
@@ -209,7 +208,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         if (!payload.IsNull && payload.IsDelivery())
         {
             var droppedId = *(AssetId*)payload.Data;
-            if (droppedId.Value > 0 && Assets.TryGet<Texture>(droppedId, out var droppedTex))
+            if (droppedId.Value > 0 && AssetStore.Instance.TryGet<Texture>(droppedId, out var droppedTex))
                 material.SetTexture(slot, droppedTex);
         }
 

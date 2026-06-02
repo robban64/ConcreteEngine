@@ -8,11 +8,9 @@ public sealed class SceneSpawner
     private static int _nameTick = 1;
 
     private readonly SceneStore _sore;
-    private readonly AssetStore _assetStore;
 
-    internal SceneSpawner(SceneStore sore, AssetStore assets)
+    internal SceneSpawner(SceneStore sore)
     {
-        _assetStore = assets;
         _sore = sore;
     }
 
@@ -29,7 +27,7 @@ public sealed class SceneSpawner
         {
             for (int i = 0; i < materials.Length; i++)
             {
-                if (!_assetStore.TryGetByGuid<Material>(materialIndices[i].AssetGId, out var material))
+                if (!AssetStore.Instance.TryGetByGuid<Material>(materialIndices[i].AssetGId, out var material))
                     material = MaterialStore.FallbackMaterial;
 
                 materials[i] = material.Id;
@@ -48,7 +46,7 @@ public sealed class SceneSpawner
         var materials = new AssetId[materialIds.Length];
         for (int i = 0; i < materialIds.Length; i++)
         {
-            if (!_assetStore.TryGet<Material>(materialIds[i], out var material))
+            if (!AssetStore.Instance.TryGet<Material>(materialIds[i], out var material))
                 material = MaterialStore.FallbackMaterial;
 
             materials[i] = material.Id;

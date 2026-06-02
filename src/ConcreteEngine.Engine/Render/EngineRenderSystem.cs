@@ -23,7 +23,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     private readonly MaterialProcessor _materialProcessor;
     private readonly RenderDispatcher _renderDispatcher;
 
-    internal EngineRenderSystem(GraphicsRuntime graphics, AssetStore assetStore)
+    internal EngineRenderSystem(GraphicsRuntime graphics)
     {
         _cameraSystem = CameraSystem.Instance;
         _visualManager = VisualManager.Instance;
@@ -34,7 +34,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
         var animations = AnimationTable.Make();
 
         _renderDispatcher = new RenderDispatcher(animations, particles);
-        _materialProcessor = new MaterialProcessor(assetStore);
+        _materialProcessor = new MaterialProcessor();
 
         Program = new RenderProgram(graphics, VisualUniformProcessor.MakeCallbacks());
     }

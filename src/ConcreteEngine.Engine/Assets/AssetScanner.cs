@@ -15,7 +15,7 @@ internal static class AssetScanner
         ExtractFileInfo(file.LogicalName, fileInfo, ref info);
     }
 
-    public static void ScanAll(AssetStore store, AssetFileRegistry files, Queue<AssetRecord>[] result)
+    public static void ScanAll(AssetStore assets, Queue<AssetRecord>[] result)
     {
         ArgumentNullException.ThrowIfNull(result);
         ArgumentOutOfRangeException.ThrowIfNotEqual(result.Length, AssetTypeCount);
@@ -25,16 +25,15 @@ internal static class AssetScanner
         var modelQueue = result[AssetKind.Model.ToIndex()] = new Queue<AssetRecord>(64);
         var materialQueue = result[AssetKind.Material.ToIndex()] = new Queue<AssetRecord>(64);
 
-        ScanFiles(store, files, AssetKind.Shader, EnginePath.ShaderPath, FileUtils.ValidShaderExt, shaderQueue);
-        ScanFiles(store, files, AssetKind.Texture, EnginePath.TexturePath, FileUtils.ValidTextureExt, textureQueue);
-        ScanFiles(store, files, AssetKind.Model, EnginePath.ModelPath, FileUtils.ValidModelExt, modelQueue);
-        ScanFiles(store, files, AssetKind.Material, EnginePath.MaterialPath, default, materialQueue);
+        ScanFiles(assets, AssetKind.Shader, EnginePath.ShaderPath, FileUtils.ValidShaderExt, shaderQueue);
+        ScanFiles(assets, AssetKind.Texture, EnginePath.TexturePath, FileUtils.ValidTextureExt, textureQueue);
+        ScanFiles(assets, AssetKind.Model, EnginePath.ModelPath, FileUtils.ValidModelExt, modelQueue);
+        ScanFiles(assets, AssetKind.Material, EnginePath.MaterialPath, default, materialQueue);
     }
 
 
     private static void ScanFiles(
         AssetStore store,
-        AssetFileRegistry fileRegistry,
         AssetKind kind,
         string directory,
         ReadOnlySpan<string> validExt,
@@ -66,6 +65,7 @@ internal static class AssetScanner
         }
 
         // register unimported files
+        var fileRegistry = store.FileRegistry;
         foreach (var fileInfo in files)
         {
             RegisterUnimportedFile(fileRegistry, fileInfo, kind, directory, relativeDirectory, validExt);

@@ -86,7 +86,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     {
         if (renamedAsset.IsValid())
         {
-            UpdateFolderAndEntries(EngineObjectStore.Assets, EngineObjectStore.FileRegistry);
+            UpdateFolderAndEntries();
             return true;
         }
 
@@ -117,7 +117,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         else
             assetBrowser.SetLocalDirectory(directory);
 
-        UpdateFolderAndEntries(EngineObjectStore.Assets, EngineObjectStore.FileRegistry);
+        UpdateFolderAndEntries();
         PendingDirectory = null;
     }
 
@@ -128,7 +128,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         var fileCount = currentNode.FileCount;
         var folderCount = currentNode.FolderCount;
 
-        var file = EngineObjectStore.FileRegistry.GetAssetRootFile(assetId);
+        var file = AssetStore.Instance.FileRegistry.GetAssetRootFile(assetId);
         var fileId = file.Id;
         for (var i = 0; i < fileCount; i++)
         {
@@ -143,7 +143,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         Console.WriteLine("AssetList Synced Rename");
     }
 
-    private void UpdateFolderAndEntries(AssetStore assets, AssetFileRegistry fileRegistry)
+    private void UpdateFolderAndEntries()
     {
         var currentNode = assetBrowser.CurrentNode;
 
@@ -169,6 +169,8 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
                 FileBinding.Unknown);
         }
 
+        var assets = AssetStore.Instance;
+        var fileRegistry = AssetStore.Instance.FileRegistry;
         for (var i = 0; i < fileCount; i++)
         {
             var index = i + folderCount;

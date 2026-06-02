@@ -26,6 +26,8 @@ internal abstract class AssetTypeLoader<TAsset, TRecord> : IAssetTypeLoader<TAss
     public bool IsActive { get; private set; }
     public bool IsSetup { get; private set; }
 
+    public static AssetKind Kind => AssetKindUtils.ToAssetKind(typeof(TAsset));
+
     public TAsset LoadAsset(TRecord record, LoaderContext ctx)
     {
         if (!IsActive) throw new InvalidOperationException(nameof(IsActive));
@@ -57,7 +59,6 @@ internal abstract class AssetTypeLoader<TAsset, TRecord> : IAssetTypeLoader<TAss
         OnDeActivate();
     }
 
-    public static AssetKind Kind => AssetKindUtils.ToAssetKind(typeof(TAsset));
 
     protected abstract void OnActivate();
     protected abstract void OnDeActivate();

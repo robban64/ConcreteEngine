@@ -138,7 +138,7 @@ internal sealed class AssetBrowser
 
     public void BuildFullDirectory()
     {
-        var fileRegistry = EngineObjectStore.FileRegistry;
+        var fileRegistry = AssetStore.Instance.FileRegistry;
 
         var addedFiles = new HashSet<int>(fileRegistry.Count);
 
@@ -155,7 +155,7 @@ internal sealed class AssetBrowser
 
         void AddAssetFilesFor(AssetKind kind, AssetFileRegistry provider, HashSet<int> filesAdded)
         {
-            var assets = EngineObjectStore.Assets;
+            var assets = AssetStore.Instance;
 
             foreach (var assetId in assets.GetAssetList(kind).AsSpan())
             {

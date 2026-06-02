@@ -10,10 +10,12 @@ using ConcreteEngine.Renderer.Buffer;
 
 namespace ConcreteEngine.Engine;
 
-internal sealed class EngineBlueprintFactory(AssetStore assetStore) : BlueprintFactory
+internal sealed class EngineBlueprintFactory : BlueprintFactory
 {
+    
     private static RenderEntityCore RenderEcs => Ecs.Render.Core;
     private static GameEntityCore GameEcs => Ecs.Game.Core;
+    private static AssetStore AssetStore => AssetStore.Instance;
 
     public override SceneObject BuildSceneObject(SceneObjectId id, SceneObjectTemplate tp)
     {
@@ -37,9 +39,9 @@ internal sealed class EngineBlueprintFactory(AssetStore assetStore) : BlueprintF
         return sceneObject;
     }
 
-    private ModelInstance BuildModel(SceneObject sceneObject, ModelBlueprint bp)
+    private static ModelInstance BuildModel(SceneObject sceneObject, ModelBlueprint bp)
     {
-        var model = assetStore.Get<Model>(bp.ModelId);
+        var model = AssetStore.Get<Model>(bp.ModelId);
 
         if (string.IsNullOrEmpty(bp.DisplayName))
             bp.DisplayName = model.Name;
@@ -54,7 +56,7 @@ internal sealed class EngineBlueprintFactory(AssetStore assetStore) : BlueprintF
             if (mesh == null!) Throwers.NotFoundBy("Mesh not found", i);
 
             var materialId = i < bp.Materials.Length ? bp.Materials[i] : MaterialStore.FallbackMaterial.Id;
-            var material = assetStore.Get<Material>(materialId);
+            var material = AssetStore.Get<Material>(materialId);
             instance.Materials.Add(material);
         }
 
@@ -131,7 +133,7 @@ internal sealed class EngineBlueprintFactory(AssetStore assetStore) : BlueprintF
         }
     }
 
-    private ParticleInstance BuildParticle(ParticleBlueprint bp)
+    private static ParticleInstance BuildParticle(ParticleBlueprint bp)
     {
         ArgumentNullException.ThrowIfNull(bp);
         ArgumentException.ThrowIfNullOrEmpty(bp.EmitterName);
@@ -144,7 +146,7 @@ internal sealed class EngineBlueprintFactory(AssetStore assetStore) : BlueprintF
                 .CreateEmitter(bp.EmitterName, bp.ParticleCount, in bp.Definition, in bp.VisualParams);
         }
 
-        var materialId = assetStore.Get<Material>(bp.Material).MaterialId;
+        var materialId = AssetStore.Get<Material>(bp.Material).MaterialId;
 
         var source = new SourceComponent(default, materialId, 0, EntitySourceKind.Particle,
             DrawCommandQueue.Particles, PassMask.Main);

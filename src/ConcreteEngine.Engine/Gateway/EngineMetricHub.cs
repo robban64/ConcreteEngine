@@ -12,7 +12,7 @@ using ConcreteEngine.Graphics.Diagnostic;
 
 namespace ConcreteEngine.Engine.Gateway;
 
-internal sealed class EngineMetricHub(SceneStore store, AssetStore assets)
+internal sealed class EngineMetricHub(SceneStore store)
 {
     private MetricSystem? _metricSystem;
 
@@ -71,6 +71,8 @@ internal sealed class EngineMetricHub(SceneStore store, AssetStore assets)
     private void WriteStoreMeta(GfxStoreMeta[] gfxResult, AssetsMetaInfo[] assetResult)
     {
         GfxMetrics.DrainStoreMetrics(gfxResult);
+
+        var assets = AssetStore.Instance;
         for (var i = 0; i < assets.Collections.Count; i++)
             assetResult[i] = assets.Collections[i].ToSnapshot();
     }

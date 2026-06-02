@@ -21,13 +21,13 @@ internal sealed class SceneSystem : IGameEngineSystem
     private readonly List<Func<GameScene>> _sceneFactories;
 
 
-    internal SceneSystem(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem)
+    internal SceneSystem(List<Func<GameScene>> sceneFactories)
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
 
-        var factory = new EngineBlueprintFactory(assetSystem.Assets);
+        var factory = new EngineBlueprintFactory();
         SceneStore = new SceneStore(factory);
-        SceneSpawner = new SceneSpawner(SceneStore, assetSystem.Assets);
+        SceneSpawner = new SceneSpawner(SceneStore);
 
         GameSystem = new GameSystem(SceneStore);
         _modules = new ModuleManager();

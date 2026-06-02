@@ -15,6 +15,4 @@ public sealed class EditorEngineBundle
 {
     public required SceneStore SceneStore;
     public required SceneSpawner SceneSpawner;
-    public required AssetStore Assets;
-    public required AssetFileRegistry FileRegistry;
 }

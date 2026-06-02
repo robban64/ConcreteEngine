@@ -12,7 +12,13 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     private const int DefaultCap = 512;
     public static int StoreCount => EnumCache<AssetKind>.Count - 1;
 
-    private AssetId MakeAssetId() => new(_assets.AllocateNext() + 1, 1);
+    public static readonly AssetStore Instance = new();
+    
+    private static readonly Func<string, Type, bool> NameExistsDel =
+        static (name, type) => !Instance._byName.ContainsKey((type, name));
+
+
+    public readonly AssetFileRegistry FileRegistry;
 
     private readonly SlotArray<AssetObject> _assets = new(DefaultCap);
     private readonly AssetTypeCollection[] _collections;
@@ -20,22 +26,19 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     private readonly Dictionary<Guid, AssetId> _byGid = new(DefaultCap);
     private readonly Dictionary<(Type, string), AssetId> _byName = new(DefaultCap);
 
-    private readonly AssetFileRegistry _fileRegistry;
-
-    private readonly Func<string, Type, bool> _nameExistsDel;
 
     //
     public int Count => _assets.Count;
     public int Capacity => _assets.Capacity;
     internal IReadOnlyList<AssetTypeCollection> Collections => _collections;
-    internal AssetFileRegistry FileRegistry => _fileRegistry;
+
+    private AssetId MakeAssetId() => new(_assets.AllocateNext() + 1, 1);
     //
 
-    internal AssetStore(AssetFileRegistry fileRegistry)
+    private AssetStore()
     {
-        _fileRegistry = fileRegistry;
+        FileRegistry = new AssetFileRegistry();
         _collections = AssetTypeCollection.CreateAll();
-        _nameExistsDel = (name, type) => !_byName.ContainsKey((type, name));
 
         _assets.OnResize = static (oldSize, newSize) =>
             Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetStore), oldSize, newSize));
@@ -68,7 +71,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
         var assetId = MakeAssetId();
         _byGid.Add(gid, assetId);
-        _fileRegistry.Add(assetId, name, name, 0, new FileScanInfo(0, kind, storageKind));
+        FileRegistry.Add(assetId, name, name, 0, new FileScanInfo(0, kind, storageKind));
         return assetId;
     }
 
@@ -84,7 +87,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
         var assetId = MakeAssetId();
         _byGid.Add(record.GId, assetId);
-        _fileRegistry.Add(assetId, record.Name, relativePath, record.Files.Count, in fileInfo);
+        FileRegistry.Add(assetId, record.Name, relativePath, record.Files.Count, in fileInfo);
         return assetId;
     }
 
@@ -101,10 +104,10 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         }
 
         var name = Path.GetFileNameWithoutExtension(relativePath);
-        if (!_fileRegistry.TryGetFileByPath(relativePath, out var fileSpec))
-            fileSpec = _fileRegistry.Add(AssetId.Empty, name, relativePath, 1, in scanInfo);
+        if (!FileRegistry.TryGetFileByPath(relativePath, out var fileSpec))
+            fileSpec = FileRegistry.Add(AssetId.Empty, name, relativePath, 1, in scanInfo);
 
-        var fileIds = _fileRegistry.GetFileBindings(assetId);
+        var fileIds = FileRegistry.GetFileBindings(assetId);
         if (fileIds[scanInfo.FileIndex].Value > 0)
             throw new InvalidOperationException($"FileSpec {name} already set for {assetName}");
 
@@ -116,7 +119,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         ArgumentNullException.ThrowIfNull(embedded);
         ArgumentNullException.ThrowIfNull(embedded.FileSpec);
 
-        if (!_fileRegistry.HasBinding(sourceId))
+        if (!FileRegistry.HasBinding(sourceId))
             throw new InvalidOperationException($"Missing original asset for {embedded.Name}");
 
         var assetId = RegisterPlainAsset(embedded.GId, embedded.Kind, embedded.Name, AssetStorageKind.Embedded);
@@ -134,12 +137,12 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         if (Has(asset.Id))
             throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is already registered.");
 
-        if (!_fileRegistry.TryGetFileBindings(asset.Id, out _))
+        if (!FileRegistry.TryGetFileBindings(asset.Id, out _))
             throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' missing file bindings.");
 
         if (!_byName.TryAdd((typeof(TAsset), asset.Name), asset.Id))
         {
-            var name = AssetNameUtils.IncrementName(asset.Name, typeof(TAsset), _nameExistsDel);
+            var name = AssetNameUtils.IncrementName(asset.Name, typeof(TAsset), NameExistsDel);
             asset.Name = name;
             _byName.Add((typeof(TAsset), asset.Name), asset.Id);
         }
@@ -154,11 +157,11 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
     internal void RegisterExistingBindings(AssetId assetId, AssetFile[] fileSpecs)
     {
-        if (!_fileRegistry.TryGetFileBindings(assetId, out var bindings))
+        if (!FileRegistry.TryGetFileBindings(assetId, out var bindings))
             throw new InvalidOperationException($"Missing file bindings for {assetId}");
 
         for (var i = 0; i < fileSpecs.Length; i++)
-            _fileRegistry.Replace(bindings[i], fileSpecs[i]);
+            FileRegistry.Replace(bindings[i], fileSpecs[i]);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

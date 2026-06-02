@@ -9,7 +9,6 @@ internal sealed class SelectionManager
 {
     public static SelectionManager Instance { get; private set; } = null!;
     private static SceneStore SceneStore => EngineObjectStore.SceneStore;
-    private static AssetStore Assets => EngineObjectStore.Assets;
 
     public InspectSceneObject? SelectedSceneObject { get; private set; }
     public InspectAsset? SelectedAsset { get; private set; }
@@ -67,7 +66,7 @@ internal sealed class SelectionManager
             return;
         }
 
-        var asset = Assets.Get(id);
+        var asset = AssetStore.Instance.Get(id);
         SelectedAsset = asset switch
         {
             Shader shader => new InspectShader(shader),

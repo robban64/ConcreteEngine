@@ -68,14 +68,7 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
     protected override Texture LoadInMemory(TextureRecord record, LoaderContext ctx)
     {
         throw new NotImplementedException();
-        /*
-        var texture = CreateTexture(ctx.Id, default, default, record);
-
-        if (record.InMemory)
-            texture.SetPixelData(TextureImporter.LoadInMemory(EnginePath.TexturePath, record));
-
-        return texture;
-        */
+        
     }
 
 

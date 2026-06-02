@@ -8,12 +8,14 @@ using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 
-internal sealed class MaterialProcessor(AssetStore assetStore)
+internal sealed class MaterialProcessor
 {
     private bool _hasUploadedMaterial;
 
     internal void SubmitMaterialData(RenderProgram renderer)
     {
+        var assetStore = AssetStore.Instance;
+        
         var materials = assetStore.GetAssetList(AssetKind.Material);
         if (materials.DirtyCount == 0 && _hasUploadedMaterial) return;
         if (materials.DirtyCount > 0) _hasUploadedMaterial = false;
@@ -21,12 +23,12 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
         foreach (var id in materials.DirtyIds)
             assetStore.GetUnsafe<Material>(id).Commit();
 
-        Submit(renderer.UploadBuffers.Materials);
+        Submit(assetStore, renderer.UploadBuffers.Materials);
 
         materials.ClearDirty();
     }
 
-    private void Submit(MaterialBuffer materialBuffer)
+    private void Submit(AssetStore assetStore, MaterialBuffer materialBuffer)
     {
         Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
         foreach (var material in assetStore.GetAssetEnumerator<Material>())

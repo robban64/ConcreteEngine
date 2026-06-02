@@ -178,7 +178,8 @@ file static unsafe class MatUtils
 
         InvalidOpThrower.ThrowIf(sizeInBytes < 4, nameof(sizeInBytes));
         var ptr = (byte*)aiTex->PcData;
-        texture.PixelDataBlock = context.RegisterTexture(ptr, sizeInBytes, texture.PixelFormat, out texture.Dimensions);
+        //texture.PixelDataBlock =
+        context.RegisterTexture(texture, ptr, sizeInBytes);
         return sizeInBytes;
         //return TextureImporter.ImportUnmanagedTexture(ptr, sizeInBytes, width, height, format, out size);
     }

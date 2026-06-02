@@ -50,7 +50,7 @@ internal sealed class AssetPendingQueue
         try
         {
             if (!loader.IsActive)
-                loader.ActivateLazyLoader(request.Kind);
+                loader.ReactiveLoader(request.Kind);
 
             switch (request.Kind)
             {

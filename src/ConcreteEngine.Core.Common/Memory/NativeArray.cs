@@ -7,6 +7,12 @@ namespace ConcreteEngine.Core.Common.Memory;
 
 public static unsafe class NativeArray
 {
+    public static NativeArray<T> From<T>(T* ptr, int length, int alignment = 0)where T : unmanaged
+    {
+        Validate(length, alignment);
+        return new NativeArray<T>(ptr, length, alignment);
+    }
+    
     public static NativeArray<T> Allocate<T>(int capacity, bool zeroed = true) where T : unmanaged
     {
         return new NativeArray<T>(capacity, 0, zeroed);
@@ -96,6 +102,13 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     internal NativeArray(int length, int alignment, bool zeroed)
     {
         Ptr = (T*)NativeArray.AllocMemory(length, Unsafe.SizeOf<T>(), alignment, zeroed);
+        Length = length;
+        Alignment = alignment;
+    }
+
+    internal NativeArray(T* ptr, int length, int alignment)
+    {
+        Ptr = ptr;
         Length = length;
         Alignment = alignment;
     }

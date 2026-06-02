@@ -10,9 +10,7 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 {
-    protected override int SetupAllocSize => 0;
-    protected override int DefaultAllocSize => 0;
-
+  
     //
     private sealed class MatProfileInfo(string shader, params ProfileSlot[] slots)
     {
@@ -38,12 +36,12 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
     }
 
 
-    protected override void OnSetup()
+    protected override void OnActivate()
     {
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    protected override void OnTeardown()
+    protected override void OnDeActivate()
     {
         _profiles.Clear();
         _profiles = null!;

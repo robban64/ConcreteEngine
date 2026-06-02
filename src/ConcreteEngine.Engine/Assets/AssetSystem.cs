@@ -17,15 +17,17 @@ public sealed class AssetSystem : IGameEngineSystem
     public MaterialStore MaterialStore { get; }
 
     private readonly AssetPendingQueue _pendingQueue;
-    private AssetLoader? _loader;
+    private readonly AssetLoader _loader;
 
-    internal AssetSystem()
+    internal AssetSystem(GfxContext gfx)
     {
         Files = new AssetFileRegistry();
         Assets = new AssetStore(Files);
         MaterialStore = new MaterialStore(Assets);
 
         _pendingQueue = new AssetPendingQueue();
+        
+        _loader = new AssetLoader(Assets, gfx);
     }
 
     public int PendingAssetCount => _pendingQueue.Count;
@@ -63,8 +65,6 @@ public sealed class AssetSystem : IGameEngineSystem
 
         AssetSystemSetup.Start();
         AssetSystemSetup.CreateFallbackAssets(Assets, MaterialStore);
-
-        _loader = new AssetLoader(Assets, graphics.Gfx);
 
         AssetScanner.ScanAll(Assets, Files, _loader.GetQueues());
         Assets.EnsureStoreCapacity(_loader.GetQueues());

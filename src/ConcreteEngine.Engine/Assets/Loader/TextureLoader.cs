@@ -14,60 +14,66 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, TextureRecord>
 {
-    private const int SizeHigh = 1024 * 1024 * 48;
-    private const int SizeLow = 1024 * 1024 * 24;
-
-    protected override int SetupAllocSize => SizeHigh;
-    protected override int DefaultAllocSize => SizeLow;
-
-    private int _storedEmbeddedBlocks;
-
-
-    public unsafe MemoryBlockPtr StoreEmbedded(byte* data, int length, TexturePixelFormat format, out Size2D size)
+    private readonly Dictionary<Guid, TextureDataEntry> _embeddedTextures = new(8);
+    
+    public int StoredEmbeddedCount => _embeddedTextures.Count;
+    
+    protected override void OnActivate()
     {
-        var block = TextureImporter.ImportUnmanagedTexture(data, Allocator, length, format, out size);
-        _storedEmbeddedBlocks++;
-        return block;
+        if(_embeddedTextures.Count > 0)
+            throw new InvalidOperationException("Embedded textures remains in the loader");
     }
 
-    public void ClearEmbedded()
+    protected override void OnDeActivate()
     {
-        _storedEmbeddedBlocks = 0;
-        Allocator.Clear();
+        if(_embeddedTextures.Count > 0)
+            throw new InvalidOperationException("Embedded textures remains in the loader");
     }
 
-    protected override void OnSetup()
+    public unsafe void StoreEmbedded(Guid guid, byte* rawData, int length, TexturePixelFormat format, out Size2D size)
     {
-        _storedEmbeddedBlocks = 0;
+        ArgumentOutOfRangeException.ThrowIfEqual(guid, Guid.Empty);
+        var textureData = TextureImporter.ImportUnmanagedTexture(rawData, length, format, out size);
+        _embeddedTextures.Add(guid, new TextureDataEntry(guid, in textureData));
     }
-
-    protected override void OnTeardown()
-    {
-        _storedEmbeddedBlocks = 0;
-    }
-
-
+    
     protected override Texture Load(TextureRecord record, LoaderContext ctx)
     {
         if (record.TextureKind == TextureKind.CubeMap)
             return LoadCubeMap(record, ctx);
 
-        using var textureData = TextureImporter.LoadTexture(record, EnginePath.TexturePath, AssetRecord.GetDefaultFilename(record), out var meta);
-        var textureId = gfx.CreateTexture2D(meta.Size, in meta.TextureProps, textureData.AsSpan());
-        var texture = CreateTexture(ctx.Id, textureId, meta.Size, record);
+        var filename = AssetRecord.GetDefaultFilename(record);
+        var textureData = NativeArray<byte>.MakeNull();
+        try
+        {
+            textureData = TextureImporter.LoadTexture(record, EnginePath.TexturePath, filename, out var size);
+            var props = TextureImporter.CreateTextureProps(record);
+            var textureId = gfx.CreateTexture2D(size, in props, textureData.AsSpan());
+            var texture = CreateTexture(ctx.Id, textureId, size, record);
+            if (record.InMemory)
+            {
+                TextureDataProvider.Persist(texture, in textureData);
+                texture.SetPixelData(textureData.AsSpan().ToArray());
+            }
+            
+            return texture;
+        }
+        finally
+        {
+            if(!record.InMemory && !textureData.IsNull) 
+                textureData.Dispose();
+        }
 
-        if (record.InMemory)
-            texture.SetPixelData(textureData.AsSpan().ToArray());
 
-        return texture;
     }
 
+    //?
     protected override Texture LoadInMemory(TextureRecord record, LoaderContext ctx)
     {
         var texture = CreateTexture(ctx.Id, default, default, record);
 
         if (record.InMemory)
-            texture.SetPixelData(TextureImporter.LoadInMemory(EnginePath.TexturePath, record, out _));
+            texture.SetPixelData(TextureImporter.LoadInMemory(EnginePath.TexturePath, record));
 
         return texture;
     }
@@ -81,13 +87,14 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
         for (var i = 0; i < 6; i++)
         {
             var filename = record.Files[$"face:{i}"];
-            using var textureData = TextureImporter.LoadTexture(record, EnginePath.TexturePath, filename, out var meta);
+            using var data = TextureImporter.LoadTexture(record, EnginePath.TexturePath, filename, out var faceSize);
             if (textureId == default)
             {
-                textureId = gfx.CreateCubeMap(meta.Size, in meta.TextureProps);
-                size = meta.Size;
+                var props = TextureImporter.CreateTextureProps(record);
+                textureId = gfx.CreateCubeMap(faceSize, in props);
+                size = faceSize;
             }
-            gfx.UploadCubeMapFace(textureId, textureData.AsSpan(), meta.Size, i);
+            gfx.UploadCubeMapFace(textureId, data.AsSpan(), size, i);
         }
 
         return CreateTexture(ctx.Id, textureId, size, record);
@@ -97,30 +104,20 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
     public Texture LoadEmbedded(AssetId assetId, EmbeddedSceneTexture embedded)
     {
         ArgumentNullException.ThrowIfNull(embedded.Name);
-        if (embedded.PixelDataBlock.IsNull)
-            throw new ArgumentNullException(nameof(embedded.PixelDataBlock));
-
-        var currentBlock = Allocator.GetHead();
-
-        if (_storedEmbeddedBlocks <= 0 || currentBlock.IsNull)
-            throw new InvalidOperationException("No embedded blocks registered");
-
-        while (currentBlock != embedded.PixelDataBlock && !currentBlock.IsNull)
-            currentBlock = currentBlock.Next;
-
-        if (currentBlock != embedded.PixelDataBlock || currentBlock.IsNull)
-            throw new InvalidOperationException($"Block not found for embedded texture '{embedded.Name}'");
-
+       
+        if(!_embeddedTextures.TryGetValue(embedded.GId, out var entry))
+            throw new InvalidOperationException($"Embedded texture '{embedded.Name}' not found");
+        
         var anisotropy = embedded.SlotKind == TextureUsage.Albedo ? AnisotropyLevel.Default : AnisotropyLevel.Off;
-        var meta = TextureImporter.CreateMeta(embedded.Dimensions, embedded.PixelFormat, TextureKind.Texture2D,
-            embedded.Preset, TextureImporter.GetAnisotropy(anisotropy), 0);
+        var props = new CreateTextureProps(0, TextureKind.Texture2D, embedded.PixelFormat, embedded.Preset,
+            TextureImporter.GetAnisotropy(anisotropy));
 
-        var textureId = gfx.CreateTexture2D(meta.Size, in meta.TextureProps, currentBlock.Data.AsSpan());
+        var textureId = gfx.CreateTexture2D(embedded.Dimensions, in props, entry.GetPixelData());
 
         var texture = new Texture(
             embedded.Name,
             textureId,
-            meta.Size,
+            embedded.Dimensions,
             new TextureProperties(
                 lod: 0,
                 kind: TextureKind.Texture2D,
@@ -129,15 +126,13 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
                 pixelFormat: embedded.PixelFormat
             )
         ) { Id = assetId, GId = embedded.GId, Usage = embedded.SlotKind };
-
-        embedded.PixelDataBlock = null;
-
-        if (--_storedEmbeddedBlocks == 0) Allocator.Clear();
-
+        
+        _embeddedTextures.Remove(embedded.GId);
+        entry.Dispose();
+        
         return texture;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     private static Texture CreateTexture(AssetId id, TextureId textureId, Size2D size, TextureRecord record,
         TextureUsage usage = TextureUsage.Albedo)
     {

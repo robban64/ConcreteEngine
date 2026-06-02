@@ -52,7 +52,7 @@ public sealed class GameEngine : IDisposable
         Ecs.Init();
 
         // systems
-        var assets = new AssetSystem();
+        var assets = new AssetSystem(_graphics.Gfx);
         _inputSystem = new InputSystem(input);
         _renderSystem = new EngineRenderSystem(_graphics, assets.Assets);
         _sceneSystem = new SceneSystem(sceneFactories, assets);

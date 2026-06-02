@@ -61,15 +61,17 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
     public ModelImportContext StartImport(string name, string path, string filename)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        ArgumentException.ThrowIfNullOrWhiteSpace(filename);
+        
         if (_hashes.Length == 0 || _boneIndices.Length == 0 || _nodes.Length == 0 || _boneIndexByName.Count > 0)
             throw new InvalidOperationException();
 
         var scene = LoadScene(path, filename);
+        
         if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
-        {
-            var error = _assimp.GetErrorStringS();
-            throw new InvalidOperationException(error);
-        }
+            throw new InvalidOperationException(_assimp.GetErrorStringS());
 
         if ((int)scene->MNumMeshes == 0)
             throw new InvalidOperationException($"Model {name} contains no meshes");

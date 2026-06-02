@@ -20,22 +20,25 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
         DefaultLength * Unsafe.SizeOf<SkinningData>() +
         DefaultLength * Unsafe.SizeOf<uint>() * 3;
 
-    protected override int SetupAllocSize => TotalSize;
-    protected override int DefaultAllocSize => TotalSize;
-
     //
-
     private ModelImporter? _importer;
+    private ArenaAllocator? _allocator;
 
-    protected override void OnSetup()
+    public readonly List<IEmbeddedAsset> EmbeddedAssets = new(16);
+
+    protected override void OnActivate()
     {
+        _allocator = new ArenaAllocator(TotalSize, zeroed: false);
         _importer = new ModelImporter();
-        EmbeddedAssets.EnsureCapacity(16);
     }
 
-    protected override void OnTeardown()
+    protected override void OnDeActivate()
     {
         EmbeddedAssets.Clear();
+        
+        _allocator?.Dispose();
+        _allocator = null;
+
         _importer?.Dispose();
         _importer = null;
     }
@@ -43,23 +46,24 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
 
     protected override Model Load(ModelRecord record, LoaderContext ctx)
     {
-        if (_importer == null) throw new InvalidOperationException("ModelImport is null");
+        if(_allocator is not {} allocator) throw new InvalidOperationException("Allocator is null");
+        if (_importer is not {} importer) throw new InvalidOperationException("ModelImport is null");
         if (EmbeddedAssets.Count > 0) throw new InvalidOperationException("EmbeddedAssets is not empty");
+        
+        allocator.Clear();
 
         var filename = record.Files.First().Value;
-
-        Allocator.Clear();
-
+        
         // load scene
-        var modelContext = _importer.StartImport(record.Name, EnginePath.ModelPath, filename);
+        var modelContext = importer.StartImport(record.Name, EnginePath.ModelPath, filename);
         AllocMeshBlocks(modelContext);
 
         // write
         modelContext.SetTextureLoader(textureLoader);
-        _importer.ImportSceneData(modelContext);
+        importer.ImportSceneData(modelContext);
 
         // upload
-        _importer.Upload(modelContext, this);
+        importer.Upload(modelContext, this);
 
         // store
         var modelData = modelContext.Model;
@@ -81,7 +85,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
             textureCount: (byte)textureRefs.Length,
             isAnimated: animation != null);
 
-        _importer.Cleanup();
+        importer.Cleanup();
         modelContext.Clear();
 
         return new Model(
@@ -98,7 +102,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
     private void AllocMeshBlocks(ModelImportContext modelContext)
     {
         var modelImportData = modelContext.Model;
-        var allocator = Allocator;
+        var allocator = _allocator;
         for (int i = 0; i < modelImportData.Meshes.Length; i++)
         {
             var info = modelImportData.Meshes[i].Info;

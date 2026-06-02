@@ -11,10 +11,10 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shader, ShaderRecord>
 {
-    protected override int SetupAllocSize => ShaderImporter.ShaderBlockSize * 8;
-    protected override int DefaultAllocSize => ShaderImporter.ShaderBlockSize * 2;
+    private static int AllocSize => ShaderImporter.ShaderBlockSize * 8;
 
     private ShaderImporter? _shaderImporter;
+    private ArenaAllocator? _allocator;
 
     private readonly Dictionary<string, IntPtr> _blocks = new(16);
 
@@ -22,20 +22,22 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
     private MemoryBlockPtr _fsBlock = null;
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    protected override void OnSetup()
+    protected override void OnActivate()
     {
+        _allocator = new ArenaAllocator(AllocSize, zeroed: false);
+
         _shaderImporter = new ShaderImporter();
         _shaderImporter.ImportAllDefinitions();
 
         if (!IsSetup)
         {
-            _vsBlock = Allocator.AllocBlock(ShaderImporter.ShaderBlockSize);
-            _fsBlock = Allocator.AllocBlock(ShaderImporter.ShaderBlockSize);
+            _vsBlock = _allocator.AllocBlock(ShaderImporter.ShaderBlockSize);
+            _fsBlock = _allocator.AllocBlock(ShaderImporter.ShaderBlockSize);
         }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    protected override void OnTeardown()
+    protected override void OnDeActivate()
     {
         _shaderImporter?.ClearCache();
         _shaderImporter = null!;
@@ -43,46 +45,55 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
         _vsBlock = null;
         _fsBlock = null;
         _blocks.Clear();
+        
+        _allocator?.Dispose();
+        _allocator = null;
     }
 
     public void LoadAllShaders(Queue<AssetRecord> queue)
     {
-        if (_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
-        var arenaAllocator = Allocator;
+        if(_allocator is not {} allocator) throw new InvalidOperationException("Allocator is null");
+        if (_shaderImporter is not {} importer) throw new InvalidOperationException("ShaderImporter is null");
 
         foreach (var record in queue)
         {
             var (vsFile, fsFile) = ShaderRecord.GetFilenames((ShaderRecord)record);
             if (!_blocks.ContainsKey(vsFile))
-                ImportShaderFile(arenaAllocator, vsFile);
-
+            {
+                var block = ImportShaderFile(allocator, importer, vsFile);
+                _blocks.Add(vsFile, (IntPtr)block);
+            }
             if (!_blocks.ContainsKey(fsFile))
-                ImportShaderFile(arenaAllocator, fsFile);
+            {
+                var block = ImportShaderFile(allocator, importer, fsFile);
+                _blocks.Add(fsFile, (IntPtr)block);
+            }
         }
 
         return;
 
-        void ImportShaderFile(ArenaAllocator allocator, string filename)
+        static MemoryBlockPtr ImportShaderFile(ArenaAllocator arena, ShaderImporter importer, string filename)
         {
             var path = Path.Join(EnginePath.ShaderCorePath, filename);
 
-            var allocBuilder = allocator.MakeBuilder();
-            var span = _shaderImporter.ImportShader(path, allocBuilder.Data, out _);
+            var allocBuilder = arena.MakeBuilder();
+            var span = importer.ImportShader(path, allocBuilder.Data, out _);
             allocBuilder.AllocSlice(span.Length);
-
-            _blocks.Add(filename, (IntPtr)allocator.CommitBuilder(allocBuilder));
+            return arena.CommitBuilder(allocBuilder);
         }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     protected override Shader Load(ShaderRecord record, LoaderContext ctx)
     {
+        if (_allocator == null) throw new InvalidOperationException("Allocator is null");
         if (_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
 
         var (vsFile, fsFile) = ShaderRecord.GetFilenames(record);
 
         var vsPtr = (MemoryBlockPtr)_blocks[vsFile];
         var fsPtr = (MemoryBlockPtr)_blocks[fsFile];
+        
         if (vsPtr.IsNull || vsPtr.Length <= 0) throw new InvalidOperationException("Vertex Shader pointer is null");
         if (fsPtr.IsNull || fsPtr.Length <= 0) throw new InvalidOperationException("Fragment Shader pointer is null");
 
@@ -97,6 +108,7 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
     [MethodImpl(MethodImplOptions.NoInlining)]
     public override void Reload(Shader asset, AssetFile[] files)
     {
+        if (_allocator == null) throw new InvalidOperationException("Allocator is null");
         if (_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
         if (_vsBlock.IsNull || _fsBlock.IsNull) throw new InvalidOperationException(nameof(_vsBlock));
 

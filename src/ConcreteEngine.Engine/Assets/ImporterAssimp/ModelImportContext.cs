@@ -29,9 +29,12 @@ internal sealed class ModelImportContext(
 
     public void SetTextureLoader(TextureLoader textureLoader) => _textureLoader = textureLoader;
 
-    public unsafe MemoryBlockPtr RegisterTexture(byte* data, int length, TexturePixelFormat format, out Size2D size)
+    public unsafe void RegisterTexture(EmbeddedSceneTexture texture, byte* data, int length)
     {
-        return _textureLoader.StoreEmbedded(data, length, format, out size);
+        ArgumentNullException.ThrowIfNull(texture);
+        ArgumentNullException.ThrowIfNull(data);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(length);
+        _textureLoader.StoreEmbedded(texture.GId, data, length, texture.PixelFormat, out texture.Dimensions);
     }
 
     public void SanitizeClips()

@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.Loader.Data;
+using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Graphics.Gfx;
 using StbImageSharp;
 
@@ -39,54 +40,27 @@ internal static unsafe class TextureImporter
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static MemoryBlockPtr LoadTexture(TextureRecord record, string path, ArenaAllocator allocator,
-        out TextureUploadMeta meta)
+    public static ScopedNativeMemory LoadTexture(TextureRecord record, string path, string filename, out TextureUploadMeta meta)
     {
-        path = Path.Join(path, AssetRecord.GetDefaultFilename(record));
+        path = Path.Join(path, filename);
         if (!File.Exists(path)) throw new FileNotFoundException("File not found.", path);
 
         int x, y, comp;
 
         using var stream = File.OpenRead(path);
         var ctx = new StbImage.stbi__context(stream);
-        var block = WriteTexture(ctx, allocator, record.PixelFormat, out var size);
+        var imageData = StbImage.stbi__load_and_postprocess_8bit(ctx, &x, &y, &comp, (int)GetColorComponent(record.PixelFormat));
 
+        if (imageData == null)
+            throw new InvalidOperationException(StbImage.stbi__g_failure_reason);
 
-        meta = CreateMeta(size, record.PixelFormat, TextureKind.Texture2D, record.Preset,
+        var size = new Size2D(x, y);
+        var sizeInBytes = x * y * 4;
+
+        meta = CreateMeta(size, record.PixelFormat, record.TextureKind, record.Preset,
             GetAnisotropy(record.Anisotropy), record.LodBias);
 
-        return block;
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static MemoryBlockPtr LoadCubeMap(TextureRecord record, string basePath, ArenaAllocator allocator,
-        out TextureUploadMeta meta)
-    {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(record.Files.Count, 6);
-
-        var size = Size2D.Zero;
-        MemoryBlockPtr startBlock = null;
-
-        for (int i = 0; i < 6; i++)
-        {
-            var path = Path.Join(basePath, record.Files[$"face:{i}"]);
-            if (!File.Exists(path)) throw new FileNotFoundException("File not found.", path);
-
-            using var stream = File.OpenRead(path);
-            var ctx = new StbImage.stbi__context(stream);
-            var block = WriteTexture(ctx, allocator, record.PixelFormat, out var textureSize);
-
-            if (i == 0)
-            {
-                size = textureSize;
-                startBlock = block;
-            }
-        }
-
-        if (startBlock.IsNull) throw new InvalidOperationException("StartBlock is null");
-
-        meta = CreateMeta(size, record.PixelFormat, TextureKind.CubeMap, record.Preset, TextureAnisotropy.Off, 0);
-        return startBlock;
+        return new ScopedNativeMemory(imageData, sizeInBytes);
     }
 
     //

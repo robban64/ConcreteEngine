@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
@@ -48,22 +49,16 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
 
     protected override Texture Load(TextureRecord record, LoaderContext ctx)
     {
-        if (_storedEmbeddedBlocks > 0)
-            throw new InvalidOperationException("Cannot Load when embedded blocks already stored");
-
-        Allocator.Clear();
-
         if (record.TextureKind == TextureKind.CubeMap)
             return LoadCubeMap(record, ctx);
 
-        var block = TextureImporter.LoadTexture(record, EnginePath.TexturePath, Allocator, out var meta);
-        var textureId = gfx.CreateTexture2D(meta.Size, in meta.TextureProps, block.Data.AsSpan());
+        using var textureData = TextureImporter.LoadTexture(record, EnginePath.TexturePath, AssetRecord.GetDefaultFilename(record), out var meta);
+        var textureId = gfx.CreateTexture2D(meta.Size, in meta.TextureProps, textureData.AsSpan());
         var texture = CreateTexture(ctx.Id, textureId, meta.Size, record);
 
         if (record.InMemory)
-            texture.SetPixelData(block.Data.AsSpan().ToArray());
+            texture.SetPixelData(textureData.AsSpan().ToArray());
 
-        Allocator.Clear();
         return texture;
     }
 
@@ -79,24 +74,23 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private unsafe Texture LoadCubeMap(TextureRecord record, LoaderContext ctx)
+    private Texture LoadCubeMap(TextureRecord record, LoaderContext ctx)
     {
-        var block = TextureImporter.LoadCubeMap(record, EnginePath.TexturePath, Allocator, out var meta);
-
-        var data = stackalloc NativeView<byte>[6];
-        var currentBlock = block;
+        TextureId textureId = default;
+        Size2D size = default;
         for (var i = 0; i < 6; i++)
         {
-            if (currentBlock.IsNull)
-                throw new InvalidOperationException($"CubeMap face {i} block is null");
-
-            data[i] = currentBlock.Data;
-            currentBlock = currentBlock.Next;
+            var filename = record.Files[$"face:{i}"];
+            using var textureData = TextureImporter.LoadTexture(record, EnginePath.TexturePath, filename, out var meta);
+            if (textureId == default)
+            {
+                textureId = gfx.CreateCubeMap(meta.Size, in meta.TextureProps);
+                size = meta.Size;
+            }
+            gfx.UploadCubeMapFace(textureId, textureData.AsSpan(), meta.Size, i);
         }
 
-        var textureId = gfx.CreateCubeMap(meta.Size, meta.TextureProps, data);
-
-        return CreateTexture(ctx.Id, textureId, meta.Size, record);
+        return CreateTexture(ctx.Id, textureId, size, record);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

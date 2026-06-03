@@ -27,6 +27,7 @@ public sealed class AssetTypeCollection(AssetKind kind)
 
     public void MarkDirty(AssetObject asset)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Value, nameof(asset.Id));
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)asset.Kind, (int)Kind, nameof(asset));
         DirtyIds.Add(asset.Id.Value);
     }
@@ -36,7 +37,11 @@ public sealed class AssetTypeCollection(AssetKind kind)
 
     public void Sort() => _asset.Sort();
 
-    public void EnsureCapacity(int capacity) => _asset.EnsureCapacity(capacity);
+    public void EnsureCapacity(int capacity)
+    {
+        _asset.EnsureCapacity(capacity);
+        DirtyIds.EnsureCapacity(capacity);
+    }
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]

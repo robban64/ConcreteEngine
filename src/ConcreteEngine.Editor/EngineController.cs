@@ -14,5 +14,4 @@ public sealed class EditorEngineContext
 public sealed class EditorEngineBundle
 {
     public required SceneStore SceneStore;
-    public required SceneSpawner SceneSpawner;
 }

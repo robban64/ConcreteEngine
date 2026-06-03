@@ -48,7 +48,6 @@ internal sealed class EngineGateway : IDisposable
         var engineBundle = new EditorEngineBundle
         {
             SceneStore = coreSystem.Scene.SceneStore,
-            SceneSpawner = coreSystem.Scene.SceneSpawner,
         };
 
         var engineContext = new EditorEngineContext

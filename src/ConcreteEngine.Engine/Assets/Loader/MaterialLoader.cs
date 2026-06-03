@@ -52,9 +52,9 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
     {
         TextureSource[] slots = [new(AssetId.Empty, TextureUsage.Albedo)];
         var param = new MaterialParams(Color4.White, 0, 0, 1);
-        return new Material("Fallback", AssetId.Empty, null, MaterialProfile.None, in param, slots)
+        return new Material("Fallback", default, null, MaterialProfile.None, in param, slots)
         {
-            Id = assetId, GId = gId,
+             Id = assetId, GId = gId,
         };
     }
 

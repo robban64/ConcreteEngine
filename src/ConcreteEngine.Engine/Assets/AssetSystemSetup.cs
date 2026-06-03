@@ -53,7 +53,7 @@ internal static class AssetSystemSetup
         // Texture
         {
             var gid = Guid.Parse("196d3a4f-99e9-4d5a-971b-b42aa0012970");
-            var textureId = assets.RegisterPlainAsset(gid, AssetKind.Texture, "White", AssetStorageKind.InMemory);
+            var assetId = assets.RegisterPlainAsset(gid, AssetKind.Texture, "White", AssetStorageKind.InMemory);
             assets.AddAsset(new Texture(
                 "White",
                 GfxTextures.Fallback.AlbedoId,
@@ -64,14 +64,14 @@ internal static class AssetSystemSetup
                     preset: TexturePreset.NearestClamp,
                     anisotropy: AnisotropyLevel.Off,
                     pixelFormat: TexturePixelFormat.Rgba
-                )) { Id = textureId, GId = gid });
+                )) { Id = assetId, GId = gid });
         }
 
         // Material
         {
             var gid = Guid.Parse("f28fbc18-9e84-41bf-b490-4b900b1d8598");
-            var materialId = assets.RegisterPlainAsset(gid, AssetKind.Material, "Fallback", AssetStorageKind.InMemory);
-            var material = MaterialLoader.CreateFallback(materialId, gid);
+            var assetId = assets.RegisterPlainAsset(gid, AssetKind.Material, "Fallback", AssetStorageKind.InMemory);
+            var material = MaterialLoader.CreateFallback(assetId, gid);
             materials.AddFallbackMaterial(material);
             assets.AddAsset(material);
         }

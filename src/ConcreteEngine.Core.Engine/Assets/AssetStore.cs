@@ -7,7 +7,7 @@ using ConcreteEngine.Core.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-public sealed partial class AssetStore : IAssetChangeNotifier
+public sealed partial class AssetStore 
 {
     private const int DefaultCap = 512;
     public static int StoreCount => EnumCache<AssetKind>.Count - 1;
@@ -151,7 +151,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
         var assetList = GetAssetList(AssetKindUtils.ToAssetKind(typeof(TAsset)));
         assetList.Add(asset);
-        asset.AttachNotifier(this);
+        MarkDirty(asset);
     }
 
 

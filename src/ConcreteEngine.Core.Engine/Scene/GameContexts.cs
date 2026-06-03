@@ -8,7 +8,7 @@ public sealed class GameSceneContext
     private readonly IEngineSystemManager _systems;
 
     public ModuleManager Modules { get; }
-    public SceneSpawner SceneSpawner { get; }
+    public SceneStore SceneSpawner { get; }
 
     public Terrain ActiveTerrain => Terrain.Main;
     public Skybox ActiveSkybox => Skybox.Instance;
@@ -16,7 +16,7 @@ public sealed class GameSceneContext
 
     public T GetSystem<T>() where T : class, IGameEngineSystem => _systems.GetSystem<T>();
 
-    internal GameSceneContext(IEngineSystemManager systems, ModuleManager modules, SceneSpawner sceneSpawner)
+    internal GameSceneContext(IEngineSystemManager systems, ModuleManager modules, SceneStore sceneSpawner)
     {
         _systems = systems;
         Modules = modules;
@@ -29,7 +29,7 @@ public sealed class GameModuleContext
     private readonly GameSceneContext _scene;
 
     public ModuleManager Modules => _scene.Modules;
-    public SceneSpawner SceneSpawner => _scene.SceneSpawner;
+    public SceneStore SceneSpawner => _scene.SceneSpawner;
 
     public T GetSystem<T>() where T : class, IGameEngineSystem => _scene.GetSystem<T>();
 

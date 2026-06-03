@@ -123,8 +123,8 @@ internal sealed class AssetLoader
         var asset = loader.LoadAsset(record, ctx);
         _store.AddAsset(asset);
 
-        if (loader is ModelLoader modelLoader)
-            ProcessEmbedded(asset.Id, modelLoader.EmbeddedAssets);
+        if (loader is ModelLoader modelLoader && asset is Model model)
+            ProcessEmbedded(model, modelLoader.EmbeddedAssets);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -197,24 +197,26 @@ internal sealed class AssetLoader
 
     }
     
-    private void ProcessEmbedded(AssetId originalAssetId, List<IEmbeddedAsset> embedded)
+    private void ProcessEmbedded(Model model, List<IEmbeddedAsset> embedded)
     {
         var hasTexture = false;
         var textureLoader = GetLoader<TextureLoader>();
         var materialLoader = GetLoader<MaterialLoader>();
         foreach (var it in embedded)
         {
-            var assetId = _store.RegisterEmbedded(originalAssetId, it);
+            var assetId = _store.RegisterEmbedded(model.Id, it);
             switch (it)
             {
                 case EmbeddedSceneTexture tex:
                     hasTexture = true;
                     var texture = textureLoader.LoadEmbedded(assetId, tex);
                     _store.AddAsset(texture);
+                    model.SetTexture(tex.TextureIndex, texture);
                     break;
                 case EmbeddedSceneMaterial mat:
                     var material = materialLoader.LoadEmbedded(assetId, mat);
                     _store.AddAsset(material);
+                    model.SetMaterial(mat.MaterialIndex, material);
                     break;
             }
         }

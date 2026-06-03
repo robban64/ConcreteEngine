@@ -20,11 +20,11 @@ public sealed class ModelBlueprint : SceneObjectBlueprint
 
     public readonly AssetId[] Materials = [];
 
-    public ModelBlueprint(AssetId modelId, params AssetId[] materialAssetIds)
+    public ModelBlueprint(AssetId modelId, params ReadOnlySpan<AssetId> materialAssetIds)
     {
         ModelId = modelId;
-        if (materialAssetIds.Length == 0) return;
-        Materials = materialAssetIds;
+        if(materialAssetIds.Length >= 1)
+            Materials = materialAssetIds.ToArray();
     }
 }
 

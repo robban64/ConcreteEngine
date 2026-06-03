@@ -120,7 +120,7 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
                 anisotropy: anisotropy,
                 pixelFormat: embedded.PixelFormat
             )
-        ) {Usage = embedded.SlotKind};
+        ) { Usage = embedded.SlotKind };
         
         _embeddedTextures.Remove(embedded.GId);
         entry.Dispose();

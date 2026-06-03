@@ -6,7 +6,6 @@ public sealed class SceneObjectTemplate
 {
     public Guid GId { get; } = Guid.NewGuid();
     public string Name { get; init; }
-
     public bool Enabled { get; set; } = true;
 
     public readonly List<SceneObjectBlueprint> Blueprints = [];

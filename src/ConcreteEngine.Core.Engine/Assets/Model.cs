@@ -14,20 +14,16 @@ public sealed class MeshEntry(string name, MeshInfo info)
     public BoundingBox LocalBounds;
 }
 
-public sealed class ModelAssetRefs(AssetIndexRef[] materialIndices, AssetIndexRef[] textureIndices)
-{
-    public readonly AssetIndexRef[] MaterialIndices = materialIndices;
-    public readonly AssetIndexRef[] TextureIndices = textureIndices;
-}
-
 public sealed class Model : AssetObject
 {
     public MeshEntry[] Meshes { get; }
-    public ModelAssetRefs AssetRefs { get; }
     public ModelAnimation? Animation { get; }
 
     public readonly ModelInfo Info;
     public readonly BoundingBox Bounds;
+
+    private readonly Texture[] _textures;
+    private readonly Material[] _materials;
 
     //
     public override AssetKind Kind => AssetKind.Model;
@@ -41,17 +37,34 @@ public sealed class Model : AssetObject
         in ModelInfo modelInfo,
         in BoundingBox bounds,
         MeshEntry[] meshes,
-        ModelAnimation? animation,
-        ModelAssetRefs assetRefs) : base(name,id,gid)
+        ModelAnimation? animation) : base(name,id,gid)
     {
         ArgumentNullException.ThrowIfNull(meshes);
-        ArgumentNullException.ThrowIfNull(assetRefs);
         ArgumentOutOfRangeException.ThrowIfNotEqual(meshes.Length, modelInfo.MeshCount);
 
         Info = modelInfo;
         Bounds = bounds;
         Meshes = meshes;
         Animation = animation;
-        AssetRefs = assetRefs;
+        _textures = modelInfo.TextureCount > 0 ? new Texture[modelInfo.TextureCount] : [];
+        _materials = modelInfo.MaterialCount > 0 ? new Material[modelInfo.MaterialCount] : [];
     }
+    
+    public ReadOnlySpan<Texture> GetTextures() => _textures;
+    public ReadOnlySpan<Material> GetMaterials() => _materials;
+    
+    internal void SetTexture(int index, Texture texture)
+    {
+        if ((uint)index >= (uint)_textures.Length) throw new ArgumentOutOfRangeException(nameof(index));
+        if (_textures[index] != null) throw new InvalidOperationException($"Texture {index} already set.");
+        _textures[index] = texture;
+    }
+    
+    internal void SetMaterial(int index, Material texture)
+    {
+        if ((uint)index >= (uint)_materials.Length) throw new ArgumentOutOfRangeException(nameof(index));
+        if (_materials[index] != null) throw new InvalidOperationException($"Material {index} already set.");
+        _materials[index] = texture;
+    }
+
 }

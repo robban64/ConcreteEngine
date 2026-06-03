@@ -47,5 +47,5 @@ internal sealed class EmbeddedSceneTexture(string name, string embeddedName, int
     public TexturePreset Preset = TexturePreset.LinearMipmapRepeat;
     public TexturePixelFormat PixelFormat = TexturePixelFormat.Unknown;
 
-    public bool Discard;
+    //public bool Discard;
 }

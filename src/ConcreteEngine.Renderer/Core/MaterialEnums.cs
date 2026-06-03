@@ -27,6 +27,7 @@ public enum TextureUsage : byte
     Normal,
     Mask,
     Specular,
+    Roughness,
     Emissive,
     Splatmap,
     Heightmap,

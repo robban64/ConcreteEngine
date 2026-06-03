@@ -66,7 +66,7 @@ public sealed class ModelInstance(ModelBlueprint blueprint, Model asset)
     : BlueprintInstance<ModelBlueprint>(blueprint)
 {
     public Model Asset { get; } = asset;
-    public readonly List<Material> Materials = new(asset.Meshes.Length);
+    public readonly List<Material> Materials = new(asset.Info.MaterialCount);
 
     public Transform LocalTransform = blueprint.LocalTransform;
     public BoundingBox LocalBounds = asset.Bounds;

@@ -50,14 +50,24 @@ internal sealed class EngineBlueprintFactory : BlueprintFactory
             sceneObject.Transform.SetBounds(in model.Bounds);
 
         var instance = new ModelInstance(bp, model);
+
+        var modelMaterials = bp.Materials.Length == 0 ? model.GetMaterials() : ReadOnlySpan<Material>.Empty;
+        
         for (int i = 0; i < model.Meshes.Length; i++)
         {
             var mesh = model.Meshes[i];
             if (mesh == null!) Throwers.NotFoundBy("Mesh not found", i);
-
-            var materialId = i < bp.Materials.Length ? bp.Materials[i] : Material.FallbackMaterial.Id;
-            var material = AssetStore.Get<Material>(materialId);
-            instance.Materials.Add(material);
+            var matIndex = mesh.Info.MaterialIndex;
+            if (modelMaterials.Length > 0 && matIndex < modelMaterials.Length)
+            {
+                instance.Materials.Add(modelMaterials[matIndex]);
+                continue;
+            }
+            
+            var materialId = matIndex < bp.Materials.Length ? bp.Materials[matIndex] : Material.FallbackMaterial.Id;
+            if(materialId == AssetId.Empty) materialId = Material.FallbackMaterial.Id;
+            
+            instance.Materials.Add(AssetStore.Get<Material>(materialId));
         }
 
         var modelRootEntity = BuildModelEntities(instance);

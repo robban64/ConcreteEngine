@@ -7,6 +7,7 @@ public struct ShaderDefaultBinding
     public sbyte AlbedoBinding;
     public sbyte NormalBinding;
     public sbyte SpecularBinding;
+    public sbyte RoughnessBinding;
     public sbyte AlphaBinding;
     public sbyte ShadowMapBinding;
     public sbyte LightMapBinding;
@@ -18,6 +19,7 @@ public struct ShaderDefaultBinding
             AlbedoBinding = -1,
             NormalBinding = -1,
             SpecularBinding = -1,
+            RoughnessBinding = -1,
             AlphaBinding = -1,
             ShadowMapBinding = -1,
             LightMapBinding = -1,
@@ -30,6 +32,7 @@ public sealed class Shader : AssetObject
     public const string AlbedoName = "uTexture";
     public const string NormalName = "uNormal";
     public const string SpecularName = "uSpecular";
+    public const string RoughnessName = "uRoughness";
     public const string AlphaName = "uAlpha";
     public const string LightMapName = "uLightMap";
 
@@ -38,7 +41,7 @@ public sealed class Shader : AssetObject
 
     public ShaderDefaultBinding DefaultBindings;
 
-    public Shader(string name, AssetId id, Guid gid, ShaderId gfxId, GfxUniformSampler[] samplers) : base(name,id,gid)
+    public Shader(string name, AssetId id, Guid gid, ShaderId gfxId, GfxUniformSampler[] samplers) : base(name, id, gid)
     {
         GfxId = gfxId;
         SetSamplers(samplers);
@@ -53,7 +56,6 @@ public sealed class Shader : AssetObject
         foreach (var sampler in samplers)
         {
             var samplerBinding = (sbyte)sampler.Binding;
-
             switch (sampler.Name)
             {
                 case AlbedoName:
@@ -64,6 +66,9 @@ public sealed class Shader : AssetObject
                     continue;
                 case SpecularName:
                     bindings.SpecularBinding = samplerBinding;
+                    continue;
+                case RoughnessName:
+                    bindings.RoughnessBinding = samplerBinding;
                     continue;
                 case AlphaName:
                     bindings.AlphaBinding = samplerBinding;

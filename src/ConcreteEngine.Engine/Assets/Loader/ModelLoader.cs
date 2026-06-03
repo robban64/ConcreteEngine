@@ -74,16 +74,17 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
 
         modelContext.SanitizeClips();
 
-        ProcessEmbedded(modelContext, out var materialRefs, out var textureRefs);
+        ProcessEmbedded(modelContext);
 
         var modelInfo = new ModelInfo(
             vertexCount: modelData.TotalVertexCount,
             faceCount: modelData.TotalFaceCount,
             boneCount: (ushort)(animation?.BoneCount ?? 0),
             meshCount: meshLength,
-            materialCount: (byte)materialRefs.Length,
-            textureCount: (byte)textureRefs.Length,
-            isAnimated: animation != null);
+            materialCount: (byte)modelContext.Materials.Count,
+            textureCount: (byte)modelContext.Textures.Count,
+            isAnimated: animation != null
+        );
 
         importer.Cleanup();
         modelContext.Clear();
@@ -95,16 +96,16 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
             modelInfo: in modelInfo,
             bounds: in modelData.ModelBounds,
             meshes: modelData.Meshes,
-            animation: animation,
-            assetRefs: new ModelAssetRefs(materialRefs, textureRefs)
+            animation: animation
         );
     }
 
 
     private void AllocMeshBlocks(ModelImportContext modelContext)
     {
+        if(_allocator is not {} allocator) throw new InvalidOperationException("Allocator is null");
+
         var modelImportData = modelContext.Model;
-        var allocator = _allocator;
         for (int i = 0; i < modelImportData.Meshes.Length; i++)
         {
             var info = modelImportData.Meshes[i].Info;
@@ -115,35 +116,20 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
         }
     }
 
-    private void ProcessEmbedded(ModelImportContext modelContext, out AssetIndexRef[] materialRefs,
-        out AssetIndexRef[] textureRefs)
+    private void ProcessEmbedded(ModelImportContext modelContext)
     {
         int textureLen = modelContext.Textures.Count, materialLen = modelContext.Materials.Count;
-
-        materialRefs = materialLen > 0 ? new AssetIndexRef[materialLen] : [];
-        textureRefs = textureLen > 0 ? new AssetIndexRef[textureLen] : [];
 
         if (textureLen > 0)
         {
             modelContext.Textures.Sort(static (it1, it2) => it1.TextureIndex.CompareTo(it2.TextureIndex));
             EmbeddedAssets.AddRange(modelContext.Textures);
-            for (var i = 0; i < modelContext.Textures.Count; i++)
-            {
-                var texEntry = modelContext.Textures[i];
-                textureRefs[i] = new AssetIndexRef(texEntry.GId, texEntry.TextureIndex);
-            }
         }
 
         if (materialLen > 0)
         {
             modelContext.Materials.Sort(static (it1, it2) => it1.MaterialIndex.CompareTo(it2.MaterialIndex));
             EmbeddedAssets.AddRange(modelContext.Materials);
-
-            for (var i = 0; i < modelContext.Materials.Count; i++)
-            {
-                var matEntry = modelContext.Materials[i];
-                materialRefs[i] = new AssetIndexRef(matEntry.GId, matEntry.MaterialIndex);
-            }
         }
     }
 

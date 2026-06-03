@@ -59,11 +59,6 @@ internal sealed unsafe partial class ModelImporter
     private static void LoadTextures(AssimpScene* scene, ModelImportContext ctx)
     {
         var textures = ctx.Textures;
-        for (var i = 0; i < textures.Count; i++)
-        {
-            if (textures[i].Discard) textures.RemoveAt(i);
-        }
-
         foreach (var texture in textures)
         {
             var aiTexture = scene->MTextures[texture.TextureIndex];
@@ -144,13 +139,12 @@ internal sealed unsafe partial class ModelImporter
         if (material.Textures.Contains(new AssetIndexRef(texture.GId, textureIndex))) return;
         if (!MatUtils.ToSystemEnums(type, out var kind, out var format))
         {
-            texture.Discard = true;
-            return;
+            kind = TextureUsage.Albedo;
+            format = TexturePixelFormat.SrgbAlpha;
         }
 
         texture.SlotKind = kind;
         texture.PixelFormat = format;
-        texture.Discard = false;
         material.Textures.Add(new AssetIndexRef(texture.GId, textureIndex));
     }
 }
@@ -201,6 +195,10 @@ file static unsafe class MatUtils
                 kind = TextureUsage.Mask;
                 format = TexturePixelFormat.Red;
                 return true;
+            case TextureType.GltfMetallicRoughness:
+                kind = TextureUsage.Roughness;
+                format = TexturePixelFormat.Rgba;
+                return  true;
             default:
                 kind = 0;
                 format = 0;

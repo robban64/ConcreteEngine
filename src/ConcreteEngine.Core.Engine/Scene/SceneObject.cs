@@ -8,13 +8,7 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.ECS;
 
 namespace ConcreteEngine.Core.Engine.Scene;
-/*
-public interface ISceneObjectNotifier
-{
-    void MarkDirty(SceneObjectId id);
-    void Rename(SceneObject asset, string newName, Action<string> onSuccess);
-}
-*/
+
 public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObject>
 {
     [Flags]
@@ -65,6 +59,8 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
             MarkDirty(DirtyFlags.Visibility);
         }
     }
+
+    public bool Attached { get; private set; }
 
 
     public SceneObjectKind Kind { get; private set; }
@@ -151,6 +147,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     //
     internal void Attach()
     {
+        Attached = true;
         MarkDirty(DirtyFlags.Transform);
         MarkDirty(DirtyFlags.Instance);
     }
@@ -174,7 +171,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void MarkDirty(DirtyFlags flags)
     {
-        if ((Dirty & flags) != 0) return;
+        if (!Attached || (Dirty & flags) != 0) return;
         Dirty |= flags;
         SceneStore.Instance.MarkDirty(Id);
     }

@@ -72,9 +72,9 @@ public sealed class Material : AssetObject
 
         ref var source = ref _textureSources[slot];
 
-        if (texture is { } tex)
+        if (texture != null)
         {
-            source = new TextureSource(tex.Id, tex.Usage, tex.GpuState.TextureKind, tex.GpuState.PixelFormat);
+            source = new TextureSource(texture.Id, texture.Usage, texture.GpuState.TextureKind, texture.GpuState.PixelFormat);
             MarkDirty();
             return;
         }

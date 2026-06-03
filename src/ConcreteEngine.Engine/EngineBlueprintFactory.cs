@@ -55,7 +55,7 @@ internal sealed class EngineBlueprintFactory : BlueprintFactory
             var mesh = model.Meshes[i];
             if (mesh == null!) Throwers.NotFoundBy("Mesh not found", i);
 
-            var materialId = i < bp.Materials.Length ? bp.Materials[i] : MaterialStore.FallbackMaterial.Id;
+            var materialId = i < bp.Materials.Length ? bp.Materials[i] : Material.FallbackMaterial.Id;
             var material = AssetStore.Get<Material>(materialId);
             instance.Materials.Add(material);
         }

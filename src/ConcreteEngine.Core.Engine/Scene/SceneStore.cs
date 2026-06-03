@@ -173,14 +173,14 @@ public sealed class SceneStore
         var materialIndices = model.AssetRefs.MaterialIndices;
         var materials = materialIndices.Length > 0
             ? new AssetId[materialIndices.Length]
-            : [MaterialStore.FallbackMaterial.Id];
+            : [Material.FallbackMaterial.Id];
 
         if (materials.Length > 1)
         {
             for (int i = 0; i < materials.Length; i++)
             {
                 if (!AssetStore.Instance.TryGetByGuid<Material>(materialIndices[i].AssetGId, out var material))
-                    material = MaterialStore.FallbackMaterial;
+                    material = Material.FallbackMaterial;
 
                 materials[i] = material.Id;
             }
@@ -199,7 +199,7 @@ public sealed class SceneStore
         for (int i = 0; i < materialIds.Length; i++)
         {
             if (!AssetStore.Instance.TryGet<Material>(materialIds[i], out var material))
-                material = MaterialStore.FallbackMaterial;
+                material = Material.FallbackMaterial;
 
             materials[i] = material.Id;
         }

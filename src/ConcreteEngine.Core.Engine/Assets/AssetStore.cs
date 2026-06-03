@@ -153,6 +153,21 @@ public sealed partial class AssetStore
         assetList.Add(asset);
         MarkDirty(asset);
     }
+    
+    
+    public Material CreateMaterial(string materialName, string newName)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(materialName);
+        ArgumentException.ThrowIfNullOrEmpty(newName);
+
+        var originalMaterial = GetByName<Material>(materialName);
+
+        var gid = Guid.NewGuid();
+        var assetId = RegisterPlainAsset(gid, AssetKind.Material, newName, AssetStorageKind.InMemory);
+        var material = originalMaterial.MakeNewAsTemplate(assetId, gid, newName);
+        AddAsset(material);
+        return material;
+    }
 
 
     internal void RegisterExistingBindings(AssetId assetId, AssetFile[] fileSpecs)

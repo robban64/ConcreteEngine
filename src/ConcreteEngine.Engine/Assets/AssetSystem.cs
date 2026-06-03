@@ -13,15 +13,12 @@ public sealed class AssetSystem : IGameEngineSystem
     public Status CurrentStatus { get; private set; } = Status.None;
 
     public AssetStore Assets => AssetStore.Instance;
-    public MaterialStore MaterialStore { get; }
 
     private readonly AssetPendingQueue _pendingQueue;
     private readonly AssetLoader _loader;
 
     internal AssetSystem(GfxContext gfx)
     {
-        MaterialStore = new MaterialStore(Assets);
-
         _pendingQueue = new AssetPendingQueue();
         _loader = new AssetLoader(Assets, gfx);
     }
@@ -60,7 +57,7 @@ public sealed class AssetSystem : IGameEngineSystem
         CurrentStatus = Status.Booting;
 
         AssetSystemSetup.Start();
-        AssetSystemSetup.CreateFallbackAssets(Assets, MaterialStore);
+        AssetSystemSetup.CreateFallbackAssets(Assets);
 
         AssetScanner.ScanAll(Assets, _loader.GetQueues());
         Assets.EnsureStoreCapacity(_loader.GetQueues());
@@ -77,7 +74,7 @@ public sealed class AssetSystem : IGameEngineSystem
     {
         foreach (var it in Assets.Collections) it.Sort();
 
-        MaterialStore.InitializeStore();
+        Material.FallbackMaterial.BoundShader = Assets.GetByName<Shader>("Model");
         _loader?.DeactivateLoader();
 
         CurrentStatus = Status.Ready;

@@ -8,31 +8,28 @@ using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 
-internal sealed class MaterialProcessor
+internal sealed class MaterialProcessor(RenderProgram renderProgram)
 {
     private bool _hasUploadedMaterial;
+    private readonly MaterialBuffer _materialBuffer = renderProgram.UploadBuffers.Materials;
+    private readonly AssetTypeCollection _materialBucket = AssetStore.Instance.GetAssetList(AssetKind.Material);
 
-    internal void SubmitMaterialData(RenderProgram renderer)
+    internal void SubmitMaterialData()
     {
-        var assetStore = AssetStore.Instance;
-        
-        var materials = assetStore.GetAssetList(AssetKind.Material);
-        if (materials.DirtyCount == 0 && _hasUploadedMaterial) return;
-        if (materials.DirtyCount > 0) _hasUploadedMaterial = false;
-
-        foreach (var id in materials.GetDirtySpan())
-            assetStore.GetUnsafe<Material>(id).Commit();
-
-        Submit(assetStore, renderer.UploadBuffers.Materials);
-
-        materials.ClearDirty();
+        if (_materialBucket.DirtyCount == 0 && _hasUploadedMaterial) return;
+        if (_materialBucket.DirtyCount > 0) _hasUploadedMaterial = false;
+        Submit(_materialBuffer);
     }
 
-    private void Submit(AssetStore assetStore, MaterialBuffer materialBuffer)
+    private void Submit(MaterialBuffer materialBuffer)
     {
+        var assetStore = AssetStore.Instance;
+
         Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
-        foreach (var material in assetStore.GetAssetEnumerator<Material>())
+        foreach (var id in _materialBucket.GetDirtySpan())
         {
+            var material = assetStore.GetUnsafe<Material>(id);
+            material.Commit();
             material.ClearDirty();
             
             if (material.BoundShader is not { } shader) continue;
@@ -69,6 +66,8 @@ internal sealed class MaterialProcessor
         }
 
         _hasUploadedMaterial = true;
+        _materialBucket.ClearDirty();
+
     }
 
     private static bool ResolveFallbackTextureId(TextureSource source, out TextureId textureId)

@@ -48,7 +48,7 @@ internal static class AssetSystemSetup
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void CreateFallbackAssets(AssetStore assets, MaterialStore materials)
+    public static void CreateFallbackAssets(AssetStore assets)
     {
         // Texture
         {
@@ -74,8 +74,7 @@ internal static class AssetSystemSetup
         {
             var gid = Guid.Parse("f28fbc18-9e84-41bf-b490-4b900b1d8598");
             var assetId = assets.RegisterPlainAsset(gid, AssetKind.Material, "Fallback", AssetStorageKind.InMemory);
-            var material = MaterialLoader.CreateFallback(assetId, gid);
-            materials.AddFallbackMaterial(material);
+            var material = Material.FallbackMaterial = MaterialLoader.CreateFallback(assetId, gid);
             assets.AddAsset(material);
         }
     }

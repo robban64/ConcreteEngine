@@ -53,8 +53,8 @@ public sealed class Terrain
 
     public ReadOnlySpan<TerrainChunk> GetChunks() => _chunks;
 
-    public MaterialId MaterialId => GroundMaterial?.MaterialId ?? MaterialStore.FallbackMaterial.MaterialId;
-    public MaterialId FoliageMaterialId => FoliageMaterial?.MaterialId ?? MaterialStore.FallbackMaterial.MaterialId;
+    public MaterialId MaterialId => GroundMaterial?.MaterialId ?? Material.FallbackMaterial.MaterialId;
+    public MaterialId FoliageMaterialId => FoliageMaterial?.MaterialId ?? Material.FallbackMaterial.MaterialId;
 
     public void SetTexture(int slot, Texture texture)
     {

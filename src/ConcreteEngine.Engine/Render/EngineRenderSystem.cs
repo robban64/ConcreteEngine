@@ -29,27 +29,28 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
         _visualManager = VisualManager.Instance;
         _visualManager.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
 
+        Program = new RenderProgram(graphics, VisualUniformProcessor.MakeCallbacks());
+
         TerrainSystem.Make(graphics.Gfx);
         var particles = ParticleSystem.Make(graphics.Gfx);
         var animations = AnimationTable.Make();
 
         _renderDispatcher = new RenderDispatcher(animations, particles);
-        _materialProcessor = new MaterialProcessor();
+        _materialProcessor = new MaterialProcessor(Program);
 
-        Program = new RenderProgram(graphics, VisualUniformProcessor.MakeCallbacks());
     }
 
     public override int VisibleCount => _renderDispatcher.VisibleCount;
     public override ReadOnlySpan<RenderEntityId> VisibleEntities() => _renderDispatcher.GetVisibleEntities();
 
 
-    internal void Initialize(AssetStore assetStore, MaterialStore materialStore)
+    internal void Initialize(AssetStore assetStore)
     {
         AnimationTable.Instance.Setup(assetStore);
         _renderDispatcher.Attach(Program.UploadBuffers);
 
         //
-        var mat = materialStore.CreateMaterial("EmptyMat", "EmptyMat1");
+        var mat = assetStore.CreateMaterial("EmptyMat", "EmptyMat1");
         mat.State.DrawState = GfxDrawState.Set(GfxDrawFlags.Blend, GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2);
         mat.State. PassFunctions = new GfxPassFunctions(BlendMode.Alpha);
 
@@ -78,7 +79,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
 
         // frame update
         _cameraSystem.CommitFrame(EngineTime.GameAlpha);
-        _materialProcessor.SubmitMaterialData(Program);
+        _materialProcessor.SubmitMaterialData();
 
         // process and upload draw commands
         _renderDispatcher.Execute();

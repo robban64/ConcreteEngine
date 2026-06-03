@@ -23,13 +23,13 @@ public sealed class AssetTypeCollection(AssetKind kind)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<AssetId> AsSpan() => CollectionsMarshal.AsSpan(_asset);
 
-    public void Add(AssetObject asset)
+    internal void Add(AssetObject asset)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)asset.Kind, (int)Kind, nameof(asset));
         _asset.Add(asset.Id);
     }
 
-    public void MarkDirty(AssetObject asset)
+    internal void MarkDirty(AssetObject asset)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Value, nameof(asset.Id));
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)asset.Kind, (int)Kind, nameof(asset));
@@ -57,11 +57,11 @@ public sealed class AssetTypeCollection(AssetKind kind)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ClearDirty() => _dirtyIds.Clear();
+    internal void ClearDirty() => _dirtyIds.Clear();
 
-    public void Sort() => _asset.Sort();
+    internal void Sort() => _asset.Sort();
 
-    public void EnsureCapacity(int capacity)
+    internal void EnsureCapacity(int capacity)
     {
         _asset.EnsureCapacity(capacity);
         _dirtyIds.EnsureCapacity(capacity);

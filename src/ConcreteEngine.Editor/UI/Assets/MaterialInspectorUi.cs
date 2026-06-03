@@ -58,36 +58,37 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
 
     private void DrawPipeline(InspectMaterial editMaterial, NativeSpanWriter sw)
     {
-        var passState = editMaterial.DrawState;
+        var ogDrawState = editMaterial.State.DrawState;
+        var drawState = editMaterial.State.DrawState;
         ImGui.SeparatorText("State Flag"u8);
-        DrawFlagToggle("Blend Mode"u8, GfxDrawFlags.Blend, ref passState, sw);
-        DrawFlagToggle("Cull Mode"u8, GfxDrawFlags.Cull, ref passState, sw);
-        DrawFlagToggle("Depth Test"u8, GfxDrawFlags.DepthTest, ref passState, sw);
-        DrawFlagToggle("Depth Write"u8, GfxDrawFlags.DepthWrite, ref passState, sw);
-        DrawFlagToggle("Polygon Offset"u8, GfxDrawFlags.PolygonOffset, ref passState, sw);
+        DrawFlagToggle("Blend Mode"u8, GfxDrawFlags.Blend, ref drawState, sw);
+        DrawFlagToggle("Cull Mode"u8, GfxDrawFlags.Cull, ref drawState, sw);
+        DrawFlagToggle("Depth Test"u8, GfxDrawFlags.DepthTest, ref drawState, sw);
+        DrawFlagToggle("Depth Write"u8, GfxDrawFlags.DepthWrite, ref drawState, sw);
+        DrawFlagToggle("Polygon Offset"u8, GfxDrawFlags.PolygonOffset, ref drawState, sw);
         ImGui.Separator();
-        DrawFlagToggle("A2C"u8, GfxDrawFlags.Ac2, ref passState, sw);
+        DrawFlagToggle("A2C"u8, GfxDrawFlags.Ac2, ref drawState, sw);
 
-        if (editMaterial.DrawState != passState)
-            editMaterial.Asset.SetPassState(passState);
+        if (ogDrawState != drawState)
+            editMaterial.State.DrawState = drawState;
 
-        if (passState.IsEmpty()) return;
+        if (drawState.IsEmpty()) return;
 
         ImGui.Spacing();
         ImGui.SeparatorText("State Value"u8);
 
         ImGui.PushItemWidth(110);
 
-        if (passState.IsSet(GfxDrawFlags.Blend))
+        if (drawState.IsSet(GfxDrawFlags.Blend))
             InspectFields.BlendCombo.Draw();
 
-        if (passState.IsSet(GfxDrawFlags.Cull))
+        if (drawState.IsSet(GfxDrawFlags.Cull))
             InspectFields.CullCombo.Draw();
 
-        if (passState.IsSet(GfxDrawFlags.DepthTest))
+        if (drawState.IsSet(GfxDrawFlags.DepthTest))
             InspectFields.DepthCombo.Draw();
 
-        if (passState.IsSet(GfxDrawFlags.PolygonOffset))
+        if (drawState.IsSet(GfxDrawFlags.PolygonOffset))
             InspectFields.PolygonCombo.Draw();
 
         ImGui.PopItemWidth();
@@ -173,7 +174,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
 
         if (ImGui.BeginPopup("##preview-popup"u8))
         {
-            state.GetOrSetTextureHandle(slotTexture.GfxLink.GfxId, ref AssetInspectorPanel.PopupTextureHandle);
+            state.GetOrSetTextureHandle(slotTexture.GfxId, ref AssetInspectorPanel.PopupTextureHandle);
             ImGui.Image(AssetInspectorPanel.PopupTextureHandle, new Vector2(256, 256));
 
             if (ImGui.Button("Close"u8)) ImGui.CloseCurrentPopup();

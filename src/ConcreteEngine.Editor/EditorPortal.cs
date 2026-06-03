@@ -25,12 +25,10 @@ public sealed class EditorPortal : IDisposable
     private readonly EditorEngineContext _engineContext;
 
 
-    public EditorPortal(EditorEngineContext engineContext, EditorEngineBundle bundle)
+    public EditorPortal(EditorEngineContext engineContext)
     {
         _engineContext = engineContext;
         EditorInput.Input = engineContext.Input;
-
-        EngineObjectStore.Create(bundle);
 
         ImGuiKeyMapper.Init();
         ImGuiSystem.Setup(engineContext.Window, 1);

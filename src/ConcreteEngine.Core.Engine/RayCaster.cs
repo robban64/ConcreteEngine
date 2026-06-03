@@ -12,7 +12,6 @@ namespace ConcreteEngine.Core.Engine;
 public sealed class RayCaster
 {
     private readonly CameraTransforms _camera;
-    private SceneStore _sceneStore = null!;
     private RenderSystem _renderSystem = null!;
 
     private static Terrain Terrain => Terrain.Main;
@@ -22,9 +21,8 @@ public sealed class RayCaster
         _camera = camera;
     }
 
-    internal void Attach(SceneStore sceneStore, RenderSystem renderSystem)
+    internal void Attach( RenderSystem renderSystem)
     {
-        _sceneStore = sceneStore;
         _renderSystem = renderSystem;
     }
 
@@ -53,7 +51,7 @@ public sealed class RayCaster
 
         if (!closestEntity.IsValid()) return null;
 
-        return _sceneStore.Get(Ecs.SceneLink.GetSceneHandleBy(closestEntity));
+        return SceneStore.Instance.Get(Ecs.SceneLink.GetSceneHandleBy(closestEntity));
     }
 
     public Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)
@@ -72,7 +70,7 @@ public sealed class RayCaster
         var newPoint = ray.GetPointOnRay(t);
         var tHeight = Terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
 
-        ref readonly var bounds = ref _sceneStore.Get(sceneObjectId).Transform.GetBounds();
+        ref readonly var bounds = ref SceneStore.Instance.Get(sceneObjectId).Transform.GetBounds();
 
         newPoint.Y = tHeight - bounds.Min.Y;
         return newPoint;

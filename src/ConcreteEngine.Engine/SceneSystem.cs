@@ -24,8 +24,7 @@ internal sealed class SceneSystem : IGameEngineSystem
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
 
-        var factory = new EngineBlueprintFactory();
-        SceneStore = new SceneStore(factory);
+        SceneStore = new SceneStore(new EngineBlueprintFactory());
 
         GameSystem = new GameSystem(SceneStore);
         _modules = new ModuleManager();

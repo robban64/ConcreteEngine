@@ -35,12 +35,14 @@ public sealed class Model : AssetObject
 
 
     public Model(
-        string name,
+        string name, 
+        AssetId id, 
+        Guid gid,
         in ModelInfo modelInfo,
         in BoundingBox bounds,
         MeshEntry[] meshes,
         ModelAnimation? animation,
-        ModelAssetRefs assetRefs) : base(name)
+        ModelAssetRefs assetRefs) : base(name,id,gid)
     {
         ArgumentNullException.ThrowIfNull(meshes);
         ArgumentNullException.ThrowIfNull(assetRefs);

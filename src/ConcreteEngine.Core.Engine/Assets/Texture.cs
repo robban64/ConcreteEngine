@@ -21,22 +21,92 @@ public struct TextureProperties(
     public TexturePixelFormat PixelFormat = pixelFormat;
 }
 
-public sealed class Texture(string name, TextureId gfxId, Size2D size, TextureProperties properties) : AssetObject(name)
+public sealed class GpuTextureState(Texture texture, TextureProperties props)
 {
-    // WIP
-    public GfxAssetLink<TextureMeta> GfxLink { get; } = new(gfxId);
+    private void MarkDirty() => texture.MarkDirty();
+    
+    //
+    public float LodBias
+    {
+        get;
+        set
+        {
+            if (FloatMath.NearlyEqual(field, value)) return;
+            field = value;
+            MarkDirty();
+        }
+    } = props.Lod;
 
-    public Size2D Size { get; } = size;
+    public TexturePixelFormat PixelFormat
+    {
+        get;
+        set
+        {
+            if (field == value) return;
+            field = value;
+            MarkDirty();
+        }
+    } = props.PixelFormat;
 
-    private TextureProperties _properties = properties;
+    public TexturePreset Preset
+    {
+        get;
+        set
+        {
+            if (field == value) return;
+            field = value;
+            MarkDirty();
+        }
+    } = props.Preset;
+
+    public TextureKind TextureKind
+    {
+        get;
+        set
+        {
+            if (field == value) return;
+            field = value;
+            MarkDirty();
+        }
+    } = props.Kind;
+
+
+    public AnisotropyLevel Anisotropy
+    {
+        get;
+        set
+        {
+            if (field == value) return;
+            field = value;
+            MarkDirty();
+        }
+    } = props.Anisotropy;
+
+}
+
+public sealed class Texture : AssetObject
+{
+    public readonly TextureId GfxId;
+    
+    public readonly GpuTextureState GpuState;
+    
+    public readonly Size2D Size;
+
+    private TextureData? _textureData;
 
     //
     public override AssetCategory Category => AssetCategory.Graphic;
     public override AssetKind Kind => AssetKind.Texture;
 
-    //TODO remove
-    private TextureData? _textureData;
-    
+
+    public Texture(string name, AssetId id, Guid gid, TextureId gfxId, Size2D size, TextureProperties props): base(name,id,gid)
+    {
+        GfxId = gfxId;
+        Size = size;
+        GpuState = new GpuTextureState(this, props);
+        
+    }
+
     public bool HasPixelData => _textureData is not null;
     
     public bool TryGetPixelSpan(out ReadOnlySpan<byte> pixelData)
@@ -51,59 +121,6 @@ public sealed class Texture(string name, TextureId gfxId, Size2D size, TexturePr
     {
         if(_textureData is not null) throw new InvalidOperationException("Texture already has a data entry.");
         _textureData = textureData;
-    }
-
-    //
-    public float LodBias
-    {
-        get => _properties.Lod;
-        set
-        {
-            if (FloatMath.NearlyEqual(_properties.Lod, value)) return;
-            _properties.Lod = value;
-            MarkDirty();
-        }
-    }
-
-    public TexturePixelFormat PixelFormat
-    {
-        get => _properties.PixelFormat;
-        set
-        {
-            _properties.PixelFormat = value;
-            MarkDirty();
-        }
-    }
-
-    public TexturePreset Preset
-    {
-        get => _properties.Preset;
-        set
-        {
-            _properties.Preset = value;
-            MarkDirty();
-        }
-    }
-
-    public TextureKind TextureKind
-    {
-        get => _properties.Kind;
-        set
-        {
-            _properties.Kind = value;
-            MarkDirty();
-        }
-    }
-
-
-    public AnisotropyLevel Anisotropy
-    {
-        get => _properties.Anisotropy;
-        set
-        {
-            _properties.Anisotropy = value;
-            MarkDirty();
-        }
     }
 
     public TextureUsage Usage

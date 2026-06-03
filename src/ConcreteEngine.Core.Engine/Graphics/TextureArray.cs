@@ -43,14 +43,15 @@ public sealed class TextureArray(int length) : CompositeTexture(length)
 
         for (int i = 0; i < Textures.Length; i++)
         {
-            if (Textures[i] == null) throw new InvalidOperationException($"Texture {i} is null");
-            if (Textures[i]!.GfxLink.GfxId == default)
+            if (Textures[i] is not {} texture) 
+                throw new InvalidOperationException($"Texture {i} is null");
+            if (texture.GfxId == default)
                 throw new InvalidOperationException($"Texture {i} has empty TextureId");
         }
 
-        var arrayId = gfx.CreateTexture2DArrayFrom(Textures[0]!.GfxLink.GfxId, Textures.Length);
+        var arrayId = gfx.CreateTexture2DArrayFrom(Textures[0]!.GfxId, Textures.Length);
         for (int i = 0; i < Textures.Length; i++)
-            gfx.SetTexture2DArrayLayerFrom(arrayId, Textures[i]!.GfxLink.GfxId, i);
+            gfx.SetTexture2DArrayLayerFrom(arrayId, Textures[i]!.GfxId, i);
 
         return GfxId = arrayId;
     }

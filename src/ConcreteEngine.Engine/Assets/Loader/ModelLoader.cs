@@ -90,12 +90,14 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
 
         return new Model(
             name: record.Name,
+            id: ctx.Id,
+            gid:record.GId,
             modelInfo: in modelInfo,
             bounds: in modelData.ModelBounds,
             meshes: modelData.Meshes,
             animation: animation,
             assetRefs: new ModelAssetRefs(materialRefs, textureRefs)
-        ) { Id = ctx.Id, GId = record.GId };
+        );
     }
 
 

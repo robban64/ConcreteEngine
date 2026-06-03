@@ -8,7 +8,6 @@ namespace ConcreteEngine.Editor.Core;
 internal sealed class SelectionManager
 {
     public static SelectionManager Instance { get; private set; } = null!;
-    private static SceneStore SceneStore => EngineObjectStore.SceneStore;
 
     public InspectSceneObject? SelectedSceneObject { get; private set; }
     public InspectAsset? SelectedAsset { get; private set; }
@@ -99,7 +98,7 @@ internal sealed class SelectionManager
         if (SelectedSceneObject?.Id.IsValid() ?? false)
             DeselectSceneObject();
 
-        var sceneObject = SceneStore.Get(id);
+        var sceneObject = SceneStore.Instance.Get(id);
         foreach (var it in sceneObject.GetInstances())
             it.ToggleSelection(true);
 

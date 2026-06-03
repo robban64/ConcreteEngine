@@ -24,11 +24,9 @@ internal sealed class EngineGateway : IDisposable
 
     internal EngineGateway(EngineWindow window, EngineCoreSystem coreSystem)
     {
-        var scene = coreSystem.GetSystem<SceneSystem>();
-        var asset = coreSystem.GetSystem<AssetSystem>();
         _renderProgram = coreSystem.GetSystem<EngineRenderSystem>().Program;
         _window = window;
-        Metrics = new EngineMetricHub(scene.SceneStore);
+        Metrics = new EngineMetricHub();
     }
 
     public void SetupEditor(EngineCoreSystem coreSystem, EngineWindow window, EngineCommandQueue commandQueues,
@@ -45,17 +43,12 @@ internal sealed class EngineGateway : IDisposable
 
         var inputSystem = coreSystem.GetSystem<InputSystem>();
 
-        var engineBundle = new EditorEngineBundle
-        {
-            SceneStore = coreSystem.Scene.SceneStore,
-        };
-
         var engineContext = new EditorEngineContext
         {
             Input = new InputLayerController(inputSystem, InputLayerKind.Ui), Window = window,
         };
 
-        _editor = new EditorPortal(engineContext, engineBundle);
+        _editor = new EditorPortal(engineContext);
         Metrics.ConnectEditor(_editor.GetMetricSystem());
 
         EditorSetup.RegisterCommands();

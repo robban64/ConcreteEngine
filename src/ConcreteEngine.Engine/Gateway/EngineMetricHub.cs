@@ -12,7 +12,7 @@ using ConcreteEngine.Graphics.Diagnostic;
 
 namespace ConcreteEngine.Engine.Gateway;
 
-internal sealed class EngineMetricHub(SceneStore store)
+internal sealed class EngineMetricHub
 {
     private MetricSystem? _metricSystem;
 
@@ -57,7 +57,7 @@ internal sealed class EngineMetricHub(SceneStore store)
 
         var frameMeta = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha);
         var sceneMeta = new SceneMeta(
-            store.ActiveCount,
+            SceneStore.Instance.ActiveCount,
             0,
             Ecs.Game.ActiveCount,
             Ecs.Render.ActiveCount

@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
@@ -8,12 +9,13 @@ using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
-public sealed class SceneStore : ISceneObjectNotifier
+public sealed class SceneStore 
 {
     private const int DefaultCapacity = 512;
     
+    private static int _unnamedCounter;
     private static int _nameTick = 1;
-
+    public static SceneStore Instance { get; private set; } = null!;
 
     private readonly SlotArray<SceneObject> _sceneObjects = new(DefaultCapacity);
 
@@ -22,13 +24,14 @@ public sealed class SceneStore : ISceneObjectNotifier
 
     private readonly Dictionary<string, Handle32<SceneObject>> _byName = new(DefaultCapacity);
 
-    private readonly BlueprintFactory _factory;
+    private readonly List<int> _dirtyIds = new(DefaultCapacity);
 
-    internal readonly HashSet<int> DirtyIds = new(DefaultCapacity);
+    private readonly BlueprintFactory _factory;
 
     internal SceneStore(BlueprintFactory factory)
     {
         ArgumentNullException.ThrowIfNull(factory);
+        if(Instance != null) throw new InvalidOperationException("SceneStore already initialized");
 
         for (int i = 0; i < _byKind.Length; i++)
         {
@@ -40,10 +43,17 @@ public sealed class SceneStore : ISceneObjectNotifier
 
         _sceneObjects.OnResize = static (oldSize, newSize) =>
             Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(SceneStore), oldSize, newSize));
+
+        Instance = this;
     }
 
     public int ActiveCount => _sceneObjects.ActiveCount;
+    public int DirtyCount => _dirtyIds.Count;
+
     public int Capacity => _sceneObjects.Capacity;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<int> GetDirtySpan() => CollectionsMarshal.AsSpan(_dirtyIds);
 
     //
 
@@ -107,20 +117,37 @@ public sealed class SceneStore : ISceneObjectNotifier
         onSuccess(newName);
     }
 
-    public void MarkDirty(SceneObjectId id)
+    public void MarkDirty(SceneObjectId sceneObjectId)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(id.Index(), _sceneObjects.Capacity, nameof(id));
-        DirtyIds.Add((int)id);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sceneObjectId.Value, nameof(sceneObjectId));
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(sceneObjectId.Index(), _sceneObjects.Capacity, nameof(sceneObjectId));
+        var id = sceneObjectId.Value;
+        if (_dirtyIds.Count == 0)
+        {
+            _dirtyIds.Add(id);
+            return;
+        }
+
+        var lastId = _dirtyIds[^1];
+        if(lastId == id) return;
+
+        if (id > lastId)
+        {
+            _dirtyIds.Add(id);
+            return;
+        }
+
+        var existingIndex = SearchMethod.BinarySearch(CollectionsMarshal.AsSpan(_dirtyIds), id);
+        if(existingIndex >= 0) return;
+        _dirtyIds.Add(id);
+        _dirtyIds.Sort();
     }
 
-    internal void ClearDirty() => DirtyIds.Clear();
+    internal void ClearDirty() => _dirtyIds.Clear();
 
     //
-
-    private static int _unnamedCounter;
-
-    internal SceneObject Create(SceneObjectTemplate bp)
+    
+    public SceneObject Create(SceneObjectTemplate bp)
     {
         var id = new SceneObjectId(_sceneObjects.AllocateNext() + 1, 1);
 
@@ -135,7 +162,7 @@ public sealed class SceneStore : ISceneObjectNotifier
 
         _byKind[(int)sceneObject.Kind].Add(id);
 
-        sceneObject.Attach(this);
+        sceneObject.Attach();
         MarkDirty(id);
         return sceneObject;
     }

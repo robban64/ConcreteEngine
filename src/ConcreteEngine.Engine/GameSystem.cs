@@ -18,7 +18,9 @@ internal sealed class GameSystem(SceneStore store)
 
     public void Update(float dt)
     {
-        CheckDirty();
+        if(store.DirtyCount > 0)
+            CheckDirty();
+        
         UpdateAnimations(dt);
     }
 
@@ -33,7 +35,7 @@ internal sealed class GameSystem(SceneStore store)
 
     private void CheckDirty()
     {
-        foreach (var id in store.DirtyIds)
+        foreach (var id in store.GetDirtySpan())
         {
             var sceneObject = store.GetInternal(id);
             var dirtyFlag = sceneObject.Dirty;

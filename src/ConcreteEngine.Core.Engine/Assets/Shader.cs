@@ -38,7 +38,7 @@ public sealed class Shader : AssetObject
 
     public ShaderDefaultBinding DefaultBindings;
 
-    public Shader(string name, ShaderId gfxId, GfxUniformSampler[] samplers) : base(name)
+    public Shader(string name, AssetId id, Guid gid, ShaderId gfxId, GfxUniformSampler[] samplers) : base(name,id,gid)
     {
         GfxId = gfxId;
         SetSamplers(samplers);

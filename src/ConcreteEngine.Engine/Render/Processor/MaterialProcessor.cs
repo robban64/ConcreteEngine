@@ -20,7 +20,7 @@ internal sealed class MaterialProcessor
         if (materials.DirtyCount == 0 && _hasUploadedMaterial) return;
         if (materials.DirtyCount > 0) _hasUploadedMaterial = false;
 
-        foreach (var id in materials.DirtyIds)
+        foreach (var id in materials.GetDirtySpan())
             assetStore.GetUnsafe<Material>(id).Commit();
 
         Submit(assetStore, renderer.UploadBuffers.Materials);
@@ -33,6 +33,8 @@ internal sealed class MaterialProcessor
         Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
         foreach (var material in assetStore.GetAssetEnumerator<Material>())
         {
+            material.ClearDirty();
+            
             if (material.BoundShader is not { } shader) continue;
 
             var textureSources = material.GetTextureSources();
@@ -40,29 +42,30 @@ internal sealed class MaterialProcessor
             {
                 var source = textureSources[i];
                 if (!ResolveFallbackTextureId(source, out var textureId))
-                    textureId = assetStore.Get<Texture>(source.AssetTexture).GfxLink.GfxId;
+                    textureId = assetStore.Get<Texture>(source.AssetTexture).GfxId;
 
                 slots[i] = new TextureBinding(textureId, source.Usage, (sbyte)i);
             }
 
-            var props = material.RenderProps;
+            var props = material.RenderToggles;
             float transparency = props.HasTransparency ? 1f : 0f;
             float normal = props.HasNormal ? 1f : 0f;
             float alpha = props.HasAlphaMask ? 1f : 0f;
 
+            var state = material.State;
             var meta = new RenderMaterialMeta(
                 material.MaterialId,
                 shader.GfxId,
-                material.Pipeline.DrawState,
-                material.Pipeline.PassFunctions,
+                state.DrawState,
+                state.PassFunctions,
                 shader.DefaultBindings.ShadowMapBinding
             );
 
             ref var uniform = ref materialBuffer.Submit(in meta, slots.Slice(0, textureSources.Length));
 
-            uniform.MatColor = material.Color;
-            uniform.MatParams0 = new Vector4(material.Specular, material.UvRepeat, 1.0f, 1.0f);
-            uniform.MatParams1 = new Vector4(material.Shininess, normal, transparency, alpha);
+            uniform.MatColor = state.Color;
+            uniform.MatParams0 = new Vector4(state.Specular, state.UvRepeat, 1.0f, 1.0f);
+            uniform.MatParams1 = new Vector4(state.Shininess, normal, transparency, alpha);
         }
 
         _hasUploadedMaterial = true;

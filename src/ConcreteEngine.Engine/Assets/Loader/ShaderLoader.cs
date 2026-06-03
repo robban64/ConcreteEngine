@@ -99,7 +99,7 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
 
         var shaderId = gfxShaders.CreateShader(vsPtr.Data, fsPtr.Data, out var samplers);
 
-        return new Shader(record.Name, shaderId, samplers) { Id = ctx.Id, GId = record.GId, };
+        return new Shader(record.Name, ctx.Id, record.GId, shaderId, samplers);
     }
 
     protected override Shader LoadInMemory(ShaderRecord record, LoaderContext ctx) =>

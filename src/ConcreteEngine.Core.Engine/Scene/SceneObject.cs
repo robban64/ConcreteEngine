@@ -8,13 +8,13 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.ECS;
 
 namespace ConcreteEngine.Core.Engine.Scene;
-
+/*
 public interface ISceneObjectNotifier
 {
     void MarkDirty(SceneObjectId id);
     void Rename(SceneObject asset, string newName, Action<string> onSuccess);
 }
-
+*/
 public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObject>
 {
     [Flags]
@@ -78,8 +78,6 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     private readonly List<RenderEntityId> _renderEntities = [];
     private readonly List<GameEntityId> _gameEntities = [];
 
-    private ISceneObjectNotifier? _notifier;
-
     internal SceneObject(
         SceneObjectId id,
         Guid gId,
@@ -103,8 +101,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     public void SetName(string newName)
     {
-        if (_notifier is not { } notifier) return;
-        notifier.Rename(this, newName, (name) => Name = name);
+        SceneStore.Instance.Rename(this, newName, (name) => Name = name);
     }
 
     //
@@ -152,9 +149,8 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
 
     //
-    internal void Attach(ISceneObjectNotifier notifier)
+    internal void Attach()
     {
-        _notifier = notifier;
         MarkDirty(DirtyFlags.Transform);
         MarkDirty(DirtyFlags.Instance);
     }
@@ -180,7 +176,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     {
         if ((Dirty & flags) != 0) return;
         Dirty |= flags;
-        _notifier?.MarkDirty(Id);
+        SceneStore.Instance.MarkDirty(Id);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -192,7 +188,11 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         _gameEntities.EnsureCapacity(gameEcsCapacity);
     }
 
-    public int CompareTo(SceneObject? other) => other is null ? 1 : Id.CompareTo(other.Id);
+    public int CompareTo(SceneObject? other)
+    {
+        if (ReferenceEquals(this, other)) return 0;
+        return other is null ? 1 : Id.CompareTo(other.Id);
+    }
 
     public bool Equals(SceneObject? other)
     {

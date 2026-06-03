@@ -25,37 +25,25 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
     }
 
     //
-    private Dictionary<int, MatProfileInfo> _profiles;
+    private static readonly Dictionary<int, MatProfileInfo> Profiles = CreateSlotProfiles();
 
-    private AssetStore _store;
+    private readonly AssetStore _store;
 
-    internal MaterialLoader(AssetStore store)
+    internal MaterialLoader()
     {
-        _store = store;
-        _profiles = CreateSlotProfiles();
+        _store = AssetStore.Instance;
     }
 
 
-    protected override void OnActivate()
-    {
-    }
+    protected override void OnActivate() { }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    protected override void OnDeActivate()
-    {
-        _profiles.Clear();
-        _profiles = null!;
-        _store = null!;
-    }
+    protected override void OnDeActivate() { }
 
     internal static Material CreateFallback(AssetId assetId, Guid gId)
     {
         TextureSource[] slots = [new(AssetId.Empty, TextureUsage.Albedo)];
         var param = new MaterialParams(Color4.White, 0, 0, 1);
-        return new Material("Fallback", default, null, MaterialProfile.None, in param, slots)
-        {
-             Id = assetId, GId = gId,
-        };
+        return new Material("Fallback", assetId, gId, default, null, MaterialProfile.None, in param, slots);
     }
 
     protected override Material LoadInMemory(MaterialRecord record, LoaderContext ctx) =>
@@ -71,7 +59,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             slots = CreateSources(record);
         else if (record.Profile != MaterialProfile.None)
         {
-            var profile = _profiles[(int)record.Profile];
+            var profile = Profiles[(int)record.Profile];
             shaderName = profile.Shader;
             slots = CreateSlotsFromProfile(profile.Slots, record);
         }
@@ -83,10 +71,8 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
         var shader = _store.GetByName<Shader>(shaderName);
 
-        return new Material(record.Name, AssetId.Empty, shader, record.Profile, record.Parameters, slots)
-        {
-            Id = ctx.Id, GId = record.GId,
-        };
+        return new Material(record.Name, ctx.Id, record.GId, AssetId.Empty, shader, record.Profile, record.Parameters,
+            slots);
     }
 
 
@@ -115,13 +101,11 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
 
         var matProfile = embedded.IsAnimated ? MaterialProfile.AnimatedModel : MaterialProfile.StaticModel;
-        var profile = _profiles[(int)matProfile];
+        var profile = Profiles[(int)matProfile];
         var shader = _store.GetByName<Shader>(profile.Shader);
 
-        return new Material(embedded.Name, AssetId.Empty, shader, matProfile, in embedded.Params, slots)
-        {
-            Id = assetId, GId = embedded.GId,
-        };
+        return new Material(embedded.Name, assetId, embedded.GId, AssetId.Empty, shader, matProfile, in embedded.Params,
+            slots);
     }
 
 

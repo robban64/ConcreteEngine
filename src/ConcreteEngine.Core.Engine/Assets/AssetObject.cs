@@ -5,9 +5,10 @@ namespace ConcreteEngine.Core.Engine.Assets;
 public abstract class AssetObject : IComparable<AssetObject>
 {
     public const int MaxNameLength = 64;
-
-    public AssetId Id { get; internal init; }
-    public required Guid GId { get; init; } = Guid.NewGuid();
+    
+    public bool IsDirty { get; private set; }
+    public AssetId Id { get;  }
+    public Guid GId { get;  } 
 
     public string Name
     {
@@ -15,16 +16,18 @@ public abstract class AssetObject : IComparable<AssetObject>
         internal set
         {
             if (field == value) return;
-            field = value;
-            PackedName = StringPacker.PackAscii(value.AsSpan(), true);
+            field = value.Length > MaxNameLength ? value.Substring(0, MaxNameLength) : value;
+            PackedName = StringPacker.PackAscii(field, true);
         }
     }
 
     public ulong PackedName { get; private set; }
 
-    protected AssetObject(string name)
+    protected AssetObject(string name, AssetId id, Guid gId)
     {
         Name = name;
+        Id = id;
+        GId = gId;
     }
 
     public abstract AssetCategory Category { get; }
@@ -37,14 +40,19 @@ public abstract class AssetObject : IComparable<AssetObject>
         return true;
     }
     
-    protected void MarkDirty()
+    protected internal void MarkDirty()
     {
         if(!Id.IsValid()) return;
+        if(IsDirty) return;
+        IsDirty = true;
         AssetStore.Instance.MarkDirty(this);
     }
+    
+    internal void ClearDirty() => IsDirty = false;
 
     public int CompareTo(AssetObject? other)
     {
+        if(ReferenceEquals(this, other)) return 0;
         return other is null ? 1 : Id.Value.CompareTo(other.Id.Value);
     }
 }

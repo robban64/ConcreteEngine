@@ -7,9 +7,25 @@ using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-public sealed class MaterialState
+public sealed class MaterialState(Material material)
 {
-    private void MarkDirty() { }
+    private void MarkDirty() => material.MarkDirty();
+    
+    public void FillParams(out MaterialParams param)
+    {
+        param.Color = Color;
+        param.Shininess = Shininess;
+        param.Specular = Specular;
+        param.UvRepeat = UvRepeat;
+    }
+
+    public void SetParams(in MaterialParams param)
+    {
+        Color = param.Color;
+        Shininess = param.Shininess;
+        Specular = param.Specular;
+        UvRepeat = param.UvRepeat;
+    }
 
     public GfxDrawState DrawState
     {
@@ -20,7 +36,10 @@ public sealed class MaterialState
             field = value;
             MarkDirty();
         }
-    }
+    } = GfxDrawState.Set(
+        GfxDrawFlags.DepthTest | GfxDrawFlags.DepthWrite | GfxDrawFlags.Cull,
+        GfxDrawFlags.Blend | GfxDrawFlags.Ac2
+    );
 
     public GfxPassFunctions PassFunctions
     {
@@ -31,7 +50,9 @@ public sealed class MaterialState
             field = value;
             MarkDirty();
         }
-    }
+    } = new (BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None);
+
+    
 
     public Color4 Color
     {
@@ -94,17 +115,19 @@ public sealed class Material : AssetObject
     public AssetId TemplateId { get; init; }
     public MaterialId MaterialId { get; internal set; }
     public MaterialProfile Profile { get; internal set; }
-    public MaterialRenderProps RenderProps { get; private set; }
+    public MaterialRenderToggles RenderToggles { get; private set; }
 
     public Shader? BoundShader { get; internal set; }
+
+    public readonly MaterialState State;
 
     private readonly TextureSource[] _textureSources;
 
     public override AssetCategory Category => AssetCategory.Renderer;
     public override AssetKind Kind => AssetKind.Material;
 
-    private Material(string name, AssetId templateId, Shader? boundShader, MaterialProfile profile,
-        TextureSource[] sources) : base(name)
+    private Material(string name, AssetId id, Guid gid, AssetId templateId, Shader? boundShader, MaterialProfile profile,
+        TextureSource[] sources) : base(name,id,gid)
     {
         ArgumentNullException.ThrowIfNull(sources);
 
@@ -112,19 +135,20 @@ public sealed class Material : AssetObject
         BoundShader = boundShader;
         _textureSources = sources;
         Profile = profile;
+        State = new MaterialState(this);
 
         CalculateProperties();
     }
 
-    public Material(string name, AssetId templateId, Shader? boundShader, MaterialProfile profile,
+    public Material(string name, AssetId id, Guid gid, AssetId templateId, Shader? boundShader, MaterialProfile profile,
         in MaterialParams param,
-        TextureSource[] sources) : this(name, templateId, boundShader, profile, sources)
+        TextureSource[] sources) : this(name,id,gid, templateId, boundShader, profile, sources)
     {
-        SetParams(in param);
+        State.SetParams(in param);
     }
 
-    public Material(string name, AssetId templateId, Shader? boundShader, MaterialProfile profile,
-        MaterialParamsRecord param, TextureSource[] sources) : this(name, templateId, boundShader, profile, sources)
+    public Material(string name, AssetId id, Guid gid, AssetId templateId, Shader? boundShader, MaterialProfile profile,
+        MaterialParamsRecord param, TextureSource[] sources) : this(name,id,gid, templateId, boundShader, profile, sources)
     {
         ArgumentNullException.ThrowIfNull(param);
 
@@ -132,6 +156,7 @@ public sealed class Material : AssetObject
     }
 
 
+    public bool HasTransparency => State.Transparency;
     public ReadOnlySpan<TextureSource> GetTextureSources() => _textureSources;
 
     public void SetOverrideTexture(int slot, TextureId textureId)
@@ -148,7 +173,7 @@ public sealed class Material : AssetObject
 
         if (texture is { } tex)
         {
-            source = new TextureSource(tex.Id, tex.Usage, tex.TextureKind, tex.PixelFormat);
+            source = new TextureSource(tex.Id, tex.Usage, tex.GpuState.TextureKind, tex.GpuState.PixelFormat);
             MarkDirty();
             return;
         }
@@ -160,100 +185,11 @@ public sealed class Material : AssetObject
         }
     }
 
-    public void SetPassFunction(GfxPassFunctions passFunctions) =>
-        Pipeline = new MaterialPipeline(Pipeline.DrawState, passFunctions);
-
-    public void SetPassState(GfxDrawState drawState) =>
-        Pipeline = new MaterialPipeline(drawState, Pipeline.PassFunctions);
-
-
-    public MaterialPipeline Pipeline
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            MarkDirty();
-        }
-    } = MaterialPipeline.MakeModel();
-
-    public Color4 Color
-    {
-        get;
-        set
-        {
-            if (value == field) return;
-            field = value;
-            MarkDirty();
-        }
-    } = Color4.White;
-
-    public float Shininess
-    {
-        get;
-        set
-        {
-            if (FloatMath.NearlyEqual(field, value)) return;
-            field = float.Max(value, 0f);
-            MarkDirty();
-        }
-    } = 12f;
-
-    public float Specular
-    {
-        get;
-        set
-        {
-            if (FloatMath.NearlyEqual(field, value)) return;
-            field = float.Max(value, 0f);
-            MarkDirty();
-        }
-    } = 0.12f;
-
-    public float UvRepeat
-    {
-        get;
-        set
-        {
-            if (FloatMath.NearlyEqual(field, value)) return;
-            field = float.Max(value, 1f);
-            MarkDirty();
-        }
-    } = 1f;
-
-    public bool Transparency
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            MarkDirty();
-        }
-    }
-
-
-    public void FillParams(out MaterialParams param)
-    {
-        param.Color = Color;
-        param.Shininess = Shininess;
-        param.Specular = Specular;
-        param.UvRepeat = UvRepeat;
-    }
-
-    public void SetParams(in MaterialParams param)
-    {
-        Color = param.Color;
-        Shininess = param.Shininess;
-        Specular = param.Specular;
-        UvRepeat = param.UvRepeat;
-    }
 
     internal Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
     {
-        FillParams(out var param);
-        return new Material(newName, Id, BoundShader, Profile, in param, _textureSources) { Id = newId, GId = newGId };
+        State.FillParams(out var param);
+        return new Material(newName, newId, newGId, Id, BoundShader, Profile, in param, _textureSources);
     }
 
     internal void Commit()
@@ -263,9 +199,9 @@ public sealed class Material : AssetObject
 
     private void CalculateProperties()
     {
-        var props = new MaterialRenderProps
+        var props = new MaterialRenderToggles
         {
-            HasTransparency = Transparency, HasShadowMap = BoundShader?.DefaultBindings.ShadowMapBinding >= 0
+            HasTransparency = HasTransparency, HasShadowMap = BoundShader?.DefaultBindings.ShadowMapBinding >= 0
         };
         foreach (var source in _textureSources)
         {
@@ -274,14 +210,14 @@ public sealed class Material : AssetObject
             if (!props.HasAlphaMask) props.HasAlphaMask = source.Usage == TextureUsage.Mask;
         }
 
-        RenderProps = props;
+        RenderToggles = props;
     }
 
     private void FromParamRecord(MaterialParamsRecord param)
     {
-        if (param.Color is { } color) Color = color;
-        if (param.Shininess is { } shininess) Shininess = shininess;
-        if (param.UvRepeat is { } uvRepeat) UvRepeat = uvRepeat;
-        if (param.Specular is { } spec) Specular = spec;
+        if (param.Color is { } color) State.Color = color;
+        if (param.Shininess is { } shininess) State.Shininess = shininess;
+        if (param.UvRepeat is { } uvRepeat) State.UvRepeat = uvRepeat;
+        if (param.Specular is { } spec) State.Specular = spec;
     }
 }

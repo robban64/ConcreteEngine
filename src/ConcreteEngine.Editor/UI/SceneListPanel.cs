@@ -30,8 +30,6 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private static readonly Vector2 VisBtnSize = new(ListItemHeight + ListItemPad, ListItemHeight + ListItemPad);
     private static readonly Vector2 TableSelectSize = new(0, ListItemHeight);
 
-    private static SceneStore Store => EngineObjectStore.SceneStore;
-
     private readonly ComboInput _kindCombo;
     private readonly TextInput _searchInput;
 
@@ -127,13 +125,13 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ArgumentOutOfRangeException.ThrowIfNegative(start);
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)length, (uint)_sceneIds.Length);
 
+        var store = SceneStore.Instance;
         var sw = TextBuffers.GetWriter();
-
         uint eyeIcon = StyleMap.GetIntIcon(Icons.Eye), eyeClosedIcon = StyleMap.GetIntIcon(Icons.EyeClosed);
         var selectedId = SelectedId;
         foreach (var id in _sceneIds.AsSpan(start, length))
         {
-            var it = Store.Get(id);
+            var it = store.Get(id);
             var isSelected = id == selectedId;
 
             ImGui.PushID((int)id);
@@ -171,7 +169,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         }
 
         var count = 0;
-        foreach (var it in Store)
+        foreach (var it in SceneStore.Instance)
         {
             if (count >= AssetCapacity) break;
 

@@ -13,7 +13,6 @@ namespace ConcreteEngine.Engine.Assets;
 
 internal sealed class AssetLoader
 {
-
     private ProcessStepOrder _step;
 
     private readonly AssetStore _store;
@@ -36,7 +35,7 @@ internal sealed class AssetLoader
         _loaders[AssetKind.Shader.ToIndex()] = _shaderLoader = new ShaderLoader(gfx.Shaders);
         _loaders[AssetKind.Texture.ToIndex()] =_textureLoader = new TextureLoader(gfx.Textures);
         _loaders[AssetKind.Model.ToIndex()] =_modelLoader = new ModelLoader(_textureLoader, gfx.Meshes);
-        _loaders[AssetKind.Material.ToIndex()] =_materialLoader = new MaterialLoader(store);
+        _loaders[AssetKind.Material.ToIndex()] =_materialLoader = new MaterialLoader();
         
         _recordQueue = new Queue<AssetRecord>[AssetKindUtils.AssetTypeCount];
     }

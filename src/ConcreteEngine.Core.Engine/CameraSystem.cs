@@ -29,7 +29,7 @@ public sealed class CameraSystem
         LightTransforms = new CameraTransformSnapshot();
     }
 
-    internal void AttachRaycast(SceneStore scene, RenderSystem renderSystem) => RayCaster.Attach(scene, renderSystem);
+    internal void AttachRaycast(RenderSystem renderSystem) => RayCaster.Attach(renderSystem);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -56,6 +56,8 @@ internal static class AssetSystemSetup
             var assetId = assets.RegisterPlainAsset(gid, AssetKind.Texture, "White", AssetStorageKind.InMemory);
             assets.AddAsset(new Texture(
                 "White",
+                assetId,
+                gid,
                 GfxTextures.Fallback.AlbedoId,
                 new Size2D(1),
                 new TextureProperties(
@@ -64,7 +66,8 @@ internal static class AssetSystemSetup
                     preset: TexturePreset.NearestClamp,
                     anisotropy: AnisotropyLevel.Off,
                     pixelFormat: TexturePixelFormat.Rgba
-                )) { Id = assetId, GId = gid });
+                ))
+            );
         }
 
         // Material

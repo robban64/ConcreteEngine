@@ -109,6 +109,8 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
 
         var texture = new Texture(
             embedded.Name,
+            assetId,
+            embedded.GId,
             textureId,
             embedded.Dimensions,
             new TextureProperties(
@@ -118,7 +120,7 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
                 anisotropy: anisotropy,
                 pixelFormat: embedded.PixelFormat
             )
-        ) { Id = assetId, GId = embedded.GId, Usage = embedded.SlotKind };
+        ) {Usage = embedded.SlotKind};
         
         _embeddedTextures.Remove(embedded.GId);
         entry.Dispose();
@@ -131,6 +133,8 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
     {
         return new Texture(
             record.Name,
+            id,
+            record.GId,
             textureId,
             size,
             new TextureProperties(
@@ -140,6 +144,6 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
                 anisotropy: record.Anisotropy,
                 pixelFormat: record.PixelFormat
             )
-        ) { Id = id, GId = record.GId, Usage = usage };
+        ){Usage = usage};
     }
 }

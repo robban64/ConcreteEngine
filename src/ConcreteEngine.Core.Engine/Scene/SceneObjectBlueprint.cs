@@ -20,11 +20,11 @@ public sealed class ModelBlueprint : SceneObjectBlueprint
 
     public readonly AssetId[] Materials = [];
 
-    public ModelBlueprint(AssetId modelId, params AssetId[] args)
+    public ModelBlueprint(AssetId modelId, params AssetId[] materialAssetIds)
     {
         ModelId = modelId;
-        if (args.Length == 0) return;
-        Materials = args;
+        if (materialAssetIds.Length == 0) return;
+        Materials = materialAssetIds;
     }
 }
 

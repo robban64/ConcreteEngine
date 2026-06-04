@@ -15,39 +15,40 @@ public sealed partial class AssetStore
     public static readonly AssetStore Instance = new();
     
     private static readonly Func<string, Type, bool> NameExistsDel =
-        static (name, type) => !Instance._byName.ContainsKey((type, name));
-
+        static (name, type) => !Instance.GetTypeStore(AssetKindUtils.ToAssetKind(type)).HasName(name);
 
     public readonly AssetFileRegistry FileRegistry;
 
     private readonly SlotArray<AssetObject> _assets = new(DefaultCap);
-    private readonly AssetTypeCollection[] _collections;
+    private readonly AssetTypeStore[] _collections;
 
     private readonly Dictionary<Guid, AssetId> _byGid = new(DefaultCap);
-    private readonly Dictionary<(Type, string), AssetId> _byName = new(DefaultCap);
-
-
-    //
-    public int Count => _assets.Count;
-    public int Capacity => _assets.Capacity;
-    internal IReadOnlyList<AssetTypeCollection> Collections => _collections;
-
-    private AssetId MakeAssetId() => new(_assets.AllocateNext() + 1, 1);
-    //
 
     private AssetStore()
     {
         FileRegistry = new AssetFileRegistry();
-        _collections = AssetTypeCollection.CreateAll();
-
+        _collections = AssetTypeStore.CreateAll();
+        
         _assets.OnResize = static (oldSize, newSize) =>
             Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetStore), oldSize, newSize));
     }
+    
+    //
+    private AssetId MakeAssetId() => new(_assets.AllocateNext() + 1, 1);
+
+    public int Count => _assets.Count;
+    public int Capacity => _assets.Capacity;
+    internal IReadOnlyList<AssetTypeStore> Collections => _collections;
+    //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetTypeCollection GetAssetList(AssetKind kind) => _collections[kind.ToIndex()];
+    public AssetTypeStore GetTypeStore(AssetKind kind) => _collections[kind.ToIndex()];
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public AssetTypeStore GetTypeStore(Type type) => _collections[AssetKindUtils.ToAssetKind(type).ToIndex()];
 
-    public void MarkDirty(AssetObject asset) => GetAssetList(asset.Kind).MarkDirty(asset);
+
+    public void MarkDirty(AssetObject asset) => GetTypeStore(asset.Kind).MarkDirty(asset);
 
     public void Rename(AssetObject asset, string newName)
     {
@@ -55,12 +56,7 @@ public sealed partial class AssetStore
         if (asset.Name == newName)
             throw new ArgumentException("Rename: Identical name", nameof(newName));
 
-        var type = AssetKindUtils.ToType(asset.Kind);
-        if (_byName.ContainsKey((type, newName)))
-            throw new ArgumentException("Rename: name already exists", nameof(newName));
-
-        _byName.Remove((type, asset.Name));
-        _byName.Add((type, newName), asset.Id);
+        GetTypeStore(asset.Kind).Rename(asset.Name, newName);
     }
 
     internal AssetId RegisterPlainAsset(Guid gid, AssetKind kind, string name, AssetStorageKind storageKind)
@@ -82,7 +78,7 @@ public sealed partial class AssetStore
         ArgumentOutOfRangeException.ThrowIfEqual(record.GId, Guid.Empty);
 
         var assetType = AssetKindUtils.ToType(record.Kind);
-        if (_byName.ContainsKey((assetType, record.Name)))
+        if (GetTypeStore(record.Kind).HasName(record.Name))
             throw new InvalidOperationException($"Asset name {record.Name} already registered");
 
         var assetId = MakeAssetId();
@@ -140,16 +136,18 @@ public sealed partial class AssetStore
         if (!FileRegistry.TryGetFileBindings(asset.Id, out _))
             throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' missing file bindings.");
 
-        if (!_byName.TryAdd((typeof(TAsset), asset.Name), asset.Id))
+        var assetList = GetTypeStore(asset.Kind);
+
+        var name = asset.Name;
+        
+        if (assetList.HasName(name))
         {
-            var name = AssetNameUtils.IncrementName(asset.Name, typeof(TAsset), NameExistsDel);
+            name = AssetNameUtils.IncrementName(name, typeof(TAsset), NameExistsDel);
             asset.Name = name;
-            _byName.Add((typeof(TAsset), asset.Name), asset.Id);
         }
 
         _assets[asset.Id.Index()] = asset;
 
-        var assetList = GetAssetList(AssetKindUtils.ToAssetKind(typeof(TAsset)));
         assetList.Add(asset);
         MarkDirty(asset);
     }
@@ -182,9 +180,9 @@ public sealed partial class AssetStore
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void EnsureStoreCapacity(Queue<AssetRecord>[] queues)
     {
-        GetAssetList(AssetKind.Shader).EnsureCapacity(queues[AssetKind.Shader.ToIndex()].Count);
-        GetAssetList(AssetKind.Model).EnsureCapacity(queues[AssetKind.Model.ToIndex()].Count);
-        GetAssetList(AssetKind.Texture).EnsureCapacity(queues[AssetKind.Texture.ToIndex()].Count);
-        GetAssetList(AssetKind.Material).EnsureCapacity(queues[AssetKind.Material.ToIndex()].Count);
+        GetTypeStore(AssetKind.Shader).EnsureCapacity(queues[AssetKind.Shader.ToIndex()].Count);
+        GetTypeStore(AssetKind.Model).EnsureCapacity(queues[AssetKind.Model.ToIndex()].Count);
+        GetTypeStore(AssetKind.Texture).EnsureCapacity(queues[AssetKind.Texture.ToIndex()].Count);
+        GetTypeStore(AssetKind.Material).EnsureCapacity(queues[AssetKind.Material.ToIndex()].Count);
     }
 }

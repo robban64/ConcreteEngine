@@ -157,7 +157,7 @@ internal sealed class AssetBrowser
         {
             var assets = AssetStore.Instance;
 
-            foreach (var assetId in assets.GetAssetList(kind).AsSpan())
+            foreach (var assetId in assets.GetTypeStore(kind).AsSpan())
             {
                 var file = provider.GetAssetRootFile(assetId);
                 if (!filesAdded.Add(file.Id) && file.Storage == AssetStorageKind.FileSystem)
@@ -165,7 +165,7 @@ internal sealed class AssetBrowser
                 AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
             }
 
-            foreach (var assetId in assets.GetAssetList(kind).AsSpan())
+            foreach (var assetId in assets.GetTypeStore(kind).AsSpan())
             {
                 var fileIds = provider.GetFileBindings(assetId);
                 if (fileIds.Length <= 1) continue;

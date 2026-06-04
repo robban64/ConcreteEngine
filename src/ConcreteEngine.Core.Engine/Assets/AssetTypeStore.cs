@@ -1,15 +1,17 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-public sealed class AssetTypeCollection(AssetKind kind)
+public sealed class AssetTypeStore(AssetKind kind)
 {
     private readonly List<AssetId> _asset = [];
     private readonly List<int> _dirtyIds = [];
+    private readonly Dictionary<string, AssetId> _byName = [];
 
     public AssetKind Kind { get; } = kind;
     public int Count => _asset.Count;
@@ -22,11 +24,36 @@ public sealed class AssetTypeCollection(AssetKind kind)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<AssetId> AsSpan() => CollectionsMarshal.AsSpan(_asset);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool HasName(string name) => _byName.ContainsKey(name);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetByName(string name,  out AssetId assetId) => _byName.TryGetValue(name, out assetId);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public AssetId GetByName(string name)
+    {
+        if (TryGetByName(name, out var value)) return value;
+        Throwers.KeyNotFound(name);
+        return AssetId.Empty;
+    }
 
     internal void Add(AssetObject asset)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)asset.Kind, (int)Kind, nameof(asset));
         _asset.Add(asset.Id);
+        _byName.Add(asset.Name, asset.Id);
+    }
+
+    internal void Rename(string oldName, string newName)
+    {
+        if (_byName.ContainsKey(newName))
+            throw new ArgumentException("Rename: name already exists", nameof(newName));
+
+        var id = GetByName(oldName);
+        _byName.Remove(oldName);
+        _byName.Add(newName, id);
     }
 
     internal void MarkDirty(AssetObject asset)
@@ -65,17 +92,18 @@ public sealed class AssetTypeCollection(AssetKind kind)
     {
         _asset.EnsureCapacity(capacity);
         _dirtyIds.EnsureCapacity(capacity);
+        _byName.EnsureCapacity(capacity);
     }
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static AssetTypeCollection[] CreateAll()
+    internal static AssetTypeStore[] CreateAll()
     {
-        var collections = new AssetTypeCollection[4];
-        collections[AssetKind.Shader.ToIndex()] = new AssetTypeCollection(AssetKind.Shader);
-        collections[AssetKind.Model.ToIndex()] = new AssetTypeCollection(AssetKind.Model);
-        collections[AssetKind.Texture.ToIndex()] = new AssetTypeCollection(AssetKind.Texture);
-        collections[AssetKind.Material.ToIndex()] = new AssetTypeCollection(AssetKind.Material);
+        var collections = new AssetTypeStore[4];
+        collections[AssetKind.Shader.ToIndex()] = new AssetTypeStore(AssetKind.Shader);
+        collections[AssetKind.Model.ToIndex()] = new AssetTypeStore(AssetKind.Model);
+        collections[AssetKind.Texture.ToIndex()] = new AssetTypeStore(AssetKind.Texture);
+        collections[AssetKind.Material.ToIndex()] = new AssetTypeStore(AssetKind.Material);
         return collections;
     }
 }

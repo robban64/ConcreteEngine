@@ -49,6 +49,19 @@ public sealed class Model : AssetObject
         _textures = modelInfo.TextureCount > 0 ? new Texture[modelInfo.TextureCount] : [];
         _materials = modelInfo.MaterialCount > 0 ? new Material[modelInfo.MaterialCount] : [];
     }
+
+
+    public Material GetMaterial(int index)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_materials.Length, nameof(index));
+        return _materials[index];
+    }
+    
+    public Texture GetTexture(int index)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_textures.Length, nameof(index));
+        return _textures[index];
+    }
     
     public ReadOnlySpan<Texture> GetTextures() => _textures;
     public ReadOnlySpan<Material> GetMaterials() => _materials;

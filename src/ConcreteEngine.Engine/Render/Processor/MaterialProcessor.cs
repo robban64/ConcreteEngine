@@ -12,7 +12,7 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
 {
     private bool _hasUploadedMaterial;
     private readonly MaterialBuffer _materialBuffer = renderProgram.UploadBuffers.Materials;
-    private readonly AssetTypeCollection _materialBucket = AssetStore.Instance.GetAssetList(AssetKind.Material);
+    private readonly AssetTypeStore _materialBucket = AssetStore.Instance.GetTypeStore(AssetKind.Material);
 
     internal void SubmitMaterialData()
     {

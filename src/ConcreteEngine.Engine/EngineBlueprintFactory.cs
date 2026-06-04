@@ -91,7 +91,7 @@ internal sealed class EngineBlueprintFactory : BlueprintFactory
             var material = component.Materials[i];
 
             var queue = material.HasTransparency ? DrawCommandQueue.Transparent : DrawCommandQueue.Opaque;
-            var pass = material.RenderToggles.HasShadowMap ? PassMask.Default : PassMask.Main;
+            var pass = material.BoundShader?.HasShadowSampler ?? false ? PassMask.Default : PassMask.Main;
             var meshIdx = mesh.Info.MeshIndex;
             var source = new SourceComponent(mesh.MeshId, material.MaterialId, meshIdx, kind, queue, pass);
 

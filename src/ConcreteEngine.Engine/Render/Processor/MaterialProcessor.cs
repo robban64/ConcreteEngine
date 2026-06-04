@@ -18,7 +18,10 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
     {
         if (_materialBucket.DirtyCount == 0 && _hasUploadedMaterial) return;
         if (_materialBucket.DirtyCount > 0) _hasUploadedMaterial = false;
+        
         Submit(_materialBuffer);
+        _hasUploadedMaterial = true;
+        _materialBucket.ClearDirty();
     }
 
     private void Submit(MaterialBuffer materialBuffer)
@@ -29,62 +32,61 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
         foreach (var id in _materialBucket.GetDirtySpan())
         {
             var material = assetStore.GetUnsafe<Material>(id);
-            material.Commit();
             material.ClearDirty();
-            
-            if (material.BoundShader is not { } shader) continue;
 
-            var textureSources = material.GetTextureSources();
-            for (var i = 0; i < textureSources.Length; i++)
-            {
-                var source = textureSources[i];
-                if (!ResolveFallbackTextureId(source, out var textureId))
-                    textureId = assetStore.Get<Texture>(source.AssetTexture).GfxId;
+            if (material.BoundShader is not { } shader)
+                shader = Shader.FallbackShader;
 
-                slots[i] = new TextureBinding(textureId, source.Usage, (sbyte)i);
-            }
-
-            var props = material.RenderToggles;
-            float transparency = props.HasTransparency ? 1f : 0f;
-            float normal = props.HasNormal ? 1f : 0f;
-            float alpha = props.HasAlphaMask ? 1f : 0f;
+            var toggles = FillSamplers(slots, material, assetStore, materialBuffer);
 
             var state = material.State;
-            var meta = new RenderMaterialMeta(
+            ref var uniform = ref materialBuffer.Submit(
                 material.MaterialId,
-                shader.GfxId,
-                state.DrawState,
-                state.PassFunctions,
-                shader.DefaultBindings.ShadowMapBinding
-            );
-
-            ref var uniform = ref materialBuffer.Submit(in meta, slots.Slice(0, textureSources.Length));
+                new RenderMaterialMeta(
+                    shader.GfxId,
+                    state.DrawState,
+                    state.PassFunctions,
+                    shader.DefaultBindings.ShadowMapBinding
+                ));
 
             uniform.MatColor = state.Color;
             uniform.MatParams0 = new Vector4(state.Specular, state.UvRepeat, 1.0f, 1.0f);
-            uniform.MatParams1 = new Vector4(state.Shininess, normal, transparency, alpha);
+            uniform.MatParams1 = new Vector4(
+                state.Shininess,
+                toggles.HasNormal ? 1f : 0f,
+                state.Transparency ? 1f : 0f,
+                toggles.HasAlphaMask ? 1f : 0f
+            );
+        }
+    }
+
+    private static MaterialRenderToggles FillSamplers(Span<TextureBinding> slots, Material material,
+        AssetStore assetStore, MaterialBuffer buffer)
+    {
+        var toggles = new MaterialRenderToggles();
+        var textureSources = material.GetTextureSources();
+        for (var i = 0; i < textureSources.Length; i++)
+        {
+            var source = textureSources[i];
+            if (!ResolveFallbackTextureId(source, out var textureId))
+            {
+                textureId = assetStore.Get<Texture>(source.AssetTexture).GfxId;
+                if (source.Usage == TextureUsage.Normal) toggles.HasNormal = true;
+                else if (source.Usage == TextureUsage.Mask) toggles.HasAlphaMask = true;
+            }
+
+            slots[i] = new TextureBinding(textureId, source.Usage, (byte)i);
         }
 
-        _hasUploadedMaterial = true;
-        _materialBucket.ClearDirty();
-
+        buffer.SubmitBindings(material.MaterialId, slots.Slice(0, textureSources.Length));
+        return toggles;
     }
 
     private static bool ResolveFallbackTextureId(TextureSource source, out TextureId textureId)
     {
-        if (source.TextureKind == TextureKind.Texture2DArray)
+        if (source.OverrideTextureId.IsValid())
         {
             textureId = source.OverrideTextureId;
-            return true;
-        }
-
-        if (source.IsFallback)
-        {
-            textureId = source.Usage switch
-            {
-                TextureUsage.Normal => GfxTextures.Fallback.NormalId,
-                _ => GfxTextures.Fallback.AlbedoId
-            };
             return true;
         }
 

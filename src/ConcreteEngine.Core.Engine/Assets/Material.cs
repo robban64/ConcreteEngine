@@ -15,7 +15,6 @@ public sealed class Material : AssetObject
     public AssetId TemplateId { get; init; }
     public MaterialId MaterialId { get; private set; } = new(++_materialIdCounter);
     public MaterialProfile Profile { get; private set; }
-    public MaterialRenderToggles RenderToggles { get; private set; }
 
     public Shader? BoundShader { get; internal set; }
 
@@ -37,7 +36,6 @@ public sealed class Material : AssetObject
         Profile = profile;
         State = new MaterialState(this);
 
-        CalculateProperties();
         MarkDirty();
     }
 
@@ -74,7 +72,7 @@ public sealed class Material : AssetObject
 
         if (texture != null)
         {
-            source = new TextureSource(texture.Id, texture.Usage, texture.GpuState.TextureKind, texture.GpuState.PixelFormat);
+            source = new TextureSource(texture.Id, texture.Usage);
             MarkDirty();
             return;
         }
@@ -91,27 +89,6 @@ public sealed class Material : AssetObject
     {
         State.FillParams(out var param);
         return new Material(newName, newId, newGId, Id, BoundShader, Profile, in param, _textureSources);
-    }
-
-    internal void Commit()
-    {
-        CalculateProperties();
-    }
-
-    private void CalculateProperties()
-    {
-        var props = new MaterialRenderToggles
-        {
-            HasTransparency = HasTransparency, HasShadowMap = BoundShader?.DefaultBindings.ShadowMapBinding >= 0
-        };
-        foreach (var source in _textureSources)
-        {
-            if (!source.AssetTexture.IsValid()) continue;
-            if (!props.HasNormal) props.HasNormal = source.Usage == TextureUsage.Normal;
-            if (!props.HasAlphaMask) props.HasAlphaMask = source.Usage == TextureUsage.Mask;
-        }
-
-        RenderToggles = props;
     }
 
     private void FromParamRecord(MaterialParamsRecord param)

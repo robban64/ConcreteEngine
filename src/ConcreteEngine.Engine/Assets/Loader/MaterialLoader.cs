@@ -124,7 +124,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
             if (slot.TextureKind == TextureKind.Texture2DArray)
             {
-                sources[i] = new TextureSource(default, slot.SlotKind, slot.TextureKind);
+                sources[i] = new TextureSource(default, slot.SlotKind);
                 continue;
             }
 
@@ -134,7 +134,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             if (slotAsset is not { } slotAssetId)
                 throw new InvalidOperationException($"Texture {slot.Name} does not exists for {embedded.Name}");
 
-            sources[i] = new TextureSource(slotAssetId, slot.SlotKind, slot.TextureKind);
+            sources[i] = new TextureSource(slotAssetId, slot.SlotKind);
         }
 
         return sources;
@@ -150,12 +150,12 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             var name = desc.ProfileSlots.Length > i ? desc.ProfileSlots[i] : null;
             if (name == null)
             {
-                slots[i] = new TextureSource(AssetId.Empty, info.SlotKind, info.TexKind);
+                slots[i] = new TextureSource(AssetId.Empty, info.SlotKind);
                 continue;
             }
 
             var tex = _store.GetByName<Texture>(name);
-            slots[i] = new TextureSource(tex.Id, info.SlotKind, info.TexKind);
+            slots[i] = new TextureSource(tex.Id, info.SlotKind);
         }
 
         return slots;

@@ -37,26 +37,29 @@ public sealed class MaterialBuffer : IDisposable
         return _textureSlots.AsSpan(range.Offset, range.Length);
     }
 
-    public ref MaterialUniform Submit(in RenderMaterialMeta payload, ReadOnlySpan<TextureBinding> slots)
+    public void SubmitBindings(MaterialId id, ReadOnlySpan<TextureBinding> slots)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(slots.Length, TextureSlots);
-
-        var index = payload.MaterialId.Index();
-
-        EnsureCapacity(index + 1);
         EnsureTextureSlotCapacity(slots.Length);
-
-        _metas[index] = payload;
 
         var slotIdx = _slotCount;
         for (var i = 0; i < slots.Length; i++, slotIdx++)
             _textureSlots[slotIdx] = slots[i];
 
-        _slotRanges[index] = new RangeU16((ushort)_slotCount, (ushort)slots.Length);
+        _slotRanges[id.Index()] = new RangeU16(_slotCount, slots.Length);
+        _slotCount = slotIdx;
+    }
+
+    public ref MaterialUniform Submit(MaterialId id, in RenderMaterialMeta payload)
+    {
+        var index = id.Index();
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_metas.Length, nameof(id));
+
+        EnsureCapacity(id.Id);
+
+        _metas[index] = payload;
 
         Count = int.Max(Count, index);
-        _slotCount = slotIdx;
-
         return ref _buffer[index];
     }
 
@@ -95,7 +98,7 @@ public sealed class MaterialBuffer : IDisposable
 
     private void EnsureTextureSlotCapacity(int amount)
     {
-        if (_textureSlots.Length > amount) return;
+        if (_textureSlots.Length > _slotCount + amount) return;
         var newCap = CapacityUtils.CapacityGrowthToFit(_textureSlots.Length, amount);
         if (newCap > MaxTextureSlotBuffCapacity)
             Throwers.BufferOverflow("MaterialTextureBuffer", newCap, MaxMaterialBufferCapacity);

@@ -116,8 +116,6 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
             ImGui.TableNextColumn();
             AppDraw.Text(sw.Append(usageNames[(int)binding.Usage]).End());
 
-            DrawHover(binding, sw);
-
             ImGui.TableNextColumn();
             if (binding.AssetTexture.IsValid())
                 DrawAssetSlot(asset, i, AssetStore.Instance.Get<Texture>(binding.AssetTexture), sw);
@@ -128,24 +126,6 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         }
 
         ImGui.EndTable();
-        return;
-
-        static void DrawHover(TextureSource binding, NativeSpanWriter sw)
-        {
-            if (!ImGui.IsItemHovered()) return;
-
-            ImGui.BeginTooltip();
-            ImGui.TextUnformatted("Binding Info"u8);
-            ImGui.Separator();
-
-            AppDraw.Text(sw.Append("Kind: "u8)
-                .Append(binding.TextureKind.ToText())
-                .Append("\nFormat: "u8)
-                .Append(binding.PixelFormat.ToText())
-                .End());
-
-            ImGui.EndTooltip();
-        }
     }
 
 
@@ -185,14 +165,6 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
     private void DrawAssetSlotEmptyTexture(Material material, int slot, TextureSource source, NativeSpanWriter sw)
     {
         var size = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetFrameHeight());
-
-        if (source.IsFallback)
-        {
-            //ImGui.PushStyleColor(ImGuiCol.Text, Palette.GrayBase);
-            ImGui.Button(sw.Write(source.GetFallbackName()), size);
-            //ImGui.PopStyleColor();
-            return;
-        }
 
         ImGui.PushStyleColor(ImGuiCol.Text, Palette.OrangeBase);
         ImGui.Button("Empty Slot"u8, size);

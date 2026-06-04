@@ -35,6 +35,8 @@ public sealed class Shader : AssetObject
     public const string RoughnessName = "uRoughness";
     public const string AlphaName = "uAlpha";
     public const string LightMapName = "uLightMap";
+    
+    public static Shader FallbackShader { get; internal set; }
 
     public readonly ShaderId GfxId;
     public GfxUniformSampler[] Samplers { get; private set; } = [];
@@ -46,6 +48,12 @@ public sealed class Shader : AssetObject
         GfxId = gfxId;
         SetSamplers(samplers);
     }
+    
+    public bool HasShadowSampler => DefaultBindings.ShadowMapBinding > 0;
+    public bool HasNormalSampler => DefaultBindings.NormalBinding > 0;
+    public bool HasSpecularSampler => DefaultBindings.SpecularBinding > 0;
+    public bool HasRoughnessSampler => DefaultBindings.RoughnessBinding > 0;
+    public bool HasAlphaSampler => DefaultBindings.AlphaBinding > 0;
 
     internal void SetSamplers(GfxUniformSampler[] samplers)
     {

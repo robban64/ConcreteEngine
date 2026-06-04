@@ -92,8 +92,7 @@ internal sealed class DrawCommandProcessor
         }
 
         _gfxCmd.UseShader(materialMeta.ShaderId);
-        if (texSlots.Length > 0)
-            BindTextureSlots(texSlots, materialMeta.ShadowMapBinding);
+        BindTextureSlots(texSlots, materialMeta.ShadowMapBinding);
     }
 
     private void BindTextureSlots(ReadOnlySpan<TextureBinding> slots, sbyte shadowMapBinding)
@@ -103,7 +102,6 @@ internal sealed class DrawCommandProcessor
 
         foreach (var value in slots)
         {
-            if (value.Slot < 0) continue;
             _gfxCmd.BindTexture(value.Texture, value.Slot);
         }
     }
@@ -111,7 +109,6 @@ internal sealed class DrawCommandProcessor
     private void BindDepthTextureSlots(ReadOnlySpan<TextureBinding> slots)
     {
         //_gfxCmd.BindTexture(GfxTextures.Fallback.AlphaMaskId, 1);
-
         foreach (var value in slots)
         {
             if (value.SlotKind == TextureUsage.Albedo)

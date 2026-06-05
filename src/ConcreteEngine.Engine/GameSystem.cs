@@ -105,7 +105,7 @@ internal sealed class GameSystem(SceneStore store)
 
             var instance = sceneObject.GetInstance<ModelInstance>();
             ref readonly var source = ref renderEcs.GetSource(entity);
-            ref readonly var meshMatrix = ref instance.Asset.Meshes[source.MeshIndex].WorldTransform;
+            ref readonly var meshMatrix = ref instance.AssetModel.Meshes[source.MeshIndex].WorldTransform;
             MatrixMath.MultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
 
             //finalMatrix = meshMatrix * worldMatrix;

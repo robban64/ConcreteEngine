@@ -132,11 +132,13 @@ public sealed class GameEngine : IDisposable
 
     private void OnGameTick(float dt)
     {
-        _renderSystem.BeforeUpdate();
+        CameraSystem.Instance.BeginUpdate();
+        
         _sceneSystem.UpdateScene(dt);
+        _gateway.UpdateGameTick(dt);
+
         _renderSystem.AfterUpdate();
 
-        _gateway.UpdateGameTick(dt);
     }
 
 

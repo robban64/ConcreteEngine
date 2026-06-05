@@ -42,33 +42,29 @@ internal sealed class EngineBlueprintFactory : BlueprintFactory
     private static ModelInstance BuildModel(SceneObject sceneObject, ModelBlueprint bp)
     {
         var model = AssetStore.Get<Model>(bp.ModelId);
-
-        if (string.IsNullOrEmpty(bp.DisplayName))
-            bp.DisplayName = model.Name;
-
+        
         if (sceneObject.Transform.GetBounds().IsIdentity)
             sceneObject.Transform.SetBounds(in model.Bounds);
 
         var instance = new ModelInstance(bp, model);
-
-        var modelMaterials = bp.Materials.Length == 0 ? model.GetMaterials() : ReadOnlySpan<Material>.Empty;
         
+        var modelMaterials = bp.Materials.Length == 0 ? model.GetMaterials() : ReadOnlySpan<Material>.Empty;
         for (int i = 0; i < model.Meshes.Length; i++)
         {
             var mesh = model.Meshes[i];
-            if (mesh == null!) Throwers.NotFoundBy("Mesh not found", i);
             var matIndex = mesh.Info.MaterialIndex;
             if (modelMaterials.Length > 0 && matIndex < modelMaterials.Length)
             {
-                instance.Materials.Add(modelMaterials[matIndex]);
+                instance.SetMaterial(matIndex, modelMaterials[i]);
                 continue;
             }
             
-            var materialId = matIndex < bp.Materials.Length ? bp.Materials[matIndex] : Material.FallbackMaterial.Id;
-            if(materialId == AssetId.Empty) materialId = Material.FallbackMaterial.Id;
-            
-            instance.Materials.Add(AssetStore.Get<Material>(materialId));
+            var assetId = matIndex < bp.Materials.Length ? bp.Materials[matIndex] : Material.FallbackMaterial.Id;
+            if(assetId == AssetId.Empty) assetId = Material.FallbackMaterial.Id;
+
+            instance.SetMaterial(matIndex, AssetStore.Get<Material>(assetId));
         }
+        
 
         var modelRootEntity = BuildModelEntities(instance);
 
@@ -80,20 +76,25 @@ internal sealed class EngineBlueprintFactory : BlueprintFactory
 
     private static RenderEntityId BuildModelEntities(ModelInstance component)
     {
-        const EntitySourceKind kind = EntitySourceKind.Model;
 
         var rootEntity = new RenderEntityId(0);
-        var meshes = component.Asset.Meshes;
-        var isAnimated = component.Asset.Animation != null;
+        var meshes = component.AssetModel.Meshes;
+        var isAnimated = component.AssetModel.Animation != null;
         for (int i = 0; i < meshes.Length; i++)
         {
             var mesh = meshes[i];
-            var material = component.Materials[i];
+            var material = component.GetMaterial(i);
 
-            var queue = material.HasTransparency ? DrawCommandQueue.Transparent : DrawCommandQueue.Opaque;
-            var pass = material.BoundShader?.HasShadowSampler ?? false ? PassMask.Default : PassMask.Main;
             var meshIdx = mesh.Info.MeshIndex;
-            var source = new SourceComponent(mesh.MeshId, material.MaterialId, meshIdx, kind, queue, pass);
+
+            //var queue = material.HasTransparency ? DrawCommandQueue.Transparent : DrawCommandQueue.Opaque;
+            var source = new SourceComponent(
+                mesh.MeshId, 
+                material.MaterialId, 
+                meshIdx, 
+                EntitySourceKind.Model,
+                material.State.DrawQueue, 
+                material.State.PassMasks);
 
             ref readonly var bounds = ref (isAnimated ? ref component.LocalBounds : ref mesh.LocalBounds);
             var entity = RenderEcs.AddEntity(source, in component.LocalTransform, in bounds);

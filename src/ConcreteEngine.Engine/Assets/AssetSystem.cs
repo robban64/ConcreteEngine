@@ -75,7 +75,7 @@ public sealed class AssetSystem : IGameEngineSystem
         foreach (var it in Assets.Collections) it.Sort();
 
         Shader.FallbackShader = Assets.GetByName<Shader>("Model");
-        Material.FallbackMaterial.BoundShader = Shader.FallbackShader;
+        Material.FallbackMaterial.SetShader(Shader.FallbackShader);
         _loader?.DeactivateLoader();
 
         CurrentStatus = Status.Ready;

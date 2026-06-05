@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
@@ -12,19 +13,14 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 {
   
     //
-    private sealed class MatProfileInfo(string shader, params ProfileSlot[] slots)
+    private sealed class MatProfileInfo(string shader, params TextureUsage[] slots)
     {
         public readonly string Shader = shader;
-        public readonly ProfileSlot[] Slots = slots;
+        public readonly TextureUsage[] Slots = slots;
+        public DrawCommandQueue DrawQueue { get; init; } = DrawCommandQueue.Opaque;
     }
-
-    private readonly struct ProfileSlot(TextureUsage slotKind, TextureKind texKind = TextureKind.Texture2D)
-    {
-        public readonly TextureUsage SlotKind = slotKind;
-        public readonly TextureKind TexKind = texKind;
-    }
-
     //
+    
     private static readonly Dictionary<int, MatProfileInfo> Profiles = CreateSlotProfiles();
 
     private readonly AssetStore _store;
@@ -140,25 +136,25 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         return sources;
     }
 
-    private TextureSource[] CreateSlotsFromProfile(ProfileSlot[] profile, MaterialRecord desc)
+    private TextureSource[] CreateSlotsFromProfile(TextureUsage[] slots, MaterialRecord desc)
     {
-        ArgumentNullException.ThrowIfNull(profile);
-        var slots = new TextureSource[profile.Length];
-        for (int i = 0; i < profile.Length; i++)
+        ArgumentNullException.ThrowIfNull(slots);
+        var sources = new TextureSource[slots.Length];
+        for (int i = 0; i < slots.Length; i++)
         {
-            var info = profile[i];
+            var slot = slots[i];
             var name = desc.ProfileSlots.Length > i ? desc.ProfileSlots[i] : null;
             if (name == null)
             {
-                slots[i] = new TextureSource(AssetId.Empty, info.SlotKind);
+                sources[i] = new TextureSource(AssetId.Empty, slot);
                 continue;
             }
 
             var tex = _store.GetByName<Texture>(name);
-            slots[i] = new TextureSource(tex.Id, info.SlotKind);
+            sources[i] = new TextureSource(tex.Id, slot);
         }
 
-        return slots;
+        return sources;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -166,19 +162,29 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         new()
         {
             [(int)MaterialProfile.None] = new MatProfileInfo("Model"),
-            [(int)MaterialProfile.Foliage] = new MatProfileInfo("Foliage", new ProfileSlot(TextureUsage.Albedo)),
-            [(int)MaterialProfile.Particle] = new MatProfileInfo("Particle", new ProfileSlot(TextureUsage.Albedo)),
-            [(int)MaterialProfile.Sky] =
-                new MatProfileInfo("Skybox", new ProfileSlot(TextureUsage.Albedo, TextureKind.CubeMap)),
+            
+            [(int)MaterialProfile.Foliage] = new MatProfileInfo("Foliage", 
+                TextureUsage.Albedo
+                ) {DrawQueue = DrawCommandQueue.Transparent},
+            
+            [(int)MaterialProfile.Particle] = new MatProfileInfo("Particle", 
+                TextureUsage.Albedo
+                ){DrawQueue = DrawCommandQueue.Particles},
+            
+            [(int)MaterialProfile.Sky] = new MatProfileInfo("Skybox", 
+                TextureUsage.Albedo
+                ) {DrawQueue = DrawCommandQueue.Skybox},
+            
             [(int)MaterialProfile.StaticModel] = new MatProfileInfo("Model",
-                new ProfileSlot(TextureUsage.Albedo),
-                new ProfileSlot(TextureUsage.Normal),
-                new ProfileSlot(TextureUsage.Mask)
+                TextureUsage.Albedo,
+                TextureUsage.Normal,
+                TextureUsage.Mask
             ),
+            
             [(int)MaterialProfile.AnimatedModel] = new MatProfileInfo("ModelAnimated",
-                new ProfileSlot(TextureUsage.Albedo),
-                new ProfileSlot(TextureUsage.Normal),
-                new ProfileSlot(TextureUsage.Mask)
+                TextureUsage.Albedo,
+                TextureUsage.Normal,
+                TextureUsage.Mask
             )
         };
 }

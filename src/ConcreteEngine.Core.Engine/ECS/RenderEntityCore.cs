@@ -73,7 +73,6 @@ public sealed class RenderEntityCore : EcsStore
     }
 
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public RenderEntityId AddEntity(SourceComponent source, in Transform transform, in BoundingBox bounds)
     {
         var entity = AddEntityInternal(source, in transform, in bounds);
@@ -84,14 +83,13 @@ public sealed class RenderEntityCore : EcsStore
     }
 
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     private RenderEntityId AddEntityInternal(SourceComponent source, in Transform transform, in BoundingBox bounds)
     {
         ValidateSource(source);
         var index = AllocateNext();
 
         ref var entity = ref _entities[index];
-        if (entity.Alive) throw new InvalidOperationException();
+        if (entity.Alive) Throwers.InvalidOperation($"Entity {entity} already exists");
 
         entity.Alive = true;
         entity.Visibility = VisibilityFlags.Visible;
@@ -103,7 +101,6 @@ public sealed class RenderEntityCore : EcsStore
         return new RenderEntityId(index + 1);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public void Remove(RenderEntityId entity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));

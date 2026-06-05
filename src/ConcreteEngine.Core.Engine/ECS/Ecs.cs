@@ -12,6 +12,9 @@ public static partial class Ecs
 
     public static EntitySceneLink SceneLink { get; private set; } = null!;
 
+    public static RenderEntityCore RenderCore => Render.Core;
+    public static GameEntityCore GameCore => Game.Core;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GameEntityStore<T> GetGameStore<T>() where T : unmanaged, IGameComponent<T> => Game.Stores<T>.Store;
 

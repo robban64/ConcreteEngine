@@ -13,7 +13,7 @@ public sealed class RenderUploadBuffers
     internal void Reset()
     {
         Commands.Reset();
-        Materials.Reset();
+        Materials.NewFrame();
         Skinning.Reset();
         Effects.Reset();
     }

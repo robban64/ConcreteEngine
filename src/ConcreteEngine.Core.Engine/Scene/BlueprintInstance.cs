@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
@@ -8,11 +9,11 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
-public abstract class BlueprintInstance(SceneObjectBlueprint blueprint)
+public abstract class BlueprintInstance
 {
-    public virtual SceneObjectBlueprint Blueprint { get; } = blueprint;
+    public abstract SceneObjectBlueprint Blueprint { get; }
 
-    public string DisplayName { get; set; } = blueprint.DisplayName;
+    public string DisplayName { get; protected set; }
     public bool IsDirty { get; private set; } = true;
 
     internal readonly List<RenderEntityId> RenderEntityIds = [];
@@ -21,11 +22,11 @@ public abstract class BlueprintInstance(SceneObjectBlueprint blueprint)
     public bool HasRenderEcs => RenderEntityIds.Count > 0;
     public bool HasGameEntityIds => GameEntityIds.Count > 0;
     public bool IsMixedEcs => HasRenderEcs && HasGameEntityIds;
-
+    
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(RenderEntityIds);
     public ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(GameEntityIds);
 
-    internal virtual void Commit() => IsDirty = false;
+    internal void Commit() => IsDirty = false;
 
     public void ToggleSelection(bool isSelected)
     {
@@ -56,26 +57,99 @@ public abstract class BlueprintInstance(SceneObjectBlueprint blueprint)
     }
 }
 
-public abstract class BlueprintInstance<TBlueprint>(TBlueprint blueprint) : BlueprintInstance(blueprint)
-    where TBlueprint : SceneObjectBlueprint
+
+public sealed class ModelInstance : BlueprintInstance, IAssetListener<Model>, IAssetListener<Material>
 {
-    public override TBlueprint Blueprint { get; } = blueprint;
+    private readonly AssetRef<Model> _model;
+    private readonly AssetRef<Material>[] _materials;
+    
+    public Transform LocalTransform;
+    public BoundingBox LocalBounds;
+
+    public ModelInstance(ModelBlueprint blueprint, Model model)
+    {
+        var materialCount = int.Max(model.Info.MaterialCount, blueprint.Materials.Length);
+        
+        Blueprint = blueprint;
+        _model = new AssetRef<Model>(model, this);
+        _materials = new AssetRef<Material>[materialCount];
+
+        DisplayName = string.IsNullOrEmpty(blueprint.DisplayName) ? model.Name : blueprint.DisplayName;
+        
+        LocalTransform = blueprint.LocalTransform;
+        LocalBounds = model.Bounds;
+    }
+    public override ModelBlueprint Blueprint { get; }
+
+    public Model AssetModel => _model.Asset;
+    public int MaterialCount => _materials.Length;
+
+    public Material GetMaterial(int index)
+    {
+        if((uint)index >= (uint)_materials.Length) Throwers.InvalidArgument(nameof(index));
+        return _materials[index].Asset;
+    }
+
+    public void SetMaterial(int index, Material material)
+    {
+        if (_materials[index] is {} currentMaterial)
+        {
+            if(currentMaterial.Asset == material) return;
+            currentMaterial.Detach();
+        }
+        
+        _materials[index] = new AssetRef<Material>(material, this);
+    }
+
+    public void OnChanged(Model model) {}
+    public void OnRemoved(AssetRef<Model> modelRef) {}
+
+    public void OnChanged(Material material)
+    {
+        var materialId = material.MaterialId;
+        var drawQueue = material.State.DrawQueue;
+        var passMask = material.State.PassMasks;
+        foreach (var entity in GetRenderEntities())
+        {
+            ref var source = ref Ecs.Render.Core.GetSource(entity);
+            if(source.Material != materialId) continue;
+            source.Queue = drawQueue;
+            source.Mask = passMask;
+        }
+    }
+
+    public void OnRemoved(AssetRef<Material> materialRef)
+    {
+        var materialId = materialRef.Asset.MaterialId;
+        var fallback = Material.FallbackMaterial;
+        foreach (var entity in GetRenderEntities())
+        {
+            ref var source = ref Ecs.RenderCore.GetSource(entity);
+            if (source.Material == materialId)
+            {
+                source.Material = fallback.MaterialId;
+                source.Queue = fallback.State.DrawQueue;
+                source.Mask = fallback.State.PassMasks;
+            }
+        }
+        
+        var idx = _materials.IndexOf(materialRef);
+        _materials[idx] = new AssetRef<Material>(fallback, this);
+    }
+
 }
 
-public sealed class ModelInstance(ModelBlueprint blueprint, Model asset)
-    : BlueprintInstance<ModelBlueprint>(blueprint)
+public sealed class AnimationInstance : BlueprintInstance
 {
-    public Model Asset { get; } = asset;
-    public readonly List<Material> Materials = new(asset.Info.MaterialCount);
+    public override ModelBlueprint Blueprint { get; }
+    public ModelAnimation AssetAnimation { get; }
+    public AnimationInstance(ModelBlueprint blueprint, ModelAnimation assetAnimation)
+    {
+        Blueprint = blueprint;
+        AssetAnimation = assetAnimation;
+        DisplayName = string.IsNullOrEmpty(blueprint.DisplayName) ?  "Animation" : blueprint.DisplayName;
 
-    public Transform LocalTransform = blueprint.LocalTransform;
-    public BoundingBox LocalBounds = asset.Bounds;
-}
-
-public sealed class AnimationInstance(ModelBlueprint blueprint, ModelAnimation assetAnimation)
-    : BlueprintInstance<ModelBlueprint>(blueprint)
-{
-    public ModelAnimation AssetAnimation { get; } = assetAnimation;
+    }
 
     public ref AnimationComponent GetComponent()
     {
@@ -89,8 +163,16 @@ public sealed class AnimationInstance(ModelBlueprint blueprint, ModelAnimation a
     }
 }
 
-public sealed class ParticleInstance(ParticleBlueprint blueprint, ParticleEmitter emitter)
-    : BlueprintInstance<ParticleBlueprint>(blueprint)
+public sealed class ParticleInstance : BlueprintInstance
 {
-    public ParticleEmitter Emitter { get; } = emitter;
+    public override ParticleBlueprint Blueprint { get; }
+    public ParticleEmitter Emitter { get; }
+    public ParticleInstance(ParticleBlueprint blueprint, ParticleEmitter emitter)
+    {
+        Blueprint = blueprint;
+        Emitter = emitter;
+        DisplayName = string.IsNullOrEmpty(blueprint.DisplayName) ? emitter.Name : blueprint.DisplayName;
+
+    }
+
 }

@@ -36,7 +36,17 @@ public sealed class VisualManager
     internal void MarkPendingOutputSize() => HasPendingOutputSize = true;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void ClearDirty()
+    internal bool ResolvePendingFrameBufferResize()
+    {
+        if(!HasPendingOutputSize) return false;
+
+        HasPendingOutputSize = false;
+        Shadow.HasPendingShadowSize = false;
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void Commit()
     {
         AnyWasDirty = false;
         HasPendingOutputSize = false;
@@ -123,7 +133,7 @@ public sealed class EnvironmentSettings : VisualStateObject
 
 public sealed class ShadowSettings : VisualStateObject
 {
-    public bool HasPendingShadowSize { get; private set; }
+    public bool HasPendingShadowSize { get; internal set; }
 
     public int ShadowMapSize
     {

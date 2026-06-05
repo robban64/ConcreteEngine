@@ -1,14 +1,63 @@
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
+public abstract class AssetRef
+{
+    internal abstract void Trigger();
+    internal abstract void Detach();
+}
+
+public sealed class AssetRef<TAsset> : AssetRef where TAsset : AssetObject
+{
+    private TAsset? _asset;
+    private readonly IAssetListener<TAsset> _listener;
+
+    public AssetRef(TAsset asset, IAssetListener<TAsset> listener)
+    {
+        ArgumentNullException.ThrowIfNull(asset);
+        ArgumentNullException.ThrowIfNull(listener);
+
+        _asset = asset;
+        _listener = listener;
+        asset.AddRef(this);
+    }
+
+    public TAsset Asset
+    {
+        get
+        {
+            if (_asset == null) Throwers.InvalidOperation("Asset is not bound");
+            return _asset;
+        }
+    }
+    
+    internal override void Trigger() => _listener.OnChanged(Asset);
+
+    internal override void Detach()
+    {
+        _listener?.OnRemoved(this);
+        Asset.RemoveRef(this);
+        _asset = null!;
+    }
+}
+
+public interface IAssetListener<TAsset> where TAsset : AssetObject
+{
+    void OnChanged(TAsset asset);
+    void OnRemoved(AssetRef<TAsset> assetRef);
+}
+
+
 public abstract class AssetObject : IComparable<AssetObject>
 {
     public const int MaxNameLength = 64;
-    
+
+    private readonly List<AssetRef> _listeners = [];
     public bool IsDirty { get; private set; }
-    public AssetId Id { get;  }
-    public Guid GId { get;  } 
+    public AssetId Id { get; }
+    public Guid GId { get; }
 
     public string Name
     {
@@ -39,20 +88,30 @@ public abstract class AssetObject : IComparable<AssetObject>
         Name = newName;
         return true;
     }
-    
+
     protected internal void MarkDirty()
     {
-        if(!Id.IsValid()) return;
-        if(IsDirty) return;
+        if (!Id.IsValid()) return;
+        if (IsDirty) return;
         IsDirty = true;
         AssetStore.Instance.MarkDirty(this);
     }
+
+    internal void Commit()
+    {
+        IsDirty = false;
+        foreach (var it in _listeners)
+        {
+            it.Trigger();
+        }
+    }
     
-    internal void ClearDirty() => IsDirty = false;
+    public void AddRef(AssetRef assetRef) => _listeners.Add(assetRef);
+    public void RemoveRef(AssetRef assetRef) => _listeners.Remove(assetRef);
 
     public int CompareTo(AssetObject? other)
     {
-        if(ReferenceEquals(this, other)) return 0;
+        if (ReferenceEquals(this, other)) return 0;
         return other is null ? 1 : Id.Value.CompareTo(other.Id.Value);
     }
 }

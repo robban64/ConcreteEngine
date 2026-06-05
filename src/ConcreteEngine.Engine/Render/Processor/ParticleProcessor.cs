@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using ConcreteEngine.Core.Common;
@@ -16,7 +17,7 @@ namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class ParticleProcessor
 {
-    private static readonly HashSet<int> ProcessedEmitters = new(16);
+    private static readonly List<int> ProcessedEmitters = new(16);
 
     internal static void Simulate(float simDt)
     {
@@ -24,7 +25,8 @@ internal static class ParticleProcessor
         var particleSystem = ParticleSystem.Instance;
         foreach (var it in Ecs.Render.Query<ParticleComponent>())
         {
-            if (!ProcessedEmitters.Add(it.Component.Emitter)) continue;
+            if (ProcessedEmitters.Contains(it.Component.Emitter)) continue;
+            ProcessedEmitters.Add(it.Component.Emitter);
 
             var emitter = particleSystem.GetEmitter(it.Component.Emitter);
             ParticleSystem.SimulateEmitter(emitter, simDt);
@@ -50,7 +52,7 @@ internal static class ParticleProcessor
     internal static unsafe void Execute(ParticleSystem particleSystem)
     {
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
-        foreach (var emitterId in ProcessedEmitters)
+        foreach (var emitterId in CollectionsMarshal.AsSpan(ProcessedEmitters))
         {
             var emitter = particleSystem.GetEmitter((Id16<ParticleEmitter>)emitterId);
             particleSystem.GetMeshWriteData(emitter, out var gpuView, out var cpuView);

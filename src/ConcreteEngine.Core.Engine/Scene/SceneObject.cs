@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 
 namespace ConcreteEngine.Core.Engine.Scene;
@@ -73,7 +74,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     private readonly List<BlueprintInstance> _instances = [];
     private readonly List<RenderEntityId> _renderEntities = [];
     private readonly List<GameEntityId> _gameEntities = [];
-
+    
     internal SceneObject(
         SceneObjectId id,
         Guid gId,

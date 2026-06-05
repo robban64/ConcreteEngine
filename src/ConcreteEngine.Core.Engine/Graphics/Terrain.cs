@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
@@ -73,12 +74,14 @@ public sealed class Terrain
 
     public void SetMaterial(Material material)
     {
+        material.State.DrawQueue = DrawCommandQueue.Terrain;
         GroundMaterial = material;
         IsDirty = true;
     }
 
     public void SetFoliageMaterial(Material material)
     {
+        material.State.DrawQueue = DrawCommandQueue.Transparent;
         FoliageMaterial = material;
         IsDirty = true;
     }

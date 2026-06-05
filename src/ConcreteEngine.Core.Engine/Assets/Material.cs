@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
@@ -11,12 +12,12 @@ public sealed class Material : AssetObject
 {
     private static int _materialIdCounter = 0;
     public static Material FallbackMaterial { get; internal set; } = null!;
+    public MaterialId MaterialId { get; private set; } = new(++_materialIdCounter);
 
     public AssetId TemplateId { get; init; }
-    public MaterialId MaterialId { get; private set; } = new(++_materialIdCounter);
     public MaterialProfile Profile { get; private set; }
 
-    public Shader? BoundShader { get; internal set; }
+    public Shader? BoundShader { get; private set; }
 
     public readonly MaterialState State;
 
@@ -36,6 +37,7 @@ public sealed class Material : AssetObject
         Profile = profile;
         State = new MaterialState(this);
 
+        if(boundShader != null) SetShader(boundShader);
         MarkDirty();
     }
 
@@ -58,10 +60,24 @@ public sealed class Material : AssetObject
     public bool HasTransparency => State.Transparency;
     public ReadOnlySpan<TextureSource> GetTextureSources() => _textureSources;
 
+    public void SetShader(Shader shader)
+    {
+        ArgumentNullException.ThrowIfNull(shader);
+        if(BoundShader == shader) return;
+        
+        if (shader.HasShadowSampler) State.PassMasks |= PassMask.Depth;
+        else State.PassMasks &= ~PassMask.Depth;
+            
+        BoundShader = shader;
+        MarkDirty();
+
+    }
+
     public void SetOverrideTexture(int slot, TextureId textureId)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
         _textureSources[slot] = _textureSources[slot] with { OverrideTextureId = textureId };
+        MarkDirty();
     }
 
     public void SetTexture(int slot, Texture? texture)
@@ -83,7 +99,6 @@ public sealed class Material : AssetObject
             MarkDirty();
         }
     }
-
 
     internal Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
     {
@@ -120,7 +135,42 @@ public sealed class MaterialState(Material material)
         Specular = param.Specular;
         UvRepeat = param.UvRepeat;
     }
+    
+    public bool Transparency
+    {
+        get;
+        set
+        {
+            if (field == value) return;
+            field = value;
+            MarkDirty();
+        }
+    }
+    
+    public DrawCommandQueue DrawQueue
+    {
+        get;
+        set
+        {
+            if (field == value) return;
+            field = value;
+            MarkDirty();
+        }
+    } = DrawCommandQueue.Opaque;
 
+    
+    public PassMask PassMasks
+    {
+        get;
+        set
+        {
+            if (field == value) return;
+            field = value;
+            MarkDirty();
+        }
+    } = PassMask.Default;
+
+    
     public GfxDrawState DrawState
     {
         get;
@@ -192,14 +242,5 @@ public sealed class MaterialState(Material material)
         }
     } = 1f;
 
-    public bool Transparency
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            MarkDirty();
-        }
-    }
+
 }

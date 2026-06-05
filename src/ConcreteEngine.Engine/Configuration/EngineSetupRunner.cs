@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Engine;
 
 namespace ConcreteEngine.Engine.Configuration;
 
@@ -36,7 +37,7 @@ internal sealed class EngineSetupPipeline
         _ctx.InputSystem.ClearInputState();
         _ctx.TickHub.Reset();
 
-        _ctx.Renderer.BeforeUpdate();
+        CameraSystem.Instance.BeginUpdate();
         _ctx.Renderer.AfterUpdate();
 
         Array.Clear(_steps);

@@ -126,10 +126,10 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         ImGui.Spacing();
         if (ImGui.CollapsingHeader("Model Material"u8, CollapseFlags))
         {
-            var mats = modelInstance.GetMaterials();
-            for (var i = 0; i < mats.Length; i++)
+            var materialCount = modelInstance.Instance.MaterialCount;
+            for (var i = 0; i < materialCount; i++)
             {
-                var mat = mats[i];
+                var mat = modelInstance.Instance.GetMaterial(i);
                 var shaderName = mat.BoundShader?.Name ?? "No Shader";
                 AppDraw.Text(sw.Append('[').Append(i).Append(']').PadRight(2).Append(mat.Name)
                     .Append(" ("u8).Append(shaderName).Append(')').End());

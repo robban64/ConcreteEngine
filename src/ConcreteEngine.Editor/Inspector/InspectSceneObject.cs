@@ -40,13 +40,13 @@ public sealed class InspectSceneObject
 
 internal sealed class InspectModelInstance
 {
-    private readonly ModelInstance _instance;
+    public readonly ModelInstance Instance;
 
-    public ReadOnlySpan<Material> GetMaterials() => CollectionsMarshal.AsSpan(_instance.Materials);
+   // public ReadOnlySpan<Material> GetMaterials() => CollectionsMarshal.AsSpan(Instance.Materials);
 
     public InspectModelInstance(ModelInstance instance)
     {
-        _instance = instance;
+        Instance = instance;
         InspectorFieldProvider.Instance.ModelInstanceFields.Bind(instance);
     }
 }

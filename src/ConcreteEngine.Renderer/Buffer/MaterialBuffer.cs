@@ -75,10 +75,8 @@ public sealed class MaterialBuffer : IDisposable
         return _buffer.Slice(0, Count);
     }
 
-    internal void Reset()
+    internal void NewFrame()
     {
-        _slotCount = 0;
-        Count = 0;
         HasDrained = false;
     }
 

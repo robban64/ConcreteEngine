@@ -9,13 +9,8 @@ using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine;
 
-internal sealed class GameSystem(SceneStore store)
+internal sealed class SceneProcessor(SceneStore store)
 {
-    public void UpdateSimulate(float simDt)
-    {
-        ParticleProcessor.Simulate(simDt);
-    }
-
     public void Update(float dt)
     {
         if(store.DirtyCount > 0)

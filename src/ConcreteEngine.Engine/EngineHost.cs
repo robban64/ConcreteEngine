@@ -32,7 +32,6 @@ public sealed class EngineHost
 
     private IWindow _window = null!;
     private GameEngine _engine = null!;
-    private EngineWindow _engineWindow = null!;
     private EngineInputSource _inputSource = null!;
 
     private SetupContainer? _setup;
@@ -94,9 +93,10 @@ public sealed class EngineHost
             glfw.SwapInterval(0);
         }
 
-        _engineWindow = new EngineWindow(_window);
+        EngineWindow.Current.Attach(_window);
+        
         _inputSource = new EngineInputSource(_window.CreateInput());
-        _engine = _setup.Builder.Build(_engineWindow, _inputSource, graphics);
+        _engine = _setup.Builder.Build(_inputSource, graphics);
         _setup.Builder = null;
         _setup = null;
     }

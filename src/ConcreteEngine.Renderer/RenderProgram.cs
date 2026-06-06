@@ -54,8 +54,8 @@ public sealed class RenderProgram
         _passPipeline.Prepare();
         _drawPipeline.Prepare();
     }
-
-    public void ResizeFrameBuffers(Size2D outputSize, int shadowSize)
+    
+    public void ResizeScreenFrameBuffers(Size2D outputSize)
     {
         RenderContext.Instance.OutputSize = outputSize;
 
@@ -63,6 +63,12 @@ public sealed class RenderProgram
 
         if (outputSize != fboRegistry.OutputSize)
             fboRegistry.RecreateScreenDependentFbo(outputSize);
+    }
+
+
+    public void ResizeShadowFrameBuffers(int shadowSize)
+    {
+        var fboRegistry = Registry.FboRegistry;
 
         if (shadowSize != fboRegistry.ShadowMapSize.Width)
             fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.V0, new Size2D(shadowSize));

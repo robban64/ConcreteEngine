@@ -10,7 +10,7 @@ namespace ConcreteEngine.Engine.Render.Processor;
 
 public static unsafe class VisualUniformProcessor
 {
-    private static CameraSystem CameraSystem => CameraSystem.Instance;
+    private static CameraManager CameraManager => CameraManager.Instance;
     private static VisualManager VisualManager => VisualManager.Instance;
 
     public static UniformUploaderCallbacks MakeCallbacks()
@@ -44,7 +44,7 @@ public static unsafe class VisualUniformProcessor
     [SkipLocalsInit]
     public static void UploadMainView(in UniformUploadContext ctx)
     {
-        var t = CameraSystem.FrameTransforms;
+        var t = CameraManager.FrameTransforms;
         CameraUniform data;
         data.ViewMat = t.ViewMatrix;
         data.ProjMat = t.ProjectionMatrix;
@@ -58,7 +58,7 @@ public static unsafe class VisualUniformProcessor
     [SkipLocalsInit]
     public static void UploadLightView(in UniformUploadContext ctx)
     {
-        var t = CameraSystem.LightTransforms;
+        var t = CameraManager.LightTransforms;
         CameraUniform data;
         data.ViewMat = t.ViewMatrix;
         data.ProjMat = t.ProjectionMatrix;
@@ -73,7 +73,7 @@ public static unsafe class VisualUniformProcessor
     public static void UploadShadow(in UniformUploadContext ctx)
     {
         var shadow = VisualManager.Shadow;
-        var t = CameraSystem.LightTransforms;
+        var t = CameraManager.LightTransforms;
 
         ref readonly var proj = ref shadow.Projection.Value;
         ref readonly var vis = ref shadow.Visuals.Value;

@@ -18,14 +18,12 @@ internal sealed class EngineGateway : IDisposable
 
     public readonly EngineMetricHub Metrics;
 
-    private readonly EngineWindow _window;
     private readonly RenderProgram _renderProgram;
     private EditorPortal _editor = null!;
 
-    internal EngineGateway(EngineWindow window, EngineCoreSystem coreSystem)
+    internal EngineGateway(EngineCoreSystem coreSystem)
     {
         _renderProgram = coreSystem.GetSystem<EngineRenderSystem>().Program;
-        _window = window;
         Metrics = new EngineMetricHub();
     }
 
@@ -54,7 +52,7 @@ internal sealed class EngineGateway : IDisposable
         EditorSetup.RegisterCommands();
         EngineCommandRouter.CommandCommandQueues = commandQueues;
 
-        _editor.Start(_window.OutputSize);
+        _editor.Start(EngineWindow.Current.OutputSize);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -68,7 +66,7 @@ internal sealed class EngineGateway : IDisposable
     public void RenderEditor(float deltaTime)
     {
         if (!Enabled) return;
-        _editor.Render(deltaTime, _window.OutputSize, _renderProgram.OutputTexture);
+        _editor.Render(deltaTime, EngineWindow.Current.OutputSize, _renderProgram.OutputTexture);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

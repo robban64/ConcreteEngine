@@ -5,9 +5,9 @@ using ConcreteEngine.Core.Engine.Configuration;
 
 namespace ConcreteEngine.Core.Engine;
 
-public sealed class CameraSystem
+public sealed class CameraManager
 {
-    public static readonly CameraSystem Instance = new();
+    public static readonly CameraManager Instance = new();
 
     public readonly Camera Camera;
     public readonly RayCaster RayCaster;
@@ -16,10 +16,10 @@ public sealed class CameraSystem
     internal readonly CameraTransformSnapshot FrameTransforms;
     internal readonly CameraTransformSnapshot LightTransforms;
 
-    private CameraSystem()
+    private CameraManager()
     {
         if (Instance != null)
-            throw new InvalidOperationException($"{nameof(CameraSystem)} is already initialized");
+            throw new InvalidOperationException($"{nameof(CameraManager)} is already initialized");
 
         Camera = new Camera(EngineSettings.Current.Display.WindowSize);
         RayCaster = new RayCaster(Camera.Transforms);

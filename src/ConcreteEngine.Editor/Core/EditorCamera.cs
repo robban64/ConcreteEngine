@@ -17,7 +17,7 @@ internal sealed class EditorCamera
     private YawPitch _targetOrientation;
 
     private readonly InputController _input = EditorInput.Input;
-    public readonly Camera Camera = CameraSystem.Instance.Camera;
+    public readonly Camera Camera = CameraManager.Instance.Camera;
 
     private EditorCamera()
     {

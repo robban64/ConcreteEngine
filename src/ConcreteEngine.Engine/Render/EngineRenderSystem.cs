@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
@@ -18,7 +19,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
 {
     internal RenderProgram Program { get; }
 
-    private readonly CameraSystem _cameraSystem;
+    private readonly CameraManager _cameraManager;
     private readonly VisualManager _visualManager;
 
     private readonly MaterialProcessor _materialProcessor;
@@ -26,7 +27,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
 
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
-        _cameraSystem = CameraSystem.Instance;
+        _cameraManager = CameraManager.Instance;
         _visualManager = VisualManager.Instance;
         _visualManager.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
 
@@ -44,7 +45,6 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     public override int VisibleCount => _renderDispatcher.VisibleCount;
     public override ReadOnlySpan<RenderEntityId> VisibleEntities() => _renderDispatcher.GetVisibleEntities();
 
-
     internal void Initialize(AssetStore assetStore)
     {
         AnimationTable.Instance.Setup(assetStore);
@@ -60,20 +60,39 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     internal void AfterUpdate()
     {
         _visualManager.Ensure();
-        _cameraSystem.CommitUpdate(_visualManager);
+        _cameraManager.CommitUpdate(_visualManager);
         _materialProcessor.Commit();
     }
 
+    internal void OnSystemTick(bool screenResize)
+    {
+        if (screenResize)
+        {
+            Logger.LogString(LogScope.Engine, "Recreating screen framebuffers");
+            Program.ResizeScreenFrameBuffers(EngineWindow.Current.Viewport.Size);
+        }
 
+        if (_visualManager.CommitShadowSize())
+        {
+            Logger.LogString(LogScope.Engine, "Recreating shadow framebuffers");
+            Program.ResizeShadowFrameBuffers(_visualManager.Shadow.ShadowMapSize);
+        }    
+    }
+    
     internal void Render(float dt, Size2D viewportSize, Vector2 mousePos)
     {
         Program.PrepareFrame();
 
+        /*
         if (_visualManager.ResolvePendingFrameBufferResize())
+        {
+            Logger.LogString(LogScope.Renderer,"Recreating frame buffers");
             Program.ResizeFrameBuffers(viewportSize, _visualManager.Shadow.ShadowMapSize);
+        }
+        */
 
         // frame update
-        _cameraSystem.CommitFrame(EngineTime.GameAlpha);
+        _cameraManager.CommitFrame(EngineTime.GameAlpha);
 
         // process and upload draw commands
         _renderDispatcher.Execute();

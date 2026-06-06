@@ -1,9 +1,5 @@
 using System.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Assets.Descriptors;
-using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Buffer;
@@ -19,11 +15,7 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
     internal void Commit()
     {
         if (_materialStore.DirtyCount == 0) return;
-        AvgFrameTimer avg = default;
-        avg.BeginSample();
         Submit();
-        avg.EndSample();
-        avg.ResetAndPrint();
         _materialStore.ClearDirty();
     }
 
@@ -36,7 +28,7 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
         {
             var material = assetStore.GetUnsafe<Material>(id);
             var flag = material.Commit();
-            if((flag & AssetDirtyFlag.State) == 0 && (flag & AssetDirtyFlag.Structure) == 0) continue;
+            if ((flag & AssetDirtyFlag.State) == 0 && (flag & AssetDirtyFlag.Structure) == 0) continue;
             var toggles = FillSamplers(slots, material.State, assetStore, _materialBuffer);
             SubmitUniform(material, _materialBuffer, toggles);
         }

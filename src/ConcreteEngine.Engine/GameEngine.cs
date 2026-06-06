@@ -11,6 +11,7 @@ using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Gateway;
 using ConcreteEngine.Engine.Render;
+using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using Silk.NET.OpenGL;
@@ -36,13 +37,12 @@ public sealed class GameEngine : IDisposable
     private bool _isDisposed;
 
     internal GameEngine(
-        EngineWindow window,
         GfxRuntimeBundle<GL> gfxBundle,
         EngineInputSource input,
         List<Func<GameScene>> sceneFactories
     )
     {
-        _window = window;
+        _window = EngineWindow.Current;
         _graphics = gfxBundle.Graphics;
 
         var gpuCapabilities = _graphics.Initialize(gfxBundle.Config, out var version);
@@ -59,14 +59,14 @@ public sealed class GameEngine : IDisposable
 
         _coreSystems = new EngineCoreSystem(_inputSystem, assets, _sceneSystem, _renderSystem);
 
-        _gateway = new EngineGateway(window, _coreSystems);
+        _gateway = new EngineGateway(_coreSystems);
 
         _commandQueues = new EngineCommandQueue(new EngineCommandContext
         {
             Assets = new AssetCommandSurface(assets), Renderer = new RenderCommandSurface()
         });
 
-        _tickHub = new EngineTickHub(OnGameTick, _sceneSystem.GameSystem.UpdateSimulate, _gateway.UpdateDiagnostics,
+        _tickHub = new EngineTickHub(OnGameTick, OnSimulate, _gateway.UpdateDiagnostics,
             OnSystemTick);
 
         EngineSetupPipeline.Setup(new EngineSetupCtx
@@ -96,6 +96,7 @@ public sealed class GameEngine : IDisposable
         _systemStepper.SetIntervalTicks(8, 8);
         OnSystemTick(0);
     }
+    AvgFrameTimer avg;
 
     internal void Render(double delta)
     {
@@ -103,11 +104,15 @@ public sealed class GameEngine : IDisposable
         _gateway.Metrics.StartCapture();
 
         // Update
+        avg.BeginSample();
+        
         _inputSystem.Update(_window.Viewport.Position);
         _gateway.BeginFrame();
 
         _tickHub.Update(dt);
         _tickHub.AdvanceFrame(dt);
+        if (avg.EndSample() >= 144) avg.ResetAndPrint();
+
 
         // Draw
         Draw(dt);
@@ -132,24 +137,26 @@ public sealed class GameEngine : IDisposable
 
     private void OnGameTick(float dt)
     {
-        CameraSystem.Instance.BeginUpdate();
+        CameraManager.Instance.BeginUpdate();
         
         _sceneSystem.UpdateScene(dt);
         _gateway.UpdateGameTick(dt);
 
         _renderSystem.AfterUpdate();
+    }
 
+    private void OnSimulate(float dt)
+    {
+        //ParticleProcessor.Simulate(dt);
     }
 
 
     private void OnSystemTick(float dt)
     {
-        TerrainSystem.Instance.OnTick();
-
-        if (_systemStepper.Tick() && _window.Refresh())
+        if (_systemStepper.Tick())
         {
-            var command = new FboCommandRecord(CommandFboAction.ScreenSize, _window.Viewport.Size);
-            _commandQueues.Enqueue(command);
+            var windowResized = _window.Commit();
+            _renderSystem.OnSystemTick(windowResized);
         }
 
         if (_coreSystems.Assets.PendingAssetCount > 0)
@@ -157,6 +164,8 @@ public sealed class GameEngine : IDisposable
 
         if (_commandQueues.QueuesCount > 0)
             _commandQueues.DrainDispatch();
+        
+        TerrainSystem.Instance.OnTick();
     }
 
     internal void Close()

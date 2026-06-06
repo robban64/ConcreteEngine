@@ -37,7 +37,7 @@ internal sealed class EngineSetupPipeline
         _ctx.InputSystem.ClearInputState();
         _ctx.TickHub.Reset();
 
-        CameraSystem.Instance.BeginUpdate();
+        CameraManager.Instance.BeginUpdate();
         _ctx.Renderer.AfterUpdate();
 
         Array.Clear(_steps);

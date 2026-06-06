@@ -12,14 +12,13 @@ public sealed class VisualManager
     public static readonly VisualManager Instance = new();
 
     public bool AnyWasDirty { get; private set; }
-    public bool HasPendingOutputSize { get; private set; }
 
     public readonly ShadowSettings Shadow;
     public readonly IlluminationSettings Illumination;
     public readonly EnvironmentSettings Environment;
     public readonly PostEffectSettings PostEffect;
 
-    public bool HasPendingFrameBufferResize => HasPendingOutputSize || Shadow.HasPendingShadowSize;
+    public bool HasPendingShadowSize => Shadow.HasPendingShadowSize;
 
     private VisualManager()
     {
@@ -33,23 +32,17 @@ public sealed class VisualManager
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void MarkPendingOutputSize() => HasPendingOutputSize = true;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal bool ResolvePendingFrameBufferResize()
+    internal bool CommitShadowSize()
     {
-        if(!HasPendingOutputSize) return false;
-
-        HasPendingOutputSize = false;
-        Shadow.HasPendingShadowSize = false;
-        return true;
+        var hasPendingShadowSize = Shadow.HasPendingShadowSize;
+        if (hasPendingShadowSize) Shadow.HasPendingShadowSize = false;
+        return hasPendingShadowSize;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Commit()
     {
         AnyWasDirty = false;
-        HasPendingOutputSize = false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

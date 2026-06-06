@@ -17,12 +17,11 @@ public sealed class GameEngineBuilder
 {
     private readonly List<Func<GameScene>> _sceneFactories = [];
 
-    internal GameEngine Build(EngineWindow engineWindow, EngineInputSource input, GfxRuntimeBundle<GL> gfxBundle)
+    internal GameEngine Build(EngineInputSource input, GfxRuntimeBundle<GL> gfxBundle)
     {
         if (_sceneFactories.Count < 0) throw new InvalidOperationException("No GameScene registered");
 
         return new GameEngine(
-            window: engineWindow,
             gfxBundle: gfxBundle,
             input: input,
             sceneFactories: _sceneFactories

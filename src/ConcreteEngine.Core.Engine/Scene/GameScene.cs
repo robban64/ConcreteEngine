@@ -6,7 +6,7 @@ public abstract class GameScene
 {
     protected GameSceneContext Context { get; private set; } = null!;
 
-    protected Camera Camera => CameraSystem.Instance.Camera;
+    protected Camera Camera => CameraManager.Instance.Camera;
 
     protected GameScene()
     {

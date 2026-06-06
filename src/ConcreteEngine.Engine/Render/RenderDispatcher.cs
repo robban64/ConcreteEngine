@@ -21,7 +21,7 @@ internal sealed class RenderDispatcher : IDisposable
     private int[] _visibleByIndices;
 
     private readonly RenderEntityCore _ecs;
-    private readonly CameraSystem _cameraSystem;
+    private readonly CameraManager _cameraManager;
 
     private AnimatorProcessor _animatorProcessor = null!;
     private RenderUploadBuffers _uploadBuffers = null!;
@@ -37,7 +37,7 @@ internal sealed class RenderDispatcher : IDisposable
 
         _animationTable = animations;
         _particleSystem = particleSystem;
-        _cameraSystem = CameraSystem.Instance;
+        _cameraManager = CameraManager.Instance;
     }
 
     public ReadOnlySpan<RenderEntityId> GetVisibleEntities() => _visibleEntities.AsSpan(0, VisibleCount);
@@ -55,13 +55,13 @@ internal sealed class RenderDispatcher : IDisposable
         EnsureCapacity();
 
         EnvironmentProcessor.SubmitDrawTerrain(_uploadBuffers.Commands, TerrainSystem.Instance,
-            _cameraSystem.Frustum);
+            _cameraManager.Frustum);
         EnvironmentProcessor.SubmitDrawSkybox(_uploadBuffers.Commands, Skybox.Instance);
 
         return VisibleCount = SpatialProcessor.CullEntities(
             _visibleEntities,
             new UnsafeSpan<int>(_visibleByIndices),
-            _cameraSystem.Frustum
+            _cameraManager.Frustum
         );
     }
 
@@ -94,7 +94,7 @@ internal sealed class RenderDispatcher : IDisposable
         CollectEntities(in ctx);
         DrawTagProcessor.TagUploadSelectionEffect(in ctx, _uploadBuffers.Effects);
         ParticleProcessor.TagParticles(in ctx, _particleSystem);
-        SpatialProcessor.TagDepthKeys(in ctx, _cameraSystem);
+        SpatialProcessor.TagDepthKeys(in ctx, _cameraManager);
         _animatorProcessor.Tag(in ctx);
     }
 

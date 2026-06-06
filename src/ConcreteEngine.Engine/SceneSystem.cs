@@ -11,7 +11,7 @@ internal sealed class SceneSystem : IGameEngineSystem
     public GameScene? Current { get; private set; }
     public bool Enabled { get; private set; }
 
-    internal GameSystem GameSystem { get; }
+    internal SceneProcessor SceneProcessor { get; }
     internal SceneStore SceneStore { get; }
 
     private readonly ModuleManager _modules;
@@ -26,7 +26,7 @@ internal sealed class SceneSystem : IGameEngineSystem
 
         SceneStore = new SceneStore(new EngineBlueprintFactory());
 
-        GameSystem = new GameSystem(SceneStore);
+        SceneProcessor = new SceneProcessor(SceneStore);
         _modules = new ModuleManager();
     }
 
@@ -47,7 +47,7 @@ internal sealed class SceneSystem : IGameEngineSystem
         _modules.UpdateTick(deltaTime);
         Current.UpdateTick(deltaTime);
 
-        GameSystem.Update(deltaTime);
+        SceneProcessor.Update(deltaTime);
     }
 
 

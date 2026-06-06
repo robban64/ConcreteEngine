@@ -60,31 +60,39 @@ internal sealed class EngineTickHub
         EngineTime.AdvanceFrame(deltaTime, _gameTicker.Alpha, _environmentTicker.Alpha);
     }
 
-    public void Update(float deltaTime)
+    private void Accumulate(float deltaTime)
     {
         _gameTicker.Accumulate(deltaTime);
         _environmentTicker.Accumulate(deltaTime);
         _diagnosticTicker.Accumulate(deltaTime);
         _systemTicker.Accumulate(deltaTime);
+    }
+
+    public void Update(float deltaTime)
+    {
+        Accumulate(deltaTime);
 
         // Advance
+        if (_systemTicker.DequeueTick(out var tickDt))
+            _onSystemTick(tickDt);
 
-        if (_systemTicker.DequeueTick())
-            _onSystemTick(_systemTicker.TickDt);
-
-        if (_diagnosticTicker.DequeueTick())
-            _onLogTick(_diagnosticTicker.TickDt);
+        if (_diagnosticTicker.DequeueTick(out tickDt))
+            _onLogTick(tickDt);
 
         var tickCounter = 0;
-        while (tickCounter < MaxTicksPerFrame && _gameTicker.DequeueTick())
+        while (tickCounter < MaxTicksPerFrame && _gameTicker.DequeueTick(out tickDt))
         {
             tickCounter++;
             EngineTime.GameTickId++;
-            _onGameTick(_gameTicker.TickDt);
+            _onGameTick(tickDt);
         }
 
-        while (_environmentTicker.DequeueTick())
-            _onEnvironmentTick(_environmentTicker.TickDt);
+        tickCounter = 0;
+        while (tickCounter < MaxTicksPerFrame && _environmentTicker.DequeueTick(out tickDt))
+        {
+            _onEnvironmentTick(tickDt);
+            tickCounter++;
+        }
     }
 
     private static float GetAlpha(double now, double last, float dt)

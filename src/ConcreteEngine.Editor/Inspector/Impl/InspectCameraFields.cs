@@ -13,7 +13,7 @@ internal sealed class InspectCameraFields : InspectorFields<EditorCamera>
     public readonly FloatField<Float2> NearFar;
     public readonly FloatField<Float1> Fov;
 
-    private static Camera Camera => CameraSystem.Instance.Camera;
+    private static Camera Camera => CameraManager.Instance.Camera;
 
     public InspectCameraFields() : base(segmentCount: 2)
     {

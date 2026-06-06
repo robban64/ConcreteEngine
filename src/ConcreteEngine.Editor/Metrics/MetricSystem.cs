@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Core.Engine.Assets.Data;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Graphics.Diagnostic;
 
 namespace ConcreteEngine.Editor.Metrics;

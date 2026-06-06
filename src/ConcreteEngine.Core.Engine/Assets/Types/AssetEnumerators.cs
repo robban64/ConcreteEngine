@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace ConcreteEngine.Core.Engine.Assets.Data;
+namespace ConcreteEngine.Core.Engine.Assets;
 
 public ref struct AssetFilesEnumerator(AssetId assetId, AssetFileRegistry fileRegistry)
 {

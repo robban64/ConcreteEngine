@@ -1,6 +1,6 @@
 using ConcreteEngine.Renderer.Core;
 
-namespace ConcreteEngine.Core.Engine.Assets.Data;
+namespace ConcreteEngine.Core.Engine.Assets;
 
 public readonly record struct TextureSource(
     AssetId AssetTexture,

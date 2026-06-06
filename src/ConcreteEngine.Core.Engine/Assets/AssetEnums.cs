@@ -1,5 +1,18 @@
 namespace ConcreteEngine.Core.Engine.Assets;
 
+
+[Flags]
+public enum AssetDirtyFlag : byte
+{
+    None = 0,
+    Name = 1 << 0,
+    Metadata = 1 << 1,
+    State = 1 << 2,
+    Structure = 1 << 3,
+    Dependencies = 1 << 4,
+    Lifecycle = 1 << 5,
+}
+
 public enum AssetKind : byte
 {
     Unknown = 0,

@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Engine.Editor;
 
-namespace ConcreteEngine.Core.Engine.Assets.Data;
+namespace ConcreteEngine.Core.Engine.Assets;
 
 [Inspectable]
 public readonly struct ModelInfo(

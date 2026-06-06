@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;

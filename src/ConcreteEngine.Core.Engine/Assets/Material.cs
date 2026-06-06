@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;

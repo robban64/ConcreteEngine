@@ -49,18 +49,6 @@ public interface IAssetListener
     void OnRemoved(AssetObject asset);
 }
 
-[Flags]
-public enum AssetDirtyFlag : byte
-{
-    None = 0,
-    Name = 1 << 0,
-    Metadata = 1 << 1,
-    State = 1 << 2,
-    Structure = 1 << 3,
-    Dependencies = 1 << 4,
-    Lifecycle = 1 << 5,
-}
-
 public abstract class AssetObject : IComparable<AssetObject>
 {
     public const int MaxNameLength = 64;

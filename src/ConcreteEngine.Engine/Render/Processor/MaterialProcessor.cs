@@ -19,8 +19,11 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
     internal void Commit()
     {
         if (_materialStore.DirtyCount == 0) return;
-        
+        AvgFrameTimer avg = default;
+        avg.BeginSample();
         Submit();
+        avg.EndSample();
+        avg.ResetAndPrint();
         _materialStore.ClearDirty();
     }
 

@@ -3,51 +3,6 @@ using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-public abstract class AssetRef
-{
-    internal abstract void Trigger();
-    internal abstract void Detach();
-}
-
-public sealed class AssetRef<TAsset> : AssetRef where TAsset : AssetObject
-{
-    private TAsset? _asset;
-    private readonly IAssetListener _listener;
-
-    public AssetRef(TAsset asset, IAssetListener listener)
-    {
-        ArgumentNullException.ThrowIfNull(asset);
-        ArgumentNullException.ThrowIfNull(listener);
-
-        _asset = asset;
-        _listener = listener;
-        asset.AddRef(this);
-    }
-
-    public TAsset Asset
-    {
-        get
-        {
-            if (_asset == null) Throwers.InvalidOperation("Asset is not bound");
-            return _asset;
-        }
-    }
-
-    internal override void Trigger() => _listener.OnChanged(Asset);
-
-    internal override void Detach()
-    {
-        _listener.OnRemoved(Asset);
-        Asset.RemoveRef(this);
-        _asset = null!;
-    }
-}
-
-public interface IAssetListener
-{
-    void OnChanged(AssetObject asset);
-    void OnRemoved(AssetObject asset);
-}
 
 public abstract class AssetObject : IComparable<AssetObject>
 {

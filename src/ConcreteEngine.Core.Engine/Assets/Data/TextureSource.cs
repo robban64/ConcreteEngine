@@ -1,4 +1,3 @@
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets.Data;

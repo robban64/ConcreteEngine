@@ -20,19 +20,10 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
     internal void Commit()
     {
         if (_materialStore.DirtyCount == 0) return;
-        CommitMaterials();
+        
         Submit();
         _materialStore.ClearDirty();
     }
-
-    private void CommitMaterials()
-    {
-        foreach (var id in _materialStore.GetDirtySpan())
-        {
-            AssetStore.Instance.GetUnsafe<Material>(id).Commit();
-        }
-    }
-
 
     private void Submit()
     {
@@ -42,7 +33,9 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
         foreach (var id in _materialStore.GetDirtySpan())
         {
             var material = assetStore.GetUnsafe<Material>(id);
-            var toggles = FillSamplers(slots, material, assetStore, _materialBuffer);
+            var flag = material.Commit();
+            if((flag & AssetDirtyFlag.State) == 0 && (flag & AssetDirtyFlag.Structure) == 0) continue;
+            var toggles = FillSamplers(slots, material.State, assetStore, _materialBuffer);
             SubmitUniform(material, _materialBuffer, toggles);
         }
     }
@@ -52,7 +45,7 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
         var state = material.State;
 
         ref var uniform = ref buffer.Submit(
-            material.MaterialId,
+            state.MaterialId,
             new RenderMaterialMeta(
                 material.BoundShader.GfxId,
                 state.DrawState,
@@ -71,11 +64,11 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
         );
     }
 
-    private static MaterialRenderToggles FillSamplers(Span<TextureBinding> slots, Material material,
+    private static MaterialRenderToggles FillSamplers(Span<TextureBinding> slots, MaterialState material,
         AssetStore assetStore, MaterialBuffer buffer)
     {
-        var toggles = new MaterialRenderToggles();
-        toggles.HasTransparency = material.HasTransparency;
+        MaterialRenderToggles toggles = default;
+        toggles.HasTransparency = material.Transparency;
         var textureSources = material.GetTextureSources();
         for (var i = 0; i < textureSources.Length; i++)
         {

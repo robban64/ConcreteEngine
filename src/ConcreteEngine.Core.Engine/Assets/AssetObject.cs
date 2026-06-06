@@ -32,7 +32,7 @@ public sealed class AssetRef<TAsset> : AssetRef where TAsset : AssetObject
             return _asset;
         }
     }
-    
+
     internal override void Trigger() => _listener.OnChanged(Asset);
 
     internal override void Detach()
@@ -49,13 +49,24 @@ public interface IAssetListener
     void OnRemoved(AssetObject asset);
 }
 
+[Flags]
+public enum AssetDirtyFlag : byte
+{
+    None = 0,
+    Name = 1 << 0,
+    Metadata = 1 << 1,
+    State = 1 << 2,
+    Structure = 1 << 3,
+    Dependencies = 1 << 4,
+    Lifecycle = 1 << 5,
+}
 
 public abstract class AssetObject : IComparable<AssetObject>
 {
     public const int MaxNameLength = 64;
 
     private readonly List<AssetRef> _listeners = [];
-    public bool IsDirty { get; private set; }
+    public AssetDirtyFlag DirtyFlags { get; private set; }
     public AssetId Id { get; }
     public Guid GId { get; }
 
@@ -89,23 +100,29 @@ public abstract class AssetObject : IComparable<AssetObject>
         return true;
     }
 
-    protected internal void MarkDirty()
+    protected internal void MarkDirty(AssetDirtyFlag flag)
     {
         if (!Id.IsValid()) return;
-        if (IsDirty) return;
-        IsDirty = true;
+        DirtyFlags |= flag;
         AssetStore.Instance.MarkDirty(this);
     }
 
-    internal void Commit()
+    internal AssetDirtyFlag Commit()
     {
-        IsDirty = false;
-        foreach (var it in _listeners)
+        var f = DirtyFlags;
+        var shouldTrigger = (f & AssetDirtyFlag.Structure) != 0 ||
+                            (f & AssetDirtyFlag.Dependencies) != 0 ||
+                            (f & AssetDirtyFlag.Lifecycle) != 0;
+        if (shouldTrigger)
         {
-            it.Trigger();
+            foreach (var it in _listeners)
+                it.Trigger();
         }
+
+        DirtyFlags = 0;
+        return f;
     }
-    
+
     public void AddRef(AssetRef assetRef) => _listeners.Add(assetRef);
     public void RemoveRef(AssetRef assetRef) => _listeners.Remove(assetRef);
 

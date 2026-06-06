@@ -1,7 +1,5 @@
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
@@ -106,30 +104,28 @@ public sealed class ModelInstance : BlueprintInstance, IAssetListener
     
     public void OnChanged(AssetObject asset)
     {
-        if (asset is Material material) ApplyMaterial(material);
+        if (asset is Material material && (material.DirtyFlags & AssetDirtyFlag.Structure) != 0) 
+            ApplyMaterialState(material.State);
     }
 
     public void OnRemoved(AssetObject asset)
     {
         if(asset is not Material material) return;
-        ApplyMaterial(Material.FallbackMaterial);
+        ApplyMaterialState(Material.FallbackMaterial.State);
         for (var i = 0; i < _materials.Length; i++)
         {
             if (_materials[i]?.Asset == material) _materials[i] = null;
         }
     }
     
-    private void ApplyMaterial(Material material)
+    private void ApplyMaterialState(MaterialState material)
     {
-        var materialId = material.MaterialId;
-        var drawQueue = material.State.DrawQueue;
-        var passMask = material.State.PassMasks;
         foreach (var entity in GetRenderEntities())
         {
             ref var source = ref Ecs.Render.Core.GetSource(entity);
-            if(source.Material.Id > 0 && source.Material != materialId) continue;
-            source.Queue = drawQueue;
-            source.Mask = passMask;
+            if(source.Material.Id > 0 && source.Material != material.MaterialId) continue;
+            source.Queue = material.DrawQueue;
+            source.Mask = material.PassMasks;
         }
     }
     public override SceneObjectBlueprint GetBlueprint() => Blueprint;

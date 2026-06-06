@@ -1,8 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
@@ -67,71 +65,8 @@ public sealed class Texture : AssetObject
         {
             if (field == value) return;
             field = value;
-            MarkDirty();
+            MarkDirty(AssetDirtyFlag.Metadata);
         }
     }
 }
 
-
-public sealed class GpuTextureState(Texture texture, TextureProperties props)
-{
-    private void MarkDirty() => texture.MarkDirty();
-    
-    //
-    public float LodBias
-    {
-        get;
-        set
-        {
-            if (FloatMath.NearlyEqual(field, value)) return;
-            field = value;
-            MarkDirty();
-        }
-    } = props.Lod;
-
-    public TexturePixelFormat PixelFormat
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            MarkDirty();
-        }
-    } = props.PixelFormat;
-
-    public TexturePreset Preset
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            MarkDirty();
-        }
-    } = props.Preset;
-
-    public TextureKind TextureKind
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            MarkDirty();
-        }
-    } = props.Kind;
-
-
-    public AnisotropyLevel Anisotropy
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            MarkDirty();
-        }
-    } = props.Anisotropy;
-
-}

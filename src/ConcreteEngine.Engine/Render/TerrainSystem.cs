@@ -53,7 +53,7 @@ internal sealed class TerrainSystem
             if (MainTerrain.GroundAlbedoTextures.IsDirty)
             {
                 var textureId = MainTerrain.GroundAlbedoTextures.Compile(_gfx.Textures);
-                material.SetOverrideTexture(0, textureId);
+                material.State.SetOverrideTexture(0, textureId);
                 Logger.LogString(LogScope.Engine, "Ground albedo texture changed");
             }
         }
@@ -61,7 +61,7 @@ internal sealed class TerrainSystem
         if (MainTerrain.FoliageTextures.IsDirty && MainTerrain.FoliageMaterial is { } foliageMaterial)
         {
             var textureId = MainTerrain.FoliageTextures.Compile(_gfx.Textures);
-            foliageMaterial.SetOverrideTexture(0, textureId);
+            foliageMaterial.State.SetOverrideTexture(0, textureId);
             Logger.LogString(LogScope.Engine, "Foliage texture changed");
         }
     }

@@ -1,7 +1,6 @@
 // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
 
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.ECS.Integration;
 

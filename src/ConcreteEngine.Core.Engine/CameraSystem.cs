@@ -2,7 +2,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.Scene;
 
 namespace ConcreteEngine.Core.Engine;
 

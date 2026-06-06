@@ -5,7 +5,6 @@ using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 
 namespace ConcreteEngine.Core.Engine.Scene;

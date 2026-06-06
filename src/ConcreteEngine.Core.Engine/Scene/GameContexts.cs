@@ -5,8 +5,6 @@ namespace ConcreteEngine.Core.Engine.Scene;
 
 public sealed class GameSceneContext
 {
-    private readonly IEngineSystemManager _systems;
-
     public ModuleManager Modules { get; }
     public SceneStore SceneSpawner { get; }
 
@@ -14,11 +12,8 @@ public sealed class GameSceneContext
     public Skybox ActiveSkybox => Skybox.Instance;
     public ParticleSystemCore ParticleSystem => ParticleSystemCore.Instance;
 
-    public T GetSystem<T>() where T : class, IGameEngineSystem => _systems.GetSystem<T>();
-
-    internal GameSceneContext(IEngineSystemManager systems, ModuleManager modules, SceneStore sceneSpawner)
+    internal GameSceneContext(ModuleManager modules, SceneStore sceneSpawner)
     {
-        _systems = systems;
         Modules = modules;
         SceneSpawner = sceneSpawner;
     }
@@ -30,8 +25,6 @@ public sealed class GameModuleContext
 
     public ModuleManager Modules => _scene.Modules;
     public SceneStore SceneSpawner => _scene.SceneSpawner;
-
-    public T GetSystem<T>() where T : class, IGameEngineSystem => _scene.GetSystem<T>();
 
     internal GameModuleContext(GameSceneContext scene)
     {

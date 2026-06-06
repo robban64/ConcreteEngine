@@ -1,11 +1,10 @@
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Engine.Scene.Modules;
 
 namespace ConcreteEngine.Engine;
 
-internal sealed class SceneSystem : IGameEngineSystem
+internal sealed class SceneSystem
 {
     public GameScene? Current { get; private set; }
     public bool Enabled { get; private set; }
@@ -50,7 +49,7 @@ internal sealed class SceneSystem : IGameEngineSystem
     }
 
 
-    public void ApplyPendingScene(GameSceneConfigBuilder builder, IEngineSystemManager systems)
+    public void ApplyPendingScene(GameSceneConfigBuilder builder)
     {
         if (_pendingIndex < 0) return;
 
@@ -60,7 +59,7 @@ internal sealed class SceneSystem : IGameEngineSystem
 
         Current?.Unload();
 
-        var sceneContext = new GameSceneContext(systems, _modules, SceneStore);
+        var sceneContext = new GameSceneContext(_modules, SceneStore);
 
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);

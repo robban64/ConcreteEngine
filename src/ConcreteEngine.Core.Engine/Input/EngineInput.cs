@@ -1,7 +1,4 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Numerics;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Core.Engine.Input;

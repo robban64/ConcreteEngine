@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Input;
 
 namespace ConcreteEngine.Engine.Configuration;
 
@@ -8,14 +9,14 @@ internal sealed class EngineSetupPipeline
 {
     private const int StepCount = 9;
 
-    internal static EngineSetupPipeline? Instance;
+    internal static EngineSetupPipeline? Current;
 
-    public EngineSetupState CurrentStep = EngineSetupState.NotStarted;
+    public EngineSetupState ActiveStep = EngineSetupState.NotStarted;
 
     private EngineSetupStep[] _steps = new EngineSetupStep[StepCount];
     private EngineSetupCtx _ctx;
 
-    public float Progress => (float)CurrentStep / _steps.Length;
+    public float Progress => (float)ActiveStep / _steps.Length;
 
 
     private EngineSetupPipeline(EngineSetupCtx ctx) => _ctx = ctx;
@@ -23,9 +24,9 @@ internal sealed class EngineSetupPipeline
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void Setup(EngineSetupCtx ctx)
     {
-        if (Instance != null) throw new InvalidOperationException();
-        Instance = new EngineSetupPipeline(ctx);
-        EngineSetupBootstrapper.RegisterSteps(Instance, ctx);
+        if (Current != null) throw new InvalidOperationException();
+        Current = new EngineSetupPipeline(ctx);
+        EngineSetupBootstrapper.RegisterSteps(Current, ctx);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -34,14 +35,14 @@ internal sealed class EngineSetupPipeline
         EngineHost.IsSetup = false;
         EngineHost.IsSetupSimulation = false;
 
-        //_ctx.InputSystem.ClearInputState();
+        EngineInput.Keyboard.ClearKeys();
         _ctx.TickHub.Reset();
 
         CameraManager.Instance.BeginUpdate();
         _ctx.Renderer.AfterUpdate();
 
         Array.Clear(_steps);
-        Instance = null;
+        Current = null;
         _steps = null!;
         _ctx = null!;
     }
@@ -50,19 +51,19 @@ internal sealed class EngineSetupPipeline
     [MethodImpl(MethodImplOptions.NoInlining)]
     public bool Run()
     {
-        if (CurrentStep >= EngineSetupState.Running) return true;
-        var step = _steps[(int)CurrentStep];
+        if (ActiveStep >= EngineSetupState.Running) return true;
+        var step = _steps[(int)ActiveStep];
         if (step == null!)
         {
-            CurrentStep++;
+            ActiveStep++;
             return false;
         }
 
         bool isStepDone = step.Execute();
 
-        if (isStepDone) CurrentStep++;
+        if (isStepDone) ActiveStep++;
 
-        return CurrentStep >= EngineSetupState.Running;
+        return ActiveStep >= EngineSetupState.Running;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

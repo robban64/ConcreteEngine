@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
 

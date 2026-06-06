@@ -12,7 +12,7 @@ using ConcreteEngine.Renderer;
 
 namespace ConcreteEngine.Engine.Render;
 
-public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
+public sealed class EngineRenderSystem
 {
     internal RenderProgram Program { get; }
 
@@ -36,11 +36,10 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
 
         _renderDispatcher = new RenderDispatcher(animations, particles);
         _materialProcessor = new MaterialProcessor(Program);
-
     }
 
-    public override int VisibleCount => _renderDispatcher.VisibleCount;
-    public override ReadOnlySpan<RenderEntityId> VisibleEntities() => _renderDispatcher.GetVisibleEntities();
+    public int VisibleCount => _renderDispatcher.VisibleCount;
+    public ReadOnlySpan<RenderEntityId> VisibleEntities() => _renderDispatcher.GetVisibleEntities();
 
     internal void Initialize(AssetStore assetStore)
     {
@@ -49,8 +48,9 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
 
         //
         var boundsMaterial = assetStore.CreateMaterial("EmptyMat", "EmptyMat1");
-        boundsMaterial.State.DrawState = GfxDrawState.Set(GfxDrawFlags.Blend, GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2);
-        boundsMaterial.State. PassFunctions = new GfxPassFunctions(BlendMode.Alpha);
+        boundsMaterial.State.DrawState =
+            GfxDrawState.Set(GfxDrawFlags.Blend, GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2);
+        boundsMaterial.State.PassFunctions = new GfxPassFunctions(BlendMode.Alpha);
         DrawTagProcessor.BoundsMaterial = boundsMaterial.MaterialId;
     }
 
@@ -73,9 +73,9 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
         {
             Logger.LogString(LogScope.Engine, "Recreating shadow framebuffers");
             Program.ResizeShadowFrameBuffers(_visualManager.Shadow.ShadowMapSize);
-        }    
+        }
     }
-    
+
     internal void Render(float dt, Size2D viewportSize, Vector2 mousePos)
     {
         Program.PrepareFrame();
@@ -102,7 +102,6 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
 
         Program.UploadUniforms();
         Program.Render();
-
     }
 
     public void Shutdown() => _renderDispatcher.Dispose();

@@ -28,14 +28,8 @@ public sealed class CameraManager
         LightTransforms = new CameraTransformSnapshot();
     }
 
-    internal void AttachRaycast(RenderSystem renderSystem) => RayCaster.Attach(renderSystem);
-
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void BeginUpdate()
-    {
-        Camera.BeginUpdate(EngineWindow.Viewport.Size);
-    }
+    internal void BeginUpdate() => Camera.BeginUpdate(EngineWindow.Viewport.Size);
 
     internal void CommitUpdate(VisualManager visuals)
     {

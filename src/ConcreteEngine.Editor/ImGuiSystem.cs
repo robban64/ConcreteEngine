@@ -1,7 +1,5 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Visuals;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Input;

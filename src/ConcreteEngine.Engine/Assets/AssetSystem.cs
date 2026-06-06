@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Command;
@@ -8,7 +7,7 @@ using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public sealed class AssetSystem : IGameEngineSystem
+public sealed class AssetSystem
 {
     public Status CurrentStatus { get; private set; } = Status.None;
 

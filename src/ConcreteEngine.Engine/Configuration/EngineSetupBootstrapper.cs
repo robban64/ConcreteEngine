@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Gateway;
@@ -20,12 +19,12 @@ internal sealed class EngineSetupCtx
 {
     public required GraphicsRuntime Graphics;
     public required EngineGateway EngineGateway;
-    public required EngineCoreSystem CoreSystem;
     public required EngineTickHub TickHub;
 
-    public AssetSystem Assets => CoreSystem.GetSystem<AssetSystem>();
-    public EngineRenderSystem Renderer => CoreSystem.GetSystem<EngineRenderSystem>();
-    public SceneSystem SceneSystem => CoreSystem.GetSystem<SceneSystem>();
+    public required EngineCommandQueue CommandQueue;
+    public required AssetSystem Assets;
+    public required EngineRenderSystem Renderer;
+    public required SceneSystem SceneSystem;
 }
 
 internal static class EngineSetupBootstrapper
@@ -96,7 +95,6 @@ internal static class EngineSetupBootstrapper
     private static bool OnLoadWorld(EngineSetupCtx ctx)
     {
         ctx.SceneSystem.QueueSwitch(0);
-        CameraManager.Instance.AttachRaycast(ctx.Renderer);
         return true;
     }
 
@@ -104,7 +102,7 @@ internal static class EngineSetupBootstrapper
     private static bool OnLoadScene(EngineSetupCtx ctx)
     {
         var builder = new GameSceneConfigBuilder();
-        ctx.SceneSystem.ApplyPendingScene(builder, ctx.CoreSystem);
+        ctx.SceneSystem.ApplyPendingScene(builder);
         ctx.SceneSystem.SetEnabled(true);
 
         return true;
@@ -113,7 +111,7 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnLoadEditor(EngineSetupCtx ctx)
     {
-        ctx.EngineGateway.SetupEditor(ctx.CoreSystem, ctx.Graphics.Gfx);
+        ctx.EngineGateway.SetupEditor(ctx.CommandQueue, ctx.Graphics.Gfx);
         Logger.ToggleGfxLog(true);
 
         for (int i = 0; i < 3; i++) EngineWarmup.YeetGenerics();

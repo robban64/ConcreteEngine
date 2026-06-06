@@ -12,18 +12,12 @@ namespace ConcreteEngine.Core.Engine;
 public sealed class RayCaster
 {
     private readonly CameraTransforms _camera;
-    private RenderSystem _renderSystem = null!;
 
     private static Terrain Terrain => Terrain.Main;
 
     internal RayCaster(CameraTransforms camera)
     {
         _camera = camera;
-    }
-
-    internal void Attach( RenderSystem renderSystem)
-    {
-        _renderSystem = renderSystem;
     }
 
     public SceneObject? GetSceneObjectFromView(Vector2 screenCoords, out BoundingBox resultBounds,
@@ -36,7 +30,7 @@ public sealed class RayCaster
 
         var ecs = Ecs.Render.Core;
         RenderEntityId closestEntity = default;
-        foreach (var entity in _renderSystem.VisibleEntities())
+        foreach (var entity in Ecs.RenderCore.VisibilityQuery())
         {
             ref readonly var box = ref ecs.GetBounds(entity);
             ref readonly var matrix = ref ecs.GetMatrix(entity);

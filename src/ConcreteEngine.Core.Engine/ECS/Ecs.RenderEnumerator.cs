@@ -12,20 +12,17 @@ public static partial class Ecs
     {
         public ref struct VisibleEntityEnumerator(NativeView<RenderEntity> entities)
         {
-            private readonly NativeView<RenderEntity> _entities = entities;
             private RenderEntityId _currentEntity;
             private int _i = -1;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
-                while (++_i < _entities.Length)
+                while (++_i < entities.Length)
                 {
-                    if (_entities[_i].IsVisible())
-                    {
-                        _currentEntity = new RenderEntityId(_i + 1);
-                        return true;
-                    }
+                    if (!entities[_i].IsVisible()) continue;
+                    _currentEntity = new RenderEntityId(_i + 1);
+                    return true;
                 }
 
                 return false;

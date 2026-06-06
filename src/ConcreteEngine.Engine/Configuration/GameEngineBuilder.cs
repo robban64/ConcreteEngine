@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Configuration;

@@ -1,10 +1,7 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Command;
-using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
@@ -20,15 +17,15 @@ internal sealed class EngineGateway : IDisposable
     private readonly RenderProgram _renderProgram;
     private EditorPortal _editor = null!;
 
-    internal EngineGateway(EngineCoreSystem coreSystem)
+    internal EngineGateway(RenderProgram renderProgram)
     {
-        _renderProgram = coreSystem.GetSystem<EngineRenderSystem>().Program;
+        _renderProgram = renderProgram;
         Metrics = new EngineMetricHub();
     }
 
-    public void SetupEditor(EngineCoreSystem coreSystem, GfxContext gfxContext)
+    public void SetupEditor(EngineCommandQueue commandQueue, GfxContext gfxContext)
     {
-        ArgumentNullException.ThrowIfNull(coreSystem);
+        ArgumentNullException.ThrowIfNull(commandQueue);
         ArgumentNullException.ThrowIfNull(gfxContext);
 
         if (Enabled) throw new InvalidOperationException(nameof(Enabled));
@@ -40,7 +37,7 @@ internal sealed class EngineGateway : IDisposable
         Metrics.ConnectEditor(_editor.GetMetricSystem());
 
         EditorSetup.RegisterCommands();
-        EngineCommandRouter.CommandCommandQueues = coreSystem.CommandQueues;
+        EngineCommandRouter.CommandCommandQueues = commandQueue;
 
         _editor.Start();
     }

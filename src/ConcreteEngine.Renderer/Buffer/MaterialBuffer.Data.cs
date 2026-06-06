@@ -1,6 +1,5 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Renderer.Buffer;
 

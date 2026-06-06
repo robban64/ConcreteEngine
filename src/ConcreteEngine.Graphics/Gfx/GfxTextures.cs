@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internals;

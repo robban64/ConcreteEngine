@@ -12,9 +12,9 @@ public abstract class AssetRef
 public sealed class AssetRef<TAsset> : AssetRef where TAsset : AssetObject
 {
     private TAsset? _asset;
-    private readonly IAssetListener<TAsset> _listener;
+    private readonly IAssetListener _listener;
 
-    public AssetRef(TAsset asset, IAssetListener<TAsset> listener)
+    public AssetRef(TAsset asset, IAssetListener listener)
     {
         ArgumentNullException.ThrowIfNull(asset);
         ArgumentNullException.ThrowIfNull(listener);
@@ -37,16 +37,16 @@ public sealed class AssetRef<TAsset> : AssetRef where TAsset : AssetObject
 
     internal override void Detach()
     {
-        _listener?.OnRemoved(this);
+        _listener.OnRemoved(Asset);
         Asset.RemoveRef(this);
         _asset = null!;
     }
 }
 
-public interface IAssetListener<TAsset> where TAsset : AssetObject
+public interface IAssetListener
 {
-    void OnChanged(TAsset asset);
-    void OnRemoved(AssetRef<TAsset> assetRef);
+    void OnChanged(AssetObject asset);
+    void OnRemoved(AssetObject asset);
 }
 
 

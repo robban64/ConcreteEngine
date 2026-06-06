@@ -12,12 +12,13 @@ public sealed class Material : AssetObject
 {
     private static int _materialIdCounter = 0;
     public static Material FallbackMaterial { get; internal set; } = null!;
+    
     public MaterialId MaterialId { get; private set; } = new(++_materialIdCounter);
 
     public AssetId TemplateId { get; init; }
     public MaterialProfile Profile { get; private set; }
 
-    public Shader? BoundShader { get; private set; }
+    public Shader BoundShader { get; private set; }
 
     public readonly MaterialState State;
 
@@ -26,30 +27,31 @@ public sealed class Material : AssetObject
     public override AssetCategory Category => AssetCategory.Renderer;
     public override AssetKind Kind => AssetKind.Material;
 
-    private Material(string name, AssetId id, Guid gid, AssetId templateId, Shader? boundShader, MaterialProfile profile,
-        TextureSource[] sources) : base(name,id,gid)
+    private Material(string name, AssetId id, Guid gid, AssetId templateId, Shader? boundShader,
+        MaterialProfile profile,
+        TextureSource[] sources) : base(name, id, gid)
     {
         ArgumentNullException.ThrowIfNull(sources);
 
         TemplateId = templateId;
-        BoundShader = boundShader;
         _textureSources = sources;
         Profile = profile;
         State = new MaterialState(this);
 
-        if(boundShader != null) SetShader(boundShader);
+        SetShader(boundShader);
         MarkDirty();
     }
 
     public Material(string name, AssetId id, Guid gid, AssetId templateId, Shader? boundShader, MaterialProfile profile,
         in MaterialParams param,
-        TextureSource[] sources) : this(name,id,gid, templateId, boundShader, profile, sources)
+        TextureSource[] sources) : this(name, id, gid, templateId, boundShader, profile, sources)
     {
         State.SetParams(in param);
     }
 
     public Material(string name, AssetId id, Guid gid, AssetId templateId, Shader? boundShader, MaterialProfile profile,
-        MaterialParamsRecord param, TextureSource[] sources) : this(name,id,gid, templateId, boundShader, profile, sources)
+        MaterialParamsRecord param, TextureSource[] sources) : this(name, id, gid, templateId, boundShader, profile,
+        sources)
     {
         ArgumentNullException.ThrowIfNull(param);
 
@@ -60,17 +62,18 @@ public sealed class Material : AssetObject
     public bool HasTransparency => State.Transparency;
     public ReadOnlySpan<TextureSource> GetTextureSources() => _textureSources;
 
-    public void SetShader(Shader shader)
+    public void SetShader(Shader? newShader)
     {
-        ArgumentNullException.ThrowIfNull(shader);
-        if(BoundShader == shader) return;
+        if (newShader is not { } shader)
+            shader = Shader.FallbackShader;
         
+        if (BoundShader == shader) return;
+
         if (shader.HasShadowSampler) State.PassMasks |= PassMask.Depth;
         else State.PassMasks &= ~PassMask.Depth;
-            
+
         BoundShader = shader;
         MarkDirty();
-
     }
 
     public void SetOverrideTexture(int slot, TextureId textureId)
@@ -115,11 +118,10 @@ public sealed class Material : AssetObject
     }
 }
 
-
 public sealed class MaterialState(Material material)
 {
     private void MarkDirty() => material.MarkDirty();
-    
+
     public void FillParams(out MaterialParams param)
     {
         param.Color = Color;
@@ -135,7 +137,7 @@ public sealed class MaterialState(Material material)
         Specular = param.Specular;
         UvRepeat = param.UvRepeat;
     }
-    
+
     public bool Transparency
     {
         get;
@@ -146,7 +148,7 @@ public sealed class MaterialState(Material material)
             MarkDirty();
         }
     }
-    
+
     public DrawCommandQueue DrawQueue
     {
         get;
@@ -158,7 +160,7 @@ public sealed class MaterialState(Material material)
         }
     } = DrawCommandQueue.Opaque;
 
-    
+
     public PassMask PassMasks
     {
         get;
@@ -170,7 +172,7 @@ public sealed class MaterialState(Material material)
         }
     } = PassMask.Default;
 
-    
+
     public GfxDrawState DrawState
     {
         get;
@@ -194,9 +196,8 @@ public sealed class MaterialState(Material material)
             field = value;
             MarkDirty();
         }
-    } = new (BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None);
+    } = new(BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None);
 
-    
 
     public Color4 Color
     {
@@ -241,6 +242,4 @@ public sealed class MaterialState(Material material)
             MarkDirty();
         }
     } = 1f;
-
-
 }

@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
@@ -26,10 +27,9 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
 
     private void CommitMaterials()
     {
-        var assetStore = AssetStore.Instance;
         foreach (var id in _materialStore.GetDirtySpan())
         {
-            assetStore.GetUnsafe<Material>(id).Commit();
+            AssetStore.Instance.GetUnsafe<Material>(id).Commit();
         }
     }
 
@@ -37,14 +37,13 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
     private void Submit()
     {
         var assetStore = AssetStore.Instance;
-        var materialBuffer = _materialBuffer;
 
         Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
         foreach (var id in _materialStore.GetDirtySpan())
         {
             var material = assetStore.GetUnsafe<Material>(id);
-            var toggles = FillSamplers(slots, material, assetStore, materialBuffer);
-            SubmitUniform(material, materialBuffer, toggles);
+            var toggles = FillSamplers(slots, material, assetStore, _materialBuffer);
+            SubmitUniform(material, _materialBuffer, toggles);
         }
     }
 
@@ -52,24 +51,22 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
     {
         var state = material.State;
 
-        if (material.BoundShader is not { } shader)
-            shader = Shader.FallbackShader;
-
         ref var uniform = ref buffer.Submit(
             material.MaterialId,
             new RenderMaterialMeta(
-                shader.GfxId,
+                material.BoundShader.GfxId,
                 state.DrawState,
                 state.PassFunctions,
-                shader.DefaultBindings.ShadowMapBinding
+                material.BoundShader.DefaultBindings.ShadowMapBinding
             ));
 
-        uniform.MatColor = state.Color;
-        uniform.MatParams0 = new Vector4(state.Specular, state.UvRepeat, 1.0f, 1.0f);
+        state.FillParams(out var param);
+        uniform.MatColor = param.Color;
+        uniform.MatParams0 = new Vector4(param.Specular, param.UvRepeat, 1.0f, 1.0f);
         uniform.MatParams1 = new Vector4(
-            state.Shininess,
+            param.Shininess,
             toggles.HasNormal ? 1f : 0f,
-            state.Transparency ? 1f : 0f,
+            toggles.HasTransparency ? 1f : 0f,
             toggles.HasAlphaMask ? 1f : 0f
         );
     }
@@ -78,6 +75,7 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
         AssetStore assetStore, MaterialBuffer buffer)
     {
         var toggles = new MaterialRenderToggles();
+        toggles.HasTransparency = material.HasTransparency;
         var textureSources = material.GetTextureSources();
         for (var i = 0; i < textureSources.Length; i++)
         {

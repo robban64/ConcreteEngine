@@ -59,8 +59,8 @@ internal sealed class EngineBlueprintFactory : BlueprintFactory
                 continue;
             }
             
-            var assetId = matIndex < bp.Materials.Length ? bp.Materials[matIndex] : Material.FallbackMaterial.Id;
-            if(assetId == AssetId.Empty) assetId = Material.FallbackMaterial.Id;
+            var assetId = matIndex < bp.Materials.Length ? bp.Materials[matIndex] : AssetId.Empty;
+            if(assetId == AssetId.Empty) continue;
 
             instance.SetMaterial(matIndex, AssetStore.Get<Material>(assetId));
         }

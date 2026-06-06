@@ -1,5 +1,7 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
@@ -11,13 +13,14 @@ namespace ConcreteEngine.Core.Engine.Scene;
 
 public abstract class BlueprintInstance
 {
-    public abstract SceneObjectBlueprint Blueprint { get; }
+    public abstract SceneObjectBlueprint GetBlueprint();
 
-    public string DisplayName { get; protected set; }
     public bool IsDirty { get; private set; } = true;
 
     internal readonly List<RenderEntityId> RenderEntityIds = [];
     internal readonly List<GameEntityId> GameEntityIds = [];
+
+    public string DisplayName => GetBlueprint().DisplayName;
 
     public bool HasRenderEcs => RenderEntityIds.Count > 0;
     public bool HasGameEntityIds => GameEntityIds.Count > 0;
@@ -58,10 +61,12 @@ public abstract class BlueprintInstance
 }
 
 
-public sealed class ModelInstance : BlueprintInstance, IAssetListener<Model>, IAssetListener<Material>
+public sealed class ModelInstance : BlueprintInstance, IAssetListener
 {
+    public readonly ModelBlueprint Blueprint;
+
     private readonly AssetRef<Model> _model;
-    private readonly AssetRef<Material>[] _materials;
+    private readonly AssetRef<Material>?[] _materials;
     
     public Transform LocalTransform;
     public BoundingBox LocalBounds;
@@ -73,13 +78,10 @@ public sealed class ModelInstance : BlueprintInstance, IAssetListener<Model>, IA
         Blueprint = blueprint;
         _model = new AssetRef<Model>(model, this);
         _materials = new AssetRef<Material>[materialCount];
-
-        DisplayName = string.IsNullOrEmpty(blueprint.DisplayName) ? model.Name : blueprint.DisplayName;
         
         LocalTransform = blueprint.LocalTransform;
         LocalBounds = model.Bounds;
     }
-    public override ModelBlueprint Blueprint { get; }
 
     public Model AssetModel => _model.Asset;
     public int MaterialCount => _materials.Length;
@@ -87,7 +89,8 @@ public sealed class ModelInstance : BlueprintInstance, IAssetListener<Model>, IA
     public Material GetMaterial(int index)
     {
         if((uint)index >= (uint)_materials.Length) Throwers.InvalidArgument(nameof(index));
-        return _materials[index].Asset;
+        var material = _materials[index];
+        return material is null ? Material.FallbackMaterial : material.Asset;
     }
 
     public void SetMaterial(int index, Material material)
@@ -100,11 +103,23 @@ public sealed class ModelInstance : BlueprintInstance, IAssetListener<Model>, IA
         
         _materials[index] = new AssetRef<Material>(material, this);
     }
+    
+    public void OnChanged(AssetObject asset)
+    {
+        if (asset is Material material) ApplyMaterial(material);
+    }
 
-    public void OnChanged(Model model) {}
-    public void OnRemoved(AssetRef<Model> modelRef) {}
-
-    public void OnChanged(Material material)
+    public void OnRemoved(AssetObject asset)
+    {
+        if(asset is not Material material) return;
+        ApplyMaterial(Material.FallbackMaterial);
+        for (var i = 0; i < _materials.Length; i++)
+        {
+            if (_materials[i]?.Asset == material) _materials[i] = null;
+        }
+    }
+    
+    private void ApplyMaterial(Material material)
     {
         var materialId = material.MaterialId;
         var drawQueue = material.State.DrawQueue;
@@ -112,43 +127,24 @@ public sealed class ModelInstance : BlueprintInstance, IAssetListener<Model>, IA
         foreach (var entity in GetRenderEntities())
         {
             ref var source = ref Ecs.Render.Core.GetSource(entity);
-            if(source.Material != materialId) continue;
+            if(source.Material.Id > 0 && source.Material != materialId) continue;
             source.Queue = drawQueue;
             source.Mask = passMask;
         }
     }
+    public override SceneObjectBlueprint GetBlueprint() => Blueprint;
 
-    public void OnRemoved(AssetRef<Material> materialRef)
-    {
-        var materialId = materialRef.Asset.MaterialId;
-        var fallback = Material.FallbackMaterial;
-        foreach (var entity in GetRenderEntities())
-        {
-            ref var source = ref Ecs.RenderCore.GetSource(entity);
-            if (source.Material == materialId)
-            {
-                source.Material = fallback.MaterialId;
-                source.Queue = fallback.State.DrawQueue;
-                source.Mask = fallback.State.PassMasks;
-            }
-        }
-        
-        var idx = _materials.IndexOf(materialRef);
-        _materials[idx] = new AssetRef<Material>(fallback, this);
-    }
 
 }
 
 public sealed class AnimationInstance : BlueprintInstance
 {
-    public override ModelBlueprint Blueprint { get; }
+    public readonly ModelBlueprint Blueprint;
     public ModelAnimation AssetAnimation { get; }
     public AnimationInstance(ModelBlueprint blueprint, ModelAnimation assetAnimation)
     {
         Blueprint = blueprint;
         AssetAnimation = assetAnimation;
-        DisplayName = string.IsNullOrEmpty(blueprint.DisplayName) ?  "Animation" : blueprint.DisplayName;
-
     }
 
     public ref AnimationComponent GetComponent()
@@ -161,18 +157,20 @@ public sealed class AnimationInstance : BlueprintInstance
 
         throw new InvalidOperationException();
     }
+    public override SceneObjectBlueprint GetBlueprint() => Blueprint;
+
 }
 
 public sealed class ParticleInstance : BlueprintInstance
 {
-    public override ParticleBlueprint Blueprint { get; }
+    public readonly ParticleBlueprint Blueprint;
+
     public ParticleEmitter Emitter { get; }
     public ParticleInstance(ParticleBlueprint blueprint, ParticleEmitter emitter)
     {
         Blueprint = blueprint;
         Emitter = emitter;
-        DisplayName = string.IsNullOrEmpty(blueprint.DisplayName) ? emitter.Name : blueprint.DisplayName;
-
     }
 
+    public override SceneObjectBlueprint GetBlueprint() => Blueprint;
 }

@@ -34,7 +34,7 @@ public sealed class CameraManager
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void BeginUpdate()
     {
-        Camera.BeginUpdate(EngineWindow.Current.Viewport.Size);
+        Camera.BeginUpdate(EngineWindow.Viewport.Size);
     }
 
     internal void CommitUpdate(VisualManager visuals)

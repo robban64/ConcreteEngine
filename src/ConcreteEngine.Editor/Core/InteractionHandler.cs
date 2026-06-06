@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Data;
 using Silk.NET.Input;
@@ -10,8 +11,6 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class InteractionHandler(StateManager state, SelectionManager selection)
 {
-    private static Vector2 MousePos => EditorInput.Input.Mouse.ViewPos;
-
     private static RayCaster RayCaster => CameraManager.Instance.RayCaster;
 
     public Vector3 DragStart;
@@ -20,7 +19,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Update()
     {
-        if (EditorInput.Input.IsKeyDown(Key.Escape))
+        if (EditorInput.Layer.IsKeyDown(Key.Escape))
         {
             WasDragging = false;
             DragStart = Vector3.Zero;
@@ -44,7 +43,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
             case { IsUsingGizmo: true, IsHoveringGizmo: true }:
                 return true;
             case { IsLeftClick: true, IsDragging: false }:
-                OnClickViewport(MousePos);
+                OnClickViewport(EngineInput.Mouse.ViewportPos);
                 return true;
             default:
                 return false;
@@ -53,8 +52,9 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
 
     private void UpdateDrag(bool isDragging)
     {
-        var mousePos = MousePos;
+        var mousePos = EngineInput.Mouse.ViewportPos;
         var dragState = EditorInput.DragState;
+        
         switch (dragState)
         {
             case DragState.None:

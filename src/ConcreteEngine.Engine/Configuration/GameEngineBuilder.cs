@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Graphics;
@@ -17,13 +16,12 @@ public sealed class GameEngineBuilder
 {
     private readonly List<Func<GameScene>> _sceneFactories = [];
 
-    internal GameEngine Build(EngineInputSource input, GfxRuntimeBundle<GL> gfxBundle)
+    internal GameEngine Build(GfxRuntimeBundle<GL> gfxBundle)
     {
         if (_sceneFactories.Count < 0) throw new InvalidOperationException("No GameScene registered");
 
         return new GameEngine(
             gfxBundle: gfxBundle,
-            input: input,
             sceneFactories: _sceneFactories
         );
     }

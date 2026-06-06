@@ -19,16 +19,13 @@ namespace ConcreteEngine.Engine.Configuration;
 internal sealed class EngineSetupCtx
 {
     public required GraphicsRuntime Graphics;
-    public required EngineWindow Window;
     public required EngineGateway EngineGateway;
     public required EngineCoreSystem CoreSystem;
-    public required EngineCommandQueue CommandQueue;
     public required EngineTickHub TickHub;
 
     public AssetSystem Assets => CoreSystem.GetSystem<AssetSystem>();
     public EngineRenderSystem Renderer => CoreSystem.GetSystem<EngineRenderSystem>();
     public SceneSystem SceneSystem => CoreSystem.GetSystem<SceneSystem>();
-    public InputSystem InputSystem => CoreSystem.GetSystem<InputSystem>();
 }
 
 internal static class EngineSetupBootstrapper
@@ -67,7 +64,7 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnSetupRender(EngineSetupCtx ctx)
     {
-        var builder = ctx.Renderer.Program.StartBuilder(ctx.Window.Viewport.Size);
+        var builder = ctx.Renderer.Program.StartBuilder(EngineWindow.Viewport.Size);
         var store = ctx.Assets.Assets;
         var shaderCount = store.GetMetaSnapshot<Shader>().Count;
 
@@ -116,7 +113,7 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnLoadEditor(EngineSetupCtx ctx)
     {
-        ctx.EngineGateway.SetupEditor(ctx.CoreSystem, ctx.Window, ctx.CommandQueue, ctx.Graphics.Gfx);
+        ctx.EngineGateway.SetupEditor(ctx.CoreSystem, ctx.Graphics.Gfx);
         Logger.ToggleGfxLog(true);
 
         for (int i = 0; i < 3; i++) EngineWarmup.YeetGenerics();
@@ -127,7 +124,7 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnWarmup(EngineSetupCtx ctx)
     {
-        ctx.Graphics.BeginFrame(new GfxFrameArgs(0, ctx.Window.Viewport.Size));
+        ctx.Graphics.BeginFrame(new GfxFrameArgs(0, EngineWindow.Viewport.Size));
         //ctx.Renderer.Program.PrepareFrameWarmup(ctx.Window.WindowSize, ctx.Window.OutputSize);
 
         ctx.Renderer.Program.Render();

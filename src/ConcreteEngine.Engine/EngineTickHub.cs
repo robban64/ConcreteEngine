@@ -25,6 +25,11 @@ internal sealed class EngineTickHub
         Action<float> onLogTick,
         Action<float> onSystemTick)
     {
+        ArgumentNullException.ThrowIfNull(onGameTick);
+        ArgumentNullException.ThrowIfNull(onEnvironmentTick);
+        ArgumentNullException.ThrowIfNull(onLogTick);
+        ArgumentNullException.ThrowIfNull(onSystemTick);
+        
         var sim = EngineSettings.Current.Simulation;
         _gameTicker = new FrameTickTimer(1.0f / sim.GameSimRate);
         _environmentTicker = new FrameTickTimer(1.0f / sim.EnvironmentSimRate);

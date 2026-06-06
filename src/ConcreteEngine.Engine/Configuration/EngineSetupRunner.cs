@@ -34,7 +34,7 @@ internal sealed class EngineSetupPipeline
         EngineHost.IsSetup = false;
         EngineHost.IsSetupSimulation = false;
 
-        _ctx.InputSystem.ClearInputState();
+        //_ctx.InputSystem.ClearInputState();
         _ctx.TickHub.Reset();
 
         CameraManager.Instance.BeginUpdate();

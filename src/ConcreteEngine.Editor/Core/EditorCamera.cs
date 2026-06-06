@@ -16,7 +16,7 @@ internal sealed class EditorCamera
     private Vector3 _currentVelocity;
     private YawPitch _targetOrientation;
 
-    private readonly InputController _input = EditorInput.Input;
+    private readonly InputLayer _input = EditorInput.Layer;
     public readonly Camera Camera = CameraManager.Instance.Camera;
 
     private EditorCamera()

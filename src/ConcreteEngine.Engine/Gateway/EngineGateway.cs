@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer;
@@ -27,11 +26,9 @@ internal sealed class EngineGateway : IDisposable
         Metrics = new EngineMetricHub();
     }
 
-    public void SetupEditor(EngineCoreSystem coreSystem, EngineWindow window, EngineCommandQueue commandQueues,
-        GfxContext gfxContext)
+    public void SetupEditor(EngineCoreSystem coreSystem, GfxContext gfxContext)
     {
         ArgumentNullException.ThrowIfNull(coreSystem);
-        ArgumentNullException.ThrowIfNull(window);
         ArgumentNullException.ThrowIfNull(gfxContext);
 
         if (Enabled) throw new InvalidOperationException(nameof(Enabled));
@@ -39,20 +36,13 @@ internal sealed class EngineGateway : IDisposable
 
         Enabled = true;
 
-        var inputSystem = coreSystem.GetSystem<InputSystem>();
-
-        var engineContext = new EditorEngineContext
-        {
-            Input = new InputLayerController(inputSystem, InputLayerKind.Ui), Window = window,
-        };
-
-        _editor = new EditorPortal(engineContext);
+        _editor = new EditorPortal();
         Metrics.ConnectEditor(_editor.GetMetricSystem());
 
         EditorSetup.RegisterCommands();
-        EngineCommandRouter.CommandCommandQueues = commandQueues;
+        EngineCommandRouter.CommandCommandQueues = coreSystem.CommandQueues;
 
-        _editor.Start(EngineWindow.Current.OutputSize);
+        _editor.Start();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -66,7 +56,7 @@ internal sealed class EngineGateway : IDisposable
     public void RenderEditor(float deltaTime)
     {
         if (!Enabled) return;
-        _editor.Render(deltaTime, EngineWindow.Current.OutputSize, _renderProgram.OutputTexture);
+        _editor.Render(deltaTime, _renderProgram.OutputTexture);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -18,7 +18,7 @@ public sealed class FlyCameraModule : GameModule
 
     public override void OnStart()
     {
-        _input = Context.GetSystem<InputSystem>().GetLayer(InputLayerKind.Game);
+        _input = EngineInput.GetLayer(InputLayerKind.Game);
         _camera = CameraManager.Instance.Camera;
     }
 

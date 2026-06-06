@@ -24,7 +24,7 @@ public sealed class EngineHost
         public WindowOptions Options = options;
     }
 
-    private bool _disposed;
+    private static bool _disposed;
     internal static bool IsSetupSimulation = false;
     internal static bool IsSetup = true;
 
@@ -32,7 +32,6 @@ public sealed class EngineHost
 
     private IWindow _window = null!;
     private GameEngine _engine = null!;
-    private EngineInputSource _inputSource = null!;
 
     private SetupContainer? _setup;
 
@@ -93,10 +92,11 @@ public sealed class EngineHost
             glfw.SwapInterval(0);
         }
 
-        EngineWindow.Current.Attach(_window);
+        EngineWindow.Attach(_window);
         
-        _inputSource = new EngineInputSource(_window.CreateInput());
-        _engine = _setup.Builder.Build(_inputSource, graphics);
+        EngineInput.Attach(_window.CreateInput());
+        
+        _engine = _setup.Builder.Build(graphics);
         _setup.Builder = null;
         _setup = null;
     }
@@ -148,7 +148,7 @@ public sealed class EngineHost
 
             _window.DoEvents();
 
-            _engine.Render(deltaTime);
+            _engine.Render((float)deltaTime);
 
             _window.SwapBuffers();
 
@@ -179,8 +179,7 @@ public sealed class EngineHost
     {
         if (_disposed) return;
         _engine.Close();
-        _inputSource.Dispose();
-        _window?.Dispose();
+        _window.Dispose();
         _disposed = true;
     }
 }

@@ -1,31 +1,55 @@
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Input;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Render;
+using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Engine;
 
-public sealed class EngineCoreSystem : IEngineSystemManager
+public sealed class EngineCoreSystem : IEngineSystemManager, IDisposable
 {
-    private readonly Dictionary<Type, IGameEngineSystem> _systems = new(4);
-
-    internal readonly InputSystem Input;
     internal readonly AssetSystem Assets;
     internal readonly SceneSystem Scene;
     internal readonly EngineRenderSystem Render;
+    
+    internal readonly EngineCommandQueue CommandQueues;
 
-    internal EngineCoreSystem(InputSystem inputSystem, AssetSystem assets, SceneSystem sceneSystem,
-        EngineRenderSystem renderSystem)
+    private FrameStepper _systemStepper = new(8);
+
+    private readonly Dictionary<Type, IGameEngineSystem> _systems = new(4);
+
+    internal EngineCoreSystem(GraphicsRuntime graphics, List<Func<GameScene>> sceneFactories)
     {
-        Input = inputSystem;
-        Scene = sceneSystem;
-        Render = renderSystem;
-        Assets = assets;
+        Assets = new AssetSystem(graphics.Gfx);
+        Render = new EngineRenderSystem(graphics);
+        Scene = new SceneSystem(sceneFactories);
 
-        Register(inputSystem);
-        Register(assets);
-        Register(sceneSystem);
-        Register(renderSystem);
+        CommandQueues = new EngineCommandQueue(new EngineCommandContext(Assets));
+
+        Register(Assets);
+        Register(Scene);
+        Register(Render);
+    }
+    
+    
+    internal void OnSystemTick(float dt)
+    {
+        if (_systemStepper.Tick())
+        {
+            var windowResized = EngineWindow.Commit();
+            Render.OnSystemTick(windowResized);
+        }
+
+        if (Assets.PendingAssetCount > 0)
+            Assets.ProcessPendingQueue();
+
+        if (CommandQueues.QueuesCount > 0)
+            CommandQueues.DrainDispatch();
+        
+        TerrainSystem.Instance.OnTick();
     }
 
 
@@ -41,5 +65,12 @@ public sealed class EngineCoreSystem : IEngineSystemManager
             throw new InvalidOperationException($"System  of type {typeof(T)} is not registered or wrong type");
 
         return t;
+    }
+
+    public void Dispose()
+    {
+        Scene.Shutdown();
+        Render.Shutdown();
+        Assets.Shutdown();
     }
 }

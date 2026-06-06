@@ -1,8 +1,6 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
@@ -11,7 +9,6 @@ using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Render;
 
@@ -69,7 +66,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
         if (screenResize)
         {
             Logger.LogString(LogScope.Engine, "Recreating screen framebuffers");
-            Program.ResizeScreenFrameBuffers(EngineWindow.Current.Viewport.Size);
+            Program.ResizeScreenFrameBuffers(EngineWindow.Viewport.Size);
         }
 
         if (_visualManager.CommitShadowSize())

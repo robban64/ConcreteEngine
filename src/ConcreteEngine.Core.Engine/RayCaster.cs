@@ -101,7 +101,7 @@ public sealed class RayCaster
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ScreenPointToRay(Vector2 screenCoords, out Ray ray)
     {
-        var ndc = CoordinateMath.ToNdcCoords(screenCoords, EngineWindow.Current.Viewport.Size);
+        var ndc = CoordinateMath.ToNdcCoords(screenCoords, EngineWindow.Viewport.Size);
         ref readonly var invProjViewMatrix = ref _camera.InverseProjectionViewMatrix;
         VectorMath.UnProject(new Vector3(ndc, -1.0f), in invProjViewMatrix, out var p1); // near
         VectorMath.UnProject(new Vector3(ndc, 1.0f), in invProjViewMatrix, out var p2); // far

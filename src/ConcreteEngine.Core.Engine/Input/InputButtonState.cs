@@ -25,10 +25,3 @@ public record struct InputButtonState
         if (Up) Down = false;
     }
 }
-
-public record struct InputMouseState
-{
-    public Vector2 Position;
-    public Vector2 Scroll;
-    public Vector2 Delta;
-}

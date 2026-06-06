@@ -2,7 +2,6 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Engine.Scene.Modules;
-using ConcreteEngine.Engine.Assets;
 
 namespace ConcreteEngine.Engine;
 
@@ -80,5 +79,8 @@ internal sealed class SceneSystem : IGameEngineSystem
         _modules.Load(new GameModuleContext(sceneContext));
     }
 
-    public void Shutdown() { }
+    public void Shutdown()
+    {
+        Current?.Unload();
+    }
 }

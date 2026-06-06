@@ -8,30 +8,32 @@ using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Core.Engine;
 
-public sealed class EngineWindow
+public static class EngineWindow
 {
-    public static readonly EngineWindow Current = new();
+    public static bool IsDirty { get; private set; }
+    public static Size2D WindowSize { get; private set; }
+    public static Size2D OutputSize { get; private set; }
 
-    public bool IsDirty { get; private set; }
-    public Size2D WindowSize { get; private set; }
-    public Size2D OutputSize { get; private set; }
+    private static ViewportRect _viewport, _nextViewport;
+    private static Size2D _nextWindowSize, _nextOutputSize;
 
-    private ViewportRect _viewport, _nextViewport;
-    private Size2D _nextWindowSize, _nextOutputSize;
+    private static IWindow _platformWindow = null!;
 
-    private IWindow _platformWindow = null!;
+    public static nint PlatformWindowPtr => _platformWindow.Handle;
 
-
-    private EngineWindow()
+    public static ref readonly ViewportRect Viewport
     {
-        if (Current is not null)
-            throw new InvalidOperationException("Only one EngineWindow can exist at a time.");
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref _viewport;
     }
 
-    internal void Attach(IWindow platformWindow)
+    internal static void Attach(IWindow platformWindow)
     {
+        if(_platformWindow != null)
+            throw new InvalidOperationException("Only one EngineWindow can exist at a time.");
+
         ArgumentNullException.ThrowIfNull(platformWindow);
-        
+
         _platformWindow = platformWindow;
         OutputSize = _nextOutputSize = _platformWindow.FramebufferSize.ToSize2D();
         WindowSize = _nextWindowSize = _platformWindow.Size.ToSize2D();
@@ -39,19 +41,10 @@ public sealed class EngineWindow
 
         _platformWindow.Resize += OnResize;
         _platformWindow.FramebufferResize += OnOutputResize;
-
     }
 
 
-    public nint PlatformWindowPtr => _platformWindow.Handle;
-
-    public ref readonly ViewportRect Viewport
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref _viewport;
-    }
-
-    public void SetViewport(ViewportRect vp)
+    public static void SetViewport(ViewportRect vp)
     {
         if (vp == _nextViewport || vp == _viewport) return;
 
@@ -62,7 +55,7 @@ public sealed class EngineWindow
         _nextViewport = vp;
     }
 
-    internal bool Commit()
+    internal static bool Commit()
     {
         if (!IsDirty) return false;
         IsDirty = false;
@@ -75,38 +68,38 @@ public sealed class EngineWindow
         return true;
     }
 
-    public string Title
+    public static string Title
     {
         get => _platformWindow.Title;
         set => _platformWindow.Title = value;
     }
 
-    public Vector2I Position
+    public static Vector2I Position
     {
         get => _platformWindow.Position.ToVec2Int();
         set => _platformWindow.Position = new Vector2D<int>(value.X, value.Y);
     }
 
-    public void SetWindowSize(Size2D windowSize)
+    public static void SetWindowSize(Size2D windowSize)
     {
         if (_nextWindowSize == windowSize) return;
         _platformWindow.Size = new Vector2D<int>(windowSize.Width, windowSize.Height);
         IsDirty = true;
     }
 
-    private void OnResize(Vector2D<int> size)
+    private static void OnResize(Vector2D<int> size)
     {
         _nextWindowSize = size.ToSize2D();
         IsDirty = true;
     }
 
-    private void OnOutputResize(Vector2D<int> size)
+    private static void OnOutputResize(Vector2D<int> size)
     {
         _nextOutputSize = size.ToSize2D();
         IsDirty = true;
     }
 
-    public void CenterOnCurrentMonitor()
+    public static void CenterOnCurrentMonitor()
     {
         var monitor = _platformWindow.Monitor;
         if (monitor is not null)

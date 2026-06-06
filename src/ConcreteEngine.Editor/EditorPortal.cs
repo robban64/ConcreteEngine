@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -22,29 +23,25 @@ public sealed class EditorPortal : IDisposable
 
     private EditorService _service = null!;
 
-    private readonly EditorEngineContext _engineContext;
 
-
-    public EditorPortal(EditorEngineContext engineContext)
+    public EditorPortal()
     {
-        _engineContext = engineContext;
-        EditorInput.Input = engineContext.Input;
+        EditorInput.Layer = EngineInput.GetLayer(InputLayerKind.Ui);
 
         ImGuiKeyMapper.Init();
-        ImGuiSystem.Setup(engineContext.Window, 1);
+        ImGuiSystem.Setup(1);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void Start(Size2D outputSize)
+    public void Start()
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
 
-        ImGuiSystem.OutputSize = outputSize;
         TextBuffers.AllocateBuffers();
         ConsoleGateway.Service.Setup();
 
         InspectorFieldProvider.Create();
-        _service = new EditorService(_engineContext.Window);
+        _service = new EditorService();
         Initialized = true;
     }
 
@@ -53,22 +50,22 @@ public sealed class EditorPortal : IDisposable
     public MetricSystem GetMetricSystem() => MetricSystem.Instance;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateInput() => ImGuiSystem.FillInput(EditorInput.Input);
+    public void UpdateInput() => ImGuiSystem.FillInput();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateGameTick(float deltaTime) => EditorCamera.Instance.Update(deltaTime);
 
-    public void Render(float deltaTime, Size2D outputSize, TextureId outputTexture)
+    public void Render(float deltaTime, TextureId outputTexture)
     {
         if (EditorTime.Advance(deltaTime))
-            Update(outputSize, outputTexture);
+            Update(outputTexture);
 
         ImGuiSystem.RenderDrawData();
     }
 
-    private void Update(Size2D outputSize, TextureId outputTexture)
+    private void Update(TextureId outputTexture)
     {
-        ImGuiSystem.NewFrame(EditorTime.DeltaTime, outputSize, outputTexture);
+        ImGuiSystem.NewFrame(EditorTime.DeltaTime, outputTexture);
 
         if (_isDiagnosticTick)
         {
@@ -87,7 +84,7 @@ public sealed class EditorPortal : IDisposable
 
         ImGuiSystem.EndFrame();
 
-        _engineContext.Input.ToggleBlockInput(EditorInput.IsBlocking);
+        EditorInput.ToggleBlockLayers();
     }
 
 

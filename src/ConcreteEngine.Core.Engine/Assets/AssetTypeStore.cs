@@ -12,7 +12,8 @@ public sealed class AssetTypeStore(AssetKind kind)
     private readonly List<int> _dirtyIds = [];
     private readonly Dictionary<string, AssetId> _byName = [];
 
-    public AssetKind Kind { get; } = kind;
+    public readonly AssetKind Kind = kind;
+    
     public int Count => _asset.Count;
     public int DirtyCount => _dirtyIds.Count;
 
@@ -92,17 +93,5 @@ public sealed class AssetTypeStore(AssetKind kind)
         _asset.EnsureCapacity(capacity);
         _dirtyIds.EnsureCapacity(capacity);
         _byName.EnsureCapacity(capacity);
-    }
-
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static AssetTypeStore[] CreateAll()
-    {
-        var collections = new AssetTypeStore[4];
-        collections[AssetKind.Shader.ToIndex()] = new AssetTypeStore(AssetKind.Shader);
-        collections[AssetKind.Model.ToIndex()] = new AssetTypeStore(AssetKind.Model);
-        collections[AssetKind.Texture.ToIndex()] = new AssetTypeStore(AssetKind.Texture);
-        collections[AssetKind.Material.ToIndex()] = new AssetTypeStore(AssetKind.Material);
-        return collections;
     }
 }

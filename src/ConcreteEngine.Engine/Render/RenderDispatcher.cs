@@ -7,7 +7,6 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Renderer.Buffer;
@@ -27,16 +26,16 @@ internal sealed class RenderDispatcher : IDisposable
     private AnimatorProcessor _animatorProcessor = null!;
     private RenderUploadBuffers _uploadBuffers = null!;
 
-    private readonly AnimationTable _animationTable;
+    private readonly AnimationSystem _animationSystem;
     private readonly ParticleSystem _particleSystem;
     
-    internal RenderDispatcher(AnimationTable animations, ParticleSystem particleSystem)
+    internal RenderDispatcher(AnimationSystem animations, ParticleSystem particleSystem)
     {
         _ecs = Ecs.Render.Core;
         _visibleEntities = new RenderEntityId[_ecs.Capacity];
         _visibleByIndices = new int[_ecs.Capacity];
 
-        _animationTable = animations;
+        _animationSystem = animations;
         _particleSystem = particleSystem;
         _cameraManager = CameraManager.Instance;
     }
@@ -46,7 +45,7 @@ internal sealed class RenderDispatcher : IDisposable
     public void Attach(RenderUploadBuffers uploadBuffers)
     {
         _uploadBuffers = uploadBuffers;
-        _animatorProcessor = new AnimatorProcessor(_animationTable, uploadBuffers.Skinning);
+        _animatorProcessor = new AnimatorProcessor(_animationSystem, uploadBuffers.Skinning);
     }
 
     public void PrepareExecute(TerrainSystem terrain)

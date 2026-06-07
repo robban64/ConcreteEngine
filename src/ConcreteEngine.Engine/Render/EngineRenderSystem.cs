@@ -23,6 +23,7 @@ public sealed class EngineRenderSystem : IDisposable
     private readonly CameraManager _cameraManager;
     private readonly VisualManager _visualManager;
 
+    private readonly AnimationSystem _animationSystem;
     private readonly TerrainSystem _terrainSystem;
     private readonly ParticleSystem _particleSystem;
 
@@ -38,22 +39,22 @@ public sealed class EngineRenderSystem : IDisposable
 
         _terrainSystem = new TerrainSystem(graphics.Gfx);
         _particleSystem = new ParticleSystem(graphics.Gfx);
-        var animations = AnimationTable.Make();
-
-        _renderDispatcher = new RenderDispatcher(animations, _particleSystem);
+        _animationSystem = new AnimationSystem();
+        
+        _renderDispatcher = new RenderDispatcher(_animationSystem, _particleSystem);
         _materialProcessor = new MaterialProcessor(Program);
     }
 
     public int VisibleCount => _renderDispatcher.VisibleCount;
     public ReadOnlySpan<RenderEntityId> VisibleEntities() => _renderDispatcher.GetVisibleEntities();
 
-    internal void Initialize(AssetStore assetStore)
+    internal void Initialize()
     {
-        AnimationTable.Instance.Setup(assetStore);
+        _animationSystem.Setup(AssetStore.Instance);
         _renderDispatcher.Attach(Program.UploadBuffers);
 
         //
-        var boundsMaterial = assetStore.CreateMaterial("EmptyMat", "EmptyMat1");
+        var boundsMaterial = AssetStore.Instance.CreateMaterial("EmptyMat", "EmptyMat1");
         boundsMaterial.State.DrawState =
             GfxDrawState.Set(GfxDrawFlags.Blend, GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2);
         boundsMaterial.State.PassFunctions = new GfxPassFunctions(BlendMode.Alpha);

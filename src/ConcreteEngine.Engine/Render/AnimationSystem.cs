@@ -43,18 +43,14 @@ internal sealed class AnimationRig
     }
 }
 
-internal sealed class AnimationTable
+internal sealed class AnimationSystem
 {
-    public static AnimationTable Instance { get; private set; } = null!;
-    public static AnimationTable Make() => Instance = new AnimationTable();
-
     private AnimationRig[] _animations = [];
 
     public int Count { get; private set; }
 
-    private AnimationTable()
+    internal AnimationSystem()
     {
-        if (Instance is not null) throw new InvalidOperationException("AnimationTable already created");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -69,15 +65,16 @@ internal sealed class AnimationTable
 
     public void Setup(AssetStore assets)
     {
-        ushort count = 0, idHeigh = 0;
+        int count = 0, idHeigh = 0;
         foreach (var model in assets.GetAssetEnumerator<Model>())
         {
             if (model.Animation is null) continue;
             count++;
-            idHeigh = ushort.Max(idHeigh, model.Animation.AnimationId.Value);
+            idHeigh = int.Max(idHeigh, model.Animation.AnimationId.Value);
         }
 
-        _animations = new AnimationRig[ushort.Max(idHeigh, count)];
+        var length = Count = int.Max(idHeigh, count);
+        _animations = new AnimationRig[length];
 
         foreach (var model in assets.GetAssetEnumerator<Model>())
         {

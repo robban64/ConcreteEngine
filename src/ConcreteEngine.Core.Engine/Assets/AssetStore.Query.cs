@@ -5,11 +5,10 @@ using ConcreteEngine.Core.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
+// ReSharper disable once ClassCannotBeInstantiated
 public sealed partial class AssetStore
 {
-    public AssetsMetaInfo GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
-        GetTypeStore(AssetKindUtils.ToAssetKind(typeof(TAsset))).ToSnapshot();
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(AssetId id)
     {
@@ -62,7 +61,7 @@ public sealed partial class AssetStore
 
     public bool TryGetByName<T>(string name, [NotNullWhen(true)] out T? asset) where T : AssetObject
     {
-        if (!GetTypeStore(typeof(T)).TryGetByName(name, out var assetId))
+        if (!TypeStore<T>.Store.TryGetByName(name, out var assetId))
         {
             asset = null;
             return false;
@@ -84,5 +83,5 @@ public sealed partial class AssetStore
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetEnumerator<T> GetAssetEnumerator<T>() where T : AssetObject =>
-        new(GetTypeStore(AssetKindUtils.ToAssetKind(typeof(T))).AsSpan(), _assets.AsSpan());
+        new(TypeStore<T>.Store.AsSpan(), _assets.AsSpan());
 }

@@ -71,8 +71,8 @@ internal sealed class EngineMetricHub
     {
         GfxMetrics.DrainStoreMetrics(gfxResult);
 
-        var assets = AssetStore.Instance;
-        for (var i = 0; i < assets.Collections.Count; i++)
-            assetResult[i] = assets.Collections[i].ToSnapshot();
+        var storeSpan = AssetStore.Instance.GetTypeStoreSpan();
+        for (var i = 0; i < storeSpan.Length; i++)
+            assetResult[i] = storeSpan[i].ToSnapshot();
     }
 }

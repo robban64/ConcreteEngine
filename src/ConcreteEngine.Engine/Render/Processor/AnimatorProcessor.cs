@@ -18,12 +18,12 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
     private NativeArray<Matrix4x4> _globals;
 
     private readonly RenderEntityStore<SkinningComponent> _skinningEcs;
-    private readonly AnimationTable _animations;
+    private readonly AnimationSystem _animations;
     private readonly SkinningBuffer _skinningBuffer;
 
     private readonly List<RenderEntityId> _entityIds = new(8);
 
-    public AnimatorProcessor(AnimationTable animations, SkinningBuffer skinningBuffer)
+    public AnimatorProcessor(AnimationSystem animations, SkinningBuffer skinningBuffer)
     {
         _globals = NativeArray.AlignedAllocate<Matrix4x4>(RenderLimits.BoneCapacity, alignment: 16);
         _skinningEcs = Ecs.GetRenderStore<SkinningComponent>();

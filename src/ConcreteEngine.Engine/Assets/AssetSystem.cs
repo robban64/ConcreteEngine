@@ -11,15 +11,16 @@ public sealed class AssetSystem
 {
     public Status CurrentStatus { get; private set; } = Status.None;
 
-    public AssetStore Assets => AssetStore.Instance;
-
+    private readonly AssetStore _assets;
     private readonly AssetPendingQueue _pendingQueue;
     private readonly AssetLoader _loader;
 
     internal AssetSystem(GfxContext gfx)
     {
+        _assets = AssetStore.Instance;
+        _assets.SetupStores();
         _pendingQueue = new AssetPendingQueue();
-        _loader = new AssetLoader(Assets, gfx);
+        _loader = new AssetLoader(_assets, gfx);
     }
 
     public int PendingAssetCount => _pendingQueue.Count;
@@ -41,7 +42,7 @@ public sealed class AssetSystem
 
     internal void ProcessPendingQueue()
     {
-        _pendingQueue.TryDrain(_loader!, Assets);
+        _pendingQueue.TryDrain(_loader!, _assets);
     }
 
     internal bool ProcessLoader() => _loader!.ProcessLoader();
@@ -56,10 +57,10 @@ public sealed class AssetSystem
         CurrentStatus = Status.Booting;
 
         AssetSystemSetup.Start();
-        AssetSystemSetup.CreateFallbackAssets(Assets);
+        AssetSystemSetup.CreateFallbackAssets(_assets);
 
-        AssetScanner.ScanAll(Assets, _loader.GetQueues());
-        Assets.EnsureStoreCapacity(_loader.GetQueues());
+        AssetScanner.ScanAll(_assets, _loader.GetQueues());
+        _assets.EnsureStoreCapacity(_loader.GetQueues());
 
         var models = _loader.GetQueues()[AssetKind.Model.ToIndex()];
         graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
@@ -71,9 +72,9 @@ public sealed class AssetSystem
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void FinishLoading()
     {
-        foreach (var it in Assets.Collections) it.Sort();
+        foreach (var it in _assets.GetTypeStoreSpan()) it.Sort();
 
-        Shader.FallbackShader = Assets.GetByName<Shader>("Model");
+        Shader.FallbackShader = _assets.GetByName<Shader>("Model");
         Material.FallbackMaterial.SetShader(Shader.FallbackShader);
         _loader?.DeactivateLoader();
 

@@ -66,11 +66,9 @@ internal sealed class ParticleSystem : IDisposable
         return new DrawCommand(meshId, materialId, (uint)emitter.ParticleCount);
     }
     
-    private AvgFrameTimer avg;
 
     internal void Simulate(float simDt)
     {
-        avg.BeginSample();
         if(_particleManager.EmitterCount == 0) return;
         
         _processedEmitters.Clear();
@@ -83,7 +81,6 @@ internal sealed class ParticleSystem : IDisposable
             
             _processedEmitters.Add(it.Component.Emitter);
         }
-        if (avg.EndSample() >= 144) avg.ResetAndPrint();
     }
 
     

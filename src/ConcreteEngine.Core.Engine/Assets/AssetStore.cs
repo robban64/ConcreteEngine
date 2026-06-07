@@ -11,7 +11,12 @@ public sealed partial class AssetStore
 {
     private const int DefaultCap = 512;
     public static int StoreCount => EnumCache<AssetKind>.Count - 1;
-
+    
+    private static class TypeStore<T> where T : AssetObject
+    {
+        public static readonly AssetTypeStore Store = new(AssetKindUtils.ToAssetKind(typeof(T)));
+    }
+    
     public static readonly AssetStore Instance = new();
 
     private static readonly Func<string, Type, bool> NameExistsDel =
@@ -22,33 +27,38 @@ public sealed partial class AssetStore
     public readonly AssetFileRegistry FileRegistry;
 
     private AssetObject?[] _assets = new AssetObject?[DefaultCap];
+    private readonly AssetTypeStore[] _storeCollection = new AssetTypeStore[StoreCount];
     private readonly Dictionary<Guid, AssetId> _byGid = new(DefaultCap);
-
-    private readonly AssetTypeStore[] _collections;
 
     private readonly Stack<int> _free = [];
 
     private AssetStore()
     {
         FileRegistry = new AssetFileRegistry();
-        _collections = AssetTypeStore.CreateAll();
+    }
+
+    internal void SetupStores()
+    {
+        _storeCollection[AssetKind.Shader.ToIndex()] = TypeStore<Shader>.Store;
+        _storeCollection[AssetKind.Model.ToIndex()] = TypeStore<Model>.Store;
+        _storeCollection[AssetKind.Texture.ToIndex()] = TypeStore<Texture>.Store;
+        _storeCollection[AssetKind.Material.ToIndex()] = TypeStore<Material>.Store;
     }
 
     //
-
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
     public int Capacity => _assets.Length;
-    internal IReadOnlyList<AssetTypeStore> Collections => _collections;
+    internal ReadOnlySpan<AssetTypeStore> GetTypeStoreSpan() => _storeCollection;
     //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetTypeStore GetTypeStore(AssetKind kind) => _collections[kind.ToIndex()];
+    public AssetTypeStore GetTypeStore(AssetKind kind) => _storeCollection[kind.ToIndex()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetTypeStore GetTypeStore(Type type) => _collections[AssetKindUtils.ToAssetKind(type).ToIndex()];
+    public AssetTypeStore GetTypeStore<T>() where T : AssetObject => TypeStore<T>.Store;
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void MarkDirty(AssetObject asset) => GetTypeStore(asset.Kind).MarkDirty(asset);
 
     public void Rename(AssetObject asset, string newName)

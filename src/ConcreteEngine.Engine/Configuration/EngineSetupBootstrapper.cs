@@ -64,20 +64,19 @@ internal static class EngineSetupBootstrapper
     private static bool OnSetupRender(EngineSetupCtx ctx)
     {
         var builder = ctx.Renderer.Program.StartBuilder(EngineWindow.Viewport.Size);
-        var store = ctx.Assets.Assets;
-        var shaderCount = store.GetMetaSnapshot<Shader>().Count;
+        var shaderCount = AssetStore.Instance.GetTypeStore<Shader>().Count;
 
         var shaderIndex = 0;
         var shaderIds = new ShaderId[shaderCount];
-        foreach (var it in store.GetAssetEnumerator<Shader>())
+        foreach (var it in AssetStore.Instance.GetAssetEnumerator<Shader>())
             shaderIds[shaderIndex++] = it.GfxId;
 
-        builder.RegisterShaders(shaderIds, SetupUtils.GetCoreShaders(store));
+        builder.RegisterShaders(shaderIds, SetupUtils.GetCoreShaders(AssetStore.Instance));
         SetupUtils.RegisterFrameBuffers(builder);
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
         ctx.Renderer.Program.ApplyBuilder(builder);
 
-        ctx.Renderer.Initialize(ctx.Assets.Assets);
+        ctx.Renderer.Initialize();
 
         return true;
     }

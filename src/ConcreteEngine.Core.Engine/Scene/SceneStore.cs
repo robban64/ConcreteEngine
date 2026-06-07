@@ -11,7 +11,7 @@ namespace ConcreteEngine.Core.Engine.Scene;
 
 public sealed class SceneStore 
 {
-    private const int DefaultCapacity = 512;
+    public const int DefaultCapacity = 512;
     
     private static int _unnamedCounter;
     private static int _nameTick = 1;
@@ -23,9 +23,6 @@ public sealed class SceneStore
         new List<Handle32<SceneObject>>[EnumCache<SceneObjectKind>.Count];
 
     private readonly Dictionary<string, Handle32<SceneObject>> _byName = new(DefaultCapacity);
-
-    private readonly List<int> _dirtyIds = new(DefaultCapacity);
-
 
     internal SceneStore()
     {
@@ -44,19 +41,12 @@ public sealed class SceneStore
     }
 
     public int ActiveCount => _sceneObjects.ActiveCount;
-    public int DirtyCount => _dirtyIds.Count;
 
     public int Capacity => _sceneObjects.Capacity;
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<int> GetDirtySpan() => CollectionsMarshal.AsSpan(_dirtyIds);
-
     //
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetCountBy(SceneObjectKind kind) => _byKind[(int)kind].Count;
-
-    //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(SceneObjectId id)
@@ -113,32 +103,6 @@ public sealed class SceneStore
         onSuccess(newName);
     }
 
-    public void MarkDirty(SceneObjectId sceneObjectId)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sceneObjectId.Value, nameof(sceneObjectId));
-        var id = sceneObjectId.Value;
-        if (_dirtyIds.Count == 0)
-        {
-            _dirtyIds.Add(id);
-            return;
-        }
-
-        var lastId = _dirtyIds[^1];
-        if(lastId == id) return;
-
-        if (id > lastId)
-        {
-            _dirtyIds.Add(id);
-            return;
-        }
-
-        var existingIndex = SearchMethod.BinarySearch(CollectionsMarshal.AsSpan(_dirtyIds), id);
-        if(existingIndex >= 0) return;
-        _dirtyIds.Add(id);
-        _dirtyIds.Sort();
-    }
-
-    internal void ClearDirty() => _dirtyIds.Clear();
 
     //
     
@@ -151,7 +115,7 @@ public sealed class SceneStore
             name = $"Unnamed({_unnamedCounter++})";
 
         if (!_byName.TryAdd(name, id))
-            throw new InvalidOperationException($"SceneObject with name {name} already exists");
+            _byName.Add(MakeName(bp.Name), id);
 
         var sceneObject = _sceneObjects[id.Index()] = BlueprintFactory.BuildSceneObject(id, bp);
 
@@ -161,34 +125,19 @@ public sealed class SceneStore
         return sceneObject;
     }
     
-    
-    public SceneObject SpawnFrom(Model model, in Transform transform)
+    private string MakeName(string baseName)
     {
-        var materials = model.Info.MaterialCount > 0 
-            ? ReadOnlySpan<AssetId>.Empty 
-            : [Material.FallbackMaterial.Id];
-        
-        var name = $"{model.Name}-{_nameTick++}";
-        return Create(new SceneObjectTemplate(name, in transform)
+        var ticks = 0;
+        var name = $"{baseName}-{_nameTick++}";
+        while (_byName.ContainsKey(name))
         {
-            Blueprints = { new ModelBlueprint(model.Id, materials) }
-        });
-    }
-
-    public SceneObject SpawnFrom(Model model, in Transform transform, params Span<AssetId> materialIds)
-    {
-        for (var i = 0; i < materialIds.Length; i++)
-        {
-            if(materialIds[i] == AssetId.Empty) materialIds[i] = Material.FallbackMaterial.Id;
+            name = $"{baseName}-{_nameTick++}";
+            if(ticks++ > 100) Throwers.InvalidOperation($"Too many retries for {name}");
         }
 
-        var name = $"{model.Name}-{_nameTick++}";
-        return Create(new SceneObjectTemplate(name, in transform)
-        {
-            Blueprints = { new ModelBlueprint(model.Id, materialIds) }
-        });
+        return name;
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ActiveObjectEnumerator<SceneObject> GetEnumerator() => _sceneObjects.GetEnumerator();
 }

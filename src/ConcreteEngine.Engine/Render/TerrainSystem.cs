@@ -3,35 +3,54 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Renderer.Buffer;
 
 namespace ConcreteEngine.Engine.Render;
 
 internal sealed class TerrainSystem
 {
-    public bool IsDirty => MainTerrain.IsDirty;
+    public bool IsDirty => MainTerrain?.IsDirty ?? false;
 
     private readonly GfxContext _gfx;
-    public readonly Terrain MainTerrain;
     public readonly TerrainMesh TerrainMesh;
 
-    public static TerrainSystem Instance { get; private set; } = null!;
-    public static TerrainSystem Make(GfxContext gfx) => Instance = new TerrainSystem(gfx);
+    public readonly Terrain MainTerrain;
 
-    private TerrainSystem(GfxContext gfx)
+    internal TerrainSystem(GfxContext gfx)
     {
-        if (Instance is not null) throw new InvalidOperationException("TerrainSystem already created");
         _gfx = gfx;
         MainTerrain = new Terrain();
         Terrain.Main = MainTerrain;
-
+        
         TerrainMesh = new TerrainMesh(gfx);
     }
 
     public void Commit()
     {
-        if (!IsDirty) return;
+        if (!MainTerrain.IsDirty) return;
         MainTerrain.IsDirty = false;
         Allocate();
+    }
+    
+    public void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, CameraFrustum camera)
+    {
+        var material = MainTerrain.MaterialId;
+        var foliageMaterial = MainTerrain.FoliageMaterialId;
+
+        foreach (var it in TerrainMesh.GetMeshChunks())
+        {
+            if (!camera.IntersectsBox(in MainTerrain.GetChunk(it.Slot).GetBounds())) continue;
+            var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
+            var cmd = new DrawCommand(it.TerrainMeshId, material);
+            commandBuffer.Submit(cmd, meta, in DrawCommandBuffer.TransformIdentity);
+
+            if (it.FoliageCount > 0)
+            {
+                meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Transparent);
+                cmd = new DrawCommand(it.FoliageMeshId, foliageMaterial, instanceCount: (uint)it.FoliageCount);
+                commandBuffer.Submit(cmd, meta, in DrawCommandBuffer.TransformIdentity);
+            }
+        }
     }
 
     private void Allocate()

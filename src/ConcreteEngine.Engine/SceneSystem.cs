@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Engine.Scene.Modules;
+using ConcreteEngine.Engine.Render;
 
 namespace ConcreteEngine.Engine;
 
@@ -10,7 +11,7 @@ internal sealed class SceneSystem
     public bool Enabled { get; private set; }
 
     internal readonly SceneProcessor SceneProcessor;
-    internal readonly SceneStore SceneStore;
+    private readonly SceneManager _sceneManager;
 
     private readonly ModuleManager _modules;
 
@@ -22,10 +23,9 @@ internal sealed class SceneSystem
     internal SceneSystem(List<Func<GameScene>> sceneFactories)
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
-
-        SceneStore = new SceneStore();
-
-        SceneProcessor = new SceneProcessor(SceneStore);
+        _sceneManager = new SceneManager();
+        
+        SceneProcessor = new SceneProcessor(_sceneManager);
         _modules = new ModuleManager();
     }
 
@@ -45,7 +45,6 @@ internal sealed class SceneSystem
 
         _modules.UpdateTick(deltaTime);
         Current.UpdateTick(deltaTime);
-
         SceneProcessor.Update(deltaTime);
     }
 
@@ -60,7 +59,7 @@ internal sealed class SceneSystem
 
         Current?.Unload();
 
-        var sceneContext = new GameSceneContext(_modules, SceneStore);
+        var sceneContext = new GameSceneContext(_modules, _sceneManager);
 
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);

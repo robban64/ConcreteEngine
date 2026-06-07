@@ -9,11 +9,13 @@ using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine;
 
-internal sealed class SceneProcessor(SceneStore store)
+internal sealed class SceneProcessor(SceneManager sceneManager)
 {
+    private readonly SceneStore _store = sceneManager.Store;
+    
     public void Update(float dt)
     {
-        if(store.DirtyCount > 0)
+        if(sceneManager.DirtyCount > 0)
             CheckDirty();
         
         UpdateAnimations(dt);
@@ -30,9 +32,9 @@ internal sealed class SceneProcessor(SceneStore store)
 
     private void CheckDirty()
     {
-        foreach (var id in store.GetDirtySpan())
+        foreach (var id in sceneManager.GetDirtySpan())
         {
-            var sceneObject = store.GetInternal(id);
+            var sceneObject = _store.GetInternal(id);
             var dirtyFlag = sceneObject.Dirty;
             if ((dirtyFlag & SceneObject.DirtyFlags.Visibility) != 0)
                 UpdateVisibility(sceneObject);
@@ -44,7 +46,7 @@ internal sealed class SceneProcessor(SceneStore store)
             sceneObject.ClearDirty();
         }
 
-        store.ClearDirty();
+        sceneManager.ClearDirty();
     }
 
     private void UpdateVisibility(SceneObject sceneObject)

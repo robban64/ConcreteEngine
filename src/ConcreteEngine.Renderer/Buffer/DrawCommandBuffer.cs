@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Passes;
 using static ConcreteEngine.Renderer.RenderLimits;
@@ -55,6 +56,10 @@ public sealed class DrawCommandBuffer : IDisposable
 {
     private const int DefaultCommandBuffCapacity = 512;
 
+    private static bool _allocated = false;
+
+    public static DrawObjectUniform TransformIdentity;
+
     public int Count { get; private set; }
 
     private NativeArray<DrawCommand> _commands;
@@ -67,12 +72,16 @@ public sealed class DrawCommandBuffer : IDisposable
 
     internal DrawCommandBuffer()
     {
+        if(_allocated) throw new InvalidOperationException("Already allocated");
         _commands = NativeArray.Allocate<DrawCommand>(DefaultCommandBuffCapacity);
         _metas = NativeArray.Allocate<DrawCommandMeta>(DefaultCommandBuffCapacity);
         _indices = NativeArray.Allocate<DrawCommandRef>(DefaultCommandBuffCapacity);
         _transforms = NativeArray.AlignedAllocate<DrawObjectUniform>(DefaultCommandBuffCapacity, alignment: 16);
 
         Count = 0;
+        
+        MatrixMath.CreateModelMatrix(Transform.Identity, out TransformIdentity.Model);
+        MatrixMath.CreateNormalMatrix(ref TransformIdentity.Normal, in TransformIdentity.Model);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -223,5 +232,6 @@ public sealed class DrawCommandBuffer : IDisposable
 
         _transforms.Dispose();
         _rangeBuffer.Dispose();
+        _allocated = false;
     }
 }

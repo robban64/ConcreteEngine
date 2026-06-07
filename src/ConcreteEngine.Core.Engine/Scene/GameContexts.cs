@@ -5,28 +5,23 @@ namespace ConcreteEngine.Core.Engine.Scene;
 
 public sealed class GameSceneContext
 {
+    public readonly SceneManager SceneManager;
     public ModuleManager Modules { get; }
-    public SceneStore SceneSpawner { get; }
+    public SceneStore Store => SceneManager.Store;
 
     public Terrain ActiveTerrain => Terrain.Main;
-    public Skybox ActiveSkybox => Skybox.Instance;
+    public Skybox ActiveSkybox => Skybox.Current;
 
-    internal GameSceneContext(ModuleManager modules, SceneStore sceneSpawner)
+    internal GameSceneContext(ModuleManager modules, SceneManager sceneManager)
     {
         Modules = modules;
-        SceneSpawner = sceneSpawner;
+        SceneManager = sceneManager;
     }
 }
 
 public sealed class GameModuleContext
 {
-    private readonly GameSceneContext _scene;
-
-    public ModuleManager Modules => _scene.Modules;
-    public SceneStore SceneSpawner => _scene.SceneSpawner;
-
     internal GameModuleContext(GameSceneContext scene)
     {
-        _scene = scene;
     }
 }

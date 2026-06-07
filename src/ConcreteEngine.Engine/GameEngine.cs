@@ -48,6 +48,7 @@ public sealed class GameEngine : IDisposable
         _assetSystem = new AssetSystem(gfxBundle.Graphics.Gfx);
         _renderSystem = new EngineRenderSystem(gfxBundle.Graphics);
         _sceneSystem = new SceneSystem(sceneFactories);
+
         _commandQueues = new EngineCommandQueue(new EngineCommandContext(_assetSystem));
 
         _gateway = new EngineGateway(_renderSystem.Program);
@@ -106,7 +107,7 @@ public sealed class GameEngine : IDisposable
     {
         var vp = EngineWindow.Viewport.Size;
         _graphics.BeginFrame(new GfxFrameArgs(dt, vp));
-        _renderSystem.Render(dt, vp, EngineInput.Mouse.ViewportPos);
+        _renderSystem.Render(dt, vp);
         _graphics.EndFrame();
 
         _gateway.RenderEditor(dt);

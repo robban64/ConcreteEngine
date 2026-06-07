@@ -11,8 +11,6 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class InteractionHandler(StateManager state, SelectionManager selection)
 {
-    private static RayCaster RayCaster => CameraManager.Instance.RayCaster;
-
     public Vector3 DragStart;
     public bool WasDragging;
 
@@ -112,7 +110,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
     private bool OnClickViewport(Vector2 mousePos)
     {
         var selectedId = state.Context.Selection.SelectedSceneId;
-        var sceneObject = RayCaster.GetSceneObjectFromView(mousePos, out _, out _);
+        var sceneObject = SceneManager.Instance.Raycaster.GetSceneObjectFromView(mousePos, out _, out _);
         if (sceneObject is null)
         {
             if (selectedId.IsValid())
@@ -129,14 +127,14 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
 
     private bool RaycastTerrain(Vector2 mousePos, out Vector3 point)
     {
-        point = RayCaster.GetPointOnTerrain(mousePos, out _);
+        point = SceneManager.Instance.Raycaster.GetPointOnTerrain(mousePos, out _);
         return point != default;
     }
 
     private void OnDragTerrain(Vector2 mousePos, Vector3 origin)
     {
         var id = selection.SelectedSceneObject?.Id ?? SceneObjectId.Empty;
-        var newPos = RayCaster.RaycastEntityOnTerrain(id, mousePos, origin);
+        var newPos = SceneManager.Instance.Raycaster.RaycastEntityOnTerrain(id, mousePos, origin);
         if (newPos == default || selection.SelectedSceneObject is not { } inspector) return;
 
         inspector.Transform.Translation = newPos;

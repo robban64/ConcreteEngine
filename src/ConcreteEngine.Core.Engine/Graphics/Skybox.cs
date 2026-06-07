@@ -6,14 +6,11 @@ namespace ConcreteEngine.Core.Engine.Graphics;
 
 public sealed class Skybox
 {
-    public static readonly Skybox Instance = new();
-
+    public static readonly Skybox Current = new();
     public MeshId MeshId { get; } = GfxMeshes.SkyboxCube;
     public Material? Material { get; private set; }
 
-    private Skybox()
-    {
-    }
+    private Skybox() { }
 
     public MaterialId MaterialId => Material?.MaterialId ?? MaterialId.Empty;
 

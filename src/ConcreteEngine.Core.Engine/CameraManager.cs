@@ -10,7 +10,6 @@ public sealed class CameraManager
     public static readonly CameraManager Instance = new();
 
     public readonly Camera Camera;
-    public readonly RayCaster RayCaster;
 
     internal readonly CameraFrustum Frustum;
     internal readonly CameraTransformSnapshot FrameTransforms;
@@ -22,7 +21,6 @@ public sealed class CameraManager
             throw new InvalidOperationException($"{nameof(CameraManager)} is already initialized");
 
         Camera = new Camera(EngineSettings.Current.Display.WindowSize);
-        RayCaster = new RayCaster(Camera.Transforms);
         Frustum = new CameraFrustum();
         FrameTransforms = new CameraTransformSnapshot();
         LightTransforms = new CameraTransformSnapshot();

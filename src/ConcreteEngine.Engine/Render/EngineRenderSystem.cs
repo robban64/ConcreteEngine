@@ -5,6 +5,8 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.Input;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -16,12 +18,15 @@ public sealed class EngineRenderSystem : IDisposable
 {
     internal RenderProgram Program { get; }
 
+    private readonly RenderDispatcher _renderDispatcher;
+
     private readonly CameraManager _cameraManager;
     private readonly VisualManager _visualManager;
 
-    private readonly MaterialProcessor _materialProcessor;
+    private readonly TerrainSystem _terrainSystem;
     private readonly ParticleSystem _particleSystem;
-    private readonly RenderDispatcher _renderDispatcher;
+
+    private readonly MaterialProcessor _materialProcessor;
 
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
@@ -31,7 +36,7 @@ public sealed class EngineRenderSystem : IDisposable
 
         Program = new RenderProgram(graphics, VisualUniformProcessor.MakeCallbacks());
 
-        TerrainSystem.Make(graphics.Gfx);
+        _terrainSystem = new TerrainSystem(graphics.Gfx);
         _particleSystem = new ParticleSystem(graphics.Gfx);
         var animations = AnimationTable.Make();
 
@@ -65,7 +70,7 @@ public sealed class EngineRenderSystem : IDisposable
     internal void OnSystemTick(bool screenResize)
     {
         _particleSystem.Commit();
-        TerrainSystem.Instance.Commit();
+        _terrainSystem.Commit();
 
         if (screenResize)
         {
@@ -85,7 +90,7 @@ public sealed class EngineRenderSystem : IDisposable
         _particleSystem.Simulate(dt);
     }
 
-    internal void Render(float dt, Size2D viewportSize, Vector2 mousePos)
+    internal void Render(float dt, Size2D viewportSize)
     {
         Program.PrepareFrame();
         
@@ -93,13 +98,14 @@ public sealed class EngineRenderSystem : IDisposable
         _cameraManager.CommitFrame(EngineTime.GameAlpha);
 
         // process and upload draw commands
+        _renderDispatcher.PrepareExecute(_terrainSystem);
         _renderDispatcher.Execute();
 
         // prepare buffers
         Program.CollectDrawBuffers();
 
         // upload buffers to gpu
-        VisualUniformProcessor.Upload(Program.GetUploadContext(), viewportSize, mousePos);
+        VisualUniformProcessor.Upload(Program.GetUploadContext(), viewportSize, EngineInput.Mouse.ViewportPos);
 
         Program.UploadUniforms();
         Program.Render();

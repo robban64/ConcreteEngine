@@ -58,11 +58,11 @@ public sealed class Camera
 
     private const float DirtyThreshold = MetricUnits.Micrometer;
 
-    internal readonly CameraTransforms Transforms;
-
+    private bool _dirty;
     public ulong Version { get; private set; }
 
-    private bool _dirty;
+    internal readonly CameraTransforms Transforms;
+
     private ProjectionInfo _projection = new(70, 0.1f, 500);
 
     private ViewTransform _transform;

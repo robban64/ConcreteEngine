@@ -173,7 +173,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     {
         if (!Attached || (Dirty & flags) != 0) return;
         Dirty |= flags;
-        SceneStore.Instance.MarkDirty(Id);
+        SceneManager.Instance.MarkDirty(Id);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

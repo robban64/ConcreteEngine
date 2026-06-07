@@ -7,6 +7,7 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Renderer.Buffer;
@@ -28,7 +29,7 @@ internal sealed class RenderDispatcher : IDisposable
 
     private readonly AnimationTable _animationTable;
     private readonly ParticleSystem _particleSystem;
-
+    
     internal RenderDispatcher(AnimationTable animations, ParticleSystem particleSystem)
     {
         _ecs = Ecs.Render.Core;
@@ -46,28 +47,31 @@ internal sealed class RenderDispatcher : IDisposable
     {
         _uploadBuffers = uploadBuffers;
         _animatorProcessor = new AnimatorProcessor(_animationTable, uploadBuffers.Skinning);
-        EnvironmentProcessor.RefreshMatrices();
     }
 
-    private int PrepareExecute()
+    public void PrepareExecute(TerrainSystem terrain)
     {
         EnsureCommandBuffer();
         EnsureCapacity();
 
-        EnvironmentProcessor.SubmitDrawTerrain(_uploadBuffers.Commands, TerrainSystem.Instance,
-            _cameraManager.Frustum);
-        EnvironmentProcessor.SubmitDrawSkybox(_uploadBuffers.Commands, Skybox.Instance);
+        terrain.SubmitDrawTerrain(_uploadBuffers.Commands, _cameraManager.Frustum);
 
-        return VisibleCount = SpatialProcessor.CullEntities(
-            _visibleEntities,
-            new UnsafeSpan<int>(_visibleByIndices),
-            _cameraManager.Frustum
-        );
+        {
+            var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
+            var cmd = new DrawCommand(Skybox.Current.MeshId, Skybox.Current.MaterialId);
+            _uploadBuffers.Commands.Submit(cmd, meta, in DrawCommandBuffer.TransformIdentity);
+        }
+
     }
 
     internal void Execute()
     {
-        var len = PrepareExecute();
+        var len = VisibleCount = SpatialProcessor.CullEntities(
+            _visibleEntities,
+            new UnsafeSpan<int>(_visibleByIndices),
+            _cameraManager.Frustum
+        );
+        
         if (len == 0) return;
         if ((uint)len > (uint)_visibleEntities.Length || (uint)_ecs.Count > (uint)_visibleByIndices.Length)
             Throwers.InvalidOperation();

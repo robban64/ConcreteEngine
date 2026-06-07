@@ -10,7 +10,6 @@ public sealed class GameSceneContext
 
     public Terrain ActiveTerrain => Terrain.Main;
     public Skybox ActiveSkybox => Skybox.Instance;
-    public ParticleSystemCore ParticleSystem => ParticleSystemCore.Instance;
 
     internal GameSceneContext(ModuleManager modules, SceneStore sceneSpawner)
     {

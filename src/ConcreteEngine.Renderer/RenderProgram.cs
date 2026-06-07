@@ -10,7 +10,7 @@ using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer;
 
-public sealed class RenderProgram
+public sealed class RenderProgram : IDisposable
 {
     private readonly DrawCommandPipeline _drawPipeline;
     private readonly RenderPassPipeline _passPipeline;
@@ -136,5 +136,10 @@ public sealed class RenderProgram
 
         PassPipeline3D.RegisterPassPipeline(_passPipeline, in RenderShaderRegistry.CoreShaders);
         Initialized = true;
+    }
+
+    public void Dispose()
+    {
+        UploadBuffers.Dispose();
     }
 }

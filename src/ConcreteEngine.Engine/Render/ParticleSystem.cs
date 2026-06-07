@@ -1,148 +1,160 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Mesh;
+using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Renderer.Buffer;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Render;
 
-public sealed class ParticleSystem : ParticleSystemCore, IDisposable
+internal sealed class ParticleSystem : IDisposable
 {
-    public static new ParticleSystem Instance { get; private set; } = null!;
-    public static ParticleSystem Make(GfxContext gfx) => Instance = new ParticleSystem(gfx);
+    private static bool _allocated = false;
+    private readonly List<int> _processedEmitters = new(16);
 
     private readonly ParticleMesh _particleMesh;
+    private readonly ParticleManager _particleManager;
 
-    private readonly List<ParticleEmitter> _emitters = new(4);
-    private readonly Dictionary<string, ParticleEmitter> _byName = new(4);
-
-    private ParticleSystem(GfxContext gfx)
+    internal ParticleSystem(GfxContext gfx)
     {
-        if (Instance is not null) throw new InvalidOperationException("ParticleSystem already created");
+        if(_allocated) Throwers.InvalidOperation("ParticleSystem already active");
+        _allocated = true;
         _particleMesh = new ParticleMesh(gfx);
+        _particleManager = ParticleManager.Instance;
     }
 
-    public override ParticleEmitter CreateEmitter(string name, int particleCount, in EmitterSpatialParams definition,
-        in EmitterVisualParams visualParams)
+    internal void Commit()
     {
-        if (_byName.ContainsKey(name)) throw new InvalidOperationException();
+        if (!_particleManager.HasPendingEmitters) return;
 
-        var emitterId = new Id16<ParticleEmitter>(_emitters.Count + 1);
-        var slot = _particleMesh.CreateParticleMesh(particleCount);
-        var emitter = new ParticleEmitter(name, emitterId, slot, particleCount, in definition, in visualParams);
-
-        if (_emitters.Count > 0 && GetEmitterOrNull(emitterId) != null)
-            throw new InvalidOperationException();
-
-        _emitters.Add(emitter);
-        _byName[name] = emitter;
-
-
-        return emitter;
-    }
-
-    public override ReadOnlySpan<ParticleEmitter> GetEmitters() => CollectionsMarshal.AsSpan(_emitters);
-
-    public override bool TryGetEmitter(string name, out ParticleEmitter emitter) =>
-        _byName.TryGetValue(name, out emitter!);
-
-    public override ParticleEmitter GetEmitter(Id16<ParticleEmitter> emitterId)
-    {
-        var emitter = GetEmitterOrNull(emitterId);
-        if (emitter is null) Throwers.NotFoundBy("Missing emitter emitterId", emitterId);
-        return emitter;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override ParticleEmitter? GetEmitterOrNull(Id16<ParticleEmitter> emitterId)
-    {
-        var index = emitterId.Index();
-        if ((uint)index >= (uint)_emitters.Count) return null;
-
-        var emitter = _emitters[index];
-        if (emitter != null! && emitter.Id == emitterId)
-            return emitter;
-
-        var foundIndex = SearchMethod.BinarySearchManaged(GetEmitters(), emitterId.Value, out emitter);
-        return foundIndex == -1 ? null : emitter;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override MeshId GetEmitterMesh(ParticleEmitter emitter)
-    {
-        return _particleMesh.GetHandle(emitter.Slot).MeshId;
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void GetMeshWriteData(ParticleEmitter emitter, out NativeView<ParticleGpuInstance> gpuView,
-        out NativeView<ParticleCpuInstance> cpuView)
-    {
-        cpuView = emitter.GetParticleView();
-        gpuView = _particleMesh.GetBufferView(emitter.ParticleCount);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void UploadEmitter(ParticleEmitter emitter)
-    {
-        _particleMesh.UploadGpuData(emitter.Slot, emitter.ParticleCount);
+        foreach (var emitter in _particleManager.GetPendingEmitters())
+        {
+            if (emitter.ParticleCount <= 0) Throwers.InvalidOperation(nameof(emitter.ParticleCount));
+            var slot = _particleMesh.CreateParticleMesh(emitter.ParticleCount);
+            emitter.Attach(slot);
+        }
+        
+        _particleManager.ClearPendingEmitters();
     }
 
     public void Dispose()
     {
-        foreach (var emitter in _emitters)
-            emitter.Dispose();
+        _allocated = false;
+        foreach (var emitter in _particleManager.GetEmitters()) emitter.Dispose();
     }
 
-    internal static void SimulateEmitter(ParticleEmitter emitter, float simDt)
+    public static readonly DrawCommandMeta DrawMeta =
+        new (DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
+    
+    internal DrawCommand MakeDrawCommand(Id16<ParticleEmitter> emitterId, MaterialId materialId)
     {
-        if (emitter.Seed == 0) emitter.NewSeed();
+        var emitter = _particleManager.Get(emitterId);
+        var meshId = _particleMesh.GetHandle(emitter.Slot).MeshId;
+        return new DrawCommand(meshId, materialId, (uint)emitter.ParticleCount);
+    }
+    
+    private AvgFrameTimer avg;
 
-        var gravityStep = emitter.SpatialParams().Gravity * simDt;
-        var translation = emitter.Translation;
-        var direction = emitter.Direction;
-        var rng = new FastRandom(emitter.Seed);
-
-        var particles = emitter.GetParticleView();
-        for (int i = 0; i < particles.Length; i++)
+    internal void Simulate(float simDt)
+    {
+        avg.BeginSample();
+        if(_particleManager.EmitterCount == 0) return;
+        
+        _processedEmitters.Clear();
+        foreach (var it in Ecs.GetRenderStore<ParticleComponent>().Query())
         {
-            ref var p = ref particles[i];
-            if (p.Life <= 0)
-            {
-                rng = RespawnParticle(ref p, in emitter.SpatialParams(), translation, direction, rng);
-                continue;
-            }
-
-            p.Life -= simDt;
-            p.Velocity += gravityStep;
-            p.Position += p.Velocity * simDt;
+            if (_processedEmitters.Contains(it.Component.Emitter)) continue;
+            var emitter = _particleManager.Get(it.Component.Emitter);
+            if(!emitter.IsAttached) continue;
+            emitter.SimulateEmitter(simDt);
+            
+            _processedEmitters.Add(it.Component.Emitter);
         }
-
-        emitter.Seed = rng.Seed;
+        if (avg.EndSample() >= 144) avg.ResetAndPrint();
     }
 
-    [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static FastRandom RespawnParticle(ref ParticleCpuInstance p, in EmitterSpatialParams param,
-        Vector3 translation,
-        Vector3 direction, FastRandom rng)
+    
+    internal unsafe void Upload()
     {
-        rng.IncrementSeed();
+        var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
+        foreach (var emitterId in CollectionsMarshal.AsSpan(_processedEmitters))
+        {
+            var emitter = _particleManager.Get((Id16<ParticleEmitter>)emitterId);
+            
+            var cpuView = emitter.GetParticleView();
+            var gpuView = _particleMesh.GetBufferView(emitter.ParticleCount);
+            
+            ref readonly var param = ref emitter.VisualParams();
+            ColorRgba startColor = param.StartColor.ToRgba(), endColor = param.EndColor.ToRgba();
+            
+            ProcessEmitter(gpuView.Length, gpuView, cpuView, param.SizeStartEnd, startColor, endColor, timeOffset);
 
-        var randDir = new Vector3(rng.RandomFloat(-1, 1), rng.RandomFloat(-1, 1), rng.RandomFloat(-1, 1));
-        var speed = rng.RandomFloat(param.SpeedMinMax);
-        var spread = new Vector2(-param.Spread, param.Spread);
+            _particleMesh.UploadGpuData(emitter.Slot, emitter.ParticleCount);
+        }
+    }
 
-        p.Position = translation +
-                     new Vector3(rng.RandomFloat(spread), rng.RandomFloat(spread), rng.RandomFloat(spread));
+    
+    [SkipLocalsInit]
+    private static unsafe void ProcessEmitter(
+        int length,
+        ParticleGpuInstance* gpuView,
+        ParticleCpuInstance* cpuView,
+        Vector2 sizeStartEnd,
+        ColorRgba colorStart,
+        ColorRgba colorEnd,
+        float timeOffset)
+    {
+        var end = gpuView + length;
 
-        p.Velocity = Vector3.Normalize(direction + randDir * 0.5f) * speed;
+        while (gpuView < end)
+        {
+            //var color = Color4.Lerp(in param.StartColor, in param.EndColor, t);
+            //color.A = 4.0f * t * (1.0f - t);
 
-        p.MaxLife = rng.RandomFloat(param.LifeMinMax);
-        p.Life = p.MaxLife;
-        return rng;
+            var t = 1f - cpuView->Life / cpuView->MaxLife;
+            var newSize = float.Lerp(sizeStartEnd.X, sizeStartEnd.Y, t);
+
+            gpuView->PositionSize = new Vector4(
+                cpuView->Position + cpuView->Velocity * timeOffset,
+                newSize
+            );
+            gpuView->Color = LerpSse(colorStart, colorEnd, (byte)(t * 255f));
+
+            ++gpuView;
+            ++cpuView;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ColorRgba LerpSse(ColorRgba a, ColorRgba b, byte t)
+    {
+        var va = Sse41.ConvertToVector128Int32(
+            Vector128.CreateScalarUnsafe(Unsafe.As<ColorRgba, uint>(ref a)).AsByte());
+        var vb = Sse41.ConvertToVector128Int32(
+            Vector128.CreateScalarUnsafe(Unsafe.As<ColorRgba, uint>(ref b)).AsByte());
+
+        var vt = Vector128.Create((int)t);
+
+        var lerped = Sse2.Add(va, Sse2.ShiftRightArithmetic(Sse41.MultiplyLow(Sse2.Subtract(vb, va), vt), 8));
+
+        var packed = Sse2.PackUnsignedSaturate(
+            Sse2.PackSignedSaturate(lerped, Vector128<int>.Zero),
+            Vector128<short>.Zero);
+
+        uint scalar = packed.AsUInt32().ToScalar();
+        return Unsafe.As<uint, ColorRgba>(ref scalar);
     }
 }

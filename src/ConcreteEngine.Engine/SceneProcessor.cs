@@ -2,6 +2,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Render;
 using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
@@ -80,13 +81,11 @@ internal sealed class SceneProcessor(SceneStore store)
             MatrixMath.CreateModelMatrix(in entityTransform, out var worldMatrix);
             MatrixMath.MultiplyAffine(ref worldMatrix, in rootMatrix);
 
-            //MatrixMath.MultiplyAffine(in entityMatrix, in rootMatrix, out var worldMatrix);
-
             var particleComp = particleEcs.TryGet(entity);
             if (!particleComp.IsNull)
             {
                 finalMatrix = worldMatrix;
-                var emitter = ParticleSystem.Instance.GetEmitter(particleComp.Value.Emitter);
+                var emitter = ParticleManager.Instance.Get(particleComp.Value.Emitter);
                 emitter.Translation = sceneObject.Transform.Translation;
                 continue;
             }
@@ -102,7 +101,6 @@ internal sealed class SceneProcessor(SceneStore store)
             ref readonly var meshMatrix = ref instance.AssetModel.Meshes[source.MeshIndex].WorldTransform;
             MatrixMath.MultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
 
-            //finalMatrix = meshMatrix * worldMatrix;
         }
     }
 }

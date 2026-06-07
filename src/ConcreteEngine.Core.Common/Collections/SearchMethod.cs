@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Common.Collections;
@@ -21,10 +22,9 @@ public static class SearchMethod
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining),]
     public static int BinarySearchManaged<TClass, TValue>(ReadOnlySpan<TClass?> collection, TValue value,
-        out TClass result)
-        where TClass : IComparable<TValue>?
+        out TClass result) where TClass : class, IComparable<TValue>?
     {
         var lo = 0;
         var hi = collection.Length - 1;
@@ -44,7 +44,7 @@ public static class SearchMethod
             else hi = mid - 1;
         }
 
-        result = default!;
+        result = null!;
         return -1;
     }
 }

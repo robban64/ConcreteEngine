@@ -20,13 +20,12 @@ public sealed class RayCaster
         _camera = camera;
     }
 
-    public SceneObject? GetSceneObjectFromView(Vector2 screenCoords, out BoundingBox resultBounds,
-        out float distance)
+    public SceneObject? GetSceneObjectFromView(Vector2 screenCoords, out BoundingBox bounds, out float distance)
     {
         ScreenPointToRay(screenCoords, out var ray);
 
         distance = float.MaxValue;
-        resultBounds = default;
+        bounds = default;
 
         var ecs = Ecs.Render.Core;
         RenderEntityId closestEntity = default;
@@ -38,7 +37,7 @@ public sealed class RayCaster
             if (CollisionMethods.RayIntersectsBox(in ray, in worldBounds, out var dist) && dist < distance)
             {
                 distance = dist;
-                resultBounds = worldBounds;
+                bounds = worldBounds;
                 closestEntity = entity;
             }
         }

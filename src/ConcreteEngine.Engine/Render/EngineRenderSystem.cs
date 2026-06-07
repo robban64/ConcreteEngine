@@ -12,7 +12,7 @@ using ConcreteEngine.Renderer;
 
 namespace ConcreteEngine.Engine.Render;
 
-public sealed class EngineRenderSystem
+public sealed class EngineRenderSystem : IDisposable
 {
     internal RenderProgram Program { get; }
 
@@ -20,6 +20,7 @@ public sealed class EngineRenderSystem
     private readonly VisualManager _visualManager;
 
     private readonly MaterialProcessor _materialProcessor;
+    private readonly ParticleSystem _particleSystem;
     private readonly RenderDispatcher _renderDispatcher;
 
     internal EngineRenderSystem(GraphicsRuntime graphics)
@@ -31,10 +32,10 @@ public sealed class EngineRenderSystem
         Program = new RenderProgram(graphics, VisualUniformProcessor.MakeCallbacks());
 
         TerrainSystem.Make(graphics.Gfx);
-        var particles = ParticleSystem.Make(graphics.Gfx);
+        _particleSystem = new ParticleSystem(graphics.Gfx);
         var animations = AnimationTable.Make();
 
-        _renderDispatcher = new RenderDispatcher(animations, particles);
+        _renderDispatcher = new RenderDispatcher(animations, _particleSystem);
         _materialProcessor = new MaterialProcessor(Program);
     }
 
@@ -63,6 +64,8 @@ public sealed class EngineRenderSystem
 
     internal void OnSystemTick(bool screenResize)
     {
+        _particleSystem.Commit();
+        
         if (screenResize)
         {
             Logger.LogString(LogScope.Engine, "Recreating screen framebuffers");
@@ -76,18 +79,15 @@ public sealed class EngineRenderSystem
         }
     }
 
+    internal void OnSimulate(float dt)
+    {
+        _particleSystem.Simulate(dt);
+    }
+
     internal void Render(float dt, Size2D viewportSize, Vector2 mousePos)
     {
         Program.PrepareFrame();
-
-        /*
-        if (_visualManager.ResolvePendingFrameBufferResize())
-        {
-            Logger.LogString(LogScope.Renderer,"Recreating frame buffers");
-            Program.ResizeFrameBuffers(viewportSize, _visualManager.Shadow.ShadowMapSize);
-        }
-        */
-
+        
         // frame update
         _cameraManager.CommitFrame(EngineTime.GameAlpha);
 
@@ -104,5 +104,10 @@ public sealed class EngineRenderSystem
         Program.Render();
     }
 
-    public void Shutdown() => _renderDispatcher.Dispose();
+    public void Dispose()
+    {
+        _renderDispatcher.Dispose();
+        _particleSystem.Dispose();
+        Program.Dispose();
+    }
 }

@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Common;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
-
+/*
 public abstract class ParticleSystemCore
 {
     public static ParticleSystemCore Instance { get; private set; } = null!;
@@ -14,4 +14,4 @@ public abstract class ParticleSystemCore
     public abstract ParticleEmitter GetEmitter(Id16<ParticleEmitter> emitterId);
     public abstract ParticleEmitter? GetEmitterOrNull(Id16<ParticleEmitter> emitterId);
     public abstract MeshId GetEmitterMesh(ParticleEmitter emitter);
-}
+}*/

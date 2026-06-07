@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Renderer.Buffer;
 
-public sealed class RenderUploadBuffers
+public sealed class RenderUploadBuffers : IDisposable
 {
     public readonly DrawCommandBuffer Commands = new();
     public readonly MaterialBuffer Materials = new();
@@ -16,5 +16,12 @@ public sealed class RenderUploadBuffers
         Materials.NewFrame();
         Skinning.Reset();
         Effects.Reset();
+    }
+
+    public void Dispose()
+    {
+        Commands.Dispose();
+        Materials.Dispose();
+        Skinning.Dispose();
     }
 }

@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
@@ -51,7 +52,7 @@ public sealed class GameEngine : IDisposable
 
         _gateway = new EngineGateway(_renderSystem.Program);
 
-        _tickHub = new EngineTickHub(OnGameTick, OnSimulate, _gateway.UpdateDiagnostics, OnSystemTick);
+        _tickHub = new EngineTickHub(OnGameTick, _renderSystem.OnSimulate, _gateway.UpdateDiagnostics, OnSystemTick);
 
         EngineSetupPipeline.Setup(new EngineSetupCtx
         {
@@ -111,7 +112,6 @@ public sealed class GameEngine : IDisposable
         _gateway.RenderEditor(dt);
     }
 
-
     private void OnGameTick(float dt)
     {
         CameraManager.Instance.BeginUpdate();
@@ -121,19 +121,10 @@ public sealed class GameEngine : IDisposable
         _renderSystem.AfterUpdate();
     }
 
-    private void OnSimulate(float dt)
-    {
-        ParticleProcessor.Simulate(dt);
-    }
-
-
     private void OnSystemTick(float dt)
     {
-        if (_systemStepper.Tick())
-        {
-            var windowResized = EngineWindow.Commit();
-            _renderSystem.OnSystemTick(windowResized);
-        }
+        var windowResized = _systemStepper.Tick() && EngineWindow.Commit();
+        _renderSystem.OnSystemTick(windowResized);
 
         if (_assetSystem.PendingAssetCount > 0)
             _assetSystem.ProcessPendingQueue();
@@ -164,7 +155,7 @@ public sealed class GameEngine : IDisposable
     {
         _gateway.Dispose();
         _sceneSystem.Shutdown();
-        _renderSystem.Shutdown();
+        _renderSystem.Dispose();
         _assetSystem.Shutdown();
 
         EngineInput.Detach();

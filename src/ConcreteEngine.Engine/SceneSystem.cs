@@ -9,13 +9,14 @@ internal sealed class SceneSystem
     public GameScene? Current { get; private set; }
     public bool Enabled { get; private set; }
 
-    internal SceneProcessor SceneProcessor { get; }
-    internal SceneStore SceneStore { get; }
+    internal readonly SceneProcessor SceneProcessor;
+    internal readonly SceneStore SceneStore;
 
     private readonly ModuleManager _modules;
 
-    private int _pendingIndex = -1;
     private readonly List<Func<GameScene>> _sceneFactories;
+
+    private int _pendingIndex = -1;
 
 
     internal SceneSystem(List<Func<GameScene>> sceneFactories)

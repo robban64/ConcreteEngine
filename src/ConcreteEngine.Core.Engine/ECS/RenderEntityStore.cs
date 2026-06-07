@@ -106,7 +106,6 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Ecs.RenderQuery<T>.RenderEntityEnumerator Query() => new(this);
 
-
     [MethodImpl(MethodImplOptions.NoInlining)]
     protected override void Resize(int newSize)
     {

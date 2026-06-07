@@ -20,4 +20,5 @@ public struct SourceComponent(
     public byte MeshIndex = (byte)meshIndex;
     public DrawCommandQueue Queue = queue;
     public EntitySourceKind Kind = kind;
+
 }

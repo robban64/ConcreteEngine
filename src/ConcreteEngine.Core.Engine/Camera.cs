@@ -63,7 +63,6 @@ public sealed class Camera
     public ulong Version { get; private set; }
 
     private bool _dirty;
-    private Size2D _viewport;
     private ProjectionInfo _projection = new(70, 0.1f, 500);
 
     private ViewTransform _transform;
@@ -76,8 +75,8 @@ public sealed class Camera
     public Camera(Size2D viewport)
     {
         ArgOutOfRangeThrower.ThrowIfSizeTooSmall(viewport, 128);
-        _viewport = viewport;
         Transforms = new CameraTransforms();
+        AspectRatio = viewport.AspectRatio;
         Ensure();
         _dirty = true;
     }
@@ -112,16 +111,15 @@ public sealed class Camera
         }
     }
 
-    public Size2D Viewport
+    public float AspectRatio
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _viewport;
-
+        get;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private set
         {
-            if (_viewport == value) return;
-            _viewport = value;
+            if (FloatMath.NearlyEqual(field, value)) return;
+            field = value;
             _dirty = true;
         }
     }
@@ -161,11 +159,7 @@ public sealed class Camera
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void BeginUpdate(Size2D viewport)
-    {
-        Viewport = viewport;
-        _prevTransform = _transform;
-    }
+    internal void BeginUpdate() => _prevTransform = _transform;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Interpolate(float alpha, out ViewTransform transform)
@@ -192,7 +186,7 @@ public sealed class Camera
 
         projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(
             FloatMath.ToRadians(_projection.Fov * 0.5f),
-            _viewport.AspectRatio,
+            AspectRatio,
             _projection.Near,
             _projection.Far
         );

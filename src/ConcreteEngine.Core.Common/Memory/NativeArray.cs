@@ -7,12 +7,12 @@ namespace ConcreteEngine.Core.Common.Memory;
 
 public static unsafe class NativeArray
 {
-    public static NativeArray<T> From<T>(T* ptr, int length, int alignment = 0)where T : unmanaged
+    public static NativeArray<T> From<T>(T* ptr, int length, int alignment = 0) where T : unmanaged
     {
         Validate(length, alignment);
         return new NativeArray<T>(ptr, length, alignment);
     }
-    
+
     public static NativeArray<T> Allocate<T>(int capacity, bool zeroed = true) where T : unmanaged
     {
         return new NativeArray<T>(capacity, 0, zeroed);
@@ -73,6 +73,7 @@ public static unsafe class NativeArray
             var clearBytes = newCapacity - capacity;
             NativeMemory.Clear((byte*)ptr + capacity, clearBytes);
         }
+
 #if DEBUG
         Console.WriteLine($"Reallocate {nameof(NativeArray)}: {newCapacity} bytes");
 #endif
@@ -86,10 +87,11 @@ public static unsafe class NativeArray
 
         if (alignment > 0) NativeMemory.AlignedFree(ptr);
         else NativeMemory.Free(ptr);
-
+/*
 #if DEBUG
         Console.WriteLine($"Disposed {nameof(NativeArray)}: {capacity} bytes");
 #endif
+*/
     }
 }
 

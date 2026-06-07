@@ -151,9 +151,9 @@ internal sealed class EngineBlueprintFactory : BlueprintFactory
 
         if (string.IsNullOrEmpty(bp.DisplayName)) bp.DisplayName = bp.EmitterName;
 
-        if (!ParticleSystem.Instance.TryGetEmitter(bp.EmitterName, out var emitter))
+        if (!ParticleManager.Instance.TryGet(bp.EmitterName, out var emitter))
         {
-            emitter = ParticleSystem.Instance
+            emitter = ParticleManager.Instance
                 .CreateEmitter(bp.EmitterName, bp.ParticleCount, in bp.Definition, in bp.VisualParams);
         }
 

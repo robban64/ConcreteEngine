@@ -22,7 +22,7 @@ internal sealed class CameraPanel(StateManager state) : EditorPanel(StateEnums.C
 
     private void UpdateText()
     {
-        var viewport = MainCamera.Viewport;
+        var viewport = EngineWindow.Viewport.Size;
 
         DataPtr.Slice(_viewportStrHandle).Writer()
             .Append("Width: "u8).Append(viewport.Width)
@@ -37,7 +37,7 @@ internal sealed class CameraPanel(StateManager state) : EditorPanel(StateEnums.C
         _viewportStrHandle = allocator.AllocSlice(32).AsRange16();
         _aspectStrHandle = allocator.AllocSlice(24).AsRange16();
 
-        _currentViewport = MainCamera.Viewport;
+        _currentViewport = EngineWindow.Viewport;
 
         UpdateText();
         InspectFields.Refresh();
@@ -45,7 +45,7 @@ internal sealed class CameraPanel(StateManager state) : EditorPanel(StateEnums.C
 
     public override void OnUpdateDiagnostic()
     {
-        if (_currentViewport != MainCamera.Viewport) UpdateText();
+        if (_currentViewport != EngineWindow.Viewport.Size) UpdateText();
     }
 
 

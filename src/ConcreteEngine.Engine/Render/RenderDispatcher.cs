@@ -83,7 +83,7 @@ internal sealed class RenderDispatcher : IDisposable
         DrawTagProcessor.UploadDebugBounds(submitOffset, visibleByIndices, _uploadBuffers.Commands,
             _uploadBuffers.Effects);
 
-        ParticleProcessor.Execute(_particleSystem);
+        _particleSystem.Upload();
     }
 
     private void ProcessEntities(int submitOffset, Span<RenderEntityId> visibleEntities, Span<int> visibleByIndices)
@@ -92,8 +92,8 @@ internal sealed class RenderDispatcher : IDisposable
         var ctx = new DrawEntityContext(visibleEntities, visibleByIndices, drawCommands);
 
         CollectEntities(in ctx);
+        TagParticles(in ctx);
         DrawTagProcessor.TagUploadSelectionEffect(in ctx, _uploadBuffers.Effects);
-        ParticleProcessor.TagParticles(in ctx, _particleSystem);
         SpatialProcessor.TagDepthKeys(in ctx, _cameraManager);
         _animatorProcessor.Tag(in ctx);
     }
@@ -106,6 +106,18 @@ internal sealed class RenderDispatcher : IDisposable
             ref readonly var source = ref sources[it.Entity.Index()];
             it.Command = new DrawCommand(source.Mesh, source.Material);
             it.Meta = new DrawCommandMeta(DrawCommandId.Model, source.Queue, source.Mask);
+        }
+    }
+
+    internal void TagParticles(in DrawEntityContext ctx)
+    {
+        foreach (var query in Ecs.Render.Query<ParticleComponent>())
+        {
+            var drawItem = ctx.TryGetVisible(query.Entity);
+            if (drawItem.Entity.Id == 0) continue;
+
+            drawItem.Command = _particleSystem.MakeDrawCommand(query.Component.Emitter,query.Component.Material);
+            drawItem.Meta = ParticleSystem.DrawMeta;
         }
     }
 

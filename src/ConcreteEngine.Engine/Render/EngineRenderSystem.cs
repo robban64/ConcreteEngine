@@ -65,7 +65,8 @@ public sealed class EngineRenderSystem : IDisposable
     internal void OnSystemTick(bool screenResize)
     {
         _particleSystem.Commit();
-        
+        TerrainSystem.Instance.Commit();
+
         if (screenResize)
         {
             Logger.LogString(LogScope.Engine, "Recreating screen framebuffers");

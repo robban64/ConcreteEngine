@@ -23,7 +23,7 @@ internal sealed class SceneSystem
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
 
-        SceneStore = new SceneStore(new EngineBlueprintFactory());
+        SceneStore = new SceneStore();
 
         SceneProcessor = new SceneProcessor(SceneStore);
         _modules = new ModuleManager();

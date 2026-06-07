@@ -26,11 +26,9 @@ public sealed class SceneStore
 
     private readonly List<int> _dirtyIds = new(DefaultCapacity);
 
-    private readonly BlueprintFactory _factory;
 
-    internal SceneStore(BlueprintFactory factory)
+    internal SceneStore()
     {
-        ArgumentNullException.ThrowIfNull(factory);
         if(Instance != null) throw new InvalidOperationException("SceneStore already initialized");
 
         for (int i = 0; i < _byKind.Length; i++)
@@ -38,8 +36,6 @@ public sealed class SceneStore
             var cap = (SceneObjectKind)i == SceneObjectKind.Model ? DefaultCapacity : 32;
             _byKind[i] = new List<Handle32<SceneObject>>(cap);
         }
-
-        _factory = factory;
 
         _sceneObjects.OnResize = static (oldSize, newSize) =>
             Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(SceneStore), oldSize, newSize));
@@ -157,7 +153,7 @@ public sealed class SceneStore
         if (!_byName.TryAdd(name, id))
             throw new InvalidOperationException($"SceneObject with name {name} already exists");
 
-        var sceneObject = _sceneObjects[id.Index()] = _factory.BuildSceneObject(id, bp);
+        var sceneObject = _sceneObjects[id.Index()] = BlueprintFactory.BuildSceneObject(id, bp);
 
         _byKind[(int)sceneObject.Kind].Add(id);
         sceneObject.Attach();

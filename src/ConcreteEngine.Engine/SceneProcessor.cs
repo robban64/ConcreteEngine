@@ -68,7 +68,6 @@ internal sealed class SceneProcessor(SceneStore store)
 
     private void UpdateTransform(SceneObject sceneObject)
     {
-        var renderEcs = Ecs.Render.Core;
         var particleEcs = Ecs.GetRenderStore<ParticleComponent>();
         var skinnedEcs = Ecs.GetRenderStore<SkinLinkComponent>();
 
@@ -76,7 +75,7 @@ internal sealed class SceneProcessor(SceneStore store)
         foreach (var entity in sceneObject.GetRenderEntities())
         {
             ref readonly var entityTransform = ref Ecs.Render.Core.GetTransform(entity);
-            ref var finalMatrix = ref renderEcs.GetMatrix(entity);
+            ref var finalMatrix = ref Ecs.RenderCore.GetMatrix(entity);
 
             MatrixMath.CreateModelMatrix(in entityTransform, out var worldMatrix);
             MatrixMath.MultiplyAffine(ref worldMatrix, in rootMatrix);
@@ -97,7 +96,7 @@ internal sealed class SceneProcessor(SceneStore store)
             }
 
             var instance = sceneObject.GetInstance<ModelInstance>();
-            ref readonly var source = ref renderEcs.GetSource(entity);
+            ref readonly var source = ref Ecs.RenderCore.GetSource(entity);
             ref readonly var meshMatrix = ref instance.AssetModel.Meshes[source.MeshIndex].WorldTransform;
             MatrixMath.MultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
 

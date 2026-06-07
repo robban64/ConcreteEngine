@@ -27,7 +27,7 @@ internal sealed class TerrainSystem
         TerrainMesh = new TerrainMesh(gfx);
     }
 
-    public void OnTick()
+    public void Commit()
     {
         if (!IsDirty) return;
         MainTerrain.IsDirty = false;

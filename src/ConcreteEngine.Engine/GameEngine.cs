@@ -132,7 +132,6 @@ public sealed class GameEngine : IDisposable
         if (_commandQueues.QueuesCount > 0)
             _commandQueues.DrainDispatch();
 
-        TerrainSystem.Instance.OnTick();
     }
 
     internal void Close()

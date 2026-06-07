@@ -65,7 +65,7 @@ internal sealed class SelectionManager
             return;
         }
 
-        var asset = AssetStore.Instance.Get(id);
+        var asset = AssetStore.Instance.Get<AssetObject>(id);
         SelectedAsset = asset switch
         {
             Shader shader => new InspectShader(shader),

@@ -7,43 +7,44 @@ using ConcreteEngine.Core.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-public sealed partial class AssetStore 
+public sealed partial class AssetStore
 {
     private const int DefaultCap = 512;
     public static int StoreCount => EnumCache<AssetKind>.Count - 1;
 
     public static readonly AssetStore Instance = new();
-    
+
     private static readonly Func<string, Type, bool> NameExistsDel =
         static (name, type) => !Instance.GetTypeStore(AssetKindUtils.ToAssetKind(type)).HasName(name);
 
+    public int Count { get; private set; }
+
     public readonly AssetFileRegistry FileRegistry;
 
-    private readonly SlotArray<AssetObject> _assets = new(DefaultCap);
+    private AssetObject?[] _assets = new AssetObject?[DefaultCap];
+    private readonly Dictionary<Guid, AssetId> _byGid = new(DefaultCap);
+
     private readonly AssetTypeStore[] _collections;
 
-    private readonly Dictionary<Guid, AssetId> _byGid = new(DefaultCap);
+    private readonly Stack<int> _free = [];
 
     private AssetStore()
     {
         FileRegistry = new AssetFileRegistry();
         _collections = AssetTypeStore.CreateAll();
-        
-        _assets.OnResize = static (oldSize, newSize) =>
-            Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetStore), oldSize, newSize));
     }
-    
-    //
-    private AssetId MakeAssetId() => new(_assets.AllocateNext() + 1, 1);
 
-    public int Count => _assets.Count;
-    public int Capacity => _assets.Capacity;
+    //
+
+    public int FreeCount => _free.Count;
+    public int ActiveCount => Count - _free.Count;
+    public int Capacity => _assets.Length;
     internal IReadOnlyList<AssetTypeStore> Collections => _collections;
     //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetTypeStore GetTypeStore(AssetKind kind) => _collections[kind.ToIndex()];
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetTypeStore GetTypeStore(Type type) => _collections[AssetKindUtils.ToAssetKind(type).ToIndex()];
 
@@ -59,13 +60,25 @@ public sealed partial class AssetStore
         GetTypeStore(asset.Kind).Rename(asset.Name, newName);
     }
 
+    private AssetId AllocateSlot()
+    {
+        var freeIndex = SlotHelper.NextSlot(_free, Count);
+        if (freeIndex >= 0) return new AssetId(freeIndex + 1, 1);
+
+        if (SlotHelper.EnsureCapacity(ref _assets, Count, 1, out var oldSize))
+            Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetStore), oldSize, _assets.Length));
+
+        return new AssetId(++Count, 1);
+    }
+
+
     internal AssetId RegisterPlainAsset(Guid gid, AssetKind kind, string name, AssetStorageKind storageKind)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentOutOfRangeException.ThrowIfEqual(gid, Guid.Empty);
         ArgumentOutOfRangeException.ThrowIfEqual((int)storageKind, (int)AssetStorageKind.FileSystem);
 
-        var assetId = MakeAssetId();
+        var assetId = AllocateSlot();
         _byGid.Add(gid, assetId);
         FileRegistry.Add(assetId, name, name, 0, new FileScanInfo(0, kind, storageKind));
         return assetId;
@@ -77,11 +90,10 @@ public sealed partial class AssetStore
         ArgumentException.ThrowIfNullOrEmpty(record.Name);
         ArgumentOutOfRangeException.ThrowIfEqual(record.GId, Guid.Empty);
 
-        var assetType = AssetKindUtils.ToType(record.Kind);
         if (GetTypeStore(record.Kind).HasName(record.Name))
             throw new InvalidOperationException($"Asset name {record.Name} already registered");
 
-        var assetId = MakeAssetId();
+        var assetId = AllocateSlot();
         _byGid.Add(record.GId, assetId);
         FileRegistry.Add(assetId, record.Name, relativePath, record.Files.Count, in fileInfo);
         return assetId;
@@ -139,7 +151,7 @@ public sealed partial class AssetStore
         var assetList = GetTypeStore(asset.Kind);
 
         var name = asset.Name;
-        
+
         if (assetList.HasName(name))
         {
             name = AssetNameUtils.IncrementName(name, typeof(TAsset), NameExistsDel);
@@ -151,8 +163,7 @@ public sealed partial class AssetStore
         assetList.Add(asset);
         MarkDirty(asset);
     }
-    
-    
+
     public Material CreateMaterial(string materialName, string newName)
     {
         ArgumentException.ThrowIfNullOrEmpty(materialName);

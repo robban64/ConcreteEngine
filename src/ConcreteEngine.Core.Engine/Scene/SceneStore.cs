@@ -17,12 +17,16 @@ public sealed class SceneStore
     private static int _nameTick = 1;
     public static SceneStore Instance { get; private set; } = null!;
 
-    private readonly SlotArray<SceneObject> _sceneObjects = new(DefaultCapacity);
+    public int Count { get; private set; }
 
-    private readonly List<Handle32<SceneObject>>[] _byKind =
-        new List<Handle32<SceneObject>>[EnumCache<SceneObjectKind>.Count];
+    private SceneObject?[] _sceneObjects = new SceneObject?[DefaultCapacity];
 
-    private readonly Dictionary<string, Handle32<SceneObject>> _byName = new(DefaultCapacity);
+    private readonly List<SceneObjectId>[] _byKind =
+        new List<SceneObjectId>[EnumCache<SceneObjectKind>.Count];
+
+    private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
+    
+    private readonly Stack<int> _free = [];
 
     internal SceneStore()
     {
@@ -31,18 +35,26 @@ public sealed class SceneStore
         for (int i = 0; i < _byKind.Length; i++)
         {
             var cap = (SceneObjectKind)i == SceneObjectKind.Model ? DefaultCapacity : 32;
-            _byKind[i] = new List<Handle32<SceneObject>>(cap);
+            _byKind[i] = new List<SceneObjectId>(cap);
         }
-
-        _sceneObjects.OnResize = static (oldSize, newSize) =>
-            Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(SceneStore), oldSize, newSize));
 
         Instance = this;
     }
 
-    public int ActiveCount => _sceneObjects.ActiveCount;
+    public int FreeCount => _free.Count;
+    public int ActiveCount => Count - _free.Count;
+    public int Capacity => _sceneObjects.Length;
+    
+    private SceneObjectId AllocateSlot()
+    {
+        var freeIndex = SlotHelper.NextSlot(_free, Count);
+        if (freeIndex >= 0) return new SceneObjectId(freeIndex + 1, 1);
 
-    public int Capacity => _sceneObjects.Capacity;
+        if (SlotHelper.EnsureCapacity(ref _sceneObjects, Count, 1, out var oldSize))
+            Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetFileRegistry), oldSize, _sceneObjects.Length));
+
+        return new SceneObjectId(++Count, 1);
+    }
     
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -52,7 +64,7 @@ public sealed class SceneStore
     public bool Has(SceneObjectId id)
     {
         var index = id.Index();
-        return (uint)index < (uint)_sceneObjects.Capacity && _sceneObjects[index]?.Id == id;
+        return (uint)index < (uint)_sceneObjects.Length && _sceneObjects[index]?.Id == id;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -73,13 +85,27 @@ public sealed class SceneStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGet(SceneObjectId id, [NotNullWhen(true)] out SceneObject? sceneObject)
     {
-        return _sceneObjects.TryGet(id.Index(), out sceneObject) && sceneObject.Id == id;
+        var index = id.Index();
+        if ((uint)index >= (uint)_sceneObjects.Length)
+        {
+            sceneObject = null;
+            return false;
+        }
+        
+        if (_sceneObjects[index] is {} file && file.Id == id)
+        {
+            sceneObject = file;
+            return true;
+        }
+        
+        sceneObject = null;
+        return false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetIdByName(string name, out SceneObjectId id)
     {
-        if (_byName.TryGetValue(name, out var handle)) id = (SceneObjectId)handle;
+        if (_byName.TryGetValue(name, out var handle)) id = handle;
         id = default;
         return id.Value > 0;
     }
@@ -87,7 +113,7 @@ public sealed class SceneStore
     public bool TryGetByName(string name, [NotNullWhen(true)] out SceneObject? sceneObject)
     {
         sceneObject = null;
-        return _byName.TryGetValue(name, out var id) && TryGet((SceneObjectId)id, out sceneObject);
+        return _byName.TryGetValue(name, out var id) && TryGet(id, out sceneObject);
     }
 
     //
@@ -108,8 +134,8 @@ public sealed class SceneStore
     
     public SceneObject Create(SceneObjectTemplate bp)
     {
-        var id = new SceneObjectId(_sceneObjects.AllocateNext() + 1, 1);
-
+        var id = AllocateSlot();
+        
         var name = bp.Name;
         if (string.IsNullOrEmpty(name))
             name = $"Unnamed({_unnamedCounter++})";
@@ -139,5 +165,5 @@ public sealed class SceneStore
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActiveObjectEnumerator<SceneObject> GetEnumerator() => _sceneObjects.GetEnumerator();
+    public ActiveObjectEnumerator<SceneObject> GetEnumerator() => new(_sceneObjects.AsSpan(0, Count));
 }

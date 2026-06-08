@@ -12,7 +12,7 @@ namespace ConcreteEngine.Engine.Render.Processor;
 
 internal sealed class SpatialProcessor(CameraFrustum frustum, Camera camera)
 {
-    internal int CullEntities(Span<RenderEntityId> entities, UnsafeSpan<int> indices)
+    internal int CullEntities()
     {
         var index = 0;
         foreach (var query in Ecs.Render.Core.Query())
@@ -21,34 +21,27 @@ internal sealed class SpatialProcessor(CameraFrustum frustum, Camera camera)
             var visible = frustum.IntersectsBox(in worldBounds);
 
             visible &= query.ToggleVisibilityFlag(VisibilityFlags.Culled, visible) == 0;
-            var entityIndex = query.Entity.Index();
-            if (!visible)
-            {
-                indices[entityIndex] = -1;
-                continue;
-            }
-
-            indices[entityIndex] = index;
-            entities[index] = query.Entity;
-            index++;
+            if (visible) index++;
+            
         }
 
         return index;
     }
 
-    internal void TagDepthKeys(in DrawEntityContext ctx)
+    internal void TagDepthKeys(DrawCommandContext ctx)
     {
         var near = camera.NearPlane;
         var far = camera.FarPlane;
         var forward = camera.Forward;
         var z = camera.ViewMatrix.M43;
         var transformView = Ecs.Render.Core.GetTransformView();
-        foreach (var it in ctx)
+        foreach (var query in Ecs.Render.Core.VisibilityQuery())
         {
-            ref readonly var worldPos = ref transformView[it.Entity.Index()].Translation;
+            ref readonly var worldPos = ref transformView[query.Entity.Index()].Translation;
             var depthKey = MakeDepthKey(worldPos, forward, z, near, far);
 
-            it.Meta.DepthKey = it.Meta.Queue < DrawCommandQueue.Transparent
+            ref var meta = ref ctx.GetMeta(query.VisibleIndex);
+            meta.DepthKey = meta.Queue < DrawCommandQueue.Transparent
                 ? depthKey
                 : (ushort)(ushort.MaxValue - depthKey);
         }

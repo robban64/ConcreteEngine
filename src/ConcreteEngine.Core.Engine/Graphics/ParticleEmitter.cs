@@ -21,11 +21,10 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     public int Slot { get; private set; } = -1;
     public readonly Id16<ParticleEmitter> Id;
+    public MeshId BoundMesh;
 
     public readonly string Name;
     
-    //public Material Material { get; set; }
-
     public Vector3 Translation;
     public Vector3 Direction;
     
@@ -55,11 +54,13 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         InitializeParticles(0, ParticleCount);
     }
 
-    internal void Attach(int slot)
+    internal void Attach(int slot, MeshId meshId)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);
+        ArgumentOutOfRangeException.ThrowIfZero(meshId.Value);
         if(Slot >= 0) throw new ArgumentOutOfRangeException(nameof(slot));
         Slot = slot;
+        BoundMesh = meshId;
     }
 
     public bool IsAttached => Slot >= 0;
@@ -112,7 +113,12 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     public int CompareTo(ushort other) => Id.CompareTo(other);
 
-    public void Dispose() => _particles.Dispose();
+    public void Dispose()
+    {
+        _particles.Dispose();
+        Slot = -1;
+        BoundMesh = default;
+    }
 
 
     internal void UpdateLocalBounds(out BoundingBox bounds)

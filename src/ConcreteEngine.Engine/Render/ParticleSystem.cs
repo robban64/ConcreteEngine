@@ -44,7 +44,8 @@ internal sealed class ParticleSystem : IDisposable
         {
             if (emitter.ParticleCount <= 0) Throwers.InvalidOperation(nameof(emitter.ParticleCount));
             var slot = _particleMesh.CreateParticleMesh(emitter.ParticleCount);
-            emitter.Attach(slot);
+            var meshId = _particleMesh.GetHandle(slot).MeshId;
+            emitter.Attach(slot, meshId);
         }
         
         _particleManager.ClearPendingEmitters();
@@ -55,17 +56,6 @@ internal sealed class ParticleSystem : IDisposable
         _allocated = false;
         foreach (var emitter in _particleManager.GetEmitters()) emitter.Dispose();
     }
-
-    public static readonly DrawCommandMeta DrawMeta =
-        new (DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
-    
-    internal DrawCommand MakeDrawCommand(Id16<ParticleEmitter> emitterId, MaterialId materialId)
-    {
-        var emitter = _particleManager.Get(emitterId);
-        var meshId = _particleMesh.GetHandle(emitter.Slot).MeshId;
-        return new DrawCommand(meshId, materialId, (uint)emitter.ParticleCount);
-    }
-    
 
     internal void Simulate(float simDt)
     {

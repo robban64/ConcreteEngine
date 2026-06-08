@@ -165,7 +165,7 @@ public static class BlueprintFactory
 
         var entity = RenderEcs.AddEntity(source, in transform, in bp.Bounds);
 
-        var particle = new ParticleComponent(emitter.Id, materialId);
+        var particle = new ParticleComponent(emitter.Id);
         Ecs.GetRenderStore<ParticleComponent>().Add(entity, in particle);
 
         var instance = new ParticleInstance(bp, emitter);

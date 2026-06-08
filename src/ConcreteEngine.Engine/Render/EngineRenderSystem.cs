@@ -101,8 +101,10 @@ public sealed class EngineRenderSystem : IDisposable
 
         // process and upload draw commands
         avg.BeginSample();
-        _renderDispatcher.Prepare(_terrainSystem);
+
+        _renderDispatcher.Prepare();
         _renderDispatcher.UploadProcessors();
+        _renderDispatcher.UploadStaticCommands(_terrainSystem);
         _renderDispatcher.Execute();
         if (avg.EndSample() >= 144) avg.ResetAndPrint();
 

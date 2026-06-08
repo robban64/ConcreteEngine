@@ -15,23 +15,24 @@ internal static class DrawTagProcessor
 {
     public static MaterialId BoundsMaterial;
 
-    public static void TagUploadSelectionEffect(in DrawEntityContext ctx, EffectBuffer effects)
+    public static void TagUploadSelectionEffect(DrawCommandContext ctx, ReadOnlySpan<int> visibleIndices, EffectBuffer effects)
     {
         if (Ecs.Render.Stores<SelectionComponent>.Store.Count == 0) return;
 
         foreach (var query in Ecs.Render.Query<SelectionComponent>())
         {
-            var drawItem = ctx.TryGetVisible(query.Entity);
-            if (drawItem.Entity.Id == 0) continue;
+            var index = visibleIndices[query.Entity.Id];
+            if (index < 0) continue;
 
             var slot = effects.Submit(new EffectUniformParams(query.Component.HighlightColor));
-            drawItem.Meta.Resolver = DrawCommandResolver.Highlight;
-            drawItem.Meta.PassMask = PassMask.Effect | PassMask.Depth;
-            drawItem.Meta.ResolverSlot = slot;
+            ref var meta = ref ctx.GetMeta(index);
+            meta.Resolver = DrawCommandResolver.Highlight;
+            meta.PassMask = PassMask.Effect | PassMask.Depth;
+            meta.ResolverSlot = slot;
         }
     }
 
-    public static void UploadDebugBounds(int submitOffset, Span<int> visibleIndices, DrawCommandBuffer buffer,
+    public static void UploadDebugBounds(int submitOffset, ReadOnlySpan<int> visibleIndices, DrawCommandBuffer buffer,
         EffectBuffer effects)
     {
         if (Ecs.Render.Stores<DebugBoundsComponent>.Store.Count == 0) return;
@@ -39,7 +40,7 @@ internal static class DrawTagProcessor
         var ecs = Ecs.Render.Core;
         var material = BoundsMaterial;
 
-        var drawCommands = buffer.GetDrawCommands(0);
+        var drawCommands = buffer.GetContext(0);
         var indices = new UnsafeSpan<int>(visibleIndices);
 
         Span<Vector3> corners = stackalloc Vector3[8];
@@ -49,12 +50,12 @@ internal static class DrawTagProcessor
             var index = indices[entity.Index()];
             if (index < 0) continue;
 
-            var depthKey = (ushort)(ushort.MaxValue - drawCommands.At2(submitOffset + index).DepthKey);
+            var depthKey = (ushort)(ushort.MaxValue - drawCommands.GetMeta(submitOffset + index).DepthKey);
             var slot = effects.Submit(new EffectUniformParams(query.Component.Color));
 
-            drawCommands.At1(buffer.Count) = new DrawCommand(GfxMeshes.Cube, material);
+            drawCommands.GetCommand(buffer.Count) = new DrawCommand(GfxMeshes.Cube, material);
 
-            drawCommands.At2(buffer.Count) =
+            drawCommands.GetMeta(buffer.Count) =
                 new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey,
                     DrawCommandResolver.BoundingVolume, resolverSlot: slot);
 

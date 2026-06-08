@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Renderer.Buffer;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -27,7 +28,13 @@ public abstract class BlueprintInstance
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(RenderEntityIds);
     public ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(GameEntityIds);
 
-    internal void Commit() => IsDirty = false;
+    internal void Commit()
+    {
+        IsDirty = false;
+        OnCommit();
+    }
+
+    protected virtual void OnCommit(){}
 
     public void ToggleSelection(bool isSelected)
     {
@@ -160,13 +167,25 @@ public sealed class AnimationInstance : BlueprintInstance
 public sealed class ParticleInstance : BlueprintInstance
 {
     public readonly ParticleBlueprint Blueprint;
-
     public ParticleEmitter Emitter { get; }
+    public override SceneObjectBlueprint GetBlueprint() => Blueprint;
+
     public ParticleInstance(ParticleBlueprint blueprint, ParticleEmitter emitter)
     {
         Blueprint = blueprint;
         Emitter = emitter;
     }
 
-    public override SceneObjectBlueprint GetBlueprint() => Blueprint;
+    protected override void OnCommit()
+    {
+        foreach (var entity in GetRenderEntities())
+        {
+            ref var source = ref Ecs.Render.Core.GetSource(entity);
+            source.Queue = DrawCommandQueue.Particles;
+            source.Mask = PassMask.Main;
+            source.Mesh = Emitter.BoundMesh;
+        }
+
+    }
+
 }

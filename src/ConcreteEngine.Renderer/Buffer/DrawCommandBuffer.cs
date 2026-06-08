@@ -52,6 +52,17 @@ internal sealed class DrawCommandBufferRanges : IDisposable
     }
 }
 
+public readonly ref struct DrawCommandContext(
+    NativeView<DrawCommand> commands,
+    NativeView<DrawCommandMeta> metas)
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref DrawCommand GetCommand(int index) => ref commands[index];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref DrawCommandMeta GetMeta(int index) => ref metas[index];
+}
+
 public sealed class DrawCommandBuffer : IDisposable
 {
     private const int DefaultCommandBuffCapacity = 512;
@@ -72,21 +83,20 @@ public sealed class DrawCommandBuffer : IDisposable
 
     internal DrawCommandBuffer()
     {
-        if(_allocated) throw new InvalidOperationException("Already allocated");
+        if (_allocated) throw new InvalidOperationException("Already allocated");
         _commands = NativeArray.Allocate<DrawCommand>(DefaultCommandBuffCapacity);
         _metas = NativeArray.Allocate<DrawCommandMeta>(DefaultCommandBuffCapacity);
         _indices = NativeArray.Allocate<DrawCommandRef>(DefaultCommandBuffCapacity);
         _transforms = NativeArray.AlignedAllocate<DrawObjectUniform>(DefaultCommandBuffCapacity, alignment: 16);
 
         Count = 0;
-        
+
         MatrixMath.CreateModelMatrix(Transform.Identity, out TransformIdentity.Model);
         MatrixMath.CreateNormalMatrix(ref TransformIdentity.Normal, in TransformIdentity.Model);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public UnsafeZippedSpan<DrawCommand, DrawCommandMeta> GetDrawCommands(int start) =>
-        new(ref _commands[start], ref _metas[start], _commands.Length - start);
+    public DrawCommandContext GetContext(int start) => new(_commands.Slice(start), _metas.Slice(start));
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

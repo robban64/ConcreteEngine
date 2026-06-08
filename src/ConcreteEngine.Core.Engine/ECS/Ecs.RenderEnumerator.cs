@@ -12,8 +12,9 @@ public static partial class Ecs
     {
         public ref struct VisibleEntityEnumerator(NativeView<RenderEntity> entities)
         {
-            private RenderEntityId _currentEntity;
             private int _i = -1;
+            private int _visibleIndex = -1;
+            private RenderEntityId _currentEntity;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
@@ -22,16 +23,17 @@ public static partial class Ecs
                 {
                     if (!entities[_i].IsVisible()) continue;
                     _currentEntity = new RenderEntityId(_i + 1);
+                    ++_visibleIndex;
                     return true;
                 }
 
                 return false;
             }
 
-            public readonly RenderEntityId Current
+            public readonly (int VisibleIndex, RenderEntityId Entity) Current
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _currentEntity;
+                get => (_visibleIndex, _currentEntity);
             }
 
             public VisibleEntityEnumerator GetEnumerator()

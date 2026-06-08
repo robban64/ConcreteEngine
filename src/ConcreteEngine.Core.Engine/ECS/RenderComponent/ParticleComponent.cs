@@ -6,9 +6,8 @@ using ConcreteEngine.Renderer.Core;
 namespace ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ParticleComponent(Id16<ParticleEmitter> emitter, MaterialId material)
+public struct ParticleComponent(Id16<ParticleEmitter> emitter)
     : IRenderComponent<ParticleComponent>
 {
     public Id16<ParticleEmitter> Emitter = emitter;
-    public MaterialId Material = material;
 }

@@ -34,28 +34,29 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
     public void Dispose() => _globals.Dispose();
 
 
-    public void Tag(in DrawEntityContext ctx)
+    public void Tag(DrawCommandContext ctx, ReadOnlySpan<int> visibleIndices)
     {
         foreach (var query in _skinningEcs.Query())
         {
-            var drawItem = ctx.TryGetVisible(query.Entity);
-            if (drawItem.Entity.Id == 0) continue;
+            var index = visibleIndices[query.Entity.Id];
+            if (index < 0) continue;
             query.Component.AnimationSlot = _skinningBuffer.NextSlot();
             _entityIds.Add(query.Entity);
         }
 
         foreach (var query in Ecs.Render.Query<SkinLinkComponent>())
         {
-            var drawItem = ctx.TryGetVisible(query.Entity);
-            if (drawItem.Entity.Id == 0) continue;
+            var index = visibleIndices[query.Entity.Id];
+            if (index < 0) continue;
             var slot = _skinningEcs.Get(query.Component.EntityId).AnimationSlot;
-            drawItem.Command.AnimationSlot = slot;
+            ctx.GetCommand(index).AnimationSlot = slot;
         }
     }
 
     public void Execute()
     {
         UpdateInterpolate();
+        
         for (var i = 0; i < _entityIds.Count; i++)
         {
             var entityId = _entityIds[i];

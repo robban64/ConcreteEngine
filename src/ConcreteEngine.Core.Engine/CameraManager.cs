@@ -14,6 +14,8 @@ public sealed class CameraManager
     internal readonly CameraFrustum Frustum;
     internal readonly CameraTransformSnapshot FrameTransforms;
     internal readonly CameraTransformSnapshot LightTransforms;
+    
+
 
     private CameraManager()
     {
@@ -71,6 +73,7 @@ public sealed class CameraManager
         FrustumMath.FillFrustumCorners(in Camera.ViewMatrix, Camera.Translation, Camera.Tan, nearFar, corners);
         CameraUtils.CreateLightView(LightTransforms, shadowSize, shadowDist, shadowZPad, lightDirection, corners);
     }
+    
 }
 
 file static class CameraUtils

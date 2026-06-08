@@ -10,15 +10,15 @@ using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 
-internal static class SpatialProcessor
+internal sealed class SpatialProcessor(CameraFrustum frustum, Camera camera)
 {
-    internal static int CullEntities(Span<RenderEntityId> entities, UnsafeSpan<int> indices, CameraFrustum camera)
+    internal int CullEntities(Span<RenderEntityId> entities, UnsafeSpan<int> indices)
     {
         var index = 0;
         foreach (var query in Ecs.Render.Core.Query())
         {
             BoundingBox.GetWorldBounds(in query.Bounds, in query.Matrix, out var worldBounds);
-            var visible = camera.IntersectsBox(in worldBounds);
+            var visible = frustum.IntersectsBox(in worldBounds);
 
             visible &= query.ToggleVisibilityFlag(VisibilityFlags.Culled, visible) == 0;
             var entityIndex = query.Entity.Index();
@@ -36,14 +36,17 @@ internal static class SpatialProcessor
         return index;
     }
 
-    internal static void TagDepthKeys(in DrawEntityContext ctx, CameraManager camera)
+    internal void TagDepthKeys(in DrawEntityContext ctx)
     {
-        var viewDepth = ExtractDepthVector(in camera.FrameTransforms.ViewMatrix);
-        var nearFar = new Vector2(camera.Camera.NearPlane, camera.Camera.FarPlane);
+        var near = camera.NearPlane;
+        var far = camera.FarPlane;
+        var forward = camera.Forward;
+        var z = camera.ViewMatrix.M43;
         var transformView = Ecs.Render.Core.GetTransformView();
         foreach (var it in ctx)
         {
-            var depthKey = MakeDepthKey(in viewDepth, in transformView[it.Entity.Index()].Translation, nearFar);
+            ref readonly var worldPos = ref transformView[it.Entity.Index()].Translation;
+            var depthKey = MakeDepthKey(worldPos, forward, z, near, far);
 
             it.Meta.DepthKey = it.Meta.Queue < DrawCommandQueue.Transparent
                 ? depthKey
@@ -52,18 +55,15 @@ internal static class SpatialProcessor
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector4 ExtractDepthVector(in Matrix4x4 v) => new(v.M13, v.M23, v.M33, v.M43);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ushort MakeDepthKey(in Vector4 view, in Vector3 worldPos, Vector2 nearFar)
+    private static ushort MakeDepthKey(Vector3 worldPos,  Vector3 forward, float viewZ, float near, float far)
     {
-        var z = worldPos.X * view.X + worldPos.Y * view.Y + worldPos.Z * view.Z + view.W;
-        var d = -z;
+        //var z = worldPos.X * view.X + worldPos.Y * view.Y + worldPos.Z * view.Z + viewZ;
+        var d = Vector3.Dot(forward, worldPos) - viewZ;
 
-        if (d <= nearFar.X) return 0;
-        if (d >= nearFar.Y) return ushort.MaxValue;
+        if (d <= near) return 0;
+        if (d >= far) return ushort.MaxValue;
 
-        var t = (d - nearFar.X) / (nearFar.Y - nearFar.X);
+        var t = (d - near) / (far - near);
         return (ushort)(t * ushort.MaxValue + 0.5f);
     }
 }

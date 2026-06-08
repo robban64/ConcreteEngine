@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
@@ -20,90 +21,90 @@ internal sealed class RenderDispatcher : IDisposable
     private RenderEntityId[] _visibleEntities;
     private int[] _visibleByIndices;
 
-    private readonly RenderEntityCore _ecs;
+    private readonly RenderUploadBuffers _uploadBuffers;
+    private readonly DrawCommandBuffer _commandBuffer;
+
     private readonly CameraManager _cameraManager;
 
-    private AnimatorProcessor _animatorProcessor = null!;
-    private RenderUploadBuffers _uploadBuffers = null!;
-
-    private readonly AnimationSystem _animationSystem;
+    private readonly SpatialProcessor _spatialProcessor;
+    private readonly AnimatorProcessor _animatorProcessor;
     private readonly ParticleSystem _particleSystem;
     
-    internal RenderDispatcher(AnimationSystem animations, ParticleSystem particleSystem)
+    internal RenderDispatcher(AnimationSystem animations, ParticleSystem particleSystem, RenderUploadBuffers uploadBuffers)
     {
-        _ecs = Ecs.Render.Core;
-        _visibleEntities = new RenderEntityId[_ecs.Capacity];
-        _visibleByIndices = new int[_ecs.Capacity];
+        ArgumentNullException.ThrowIfNull(animations);
+        ArgumentNullException.ThrowIfNull(particleSystem);
+        ArgumentNullException.ThrowIfNull(uploadBuffers);
 
-        _animationSystem = animations;
-        _particleSystem = particleSystem;
+        var entityCap = Ecs.Render.Core.Capacity;
+        _visibleEntities = new RenderEntityId[entityCap];
+        _visibleByIndices = new int[entityCap];
+
         _cameraManager = CameraManager.Instance;
+
+        _uploadBuffers = uploadBuffers;
+        _commandBuffer = uploadBuffers.Commands;
+        _particleSystem = particleSystem;
+        _spatialProcessor = new SpatialProcessor(_cameraManager.Frustum, _cameraManager.Camera);
+        _animatorProcessor = new AnimatorProcessor(animations, uploadBuffers.Skinning);
     }
 
     public ReadOnlySpan<RenderEntityId> GetVisibleEntities() => _visibleEntities.AsSpan(0, VisibleCount);
 
-    public void Attach(RenderUploadBuffers uploadBuffers)
-    {
-        _uploadBuffers = uploadBuffers;
-        _animatorProcessor = new AnimatorProcessor(_animationSystem, uploadBuffers.Skinning);
-    }
-
-    public void PrepareExecute(TerrainSystem terrain)
+    public void Prepare(TerrainSystem terrain)
     {
         EnsureCommandBuffer();
         EnsureCapacity();
 
-        terrain.SubmitDrawTerrain(_uploadBuffers.Commands, _cameraManager.Frustum);
+        terrain.SubmitDrawTerrain(_commandBuffer, _cameraManager.Frustum);
 
         {
             var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
             var cmd = new DrawCommand(Skybox.Current.MeshId, Skybox.Current.MaterialId);
-            _uploadBuffers.Commands.Submit(cmd, meta, in DrawCommandBuffer.TransformIdentity);
+            _commandBuffer.Submit(cmd, meta, in DrawCommandBuffer.TransformIdentity);
         }
-
+    }
+    
+    public void UploadProcessors()
+    {
+        _animatorProcessor.Execute();
+        _particleSystem.Upload();
     }
 
     internal void Execute()
     {
-        var len = VisibleCount = SpatialProcessor.CullEntities(
+        var len = VisibleCount = _spatialProcessor.CullEntities(
             _visibleEntities,
-            new UnsafeSpan<int>(_visibleByIndices),
-            _cameraManager.Frustum
+            new UnsafeSpan<int>(_visibleByIndices)
         );
-        
+
         if (len == 0) return;
-        if ((uint)len > (uint)_visibleEntities.Length || (uint)_ecs.Count > (uint)_visibleByIndices.Length)
+        if ((uint)len > (uint)_visibleEntities.Length || (uint)Ecs.Render.Core.Capacity > (uint)_visibleByIndices.Length)
             Throwers.InvalidOperation();
 
         var visibleEntities = _visibleEntities.AsSpan(0, len);
-        var visibleByIndices = _visibleByIndices.AsSpan(0, _ecs.Count);
-        var submitOffset = _uploadBuffers.Commands.Count;
+        var visibleByIndices = _visibleByIndices.AsSpan(0, Ecs.Render.Core.Capacity);
+        var submitOffset = _commandBuffer.Count;
 
         ProcessEntities(submitOffset, visibleEntities, visibleByIndices);
-        _animatorProcessor.Execute();
-
         UploadDrawCommands(visibleEntities);
-        DrawTagProcessor.UploadDebugBounds(submitOffset, visibleByIndices, _uploadBuffers.Commands,
-            _uploadBuffers.Effects);
+        DrawTagProcessor.UploadDebugBounds(submitOffset, visibleByIndices, _commandBuffer, _uploadBuffers.Effects);
 
-        _particleSystem.Upload();
     }
 
     private void ProcessEntities(int submitOffset, Span<RenderEntityId> visibleEntities, Span<int> visibleByIndices)
     {
-        var drawCommands = _uploadBuffers.Commands.GetDrawCommands(submitOffset);
-        var ctx = new DrawEntityContext(visibleEntities, visibleByIndices, drawCommands);
-
+        var ctx = new DrawEntityContext(visibleEntities, visibleByIndices, _commandBuffer.GetDrawCommands(submitOffset));
         CollectEntities(in ctx);
         TagParticles(in ctx);
         DrawTagProcessor.TagUploadSelectionEffect(in ctx, _uploadBuffers.Effects);
-        SpatialProcessor.TagDepthKeys(in ctx, _cameraManager);
+        _spatialProcessor.TagDepthKeys(in ctx);
         _animatorProcessor.Tag(in ctx);
     }
 
     private void CollectEntities(in DrawEntityContext ctx)
     {
-        var sources = _ecs.GetSourceView();
+        var sources = Ecs.Render.Core.GetSourceView();
         foreach (var it in ctx)
         {
             ref readonly var source = ref sources[it.Entity.Index()];
@@ -114,22 +115,21 @@ internal sealed class RenderDispatcher : IDisposable
 
     internal void TagParticles(in DrawEntityContext ctx)
     {
-        foreach (var query in Ecs.Render.Query<ParticleComponent>())
+        foreach (var query in Ecs.GetRenderStore<ParticleComponent>().Query())
         {
             var drawItem = ctx.TryGetVisible(query.Entity);
             if (drawItem.Entity.Id == 0) continue;
 
-            drawItem.Command = _particleSystem.MakeDrawCommand(query.Component.Emitter,query.Component.Material);
+            drawItem.Command = _particleSystem.MakeDrawCommand(query.Component.Emitter, query.Component.Material);
             drawItem.Meta = ParticleSystem.DrawMeta;
         }
     }
 
     private void UploadDrawCommands(Span<RenderEntityId> visibleEntities)
     {
-        var buffer = _uploadBuffers.Commands;
-        var parentMatrices = _ecs.GetMatrixView();
-        var len = visibleEntities.Length;
-        for (var i = 0; i < len; i++)
+        var buffer = _commandBuffer;
+        var parentMatrices = Ecs.RenderCore.GetMatrixView();
+        for (var i = 0; i < visibleEntities.Length; i++)
         {
             ref readonly var world = ref parentMatrices[visibleEntities[i].Index()];
             ref var bufferData = ref buffer.SubmitDraw();
@@ -155,14 +155,14 @@ internal sealed class RenderDispatcher : IDisposable
     private void EnsureCapacity()
     {
         var len = _visibleEntities.Length;
-        if (_ecs.Capacity <= len) return;
+        var entityCap = Ecs.Render.Core.Capacity;
+        if (entityCap <= len) return;
 
-        _visibleEntities = new RenderEntityId[_ecs.Capacity];
-        _visibleByIndices = new int[_ecs.Capacity];
+        _visibleEntities = new RenderEntityId[entityCap];
+        _visibleByIndices = new int[entityCap];
 
         if (len > 0)
-            Logger.LogString(LogScope.Ecs, $"{nameof(RenderDispatcher)} _drawEntities resize {_ecs.Capacity}",
-                LogLevel.Warn);
+            Logger.LogString(LogScope.Ecs, $"{nameof(RenderDispatcher)} _drawEntities resize {entityCap}", LogLevel.Warn);
     }
 
     public void Dispose() => _animatorProcessor.Dispose();

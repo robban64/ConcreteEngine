@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
@@ -41,7 +42,7 @@ public sealed class EngineRenderSystem : IDisposable
         _particleSystem = new ParticleSystem(graphics.Gfx);
         _animationSystem = new AnimationSystem();
         
-        _renderDispatcher = new RenderDispatcher(_animationSystem, _particleSystem);
+        _renderDispatcher = new RenderDispatcher(_animationSystem, _particleSystem, Program.UploadBuffers);
         _materialProcessor = new MaterialProcessor(Program);
     }
 
@@ -51,7 +52,6 @@ public sealed class EngineRenderSystem : IDisposable
     internal void Initialize()
     {
         _animationSystem.Setup(AssetStore.Instance);
-        _renderDispatcher.Attach(Program.UploadBuffers);
 
         //
         var boundsMaterial = AssetStore.Instance.CreateMaterial("EmptyMat", "EmptyMat1");
@@ -91,6 +91,7 @@ public sealed class EngineRenderSystem : IDisposable
         _particleSystem.Simulate(dt);
     }
 
+    private AvgFrameTimer avg;
     internal void Render(float dt, Size2D viewportSize)
     {
         Program.PrepareFrame();
@@ -99,8 +100,11 @@ public sealed class EngineRenderSystem : IDisposable
         _cameraManager.CommitFrame(EngineTime.GameAlpha);
 
         // process and upload draw commands
-        _renderDispatcher.PrepareExecute(_terrainSystem);
+        avg.BeginSample();
+        _renderDispatcher.Prepare(_terrainSystem);
+        _renderDispatcher.UploadProcessors();
         _renderDispatcher.Execute();
+        if (avg.EndSample() >= 144) avg.ResetAndPrint();
 
         // prepare buffers
         Program.CollectDrawBuffers();
@@ -111,6 +115,7 @@ public sealed class EngineRenderSystem : IDisposable
         Program.UploadUniforms();
         Program.Render();
     }
+
 
     public void Dispose()
     {

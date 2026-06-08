@@ -29,6 +29,7 @@ public sealed class CameraTransformSnapshot
     public Matrix4x4 ViewMatrix;
     public Matrix4x4 ProjectionMatrix;
 
+
     public Vector3 Right => new(ViewMatrix.M11, ViewMatrix.M21, ViewMatrix.M31);
     public Vector3 Up => new(ViewMatrix.M12, ViewMatrix.M22, ViewMatrix.M32);
     public Vector3 Forward => new(-ViewMatrix.M13, -ViewMatrix.M23, -ViewMatrix.M33);
@@ -64,13 +65,13 @@ public sealed class Camera
     internal readonly CameraTransforms Transforms;
 
     private ProjectionInfo _projection = new(70, 0.1f, 500);
-
     private ViewTransform _transform;
     private ViewTransform _prevTransform;
 
     public Vector3 Right { get; private set; }
     public Vector3 Up { get; private set; }
     public Vector3 Forward { get; private set; }
+
 
     public Camera(Size2D viewport)
     {
@@ -81,6 +82,7 @@ public sealed class Camera
         _dirty = true;
     }
 
+
     internal Vector2 Tan => new(1f / Transforms.ProjectionMatrix.M11, 1f / Transforms.ProjectionMatrix.M22);
 
     public ref readonly Matrix4x4 ViewMatrix => ref Transforms.ViewMatrix;
@@ -88,6 +90,7 @@ public sealed class Camera
     public ref readonly Matrix4x4 InverseProjectionViewMatrix => ref Transforms.InverseProjectionViewMatrix;
 
     public ref readonly ProjectionInfo ProjectionInfo => ref _projection;
+
 
     public Vector3 Translation
     {

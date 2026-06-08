@@ -26,12 +26,10 @@ internal sealed class RenderDispatcher : IDisposable
 
     private readonly SpatialProcessor _spatialProcessor;
     private readonly AnimatorProcessor _animatorProcessor;
-    private readonly ParticleSystem _particleSystem;
     
-    internal RenderDispatcher(AnimationSystem animations, ParticleSystem particleSystem, RenderUploadBuffers uploadBuffers)
+    internal RenderDispatcher(AnimationSystem animations, RenderUploadBuffers uploadBuffers)
     {
         ArgumentNullException.ThrowIfNull(animations);
-        ArgumentNullException.ThrowIfNull(particleSystem);
         ArgumentNullException.ThrowIfNull(uploadBuffers);
 
         _visibleByIndices = new int[Ecs.Render.Core.Capacity];
@@ -40,19 +38,11 @@ internal sealed class RenderDispatcher : IDisposable
 
         _uploadBuffers = uploadBuffers;
         _commandBuffer = uploadBuffers.Commands;
-        _particleSystem = particleSystem;
         _spatialProcessor = new SpatialProcessor(_cameraManager.Frustum, _cameraManager.Camera);
         _animatorProcessor = new AnimatorProcessor(animations, uploadBuffers.Skinning);
     }
 
     public ReadOnlySpan<RenderEntityId> GetVisibleEntities() => ReadOnlySpan<RenderEntityId>.Empty;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ReadOnlySpan<int> GetVisibleIndices() => _visibleByIndices.AsSpan(0, Ecs.Render.Core.Capacity);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private UnsafeSpan<int> GetVisibleIndicesUnsafe() => new(_visibleByIndices.AsSpan(0, Ecs.Render.Core.Capacity));
-
 
     public void Prepare()
     {
@@ -72,7 +62,6 @@ internal sealed class RenderDispatcher : IDisposable
     public void UploadProcessors()
     {
         _animatorProcessor.Execute();
-        _particleSystem.Upload();
     }
 
     internal void Execute()
@@ -95,21 +84,24 @@ internal sealed class RenderDispatcher : IDisposable
     private void ProcessEntities(int submitOffset, Span<int> visibleIndices)
     {
         var ctx = _commandBuffer.GetContext(submitOffset);
-        CollectEntities(ctx, visibleIndices);
+        CollectEntities(_cameraManager.Camera, ctx, visibleIndices);
         _animatorProcessor.Tag(ctx, visibleIndices);
-        DrawTagProcessor.TagUploadSelectionEffect(ctx, visibleIndices, _uploadBuffers.Effects);
-        _spatialProcessor.TagDepthKeys(ctx);
+        //DrawTagProcessor.TagUploadSelectionEffect(ctx, visibleIndices, _uploadBuffers.Effects);
+        //_spatialProcessor.TagDepthKeys(ctx);
     }
 
-    private void CollectEntities(DrawCommandContext ctx, Span<int> visibleIndices)
+    private void CollectEntities(Camera camera, DrawCommandContext ctx, Span<int> visibleIndices)
     {
         var sources = Ecs.Render.Core.GetSourceView();
+        var transforms = Ecs.Render.Core.GetTransformView();
         foreach (var query in Ecs.Render.Core.VisibilityQuery())
         {
             visibleIndices[query.Entity.Id] = query.VisibleIndex;
             ref readonly var source = ref sources[query.Entity.Index()];
+            var depth = camera.MakeDepthKey(transforms[query.Entity.Index()].Translation);
+            depth = source.Queue < DrawCommandQueue.Transparent ? depth : (ushort)(ushort.MaxValue - depth);
             ctx.GetCommand(query.VisibleIndex) = new DrawCommand(source.Mesh, source.Material);
-            ctx.GetMeta(query.VisibleIndex) = new DrawCommandMeta(DrawCommandId.Model, source.Queue, source.Mask);
+            ctx.GetMeta(query.VisibleIndex) = new DrawCommandMeta(DrawCommandId.Model, source.Queue, source.Mask, depth);
         }
     }
     private void UploadDrawCommands()

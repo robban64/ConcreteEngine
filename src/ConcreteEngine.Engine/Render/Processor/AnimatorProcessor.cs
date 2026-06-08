@@ -36,20 +36,16 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
 
     public void Tag(DrawCommandContext ctx, ReadOnlySpan<int> visibleIndices)
     {
-        foreach (var query in _skinningEcs.Query())
+        foreach (var query in _skinningEcs.VisibilityQuery())
         {
-            var index = visibleIndices[query.Entity.Id];
-            if (index < 0) continue;
             query.Component.AnimationSlot = _skinningBuffer.NextSlot();
             _entityIds.Add(query.Entity);
         }
 
-        foreach (var query in Ecs.Render.Query<SkinLinkComponent>())
+        foreach (var query in Ecs.GetRenderStore<SkinLinkComponent>().VisibilityQuery())
         {
-            var index = visibleIndices[query.Entity.Id];
-            if (index < 0) continue;
             var slot = _skinningEcs.Get(query.Component.EntityId).AnimationSlot;
-            ctx.GetCommand(index).AnimationSlot = slot;
+            ctx.GetCommand(visibleIndices[query.Entity.Id]).AnimationSlot = slot;
         }
     }
 

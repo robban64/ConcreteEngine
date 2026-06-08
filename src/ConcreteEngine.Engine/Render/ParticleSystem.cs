@@ -22,7 +22,7 @@ namespace ConcreteEngine.Engine.Render;
 
 internal sealed class ParticleSystem : IDisposable
 {
-    private static bool _allocated = false;
+    private static bool _allocated;
     private readonly List<int> _processedEmitters = new(16);
 
     private readonly ParticleMesh _particleMesh;

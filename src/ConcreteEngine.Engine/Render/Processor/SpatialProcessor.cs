@@ -24,7 +24,6 @@ internal sealed class SpatialProcessor(CameraFrustum frustum, Camera camera)
             if (visible) index++;
             
         }
-
         return index;
     }
 

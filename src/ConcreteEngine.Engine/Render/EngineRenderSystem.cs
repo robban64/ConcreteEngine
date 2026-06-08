@@ -42,7 +42,7 @@ public sealed class EngineRenderSystem : IDisposable
         _particleSystem = new ParticleSystem(graphics.Gfx);
         _animationSystem = new AnimationSystem();
         
-        _renderDispatcher = new RenderDispatcher(_animationSystem, _particleSystem, Program.UploadBuffers);
+        _renderDispatcher = new RenderDispatcher(_animationSystem, Program.UploadBuffers);
         _materialProcessor = new MaterialProcessor(Program);
     }
 
@@ -101,7 +101,8 @@ public sealed class EngineRenderSystem : IDisposable
 
         // process and upload draw commands
         avg.BeginSample();
-
+        _particleSystem.Upload();
+        
         _renderDispatcher.Prepare();
         _renderDispatcher.UploadProcessors();
         _renderDispatcher.UploadStaticCommands(_terrainSystem);

@@ -68,9 +68,11 @@ public sealed class Camera
     private ViewTransform _transform;
     private ViewTransform _prevTransform;
 
-    public Vector3 Right { get; private set; }
-    public Vector3 Up { get; private set; }
+    private float _viewZ;
+
     public Vector3 Forward { get; private set; }
+    public Vector3 Up { get; private set; }
+    public Vector3 Right { get; private set; }
 
 
     public Camera(Size2D viewport)
@@ -197,10 +199,24 @@ public sealed class Camera
         Matrix4x4.Invert(projectionMatrix, out var invProjection);
         Transforms.InverseProjectionViewMatrix = invProjection * modelMatrix;
 
+        _viewZ = ViewMatrix.M43;
         Up = Transforms.Up;
         Right = Transforms.Right;
         Forward = Transforms.Forward;
 
         return isDirty;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal ushort MakeDepthKey(Vector3 worldPos)
+    {
+        //var z = worldPos.X * view.X + worldPos.Y * view.Y + worldPos.Z * view.Z + viewZ;
+        var d = Vector3.Dot(Forward, worldPos) - _viewZ;
+
+        if (d <= NearPlane) return 0;
+        if (d >= FarPlane) return ushort.MaxValue;
+
+        var t = (d - NearPlane) / (FarPlane - NearPlane);
+        return (ushort)(t * ushort.MaxValue + 0.5f);
     }
 }

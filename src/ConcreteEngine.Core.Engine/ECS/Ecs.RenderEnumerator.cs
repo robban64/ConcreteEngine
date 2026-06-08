@@ -14,7 +14,6 @@ public static partial class Ecs
         {
             private int _i = -1;
             private int _visibleIndex = -1;
-            private RenderEntityId _currentEntity;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
@@ -22,7 +21,6 @@ public static partial class Ecs
                 while (++_i < entities.Length)
                 {
                     if (!entities[_i].IsVisible()) continue;
-                    _currentEntity = new RenderEntityId(_i + 1);
                     ++_visibleIndex;
                     return true;
                 }
@@ -33,15 +31,13 @@ public static partial class Ecs
             public readonly (int VisibleIndex, RenderEntityId Entity) Current
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => (_visibleIndex, _currentEntity);
+                get => (_visibleIndex, new RenderEntityId(_i + 1));
             }
 
-            public VisibleEntityEnumerator GetEnumerator()
-            {
-                _i = -1;
-                return this;
-            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public readonly VisibleEntityEnumerator GetEnumerator() => new(entities);
         }
+
 
         public ref struct RenderEntityEnumerator(RenderEntityCore core)
         {
@@ -65,11 +61,7 @@ public static partial class Ecs
                 get => new(core, new RenderEntityId(_i + 1));
             }
 
-            public RenderEntityEnumerator GetEnumerator()
-            {
-                _i = -1;
-                return this;
-            }
+            public RenderEntityEnumerator GetEnumerator() => new(core);
 
             public readonly ref struct EntityCoreQuery(RenderEntityCore core, RenderEntityId entity)
             {
@@ -108,7 +100,7 @@ public static partial class Ecs
 
     public static class RenderQuery<T1> where T1 : unmanaged, IRenderComponent<T1>
     {
-        public ref struct RenderEntityEnumerator(RenderEntityStore<T1> store)
+        public ref struct VisibleQueryEnumerator(RenderEntityStore<T1> store, RenderEntityCore core)
         {
             private int _i = -1;
             private RenderEntityId _currentEntity;
@@ -120,78 +112,59 @@ public static partial class Ecs
                 while (++_i < _count)
                 {
                     var entity = store.GetEntity(_i);
-                    if (entity.IsValid())
-                    {
-                        _currentEntity = entity;
-                        return true;
-                    }
+                    if (entity.Id <= 0 || !core.IsVisible(entity)) continue;
+                    _currentEntity = entity;
+                    return true;
                 }
 
                 return false;
             }
 
-            public readonly Item Current => new(store, _i, _currentEntity);
-
-            public readonly ref struct Item(RenderEntityStore<T1> store, int idx, RenderEntityId entityId)
+            public readonly QueryItem Current
             {
-                public readonly int Index = idx;
-                public readonly RenderEntityId Entity = entityId;
-
-                public ref T1 Component
-                {
-                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => ref store.GetByIndex(Index);
-                }
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => new(_i, _currentEntity, ref store.GetByIndex(_i));
             }
 
-            public RenderEntityEnumerator GetEnumerator()
-            {
-                _i = -1;
-                return this;
-            }
-        }
-    }
-
-    /*
-        public readonly ref struct RenderCoreQuery<T1, T2>(ref T1 item1, ref T2 item2, RenderEntityId entity)
-            where T1 : unmanaged where T2 : unmanaged
-        {
-            public readonly RenderEntityId Entity = entity;
-            public readonly ref T1 Item1 = ref item1;
-            public readonly ref T2 Item2 = ref item2;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public readonly VisibleQueryEnumerator GetEnumerator() => new(store, core);
         }
 
-        public ref struct RenderCoreEnumerator<T1, T2>(RenderEntityCore core) where T1 : unmanaged where T2 : unmanaged
+        public ref struct QueryEnumerator(RenderEntityStore<T1> store)
         {
             private int _i = -1;
-            private RenderEntityId _entity;
-            private readonly int _count = core.Count;
-            public readonly ref T1 Item1 = ref RenderEntityCore.Store<T1>.Entries[0];
-            public readonly ref T2 Item2 = ref RenderEntityCore.Store<T2>.Entries[0];
+            private RenderEntityId _currentEntity;
+            private readonly int _count = store.Count;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
                 while (++_i < _count)
                 {
-                    if (core.Has(_entity = new RenderEntityId(_i + 1))) return true;
+                    var entity = store.GetEntity(_i);
+                    if (!entity.IsValid()) continue;
+                    _currentEntity = entity;
+                    return true;
                 }
 
                 return false;
             }
 
-            public readonly RenderCoreQuery<T1, T2> Current
+            public readonly QueryItem Current
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => new(ref Unsafe.Add(ref Item1, _i), ref Unsafe.Add(ref Item2, _i), _entity);
+                get => new(_i, _currentEntity, ref store.GetByIndex(_i));
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public RenderCoreEnumerator<T1, T2> GetEnumerator()
-            {
-                _i = -1;
-                return this;
-            }
+            public readonly QueryEnumerator GetEnumerator() => new(store);
         }
-*/
+
+        public readonly ref struct QueryItem(int idx, RenderEntityId entityId, ref T1 component)
+        {
+            public readonly int Index = idx;
+            public readonly RenderEntityId Entity = entityId;
+            public readonly ref T1 Component = ref component;
+        }
+    }
 }

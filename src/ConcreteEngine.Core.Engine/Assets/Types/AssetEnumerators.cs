@@ -10,11 +10,7 @@ public ref struct AssetFilesEnumerator(AssetId assetId, AssetFileRegistry fileRe
     public bool MoveNext() => ++_i < _fileIds.Length;
     public readonly AssetFile Current => fileRegistry.Get(_fileIds[_i]);
 
-    public AssetFilesEnumerator GetEnumerator()
-    {
-        _i = -1;
-        return this;
-    }
+    public readonly AssetFilesEnumerator GetEnumerator() => new(assetId, fileRegistry);
 }
 
 public ref struct AssetEnumerator(ReadOnlySpan<AssetId> assetIds, ReadOnlySpan<AssetObject?> assets)
@@ -28,11 +24,7 @@ public ref struct AssetEnumerator(ReadOnlySpan<AssetId> assetIds, ReadOnlySpan<A
 
     public readonly AssetObject Current => _assets[_assetIds[_i].Index()]!;
 
-    public AssetEnumerator GetEnumerator()
-    {
-        _i = -1;
-        return this;
-    }
+    public readonly AssetEnumerator GetEnumerator() => new (_assetIds, _assets);
 }
 
 public ref struct AssetEnumerator<T>(ReadOnlySpan<AssetId> assetIds, ReadOnlySpan<AssetObject?> assets)
@@ -47,11 +39,7 @@ public ref struct AssetEnumerator<T>(ReadOnlySpan<AssetId> assetIds, ReadOnlySpa
 
     public readonly T Current => (T)_assets[_assetIds[_i].Index()]!;
 
-    public AssetEnumerator<T> GetEnumerator()
-    {
-        _i = -1;
-        return this;
-    }
+    public readonly AssetEnumerator<T> GetEnumerator() => new(_assetIds, _assets);
 }
 
 public ref struct FileSpecEnumerator(ReadOnlySpan<AssetFileId> ids, ReadOnlySpan<AssetFile?> entries)
@@ -65,9 +53,5 @@ public ref struct FileSpecEnumerator(ReadOnlySpan<AssetFileId> ids, ReadOnlySpan
 
     public readonly AssetFile Current => _entries[_ids[_i].Index()]!;
 
-    public FileSpecEnumerator GetEnumerator()
-    {
-        _i = -1;
-        return this;
-    }
+    public readonly FileSpecEnumerator GetEnumerator() => new(_ids, _entries);
 }

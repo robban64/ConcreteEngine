@@ -22,5 +22,6 @@ public struct SourceComponent(
     public DrawCommandQueue Queue = queue;
     public EntitySourceKind Kind = kind;
     
+    public ushort AnimationSlot;
 
 }

@@ -73,7 +73,6 @@ public static class BlueprintFactory
 
     private static RenderEntityId BuildModelEntities(ModelInstance component)
     {
-
         var rootEntity = new RenderEntityId(0);
         var meshes = component.AssetModel.Meshes;
         var isAnimated = component.AssetModel.Animation != null;
@@ -93,8 +92,7 @@ public static class BlueprintFactory
                 material.State.DrawQueue, 
                 material.State.PassMasks);
 
-            ref readonly var bounds = ref (isAnimated ? ref component.LocalBounds : ref mesh.LocalBounds);
-            var entity = RenderEcs.AddEntity(source, in component.LocalTransform, in bounds);
+            var entity = RenderEcs.AddEntity(source, in component.LocalTransform);
             component.RenderEntityIds.Add(entity);
 
             if (i == 0) rootEntity = entity;
@@ -163,7 +161,7 @@ public static class BlueprintFactory
         emitter.Direction = bp.Direction;
         emitter.Translation = transform.Translation;
 
-        var entity = RenderEcs.AddEntity(source, in transform, in bp.Bounds);
+        var entity = RenderEcs.AddEntity(source, in transform);
 
         var particle = new ParticleComponent(emitter.Id);
         Ecs.GetRenderStore<ParticleComponent>().Add(entity, in particle);

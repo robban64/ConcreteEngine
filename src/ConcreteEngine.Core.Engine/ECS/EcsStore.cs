@@ -20,16 +20,17 @@ public abstract class EcsStore : IDisposable
 
     protected sealed class EcsStoreMeta
     {
-        public readonly int StoreId = ++_currentStoreId;
         public bool IsDirty;
+        public readonly int StoreId = ++_currentStoreId;
         public readonly List<Action<EcsStore>> OnResizeCallbacks = [];
         public readonly List<IEntityListener> Listeners = [];
     }
+    
+    public int Count { get; protected set; }
 
     protected readonly EcsStoreMeta StoreMeta = new();
     protected readonly Stack<int> Free = [];
 
-    public int Count { get; protected set; }
     public int ActiveCount => Count - Free.Count;
     public bool IsDirty => StoreMeta.IsDirty;
     public int StoreId => StoreMeta.StoreId;

@@ -1,4 +1,7 @@
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
@@ -16,7 +19,7 @@ internal sealed class SceneProcessor(SceneManager sceneManager)
     public void Update(float dt)
     {
         if(sceneManager.DirtyCount > 0)
-            CheckDirty();
+            CommitSceneObjects();
         
         UpdateAnimations(dt);
     }
@@ -30,18 +33,23 @@ internal sealed class SceneProcessor(SceneManager sceneManager)
         }
     }
 
-    private void CheckDirty()
+    private void CommitSceneObjects()
     {
         foreach (var id in sceneManager.GetDirtySpan())
         {
             var sceneObject = _store.GetInternal(id);
+            
             var dirtyFlag = sceneObject.Dirty;
+            
             if ((dirtyFlag & SceneObject.DirtyFlags.Visibility) != 0)
                 UpdateVisibility(sceneObject);
-            if ((dirtyFlag & SceneObject.DirtyFlags.Transform) != 0)
-                UpdateTransform(sceneObject);
             if ((dirtyFlag & SceneObject.DirtyFlags.Instance) != 0)
                 UpdateInstance(sceneObject);
+            if ((dirtyFlag & SceneObject.DirtyFlags.Transform) != 0)
+            {
+                UpdateTransform(sceneObject);
+                UpdateBounds(sceneObject);
+            }            
 
             sceneObject.ClearDirty();
         }
@@ -55,7 +63,7 @@ internal sealed class SceneProcessor(SceneManager sceneManager)
         var visibility = sceneObject.Visible;
         foreach (var entity in sceneObject.GetRenderEntities())
         {
-            renderEcs.ToggleVisibilityFlag(entity, VisibilityFlags.ForceHidden, visibility);
+            renderEcs.ToggleVisibility(entity, VisibilityFlags.ForceHidden, visibility);
         }
     }
 
@@ -77,10 +85,10 @@ internal sealed class SceneProcessor(SceneManager sceneManager)
         foreach (var entity in sceneObject.GetRenderEntities())
         {
             ref readonly var entityTransform = ref Ecs.Render.Core.GetTransform(entity);
-            ref var finalMatrix = ref Ecs.RenderCore.GetMatrix(entity);
-
             MatrixMath.CreateModelMatrix(in entityTransform, out var worldMatrix);
             MatrixMath.MultiplyAffine(ref worldMatrix, in rootMatrix);
+
+            ref var finalMatrix = ref Ecs.Render.Core.GetMatrix(entity);
 
             var particleComp = particleEcs.TryGet(entity);
             if (!particleComp.IsNull)
@@ -98,10 +106,27 @@ internal sealed class SceneProcessor(SceneManager sceneManager)
             }
 
             var instance = sceneObject.GetInstance<ModelInstance>();
-            ref readonly var source = ref Ecs.RenderCore.GetSource(entity);
-            ref readonly var meshMatrix = ref instance.AssetModel.Meshes[source.MeshIndex].WorldTransform;
+            var meshIndex = Ecs.Render.Core.GetSource(entity).MeshIndex;
+            ref readonly var meshMatrix = ref instance.AssetModel.Meshes[meshIndex].WorldTransform;
             MatrixMath.MultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
-
         }
+    }
+
+    private void UpdateBounds(SceneObject sceneObject)
+    {
+        if(!sceneObject.TryGetInstance<ModelInstance>(out var instance)) return;
+        var isAnimated = instance.AssetModel.Animation != null;
+
+        foreach (var entity in instance.GetRenderEntities())
+        {
+            ref readonly var matrix = ref Ecs.Render.Core.GetMatrix(entity);
+
+            var meshIndex = Ecs.Render.Core.GetSource(entity).MeshIndex;
+            var local = isAnimated ? instance.LocalBounds : instance.AssetModel.Meshes[meshIndex].LocalBounds;
+
+            ref var bounds = ref Ecs.Render.Core.GetBounds(entity);
+            BoundingBox.GetWorldBounds(in local, in matrix, out bounds);
+        }
+
     }
 }

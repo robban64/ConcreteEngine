@@ -14,7 +14,7 @@ namespace ConcreteEngine.Engine.Render.Processor;
 internal static class DrawTagProcessor
 {
     public static MaterialId BoundsMaterial;
-
+/*
     public static void TagUploadSelectionEffect(DrawCommandContext ctx, ReadOnlySpan<int> visibleIndices, EffectBuffer effects)
     {
         if (Ecs.Render.Stores<SelectionComponent>.Store.Count == 0) return;
@@ -40,7 +40,7 @@ internal static class DrawTagProcessor
         var ecs = Ecs.Render.Core;
         var material = BoundsMaterial;
 
-        var drawCommands = buffer.GetContext(0);
+        var drawCommands = buffer.GetContext();
         var indices = new UnsafeSpan<int>(visibleIndices);
 
         Span<Vector3> corners = stackalloc Vector3[8];
@@ -80,4 +80,5 @@ internal static class DrawTagProcessor
             MatrixMath.CreateModelMatrix(in axisBounds.Center, in axisBounds.Extent, in transform.Rotation, out global);
         }
     }
+    */
 }

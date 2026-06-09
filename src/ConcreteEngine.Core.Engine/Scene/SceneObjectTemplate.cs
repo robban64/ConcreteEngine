@@ -11,7 +11,7 @@ public sealed class SceneObjectTemplate
     public readonly List<SceneObjectBlueprint> Blueprints = [];
 
     public Transform Transform = Transform.Identity;
-    public BoundingBox Bounds = BoundingBox.Identity;
+    public BoundingBox Bounds = BoundingBox.One;
 
     public SceneObjectTemplate() { }
 

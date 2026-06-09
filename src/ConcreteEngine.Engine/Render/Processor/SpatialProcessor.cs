@@ -10,23 +10,9 @@ using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 
-internal sealed class SpatialProcessor(CameraFrustum frustum, Camera camera)
+internal sealed class SpatialProcessor()
 {
-    internal int CullEntities()
-    {
-        var index = 0;
-        foreach (var query in Ecs.Render.Core.Query())
-        {
-            BoundingBox.GetWorldBounds(in query.Bounds, in query.Matrix, out var worldBounds);
-            var visible = frustum.IntersectsBox(in worldBounds);
-
-            visible &= query.ToggleVisibilityFlag(VisibilityFlags.Culled, visible) == 0;
-            if (visible) index++;
-            
-        }
-        return index;
-    }
-
+/*
     internal void TagDepthKeys(DrawCommandContext ctx)
     {
         var near = camera.NearPlane;
@@ -45,7 +31,7 @@ internal sealed class SpatialProcessor(CameraFrustum frustum, Camera camera)
                 : (ushort)(ushort.MaxValue - depthKey);
         }
     }
-
+*/
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ushort MakeDepthKey(Vector3 worldPos,  Vector3 forward, float viewZ, float near, float far)
     {

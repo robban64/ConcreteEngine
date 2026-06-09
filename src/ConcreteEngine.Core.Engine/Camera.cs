@@ -44,6 +44,8 @@ public sealed class CameraTransforms
     public Vector3 Right => new(ViewMatrix.M11, ViewMatrix.M21, ViewMatrix.M31);
     public Vector3 Up => new(ViewMatrix.M12, ViewMatrix.M22, ViewMatrix.M32);
     public Vector3 Forward => new(-ViewMatrix.M13, -ViewMatrix.M23, -ViewMatrix.M33);
+
+    internal Vector2 Tan => new(1f / ProjectionMatrix.M11, 1f / ProjectionMatrix.M22);
 }
 
 public sealed class Camera
@@ -59,16 +61,16 @@ public sealed class Camera
 
     private const float DirtyThreshold = MetricUnits.Micrometer;
 
-    private bool _dirty;
     public ulong Version { get; private set; }
 
-    internal readonly CameraTransforms Transforms;
-
-    private ProjectionInfo _projection = new(70, 0.1f, 500);
-    private ViewTransform _transform;
-    private ViewTransform _prevTransform;
+    private bool _dirty;
 
     private float _viewZ;
+
+    private ProjectionInfo _projection = new(70, 0.1f, 500);
+    private ViewTransform _transform, _prevTransform;
+
+    internal readonly CameraTransforms Transforms;
 
     public Vector3 Forward { get; private set; }
     public Vector3 Up { get; private set; }
@@ -206,17 +208,17 @@ public sealed class Camera
 
         return isDirty;
     }
-    
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ushort MakeDepthKey(Vector3 worldPos)
     {
-        //var z = worldPos.X * view.X + worldPos.Y * view.Y + worldPos.Z * view.Z + viewZ;
         var d = Vector3.Dot(Forward, worldPos) - _viewZ;
 
-        if (d <= NearPlane) return 0;
-        if (d >= FarPlane) return ushort.MaxValue;
+        if (d <= _projection.Near) return 0;
+        if (d >= _projection.Far) return ushort.MaxValue;
 
-        var t = (d - NearPlane) / (FarPlane - NearPlane);
+        var t = (d - _projection.Near) / (_projection.Far - _projection.Near);
         return (ushort)(t * ushort.MaxValue + 0.5f);
     }
 }

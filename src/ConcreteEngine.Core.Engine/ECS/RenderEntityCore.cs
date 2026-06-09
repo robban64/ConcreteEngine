@@ -12,7 +12,6 @@ namespace ConcreteEngine.Core.Engine.ECS;
 public sealed class RenderEntityCore : EcsStore
 {
     private NativeArray<RenderEntity> _entities;
-
     private NativeArray<SourceComponent> _sources;
     private NativeArray<Transform> _transforms;
     private NativeArray<BoundingBox> _bounds;
@@ -35,10 +34,18 @@ public sealed class RenderEntityCore : EcsStore
     public override int Capacity => _entities.Length;
     public override EcsStoreType StoreType => EcsStoreType.RenderCore;
 
+    internal NativeView<RenderEntity> GetCoreEntityView() => _entities.Slice(0, Count);
     internal NativeView<SourceComponent> GetSourceView() => _sources.Slice(0, Count);
     internal NativeView<Transform> GetTransformView() => _transforms.Slice(0, Count);
     internal NativeView<Matrix4x4> GetMatrixView() => _matrices.Slice(0, Count);
     internal NativeView<BoundingBox> GetBoundsView() => _bounds.Slice(0, Count);
+
+    internal unsafe RenderEntity* GetCoreEntityPtr() => _entities;
+    internal unsafe SourceComponent* GetSourcePtr() => _sources;
+    internal unsafe Transform* GetTransformPtr() => _transforms;
+    internal unsafe Matrix4x4* GetMatrixPtr() => _matrices;
+    internal unsafe BoundingBox* GetBoundsPtr() => _bounds;
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(RenderEntityId e)
@@ -46,6 +53,9 @@ public sealed class RenderEntityCore : EcsStore
         var index = e.Index();
         return (uint)index < (uint)_entities.Length && _entities[index].Alive;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsAlive(RenderEntityId e) => _entities[e.Index()].Alive;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsVisible(RenderEntityId e) => _entities[e.Index()].IsVisible();
@@ -64,18 +74,15 @@ public sealed class RenderEntityCore : EcsStore
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public VisibilityFlags ToggleVisibilityFlag(RenderEntityId entity, VisibilityFlags flag, bool isVisible)
+    public VisibilityFlags ToggleVisibility(RenderEntityId entity, VisibilityFlags flag, bool isVisible)
     {
-        ref var it = ref _entities[entity.Index()].Visibility;
-        if (isVisible) it &= ~flag;
-        else it |= flag;
-        return it;
+        return _entities[entity.Index()].ToggleVisibility(flag, isVisible);
     }
 
 
-    public RenderEntityId AddEntity(SourceComponent source, in Transform transform, in BoundingBox bounds)
+    public RenderEntityId AddEntity(SourceComponent source, in Transform transform)
     {
-        var entity = AddEntityInternal(source, in transform, in bounds);
+        var entity = AddEntityInternal(source, in transform);
         foreach (var it in StoreMeta.Listeners)
             it.EntityAdded(entity.Id, this);
 
@@ -83,7 +90,7 @@ public sealed class RenderEntityCore : EcsStore
     }
 
 
-    private RenderEntityId AddEntityInternal(SourceComponent source, in Transform transform, in BoundingBox bounds)
+    private RenderEntityId AddEntityInternal(SourceComponent source, in Transform transform)
     {
         ValidateSource(source);
         var index = AllocateNext();
@@ -95,7 +102,7 @@ public sealed class RenderEntityCore : EcsStore
         entity.Visibility = VisibilityFlags.Visible;
         _sources[index] = source;
         _transforms[index] = transform;
-        _bounds[index] = bounds;
+        _bounds[index] = BoundingBox.One;
         _matrices[index] = Matrix4x4.Identity;
 
         return new RenderEntityId(index + 1);
@@ -141,10 +148,7 @@ public sealed class RenderEntityCore : EcsStore
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Ecs.RenderQuery.RenderEntityEnumerator Query() => new(this);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Ecs.RenderQuery.VisibleEntityEnumerator VisibilityQuery() => new(_entities.Slice(0, Count));
+    public unsafe Ecs.RenderQuery.VisibleCoreEnumerator VisibilityQuery() => new(_entities, Count);
 
 
     public override void Dispose()

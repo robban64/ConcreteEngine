@@ -39,7 +39,7 @@ public abstract class BlueprintInstance
     public void ToggleSelection(bool isSelected)
     {
         if (!HasRenderEcs) return;
-        var selectionStore = Ecs.Render.Stores<SelectionComponent>.Store;
+        var selectionStore = Ecs.GetRenderStore<SelectionComponent>();
 
         foreach (var entity in GetRenderEntities())
         {
@@ -185,7 +185,6 @@ public sealed class ParticleInstance : BlueprintInstance
             source.Mask = PassMask.Main;
             source.Mesh = Emitter.BoundMesh;
         }
-
     }
 
 }

@@ -52,17 +52,6 @@ internal sealed class DrawCommandBufferRanges : IDisposable
     }
 }
 
-public readonly ref struct DrawCommandContext(
-    NativeView<DrawCommand> commands,
-    NativeView<DrawCommandMeta> metas)
-{
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawCommand GetCommand(int index) => ref commands[index];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawCommandMeta GetMeta(int index) => ref metas[index];
-}
-
 public sealed class DrawCommandBuffer : IDisposable
 {
     private const int DefaultCommandBuffCapacity = 512;
@@ -96,8 +85,8 @@ public sealed class DrawCommandBuffer : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DrawCommandContext GetContext(int start) => new(_commands.Slice(start), _metas.Slice(start));
-
+    public UnsafeZippedSpan<DrawCommand, DrawCommandMeta> GetCommandMetaSpan() 
+        => new(ref _commands[Count],ref _metas[Count], _commands.Length - Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Submit(DrawCommand cmd, DrawCommandMeta meta, in DrawObjectUniform matrices)
@@ -108,6 +97,14 @@ public sealed class DrawCommandBuffer : IDisposable
         _indices[idx] = new DrawCommandRef(meta, idx);
         _transforms[idx] = matrices;
         return idx;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SubmitCommand(int index, DrawCommand cmd, DrawCommandMeta meta)
+    {
+        _commands[index] = cmd;
+        _metas[index] = meta;
+        _indices[index] = new DrawCommandRef(meta, index);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

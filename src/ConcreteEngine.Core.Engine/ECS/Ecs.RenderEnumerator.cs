@@ -10,32 +10,28 @@ public static partial class Ecs
 {
     public static class RenderQuery
     {
-        public ref struct VisibleEntityEnumerator(NativeView<RenderEntity> entities)
+        public unsafe ref struct VisibleCoreEnumerator(RenderEntity* entities, int count)
         {
             private int _i = -1;
-            private int _visibleIndex = -1;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
-                while (++_i < entities.Length)
+                while (++_i < count)
                 {
-                    if (!entities[_i].IsVisible()) continue;
-                    ++_visibleIndex;
-                    return true;
+                    if (entities[_i].IsVisible()) return true;
                 }
-
                 return false;
             }
 
-            public readonly (int VisibleIndex, RenderEntityId Entity) Current
+            public readonly RenderEntityId Current
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => (_visibleIndex, new RenderEntityId(_i + 1));
+                get => new (_i + 1);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public readonly VisibleEntityEnumerator GetEnumerator() => new(entities);
+            public readonly VisibleCoreEnumerator GetEnumerator() => new(entities, count);
         }
 
 
@@ -49,7 +45,7 @@ public static partial class Ecs
             {
                 while (++_i < _count)
                 {
-                    if (core.Has(new RenderEntityId(_i + 1))) return true;
+                    if (core.IsAlive(new RenderEntityId(_i + 1))) return true;
                 }
 
                 return false;
@@ -69,7 +65,7 @@ public static partial class Ecs
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public VisibilityFlags ToggleVisibilityFlag(VisibilityFlags flag, bool isVisible) =>
-                    core.ToggleVisibilityFlag(Entity, flag, isVisible);
+                    core.ToggleVisibility(Entity, flag, isVisible);
 
                 public ref SourceComponent Source
                 {
@@ -112,15 +108,17 @@ public static partial class Ecs
                 while (++_i < _count)
                 {
                     var entity = store.GetEntity(_i);
-                    if (entity.Id <= 0 || !core.IsVisible(entity)) continue;
-                    _currentEntity = entity;
-                    return true;
+                    if (entity.Id > 0 && core.IsVisible(entity))
+                    {
+                        _currentEntity = entity;
+                        return true;
+                    }
                 }
 
                 return false;
             }
 
-            public readonly QueryItem Current
+            public readonly RenderQueryItem Current
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get => new(_i, _currentEntity, ref store.GetByIndex(_i));
@@ -142,15 +140,16 @@ public static partial class Ecs
                 while (++_i < _count)
                 {
                     var entity = store.GetEntity(_i);
-                    if (!entity.IsValid()) continue;
-                    _currentEntity = entity;
-                    return true;
+                    if (!entity.IsValid())
+                    {
+                        _currentEntity = entity;
+                        return true;
+                    }
                 }
-
                 return false;
             }
 
-            public readonly QueryItem Current
+            public readonly RenderQueryItem Current
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get => new(_i, _currentEntity, ref store.GetByIndex(_i));
@@ -159,12 +158,14 @@ public static partial class Ecs
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public readonly QueryEnumerator GetEnumerator() => new(store);
         }
-
-        public readonly ref struct QueryItem(int idx, RenderEntityId entityId, ref T1 component)
+        public readonly ref struct RenderQueryItem(int idx, RenderEntityId entityId, ref T1 component)
         {
+            public readonly ref T1 Component = ref component;
             public readonly int Index = idx;
             public readonly RenderEntityId Entity = entityId;
-            public readonly ref T1 Component = ref component;
         }
+
+
     }
+
 }

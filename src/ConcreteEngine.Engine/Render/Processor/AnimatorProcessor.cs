@@ -33,25 +33,11 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
 
     public void Dispose() => _globals.Dispose();
 
-
-    public void Tag(DrawCommandContext ctx, ReadOnlySpan<int> visibleIndices)
-    {
-        foreach (var query in _skinningEcs.VisibilityQuery())
-        {
-            query.Component.AnimationSlot = _skinningBuffer.NextSlot();
-            _entityIds.Add(query.Entity);
-        }
-
-        foreach (var query in Ecs.GetRenderStore<SkinLinkComponent>().VisibilityQuery())
-        {
-            var slot = _skinningEcs.Get(query.Component.EntityId).AnimationSlot;
-            ctx.GetCommand(visibleIndices[query.Entity.Id]).AnimationSlot = slot;
-        }
-    }
-
+    
     public void Execute()
     {
         UpdateInterpolate();
+        ProcessRenderEcs();
         
         for (var i = 0; i < _entityIds.Count; i++)
         {
@@ -63,6 +49,22 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
 
         _entityIds.Clear();
     }
+    
+    private void ProcessRenderEcs()
+    {
+        foreach (var query in _skinningEcs.VisibilityQuery())
+        {
+            query.Component.AnimationSlot = _skinningBuffer.NextSlot();
+            _entityIds.Add(query.Entity);
+        }
+
+        foreach (var query in Ecs.GetRenderStore<SkinLinkComponent>().VisibilityQuery())
+        {
+            var slot = _skinningEcs.Get(query.Component.EntityId).AnimationSlot;
+            Ecs.Render.Core.GetSource(query.Entity).AnimationSlot = slot;
+        }
+    }
+
 
     private void UpdateInterpolate()
     {

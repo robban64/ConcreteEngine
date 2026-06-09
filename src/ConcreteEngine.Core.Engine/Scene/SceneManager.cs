@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
@@ -35,26 +36,17 @@ public sealed class SceneManager
 
     public SceneObject SpawnFrom(Model model, in Transform transform)
     {
-        var materials = model.Info.MaterialCount > 0 
-            ? ReadOnlySpan<AssetId>.Empty 
-            : [Material.FallbackMaterial.Id];
-        
         return Store.Create(new SceneObjectTemplate(model.Name, in transform)
         {
-            Blueprints = { new ModelBlueprint(model.Id, materials) }
+            Blueprints = { new ModelBlueprint(model) }
         });
     }
 
-    public SceneObject SpawnFrom(Model model, in Transform transform, params Span<AssetId> materialIds)
+    public SceneObject SpawnFrom(Model model, in Transform transform, params ReadOnlySpan<Material> materials)
     {
-        for (var i = 0; i < materialIds.Length; i++)
-        {
-            if(materialIds[i] == AssetId.Empty) materialIds[i] = Material.FallbackMaterial.Id;
-        }
-
         return Store.Create(new SceneObjectTemplate(model.Name, in transform)
         {
-            Blueprints = { new ModelBlueprint(model.Id, materialIds) }
+            Blueprints = { new ModelBlueprint(model, materials) }
         });
     }
     

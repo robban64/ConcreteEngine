@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
@@ -12,6 +13,12 @@ public abstract class BlueprintInstance
 
     internal readonly List<RenderEntityId> RenderEntityIds = [];
     internal readonly List<GameEntityId> GameEntityIds = [];
+    private readonly SceneObject _sceneObject;
+
+    protected BlueprintInstance(SceneObject sceneObject)
+    {
+        _sceneObject = sceneObject;
+    }
 
     public string DisplayName => GetBlueprint().DisplayName;
 
@@ -22,13 +29,15 @@ public abstract class BlueprintInstance
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(RenderEntityIds);
     public ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(GameEntityIds);
 
-    internal void Commit(SceneObject sceneObject)
+    internal void MarkDirty(SceneDirtyFlags flag) => _sceneObject.MarkDirty(flag);
+    
+    internal void Commit()
     {
         IsDirty = false;
-        OnCommit(sceneObject);
+        OnCommit();
     }
 
-    protected virtual void OnCommit(SceneObject sceneObject) { }
+    protected virtual void OnCommit() { }
 
     // TODO
     public void ToggleSelection(bool isSelected)
@@ -67,3 +76,47 @@ public abstract class BlueprintInstance
     }
 
 }
+/*
+
+public abstract class RenderBlueprintInstance
+{
+    internal readonly List<RenderEntityId> RenderEntityIds = [];
+    public Transform LocalTransform;
+    public BoundingBox LocalBounds;
+
+    public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(RenderEntityIds);
+    public int RenderEntitiesCount => RenderEntityIds.Count;
+    
+    public void ToggleSelection(bool isSelected)
+    {
+        var selectionStore = Ecs.GetRenderStore<SelectionComponent>();
+
+        foreach (var entity in GetRenderEntities())
+        {
+            ref var source = ref Ecs.RenderCore.GetSource(entity);
+            if (isSelected)
+            {
+                selectionStore.Add(entity, new SelectionComponent(SelectionComponent.DefaultHighlight, source.Passes));
+            }
+            else
+            {
+                var passes = selectionStore.Get(entity).OriginalPasses;
+                source = source with { Resolver = 0, ResolverSlot = 0, Passes = passes };
+                selectionStore.Remove(entity);
+            }
+        }
+    }
+
+    public void ToggleDebugBounds(bool isSelected)
+    {
+        var debugStore = Ecs.Render.Stores<DebugBoundsComponent>.Store;
+        var span = GetRenderEntities();
+        for (var i = 0; i < span.Length; i++)
+        {
+            var entity = span[i];
+            var color = DebugBoundsComponent.DefaultColors[i % (DebugBoundsComponent.DefaultColors.Length - 1)];
+            if (isSelected) debugStore.Add(entity, new DebugBoundsComponent(color));
+            else debugStore.Remove(entity);
+        }
+    }
+}*/

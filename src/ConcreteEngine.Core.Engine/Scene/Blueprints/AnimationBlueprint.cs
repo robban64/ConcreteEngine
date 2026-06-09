@@ -13,7 +13,7 @@ public sealed class AnimationInstance : BlueprintInstance
     public readonly ModelBlueprint Blueprint;
     public ModelAnimation AssetAnimation { get; }
 
-    public AnimationInstance(ModelBlueprint blueprint, ModelAnimation assetAnimation)
+    public AnimationInstance(SceneObject sceneObject, ModelBlueprint blueprint, ModelAnimation assetAnimation) : base(sceneObject)
     {
         Blueprint = blueprint;
         AssetAnimation = assetAnimation;

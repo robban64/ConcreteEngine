@@ -5,48 +5,55 @@ using ConcreteEngine.Core.Engine.ECS;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
-public sealed class ModelBlueprint : SceneObjectBlueprint
-{
-    public AssetId ModelId { get; }
+/*
+ 
+   public sealed class ModelBlueprint : SceneObjectBlueprint
+   {
+       public AssetId ModelId { get; }
+       public readonly AssetId[] Materials = [];
+   
+       public Transform LocalTransform = Transform.Identity;
+   
+       public ModelBlueprint(AssetId modelId, params ReadOnlySpan<AssetId> materialAssetIds)
+       {
+           ModelId = modelId;
+           if (materialAssetIds.Length >= 1)
+               Materials = materialAssetIds.ToArray();
+       }
+   }
+ */
 
+public sealed class ModelBlueprint : SceneObjectBlueprint<ModelInstance>, IAssetListener
+{
     public Transform LocalTransform = Transform.Identity;
-
-    public readonly AssetId[] Materials = [];
-
-    public ModelBlueprint(AssetId modelId, params ReadOnlySpan<AssetId> materialAssetIds)
-    {
-        ModelId = modelId;
-        if(materialAssetIds.Length >= 1)
-            Materials = materialAssetIds.ToArray();
-    }
-}
-
-public sealed class ModelInstance : BlueprintInstance, IAssetListener
-{
-    public readonly ModelBlueprint Blueprint;
+    public BoundingBox LocalBounds = BoundingBox.One;
 
     private readonly AssetRef<Model> _model;
     private readonly AssetRef<Material>?[] _materials;
-
-    public Transform LocalTransform;
-    public BoundingBox LocalBounds;
-
-    public override SceneObjectBlueprint GetBlueprint() => Blueprint;
-
-    public ModelInstance(ModelBlueprint blueprint, Model model)
+    
+    public ModelBlueprint(Model model)
     {
-        var materialCount = int.Max(model.Info.MaterialCount, blueprint.Materials.Length);
-
-        Blueprint = blueprint;
         _model = new AssetRef<Model>(model, this);
-        _materials = new AssetRef<Material>[materialCount];
-
-        LocalTransform = blueprint.LocalTransform;
-        LocalBounds = model.Bounds;
+        _materials = new AssetRef<Material>?[model.Info.MaterialCount];
+        for (var i = 0; i < _materials.Length; i++)
+        {
+            _materials[i] = new AssetRef<Material>(_model.Asset.GetMaterial(i), this);
+        }
     }
-
-    public Model AssetModel => _model.Asset;
+    public ModelBlueprint(Model model, params ReadOnlySpan<Material?> materials)
+    {
+        _model = new AssetRef<Model>(model, this);
+        _materials = new AssetRef<Material>?[int.Max(model.Info.MaterialCount, materials.Length)];
+        for (var i = 0; i < materials.Length; i++)
+        {
+            var material = materials[i] ?? _model.Asset.GetMaterial(i);
+            _materials[i] = new AssetRef<Material>(material, this);
+        }
+    }
+    
     public int MaterialCount => _materials.Length;
+
+    public Model GetModel() => _model.Asset;
 
     public Material GetMaterial(int index)
     {
@@ -66,23 +73,42 @@ public sealed class ModelInstance : BlueprintInstance, IAssetListener
         _materials[index] = new AssetRef<Material>(material, this);
     }
 
+    
     public void OnAssetChanged(AssetObject asset)
     {
-        if (asset is Material material && (material.DirtyFlags & AssetDirtyFlag.Structure) != 0)
-            ApplyMaterialState(material.State);
+        if (asset is not Material material || (material.DirtyFlags & AssetDirtyFlag.Structure) == 0) return;
+        foreach (var instance in GetInstanceSpan())
+            instance.ApplyMaterialState(material.State);
     }
 
     public void OnAssetRemoved(AssetObject asset)
     {
-        if (asset is not Material material) return;
-        ApplyMaterialState(Material.FallbackMaterial.State);
-        for (var i = 0; i < _materials.Length; i++)
-        {
-            if (_materials[i]?.Asset == material) _materials[i] = null;
-        }
+        if (asset is not Material) return;
+        foreach (var instance in GetInstanceSpan())
+            instance.ApplyMaterialState(Material.FallbackMaterial.State);
+
     }
 
-    private void ApplyMaterialState(MaterialState material)
+}
+
+public sealed class ModelInstance : BlueprintInstance
+{
+    public readonly ModelBlueprint Blueprint;
+    public override SceneObjectBlueprint GetBlueprint() => Blueprint;
+
+    public ModelInstance(SceneObject sceneObject, ModelBlueprint blueprint) : base(sceneObject)
+    {
+        Blueprint = blueprint;
+    }
+
+    public ref readonly Transform LocalTransform => ref Blueprint.LocalTransform;
+    public ref readonly BoundingBox LocalBounds => ref Blueprint.LocalBounds;
+
+    public int MaterialCount => Blueprint.MaterialCount;
+
+    public Model GetModel() => Blueprint.GetModel();
+
+    public void ApplyMaterialState(MaterialState material)
     {
         foreach (var entity in GetRenderEntities())
         {

@@ -26,10 +26,9 @@ public static class BlueprintFactory
             var instance = it switch
             {
                 ModelBlueprint model => BuildModel(sceneObject, model),
-                ParticleBlueprint particle => BuildParticle(particle),
+                ParticleBlueprint particle => BuildParticle(sceneObject, particle),
                 _ => Throwers.Unreachable<BlueprintInstance>(nameof(tp.Blueprints))
             };
-
             sceneObject.AddInstance(instance);
         }
 
@@ -38,48 +37,31 @@ public static class BlueprintFactory
 
     private static ModelInstance BuildModel(SceneObject sceneObject, ModelBlueprint bp)
     {
-        var model = AssetStore.Get<Model>(bp.ModelId);
+        var model = bp.GetModel();
         
         if (sceneObject.Transform.GetBounds().IsIdentity)
             sceneObject.Transform.SetBounds(in model.Bounds);
 
-        var instance = new ModelInstance(bp, model);
-        
-        var modelMaterials = bp.Materials.Length == 0 ? model.GetMaterials() : ReadOnlySpan<Material>.Empty;
-        for (int i = 0; i < model.Meshes.Length; i++)
-        {
-            var mesh = model.Meshes[i];
-            var matIndex = mesh.Info.MaterialIndex;
-            if (modelMaterials.Length > 0 && matIndex < modelMaterials.Length)
-            {
-                instance.SetMaterial(matIndex, modelMaterials[i]);
-                continue;
-            }
-            
-            var assetId = matIndex < bp.Materials.Length ? bp.Materials[matIndex] : AssetId.Empty;
-            if(assetId == AssetId.Empty) continue;
-
-            instance.SetMaterial(matIndex, AssetStore.Get<Material>(assetId));
-        }
-        
+        var instance = new ModelInstance(sceneObject, bp);
 
         var modelRootEntity = BuildModelEntities(instance);
 
         if (model.Animation != null)
             BuildAnimationEntities(modelRootEntity, instance, model.Animation);
 
+        bp.AddInstance(instance);
         return instance;
     }
 
     private static RenderEntityId BuildModelEntities(ModelInstance component)
     {
         var rootEntity = new RenderEntityId(0);
-        var meshes = component.AssetModel.Meshes;
-        var isAnimated = component.AssetModel.Animation != null;
+        var meshes = component.GetModel().Meshes;
+        var isAnimated = component.GetModel().Animation != null;
         for (int i = 0; i < meshes.Length; i++)
         {
             var mesh = meshes[i];
-            var material = component.GetMaterial(i);
+            var material = component.Blueprint.GetMaterial(i);
 
             var meshIdx = mesh.Info.MeshIndex;
 
@@ -139,7 +121,7 @@ public static class BlueprintFactory
         }
     }
 
-    private static ParticleInstance BuildParticle(ParticleBlueprint bp)
+    private static ParticleInstance BuildParticle(SceneObject sceneObject, ParticleBlueprint bp)
     {
         ArgumentNullException.ThrowIfNull(bp);
         ArgumentException.ThrowIfNullOrEmpty(bp.EmitterName);
@@ -166,7 +148,9 @@ public static class BlueprintFactory
         var particle = new ParticleComponent(emitter.Id);
         Ecs.GetRenderStore<ParticleComponent>().Add(entity, in particle);
 
-        var instance = new ParticleInstance(bp, emitter);
+        var instance = new ParticleInstance(sceneObject, bp, emitter);
         instance.RenderEntityIds.Add(entity);
+        
+        bp.AddInstance(instance);
         return instance;
     }}

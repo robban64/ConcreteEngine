@@ -25,9 +25,10 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
 
     private readonly InspectSceneFields _inspectFields = InspectorFieldProvider.Instance.SceneFields;
 
+    /*
     private readonly InspectModelInstanceFields _modelInstanceFields =
         InspectorFieldProvider.Instance.ModelInstanceFields;
-
+*/
     private readonly InspectParticleFields _particleInstanceFields =
         InspectorFieldProvider.Instance.ParticleInstanceFields;
 
@@ -115,12 +116,12 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
     private void DrawModelInstance(InspectSceneObject inspector, InspectModelInstance modelInstance)
     {
         var sw = TextBuffers.GetWriter();
-
+/*
         if (ImGui.CollapsingHeader("Local Spatial"u8))
         {
             _modelInstanceFields.Draw();
         }
-
+*/
         ImGui.Spacing();
         ImGui.Separator();
         ImGui.Spacing();
@@ -129,7 +130,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
             var materialCount = modelInstance.Instance.MaterialCount;
             for (var i = 0; i < materialCount; i++)
             {
-                var mat = modelInstance.Instance.GetMaterial(i);
+                var mat = modelInstance.Instance.Blueprint.GetMaterial(i);
                 var shaderName = mat.BoundShader?.Name ?? "No Shader";
                 AppDraw.Text(sw.Append('[').Append(i).Append(']').PadRight(2).Append(mat.Name)
                     .Append(" ("u8).Append(shaderName).Append(')').End());

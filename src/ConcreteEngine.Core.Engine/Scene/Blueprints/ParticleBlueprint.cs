@@ -7,7 +7,7 @@ using ConcreteEngine.Renderer.Buffer;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
-public sealed class ParticleBlueprint : SceneObjectBlueprint
+public sealed class ParticleBlueprint : SceneObjectBlueprint<ParticleInstance>
 {
     public required string EmitterName;
 
@@ -30,13 +30,13 @@ public sealed class ParticleInstance : BlueprintInstance
     public ParticleEmitter Emitter { get; }
     public override SceneObjectBlueprint GetBlueprint() => Blueprint;
 
-    public ParticleInstance(ParticleBlueprint blueprint, ParticleEmitter emitter)
+    public ParticleInstance(SceneObject sceneObject, ParticleBlueprint blueprint, ParticleEmitter emitter) : base(sceneObject)
     {
         Blueprint = blueprint;
         Emitter = emitter;
     }
 
-    protected override void OnCommit(SceneObject sceneObject)
+    protected override void OnCommit()
     {
         foreach (var entity in GetRenderEntities())
         {

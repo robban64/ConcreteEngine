@@ -45,7 +45,7 @@ internal sealed class InspectModelInstance
     public InspectModelInstance(ModelInstance instance)
     {
         Instance = instance;
-        InspectorFieldProvider.Instance.ModelInstanceFields.Bind(instance);
+        //InspectorFieldProvider.Instance.ModelInstanceFields.Bind(instance);
     }
 }
 

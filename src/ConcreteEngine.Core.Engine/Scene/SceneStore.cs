@@ -26,6 +26,8 @@ public sealed class SceneStore
 
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
     
+    private readonly Dictionary<Guid, SceneObjectBlueprint> _blueprints = new(128);
+
     private readonly Stack<int> _free = [];
 
     internal SceneStore()
@@ -128,24 +130,28 @@ public sealed class SceneStore
         _byName.Add(newName, sceneObject.Id);
         onSuccess(newName);
     }
-
-
     //
-    
-    public SceneObject Create(SceneObjectTemplate bp)
+
+    public SceneObject Create(SceneObjectTemplate template)
     {
         var id = AllocateSlot();
         
-        var name = bp.Name;
+        var name = template.Name;
         if (string.IsNullOrEmpty(name))
             name = $"Unnamed({_unnamedCounter++})";
 
         if (!_byName.TryAdd(name, id))
-            _byName.Add(MakeName(bp.Name), id);
+            _byName.Add(MakeName(template.Name), id);
 
-        var sceneObject = _sceneObjects[id.Index()] = BlueprintFactory.BuildSceneObject(id, bp);
+        var sceneObject = _sceneObjects[id.Index()] = BlueprintFactory.BuildSceneObject(id, template);
 
         _byKind[(int)sceneObject.Kind].Add(id);
+
+        foreach (var bp in template.Blueprints)
+        {
+            _blueprints.TryAdd(bp.GId, bp);
+        }
+        
         sceneObject.Attach();
         
         return sceneObject;

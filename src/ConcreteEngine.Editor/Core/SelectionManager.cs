@@ -120,7 +120,7 @@ internal sealed class SelectionManager
         SelectedSceneObject = null;
 
         InspectorFieldProvider.Instance.SceneFields.Unbind();
-        InspectorFieldProvider.Instance.ModelInstanceFields.Unbind();
+        //InspectorFieldProvider.Instance.ModelInstanceFields.Unbind();
         InspectorFieldProvider.Instance.ParticleInstanceFields.Unbind();
     }
 }

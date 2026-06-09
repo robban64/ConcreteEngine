@@ -1,3 +1,4 @@
+using System.Runtime;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
@@ -80,6 +81,9 @@ public sealed class GameEngine : IDisposable
         runner.Teardown();
 
         OnSystemTick(0);
+        Console.WriteLine($"Fragmentation: {GC.GetGCMemoryInfo().FragmentedBytes}");
+        Console.WriteLine($"Total Alloc: {GC.GetTotalAllocatedBytes() / 1024.0 / 1024.0:F2}");
+
     }
 
     internal void Render(float dt)

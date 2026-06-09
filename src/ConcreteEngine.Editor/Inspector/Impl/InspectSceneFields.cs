@@ -42,7 +42,7 @@ internal sealed class InspectSceneFields : InspectorFields<InspectSceneObject>
         );
     }
 }
-
+/*
 internal sealed class InspectModelInstanceFields : InspectorFields<ModelInstance>
 {
     public readonly FloatField<Float3> TranslationField;
@@ -92,7 +92,7 @@ internal sealed class InspectModelInstanceFields : InspectorFields<ModelInstance
         );
     }
 }
-
+*/
 internal sealed class InspectParticleFields : InspectorFields<ParticleInstance>
 {
     public readonly IntField<Int1> ParticleCountField;

@@ -48,4 +48,5 @@ public sealed class AssetRef<TAsset>(TAsset assetObject, IAssetListener listener
             return (TAsset)AssetObjectRef;
         }
     }
+    
 }

@@ -5,8 +5,8 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 public interface IAssetListener
 {
-    void OnChanged(AssetObject asset);
-    void OnRemoved(AssetObject asset);
+    void OnAssetChanged(AssetObject asset);
+    void OnAssetRemoved(AssetObject asset);
 }
 
 public abstract class AssetRef
@@ -27,11 +27,11 @@ public abstract class AssetRef
     public abstract AssetObject Asset { get; }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Trigger() => _listener.OnChanged(Asset);
+    internal void Trigger() => _listener.OnAssetChanged(Asset);
 
     internal void Detach()
     {
-        _listener.OnRemoved(Asset);
+        _listener.OnAssetRemoved(Asset);
         Asset.RemoveRef(this);
         AssetObjectRef = null!;
     }}

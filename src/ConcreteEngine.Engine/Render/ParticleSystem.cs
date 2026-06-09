@@ -64,12 +64,12 @@ internal sealed class ParticleSystem : IDisposable
         _processedEmitters.Clear();
         foreach (var it in Ecs.GetRenderStore<ParticleComponent>().Query())
         {
-            if (_processedEmitters.Contains(it.Component.Emitter)) continue;
-            var emitter = _particleManager.Get(it.Component.Emitter);
+            if (_processedEmitters.Contains(it.Component.EmitterId)) continue;
+            var emitter = _particleManager.Get(it.Component.EmitterId);
             if(!emitter.IsAttached) continue;
             emitter.SimulateEmitter(simDt);
             
-            _processedEmitters.Add(it.Component.Emitter);
+            _processedEmitters.Add(it.Component.EmitterId);
         }
     }
 

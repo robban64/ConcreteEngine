@@ -7,7 +7,7 @@ namespace ConcreteEngine.Editor.Inspector;
 public sealed class InspectSceneObject
 {
     public readonly SceneObject SceneObject;
-    public readonly SceneObjectTransform Transform;
+    public readonly SceneTransform Transform;
 
     public SceneObjectId Id => SceneObject.Id;
     public SceneObjectKind Kind => SceneObject.Kind;

@@ -41,11 +41,11 @@ internal sealed class SceneProcessor(SceneManager sceneManager)
             
             var dirtyFlag = sceneObject.Dirty;
             
-            if ((dirtyFlag & SceneObject.DirtyFlags.Visibility) != 0)
+            if ((dirtyFlag & SceneDirtyFlags.Visibility) != 0)
                 UpdateVisibility(sceneObject);
-            if ((dirtyFlag & SceneObject.DirtyFlags.Instance) != 0)
+            if ((dirtyFlag & SceneDirtyFlags.Instance) != 0)
                 UpdateInstance(sceneObject);
-            if ((dirtyFlag & SceneObject.DirtyFlags.Transform) != 0)
+            if ((dirtyFlag & SceneDirtyFlags.Transform) != 0)
             {
                 UpdateTransform(sceneObject);
                 UpdateBounds(sceneObject);
@@ -78,28 +78,25 @@ internal sealed class SceneProcessor(SceneManager sceneManager)
 
     private void UpdateTransform(SceneObject sceneObject)
     {
-        var particleEcs = Ecs.GetRenderStore<ParticleComponent>();
-        var skinnedEcs = Ecs.GetRenderStore<SkinLinkComponent>();
-
-        MatrixMath.CreateModelMatrix(in sceneObject.Transform.GetTransform(), out var rootMatrix);
+        sceneObject.Transform.GetTransformMatrix(out var rootMatrix);
         foreach (var entity in sceneObject.GetRenderEntities())
         {
-            ref readonly var entityTransform = ref Ecs.Render.Core.GetLocalTransform(entity);
-            MatrixMath.CreateModelMatrix(in entityTransform, out var worldMatrix);
+            MatrixMath.CreateModelMatrix(in Ecs.Render.Core.GetLocalTransform(entity), out var worldMatrix);
             MatrixMath.MultiplyAffine(ref worldMatrix, in rootMatrix);
 
             ref var finalMatrix = ref Ecs.Render.Core.GetWorldMatrix(entity);
 
-            var particleComp = particleEcs.TryGet(entity);
-            if (!particleComp.IsNull)
+            if (Ecs.GetRenderStore<ParticleComponent>().Has(entity))
             {
-                finalMatrix = worldMatrix;
-                var emitter = ParticleManager.Instance.Get(particleComp.Value.Emitter);
+                var emitterId = Ecs.GetRenderStore<ParticleComponent>().Get(entity).EmitterId;
+                var emitter = ParticleManager.Instance.Get(emitterId);
                 emitter.Translation = sceneObject.Transform.Translation;
+                
+                finalMatrix = worldMatrix;
                 continue;
             }
 
-            if (skinnedEcs.Has(entity))
+            if (Ecs.GetRenderStore<SkinLinkComponent>().Has(entity))
             {
                 finalMatrix = worldMatrix;
                 continue;
@@ -111,6 +108,7 @@ internal sealed class SceneProcessor(SceneManager sceneManager)
             MatrixMath.MultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
         }
     }
+    
 
     private void UpdateBounds(SceneObject sceneObject)
     {

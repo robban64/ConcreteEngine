@@ -11,16 +11,6 @@ namespace ConcreteEngine.Core.Engine.Scene;
 
 public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObject>
 {
-    [Flags]
-    public enum DirtyFlags : byte
-    {
-        None = 0,
-        Enabled = 1 << 0,
-        Visibility = 1 << 1,
-        Instance = 1 << 2,
-        Transform = 1 << 3,
-    }
-
     public SceneObjectId Id { get; }
     public Guid GId { get; }
 
@@ -45,7 +35,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         {
             if (value == field) return;
             field = value;
-            MarkDirty(DirtyFlags.Enabled);
+            MarkDirty(SceneDirtyFlags.Enabled);
         }
     }
 
@@ -56,18 +46,19 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         {
             if (value == field) return;
             field = value;
-            MarkDirty(DirtyFlags.Visibility);
+            MarkDirty(SceneDirtyFlags.Visibility);
         }
     }
-
-    public bool Attached { get; private set; }
 
     public SceneObjectKind Kind { get; private set; }
 
     [JsonIgnore]
-    public DirtyFlags Dirty { get; private set; }
+    public SceneDirtyFlags Dirty { get; private set; }
+    
+    [JsonIgnore]
+    public bool Attached { get; private set; }
 
-    public SceneObjectTransform Transform { get; }
+    public SceneTransform Transform { get; }
 
     private readonly List<BlueprintInstance> _instances = [];
     private readonly List<RenderEntityId> _renderEntities = [];
@@ -91,7 +82,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         Enabled = enabled;
         Visible = true;
 
-        Transform = new SceneObjectTransform(this, in transform, in bounds);
+        Transform = new SceneTransform(this, in transform, in bounds);
     }
 
     public void SetName(string newName)
@@ -147,8 +138,8 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     internal void Attach()
     {
         Attached = true;
-        MarkDirty(DirtyFlags.Transform);
-        MarkDirty(DirtyFlags.Instance);
+        MarkDirty(SceneDirtyFlags.Transform);
+        MarkDirty(SceneDirtyFlags.Instance);
     }
 
     internal void AddInstance(BlueprintInstance instance)
@@ -168,7 +159,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void MarkDirty(DirtyFlags flags)
+    internal void MarkDirty(SceneDirtyFlags flags)
     {
         if (!Attached || (Dirty & flags) != 0) return;
         Dirty |= flags;
@@ -176,7 +167,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void ClearDirty() => Dirty = DirtyFlags.None;
+    internal void ClearDirty() => Dirty = SceneDirtyFlags.None;
 
     internal void EnsureCapacity(int renderEcsCapacity, int gameEcsCapacity)
     {
@@ -203,55 +194,3 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     public override int GetHashCode() => HashCode.Combine(Id, GId);
 }
 
-public sealed class SceneObjectTransform(SceneObject sceneObject, in Transform transform, in BoundingBox bounds)
-{
-    private Transform _transform = transform;
-    private BoundingBox _bounds = bounds;
-
-    public ref readonly Transform GetTransform() => ref _transform;
-    public ref readonly BoundingBox GetBounds() => ref _bounds;
-
-    //
-    public Vector3 Translation
-    {
-        get => _transform.Translation;
-        set
-        {
-            _transform.Translation = value;
-            sceneObject.MarkDirty(SceneObject.DirtyFlags.Transform);
-        }
-    }
-
-    public Vector3 Scale
-    {
-        get => _transform.Scale;
-        set
-        {
-            _transform.Scale = value;
-            sceneObject.MarkDirty(SceneObject.DirtyFlags.Transform);
-        }
-    }
-
-    public Quaternion Rotation
-    {
-        get => _transform.Rotation;
-        set
-        {
-            _transform.Rotation = value;
-            sceneObject.MarkDirty(SceneObject.DirtyFlags.Transform);
-        }
-    }
-
-    //
-    public void SetTransform(in Transform transform)
-    {
-        _transform = transform;
-        sceneObject.MarkDirty(SceneObject.DirtyFlags.Transform);
-    }
-
-    public void SetBounds(in BoundingBox bounds)
-    {
-        _bounds = bounds;
-        sceneObject.MarkDirty(SceneObject.DirtyFlags.Transform);
-    }
-}

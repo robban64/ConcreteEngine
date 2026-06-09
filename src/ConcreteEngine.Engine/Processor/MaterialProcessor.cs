@@ -5,7 +5,7 @@ using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
 
-namespace ConcreteEngine.Engine.Render.Processor;
+namespace ConcreteEngine.Engine.Processor;
 
 internal sealed class MaterialProcessor(RenderProgram renderProgram)
 {

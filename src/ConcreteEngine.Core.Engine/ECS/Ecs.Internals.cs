@@ -17,10 +17,10 @@ public static partial class Ecs
             _ = Render.Core.Count;
             _ = Render.Core.Capacity;
             _ = Render.Core.Has(new RenderEntityId(1));
-            _ = Render.Core.GetBounds(new RenderEntityId(1));
+            _ = Render.Core.GetWorldBounds(new RenderEntityId(1));
             _ = Render.Core.GetSource(new RenderEntityId(1));
-            _ = Render.Core.GetTransform(new RenderEntityId(1));
-            _ = Render.Core.GetMatrix(new RenderEntityId(1));
+            _ = Render.Core.GetLocalTransform(new RenderEntityId(1));
+            _ = Render.Core.GetWorldMatrix(new RenderEntityId(1));
             _ = Render.Core.IsVisible(new RenderEntityId(1));
 
             _ = Render.Stores<SkinningComponent>.Store.Has(new RenderEntityId(1));

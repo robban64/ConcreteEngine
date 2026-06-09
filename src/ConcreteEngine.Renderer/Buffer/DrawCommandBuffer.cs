@@ -147,7 +147,7 @@ public sealed class DrawCommandBuffer : IDisposable
         for (var i = 0; i < Count; i++)
         {
             var idx = _indices[i].Index;
-            var mask = (uint)_metas[idx].PassMask;
+            var mask = (uint)_metas[idx].Passes;
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);
@@ -168,7 +168,7 @@ public sealed class DrawCommandBuffer : IDisposable
         for (var i = 0; i < length; i++)
         {
             var idx = _indices[i].Index;
-            var mask = (uint)_metas[idx].PassMask;
+            var mask = (uint)_metas[idx].Passes;
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);

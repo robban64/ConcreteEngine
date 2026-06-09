@@ -62,7 +62,6 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     public bool Attached { get; private set; }
 
-
     public SceneObjectKind Kind { get; private set; }
 
     [JsonIgnore]

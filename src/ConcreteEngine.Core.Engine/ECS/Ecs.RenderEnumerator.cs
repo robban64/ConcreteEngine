@@ -76,19 +76,19 @@ public static partial class Ecs
                 public ref Transform Transform
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => ref core.GetTransform(Entity);
+                    get => ref core.GetLocalTransform(Entity);
                 }
 
                 public ref BoundingBox Bounds
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => ref core.GetBounds(Entity);
+                    get => ref core.GetWorldBounds(Entity);
                 }
 
                 public ref Matrix4x4 Matrix
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => ref core.GetMatrix(Entity);
+                    get => ref core.GetWorldMatrix(Entity);
                 }
             }
         }

@@ -1,12 +1,16 @@
+using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -14,7 +18,8 @@ public abstract class BlueprintInstance
 {
     public abstract SceneObjectBlueprint GetBlueprint();
 
-    public bool IsDirty { get; private set; } = true;
+    public bool IsDirty { get; internal set; } = true;
+    public bool HasDebugBounds { get; private set; } = false;
 
     internal readonly List<RenderEntityId> RenderEntityIds = [];
     internal readonly List<GameEntityId> GameEntityIds = [];
@@ -24,18 +29,19 @@ public abstract class BlueprintInstance
     public bool HasRenderEcs => RenderEntityIds.Count > 0;
     public bool HasGameEntityIds => GameEntityIds.Count > 0;
     public bool IsMixedEcs => HasRenderEcs && HasGameEntityIds;
-    
+
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(RenderEntityIds);
     public ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(GameEntityIds);
 
-    internal void Commit()
+    internal void Commit(SceneObject sceneObject)
     {
         IsDirty = false;
-        OnCommit();
+        OnCommit(sceneObject);
     }
 
-    protected virtual void OnCommit(){}
+    protected virtual void OnCommit(SceneObject sceneObject) { }
 
+    // TODO
     public void ToggleSelection(bool isSelected)
     {
         if (!HasRenderEcs) return;
@@ -43,8 +49,17 @@ public abstract class BlueprintInstance
 
         foreach (var entity in GetRenderEntities())
         {
-            if (isSelected) selectionStore.Add(entity, new SelectionComponent(SelectionComponent.DefaultHighlight));
-            else selectionStore.Remove(entity);
+            ref var source = ref Ecs.RenderCore.GetSource(entity);
+            if (isSelected)
+            {
+                selectionStore.Add(entity, new SelectionComponent(SelectionComponent.DefaultHighlight, source.Passes));
+            }
+            else
+            {
+                var passes = selectionStore.Get(entity).OriginalPasses;
+                source = source with { Resolver = 0, ResolverSlot = 0, Passes = passes };
+                selectionStore.Remove(entity);
+            }
         }
     }
 
@@ -63,8 +78,8 @@ public abstract class BlueprintInstance
             else debugStore.Remove(entity);
         }
     }
-}
 
+}
 
 public sealed class ModelInstance : BlueprintInstance, IAssetListener
 {
@@ -72,18 +87,20 @@ public sealed class ModelInstance : BlueprintInstance, IAssetListener
 
     private readonly AssetRef<Model> _model;
     private readonly AssetRef<Material>?[] _materials;
-    
+
     public Transform LocalTransform;
     public BoundingBox LocalBounds;
+
+    public override SceneObjectBlueprint GetBlueprint() => Blueprint;
 
     public ModelInstance(ModelBlueprint blueprint, Model model)
     {
         var materialCount = int.Max(model.Info.MaterialCount, blueprint.Materials.Length);
-        
+
         Blueprint = blueprint;
         _model = new AssetRef<Model>(model, this);
         _materials = new AssetRef<Material>[materialCount];
-        
+
         LocalTransform = blueprint.LocalTransform;
         LocalBounds = model.Bounds;
     }
@@ -93,57 +110,55 @@ public sealed class ModelInstance : BlueprintInstance, IAssetListener
 
     public Material GetMaterial(int index)
     {
-        if((uint)index >= (uint)_materials.Length) Throwers.InvalidArgument(nameof(index));
+        if ((uint)index >= (uint)_materials.Length) Throwers.InvalidArgument(nameof(index));
         var material = _materials[index];
         return material is null ? Material.FallbackMaterial : material.Asset;
     }
 
     public void SetMaterial(int index, Material material)
     {
-        if (_materials[index] is {} currentMaterial)
+        if (_materials[index] is { } currentMaterial)
         {
-            if(currentMaterial.Asset == material) return;
+            if (currentMaterial.Asset == material) return;
             currentMaterial.Detach();
         }
-        
+
         _materials[index] = new AssetRef<Material>(material, this);
     }
-    
+
     public void OnChanged(AssetObject asset)
     {
-        if (asset is Material material && (material.DirtyFlags & AssetDirtyFlag.Structure) != 0) 
+        if (asset is Material material && (material.DirtyFlags & AssetDirtyFlag.Structure) != 0)
             ApplyMaterialState(material.State);
     }
 
     public void OnRemoved(AssetObject asset)
     {
-        if(asset is not Material material) return;
+        if (asset is not Material material) return;
         ApplyMaterialState(Material.FallbackMaterial.State);
         for (var i = 0; i < _materials.Length; i++)
         {
             if (_materials[i]?.Asset == material) _materials[i] = null;
         }
     }
-    
+
     private void ApplyMaterialState(MaterialState material)
     {
         foreach (var entity in GetRenderEntities())
         {
             ref var source = ref Ecs.Render.Core.GetSource(entity);
-            if(source.Material.Id > 0 && source.Material != material.MaterialId) continue;
+            if (source.Material.Id > 0 && source.Material != material.MaterialId) continue;
             source.Queue = material.DrawQueue;
-            source.Mask = material.PassMasks;
+            source.Passes = material.PassMasks;
         }
     }
-    public override SceneObjectBlueprint GetBlueprint() => Blueprint;
-
-
 }
 
 public sealed class AnimationInstance : BlueprintInstance
 {
     public readonly ModelBlueprint Blueprint;
     public ModelAnimation AssetAnimation { get; }
+
     public AnimationInstance(ModelBlueprint blueprint, ModelAnimation assetAnimation)
     {
         Blueprint = blueprint;
@@ -160,8 +175,8 @@ public sealed class AnimationInstance : BlueprintInstance
 
         throw new InvalidOperationException();
     }
-    public override SceneObjectBlueprint GetBlueprint() => Blueprint;
 
+    public override SceneObjectBlueprint GetBlueprint() => Blueprint;
 }
 
 public sealed class ParticleInstance : BlueprintInstance
@@ -176,15 +191,14 @@ public sealed class ParticleInstance : BlueprintInstance
         Emitter = emitter;
     }
 
-    protected override void OnCommit()
+    protected override void OnCommit(SceneObject sceneObject)
     {
         foreach (var entity in GetRenderEntities())
         {
             ref var source = ref Ecs.Render.Core.GetSource(entity);
             source.Queue = DrawCommandQueue.Particles;
-            source.Mask = PassMask.Main;
+            source.Passes = PassMask.Main;
             source.Mesh = Emitter.BoundMesh;
         }
     }
-
 }

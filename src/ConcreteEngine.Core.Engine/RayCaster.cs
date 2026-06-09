@@ -32,7 +32,7 @@ public sealed class RayCaster
         RenderEntityId closestEntity = default;
         foreach (var entity in Ecs.RenderCore.VisibilityQuery())
         {
-            ref readonly var box = ref Ecs.Render.Core.GetBounds(entity);
+            ref readonly var box = ref Ecs.Render.Core.GetWorldBounds(entity);
             //ref readonly var matrix = ref ecs.GetMatrix(entity);
             //BoundingBox.GetWorldBounds(in box, in matrix, out var worldBounds);
             if (CollisionMethods.RayIntersectsBox(in ray, in box, out var dist) && dist < distance)

@@ -11,7 +11,6 @@ using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Gateway;
 using ConcreteEngine.Engine.Render;
-using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using Silk.NET.OpenGL;

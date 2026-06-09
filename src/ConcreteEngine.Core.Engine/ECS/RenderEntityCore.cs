@@ -13,9 +13,9 @@ public sealed class RenderEntityCore : EcsStore
 {
     private NativeArray<RenderEntity> _entities;
     private NativeArray<SourceComponent> _sources;
-    private NativeArray<Transform> _transforms;
-    private NativeArray<BoundingBox> _bounds;
-    private NativeArray<Matrix4x4> _matrices;
+    private NativeArray<Transform> _localTransforms;
+    private NativeArray<BoundingBox> _worldBounds;
+    private NativeArray<Matrix4x4> _worldMatrices;
 
 
     internal RenderEntityCore(int initialCapacity)
@@ -23,10 +23,10 @@ public sealed class RenderEntityCore : EcsStore
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
         _entities = NativeArray.Allocate<RenderEntity>(initialCapacity);
         _sources = NativeArray.Allocate<SourceComponent>(initialCapacity);
-        _transforms = NativeArray.Allocate<Transform>(initialCapacity);
-        _bounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
+        _localTransforms = NativeArray.Allocate<Transform>(initialCapacity);
+        _worldBounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
 
-        _matrices = NativeArray.AlignedAllocate<Matrix4x4>(initialCapacity, alignment: 16);
+        _worldMatrices = NativeArray.AlignedAllocate<Matrix4x4>(initialCapacity, alignment: 16);
 
         StoreMeta.Listeners.EnsureCapacity(128);
     }
@@ -36,15 +36,15 @@ public sealed class RenderEntityCore : EcsStore
 
     internal NativeView<RenderEntity> GetCoreEntityView() => _entities.Slice(0, Count);
     internal NativeView<SourceComponent> GetSourceView() => _sources.Slice(0, Count);
-    internal NativeView<Transform> GetTransformView() => _transforms.Slice(0, Count);
-    internal NativeView<Matrix4x4> GetMatrixView() => _matrices.Slice(0, Count);
-    internal NativeView<BoundingBox> GetBoundsView() => _bounds.Slice(0, Count);
+    internal NativeView<Transform> GetLocalTransformView() => _localTransforms.Slice(0, Count);
+    internal NativeView<Matrix4x4> GetWorldMatrixView() => _worldMatrices.Slice(0, Count);
+    internal NativeView<BoundingBox> GetWorldBoundsView() => _worldBounds.Slice(0, Count);
 
     internal unsafe RenderEntity* GetCoreEntityPtr() => _entities;
     internal unsafe SourceComponent* GetSourcePtr() => _sources;
-    internal unsafe Transform* GetTransformPtr() => _transforms;
-    internal unsafe Matrix4x4* GetMatrixPtr() => _matrices;
-    internal unsafe BoundingBox* GetBoundsPtr() => _bounds;
+    internal unsafe Transform* GetLocalTransformPtr() => _localTransforms;
+    internal unsafe Matrix4x4* GetWorldMatrixPtr() => _worldMatrices;
+    internal unsafe BoundingBox* GetWorldBoundsPtr() => _worldBounds;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -64,13 +64,13 @@ public sealed class RenderEntityCore : EcsStore
     public ref SourceComponent GetSource(RenderEntityId e) => ref _sources[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Transform GetTransform(RenderEntityId e) => ref _transforms[e.Index()];
+    public ref Transform GetLocalTransform(RenderEntityId e) => ref _localTransforms[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoundingBox GetBounds(RenderEntityId e) => ref _bounds[e.Index()];
+    public ref BoundingBox GetWorldBounds(RenderEntityId e) => ref _worldBounds[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix4x4 GetMatrix(RenderEntityId e) => ref _matrices[e.Index()];
+    public ref Matrix4x4 GetWorldMatrix(RenderEntityId e) => ref _worldMatrices[e.Index()];
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -79,10 +79,26 @@ public sealed class RenderEntityCore : EcsStore
         return _entities[entity.Index()].ToggleVisibility(flag, isVisible);
     }
 
+    public RenderEntityId Copy(RenderEntityId entity)
+    {
+        var newEntity = AllocateNewEntity();
+        GetSource(newEntity) = GetSource(entity);
+        GetLocalTransform(newEntity) = GetLocalTransform(entity);
+        GetWorldBounds(newEntity) = GetWorldBounds(entity);
+        GetWorldMatrix(newEntity) = GetWorldMatrix(entity);
+        return newEntity;
+    }
 
     public RenderEntityId AddEntity(SourceComponent source, in Transform transform)
     {
-        var entity = AddEntityInternal(source, in transform);
+        ValidateSource(source);
+
+        var entity = AllocateNewEntity();
+        _sources[entity.Index()] = source;
+        _localTransforms[entity.Index()] = transform;
+        _worldBounds[entity.Index()] = BoundingBox.One;
+        _worldMatrices[entity.Index()] = Matrix4x4.Identity;
+
         foreach (var it in StoreMeta.Listeners)
             it.EntityAdded(entity.Id, this);
 
@@ -90,21 +106,13 @@ public sealed class RenderEntityCore : EcsStore
     }
 
 
-    private RenderEntityId AddEntityInternal(SourceComponent source, in Transform transform)
+    private RenderEntityId AllocateNewEntity()
     {
-        ValidateSource(source);
         var index = AllocateNext();
-
         ref var entity = ref _entities[index];
         if (entity.Alive) Throwers.InvalidOperation($"Entity {entity} already exists");
-
         entity.Alive = true;
         entity.Visibility = VisibilityFlags.Visible;
-        _sources[index] = source;
-        _transforms[index] = transform;
-        _bounds[index] = BoundingBox.One;
-        _matrices[index] = Matrix4x4.Identity;
-
         return new RenderEntityId(index + 1);
     }
 
@@ -118,9 +126,9 @@ public sealed class RenderEntityCore : EcsStore
 
         _entities[index] = default;
         _sources[index] = default;
-        _transforms[index] = default;
-        _bounds[index] = default;
-        _matrices[index] = default;
+        _localTransforms[index] = default;
+        _worldBounds[index] = default;
+        _worldMatrices[index] = default;
 
         FreeEntity(index);
 
@@ -132,17 +140,17 @@ public sealed class RenderEntityCore : EcsStore
     protected override void Resize(int newSize)
     {
         var curLen = _entities.Length;
-        if (_sources.Length != curLen || _transforms.Length != curLen ||
-            _bounds.Length != curLen || _matrices.Length != curLen)
+        if (_sources.Length != curLen || _localTransforms.Length != curLen ||
+            _worldBounds.Length != curLen || _worldMatrices.Length != curLen)
         {
             Throwers.InvalidOperation("Length mismatch");
         }
 
         _entities.Resize(newSize, true);
         _sources.Resize(newSize, true);
-        _transforms.Resize(newSize, true);
-        _bounds.Resize(newSize, true);
-        _matrices.Resize(newSize, true);
+        _localTransforms.Resize(newSize, true);
+        _worldBounds.Resize(newSize, true);
+        _worldMatrices.Resize(newSize, true);
 
         Logger.LogString(LogScope.Ecs, $"{nameof(RenderEntityCore)}: resized {newSize}", LogLevel.Warn);
     }
@@ -155,9 +163,9 @@ public sealed class RenderEntityCore : EcsStore
     {
         _entities.Dispose();
         _sources.Dispose();
-        _transforms.Dispose();
-        _bounds.Dispose();
-        _matrices.Dispose();
+        _localTransforms.Dispose();
+        _worldBounds.Dispose();
+        _worldMatrices.Dispose();
     }
 
     [StackTraceHidden]

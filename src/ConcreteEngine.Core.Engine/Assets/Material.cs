@@ -7,6 +7,7 @@ namespace ConcreteEngine.Core.Engine.Assets;
 public sealed class Material : AssetObject
 {
     public static Material FallbackMaterial { get; internal set; } = null!;
+    public static MaterialId BoundsMaterialId;
 
     public MaterialId MaterialId => State.MaterialId;
 
@@ -46,10 +47,14 @@ public sealed class Material : AssetObject
         sources)
     {
         ArgumentNullException.ThrowIfNull(param);
-
         FromParamRecord(param);
     }
 
+    protected override void OnCommit()
+    {
+        if (State.Transparency && State.DrawQueue == DrawCommandQueue.Opaque)
+            State.DrawQueue = DrawCommandQueue.Transparent;
+    }
 
     public void SetShader(Shader? newShader)
     {

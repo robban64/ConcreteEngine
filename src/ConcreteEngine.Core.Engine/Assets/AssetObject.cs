@@ -57,6 +57,7 @@ public abstract class AssetObject : IComparable<AssetObject>
                             (f & AssetDirtyFlag.Lifecycle) != 0;
         if (shouldTrigger)
         {
+            OnCommit();
             foreach (var it in _listeners)
                 it.Trigger();
         }
@@ -64,6 +65,7 @@ public abstract class AssetObject : IComparable<AssetObject>
         DirtyFlags = 0;
         return f;
     }
+    protected virtual void OnCommit(){}
 
     public void AddRef(AssetRef assetRef) => _listeners.Add(assetRef);
     public void RemoveRef(AssetRef assetRef) => _listeners.Remove(assetRef);

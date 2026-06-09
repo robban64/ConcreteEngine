@@ -21,13 +21,13 @@ public struct DrawCommand(
 public struct DrawCommandMeta(
     DrawCommandId id,
     DrawCommandQueue queue,
-    PassMask passMask = PassMask.Default,
+    PassMask passes = PassMask.Default,
     ushort depthKey = 0,
     DrawCommandResolver resolver = DrawCommandResolver.None,
     byte resolverSlot = 0)
 {
     public ushort DepthKey = depthKey;
-    public PassMask PassMask = passMask;
+    public PassMask Passes = passes;
     public DrawCommandId Id = id;
     public DrawCommandQueue Queue = queue;
     public DrawCommandResolver Resolver = resolver;

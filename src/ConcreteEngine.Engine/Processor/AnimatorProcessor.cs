@@ -7,11 +7,12 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Buffer;
 
-namespace ConcreteEngine.Engine.Render.Processor;
+namespace ConcreteEngine.Engine.Processor;
 
 internal sealed unsafe class AnimatorProcessor : IDisposable
 {

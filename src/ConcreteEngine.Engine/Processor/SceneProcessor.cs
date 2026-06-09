@@ -72,7 +72,7 @@ internal sealed class SceneProcessor(SceneManager sceneManager)
         foreach (var it in sceneObject.GetInstances())
         {
             if (!it.IsDirty) continue;
-            it.Commit();
+            it.Commit(sceneObject);
         }
     }
 
@@ -84,11 +84,11 @@ internal sealed class SceneProcessor(SceneManager sceneManager)
         MatrixMath.CreateModelMatrix(in sceneObject.Transform.GetTransform(), out var rootMatrix);
         foreach (var entity in sceneObject.GetRenderEntities())
         {
-            ref readonly var entityTransform = ref Ecs.Render.Core.GetTransform(entity);
+            ref readonly var entityTransform = ref Ecs.Render.Core.GetLocalTransform(entity);
             MatrixMath.CreateModelMatrix(in entityTransform, out var worldMatrix);
             MatrixMath.MultiplyAffine(ref worldMatrix, in rootMatrix);
 
-            ref var finalMatrix = ref Ecs.Render.Core.GetMatrix(entity);
+            ref var finalMatrix = ref Ecs.Render.Core.GetWorldMatrix(entity);
 
             var particleComp = particleEcs.TryGet(entity);
             if (!particleComp.IsNull)
@@ -119,12 +119,12 @@ internal sealed class SceneProcessor(SceneManager sceneManager)
 
         foreach (var entity in instance.GetRenderEntities())
         {
-            ref readonly var matrix = ref Ecs.Render.Core.GetMatrix(entity);
+            ref readonly var matrix = ref Ecs.Render.Core.GetWorldMatrix(entity);
 
             var meshIndex = Ecs.Render.Core.GetSource(entity).MeshIndex;
             var local = isAnimated ? instance.LocalBounds : instance.AssetModel.Meshes[meshIndex].LocalBounds;
 
-            ref var bounds = ref Ecs.Render.Core.GetBounds(entity);
+            ref var bounds = ref Ecs.Render.Core.GetWorldBounds(entity);
             BoundingBox.GetWorldBounds(in local, in matrix, out bounds);
         }
 

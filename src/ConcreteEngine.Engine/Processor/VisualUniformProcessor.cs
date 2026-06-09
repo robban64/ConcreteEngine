@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Core;
 
-namespace ConcreteEngine.Engine.Render.Processor;
+namespace ConcreteEngine.Engine.Processor;
 
 public static unsafe class VisualUniformProcessor
 {

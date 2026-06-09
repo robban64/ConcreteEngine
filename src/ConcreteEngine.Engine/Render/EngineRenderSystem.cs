@@ -8,7 +8,7 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Engine.Render.Processor;
+using ConcreteEngine.Engine.Processor;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer;
@@ -57,7 +57,7 @@ public sealed class EngineRenderSystem : IDisposable
         boundsMaterial.State.DrawState =
             GfxDrawState.Set(GfxDrawFlags.Blend, GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2);
         boundsMaterial.State.PassFunctions = new GfxPassFunctions(BlendMode.Alpha);
-        DrawTagProcessor.BoundsMaterial = boundsMaterial.MaterialId;
+        Material.BoundsMaterialId = boundsMaterial.MaterialId;
     }
 
     internal void AfterUpdate()

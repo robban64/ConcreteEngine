@@ -104,7 +104,7 @@ internal sealed class SceneProcessor(SceneManager sceneManager)
 
             var instance = sceneObject.GetInstance<ModelInstance>();
             var meshIndex = Ecs.Render.Core.GetSource(entity).MeshIndex;
-            ref readonly var meshMatrix = ref instance.GetModel().Meshes[meshIndex].WorldTransform;
+            ref readonly var meshMatrix = ref instance.Model.Meshes[meshIndex].WorldTransform;
             MatrixMath.MultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
         }
     }
@@ -112,19 +112,9 @@ internal sealed class SceneProcessor(SceneManager sceneManager)
 
     private void UpdateBounds(SceneObject sceneObject)
     {
-        if(!sceneObject.TryGetInstance<ModelInstance>(out var instance)) return;
-        var isAnimated = instance.GetModel().Animation != null;
+        if(sceneObject.TryGetInstance<ModelInstance>(out var instance))
+            instance.ApplyBounds();
 
-        foreach (var entity in instance.GetRenderEntities())
-        {
-            ref readonly var matrix = ref Ecs.Render.Core.GetWorldMatrix(entity);
-
-            var meshIndex = Ecs.Render.Core.GetSource(entity).MeshIndex;
-            var local = isAnimated ? instance.LocalBounds : instance.GetModel().Meshes[meshIndex].LocalBounds;
-
-            ref var bounds = ref Ecs.Render.Core.GetWorldBounds(entity);
-            BoundingBox.GetWorldBounds(in local, in matrix, out bounds);
-        }
 
     }
 }

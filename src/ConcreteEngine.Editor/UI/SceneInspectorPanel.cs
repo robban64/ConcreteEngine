@@ -95,13 +95,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         if (inspector.InspectModel is { } modelInstance)
         {
             ImGui.Spacing();
-            DrawModelInstance(inspector, modelInstance);
-        }
-
-        if (inspector.InspectAnimation is { } animationFields)
-        {
-            ImGui.Spacing();
-            DrawAnimation(inspector, animationFields);
+            DrawModelInstance(inspector, modelInstance.Instance);
         }
 
         if (inspector.InspectParticle is { } particleFields)
@@ -113,7 +107,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         ImGui.PopItemWidth();
     }
 
-    private void DrawModelInstance(InspectSceneObject inspector, InspectModelInstance modelInstance)
+    private void DrawModelInstance(InspectSceneObject inspector, ModelInstance modelInstance)
     {
         var sw = TextBuffers.GetWriter();
 /*
@@ -127,32 +121,29 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         ImGui.Spacing();
         if (ImGui.CollapsingHeader("Model Material"u8, CollapseFlags))
         {
-            var materialCount = modelInstance.Instance.MaterialCount;
+            var materialCount = modelInstance.MaterialCount;
             for (var i = 0; i < materialCount; i++)
             {
-                var mat = modelInstance.Instance.Blueprint.GetMaterial(i);
+                var mat = modelInstance.Blueprint.GetMaterial(i);
                 var shaderName = mat.BoundShader?.Name ?? "No Shader";
                 AppDraw.Text(sw.Append('[').Append(i).Append(']').PadRight(2).Append(mat.Name)
                     .Append(" ("u8).Append(shaderName).Append(')').End());
             }
         }
-    }
 
-    private static void DrawAnimation(InspectSceneObject inspector, InspectAnimationInstance fields)
-    {
-        var sw = TextBuffers.GetWriter();
+        if (modelInstance.Model.Animation is { } animation)
+        {
+            if (ImGui.CollapsingHeader("Animation"u8, CollapseFlags))
+                return;
 
-        if (ImGui.CollapsingHeader("Animation"u8, CollapseFlags))
-            return;
-
-        var animation = fields.Instance.AssetAnimation;
-        ImGui.TextUnformatted("Clips: "u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(sw.Write(animation.AnimationCount));
-        ImGui.SameLine();
-        ImGui.TextUnformatted("Bones: "u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(sw.Write(animation.BoneCount));
+            ImGui.TextUnformatted("Clips: "u8);
+            ImGui.SameLine();
+            ImGui.TextUnformatted(sw.Write(animation.AnimationCount));
+            ImGui.SameLine();
+            ImGui.TextUnformatted("Bones: "u8);
+            ImGui.SameLine();
+            ImGui.TextUnformatted(sw.Write(animation.BoneCount));
+        }
     }
 
     private void DrawParticles(InspectParticleInstance particle)

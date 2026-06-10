@@ -9,15 +9,16 @@ public abstract class BlueprintInstance
 {
     public abstract SceneObjectBlueprint GetBlueprint();
 
-    public bool IsDirty { get; internal set; } = true;
+    protected readonly SceneObject Owner;
+
+    public bool IsDirty { get; private set; } = true;
 
     internal readonly List<RenderEntityId> RenderEntityIds = [];
     internal readonly List<GameEntityId> GameEntityIds = [];
-    private readonly SceneObject _sceneObject;
 
-    protected BlueprintInstance(SceneObject sceneObject)
+    protected BlueprintInstance(SceneObject owner)
     {
-        _sceneObject = sceneObject;
+        Owner = owner;
     }
 
     public string DisplayName => GetBlueprint().DisplayName;
@@ -29,14 +30,19 @@ public abstract class BlueprintInstance
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(RenderEntityIds);
     public ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(GameEntityIds);
 
-    internal void MarkDirty(SceneDirtyFlags flag) => _sceneObject.MarkDirty(flag);
-    
+    internal void MarkDirty(SceneDirtyFlags flag)
+    {
+        IsDirty = true;
+        Owner.MarkDirty(flag);
+    }
+
     internal void Commit()
     {
         IsDirty = false;
         OnCommit();
     }
 
+    internal abstract void OnCreate();
     protected virtual void OnCommit() { }
 
     // TODO
@@ -77,7 +83,6 @@ public abstract class BlueprintInstance
 
 }
 /*
-
 public abstract class RenderBlueprintInstance
 {
     internal readonly List<RenderEntityId> RenderEntityIds = [];

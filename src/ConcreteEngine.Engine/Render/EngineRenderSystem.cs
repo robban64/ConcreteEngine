@@ -90,7 +90,6 @@ public sealed class EngineRenderSystem : IDisposable
         _particleSystem.Simulate(dt);
     }
 
-    private AvgFrameTimer avg;
     internal void Render(float dt, Size2D viewportSize)
     {
         Program.PrepareFrame();
@@ -101,10 +100,7 @@ public sealed class EngineRenderSystem : IDisposable
         // process and upload draw commands
         _particleSystem.Upload();
         _renderDispatcher.Prepare(_terrainSystem);
-
-        avg.BeginSample();
         _renderDispatcher.Execute();
-        if (avg.EndSample() >= 144) avg.ResetAndPrint();
 
         // prepare buffers
         Program.CollectDrawBuffers();

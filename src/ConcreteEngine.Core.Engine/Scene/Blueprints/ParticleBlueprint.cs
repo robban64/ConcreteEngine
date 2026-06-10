@@ -30,10 +30,15 @@ public sealed class ParticleInstance : BlueprintInstance
     public ParticleEmitter Emitter { get; }
     public override SceneObjectBlueprint GetBlueprint() => Blueprint;
 
-    public ParticleInstance(SceneObject sceneObject, ParticleBlueprint blueprint, ParticleEmitter emitter) : base(sceneObject)
+    public ParticleInstance(SceneObject owner, ParticleBlueprint blueprint, ParticleEmitter emitter) : base(owner)
     {
         Blueprint = blueprint;
         Emitter = emitter;
+    }
+
+    internal override void OnCreate()
+    {
+        
     }
 
     protected override void OnCommit()

@@ -43,16 +43,44 @@ public static class BlueprintFactory
             sceneObject.Transform.SetBounds(in model.Bounds);
 
         var instance = new ModelInstance(sceneObject, bp);
+        bp.AddInstance(instance);
+        instance.OnCreate();
+        return instance;
+    }
+    private static ParticleInstance BuildParticle(SceneObject sceneObject, ParticleBlueprint bp)
+    {
+        ArgumentNullException.ThrowIfNull(bp);
+        ArgumentException.ThrowIfNullOrEmpty(bp.EmitterName);
 
-        var modelRootEntity = BuildModelEntities(instance);
+        if (string.IsNullOrEmpty(bp.DisplayName)) bp.DisplayName = bp.EmitterName;
 
-        if (model.Animation != null)
-            BuildAnimationEntities(modelRootEntity, instance, model.Animation);
+        if (!ParticleManager.Instance.TryGet(bp.EmitterName, out var emitter))
+        {
+            emitter = ParticleManager.Instance
+                .CreateEmitter(bp.EmitterName, bp.ParticleCount, in bp.Definition, in bp.VisualParams);
+        }
 
+        var materialId = AssetStore.Get<Material>(bp.Material).MaterialId;
+
+        var source = new SourceComponent(default, materialId, 0, EntitySourceKind.Particle,
+            DrawCommandQueue.Particles, PassMask.Main);
+
+        var transform = ParticleBlueprint.MakeTransform(bp);
+        emitter.Direction = bp.Direction;
+        emitter.Translation = transform.Translation;
+
+        var entity = RenderEcs.AddEntity(source, in transform);
+
+        var particle = new ParticleComponent(emitter.Id);
+        Ecs.GetRenderStore<ParticleComponent>().Add(entity, in particle);
+
+        var instance = new ParticleInstance(sceneObject, bp, emitter);
+        instance.RenderEntityIds.Add(entity);
+        
         bp.AddInstance(instance);
         return instance;
     }
-
+/*
     private static RenderEntityId BuildModelEntities(ModelInstance component)
     {
         var rootEntity = new RenderEntityId(0);
@@ -62,10 +90,8 @@ public static class BlueprintFactory
         {
             var mesh = meshes[i];
             var material = component.Blueprint.GetMaterial(i);
-
             var meshIdx = mesh.Info.MeshIndex;
 
-            //var queue = material.HasTransparency ? DrawCommandQueue.Transparent : DrawCommandQueue.Opaque;
             var source = new SourceComponent(
                 mesh.MeshId, 
                 material.MaterialId, 
@@ -120,37 +146,7 @@ public static class BlueprintFactory
             Ecs.GetRenderStore<SkinLinkComponent>().Add(entity, skinLinkComponent);
         }
     }
-
-    private static ParticleInstance BuildParticle(SceneObject sceneObject, ParticleBlueprint bp)
-    {
-        ArgumentNullException.ThrowIfNull(bp);
-        ArgumentException.ThrowIfNullOrEmpty(bp.EmitterName);
-
-        if (string.IsNullOrEmpty(bp.DisplayName)) bp.DisplayName = bp.EmitterName;
-
-        if (!ParticleManager.Instance.TryGet(bp.EmitterName, out var emitter))
-        {
-            emitter = ParticleManager.Instance
-                .CreateEmitter(bp.EmitterName, bp.ParticleCount, in bp.Definition, in bp.VisualParams);
-        }
-
-        var materialId = AssetStore.Get<Material>(bp.Material).MaterialId;
-
-        var source = new SourceComponent(default, materialId, 0, EntitySourceKind.Particle,
-            DrawCommandQueue.Particles, PassMask.Main);
-
-        var transform = ParticleBlueprint.MakeTransform(bp);
-        emitter.Direction = bp.Direction;
-        emitter.Translation = transform.Translation;
-
-        var entity = RenderEcs.AddEntity(source, in transform);
-
-        var particle = new ParticleComponent(emitter.Id);
-        Ecs.GetRenderStore<ParticleComponent>().Add(entity, in particle);
-
-        var instance = new ParticleInstance(sceneObject, bp, emitter);
-        instance.RenderEntityIds.Add(entity);
-        
-        bp.AddInstance(instance);
-        return instance;
-    }}
+*/
+  
+    
+}

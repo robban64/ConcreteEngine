@@ -1,7 +1,11 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.GameComponent;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -26,7 +30,6 @@ namespace ConcreteEngine.Core.Engine.Scene;
 public sealed class ModelBlueprint : SceneObjectBlueprint<ModelInstance>, IAssetListener
 {
     public Transform LocalTransform = Transform.Identity;
-    public BoundingBox LocalBounds = BoundingBox.One;
 
     private readonly AssetRef<Model> _model;
     private readonly AssetRef<Material>?[] _materials;
@@ -94,19 +97,83 @@ public sealed class ModelBlueprint : SceneObjectBlueprint<ModelInstance>, IAsset
 public sealed class ModelInstance : BlueprintInstance
 {
     public readonly ModelBlueprint Blueprint;
-    public override SceneObjectBlueprint GetBlueprint() => Blueprint;
+    public readonly bool IsAnimated;
 
-    public ModelInstance(SceneObject sceneObject, ModelBlueprint blueprint) : base(sceneObject)
+    private BoundingBox _worldBounds;
+    
+    public ModelInstance(SceneObject owner, ModelBlueprint blueprint) : base(owner)
     {
         Blueprint = blueprint;
+        IsAnimated = blueprint.GetModel().Animation is not null;
     }
 
+    public override SceneObjectBlueprint GetBlueprint() => Blueprint;
     public ref readonly Transform LocalTransform => ref Blueprint.LocalTransform;
-    public ref readonly BoundingBox LocalBounds => ref Blueprint.LocalBounds;
+    public ref readonly BoundingBox WorldBounds => ref _worldBounds;
 
     public int MaterialCount => Blueprint.MaterialCount;
 
-    public Model GetModel() => Blueprint.GetModel();
+    public Model Model => Blueprint.GetModel();
+
+    internal override void OnCreate()
+    {
+        var meshes = Model.Meshes;
+        for (int i = 0; i < meshes.Length; i++)
+        {
+            var mesh = meshes[i];
+            var material = Blueprint.GetMaterial(i);
+
+            var source = new SourceComponent(
+                mesh.MeshId, 
+                material.MaterialId, 
+                mesh.Info.MeshIndex, 
+                EntitySourceKind.Model,
+                material.State.DrawQueue, 
+                material.State.PassMasks);
+
+            var entity = Ecs.RenderCore.AddEntity(source, in LocalTransform);
+            RenderEntityIds.Add(entity);
+        }
+
+        if (Model.Animation is { } animation)
+            AddAnimationEntities(animation);
+    }
+
+    private void AddAnimationEntities(ModelAnimation animation)
+    {
+        var clip = animation.Clips[0];
+        var renderComponent = new SkinningComponent(animation.AnimationId, instance: 0);
+        var gameComponent = new AnimationComponent { Duration = clip.Duration, Speed = clip.TicksPerSecond };
+
+        var existing = false;
+        var rootEntity = RenderEntityIds[0];
+        foreach (var query in Ecs.GetRenderStore<SkinningComponent>().Query())
+        {
+            ref readonly var c = ref query.Component;
+            if (renderComponent.AnimationId != c.AnimationId || renderComponent.Instance != c.Instance)
+                continue;
+
+            existing = true;
+            rootEntity = query.Entity;
+            break;
+        }
+
+        if (!existing)
+        {
+            Ecs.GetRenderStore<SkinningComponent>().Add(rootEntity, renderComponent);
+
+            var gameEntity = Ecs.GameCore.AddEntity();
+            GameEntityIds.Add(gameEntity);
+            Ecs.GetGameStore<AnimationComponent>().Add(gameEntity, gameComponent);
+            Ecs.GetGameStore<RenderLink>().Add(gameEntity, new RenderLink(rootEntity));
+        }
+
+        var skinLinkComponent = new SkinLinkComponent { EntityId = rootEntity };
+        foreach (var entity in GetRenderEntities())
+        {
+            Ecs.GetRenderStore<SkinLinkComponent>().Add(entity, skinLinkComponent);
+        }
+    }
 
     public void ApplyMaterialState(MaterialState material)
     {
@@ -116,6 +183,42 @@ public sealed class ModelInstance : BlueprintInstance
             if (source.Material.Id > 0 && source.Material != material.MaterialId) continue;
             source.Queue = material.DrawQueue;
             source.Passes = material.PassMasks;
+        }
+    }
+
+    public void ApplyBounds()
+    {
+        BoundingBox result = default;
+        foreach (var entity in GetRenderEntities())
+        {
+            var meshIndex = Ecs.RenderCore.GetSource(entity).MeshIndex;
+            var local = Model.Meshes[meshIndex].LocalBounds;
+
+            ref var bounds = ref Ecs.RenderCore.GetWorldBounds(entity);
+            BoundingBox.GetWorldBounds(in local, in Ecs.RenderCore.GetWorldMatrix(entity), out bounds);
+            BoundingBox.Merge(in result, in bounds, out result);
+        }
+
+    }
+    private void UpdateTransform()
+    {
+        Owner.Transform.GetTransformMatrix(out var rootMatrix);
+        foreach (var entity in GetRenderEntities())
+        {
+            MatrixMath.CreateModelMatrix(in Ecs.Render.Core.GetLocalTransform(entity), out var worldMatrix);
+            MatrixMath.MultiplyAffine(ref worldMatrix, in rootMatrix);
+
+            ref var finalMatrix = ref Ecs.Render.Core.GetWorldMatrix(entity);
+            if (IsAnimated)
+            {
+                finalMatrix = worldMatrix;
+                continue;
+            }
+
+
+            var meshIndex = Ecs.Render.Core.GetSource(entity).MeshIndex;
+            ref readonly var meshMatrix = ref Model.Meshes[meshIndex].WorldTransform;
+            MatrixMath.MultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
         }
     }
 }

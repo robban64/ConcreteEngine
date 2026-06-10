@@ -33,7 +33,7 @@ public abstract class SceneObjectBlueprint<T> : SceneObjectBlueprint where T : B
         _instances.Remove(instance);
     }
 
-    private void PropagateChange()
+    private void NotifyChanges()
     {
         foreach (var instance in GetInstanceSpan())
         {

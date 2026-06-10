@@ -14,7 +14,6 @@ public sealed class InspectSceneObject
 
     internal readonly InspectModelInstance? InspectModel;
     internal readonly InspectParticleInstance? InspectParticle;
-    internal readonly InspectAnimationInstance? InspectAnimation;
 
     public InspectSceneObject(SceneObject sceneObject)
     {
@@ -24,13 +23,7 @@ public sealed class InspectSceneObject
         InspectorFieldProvider.Instance.SceneFields.Bind(this);
 
         if (sceneObject.Kind == SceneObjectKind.Model)
-        {
             InspectModel = new InspectModelInstance(sceneObject.GetInstance<ModelInstance>());
-
-            if (sceneObject.TryGetInstance<AnimationInstance>(out var animationInstance))
-            {
-            }
-        }
         else if (sceneObject.Kind == SceneObjectKind.Particle)
             InspectParticle = new InspectParticleInstance(sceneObject.GetInstance<ParticleInstance>());
     }
@@ -46,16 +39,6 @@ internal sealed class InspectModelInstance
     {
         Instance = instance;
         //InspectorFieldProvider.Instance.ModelInstanceFields.Bind(instance);
-    }
-}
-
-internal sealed class InspectAnimationInstance
-{
-    public readonly AnimationInstance Instance;
-
-    public InspectAnimationInstance(AnimationInstance instance)
-    {
-        Instance = instance;
     }
 }
 

@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
@@ -10,18 +11,19 @@ namespace ConcreteEngine.Core.Engine.Scene;
 public abstract class RenderBlueprintInstance(SceneObject owner)
 {
     
-    protected readonly SceneObject Owner = owner;
     public bool IsDirty { get; private set; } = true;
     
+    protected readonly SceneObject Owner = owner;
     protected readonly List<RenderEntityId> RenderEntityIds = [];
     
-    //public Transform LocalTransform;
-    public BoundingBox WorldBounds;
-
+    protected BoundingBox WorldBounds;
+    
     public abstract RenderBlueprint GetBlueprint();
     public string DisplayName => GetBlueprint().DisplayName;
     public int EntityCount => RenderEntityIds.Count;
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(RenderEntityIds);
+    
+    public ref readonly BoundingBox GetWorldBounds() => ref WorldBounds;
     
     internal void MarkDirty(SceneDirtyFlags flag)
     {
@@ -38,7 +40,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
     internal abstract void OnCreate();
     protected virtual void OnCommit() { }
     
-    internal abstract void ApplyTransform();
+    internal abstract void ApplyTransform(in Matrix4x4 rootMatrix);
 
     internal void AddEntity()
     {
@@ -54,6 +56,12 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
             source.Queue = material.DrawQueue;
             source.Passes = material.PassMasks;
         }
+    }
+
+    public void ToggleVisibility(bool visible)
+    {
+        foreach (var entity in GetRenderEntities())
+            Ecs.RenderCore.ToggleVisibility(entity, VisibilityFlags.ForceHidden, visible);
     }
 
     public void ToggleSelection(bool isSelected)

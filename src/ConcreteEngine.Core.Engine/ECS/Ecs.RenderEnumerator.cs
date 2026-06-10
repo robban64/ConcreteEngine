@@ -140,7 +140,7 @@ public static partial class Ecs
                 while (++_i < _count)
                 {
                     var entity = store.GetEntity(_i);
-                    if (!entity.IsValid())
+                    if (entity.IsValid())
                     {
                         _currentEntity = entity;
                         return true;

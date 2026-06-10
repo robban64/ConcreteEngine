@@ -87,6 +87,7 @@ public sealed class EngineRenderSystem : IDisposable
 
     internal void OnSimulate(float dt)
     {
+        _animationSystem.UpdateAnimations(dt);
         _particleSystem.Simulate(dt);
     }
 

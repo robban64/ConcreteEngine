@@ -147,12 +147,7 @@ public sealed class SceneStore
 
         _byKind[(int)sceneObject.Kind].Add(id);
 
-        foreach (var bp in template.Blueprints)
-        {
-            _blueprints.TryAdd(bp.GId, bp);
-        }
-        
-        sceneObject.Attach();
+        foreach (var bp in template.Blueprints) _blueprints.TryAdd(bp.GId, bp);
         
         return sceneObject;
     }

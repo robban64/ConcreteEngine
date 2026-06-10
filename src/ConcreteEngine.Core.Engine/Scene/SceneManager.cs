@@ -31,14 +31,20 @@ public sealed class SceneManager
     
     public int DirtyCount => _dirtyIds.Count;
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ReadOnlySpan<int> GetDirtySpan() => CollectionsMarshal.AsSpan(_dirtyIds);
+    internal void CommitTick()
+    {
+        if(_dirtyIds.Count == 0) return;
+        foreach (var id in CollectionsMarshal.AsSpan(_dirtyIds))
+        {
+            Store.GetInternal(id).Commit();
+        }
+    }
 
     public SceneObject SpawnFrom(Model model, in Transform transform)
     {
         return Store.Create(new SceneObjectTemplate(model.Name, in transform)
         {
-            Blueprints = { new ModelBlueprint(model) }
+            Blueprints = [new ModelBlueprint(model)]
         });
     }
 
@@ -46,7 +52,7 @@ public sealed class SceneManager
     {
         return Store.Create(new SceneObjectTemplate(model.Name, in transform)
         {
-            Blueprints = { new ModelBlueprint(model, materials) }
+            Blueprints = [new ModelBlueprint(model, materials)]
         });
     }
     

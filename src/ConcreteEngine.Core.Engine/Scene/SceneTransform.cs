@@ -5,10 +5,10 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
-public sealed class SceneTransform(SceneObject sceneObject, in Transform transform, in BoundingBox bounds)
+public sealed class SceneTransform(SceneObject sceneObject)
 {
-    private Transform _transform = transform;
-    private BoundingBox _bounds = bounds;
+    private Transform _transform;
+    private BoundingBox _bounds;
 
     public ref readonly Transform GetTransform() => ref _transform;
     public ref readonly BoundingBox GetBounds() => ref _bounds;

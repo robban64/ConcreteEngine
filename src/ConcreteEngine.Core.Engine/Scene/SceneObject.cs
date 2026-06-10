@@ -54,34 +54,32 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     [JsonIgnore]
     public SceneDirtyFlags Dirty { get; private set; }
-    
-    [JsonIgnore]
-    public bool Attached { get; private set; }
+
+    //[JsonIgnore] public bool Attached { get; private set; }
 
     public SceneTransform Transform { get; }
 
     private readonly List<RenderBlueprintInstance> _instances = [];
-    private readonly List<RenderEntityId> _renderEntities = [];
-    
+
     internal SceneObject(
         SceneObjectId id,
-        Guid gId,
+        Guid gid,
         string name,
-        bool enabled,
-        in Transform transform,
-        in BoundingBox bounds)
+        bool enabled = true)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
-        ArgumentOutOfRangeException.ThrowIfEqual(gId, Guid.Empty);
+        ArgumentOutOfRangeException.ThrowIfEqual(gid, Guid.Empty);
         ArgumentException.ThrowIfNullOrEmpty(name);
 
         Id = id;
-        GId = gId;
+        GId = gid;
         Name = name;
         Enabled = enabled;
         Visible = true;
 
-        Transform = new SceneTransform(this, in transform, in bounds);
+        Transform = new SceneTransform(this);
+        MarkDirty(SceneDirtyFlags.Transform);
+        MarkDirty(SceneDirtyFlags.Instance);
     }
 
     public void SetName(string newName)
@@ -91,12 +89,8 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     //
     public int InstanceCount => _instances.Count;
-    public int RenderEntitiesCount => _renderEntities.Count;
 
     //
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(_renderEntities);
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<RenderBlueprintInstance> GetInstances() => CollectionsMarshal.AsSpan(_instances);
 
@@ -129,25 +123,9 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
 
     //
-    internal void Attach()
-    {
-        Attached = true;
-        MarkDirty(SceneDirtyFlags.Transform);
-        MarkDirty(SceneDirtyFlags.Instance);
-    }
-
     internal void AddInstance(RenderBlueprintInstance instance)
     {
         _instances.Add(instance);
-        _renderEntities.AddRange(instance.GetRenderEntities());
-        //_gameEntities.AddRange(instance.GetGameEntities());
-/*
-        foreach (var entity in instance.GetRenderEntities())
-            Ecs.SceneLink.BindSceneHandle(entity, Id);
-*/
-        //foreach (var entity in instance.GetGameEntities())
-        //    Ecs.SceneLink.BindSceneHandle(entity, Id);
-
         if (instance is ModelInstance) Kind = SceneObjectKind.Model;
         else if (instance is ParticleInstance) Kind = SceneObjectKind.Particle;
     }
@@ -155,13 +133,41 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void MarkDirty(SceneDirtyFlags flags)
     {
-        if (!Attached || (Dirty & flags) != 0) return;
+        if ((Dirty & flags) != 0) return;
         Dirty |= flags;
         SceneManager.Instance.MarkDirty(Id);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void ClearDirty() => Dirty = SceneDirtyFlags.None;
+    internal void Commit()
+    {
+        var flag = Dirty;
+        if ((flag & SceneDirtyFlags.Visibility) != 0) CommitVisibility();
+        if ((flag & SceneDirtyFlags.Transform) != 0) CommitTransform();
+        if ((flag & SceneDirtyFlags.Instance) != 0) CommitInstances();
+        Dirty = SceneDirtyFlags.None;
+    }
+
+
+    private void CommitVisibility()
+    {
+        foreach (var it in GetInstances()) it.ToggleVisibility(Visible);
+    }
+    
+    private void CommitTransform()
+    {
+        Transform.GetTransformMatrix(out var rootMatrix);
+        foreach (var instance in GetInstances()) 
+            instance.ApplyTransform(in rootMatrix);
+    }
+
+    private void CommitInstances()
+    {
+        foreach (var it in GetInstances())
+        {
+            if (it.IsDirty) it.Commit();
+        }
+    }
 
     public int CompareTo(SceneObject? other)
     {
@@ -181,4 +187,3 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     public override int GetHashCode() => HashCode.Combine(Id, GId);
 }
-

@@ -1,3 +1,4 @@
+using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
@@ -115,11 +116,10 @@ public sealed class ModelInstance : RenderBlueprintInstance
         }
     }
 
-    internal override void ApplyTransform()
+    internal override void ApplyTransform(in Matrix4x4 rootMatrix)
     {
         BoundingBox globalBounds = default;
         var meshes = Model.Meshes;
-        Owner.Transform.GetTransformMatrix(out var rootMatrix);
         foreach (var entity in GetRenderEntities())
         {
             var meshIndex = Ecs.Render.Core.GetSource(entity).MeshIndex;

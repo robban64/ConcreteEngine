@@ -8,11 +8,10 @@ public sealed class SceneObjectTemplate
     public string Name { get; init; }
     public bool Enabled { get; set; } = true;
 
-    public readonly List<RenderBlueprint> Blueprints = [];
-    public readonly List<GameBlueprint> GameBlueprints = [];
+    public RenderBlueprint[] Blueprints = [];
+    public GameBlueprint[] GameBlueprints = [];
 
     public Transform Transform = Transform.Identity;
-    public BoundingBox Bounds = BoundingBox.One;
 
     public SceneObjectTemplate() { }
 
@@ -20,10 +19,5 @@ public sealed class SceneObjectTemplate
     {
         Name = name;
         Transform = transform;
-    }
-
-    public SceneObjectTemplate(string name, in Transform transform, in BoundingBox bounds) : this(name, in transform)
-    {
-        Bounds = bounds;
     }
 }

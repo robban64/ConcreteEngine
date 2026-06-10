@@ -19,7 +19,8 @@ public static class BlueprintFactory
         ArgumentNullException.ThrowIfNull(tp);
         ArgumentNullException.ThrowIfNull(tp.Blueprints);
 
-        var sceneObject = new SceneObject(id, tp.GId, tp.Name, tp.Enabled, in tp.Transform, in tp.Bounds);
+        var sceneObject = new SceneObject(id, tp.GId, tp.Name, tp.Enabled);
+        sceneObject.Transform.SetTransform(in tp.Transform);
 
         foreach (var it in tp.Blueprints)
         {
@@ -35,13 +36,10 @@ public static class BlueprintFactory
         return sceneObject;
     }
 
-    private static ModelInstance BuildModel(SceneObject sceneObject, ModelBlueprint bp)
+    public static ModelInstance BuildModel(SceneObject sceneObject, ModelBlueprint bp)
     {
         var model = bp.Model;
-        
-        if (sceneObject.Transform.GetBounds().IsIdentity)
-            sceneObject.Transform.SetBounds(in model.Bounds);
-
+        sceneObject.Transform.SetBounds(in model.Bounds);
         var instance = new ModelInstance(sceneObject, bp);
         bp.AddInstance(instance);
         instance.OnCreate();
@@ -75,73 +73,5 @@ public static class BlueprintFactory
 
         return instance;
     }
-/*
-    private static RenderEntityId BuildModelEntities(ModelInstance component)
-    {
-        var rootEntity = new RenderEntityId(0);
-        var meshes = component.GetModel().Meshes;
-        var isAnimated = component.GetModel().Animation != null;
-        for (int i = 0; i < meshes.Length; i++)
-        {
-            var mesh = meshes[i];
-            var material = component.Blueprint.GetMaterial(i);
-            var meshIdx = mesh.Info.MeshIndex;
-
-            var source = new SourceComponent(
-                mesh.MeshId, 
-                material.MaterialId, 
-                meshIdx, 
-                EntitySourceKind.Model,
-                material.State.DrawQueue, 
-                material.State.PassMasks);
-
-            var entity = RenderEcs.AddEntity(source, in component.LocalTransform);
-            component.RenderEntityIds.Add(entity);
-
-            if (i == 0) rootEntity = entity;
-        }
-
-        return rootEntity;
-    }
-
-    private static void BuildAnimationEntities(RenderEntityId rootEntity, ModelInstance instance,
-        ModelAnimation animation)
-    {
-        var clip = animation.Clips[0];
-
-        var renderComponent = new SkinningComponent(animation.AnimationId, instance: 0);
-        var gameComponent = new AnimationComponent { Duration = clip.Duration, Speed = clip.TicksPerSecond };
-        var animationStore = Ecs.GetRenderStore<SkinningComponent>();
-
-        var existing = false;
-        foreach (var query in animationStore.Query())
-        {
-            ref readonly var c = ref query.Component;
-            if (renderComponent.AnimationId != c.AnimationId || renderComponent.Instance != c.Instance)
-                continue;
-
-            existing = true;
-            rootEntity = query.Entity;
-            break;
-        }
-
-        if (!existing)
-        {
-            animationStore.Add(rootEntity, renderComponent);
-
-            var gameEntity = GameEcs.AddEntity();
-            instance.GameEntityIds.Add(gameEntity);
-            Ecs.GetGameStore<AnimationComponent>().Add(gameEntity, gameComponent);
-            Ecs.GetGameStore<RenderLink>().Add(gameEntity, new RenderLink(rootEntity));
-        }
-
-        var skinLinkComponent = new SkinLinkComponent { EntityId = rootEntity };
-        foreach (var entity in instance.GetRenderEntities())
-        {
-            Ecs.GetRenderStore<SkinLinkComponent>().Add(entity, skinLinkComponent);
-        }
-    }
-*/
-  
     
 }

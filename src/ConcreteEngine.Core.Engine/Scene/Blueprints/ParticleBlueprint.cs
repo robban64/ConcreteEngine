@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
@@ -66,9 +67,18 @@ public sealed class ParticleInstance : RenderBlueprintInstance, IAssetListener
         }
     }
 
-    internal override void ApplyTransform()
+    internal override void ApplyTransform(in Matrix4x4 rootMatrix)
     {
-        
+        Emitter.Translation = Owner.Transform.Translation;
+        foreach (var entity in GetRenderEntities())
+        {
+            MatrixMath.CreateModelMatrix(in Ecs.Render.Core.GetLocalTransform(entity), out var worldMatrix);
+            MatrixMath.MultiplyAffine(ref worldMatrix, in rootMatrix);
+
+            Ecs.Render.Core.GetWorldMatrix(entity) = worldMatrix;
+            BoundingBox.GetWorldBounds(new BoundingBox(-Vector3.One*10,Vector3.One*10), in worldMatrix, out Ecs.Render.Core.GetWorldBounds(entity));
+        }
+
     }
 
     public void OnAssetChanged(AssetObject asset) {}

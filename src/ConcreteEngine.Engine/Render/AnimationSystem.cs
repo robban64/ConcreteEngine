@@ -2,6 +2,8 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Render.Data;
 
@@ -61,7 +63,15 @@ internal sealed class AnimationSystem
             Throwers.BufferOverflow(nameof(AnimationChannel), index, _animations.Length);
         return _animations[index].GetSkinningContext(clip);
     }
-
+    
+    public void UpdateAnimations(float dt)
+    {
+        foreach (var query in Ecs.Game.Query<AnimationComponent>())
+        {
+            ref var c = ref query.Component;
+            c.AdvanceTime(dt);
+        }
+    }
 
     public void Setup(AssetStore assets)
     {

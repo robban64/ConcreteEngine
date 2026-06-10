@@ -10,7 +10,6 @@ internal sealed class SceneSystem
     public GameScene? Current { get; private set; }
     public bool Enabled { get; private set; }
 
-    internal readonly SceneProcessor SceneProcessor;
     private readonly SceneManager _sceneManager;
 
     private readonly ModuleManager _modules;
@@ -25,7 +24,6 @@ internal sealed class SceneSystem
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
         _sceneManager = new SceneManager();
         
-        SceneProcessor = new SceneProcessor(_sceneManager);
         _modules = new ModuleManager();
     }
 
@@ -45,7 +43,7 @@ internal sealed class SceneSystem
 
         _modules.UpdateTick(deltaTime);
         Current.UpdateTick(deltaTime);
-        SceneProcessor.Update(deltaTime);
+        _sceneManager.CommitTick();
     }
 
 

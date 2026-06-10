@@ -8,7 +8,8 @@ public sealed class SceneObjectTemplate
     public string Name { get; init; }
     public bool Enabled { get; set; } = true;
 
-    public readonly List<SceneObjectBlueprint> Blueprints = [];
+    public readonly List<RenderBlueprint> Blueprints = [];
+    public readonly List<GameBlueprint> GameBlueprints = [];
 
     public Transform Transform = Transform.Identity;
     public BoundingBox Bounds = BoundingBox.One;

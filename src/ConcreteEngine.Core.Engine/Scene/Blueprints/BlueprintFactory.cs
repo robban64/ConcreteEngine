@@ -27,7 +27,7 @@ public static class BlueprintFactory
             {
                 ModelBlueprint model => BuildModel(sceneObject, model),
                 ParticleBlueprint particle => BuildParticle(sceneObject, particle),
-                _ => Throwers.Unreachable<BlueprintInstance>(nameof(tp.Blueprints))
+                _ => Throwers.Unreachable<RenderBlueprintInstance>(nameof(tp.Blueprints))
             };
             sceneObject.AddInstance(instance);
         }
@@ -37,7 +37,7 @@ public static class BlueprintFactory
 
     private static ModelInstance BuildModel(SceneObject sceneObject, ModelBlueprint bp)
     {
-        var model = bp.GetModel();
+        var model = bp.Model;
         
         if (sceneObject.Transform.GetBounds().IsIdentity)
             sceneObject.Transform.SetBounds(in model.Bounds);
@@ -60,24 +60,19 @@ public static class BlueprintFactory
                 .CreateEmitter(bp.EmitterName, bp.ParticleCount, in bp.Definition, in bp.VisualParams);
         }
 
-        var materialId = AssetStore.Get<Material>(bp.Material).MaterialId;
-
-        var source = new SourceComponent(default, materialId, 0, EntitySourceKind.Particle,
-            DrawCommandQueue.Particles, PassMask.Main);
+        var material = AssetStore.Get<Material>(bp.Material);
 
         var transform = ParticleBlueprint.MakeTransform(bp);
         emitter.Direction = bp.Direction;
         emitter.Translation = transform.Translation;
 
-        var entity = RenderEcs.AddEntity(source, in transform);
-
-        var particle = new ParticleComponent(emitter.Id);
-        Ecs.GetRenderStore<ParticleComponent>().Add(entity, in particle);
-
         var instance = new ParticleInstance(sceneObject, bp, emitter);
-        instance.RenderEntityIds.Add(entity);
+        instance.ParticleMaterial = new AssetRef<Material>(material, instance);
+        bp.LocalTransform = transform;
         
         bp.AddInstance(instance);
+        instance.OnCreate();
+
         return instance;
     }
 /*

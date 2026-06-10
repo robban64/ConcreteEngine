@@ -26,7 +26,7 @@ public sealed class SceneStore
 
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
     
-    private readonly Dictionary<Guid, SceneObjectBlueprint> _blueprints = new(128);
+    private readonly Dictionary<Guid, IBlueprint> _blueprints = new(128);
 
     private readonly Stack<int> _free = [];
 

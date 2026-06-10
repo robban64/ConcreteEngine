@@ -9,111 +9,50 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
-/*
- 
-   public sealed class ModelBlueprint : SceneObjectBlueprint
-   {
-       public AssetId ModelId { get; }
-       public readonly AssetId[] Materials = [];
-   
-       public Transform LocalTransform = Transform.Identity;
-   
-       public ModelBlueprint(AssetId modelId, params ReadOnlySpan<AssetId> materialAssetIds)
-       {
-           ModelId = modelId;
-           if (materialAssetIds.Length >= 1)
-               Materials = materialAssetIds.ToArray();
-       }
-   }
- */
-
-public sealed class ModelBlueprint : SceneObjectBlueprint<ModelInstance>, IAssetListener
+public sealed class ModelBlueprint : RenderBlueprint
 {
-    public Transform LocalTransform = Transform.Identity;
-
     private readonly AssetRef<Model> _model;
-    private readonly AssetRef<Material>?[] _materials;
-    
-    public ModelBlueprint(Model model)
+    public Model Model => _model.Asset;
+
+    public ModelBlueprint(Model model) : base(model.Info.MaterialCount)
     {
         _model = new AssetRef<Model>(model, this);
-        _materials = new AssetRef<Material>?[model.Info.MaterialCount];
-        for (var i = 0; i < _materials.Length; i++)
+        for (var i = 0; i < Materials.Length; i++)
         {
-            _materials[i] = new AssetRef<Material>(_model.Asset.GetMaterial(i), this);
+            Materials[i] = new AssetRef<Material>(_model.Asset.GetMaterial(i), this);
         }
     }
-    public ModelBlueprint(Model model, params ReadOnlySpan<Material?> materials)
+    public ModelBlueprint(Model model, params ReadOnlySpan<Material?> materials) 
+        : base(int.Max(model.Info.MaterialCount, materials.Length))
     {
         _model = new AssetRef<Model>(model, this);
-        _materials = new AssetRef<Material>?[int.Max(model.Info.MaterialCount, materials.Length)];
         for (var i = 0; i < materials.Length; i++)
         {
             var material = materials[i] ?? _model.Asset.GetMaterial(i);
-            _materials[i] = new AssetRef<Material>(material, this);
+            Materials[i] = new AssetRef<Material>(material, this);
         }
     }
     
-    public int MaterialCount => _materials.Length;
 
-    public Model GetModel() => _model.Asset;
-
-    public Material GetMaterial(int index)
-    {
-        if ((uint)index >= (uint)_materials.Length) Throwers.InvalidArgument(nameof(index));
-        var material = _materials[index];
-        return material is null ? Material.FallbackMaterial : material.Asset;
-    }
-
-    public void SetMaterial(int index, Material material)
-    {
-        if (_materials[index] is { } currentMaterial)
-        {
-            if (currentMaterial.Asset == material) return;
-            currentMaterial.Detach();
-        }
-
-        _materials[index] = new AssetRef<Material>(material, this);
-    }
-
-    
-    public void OnAssetChanged(AssetObject asset)
-    {
-        if (asset is not Material material || (material.DirtyFlags & AssetDirtyFlag.Structure) == 0) return;
-        foreach (var instance in GetInstanceSpan())
-            instance.ApplyMaterialState(material.State);
-    }
-
-    public void OnAssetRemoved(AssetObject asset)
-    {
-        if (asset is not Material) return;
-        foreach (var instance in GetInstanceSpan())
-            instance.ApplyMaterialState(Material.FallbackMaterial.State);
-
-    }
 
 }
 
-public sealed class ModelInstance : BlueprintInstance
+public sealed class ModelInstance : RenderBlueprintInstance
 {
     public readonly ModelBlueprint Blueprint;
     public readonly bool IsAnimated;
 
-    private BoundingBox _worldBounds;
-    
     public ModelInstance(SceneObject owner, ModelBlueprint blueprint) : base(owner)
     {
         Blueprint = blueprint;
-        IsAnimated = blueprint.GetModel().Animation is not null;
+        IsAnimated = blueprint.Model.Animation is not null;
     }
 
-    public override SceneObjectBlueprint GetBlueprint() => Blueprint;
-    public ref readonly Transform LocalTransform => ref Blueprint.LocalTransform;
-    public ref readonly BoundingBox WorldBounds => ref _worldBounds;
+    public override ModelBlueprint GetBlueprint() => Blueprint;
 
     public int MaterialCount => Blueprint.MaterialCount;
 
-    public Model Model => Blueprint.GetModel();
+    public Model Model => Blueprint.Model;
 
     internal override void OnCreate()
     {
@@ -131,7 +70,8 @@ public sealed class ModelInstance : BlueprintInstance
                 material.State.DrawQueue, 
                 material.State.PassMasks);
 
-            var entity = Ecs.RenderCore.AddEntity(source, in LocalTransform);
+            var entity = Ecs.RenderCore.AddEntity(source, in Blueprint.LocalTransform);
+            Ecs.SceneLink.BindSceneHandle(entity, Owner.Id);
             RenderEntityIds.Add(entity);
         }
 
@@ -163,7 +103,7 @@ public sealed class ModelInstance : BlueprintInstance
             Ecs.GetRenderStore<SkinningComponent>().Add(rootEntity, renderComponent);
 
             var gameEntity = Ecs.GameCore.AddEntity();
-            GameEntityIds.Add(gameEntity);
+            //GameEntityIds.Add(gameEntity);
             Ecs.GetGameStore<AnimationComponent>().Add(gameEntity, gameComponent);
             Ecs.GetGameStore<RenderLink>().Add(gameEntity, new RenderLink(rootEntity));
         }
@@ -175,50 +115,30 @@ public sealed class ModelInstance : BlueprintInstance
         }
     }
 
-    public void ApplyMaterialState(MaterialState material)
+    internal override void ApplyTransform()
     {
-        foreach (var entity in GetRenderEntities())
-        {
-            ref var source = ref Ecs.Render.Core.GetSource(entity);
-            if (source.Material.Id > 0 && source.Material != material.MaterialId) continue;
-            source.Queue = material.DrawQueue;
-            source.Passes = material.PassMasks;
-        }
-    }
-
-    public void ApplyBounds()
-    {
-        BoundingBox result = default;
-        foreach (var entity in GetRenderEntities())
-        {
-            var meshIndex = Ecs.RenderCore.GetSource(entity).MeshIndex;
-            var local = Model.Meshes[meshIndex].LocalBounds;
-
-            ref var bounds = ref Ecs.RenderCore.GetWorldBounds(entity);
-            BoundingBox.GetWorldBounds(in local, in Ecs.RenderCore.GetWorldMatrix(entity), out bounds);
-            BoundingBox.Merge(in result, in bounds, out result);
-        }
-
-    }
-    private void UpdateTransform()
-    {
+        BoundingBox globalBounds = default;
+        var meshes = Model.Meshes;
         Owner.Transform.GetTransformMatrix(out var rootMatrix);
         foreach (var entity in GetRenderEntities())
         {
+            var meshIndex = Ecs.Render.Core.GetSource(entity).MeshIndex;
+
             MatrixMath.CreateModelMatrix(in Ecs.Render.Core.GetLocalTransform(entity), out var worldMatrix);
             MatrixMath.MultiplyAffine(ref worldMatrix, in rootMatrix);
 
             ref var finalMatrix = ref Ecs.Render.Core.GetWorldMatrix(entity);
             if (IsAnimated)
-            {
                 finalMatrix = worldMatrix;
-                continue;
-            }
+            else
+                MatrixMath.MultiplyAffine(ref finalMatrix, in meshes[meshIndex].WorldTransform, in worldMatrix);
 
 
-            var meshIndex = Ecs.Render.Core.GetSource(entity).MeshIndex;
-            ref readonly var meshMatrix = ref Model.Meshes[meshIndex].WorldTransform;
-            MatrixMath.MultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
+            ref readonly var localBounds = ref meshes[meshIndex].LocalBounds;
+            ref var worldBounds = ref Ecs.RenderCore.GetWorldBounds(entity);
+            BoundingBox.GetWorldBounds(in localBounds, in finalMatrix, out worldBounds);
+            BoundingBox.Merge(in globalBounds, in worldBounds, out globalBounds);
         }
+        WorldBounds = globalBounds;
     }
 }

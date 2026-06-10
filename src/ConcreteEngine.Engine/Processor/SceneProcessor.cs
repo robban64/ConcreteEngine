@@ -44,12 +44,9 @@ internal sealed class SceneProcessor(SceneManager sceneManager)
             if ((dirtyFlag & SceneDirtyFlags.Visibility) != 0)
                 UpdateVisibility(sceneObject);
             if ((dirtyFlag & SceneDirtyFlags.Instance) != 0)
-                UpdateInstance(sceneObject);
+                CommitInstances(sceneObject);
             if ((dirtyFlag & SceneDirtyFlags.Transform) != 0)
-            {
                 UpdateTransform(sceneObject);
-                UpdateBounds(sceneObject);
-            }            
 
             sceneObject.ClearDirty();
         }
@@ -67,7 +64,7 @@ internal sealed class SceneProcessor(SceneManager sceneManager)
         }
     }
 
-    private void UpdateInstance(SceneObject sceneObject)
+    private void CommitInstances(SceneObject sceneObject)
     {
         foreach (var it in sceneObject.GetInstances())
         {
@@ -78,43 +75,8 @@ internal sealed class SceneProcessor(SceneManager sceneManager)
 
     private void UpdateTransform(SceneObject sceneObject)
     {
-        sceneObject.Transform.GetTransformMatrix(out var rootMatrix);
-        foreach (var entity in sceneObject.GetRenderEntities())
-        {
-            MatrixMath.CreateModelMatrix(in Ecs.Render.Core.GetLocalTransform(entity), out var worldMatrix);
-            MatrixMath.MultiplyAffine(ref worldMatrix, in rootMatrix);
-
-            ref var finalMatrix = ref Ecs.Render.Core.GetWorldMatrix(entity);
-
-            if (Ecs.GetRenderStore<ParticleComponent>().Has(entity))
-            {
-                var emitterId = Ecs.GetRenderStore<ParticleComponent>().Get(entity).EmitterId;
-                var emitter = ParticleManager.Instance.Get(emitterId);
-                emitter.Translation = sceneObject.Transform.Translation;
-                
-                finalMatrix = worldMatrix;
-                continue;
-            }
-
-            if (Ecs.GetRenderStore<SkinLinkComponent>().Has(entity))
-            {
-                finalMatrix = worldMatrix;
-                continue;
-            }
-
-            var instance = sceneObject.GetInstance<ModelInstance>();
-            var meshIndex = Ecs.Render.Core.GetSource(entity).MeshIndex;
-            ref readonly var meshMatrix = ref instance.Model.Meshes[meshIndex].WorldTransform;
-            MatrixMath.MultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
-        }
+        foreach (var instance in sceneObject.GetInstances())
+            instance.ApplyTransform();
     }
     
-
-    private void UpdateBounds(SceneObject sceneObject)
-    {
-        if(sceneObject.TryGetInstance<ModelInstance>(out var instance))
-            instance.ApplyBounds();
-
-
-    }
 }

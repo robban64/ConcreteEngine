@@ -60,9 +60,8 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     public SceneTransform Transform { get; }
 
-    private readonly List<BlueprintInstance> _instances = [];
+    private readonly List<RenderBlueprintInstance> _instances = [];
     private readonly List<RenderEntityId> _renderEntities = [];
-    private readonly List<GameEntityId> _gameEntities = [];
     
     internal SceneObject(
         SceneObjectId id,
@@ -93,21 +92,16 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     //
     public int InstanceCount => _instances.Count;
     public int RenderEntitiesCount => _renderEntities.Count;
-    public int GameEntitiesCount => _gameEntities.Count;
-
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(_renderEntities);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(_gameEntities);
+    public ReadOnlySpan<RenderBlueprintInstance> GetInstances() => CollectionsMarshal.AsSpan(_instances);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<BlueprintInstance> GetInstances() => CollectionsMarshal.AsSpan(_instances);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TInstance GetInstance<TInstance>() where TInstance : BlueprintInstance
+    public TInstance GetInstance<TInstance>() where TInstance : RenderBlueprintInstance
     {
         foreach (var it in GetInstances())
         {
@@ -118,7 +112,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         return null!;
     }
 
-    public bool TryGetInstance<TInstance>(out TInstance instance) where TInstance : BlueprintInstance
+    public bool TryGetInstance<TInstance>(out TInstance instance) where TInstance : RenderBlueprintInstance
     {
         foreach (var it in GetInstances())
         {
@@ -142,17 +136,17 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         MarkDirty(SceneDirtyFlags.Instance);
     }
 
-    internal void AddInstance(BlueprintInstance instance)
+    internal void AddInstance(RenderBlueprintInstance instance)
     {
         _instances.Add(instance);
         _renderEntities.AddRange(instance.GetRenderEntities());
-        _gameEntities.AddRange(instance.GetGameEntities());
-
+        //_gameEntities.AddRange(instance.GetGameEntities());
+/*
         foreach (var entity in instance.GetRenderEntities())
             Ecs.SceneLink.BindSceneHandle(entity, Id);
-
-        foreach (var entity in instance.GetGameEntities())
-            Ecs.SceneLink.BindSceneHandle(entity, Id);
+*/
+        //foreach (var entity in instance.GetGameEntities())
+        //    Ecs.SceneLink.BindSceneHandle(entity, Id);
 
         if (instance is ModelInstance) Kind = SceneObjectKind.Model;
         else if (instance is ParticleInstance) Kind = SceneObjectKind.Particle;
@@ -168,12 +162,6 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void ClearDirty() => Dirty = SceneDirtyFlags.None;
-
-    internal void EnsureCapacity(int renderEcsCapacity, int gameEcsCapacity)
-    {
-        _renderEntities.EnsureCapacity(renderEcsCapacity);
-        _gameEntities.EnsureCapacity(gameEcsCapacity);
-    }
 
     public int CompareTo(SceneObject? other)
     {

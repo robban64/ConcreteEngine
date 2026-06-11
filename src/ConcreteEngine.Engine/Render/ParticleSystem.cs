@@ -13,7 +13,6 @@ using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Mesh;
-using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;

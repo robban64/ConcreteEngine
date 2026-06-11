@@ -79,7 +79,27 @@ public sealed class ModelInstance : RenderBlueprintInstance
         if (Model.Animation is { } animation)
             AddAnimationEntities(animation);
     }
+    private void AddAnimationEntities(ModelAnimation animation)
+    {
+        var clip = animation.Clips[0];
+        var renderComponent = new SkinningComponent(animation.AnimationId, instance: 0);
+        var gameComponent = new AnimationComponent { Duration = clip.Duration, Speed = clip.TicksPerSecond };
 
+        var rootEntity = RenderEntityIds[0];
+
+        Ecs.GetRenderStore<SkinningComponent>().Add(rootEntity, renderComponent);
+        var gameEntity = Ecs.GameCore.AddEntity();
+        //GameEntityIds.Add(gameEntity);
+        Ecs.GetGameStore<AnimationComponent>().Add(gameEntity, gameComponent);
+        Ecs.GetGameStore<RenderLink>().Add(gameEntity, new RenderLink(rootEntity));
+
+        var skinLinkComponent = new SkinLinkComponent { EntityId = rootEntity };
+        foreach (var entity in GetRenderEntities())
+        {
+            Ecs.GetRenderStore<SkinLinkComponent>().Add(entity, skinLinkComponent);
+        }
+    }
+/*
     private void AddAnimationEntities(ModelAnimation animation)
     {
         var clip = animation.Clips[0];
@@ -115,6 +135,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
             Ecs.GetRenderStore<SkinLinkComponent>().Add(entity, skinLinkComponent);
         }
     }
+    */
 
     internal override void ApplyTransform(in Matrix4x4 rootMatrix)
     {

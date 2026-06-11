@@ -106,7 +106,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         {
             var sceneAnimations = scene->MAnimations;
             for (var i = 0; i < meta.AnimationCount; i++)
-                ProcessAnimation(sceneAnimations[i], animation);
+                ProcessAnimation(i, sceneAnimations[i], animation);
         }
 
         ProcessMaterials(scene, ctx, meta);

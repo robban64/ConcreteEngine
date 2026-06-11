@@ -2,9 +2,8 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Engine.Graphics;
 
-namespace ConcreteEngine.Engine.Render.Data;
+namespace ConcreteEngine.Core.Engine.Graphics;
 
 internal readonly ref struct SkinningContext
 {
@@ -30,13 +29,28 @@ internal readonly ref struct SkinningContext
     }
 }
 
-internal readonly struct AnimationChannel(AnimationClip.Channel channels)
+public readonly struct AnimationChannel
 {
-    public readonly float[] PositionTimes = channels.PositionTimes;
-    public readonly float[] RotationTimes = channels.RotationTimes;
+    public readonly float[] PositionTimes;
+    public readonly float[] RotationTimes;
 
-    public readonly Vector3[] Positions = channels.Positions;
-    public readonly Quaternion[] Rotations = channels.Rotations;
+    public readonly Vector3[] Positions;
+    public readonly Quaternion[] Rotations;
+
+    public AnimationChannel()
+    {
+        PositionTimes = [];
+        RotationTimes = [];
+        Positions = [];
+        Rotations = [];
+    }
+    public AnimationChannel(AnimationClip.Channel channels)
+    {
+        PositionTimes = channels.PositionTimes;
+        RotationTimes = channels.RotationTimes;
+        Positions = channels.Positions;
+        Rotations = channels.Rotations;
+    }
 
     public int MaxLength
     {

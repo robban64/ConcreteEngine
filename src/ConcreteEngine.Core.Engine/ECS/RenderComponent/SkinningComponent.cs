@@ -9,7 +9,14 @@ public struct SkinLinkComponent : IRenderComponent<SkinLinkComponent>
 {
     public RenderEntityId EntityId;
 }
-
+/*
+public struct SkinningComponent(Id16<ModelAnimation> rigId, GameEntityId animationEntity) : IRenderComponent<SkinningComponent>
+{
+    public GameEntityId AnimationEntity = animationEntity;
+    public Id16<ModelAnimation> RigId = rigId;
+    public ushort SkinningSlot;
+}
+*/
 [StructLayout(LayoutKind.Sequential)]
 public struct SkinningComponent(Id16<ModelAnimation> animationId, ushort instance)
     : IRenderComponent<SkinningComponent>, IEquatable<SkinningComponent>

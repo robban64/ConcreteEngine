@@ -3,12 +3,13 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Render;
-using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Buffer;
 
@@ -19,12 +20,12 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
     private NativeArray<Matrix4x4> _globals;
 
     private readonly RenderEntityStore<SkinningComponent> _skinningEcs;
-    private readonly AnimationSystem _animations;
+    private readonly AnimationManager _animations;
     private readonly SkinningBuffer _skinningBuffer;
 
     private readonly List<RenderEntityId> _entityIds = new(8);
 
-    public AnimatorProcessor(AnimationSystem animations, SkinningBuffer skinningBuffer)
+    public AnimatorProcessor(AnimationManager animations, SkinningBuffer skinningBuffer)
     {
         _globals = NativeArray.AlignedAllocate<Matrix4x4>(RenderLimits.BoneCapacity, alignment: 16);
         _skinningEcs = Ecs.GetRenderStore<SkinningComponent>();
@@ -33,13 +34,14 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
     }
 
     public void Dispose() => _globals.Dispose();
-    
-    
+
+    private AvgFrameTimer avg;
     public void Execute()
     {
         UpdateInterpolate();
         ProcessRenderEcs();
         
+        avg.BeginSample();
         for (var i = 0; i < _entityIds.Count; i++)
         {
             var entityId = _entityIds[i];
@@ -47,6 +49,8 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
             var skinningContext = _animations.GetSkinningContext(it.AnimationId, it.Clip);
             ExecuteInner(it.Time, skinningContext, _skinningBuffer.GetWriteView(it.AnimationSlot));
         }
+
+        if (avg.EndSample() >= 144) avg.ResetAndPrint();
 
         _entityIds.Clear();
     }

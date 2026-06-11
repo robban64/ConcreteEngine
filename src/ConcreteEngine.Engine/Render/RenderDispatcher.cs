@@ -12,7 +12,6 @@ using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Processor;
-using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
 using Camera = ConcreteEngine.Core.Engine.Camera;
@@ -29,7 +28,7 @@ internal sealed class RenderDispatcher : IDisposable
     private readonly RenderUploadBuffers _uploadBuffers;
     private readonly AnimatorProcessor _animatorProcessor;
 
-    internal RenderDispatcher(CameraManager cameraManager, AnimationSystem animations,
+    internal RenderDispatcher(CameraManager cameraManager, AnimationManager animations,
         RenderUploadBuffers uploadBuffers)
     {
         ArgumentNullException.ThrowIfNull(cameraManager);

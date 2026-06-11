@@ -38,6 +38,10 @@ public static class Throwers
     public static void InvalidHandle<T>(T handle) =>
         throw new InvalidOperationException($"Invalid handle ({typeof(T).Name}) = {handle}");
 
+    [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
+    public static void IndexOutOfRange(string buffer, int index, int length) =>
+        throw new InvalidOperationException($"OutOfRange {index} with '{buffer}' length {index}");
+
 
     [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
     public static void BufferOverflow(string buffer, int size, int limit) =>

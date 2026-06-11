@@ -1,17 +1,52 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
+
+
+internal sealed class AnimationRig
+{
+    public readonly byte[] ParentIndices;
+    public readonly Matrix4x4[] BindPose;
+    public readonly Matrix4x4[] InverseBindPose;
+    public readonly AnimationChannel[][] Channels;
+
+    public readonly Id16<ModelAnimation> AnimationId;
+
+    public AnimationRig(ModelAnimation source, AnimationChannel[][] channels)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(channels);
+        ArgumentOutOfRangeException.ThrowIfZero(source.AnimationId.Value, nameof(source.AnimationId));
+
+        AnimationId = source.AnimationId;
+
+        ParentIndices = source.ParentIndices;
+        BindPose = source.BindPose;
+        InverseBindPose = source.InverseBindPose;
+        Channels = channels;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal SkinningContext GetSkinningContext(int clip)
+    {
+        if ((uint)clip > (uint)Channels.Length)
+            Throwers.IndexOutOfRange(nameof(AnimationChannel), clip, Channels.Length);
+
+        return new SkinningContext(ParentIndices, BindPose, InverseBindPose, Channels[clip]);
+    }
+}
 
 public sealed class ModelAnimation
 {
     private static ushort _idCounter;
     public readonly Id16<ModelAnimation> AnimationId = new(++_idCounter);
 
-    [Inspectable] public readonly int AnimationCount;
-    [Inspectable] public readonly List<AnimationClip> Clips;
-    [Inspectable] public readonly Dictionary<string, int> BoneMapping;
+    public readonly int AnimationCount;
+    public readonly AnimationClip[] Clips;
+    public readonly Dictionary<string, int> BoneMapping;
 
     public readonly byte[] ParentIndices;
     public readonly Matrix4x4[] BindPose;
@@ -29,7 +64,7 @@ public sealed class ModelAnimation
         BindPose = new Matrix4x4[boneMapping.Count];
         InverseBindPose = new Matrix4x4[boneMapping.Count];
 
-        Clips = new List<AnimationClip>(animationCount);
+        Clips = new AnimationClip[animationCount];
     }
 }
 

@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Processor;
@@ -24,7 +25,7 @@ public sealed class EngineRenderSystem : IDisposable
     private readonly CameraManager _cameraManager;
     private readonly VisualManager _visualManager;
 
-    private readonly AnimationSystem _animationSystem;
+    private readonly AnimationManager _animationManager;
     private readonly TerrainSystem _terrainSystem;
     private readonly ParticleSystem _particleSystem;
 
@@ -40,9 +41,9 @@ public sealed class EngineRenderSystem : IDisposable
 
         _terrainSystem = new TerrainSystem(graphics.Gfx);
         _particleSystem = new ParticleSystem(graphics.Gfx);
-        _animationSystem = new AnimationSystem();
+        _animationManager = new AnimationManager();
         
-        _renderDispatcher = new RenderDispatcher(_cameraManager, _animationSystem, Program.UploadBuffers);
+        _renderDispatcher = new RenderDispatcher(_cameraManager, _animationManager, Program.UploadBuffers);
         _materialProcessor = new MaterialProcessor(Program);
     }
 
@@ -50,7 +51,7 @@ public sealed class EngineRenderSystem : IDisposable
 
     internal void Initialize()
     {
-        _animationSystem.Setup(AssetStore.Instance);
+        _animationManager.Setup(AssetStore.Instance);
 
         //
         var boundsMaterial = AssetStore.Instance.CreateMaterial("EmptyMat", "EmptyMat1");
@@ -87,7 +88,7 @@ public sealed class EngineRenderSystem : IDisposable
 
     internal void OnSimulate(float dt)
     {
-        _animationSystem.UpdateAnimations(dt);
+        _animationManager.Simulate(dt);
         _particleSystem.Simulate(dt);
     }
 

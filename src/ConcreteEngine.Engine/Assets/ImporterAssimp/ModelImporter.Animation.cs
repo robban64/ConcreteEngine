@@ -31,7 +31,7 @@ internal sealed unsafe partial class ModelImporter
         }
     }
 
-    private static void ProcessAnimation(AssimpAnimation* aiAnim, ModelAnimation? animation)
+    private static void ProcessAnimation(int index, AssimpAnimation* aiAnim, ModelAnimation? animation)
     {
         ArgumentNullException.ThrowIfNull(animation);
 
@@ -40,7 +40,7 @@ internal sealed unsafe partial class ModelImporter
         var ticksPerSecond = (float)(aiAnim->MTicksPerSecond != 0 ? aiAnim->MTicksPerSecond : 25.0f);
 
         var clip = new AnimationClip(name, animation.BoneCount, duration, ticksPerSecond);
-        animation.Clips.Add(clip);
+        animation.Clips[index] = clip;
 
         var channelLen = (int)aiAnim->MNumChannels;
         var channels = aiAnim->MChannels;

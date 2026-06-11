@@ -36,11 +36,12 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
     public void Dispose() => _globals.Dispose();
 
     private AvgFrameTimer avg;
+
     public void Execute()
     {
         UpdateInterpolate();
         ProcessRenderEcs();
-        
+
         avg.BeginSample();
         for (var i = 0; i < _entityIds.Count; i++)
         {
@@ -54,7 +55,7 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
 
         _entityIds.Clear();
     }
-    
+
     private void ProcessRenderEcs()
     {
         foreach (var query in _skinningEcs.VisibilityQuery())
@@ -100,18 +101,18 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
 
         for (var i = 0; i < len; i++)
         {
-            ref readonly var channel = ref ctx.Channels[i];
-            if (channel.MaxLength == 0)
+            var track = ctx.Tracks.BoneTracks[i];
+            if (track.IsNull || track.MaxLength == 0)
             {
                 globals[i] = ctx.BindPose[i];
                 continue;
             }
 
-            var posIndex = GetIndexFactor(time, channel.GetPositionTimes(), out var posFactor);
-            var rotIndex = GetIndexFactor(time, channel.GetRotationTimes(), out var rotFactor);
+            var posIndex = GetIndexFactor(time, track.PositionTimes, out var posFactor);
+            var rotIndex = GetIndexFactor(time, track.RotationTimes, out var rotFactor);
 
-            var pos = GetPosition(posIndex, posFactor, channel.Positions);
-            var rot = GetRotation(rotIndex, rotFactor, channel.Rotations);
+            var pos = GetPosition(posIndex, posFactor, track.Positions);
+            var rot = GetRotation(rotIndex, rotFactor, track.Rotations);
 
             MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out globals[i]);
         }
@@ -126,7 +127,7 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector3 GetPosition(int posIndex, float posFactor, ReadOnlySpan<Vector3> positions)
+    private static Vector3 GetPosition(int posIndex, float posFactor, NativeView<Vector3> positions)
     {
         return posIndex > 0
             ? Vector3.Lerp(positions[posIndex], positions[posIndex + 1], posFactor)
@@ -134,7 +135,7 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Quaternion GetRotation(int rotIndex, float rotFactor, ReadOnlySpan<Quaternion> rotation)
+    private static Quaternion GetRotation(int rotIndex, float rotFactor, NativeView<Quaternion> rotation)
     {
         return rotIndex > 0
             ? Quaternion.Slerp(rotation[rotIndex], rotation[rotIndex + 1], rotFactor)
@@ -142,7 +143,7 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int GetIndexFactor(float time, UnsafeSpan<float> times, out float factor)
+    private static int GetIndexFactor(float time, NativeView<float> times, out float factor)
     {
         if (times.Length == 1)
         {
@@ -159,7 +160,7 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int FindIndex(UnsafeSpan<float> keys, float time)
+    private static int FindIndex(NativeView<float> keys, float time)
     {
         if (time >= keys[keys.Length - 1]) return keys.Length - 2;
         if (time <= keys[0]) return 0;

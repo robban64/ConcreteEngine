@@ -101,9 +101,8 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
         if (ctx.Animation is { } animation)
         {
-            var sceneAnimations = scene->MAnimations;
-            for (var i = 0; i < meta.AnimationCount; i++)
-                ProcessAnimation(i, sceneAnimations[i], animation);
+            var clipBuffer = AllocateAnimation(scene->MAnimations, animation.Clips ,meta.AnimationCount, meta.BoneCount);
+            animation.SetClipBuffer(clipBuffer);
         }
 
         ProcessMaterials(scene, ctx, meta);

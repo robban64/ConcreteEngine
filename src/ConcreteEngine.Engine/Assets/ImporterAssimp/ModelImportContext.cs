@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.Loader;
@@ -22,8 +23,8 @@ internal sealed class ModelImportContext(
     public string ModelName = modelName;
     public string Filename = filename;
 
-    private TextureLoader _textureLoader = null!;
-
+    private TextureLoader? _textureLoader;
+    
     public void SetTextureLoader(TextureLoader textureLoader) => _textureLoader = textureLoader;
 
     public unsafe void RegisterTexture(EmbeddedSceneTexture texture, byte* data, int length)
@@ -31,23 +32,10 @@ internal sealed class ModelImportContext(
         ArgumentNullException.ThrowIfNull(texture);
         ArgumentNullException.ThrowIfNull(data);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(length);
+        if(_textureLoader == null) Throwers.NullReference(nameof(_textureLoader));
         _textureLoader.StoreEmbedded(texture.GId, data, length, texture.PixelFormat, out texture.Dimensions);
     }
-
-    public void SanitizeClips()
-    {
-        if (Animation == null) return;
-
-        foreach (var clipTrack in Animation.ClipTracks)
-        {
-            for (var i = 0; i < clipTrack.Length; i++)
-            {
-                if (clipTrack[i].IsNull) clipTrack[i] = new BoneTrack();
-            }
-        }
-
-    }
-
+    
 
     public void Clear()
     {
@@ -58,6 +46,6 @@ internal sealed class ModelImportContext(
         Filename = null!;
         Model = null!;
         Animation = null!;
-        _textureLoader = null!;
+        _textureLoader = null;
     }
 }

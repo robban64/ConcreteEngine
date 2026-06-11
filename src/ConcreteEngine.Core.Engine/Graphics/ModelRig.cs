@@ -1,11 +1,11 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Engine.Editor;
+using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
-public sealed class ModelRig
+public sealed class ModelRig : IDisposable
 {
     private static ushort _idCounter;
     public readonly Id16<ModelRig> Id = new(++_idCounter);
@@ -16,11 +16,13 @@ public sealed class ModelRig
     public readonly byte[] ParentIndices;
     public readonly Matrix4x4[] BindPose;
     public readonly Matrix4x4[] InverseBindPose;
-    public readonly BoneTrack[][] ClipTracks;
+    
+    private NativeArray<byte> _clipsBuffer;
+    private NativeView<NativeClip> _clipsView;
 
     public int ClipCount => Clips.Length;
     public int BoneCount => BoneMapping.Count;
-
+    
     public ModelRig(int animationCount, Dictionary<string, int> boneMapping)
     {
         ArgumentOutOfRangeException.ThrowIfZero(boneMapping.Count);
@@ -31,17 +33,42 @@ public sealed class ModelRig
         InverseBindPose = new Matrix4x4[boneMapping.Count];
 
         Clips = new AnimationClip[animationCount];
-        ClipTracks = new BoneTrack[animationCount][];
     }
-    
+
+    internal unsafe void SetClipBuffer(NativeArray<byte> buffer)
+    {
+        if(!_clipsBuffer.IsNull) Throwers.InvalidOperation("Clip buffer already set");
+        
+        if(buffer.IsNull) Throwers.NullPointer(nameof(buffer));
+        if(buffer.Length == 0) Throwers.InvalidArgument(nameof(buffer), "is empty");
+
+        _clipsBuffer = buffer;
+        var view = _clipsView = new NativeView<NativeClip>((NativeClip*)_clipsBuffer.Ptr, ClipCount);
+        for (var i = 0; i < ClipCount; i++)
+        {
+            if(view + i == null) Throwers.NullPointer(nameof(buffer));
+            var clip = view[i];
+            if(clip.IsNull || clip.BoneTracks.IsNull) Throwers.NullPointer(nameof(buffer));
+            for (var j = 0; j < clip.Length; j++)
+            {
+                if(clip.BoneTracks + j == null) Throwers.NullPointer(nameof(buffer));
+            }
+        }
+    }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal SkinningContext GetSkinningContext(int clip)
     {
-        if ((uint)clip > (uint)ClipTracks.Length)
-            Throwers.IndexOutOfRange(nameof(BoneTrack), clip, ClipTracks.Length);
+        if(_clipsBuffer.IsNull || (uint)clip >= (uint)_clipsView.Length)
+            Throwers.InvalidOperation(nameof(_clipsBuffer));
+        
+        return new SkinningContext(ParentIndices, BindPose, InverseBindPose, _clipsView[clip]);
+    }
 
-        return new SkinningContext(ParentIndices, BindPose, InverseBindPose, ClipTracks[clip]);
+    public void Dispose()
+    {
+        _clipsView = NativeView<NativeClip>.MakeNull();
+        _clipsBuffer.Dispose();
     }
 }
 
@@ -51,18 +78,17 @@ public sealed class AnimationClip
     public readonly float Duration;
     public readonly float TicksPerSecond;
 
-    public readonly int Length;
+    public readonly int ActiveChannelCount;
 
-
-    public AnimationClip(string name, int boneCount, float duration, float ticksPerSecond)
+    public AnimationClip(string name, int activeChannelCount, float duration, float ticksPerSecond)
     {
         ArgumentNullException.ThrowIfNull(name);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(boneCount);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(activeChannelCount);
         ArgumentOutOfRangeException.ThrowIfNegative(duration);
         ArgumentOutOfRangeException.ThrowIfNegative(ticksPerSecond);
 
         Name = name;
-        Length = boneCount;
+        ActiveChannelCount = activeChannelCount;
         Duration = duration;
         TicksPerSecond = ticksPerSecond;
     }

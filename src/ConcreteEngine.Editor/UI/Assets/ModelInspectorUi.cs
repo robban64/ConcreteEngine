@@ -60,7 +60,7 @@ internal sealed unsafe class ModelInspectorUi(StateManager state)
                 float rowHeight = AppDraw.ColumnV(sw.Write(clip.Name));
                 AppDraw.ColumnV(sw.Write(clip.Duration), rowHeight);
                 AppDraw.ColumnV(sw.Write(clip.TicksPerSecond), rowHeight);
-                AppDraw.ColumnV(sw.Write(clip.Length), rowHeight);
+                AppDraw.ColumnV(sw.Write(clip.ActiveChannelCount), rowHeight);
             }
 
             ImGui.EndTable();

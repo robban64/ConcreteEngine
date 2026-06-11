@@ -2,33 +2,101 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
 internal readonly ref struct SkinningContext
 {
+    public readonly NativeClip Tracks;
+
     public readonly ReadOnlySpan<byte> ParentIndices;
     public readonly ReadOnlySpan<Matrix4x4> BindPose;
     public readonly ReadOnlySpan<Matrix4x4> InverseBindPose;
-    public readonly ReadOnlySpan<BoneTrack> Channels;
 
     public SkinningContext(
         ReadOnlySpan<byte> parentIndices,
         ReadOnlySpan<Matrix4x4> bindPose,
         ReadOnlySpan<Matrix4x4> inverseBindPose,
-        ReadOnlySpan<BoneTrack> channels)
+        NativeClip tracks)
     {
-        if (parentIndices.Length != channels.Length || parentIndices.Length != bindPose.Length ||
+        if (parentIndices.Length != tracks.Length || parentIndices.Length != bindPose.Length ||
             parentIndices.Length != inverseBindPose.Length)
             Throwers.InvalidOperation("Length mismatch");
+        
+        if(tracks.IsNull) Throwers.NullPointer(nameof(tracks));
 
         ParentIndices = parentIndices;
         BindPose = bindPose;
         InverseBindPose = inverseBindPose;
-        Channels = channels;
+        Tracks = tracks;
     }
 }
 
+internal readonly struct NativeClip
+{
+    public readonly NativeView<NativeBoneTrack> BoneTracks;
+
+    internal NativeClip(NativeView<NativeBoneTrack> boneTracks)
+    {
+        if(boneTracks.IsNull) Throwers.NullPointer(nameof(boneTracks));
+        BoneTracks = boneTracks;
+    }
+    public bool IsNull => BoneTracks.IsNull;
+    public int Length => BoneTracks.Length;
+    public NativeBoneTrack GetTrack(int boneIndex) => BoneTracks[boneIndex];
+}
+
+internal readonly unsafe struct NativeBoneTrack
+{
+    private readonly float* _data;
+
+    public readonly int PosCount;
+    public readonly int RotCount;
+
+    public NativeBoneTrack(float* data, int posCount, int rotCount)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(posCount);
+        ArgumentOutOfRangeException.ThrowIfNegative(rotCount);
+        
+        if(data == null && (posCount > 0 || rotCount > 0))
+            Throwers.InvalidArgument(nameof(data));
+        
+        _data = data;
+        PosCount = posCount;
+        RotCount = rotCount;
+    }
+
+    public bool IsNull => _data == null;
+    
+    public int MaxLength
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => int.Max(PosCount, RotCount);
+    }
+
+    public NativeView<float> PositionTimes => new(_data, PosCount);
+    
+    public NativeView<float> RotationTimes
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(_data + PosCount, RotCount);
+    }
+
+    public NativeView<Vector3> Positions
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new((Vector3*)(_data + (PosCount + RotCount)), PosCount);
+    }
+
+    public NativeView<Quaternion> Rotations
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new((Quaternion*)(_data + (PosCount + RotCount + (PosCount * 3))), RotCount);
+    }
+
+}
+/*
 public readonly struct BoneTrack
 {
     public readonly float[] PositionTimes;
@@ -69,4 +137,4 @@ public readonly struct BoneTrack
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UnsafeSpan<float> GetRotationTimes() => new(RotationTimes);
-}
+}*/

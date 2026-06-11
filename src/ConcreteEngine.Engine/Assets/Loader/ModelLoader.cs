@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
@@ -17,7 +18,8 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
     private static readonly int TotalSize =
         DefaultLength * Unsafe.SizeOf<Vertex3D>() +
         DefaultLength * Unsafe.SizeOf<SkinningData>() +
-        DefaultLength * Unsafe.SizeOf<uint>() * 3;
+        DefaultLength * Unsafe.SizeOf<uint>() * 3 +
+        DefaultLength; // clips
 
     //
     private ModelImporter? _importer;
@@ -70,9 +72,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
 
         var meshLength = (byte)modelData.Meshes.Length;
         if (meshLength == 0) throw new InvalidOperationException("Model import resulted in zero meshes");
-
-        modelContext.SanitizeClips();
-
+        
         ProcessEmbedded(modelContext);
 
         var modelInfo = new ModelInfo(

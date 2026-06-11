@@ -18,6 +18,8 @@ public static class Throwers
 
     [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
     public static void NullPointer(string name) => throw new InvalidOperationException($"Null pointer: {name}");
+    [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
+    public static void NullReference(string name) => throw new InvalidOperationException($"Null reference: {name}");
 
     [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
     public static T Unreachable<T>(string name) => throw new UnreachableException(name);

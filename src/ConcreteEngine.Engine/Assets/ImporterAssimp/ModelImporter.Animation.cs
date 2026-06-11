@@ -1,5 +1,8 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Graphics;
+using Silk.NET.Assimp;
 using AssimpAnimation = Silk.NET.Assimp.Animation;
 using AssimpScene = Silk.NET.Assimp.Scene;
 
@@ -30,17 +33,156 @@ internal sealed unsafe partial class ModelImporter
             return false;
         }
     }
-
-    private static void ProcessAnimation(int index, AssimpAnimation* aiAnim, ModelRig? animation)
+    
+    private static NativeArray<byte> AllocateAnimation(
+        AssimpAnimation** mAnimations,
+        AnimationClip[] animationClips,
+        int animationCount,
+        int boneCount)
     {
-        ArgumentNullException.ThrowIfNull(animation);
+        int totalArenaBytes = animationCount * Unsafe.SizeOf<NativeClip>();
 
-        var name = aiAnim->MName.AsString;
-        var duration = (float)aiAnim->MDuration;
-        var ticksPerSecond = (float)(aiAnim->MTicksPerSecond != 0 ? aiAnim->MTicksPerSecond : 25.0f);
+        for (int i = 0; i < animationCount; i++)
+        {
+            var aiAnim = mAnimations[i];
         
-        var clip = new AnimationClip(name, animation.BoneCount, duration, ticksPerSecond);
-        var clipTrack = new BoneTrack[animation.BoneCount];
+            totalArenaBytes += boneCount * Unsafe.SizeOf<NativeBoneTrack>();
+
+            var channelLength = (int)aiAnim->MNumChannels;
+            for (var c = 0; c < channelLength; c++)
+            {
+                var aiChannel = aiAnim->MChannels[c];
+                if (!TryGetBoneIndex(AssimpUtils.GetNameHash(aiChannel->MNodeName), out _)) continue;
+            
+                var posCount = (int)aiChannel->MNumPositionKeys;
+                var rotCount = (int)aiChannel->MNumRotationKeys;
+            
+                totalArenaBytes += (posCount * sizeof(float)) +
+                                   (rotCount * sizeof(float)) +
+                                   (posCount * Unsafe.SizeOf<Vector3>()) +
+                                   (rotCount * Unsafe.SizeOf<Quaternion>());
+            }
+        }
+
+        NativeArray<byte> clipBuffer = NativeArray.Allocate<byte>(totalArenaBytes);
+        
+        int cursor = 0;
+        NativeAllocator allocator = new NativeAllocator(clipBuffer, ref cursor);
+        NativeView<NativeClip> clips = allocator.AllocSlice<NativeClip>(animationCount);
+        
+        for (int i = 0; i < animationCount; i++)
+        {
+            var aiAnim = mAnimations[i];
+
+            NativeView<NativeBoneTrack> tracks = allocator.AllocSlice<NativeBoneTrack>(boneCount);
+            clips[i] = new NativeClip(tracks);
+
+            var channelLength = (int)aiAnim->MNumChannels;
+            for (var c = 0; c < channelLength; c++)
+            {
+                var aiChannel = aiAnim->MChannels[c];
+                if (!TryGetBoneIndex(AssimpUtils.GetNameHash(aiChannel->MNodeName), out var boneIndex))
+                    continue;
+
+                var posCount = (int)aiChannel->MNumPositionKeys;
+                var rotCount = (int)aiChannel->MNumRotationKeys;
+
+                int floatCount = posCount + rotCount + (posCount * 3) + (rotCount * 4);
+
+                if (floatCount == 0)
+                {
+                    tracks[boneIndex] = new NativeBoneTrack(null, 0, 0);
+                    continue;
+                }
+
+                var trackData = allocator.AllocSlice<float>(floatCount);
+                var track = new NativeBoneTrack(trackData.Ptr, posCount, rotCount);
+                WriteChannels(aiChannel, track);
+                tracks[boneIndex] = track;
+            }
+            
+
+
+            var name = aiAnim->MName.AsString;
+            var duration = (float)aiAnim->MDuration;
+            var ticksPerSecond = (float)(aiAnim->MTicksPerSecond != 0 ? aiAnim->MTicksPerSecond : 25.0f);
+            animationClips[i] = new AnimationClip(name, channelLength, duration, ticksPerSecond);
+        }
+
+        return clipBuffer;
+    }
+/*
+
+    private static void AllocateAnimation(
+        AssimpAnimation** mAnimations,
+        AnimationClip[] animationClips,
+        NativeAllocator allocator,
+        int animationCount,
+        int boneCount)
+    {
+        NativeView<NativeClip> clips = allocator.AllocSlice<NativeClip>(animationCount);
+        
+        for (int i = 0; i < animationCount; i++)
+        {
+            var aiAnim = mAnimations[i];
+
+            NativeView<NativeBoneTrack> tracks = allocator.AllocSlice<NativeBoneTrack>(boneCount);
+            clips[i] = new NativeClip(tracks);
+
+            var channelLength = (int)aiAnim->MNumChannels;
+            for (var c = 0; c < channelLength; c++)
+            {
+                var aiChannel = aiAnim->MChannels[c];
+                if (!TryGetBoneIndex(AssimpUtils.GetNameHash(aiChannel->MNodeName), out var boneIndex))
+                    continue;
+
+                var posCount = (int)aiChannel->MNumPositionKeys;
+                var rotCount = (int)aiChannel->MNumRotationKeys;
+
+                int floatCount = posCount + rotCount + (posCount * 3) + (rotCount * 4);
+
+                if (floatCount == 0)
+                {
+                    tracks[boneIndex] = new NativeBoneTrack(null, 0, 0);
+                    continue;
+                }
+
+                var trackData = allocator.AllocSlice<float>(floatCount);
+                var track = new NativeBoneTrack(trackData.Ptr, posCount, rotCount);
+                WriteChannels(aiChannel, track);
+                tracks[boneIndex] = track;
+            }
+            
+
+
+            var name = aiAnim->MName.AsString;
+            var duration = (float)aiAnim->MDuration;
+            var ticksPerSecond = (float)(aiAnim->MTicksPerSecond != 0 ? aiAnim->MTicksPerSecond : 25.0f);
+            animationClips[i] = new AnimationClip(name, channelLength, duration, ticksPerSecond);
+        }
+    }
+*/
+    private static void WriteChannels(NodeAnim* aiChannel, NativeBoneTrack track)
+    {
+        var posKeys = aiChannel->MPositionKeys;
+        var rotKeys = aiChannel->MRotationKeys;
+
+        for (var k = 0; k < track.PosCount; k++)
+            track.PositionTimes[k] = (float)posKeys[k].MTime;
+        for (var k = 0; k < track.RotCount; k++)
+            track.RotationTimes[k] = (float)rotKeys[k].MTime;
+
+        for (var k = 0; k < track.PosCount; k++)
+            track.Positions[k] = posKeys[k].MValue;
+        for (var k = 0; k < track.RotCount; k++)
+            track.Rotations[k] = rotKeys[k].MValue.AsQuaternion;
+    }
+
+    private static AnimationClip ProcessAnimation(AssimpAnimation* aiAnim, NativeView<NativeBoneTrack> tracks,
+        int index, int boneCount)
+    {
+        ArgumentNullException.ThrowIfNull(aiAnim);
+
 
         var channels = aiAnim->MChannels;
         var channelLength = (int)aiAnim->MNumChannels;
@@ -50,37 +192,34 @@ internal sealed unsafe partial class ModelImporter
             if (!TryGetBoneIndex(AssimpUtils.GetNameHash(aiChannel->MNodeName), out var boneIndex))
                 continue;
 
-            // Position
-            var posKeys = aiChannel->MPositionKeys;
             var posCount = (int)aiChannel->MNumPositionKeys;
-
-            var rotKeys = aiChannel->MRotationKeys;
             var rotCount = (int)aiChannel->MNumRotationKeys;
 
             if (posCount == 0 && rotCount == 0)
             {
-                clipTrack[boneIndex] = new BoneTrack();
+                tracks[boneIndex] = new NativeBoneTrack(null, 0, 0);
                 continue;
             }
 
-            var track = new BoneTrack(posCount, rotCount);
-
+            ref var track = ref tracks[boneIndex];
+            var posKeys = aiChannel->MPositionKeys;
             for (var k = 0; k < posCount; k++)
             {
                 track.PositionTimes[k] = (float)posKeys[k].MTime;
                 track.Positions[k] = posKeys[k].MValue;
             }
 
+            var rotKeys = aiChannel->MRotationKeys;
             for (var k = 0; k < rotCount; k++)
             {
                 track.RotationTimes[k] = (float)rotKeys[k].MTime;
                 track.Rotations[k] = rotKeys[k].MValue.AsQuaternion;
             }
-
-            clipTrack[boneIndex] = track;
         }
-        
-        animation.Clips[index] = clip;
-        animation.ClipTracks[index] = clipTrack;
+
+        var name = aiAnim->MName.AsString;
+        var duration = (float)aiAnim->MDuration;
+        var ticksPerSecond = (float)(aiAnim->MTicksPerSecond != 0 ? aiAnim->MTicksPerSecond : 25.0f);
+        return new AnimationClip(name, boneCount, duration, ticksPerSecond);
     }
 }

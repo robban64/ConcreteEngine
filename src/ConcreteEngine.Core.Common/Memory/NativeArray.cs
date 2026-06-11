@@ -9,7 +9,7 @@ public static unsafe class NativeArray
 {
     public static NativeArray<T> From<T>(T* ptr, int length, int alignment = 0) where T : unmanaged
     {
-        Validate(length, alignment);
+        Validate(length, Unsafe.SizeOf<T>(), alignment);
         return new NativeArray<T>(ptr, length, alignment);
     }
 
@@ -25,9 +25,10 @@ public static unsafe class NativeArray
     }
 
     [MethodImpl(MethodImplOptions.NoInlining), StackTraceHidden]
-    internal static void Validate(int capacity, int alignment)
+    internal static void Validate(int capacity, int stride, int alignment)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 4);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(stride);
         if (alignment != 0)
         {
             ArgumentOutOfRangeException.ThrowIfLessThan(alignment, 16);
@@ -40,7 +41,7 @@ public static unsafe class NativeArray
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void* AllocMemory(int length, int stride, int alignment, bool zeroed)
     {
-        Validate(length, alignment);
+        Validate(length, stride, alignment);
 
         if (alignment > 0)
         {
@@ -62,7 +63,7 @@ public static unsafe class NativeArray
         var capacity = (nuint)length * (nuint)stride;
         var newCapacity = (nuint)newLength * (nuint)stride;
 
-        Validate((int)newCapacity, alignment);
+        Validate((int)newCapacity, stride, alignment);
 
         ptr = alignment > 0
             ? NativeMemory.AlignedRealloc(ptr, newCapacity, (nuint)alignment)

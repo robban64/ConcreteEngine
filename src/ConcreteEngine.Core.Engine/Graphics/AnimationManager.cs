@@ -9,7 +9,7 @@ namespace ConcreteEngine.Core.Engine.Graphics;
 
 internal sealed class AnimationManager
 {
-    private AnimationRig[] _animations = [];
+    private ModelRig[] _animations = [];
 
     public int Count { get; private set; }
 
@@ -18,11 +18,11 @@ internal sealed class AnimationManager
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SkinningContext GetSkinningContext(Id16<ModelAnimation> id, int clip)
+    public SkinningContext GetSkinningContext(Id16<ModelRig> id, int clip)
     {
         var index = id.Index();
         if ((uint)index >= (uint)_animations.Length)
-            Throwers.BufferOverflow(nameof(AnimationChannel), index, _animations.Length);
+            Throwers.IndexOutOfRange(nameof(ModelRig), index, _animations.Length);
         return _animations[index].GetSkinningContext(clip);
     }
     
@@ -37,42 +37,20 @@ internal sealed class AnimationManager
 
     public void Setup(AssetStore assets)
     {
-        int count = 0, idHeigh = 0;
+        int count = 0;
         foreach (var model in assets.GetAssetEnumerator<Model>())
         {
             if (model.Animation is null) continue;
             count++;
-            idHeigh = int.Max(idHeigh, model.Animation.AnimationId.Value);
         }
 
-        var length = Count = int.Max(idHeigh, count);
-        _animations = new AnimationRig[length];
-
+        Count = count;
+        _animations = new ModelRig[count];
         foreach (var model in assets.GetAssetEnumerator<Model>())
         {
-            if (model.Animation is null) continue;
-            var animation = model.Animation!;
-            var index = animation.AnimationId.Index();
-            var clips = CreateClipChannels(animation);
-
-            _animations[index] = new AnimationRig(animation, clips);
+            if (model.Animation is not {} rig) continue;
+            _animations[rig.Id.Index()] = rig;
         }
     }
 
-    private static AnimationChannel[][] CreateClipChannels(ModelAnimation animation)
-    {
-        var result = new AnimationChannel[animation.Clips.Length][];
-        var len = animation.Clips.Length;
-        for (var c = 0; c < len; c++)
-        {
-            var clip = animation.Clips[c];
-            result[c] = new AnimationChannel[clip.Length];
-            for (int b = 0; b < clip.Length; b++)
-            {
-                result[c][b] = new AnimationChannel(clip.Channels[b]);
-            }
-        }
-
-        return result;
-    }
 }

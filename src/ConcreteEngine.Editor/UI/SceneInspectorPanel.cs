@@ -138,7 +138,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
 
             ImGui.TextUnformatted("Clips: "u8);
             ImGui.SameLine();
-            ImGui.TextUnformatted(sw.Write(animation.AnimationCount));
+            ImGui.TextUnformatted(sw.Write(animation.ClipCount));
             ImGui.SameLine();
             ImGui.TextUnformatted("Bones: "u8);
             ImGui.SameLine();

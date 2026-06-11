@@ -10,13 +10,13 @@ internal readonly ref struct SkinningContext
     public readonly ReadOnlySpan<byte> ParentIndices;
     public readonly ReadOnlySpan<Matrix4x4> BindPose;
     public readonly ReadOnlySpan<Matrix4x4> InverseBindPose;
-    public readonly ReadOnlySpan<AnimationChannel> Channels;
+    public readonly ReadOnlySpan<BoneTrack> Channels;
 
     public SkinningContext(
         ReadOnlySpan<byte> parentIndices,
         ReadOnlySpan<Matrix4x4> bindPose,
         ReadOnlySpan<Matrix4x4> inverseBindPose,
-        ReadOnlySpan<AnimationChannel> channels)
+        ReadOnlySpan<BoneTrack> channels)
     {
         if (parentIndices.Length != channels.Length || parentIndices.Length != bindPose.Length ||
             parentIndices.Length != inverseBindPose.Length)
@@ -29,7 +29,7 @@ internal readonly ref struct SkinningContext
     }
 }
 
-public readonly struct AnimationChannel
+public readonly struct BoneTrack
 {
     public readonly float[] PositionTimes;
     public readonly float[] RotationTimes;
@@ -37,20 +37,26 @@ public readonly struct AnimationChannel
     public readonly Vector3[] Positions;
     public readonly Quaternion[] Rotations;
 
-    public AnimationChannel()
+    public BoneTrack()
     {
         PositionTimes = [];
         RotationTimes = [];
         Positions = [];
         Rotations = [];
     }
-    public AnimationChannel(AnimationClip.Channel channels)
+    
+    public BoneTrack(int positionLength, int rotationLength)
     {
-        PositionTimes = channels.PositionTimes;
-        RotationTimes = channels.RotationTimes;
-        Positions = channels.Positions;
-        Rotations = channels.Rotations;
+        PositionTimes = new float[positionLength];
+        RotationTimes = new float[rotationLength];
+
+        Positions = new Vector3[positionLength];
+        Rotations = new Quaternion[rotationLength];
     }
+
+    
+
+    public bool IsNull => PositionTimes == null || RotationTimes == null || Positions ==  null || Rotations == null;
 
     public int MaxLength
     {

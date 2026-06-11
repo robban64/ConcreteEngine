@@ -40,10 +40,10 @@ internal sealed unsafe class ModelInspectorUi(StateManager state)
             DrawAnimated(model.Animation, sw);
     }
 
-    private static void DrawAnimated(ModelAnimation animation, NativeSpanWriter sw)
+    private static void DrawAnimated(ModelRig rig, NativeSpanWriter sw)
     {
         ImGui.SeparatorText("Animation"u8);
-        AppDraw.DrawTextProperty("Bone Count:"u8, sw.Write(animation.BoneCount));
+        AppDraw.DrawTextProperty("Bone Count:"u8, sw.Write(rig.BoneCount));
 
         if (ImGui.BeginTable("##anim_table"u8, 4, GuiTheme.TableFlags))
         {
@@ -54,7 +54,7 @@ internal sealed unsafe class ModelInspectorUi(StateManager state)
 
             ImGui.TableHeadersRow();
 
-            foreach (var clip in animation.Clips)
+            foreach (var clip in rig.Clips)
             {
                 ImGui.TableNextRow();
                 float rowHeight = AppDraw.ColumnV(sw.Write(clip.Name));

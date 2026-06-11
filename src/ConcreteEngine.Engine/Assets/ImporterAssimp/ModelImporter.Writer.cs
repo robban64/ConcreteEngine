@@ -64,10 +64,10 @@ internal sealed unsafe partial class ModelImporter
         meshEntry.LocalBounds = bounds;
     }
 
-    private static void WriteSkinningData(AssimpMesh* aMesh, ModelAnimation animation,
+    private static void WriteSkinningData(AssimpMesh* aMesh, ModelRig rig,
         NativeView<SkinningData> vertices)
     {
-        ArgumentNullException.ThrowIfNull(animation);
+        ArgumentNullException.ThrowIfNull(rig);
         ArgumentOutOfRangeException.ThrowIfGreaterThan((int)aMesh->MNumBones, AssimpUtils.BoneLimit);
 
         // clear
@@ -77,7 +77,7 @@ internal sealed unsafe partial class ModelImporter
         {
             var boneLen = aMesh->MNumBones;
             var bones = aMesh->MBones;
-            var inverseBindPose = animation.InverseBindPose;
+            var inverseBindPose = rig.InverseBindPose;
             for (var i = 0; i < boneLen; i++)
             {
                 var bone = bones[i];

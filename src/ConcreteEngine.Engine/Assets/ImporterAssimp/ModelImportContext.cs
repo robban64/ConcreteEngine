@@ -9,7 +9,7 @@ internal sealed class ModelImportContext(
     string modelName,
     string filename,
     ModelImportData model,
-    ModelAnimation? animation,
+    ModelRig? animation,
     int materialCount,
     int textureCount)
 {
@@ -17,7 +17,7 @@ internal sealed class ModelImportContext(
     public readonly List<EmbeddedSceneMaterial> Materials = new(materialCount);
 
     public ModelImportData Model = model;
-    public ModelAnimation? Animation = animation;
+    public ModelRig? Animation = animation;
 
     public string ModelName = modelName;
     public string Filename = filename;
@@ -38,13 +38,14 @@ internal sealed class ModelImportContext(
     {
         if (Animation == null) return;
 
-        foreach (var clip in Animation.Clips)
+        foreach (var clipTrack in Animation.ClipTracks)
         {
-            for (var i = 0; i < clip.Channels.Length; i++)
+            for (var i = 0; i < clipTrack.Length; i++)
             {
-                if (clip.Channels[i] == null!) clip.Channels[i] = new AnimationClip.Channel(0, 0);
+                if (clipTrack[i].IsNull) clipTrack[i] = new BoneTrack();
             }
         }
+
     }
 
 

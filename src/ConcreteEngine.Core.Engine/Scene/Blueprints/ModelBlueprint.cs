@@ -79,10 +79,10 @@ public sealed class ModelInstance : RenderBlueprintInstance
         if (Model.Animation is { } animation)
             AddAnimationEntities(animation);
     }
-    private void AddAnimationEntities(ModelAnimation animation)
+    private void AddAnimationEntities(ModelRig rig)
     {
-        var clip = animation.Clips[0];
-        var renderComponent = new SkinningComponent(animation.AnimationId, instance: 0);
+        var clip = rig.Clips[0];
+        var renderComponent = new SkinningComponent(rig.Id, instance: 0);
         var gameComponent = new AnimationComponent { Duration = clip.Duration, Speed = clip.TicksPerSecond };
 
         var rootEntity = RenderEntityIds[0];

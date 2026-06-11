@@ -16,7 +16,7 @@ public sealed class MeshEntry(string name, MeshInfo info)
 public sealed class Model : AssetObject
 {
     public MeshEntry[] Meshes { get; }
-    public ModelAnimation? Animation { get; }
+    public ModelRig? Animation { get; }
 
     public readonly ModelInfo Info;
     public readonly BoundingBox Bounds;
@@ -36,7 +36,7 @@ public sealed class Model : AssetObject
         in ModelInfo modelInfo,
         in BoundingBox bounds,
         MeshEntry[] meshes,
-        ModelAnimation? animation) : base(name,id,gid)
+        ModelRig? animation) : base(name,id,gid)
     {
         ArgumentNullException.ThrowIfNull(meshes);
         ArgumentOutOfRangeException.ThrowIfNotEqual(meshes.Length, modelInfo.MeshCount);

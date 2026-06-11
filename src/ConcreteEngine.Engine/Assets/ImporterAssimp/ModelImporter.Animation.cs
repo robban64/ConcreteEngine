@@ -8,7 +8,7 @@ namespace ConcreteEngine.Engine.Assets.ImporterAssimp;
 internal sealed unsafe partial class ModelImporter
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private ModelAnimation? RegisterAnimation(AssimpScene* scene)
+    private ModelRig? RegisterAnimation(AssimpScene* scene)
     {
         if (!HasAnimationChannels(scene) || _boneIndexByName.Count == 0)
             return null;
@@ -16,7 +16,7 @@ internal sealed unsafe partial class ModelImporter
         var animationCount = _sceneMeta.AnimationCount;
         var boneMap = new Dictionary<string, int>(_boneIndexByName);
 
-        return new ModelAnimation(animationCount, boneMap);
+        return new ModelRig(animationCount, boneMap);
 
         static bool HasAnimationChannels(AssimpScene* scene)
         {
@@ -31,20 +31,20 @@ internal sealed unsafe partial class ModelImporter
         }
     }
 
-    private static void ProcessAnimation(int index, AssimpAnimation* aiAnim, ModelAnimation? animation)
+    private static void ProcessAnimation(int index, AssimpAnimation* aiAnim, ModelRig? animation)
     {
         ArgumentNullException.ThrowIfNull(animation);
 
         var name = aiAnim->MName.AsString;
         var duration = (float)aiAnim->MDuration;
         var ticksPerSecond = (float)(aiAnim->MTicksPerSecond != 0 ? aiAnim->MTicksPerSecond : 25.0f);
-
+        
         var clip = new AnimationClip(name, animation.BoneCount, duration, ticksPerSecond);
-        animation.Clips[index] = clip;
+        var clipTrack = new BoneTrack[animation.BoneCount];
 
-        var channelLen = (int)aiAnim->MNumChannels;
         var channels = aiAnim->MChannels;
-        for (var c = 0; c < channelLen; c++)
+        var channelLength = (int)aiAnim->MNumChannels;
+        for (var c = 0; c < channelLength; c++)
         {
             var aiChannel = channels[c];
             if (!TryGetBoneIndex(AssimpUtils.GetNameHash(aiChannel->MNodeName), out var boneIndex))
@@ -57,21 +57,30 @@ internal sealed unsafe partial class ModelImporter
             var rotKeys = aiChannel->MRotationKeys;
             var rotCount = (int)aiChannel->MNumRotationKeys;
 
-            var channel = new AnimationClip.Channel(posCount, rotCount);
+            if (posCount == 0 && rotCount == 0)
+            {
+                clipTrack[boneIndex] = new BoneTrack();
+                continue;
+            }
+
+            var track = new BoneTrack(posCount, rotCount);
 
             for (var k = 0; k < posCount; k++)
             {
-                channel.PositionTimes[k] = (float)posKeys[k].MTime;
-                channel.Positions[k] = posKeys[k].MValue;
+                track.PositionTimes[k] = (float)posKeys[k].MTime;
+                track.Positions[k] = posKeys[k].MValue;
             }
 
             for (var k = 0; k < rotCount; k++)
             {
-                channel.RotationTimes[k] = (float)rotKeys[k].MTime;
-                channel.Rotations[k] = rotKeys[k].MValue.AsQuaternion;
+                track.RotationTimes[k] = (float)rotKeys[k].MTime;
+                track.Rotations[k] = rotKeys[k].MValue.AsQuaternion;
             }
 
-            clip.Channels[boneIndex] = channel;
+            clipTrack[boneIndex] = track;
         }
+        
+        animation.Clips[index] = clip;
+        animation.ClipTracks[index] = clipTrack;
     }
 }

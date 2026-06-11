@@ -84,10 +84,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
         var model = RegisterMeshes(scene);
         var animation = RegisterAnimation(scene);
-        return new ModelImportContext(name, path, model, animation, _sceneMeta.MaterialCount, _sceneMeta.TextureCount)
-        {
-            Model = RegisterMeshes(scene), Animation = RegisterAnimation(scene)
-        };
+        return new ModelImportContext(name, path, model, animation, _sceneMeta.MaterialCount, _sceneMeta.TextureCount);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

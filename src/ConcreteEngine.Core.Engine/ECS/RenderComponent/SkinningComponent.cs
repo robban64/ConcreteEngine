@@ -18,13 +18,13 @@ public struct SkinningComponent(Id16<ModelAnimation> rigId, GameEntityId animati
 }
 */
 [StructLayout(LayoutKind.Sequential)]
-public struct SkinningComponent(Id16<ModelAnimation> animationId, ushort instance)
+public struct SkinningComponent(Id16<ModelRig> animationId, ushort instance)
     : IRenderComponent<SkinningComponent>, IEquatable<SkinningComponent>
 {
     public float Time;
     public short Clip;
 
-    public Id16<ModelAnimation> AnimationId = animationId;
+    public Id16<ModelRig> AnimationId = animationId;
     public ushort Instance = instance;
 
     public ushort AnimationSlot;

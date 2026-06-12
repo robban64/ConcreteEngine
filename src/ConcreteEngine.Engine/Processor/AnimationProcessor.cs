@@ -16,7 +16,7 @@ using ConcreteEngine.Renderer.Buffer;
 
 namespace ConcreteEngine.Engine.Processor;
 
-internal sealed unsafe class AnimatorProcessor : IDisposable
+internal sealed unsafe class AnimationProcessor : IDisposable
 {
     private NativeArray<Matrix4x4> _globals;
 
@@ -25,7 +25,7 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
 
     private readonly List<GameEntityId> _entityIds = new(8);
 
-    public AnimatorProcessor(AnimationManager animations, SkinningBuffer skinningBuffer)
+    public AnimationProcessor(AnimationManager animations, SkinningBuffer skinningBuffer)
     {
         _globals = NativeArray.AlignedAllocate<Matrix4x4>(RenderLimits.BoneCapacity, alignment: 16);
         _animations = animations;
@@ -37,9 +37,13 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
 
     public void Execute()
     {
+        avg.BeginSample();
         ProcessEntities();
+        if (avg.EndSample() >= 144) avg.ResetAndPrint();
         Upload();
     }
+
+    private AvgFrameTimer avg;
     
     private void ProcessEntities()
     {
@@ -62,6 +66,7 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
             _skinningBuffer.NextSlot();
         }
     }
+    
 
     private void Upload()
     {

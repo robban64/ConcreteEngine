@@ -30,6 +30,7 @@ public sealed class SkinningBuffer : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<Matrix4x4> GetWriteView(int slot)
     {
+        ArgumentOutOfRangeException.ThrowIfZero(slot);
         return _matrices.Slice((slot - 1) * BoneCapacity, BoneCapacity);
     }
 
@@ -44,9 +45,9 @@ public sealed class SkinningBuffer : IDisposable
 
     internal void Reset() => Count = 0;
 
-    public void EnsureCapacity(int index)
+    public void EnsureCapacity(int requiredLength)
     {
-        var len = index * BoneCapacity;
+        var len = requiredLength * BoneCapacity;
         if (_matrices.Length >= len) return;
         var newSize = CapacityUtils.CapacityGrowthToFit(_matrices.Length, len);
         _matrices.Resize(newSize, false);

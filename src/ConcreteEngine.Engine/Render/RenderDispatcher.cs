@@ -9,6 +9,7 @@ using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Processor;
@@ -26,7 +27,7 @@ internal sealed class RenderDispatcher : IDisposable
     private readonly CameraFrustum _frustum;
     private readonly DrawCommandBuffer _commandBuffer;
     private readonly RenderUploadBuffers _uploadBuffers;
-    private readonly AnimatorProcessor _animatorProcessor;
+    private readonly AnimationProcessor _animationProcessor;
 
     internal RenderDispatcher(CameraManager cameraManager, AnimationManager animations,
         RenderUploadBuffers uploadBuffers)
@@ -41,7 +42,7 @@ internal sealed class RenderDispatcher : IDisposable
         _frustum = cameraManager.Frustum;
         _uploadBuffers = uploadBuffers;
         _commandBuffer = uploadBuffers.Commands;
-        _animatorProcessor = new AnimatorProcessor(animations, uploadBuffers.Skinning);
+        _animationProcessor = new AnimationProcessor(animations, uploadBuffers.Skinning);
     }
 
 
@@ -60,7 +61,7 @@ internal sealed class RenderDispatcher : IDisposable
         VisibleCount = CullEntities();
 
         if (VisibleCount == 0) return;
-        _animatorProcessor.Execute();
+        _animationProcessor.Execute();
 
         TagUploadSelectionEffect();
         CollectEntities();
@@ -171,11 +172,10 @@ internal sealed class RenderDispatcher : IDisposable
         const int extraAnimations = 8;
 
         var entityLen = Ecs.Render.Core.Count + extraEntities;
-        var animationLen = Ecs.Render.Stores<SkinningComponent>.Store.Count + extraAnimations;
 
         _uploadBuffers.Commands.EnsureCapacity(entityLen);
-        _uploadBuffers.Skinning.EnsureCapacity(animationLen);
+        _uploadBuffers.Skinning.EnsureCapacity(AnimationManager.Instance.AnimationCount);
     }
 
-    public void Dispose() => _animatorProcessor.Dispose();
+    public void Dispose() => _animationProcessor.Dispose();
 }

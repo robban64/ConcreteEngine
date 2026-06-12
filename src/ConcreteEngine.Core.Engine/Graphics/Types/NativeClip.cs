@@ -1,0 +1,78 @@
+using System.Numerics;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Memory;
+
+namespace ConcreteEngine.Core.Engine.Graphics;
+
+internal readonly struct NativeClip
+{
+    public readonly NativeView<NativeBoneTrack> BoneTracks;
+
+    internal NativeClip(NativeView<NativeBoneTrack> boneTracks)
+    {
+        if(boneTracks.IsNull) Throwers.NullPointer(nameof(boneTracks));
+        BoneTracks = boneTracks;
+    }
+    public bool IsNull => BoneTracks.IsNull;
+    public int Length => BoneTracks.Length;
+}
+
+internal readonly unsafe struct NativeBoneTrack
+{
+    private readonly float* _data;
+
+    public readonly int PosCount;
+    public readonly int RotCount;
+
+    public NativeBoneTrack(float* data, int posCount, int rotCount)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(posCount);
+        ArgumentOutOfRangeException.ThrowIfNegative(rotCount);
+        
+        if(data == null && (posCount > 0 || rotCount > 0))
+            Throwers.InvalidArgument(nameof(data));
+        
+        _data = data;
+        PosCount = posCount;
+        RotCount = rotCount;
+    }
+    
+    public bool IsNull => _data == null;
+    
+    public int MaxLength
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => int.Max(PosCount, RotCount);
+    }
+    public bool IsEmpty
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (PosCount == 0 && RotCount == 0) || _data == null;
+    }
+
+    public NativeView<float> PositionTimes
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(_data, PosCount);
+    }
+
+    public NativeView<float> RotationTimes
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(_data + PosCount, RotCount);
+    }
+
+    public NativeView<Vector3> Positions
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new((Vector3*)(_data + (PosCount + RotCount)), PosCount);
+    }
+
+    public NativeView<Quaternion> Rotations
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new((Quaternion*)(_data + (PosCount + RotCount + (PosCount * 3))), RotCount);
+    }
+
+}

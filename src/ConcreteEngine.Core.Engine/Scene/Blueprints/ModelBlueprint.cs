@@ -79,7 +79,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
         if (Model.Animation is { } rig)
         {
             foreach (var entity in GetRenderEntities())
-                AnimationManager.Instance.AddAnimation(rig.Id,0, entity);
+                AnimationManager.Instance.AttachEntity(rig.Id,0, entity);
         }
     }
 

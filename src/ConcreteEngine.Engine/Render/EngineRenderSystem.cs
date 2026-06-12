@@ -41,7 +41,7 @@ public sealed class EngineRenderSystem : IDisposable
 
         _terrainSystem = new TerrainSystem(graphics.Gfx);
         _particleSystem = new ParticleSystem(graphics.Gfx);
-        _animationManager = new AnimationManager();
+        _animationManager = AnimationManager.Instance;
         
         _renderDispatcher = new RenderDispatcher(_cameraManager, _animationManager, Program.UploadBuffers);
         _materialProcessor = new MaterialProcessor(Program);

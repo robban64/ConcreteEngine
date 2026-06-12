@@ -30,7 +30,7 @@ public struct SourceComponent(
     public byte ResolverSlot;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly void WriteCommand(scoped ref DrawCommand cmd)
+    internal readonly void WriteCommand(scoped ref DrawCommand cmd)
     {
         cmd.MeshId = Mesh;
         cmd.MaterialId = Material;
@@ -38,7 +38,7 @@ public struct SourceComponent(
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly void WriteMeta(scoped ref DrawCommandMeta meta, ushort depth)
+    internal readonly void WriteMeta(scoped ref DrawCommandMeta meta, ushort depth)
     {
         meta.Id = DrawCommandId.Model;
         meta.Queue = Queue;

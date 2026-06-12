@@ -8,7 +8,10 @@ namespace ConcreteEngine.Core.Engine.Graphics;
 public sealed class ModelRig : IDisposable
 {
     private static ushort _idCounter;
+    
     public readonly Id16<ModelRig> Id = new(++_idCounter);
+    public readonly int ClipCount;
+    public readonly int BoneCount;
 
     public readonly AnimationClip[] Clips;
     public readonly Dictionary<string, int> BoneMapping; 
@@ -20,21 +23,32 @@ public sealed class ModelRig : IDisposable
     private NativeArray<byte> _clipsBuffer;
     private NativeView<NativeClip> _clipsView;
 
-    public int ClipCount => Clips.Length;
-    public int BoneCount => BoneMapping.Count;
-    
     public ModelRig(int animationCount, Dictionary<string, int> boneMapping)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(animationCount);
+        ArgumentNullException.ThrowIfNull(boneMapping);
         ArgumentOutOfRangeException.ThrowIfZero(boneMapping.Count);
+        
         BoneMapping = boneMapping;
-
         ParentIndices = new byte[boneMapping.Count];
         BindPose = new Matrix4x4[boneMapping.Count];
         InverseBindPose = new Matrix4x4[boneMapping.Count];
 
         Clips = new AnimationClip[animationCount];
+        
+        ClipCount = animationCount;
+        BoneCount = boneMapping.Count;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal SkinningContext GetSkinningContext(int clip)
+    {
+        if(_clipsView.IsNull || (uint)clip >= (uint)ClipCount)
+            Throwers.InvalidOperation(nameof(_clipsBuffer));
+        
+        return new SkinningContext(ParentIndices, BindPose, InverseBindPose, _clipsView[clip]);
+    }
+    
     internal unsafe void SetClipBuffer(NativeArray<byte> buffer)
     {
         if(!_clipsBuffer.IsNull) Throwers.InvalidOperation("Clip buffer already set");
@@ -54,15 +68,6 @@ public sealed class ModelRig : IDisposable
                 if(clip.BoneTracks + j == null) Throwers.NullPointer(nameof(buffer));
             }
         }
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal SkinningContext GetSkinningContext(int clip)
-    {
-        if(_clipsBuffer.IsNull || (uint)clip >= (uint)_clipsView.Length)
-            Throwers.InvalidOperation(nameof(_clipsBuffer));
-        
-        return new SkinningContext(ParentIndices, BindPose, InverseBindPose, _clipsView[clip]);
     }
 
     public void Dispose()

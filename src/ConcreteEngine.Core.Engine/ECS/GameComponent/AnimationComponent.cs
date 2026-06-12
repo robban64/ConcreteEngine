@@ -5,21 +5,22 @@ using ConcreteEngine.Core.Engine.Graphics;
 namespace ConcreteEngine.Core.Engine.ECS.GameComponent;
 
 
-public struct AnimationComponent : IGameComponent<AnimationComponent>
+public struct AnimationComponent(Id16<ModelRig> rigId, short clip = 0)
+    : IGameComponent<AnimationComponent>
 {
-    //public short Clip;
-    //public Id16<ModelAnimation> RigId;
+    public Id16<ModelRig> RigId = rigId;
+    //public ushort RigInstanceId = rigInstanceId;
+    public short Clip = clip;
     
-    public float InterpolatedTime;
+    public float Speed;
+    public float Duration;
 
     public float Time;
     public float PrevTime;
-    public float Duration;
-    public float Speed;
-    //public AnimationState State;
+    public float InterpolatedTime;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AdvanceTime(float deltaTime)
+    internal void AdvanceTime(float deltaTime)
     {
         PrevTime = Time;
         Time += deltaTime * Speed;
@@ -27,7 +28,7 @@ public struct AnimationComponent : IGameComponent<AnimationComponent>
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Interpolate(float alpha)
+    internal void Interpolate(float alpha)
     {
         if (Time < PrevTime)
             InterpolatedTime = float.Lerp(PrevTime, Time + Duration, alpha) % Duration;

@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
@@ -19,97 +20,75 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
 {
     private NativeArray<Matrix4x4> _globals;
 
-    private readonly RenderEntityStore<SkinningComponent> _skinningEcs;
     private readonly AnimationManager _animations;
     private readonly SkinningBuffer _skinningBuffer;
 
-    private readonly List<RenderEntityId> _entityIds = new(8);
+    private readonly List<GameEntityId> _entityIds = new(8);
 
     public AnimatorProcessor(AnimationManager animations, SkinningBuffer skinningBuffer)
     {
         _globals = NativeArray.AlignedAllocate<Matrix4x4>(RenderLimits.BoneCapacity, alignment: 16);
-        _skinningEcs = Ecs.GetRenderStore<SkinningComponent>();
         _animations = animations;
         _skinningBuffer = skinningBuffer;
     }
 
     public void Dispose() => _globals.Dispose();
-
-    private AvgFrameTimer avg;
+   
 
     public void Execute()
     {
-        UpdateInterpolate();
-        ProcessRenderEcs();
+        ProcessEntities();
+        Upload();
+    }
+    
+    private void ProcessEntities()
+    {
+        _entityIds.Clear();
+        foreach (var animationQuery in Ecs.Game.Query<AnimationComponent>())
+        {
+            var count = 0;
+            var slot = (ushort)(_entityIds.Count + 1);
+            foreach (var skinQuery in Ecs.GetRenderStore<SkinningComponent>().VisibilityQuery())
+            {
+                if(animationQuery.Entity != skinQuery.Component.LinkedAnimationEntity) continue;
+                Ecs.RenderCore.GetSource(skinQuery.Entity).AnimationSlot = slot;
+                ++count;
+            }
 
-        avg.BeginSample();
+            if (count == 0) continue;
+
+            animationQuery.Component.Interpolate(EngineTime.GameAlpha);
+            _entityIds.Add(animationQuery.Entity);
+            _skinningBuffer.NextSlot();
+        }
+    }
+
+    private void Upload()
+    {
         for (var i = 0; i < _entityIds.Count; i++)
         {
-            var entityId = _entityIds[i];
-            var it = _skinningEcs.Get(entityId);
-            var skinningContext = _animations.GetSkinningContext(it.AnimationId, it.Clip);
-            ExecuteInner(it.Time, skinningContext, _skinningBuffer.GetWriteView(it.AnimationSlot));
-        }
-
-        if (avg.EndSample() >= 144) avg.ResetAndPrint();
-
-        _entityIds.Clear();
-    }
-
-    private void ProcessRenderEcs()
-    {
-        foreach (var query in _skinningEcs.VisibilityQuery())
-        {
-            query.Component.AnimationSlot = _skinningBuffer.NextSlot();
-            _entityIds.Add(query.Entity);
-        }
-
-        foreach (var query in Ecs.GetRenderStore<SkinLinkComponent>().VisibilityQuery())
-        {
-            var slot = _skinningEcs.Get(query.Component.EntityId).AnimationSlot;
-            Ecs.Render.Core.GetSource(query.Entity).AnimationSlot = slot;
+            var it = Ecs.GetGameStore<AnimationComponent>().Get(_entityIds[i]);
+            var skinningContext = _animations.GetSkinningContext(it.RigId, it.Clip);
+            if (skinningContext.Length == 0) continue;
+            WriteSkinned(it.InterpolatedTime, in skinningContext, _skinningBuffer.GetWriteView(i+1));
         }
     }
 
-
-    private void UpdateInterpolate()
-    {
-        var alpha = EngineTime.GameAlpha;
-
-        foreach (var query in Ecs.Game.Query<AnimationComponent, RenderLink>())
-        {
-            var renderEntity = query.Component2.RenderEntityId;
-            if (renderEntity == default) continue;
-
-            var animationRef = _skinningEcs.TryGet(renderEntity);
-            if (animationRef.IsNull) continue;
-
-            ref readonly var a = ref query.Component1;
-
-            if (a.Time < a.PrevTime)
-                animationRef.Value.Time = float.Lerp(a.PrevTime, a.Time + a.Duration, alpha) % a.Duration;
-            else
-                animationRef.Value.Time = float.Lerp(a.PrevTime, a.Time, alpha);
-        }
-    }
-
-    private void ExecuteInner(float time, SkinningContext ctx, NativeView<Matrix4x4> writer)
+    private void WriteSkinned(float time, in SkinningContext ctx, NativeView<Matrix4x4> writer)
     {
         var globals = _globals.Ptr;
-
-        var len = ctx.ParentIndices.Length;
-
-        for (var i = 0; i < len; i++)
+        var length = ctx.Length;
+        for (var i = 0; i < length; i++)
         {
             var track = ctx.Tracks.BoneTracks[i];
-            if (track.IsNull || track.MaxLength == 0)
+            if (track.IsEmpty)
             {
                 globals[i] = ctx.BindPose[i];
                 continue;
             }
 
-            var posIndex = GetIndexFactor(time, track.PositionTimes, out var posFactor);
-            var rotIndex = GetIndexFactor(time, track.RotationTimes, out var rotFactor);
+            var posFactor = GetIndexFactor(time, track.PositionTimes, out var posIndex);
+            var rotFactor = GetIndexFactor(time, track.RotationTimes, out var rotIndex);
 
             var pos = GetPosition(posIndex, posFactor, track.Positions);
             var rot = GetRotation(rotIndex, rotFactor, track.Rotations);
@@ -118,7 +97,7 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
         }
 
         MatrixMath.MultiplyAffine(ref writer[0], in ctx.InverseBindPose[0], in globals[0]);
-        for (var i = 1; i < len; i++)
+        for (var i = 1; i < length; i++)
         {
             var p = ctx.ParentIndices[i];
             MatrixMath.MultiplyAffine(ref globals[i], in globals[p]);
@@ -143,19 +122,18 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int GetIndexFactor(float time, NativeView<float> times, out float factor)
+    private static float GetIndexFactor(float time, NativeView<float> times, out int index)
     {
         if (times.Length == 1)
         {
-            factor = 0;
-            return -1;
+            index = -1;
+            return 0;
         }
 
-        var index = FindIndex(times, time);
+        index = FindIndex(times, time);
         var i0 = times[index];
         var i1 = times[index + 1];
-        factor = (time - i0) / (i1 - i0);
-        return index;
+        return (time - i0) / (i1 - i0);
     }
 
 

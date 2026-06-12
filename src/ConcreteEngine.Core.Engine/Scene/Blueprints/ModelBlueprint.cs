@@ -76,66 +76,12 @@ public sealed class ModelInstance : RenderBlueprintInstance
             RenderEntityIds.Add(entity);
         }
 
-        if (Model.Animation is { } animation)
-            AddAnimationEntities(animation);
-    }
-    private void AddAnimationEntities(ModelRig rig)
-    {
-        var clip = rig.Clips[0];
-        var renderComponent = new SkinningComponent(rig.Id, instance: 0);
-        var gameComponent = new AnimationComponent { Duration = clip.Duration, Speed = clip.TicksPerSecond };
-
-        var rootEntity = RenderEntityIds[0];
-
-        Ecs.GetRenderStore<SkinningComponent>().Add(rootEntity, renderComponent);
-        var gameEntity = Ecs.GameCore.AddEntity();
-        //GameEntityIds.Add(gameEntity);
-        Ecs.GetGameStore<AnimationComponent>().Add(gameEntity, gameComponent);
-        Ecs.GetGameStore<RenderLink>().Add(gameEntity, new RenderLink(rootEntity));
-
-        var skinLinkComponent = new SkinLinkComponent { EntityId = rootEntity };
-        foreach (var entity in GetRenderEntities())
+        if (Model.Animation is { } rig)
         {
-            Ecs.GetRenderStore<SkinLinkComponent>().Add(entity, skinLinkComponent);
+            foreach (var entity in GetRenderEntities())
+                AnimationManager.Instance.AddAnimation(rig.Id,0, entity);
         }
     }
-/*
-    private void AddAnimationEntities(ModelAnimation animation)
-    {
-        var clip = animation.Clips[0];
-        var renderComponent = new SkinningComponent(animation.AnimationId, instance: 0);
-        var gameComponent = new AnimationComponent { Duration = clip.Duration, Speed = clip.TicksPerSecond };
-
-        var existing = false;
-        var rootEntity = RenderEntityIds[0];
-        foreach (var query in Ecs.GetRenderStore<SkinningComponent>().Query())
-        {
-            ref readonly var c = ref query.Component;
-            if (renderComponent.AnimationId != c.AnimationId || renderComponent.Instance != c.Instance)
-                continue;
-
-            existing = true;
-            rootEntity = query.Entity;
-            break;
-        }
-
-        if (!existing)
-        {
-            Ecs.GetRenderStore<SkinningComponent>().Add(rootEntity, renderComponent);
-
-            var gameEntity = Ecs.GameCore.AddEntity();
-            //GameEntityIds.Add(gameEntity);
-            Ecs.GetGameStore<AnimationComponent>().Add(gameEntity, gameComponent);
-            Ecs.GetGameStore<RenderLink>().Add(gameEntity, new RenderLink(rootEntity));
-        }
-
-        var skinLinkComponent = new SkinLinkComponent { EntityId = rootEntity };
-        foreach (var entity in GetRenderEntities())
-        {
-            Ecs.GetRenderStore<SkinLinkComponent>().Add(entity, skinLinkComponent);
-        }
-    }
-    */
 
     internal override void ApplyTransform(in Matrix4x4 rootMatrix)
     {

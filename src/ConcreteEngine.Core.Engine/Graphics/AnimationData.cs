@@ -9,10 +9,15 @@ namespace ConcreteEngine.Core.Engine.Graphics;
 internal readonly ref struct SkinningContext
 {
     public readonly NativeClip Tracks;
-
     public readonly ReadOnlySpan<byte> ParentIndices;
     public readonly ReadOnlySpan<Matrix4x4> BindPose;
     public readonly ReadOnlySpan<Matrix4x4> InverseBindPose;
+    
+    public int Length
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => InverseBindPose.Length;
+    }
 
     public SkinningContext(
         ReadOnlySpan<byte> parentIndices,
@@ -44,7 +49,6 @@ internal readonly struct NativeClip
     }
     public bool IsNull => BoneTracks.IsNull;
     public int Length => BoneTracks.Length;
-    public NativeBoneTrack GetTrack(int boneIndex) => BoneTracks[boneIndex];
 }
 
 internal readonly unsafe struct NativeBoneTrack
@@ -66,7 +70,7 @@ internal readonly unsafe struct NativeBoneTrack
         PosCount = posCount;
         RotCount = rotCount;
     }
-
+    
     public bool IsNull => _data == null;
     
     public int MaxLength
@@ -74,9 +78,18 @@ internal readonly unsafe struct NativeBoneTrack
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => int.Max(PosCount, RotCount);
     }
+    public bool IsEmpty
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (PosCount == 0 && RotCount == 0) || _data == null;
+    }
 
-    public NativeView<float> PositionTimes => new(_data, PosCount);
-    
+    public NativeView<float> PositionTimes
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(_data, PosCount);
+    }
+
     public NativeView<float> RotationTimes
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

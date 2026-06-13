@@ -8,13 +8,13 @@ namespace ConcreteEngine.Renderer.Registry;
 
 public sealed class RenderUbo(UniformBufferId id, UboSlot slot, in UniformBufferMeta meta)
 {
-    public UniformBufferId Id { get; } = id;
-    public UboSlot Slot { get; } = slot;
-    public uint Stride { get; } = (uint)meta.Stride;
-    public uint Capacity { get; private set; } = meta.Capacity;
+    public readonly UniformBufferId Id  = id;
+    public readonly UboSlot Slot = slot;
+    public readonly int Stride = meta.Stride;
+    public int Capacity { get; private set; } = meta.Capacity;
 
-    private uint _uploadCursor = 0;
-    private uint _drawCursor = 0;
+    private int _uploadCursor = 0;
+    private int _drawCursor = 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ResetCursor()
@@ -26,7 +26,7 @@ public sealed class RenderUbo(UniformBufferId id, UboSlot slot, in UniformBuffer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool HasNextCapacity() => _uploadCursor + Stride < Capacity;
 
-    public void SetCapacity(uint capacity)
+    public void SetCapacity(int capacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, Stride);
         InvalidOpThrower.ThrowIf(_uploadCursor > 0 || _drawCursor > 0);
@@ -34,7 +34,7 @@ public sealed class RenderUbo(UniformBufferId id, UboSlot slot, in UniformBuffer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public uint NextUploadCursor()
+    public int NextUploadCursor()
     {
         InvalidOpThrower.ThrowIfNot(HasNextCapacity());
 
@@ -44,7 +44,7 @@ public sealed class RenderUbo(UniformBufferId id, UboSlot slot, in UniformBuffer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public uint SetUploadCursor(uint idx)
+    public int SetUploadCursor(int idx)
     {
         _uploadCursor = idx * Stride;
         Debug.Assert(_uploadCursor < Capacity, "Ubo overflow. Increase capacity.");
@@ -52,7 +52,7 @@ public sealed class RenderUbo(UniformBufferId id, UboSlot slot, in UniformBuffer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public uint NextDrawCursor()
+    public int NextDrawCursor()
     {
         var offset = _drawCursor;
         _drawCursor += Stride;
@@ -61,16 +61,16 @@ public sealed class RenderUbo(UniformBufferId id, UboSlot slot, in UniformBuffer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public uint SetDrawCursor(int idx)
+    public int SetDrawCursor(int idx)
     {
-        _drawCursor = (uint)idx * Stride;
+        _drawCursor = idx * Stride;
         Debug.Assert(_drawCursor < Capacity, "Ubo overflow. Increase capacity.");
         return _drawCursor;
     }
 
-    public uint GetCapacityFor(int records)
+    public int GetCapacityFor(int records)
     {
-        uint required = Stride * (uint)int.Max(1, records);
+        var required = Stride * int.Max(1, records);
         if (required <= Capacity) return 0;
         return UniformBufferUtils.NextCapacity(Capacity, required);
     }

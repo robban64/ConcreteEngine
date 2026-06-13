@@ -23,8 +23,6 @@ internal sealed unsafe class AnimationProcessor : IDisposable
     private readonly AnimationManager _animations;
     private readonly SkinningBuffer _skinningBuffer;
 
-    private readonly List<GameEntityId> _entityIds = new(8);
-
     public AnimationProcessor(AnimationManager animations, SkinningBuffer skinningBuffer)
     {
         _globals = NativeArray.AlignedAllocate<Matrix4x4>(RenderLimits.BoneCapacity, alignment: 16);
@@ -33,58 +31,39 @@ internal sealed unsafe class AnimationProcessor : IDisposable
     }
 
     public void Dispose() => _globals.Dispose();
-   
+
 
     public void Execute()
     {
-        _entityIds.Clear();
-        ProcessEntities();
-        Upload();
-    }
-
-    private void ProcessEntities()
-    {
-        foreach (var animationQuery in Ecs.Game.Query<AnimationComponent>())
+        ushort slot = 1;
+        foreach (var animation in _animations)
         {
             var count = 0;
-            var slot = (ushort)(_entityIds.Count + 1);
-            foreach (var skinQuery in Ecs.GetRenderStore<SkinningComponent>().VisibilityQuery())
+            foreach (var entity in animation.GetEntitySpan())
             {
-                if(animationQuery.Entity != skinQuery.Component.LinkedAnimationEntity) continue;
-                Ecs.RenderCore.GetSource(skinQuery.Entity).AnimationSlot = slot;
+                if (!Ecs.RenderCore.IsVisible(entity)) continue;
+                Ecs.RenderCore.GetSource(entity).AnimationSlot = slot;
                 ++count;
             }
-
             if (count == 0) continue;
 
-            animationQuery.Component.Interpolate(EngineTime.GameAlpha);
-            _entityIds.Add(animationQuery.Entity);
-            _skinningBuffer.NextSlot();
-        }
-    }
-    
-
-    private void Upload()
-    {
-        for (var i = 0; i < _entityIds.Count; i++)
-        {
-            var it = Ecs.GetGameStore<AnimationComponent>().Get(_entityIds[i]);
-            var skinningContext = _animations.GetSkinningContext(it.RigId, it.Clip);
-            if (skinningContext.Length == 0) continue;
-            WriteSkinned(it.InterpolatedTime, in skinningContext, _skinningBuffer.GetWriteView(i+1));
+            var time = animation.Interpolate();
+            var skinningContext = animation.GetSkinningContext();
+            var writer = _skinningBuffer.WriteSlot(skinningContext.Length);
+            WriteSkinned(time, skinningContext, writer);
+            ++slot;
         }
     }
 
-    private void WriteSkinned(float time, in SkinningContext ctx, NativeView<Matrix4x4> writer)
+    private void WriteSkinned(float time, SkinningContext ctx, NativeView<Matrix4x4> writer)
     {
         var globals = _globals.Ptr;
-        var length = ctx.Length;
-        for (var i = 0; i < length; i++)
+        for (var i = 0; i < ctx.Length; i++)
         {
-            var track = ctx.Tracks.BoneTracks[i];
+            ref readonly var track = ref ctx.GetBoneTrack(i);
             if (track.IsEmpty)
             {
-                globals[i] = ctx.BindPose[i];
+                globals[i] = ctx.GetBindPose(i);
                 continue;
             }
 
@@ -97,12 +76,12 @@ internal sealed unsafe class AnimationProcessor : IDisposable
             MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out globals[i]);
         }
 
-        MatrixMath.MultiplyAffine(ref writer[0], in ctx.InverseBindPose[0], in globals[0]);
-        for (var i = 1; i < length; i++)
+        MatrixMath.MultiplyAffine(ref writer[0], in ctx.GetInverseBindPose(0), in globals[0]);
+        for (var i = 1; i < ctx.Length; i++)
         {
-            var p = ctx.ParentIndices[i];
+            var p = ctx.GetParentIndices(i);
             MatrixMath.MultiplyAffine(ref globals[i], in globals[p]);
-            MatrixMath.MultiplyAffine(ref writer[i], in ctx.InverseBindPose[i], in globals[i]);
+            MatrixMath.MultiplyAffine(ref writer[i], in ctx.GetInverseBindPose(i), in globals[i]);
         }
     }
 

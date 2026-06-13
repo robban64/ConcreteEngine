@@ -35,7 +35,7 @@ public readonly ref struct UnsafeZippedSpan<T1, T2> where T1 : unmanaged where T
         get => new(ref Unsafe.Add(ref Ref1, index), ref Unsafe.Add(ref Ref2, index));
     }
 
-    public TuplePtrEnumerator<T1, T2> GetEnumerator() => new(ref Ref1, ref Ref2, Length);
+    public ZipRefEnumerator<T1, T2> GetEnumerator() => new(ref Ref1, ref Ref2, Length);
 }
 
 public readonly ref struct UnsafeSpan<T> where T : unmanaged

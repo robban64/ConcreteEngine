@@ -151,13 +151,13 @@ public readonly struct RenderBufferMeta(
 public readonly struct UniformBufferMeta(
     UboSlot slot,
     int stride,
-    uint capacity,
+    int capacity,
     BufferUsage usage,
     BufferStorage storage,
     BufferAccess access)
     : IResourceMeta
 {
-    public readonly uint Capacity = capacity;
+    public readonly int Capacity = capacity;
     public readonly int Stride = stride;
     public readonly UboSlot Slot = slot;
     public readonly BufferUsage Usage = usage;
@@ -165,6 +165,6 @@ public readonly struct UniformBufferMeta(
     public readonly BufferAccess Access = access;
     public static GraphicsKind ResourceKind => GraphicsKind.UniformBuffer;
 
-    public static UniformBufferMeta MakeResizeCopy(in UniformBufferMeta meta, uint capacity) =>
+    public static UniformBufferMeta MakeResizeCopy(in UniformBufferMeta meta, int capacity) =>
         new(meta.Slot, meta.Stride, capacity, meta.Usage, meta.Storage, meta.Access);
 }

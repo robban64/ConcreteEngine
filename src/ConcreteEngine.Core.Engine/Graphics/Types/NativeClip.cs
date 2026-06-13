@@ -15,7 +15,11 @@ internal readonly struct NativeClip
         BoneTracks = boneTracks;
     }
     public bool IsNull => BoneTracks.IsNull;
-    public int Length => BoneTracks.Length;
+    public int Length
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => BoneTracks.Length;
+    }
 }
 
 internal readonly unsafe struct NativeBoneTrack
@@ -40,11 +44,6 @@ internal readonly unsafe struct NativeBoneTrack
     
     public bool IsNull => _data == null;
     
-    public int MaxLength
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => int.Max(PosCount, RotCount);
-    }
     public bool IsEmpty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

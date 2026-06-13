@@ -39,6 +39,8 @@ public sealed class ModelRig : IDisposable
         ClipCount = animationCount;
         BoneCount = boneMapping.Count;
     }
+    
+    internal AnimationClip GetClip(int index) => Clips[index];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal SkinningContext GetSkinningContext(int clip)

@@ -169,12 +169,7 @@ internal sealed class RenderDispatcher : IDisposable
     private void EnsureCommandBuffer()
     {
         const int extraEntities = 64;
-        const int extraAnimations = 8;
-
-        var entityLen = Ecs.Render.Core.Count + extraEntities;
-
-        _uploadBuffers.Commands.EnsureCapacity(entityLen);
-        _uploadBuffers.Skinning.EnsureCapacity(AnimationManager.Instance.AnimationCount);
+        _uploadBuffers.Commands.EnsureCapacity(Ecs.Render.Core.Count + extraEntities);
     }
 
     public void Dispose() => _animationProcessor.Dispose();

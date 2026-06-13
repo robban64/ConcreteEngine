@@ -8,6 +8,7 @@ public static partial class Ecs
 {
     internal static class Internals
     {
+        /*
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void Warmup()
         {
@@ -50,11 +51,10 @@ public static partial class Ecs
             _ = Game.Stores<BoxComponent>.Store.Has(new GameEntityId(0));
             _ = Game.Stores<BoxComponent>.Store.TryGet(new GameEntityId(1));
 
-            _ = Game.Stores<AnimationComponent>.Store.Has(new GameEntityId(1));
-            _ = Game.Stores<AnimationComponent>.Store.TryGet(new GameEntityId(0));
-
             _ = Game.Stores<TagComponent>.Store.Has(new GameEntityId(0));
             _ = Game.Stores<TagComponent>.Store.TryGet(new GameEntityId(1));
         }
+        */
     }
+
 }

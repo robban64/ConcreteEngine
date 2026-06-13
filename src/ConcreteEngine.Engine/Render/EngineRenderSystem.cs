@@ -51,8 +51,6 @@ public sealed class EngineRenderSystem : IDisposable
 
     internal void Initialize()
     {
-        _animationManager.Setup(AssetStore.Instance);
-
         //
         var boundsMaterial = AssetStore.Instance.CreateMaterial("EmptyMat", "EmptyMat1");
         boundsMaterial.State.DrawState =

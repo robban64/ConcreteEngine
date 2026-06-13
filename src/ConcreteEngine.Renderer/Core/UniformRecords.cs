@@ -3,10 +3,10 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
 using ConcreteEngine.Core.Common.Visuals;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Renderer.Core;
 
-public interface IUniform;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct LightDataStruct(
@@ -40,6 +40,8 @@ public struct EngineUniformRecord : IUniform
         EngineParams0 = new Vector4(time, deltaTime, random, 0);
         EngineParams1 = new Vector4(invResolution.X, invResolution.Y, mouse.X, mouse.Y);
     }
+
+    public static int OverrideSize => 0;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -50,6 +52,9 @@ public struct FrameUniform : IUniform
     public Vector4 FogColor; // rgb = base fog color, a = in-scattering mix
     public Vector4 FogParams0; // x=exp2_k, y=height_k, z=height0, w=globalStrength
     public Vector4 FogParams1; // x=expWeight, y=heightWeight, z=maxDistance, w=reserved
+    
+    public static int OverrideSize => 0;
+
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -67,6 +72,8 @@ public struct CameraUniform : IUniform
 
     public Vector3 CameraRight;
     private float _cameraRightPad;
+    
+    public static int OverrideSize => 0;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -75,6 +82,9 @@ public struct DirectionalLightUniform : IUniform
     public Vector4 Direction; // direction, light toward scene
     public Vector4 Diffuse; // rgb=color, a=intensity
     public Vector4 Specular; // x = specular multiplier
+    
+    public static int OverrideSize => 0;
+
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -91,6 +101,9 @@ public struct LightUniform : IUniform
     public LightDataStruct L5;
     public LightDataStruct L6;
     public LightDataStruct L7;
+    
+    public static int OverrideSize => 0;
+
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -99,6 +112,9 @@ public struct ShadowUniform : IUniform
     public Matrix4x4 LightViewProj;
     public Vector4 ShadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
     public Vector4 ShadowParams1; // x=strength, y=pcfRadius, z=NormalBias, w=MaxDistance
+    
+    public static int OverrideSize => 0;
+
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -107,6 +123,9 @@ public struct MaterialUniform : IUniform
     public Vector4 MatColor; // rgb = tint
     public Vector4 MatParams0; // x = SpecularStrength, y = uvRepeat, z,w reserved
     public Vector4 MatParams1; // x = Shininess, y = HasNormals z = Transparency, w = HasAlpha
+    
+    public static int OverrideSize => 0;
+
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -115,17 +134,16 @@ public struct DrawObjectUniform : IUniform
     public Matrix4x4 Model;
     public Matrix3X4 Normal;
     private Vector4 _pad;
+    
+    public static int OverrideSize => 0;
+
 }
 
 //TODO remove
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct DrawAnimationUniform : IUniform
+public struct DrawAnimationUniform : IUniform
 {
-    public const int MaxBones = 64;
-    public const int Mat4Components = 16;
-    public const int TotalComponents = Mat4Components * MaxBones;
-
-    public fixed float Weights[TotalComponents];
+    public static int OverrideSize => 128 * 64;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -135,6 +153,9 @@ public struct PostFxUniform : IUniform
     public Vector4 WhiteBalance;
     public Vector4 Bloom;
     public Vector4 Fx;
+    
+    public static int OverrideSize => 0;
+
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -143,6 +164,8 @@ public struct EditorEffectsUniform : IUniform
     public int IsAnimated;
     private int _effectPad1, _effectPad2, _effectPad3;
     public Vector4 EffectColor1;
+
+    public static int OverrideSize => 0;
 
     public EditorEffectsUniform(bool isAnimated, in Color4 effectColor1)
     {

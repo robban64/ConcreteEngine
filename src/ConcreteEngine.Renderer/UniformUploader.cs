@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
@@ -17,6 +18,7 @@ internal sealed unsafe class UniformUploader
 
     private readonly GfxBuffers _gfxBuffers;
     private readonly MaterialBuffer _materialBuffer;
+    private readonly SkinningBuffer _skinningBuffer;
     private readonly EffectBuffer _effectBuffer;
 
     public MaterialId PrevMaterial { get; private set; } = new(-1);
@@ -25,6 +27,7 @@ internal sealed unsafe class UniformUploader
     internal UniformUploader(GfxContext gfx, RenderRegistry renderRegistry, RenderUploadBuffers buffers)
     {
         _materialBuffer = buffers.Materials;
+        _skinningBuffer = buffers.Skinning;
         _effectBuffer = buffers.Effects;
 
         _gfxBuffers = gfx.Buffers;
@@ -34,9 +37,6 @@ internal sealed unsafe class UniformUploader
         _drawUbo = registry.GetRenderUbo<DrawObjectUniform>();
         _materialUbo = registry.GetRenderUbo<MaterialUniform>();
         _animationUbo = registry.GetRenderUbo<DrawAnimationUniform>();
-
-        _animationUbo.SetCapacity(_animationUbo.Stride * 64);
-        _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, _animationUbo.Capacity);
 
         UploadLight(); // set the buffer
     }
@@ -51,18 +51,17 @@ internal sealed unsafe class UniformUploader
         PrevMaterial = default;
     }
 
-    internal void EnsureDrawBuffers(uint drawCapacity, uint materialCapacity)
+    internal void EnsureUboSizes(int drawCount, int materialCount)
     {
-        if (drawCapacity > _drawUbo.Capacity)
+        if (drawCount * _drawUbo.Stride > _drawUbo.Capacity)
         {
-            _drawUbo.SetCapacity(drawCapacity);
-            _gfxBuffers.SetUniformBufferCapacity(_drawUbo.Id, drawCapacity);
+            var capacity = _drawUbo.GetCapacityFor(drawCount);
+            _gfxBuffers.SetUniformBufferCapacity(_drawUbo.Id, capacity);
         }
-
-        if (materialCapacity > _materialUbo.Capacity)
+        if (materialCount * _materialUbo.Stride > _materialUbo.Capacity)
         {
-            _materialUbo.SetCapacity(materialCapacity);
-            _gfxBuffers.SetUniformBufferCapacity(_materialUbo.Id, drawCapacity);
+            var capacity = _materialUbo.GetCapacityFor(materialCount);
+            _gfxBuffers.SetUniformBufferCapacity(_materialUbo.Id, capacity);
         }
     }
 
@@ -97,8 +96,8 @@ internal sealed unsafe class UniformUploader
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void BindAnimation(int slot)
     {
-        var cursor = _animationUbo.SetDrawCursor(slot);
-        _gfxBuffers.BindUniformBufferRange(_animationUbo.Id, cursor, _animationUbo.Stride);
+        var range = _skinningBuffer.GetSlotRange(slot);
+        _gfxBuffers.BindUniformBufferRange(_animationUbo.Id, range.Offset * 64, range.Length * 64);
     }
 
     internal void UploadMaterial(NativeView<MaterialUniform> data) =>
@@ -110,15 +109,11 @@ internal sealed unsafe class UniformUploader
 
     internal void UploadAnimationData(NativeView<Matrix4x4> boneData)
     {
-        var uploadSize = _animationUbo.GetCapacityFor(boneData.Length);
+        var uploadSize = boneData.Length * 64;
         if (uploadSize > _animationUbo.Capacity)
-        {
-            _animationUbo.SetCapacity(uploadSize);
             _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, uploadSize);
-        }
 
         _gfxBuffers.UploadUniform(_animationUbo.Id, boneData, 0);
-        //_gfxBuffers.UploadUniformBytes(_animationUbo.Id, boneData.Reinterpret<byte>(), boneData.Length, stride, 0);
     }
 
     // Globals //

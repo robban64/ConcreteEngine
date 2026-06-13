@@ -14,109 +14,142 @@ internal sealed class AnimationManager
 {
     internal static readonly AnimationManager Instance = new();
 
-    private ModelRig[] _rigs = [];
-    private readonly List<AnimationRigInstance> _animations = new(4);
-    
-    public int RigCount { get; private set; }
-    public int AnimationCount => _animations.Count;
+    private readonly SlotArray<AnimationInstance> _animations = new(8);
 
     private AnimationManager() { }
-    
+
+    public int AnimationCount => _animations.Count;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal ReadOnlySpan<AnimationInstance?> GetAnimationSpan() => _animations.AsSpan();
+
     internal void Simulate(float dt)
     {
-        foreach (var query in Ecs.Game.Query<AnimationComponent>())
+        foreach (var it in _animations)
+            it.AdvanceTime(dt);
+    }
+
+    public void AttachEntity(ModelRig rig, RenderEntityId entity, Id16<AnimationInstance> animationId = default)
+    {
+        if (animationId == 0 && TryGetFirstByRig(rig, out var firstEntry))
+            animationId = firstEntry.Id;
+
+        if (animationId == 0 || !_animations.TryGet(animationId.Index(), out var animation))
         {
-            ref var c = ref query.Component;
-            c.AdvanceTime(dt);
+            animationId = new Id16<AnimationInstance>(_animations.AllocateNext() + 1);
+            animation = new AnimationInstance(rig, animationId);
+            animation.SetClip(0);
+            _animations[animationId.Index()] = animation;
         }
+        else if (rig != animation.Rig)
+        {
+            Throwers.InvalidArgument(nameof(rig));
+        }
+
+
+        animation.AddEntity(entity);
+        Ecs.GetRenderStore<SkinningComponent>().Add(entity, new SkinningComponent(animation.Id));
     }
     
-    public void AttachEntity(Id16<ModelRig> rigId, ushort rigInstanceId, RenderEntityId entity)
-    {
-        var instance = GetAnimationInstance(rigId, rigInstanceId);
-
-        if (instance is null)
-        {
-            var clip = GetRig(rigId).Clips[0];
-            var gameComponent = new AnimationComponent(rigId) { Duration = clip.Duration, Speed = clip.TicksPerSecond };
-
-            var animationEntity = Ecs.GameCore.AddEntity();
-            Ecs.GetGameStore<AnimationComponent>().Add(animationEntity, gameComponent);
-            instance = new AnimationRigInstance(rigId, rigInstanceId, animationEntity);
-            _animations.Add(instance);
-        }
-
-        instance.RenderEntities.Add(entity);
-        Ecs.GetRenderStore<SkinningComponent>().Add(entity, new SkinningComponent(instance.AnimationEntity));
-    }
-
-
-    private AnimationRigInstance? GetAnimationInstance(Id16<ModelRig> rigId, ushort rigInstanceId)
+    private bool TryGetFirstByRig(ModelRig rig, out AnimationInstance animation)
     {
         foreach (var a in _animations)
         {
-            if (a.RigId == rigId && a.RigInstanceId == rigInstanceId) return a;
+            if (a.Rig == rig)
+            {
+                animation = a;
+                return true;
+            }
         }
-        return  null;
-    }
 
-    internal ModelRig GetRig(Id16<ModelRig> id)
-    {
-        var index = id.Index();
-        if ((uint)index >= (uint)_rigs.Length) Throwers.IndexOutOfRange(nameof(ModelRig), index, _rigs.Length);
-        return _rigs[index];
+        animation = null!;
+        return false;
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal SkinningContext GetSkinningContext(Id16<ModelRig> id, int clip)
-    {
-        var index = id.Index();
-        if ((uint)index >= (uint)_rigs.Length) Throwers.IndexOutOfRange(nameof(ModelRig), index, _rigs.Length);
-        return _rigs[index].GetSkinningContext(clip);
-    }
+    public ActiveObjectEnumerator<AnimationInstance> GetEnumerator() => new(_animations.AsSpan());
 
+}
+
+public sealed class AnimationInstance : IComparable<AnimationInstance>
+{
+    public readonly Id16<AnimationInstance> Id;
+    public short ActiveClip { get; private set; } = -1;
+
+    public readonly ModelRig Rig;
     
-    internal void Setup(AssetStore assets)
-    {
-        int count = 0;
-        foreach (var model in assets.GetAssetEnumerator<Model>())
-        {
-            if (model.Animation is null) continue;
-            count++;
-        }
+    private readonly List<RenderEntityId> _renderEntities = [];
+    
+    private AnimationTime _animationTime;
 
-        RigCount = count;
-        _rigs = new ModelRig[count];
-        foreach (var model in assets.GetAssetEnumerator<Model>())
-        {
-            if (model.Animation is not { } rig) continue;
-            _rigs[rig.Id.Index()] = rig;
-        }
+    internal AnimationInstance(ModelRig rig, Id16<AnimationInstance> animationId)
+    {
+        ArgumentNullException.ThrowIfNull(rig);
+        ArgumentOutOfRangeException.ThrowIfZero(animationId.Value, nameof(animationId));
+        Rig = rig;
+        Id = animationId;
     }
 
-    private sealed class AnimationRigInstance : IComparable<AnimationRigInstance>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal SkinningContext GetSkinningContext() => Rig.GetSkinningContext(ActiveClip);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<RenderEntityId> GetEntitySpan() => CollectionsMarshal.AsSpan(_renderEntities);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AdvanceTime(float delta) => _animationTime.AdvanceTime(delta);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Interpolate() => _animationTime.Interpolate(EngineTime.GameAlpha);
+
+    public void AddEntity(RenderEntityId entity)
     {
-        public readonly ushort RigInstanceId;
-        public readonly Id16<ModelRig> RigId;
-        public readonly GameEntityId AnimationEntity;
+        if (_renderEntities.Contains(entity)) Throwers.InvalidArgument(nameof(entity), "Already added");
+        _renderEntities.Add(entity);
+    }
+    public void RemoveEntity(RenderEntityId entity) => _renderEntities.Remove(entity);
 
-        internal readonly List<RenderEntityId> RenderEntities = [];
+    public void SetClip(short clipIndex)
+    {
+        if (ActiveClip == clipIndex) return;
+        ActiveClip = clipIndex;
 
-        public AnimationRigInstance(Id16<ModelRig> rigId, ushort rigInstanceId, GameEntityId animationEntity)
-        {
-            ArgumentOutOfRangeException.ThrowIfZero(rigId.Value, nameof(rigId));
-            ArgumentOutOfRangeException.ThrowIfZero(animationEntity.Id, nameof(animationEntity));
-            RigInstanceId = rigInstanceId;
-            RigId = rigId;
-            AnimationEntity = animationEntity;
-        }
+        var clip = Rig.GetClip(clipIndex);
+        _animationTime.Duration = clip.Duration;
+        _animationTime.TicksPerSecond = clip.TicksPerSecond;
+    }
 
-        public int CompareTo(AnimationRigInstance? other)
-        {
-            if (ReferenceEquals(this, other)) return 0;
-            if (other is null) return 1;
-            var c = RigInstanceId.CompareTo(other.RigInstanceId);
-            return c != 0 ? c : RigId.CompareTo(other.RigId);
-        }
+    public int CompareTo(AnimationInstance? other)
+    {
+        if (other is null) return 1;
+        if (ReferenceEquals(this, other)) return 0;
+        return Id.CompareTo(other.Id);
+    }
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct AnimationTime
+{
+    public float Time;
+    public float PrevTime;
+
+    public float Duration;
+    public float TicksPerSecond;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void AdvanceTime(float deltaTime)
+    {
+        PrevTime = Time;
+        Time += deltaTime * TicksPerSecond;
+        if (Time > Duration) Time = 0;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal readonly float Interpolate(float alpha)
+    {
+        if (Time < PrevTime)
+            return float.Lerp(PrevTime, Time + Duration, alpha) % Duration;
+
+        return float.Lerp(PrevTime, Time, alpha);
     }
 }

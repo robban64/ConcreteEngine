@@ -47,12 +47,12 @@ public static partial class Ecs
     {
         if (Game.StoreCount > 0)
             throw new InvalidOperationException("Ecs.Game already initialized");
-
+/*
         Game.Stores<AnimationComponent>.CreateStore(DefaultGameCap);
-
         Game.Stores<RenderLink>.CreateStore(DefaultGameCap);
         Game.Stores<TransformComponent>.CreateStore(DefaultGameCap);
         Game.Stores<BoxComponent>.CreateStore(DefaultGameCap);
         Game.Stores<TagComponent>.CreateStore(DefaultGameCap);
+*/
     }
 }

@@ -12,8 +12,8 @@ public struct AnimationComponent(Id16<ModelRig> rigId, short clip = 0)
     public Id16<ModelRig> RigId = rigId;
     public short Clip = clip;
     
-    public float Speed;
     public float Duration;
+    public float TicksPerSecond;
 
     public float Time;
     public float PrevTime;
@@ -23,7 +23,7 @@ public struct AnimationComponent(Id16<ModelRig> rigId, short clip = 0)
     internal void AdvanceTime(float deltaTime)
     {
         PrevTime = Time;
-        Time += deltaTime * Speed;
+        Time += deltaTime * TicksPerSecond;
         if (Time > Duration) Time = 0;
     }
     

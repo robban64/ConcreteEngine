@@ -4,49 +4,10 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Common.Visuals;
+using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine;
 
-public sealed class CameraFrustum
-{
-    public BoundingFrustum Frustum;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IntersectsBox(in BoundingBox box)
-    {
-        for (int i = 0; i < 6; i++)
-        {
-            if (CollisionMethods.IsOutsidePlane(in box, in Unsafe.Add(ref Frustum.LeftPlane, i))) return false;
-        }
-
-        return true;
-    }
-}
-
-public sealed class CameraTransformSnapshot
-{
-    public Vector3 Translation;
-    public Matrix4x4 ViewMatrix;
-    public Matrix4x4 ProjectionMatrix;
-
-
-    public Vector3 Right => new(ViewMatrix.M11, ViewMatrix.M21, ViewMatrix.M31);
-    public Vector3 Up => new(ViewMatrix.M12, ViewMatrix.M22, ViewMatrix.M32);
-    public Vector3 Forward => new(-ViewMatrix.M13, -ViewMatrix.M23, -ViewMatrix.M33);
-}
-
-public sealed class CameraTransforms
-{
-    public Matrix4x4 ViewMatrix;
-    public Matrix4x4 ProjectionMatrix;
-    public Matrix4x4 InverseProjectionViewMatrix;
-
-    public Vector3 Right => new(ViewMatrix.M11, ViewMatrix.M21, ViewMatrix.M31);
-    public Vector3 Up => new(ViewMatrix.M12, ViewMatrix.M22, ViewMatrix.M32);
-    public Vector3 Forward => new(-ViewMatrix.M13, -ViewMatrix.M23, -ViewMatrix.M33);
-
-    internal Vector2 Tan => new(1f / ProjectionMatrix.M11, 1f / ProjectionMatrix.M22);
-}
 
 public sealed class Camera
 {
@@ -70,7 +31,7 @@ public sealed class Camera
     private ProjectionInfo _projection = new(70, 0.1f, 500);
     private ViewTransform _transform, _prevTransform;
 
-    internal readonly CameraTransforms Transforms;
+    internal readonly CameraTransform Transform;
 
     public Vector3 Forward { get; private set; }
     public Vector3 Up { get; private set; }
@@ -80,18 +41,18 @@ public sealed class Camera
     public Camera(Size2D viewport)
     {
         ArgOutOfRangeThrower.ThrowIfSizeTooSmall(viewport, 128);
-        Transforms = new CameraTransforms();
+        Transform = new CameraTransform();
         AspectRatio = viewport.AspectRatio;
         Ensure();
         _dirty = true;
     }
 
 
-    internal Vector2 Tan => new(1f / Transforms.ProjectionMatrix.M11, 1f / Transforms.ProjectionMatrix.M22);
+    internal Vector2 Tan => new(1f / Transform.ProjectionMatrix.M11, 1f / Transform.ProjectionMatrix.M22);
 
-    public ref readonly Matrix4x4 ViewMatrix => ref Transforms.ViewMatrix;
-    public ref readonly Matrix4x4 ProjectionMatrix => ref Transforms.ProjectionMatrix;
-    public ref readonly Matrix4x4 InverseProjectionViewMatrix => ref Transforms.InverseProjectionViewMatrix;
+    public ref readonly Matrix4x4 ViewMatrix => ref Transform.ViewMatrix;
+    public ref readonly Matrix4x4 ProjectionMatrix => ref Transform.ProjectionMatrix;
+    public ref readonly Matrix4x4 InverseProjectionViewMatrix => ref Transform.InverseProjectionViewMatrix;
 
     public ref readonly ProjectionInfo ProjectionInfo => ref _projection;
 
@@ -181,8 +142,8 @@ public sealed class Camera
         _dirty = false;
         Version++;
 
-        ref var viewMatrix = ref Transforms.ViewMatrix;
-        ref var projectionMatrix = ref Transforms.ProjectionMatrix;
+        ref var viewMatrix = ref Transform.ViewMatrix;
+        ref var projectionMatrix = ref Transform.ProjectionMatrix;
 
         MatrixMath.CreateFixedSizeModelMatrix(
             in _transform.Translation,
@@ -199,12 +160,12 @@ public sealed class Camera
         );
 
         Matrix4x4.Invert(projectionMatrix, out var invProjection);
-        Transforms.InverseProjectionViewMatrix = invProjection * modelMatrix;
+        Transform.InverseProjectionViewMatrix = invProjection * modelMatrix;
 
         _viewZ = ViewMatrix.M43;
-        Up = Transforms.Up;
-        Right = Transforms.Right;
-        Forward = Transforms.Forward;
+        Up = Transform.Up;
+        Right = Transform.Right;
+        Forward = Transform.Forward;
 
         return isDirty;
     }

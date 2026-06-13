@@ -26,7 +26,7 @@ public sealed class SceneManager
         Store = new SceneStore();
         Camera = CameraManager.Instance.Camera;
         
-        Raycaster = new RayCaster(Store, Camera.Transforms);
+        Raycaster = new RayCaster(Store, Camera.Transform);
     }
     
     public int DirtyCount => _dirtyIds.Count;

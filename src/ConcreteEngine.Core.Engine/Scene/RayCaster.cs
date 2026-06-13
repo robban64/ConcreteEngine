@@ -12,11 +12,11 @@ namespace ConcreteEngine.Core.Engine;
 public sealed class RayCaster
 {
     private readonly SceneStore _sceneStore;
-    private readonly CameraTransforms _camera;
+    private readonly CameraTransform _camera;
 
     private Terrain Terrain => Terrain.Main;
 
-    internal RayCaster(SceneStore sceneStore, CameraTransforms camera)
+    internal RayCaster(SceneStore sceneStore, CameraTransform camera)
     {
         _sceneStore = sceneStore;
         _camera = camera;

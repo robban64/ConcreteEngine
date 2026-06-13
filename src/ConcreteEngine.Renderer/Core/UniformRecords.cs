@@ -67,16 +67,6 @@ public struct CameraUniform : IUniform
 
     public Vector3 CameraRight;
     private float _cameraRightPad;
-
-    public CameraUniform(Vector3 translation, in CameraMatrices data)
-    {
-        ViewMat = data.ViewMatrix;
-        ProjMat = data.ProjectionMatrix;
-        ProjViewMat = data.ViewMatrix * data.ProjectionMatrix;
-        CameraPos = translation;
-        CameraUp = data.Up;
-        CameraRight = data.Right;
-    }
 }
 
 [StructLayout(LayoutKind.Sequential)]

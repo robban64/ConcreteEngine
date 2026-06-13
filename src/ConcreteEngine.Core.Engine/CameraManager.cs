@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine;
 
@@ -60,7 +61,7 @@ public sealed class CameraManager
 
         projMatrix = Camera.ProjectionMatrix;
 
-        Frustum.Frustum.UpdateFrom(viewMatrix * projMatrix);
+        Frustum.Update(viewMatrix * projMatrix);
     }
 
     [SkipLocalsInit]
@@ -138,7 +139,7 @@ file static class CameraUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void FillFrustumCorners(Span<Vector3> corners, Camera camera, float distance)
     {
-        var tan = camera.Transforms.Tan;
+        var tan = camera.Transform.Tan;
 
         var near = camera.NearPlane;
         var far = MathF.Min(camera.FarPlane, near + distance);

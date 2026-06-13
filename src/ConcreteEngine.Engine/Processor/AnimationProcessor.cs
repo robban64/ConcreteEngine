@@ -37,17 +37,13 @@ internal sealed unsafe class AnimationProcessor : IDisposable
 
     public void Execute()
     {
-        avg.BeginSample();
+        _entityIds.Clear();
         ProcessEntities();
-        if (avg.EndSample() >= 144) avg.ResetAndPrint();
         Upload();
     }
 
-    private AvgFrameTimer avg;
-    
     private void ProcessEntities()
     {
-        _entityIds.Clear();
         foreach (var animationQuery in Ecs.Game.Query<AnimationComponent>())
         {
             var count = 0;

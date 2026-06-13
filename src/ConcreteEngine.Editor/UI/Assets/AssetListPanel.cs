@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
@@ -237,7 +238,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             if (!modelId.IsValid()) return;
 
             var model = Assets.Get<Model>(modelId);
-            var camera = SceneManager.Instance.Camera;
+            var camera = CameraManager.Instance.Camera;
             var transform = new Transform(camera.Translation + camera.Forward * 10);
             SceneManager.Instance.SpawnFrom(model, in transform);
         }

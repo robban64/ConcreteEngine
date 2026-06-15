@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Engine.Scene;
@@ -8,8 +9,7 @@ public sealed class SceneObjectTemplate
     public string Name { get; init; }
     public bool Enabled { get; set; } = true;
 
-    public RenderBlueprint[] Blueprints = [];
-    public GameBlueprint[] GameBlueprints = [];
+    public IBlueprint[] Blueprints = [];
 
     public Transform Transform = Transform.Identity;
 

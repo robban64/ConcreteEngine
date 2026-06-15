@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -8,70 +9,80 @@ using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
-internal sealed class ParticleManager
+internal sealed class ParticleManager : IDisposable
 {
     public static readonly ParticleManager Instance = new();
-    private static int _emitterIdCounter;
-    private static Id16<ParticleEmitter> MakeId() => new(++_emitterIdCounter);
 
-    private readonly List<ParticleEmitter> _emitters = new(4);
-    private readonly List<ParticleEmitter> _pendingEmitters = new(4);
-
-    private readonly Dictionary<string, ParticleEmitter> _byName = new(4);
+    private readonly SlotArray<ParticleEmitter> _emitters = new(8);
+    private readonly List<Id16<ParticleEmitter>> _pendingEmitters = new(4);
+    private readonly Dictionary<string, Id16<ParticleEmitter>> _byName = new(4);
 
     private ParticleManager() { }
 
     public int EmitterCount => _emitters.Count;
     public bool HasPendingEmitters => _pendingEmitters.Count > 0;
-    public ReadOnlySpan<ParticleEmitter> GetEmitters() => CollectionsMarshal.AsSpan(_emitters);
-    internal ReadOnlySpan<ParticleEmitter> GetPendingEmitters() => CollectionsMarshal.AsSpan(_pendingEmitters);
+    internal ReadOnlySpan<Id16<ParticleEmitter>> GetPendingEmitters() => CollectionsMarshal.AsSpan(_pendingEmitters);
 
     public ParticleEmitter CreateEmitter(
         string name,
         int particleCount,
-        in EmitterSpatialParams definition,
+        in EmitterSpatialParams spatialParams,
         in EmitterVisualParams visualParams
     )
     {
         if (_byName.ContainsKey(name)) Throwers.InvalidArgument(nameof(name));
 
-        var emitterId = MakeId();
+        var emitterId = new Id16<ParticleEmitter>(_emitters.AllocateNextId() + 1);
 
-        if (_emitters.Count > 0 && GetOrNull(emitterId) != null)
+        if (_emitters.Count > 0 && _emitters.GetOrNull(emitterId.Index()) != null)
             throw new InvalidOperationException($"Duplicated emitter id {emitterId}");
 
-        var emitter = new ParticleEmitter(name, emitterId, particleCount, in definition, in visualParams);
-        _pendingEmitters.Add(emitter);
-        _emitters.Add(emitter);
-        _byName.Add(emitter.Name, emitter);
+        var emitter = new ParticleEmitter(name, emitterId, particleCount, in spatialParams, in visualParams);
+        _pendingEmitters.Add(emitterId);
+        _emitters.Set(emitter, emitterId.Index());
+        _byName.Add(emitter.Name, emitterId);
         return emitter;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGet(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);
-
-    public ParticleEmitter? GetOrNull(Id16<ParticleEmitter> emitterId)
+    public bool TryGet(string name, [NotNullWhen(true)] out ParticleEmitter? emitter)
     {
-        SearchMethod.BinarySearchManaged(GetEmitters(), emitterId.Value, out var emitter);
-        return emitter;
+        if (_byName.TryGetValue(name, out var id) && _emitters.TryGet(id.Index(), out emitter)) return true;
+       emitter = null;
+       return false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ParticleEmitter Get(Id16<ParticleEmitter> emitterId)
     {
-        if (SearchMethod.BinarySearchManaged(GetEmitters(), emitterId.Value, out var emitter) == -1)
+        if (!_emitters.TryGet(emitterId.Index(), out var emitter))
             Throwers.NotFoundBy("Missing emitter emitterId", emitterId);
 
         return emitter;
     }
 
+    internal void CommitEmitters()
+    {
+        foreach (var emitter in _emitters)
+        {
+            if (!emitter.IsDirty) emitter.Commit();
+        }
+    }
+
     internal void ClearPendingEmitters()
     {
-        foreach (var it in _pendingEmitters)
+        foreach (var id in _pendingEmitters)
         {
-            if (!it.IsAttached) Throwers.InvalidOperation("Emitter should be attached when cleared");
+            if (!Get(id).IsAttached) Throwers.InvalidOperation("Emitter should be attached when cleared");
         }
 
         _pendingEmitters.Clear();
+    }
+
+    public void Dispose()
+    {
+        foreach (var emitter in _emitters) emitter.Dispose();
+        _emitters.Clear();
+        _byName.Clear();
     }
 }

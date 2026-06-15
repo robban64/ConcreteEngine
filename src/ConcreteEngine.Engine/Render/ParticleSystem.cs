@@ -22,7 +22,7 @@ namespace ConcreteEngine.Engine.Render;
 internal sealed class ParticleSystem : IDisposable
 {
     private static bool _allocated;
-    private readonly List<int> _processedEmitters = new(16);
+    private readonly List<Id16<ParticleEmitter>> _processedEmitters = new(16);
 
     private readonly ParticleMesh _particleMesh;
     private readonly ParticleManager _particleManager;
@@ -37,10 +37,17 @@ internal sealed class ParticleSystem : IDisposable
 
     internal void Commit()
     {
-        if (!_particleManager.HasPendingEmitters) return;
+        if (_particleManager.HasPendingEmitters)
+            CommitPending();
+        
+        _particleManager.CommitEmitters();
+    }
 
-        foreach (var emitter in _particleManager.GetPendingEmitters())
+    private void CommitPending()
+    {
+        foreach (var id in _particleManager.GetPendingEmitters())
         {
+            var emitter = _particleManager.Get(id);
             if (emitter.ParticleCount <= 0) Throwers.InvalidOperation(nameof(emitter.ParticleCount));
             var slot = _particleMesh.CreateParticleMesh(emitter.ParticleCount);
             var meshId = _particleMesh.GetHandle(slot).MeshId;
@@ -53,7 +60,8 @@ internal sealed class ParticleSystem : IDisposable
     public void Dispose()
     {
         _allocated = false;
-        foreach (var emitter in _particleManager.GetEmitters()) emitter.Dispose();
+        _particleManager.Dispose();
+        _particleMesh.Dispose();
     }
 
     internal void Simulate(float simDt)
@@ -61,12 +69,11 @@ internal sealed class ParticleSystem : IDisposable
         if(_particleManager.EmitterCount == 0) return;
         
         _processedEmitters.Clear();
-        foreach (var it in Ecs.GetRenderStore<ParticleComponent>().Query())
+        foreach (var it in Ecs.GetRenderStore<ParticleComponent>().VisibilityQuery())
         {
             if (_processedEmitters.Contains(it.Component.EmitterId)) continue;
             var emitter = _particleManager.Get(it.Component.EmitterId);
-            if(!emitter.IsAttached) continue;
-            emitter.SimulateEmitter(simDt);
+            emitter.Simulate(simDt);
             
             _processedEmitters.Add(it.Component.EmitterId);
         }
@@ -78,12 +85,12 @@ internal sealed class ParticleSystem : IDisposable
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
         foreach (var emitterId in CollectionsMarshal.AsSpan(_processedEmitters))
         {
-            var emitter = _particleManager.Get((Id16<ParticleEmitter>)emitterId);
+            var emitter = _particleManager.Get(emitterId);
             
             var cpuView = emitter.GetParticleView();
             var gpuView = _particleMesh.GetBufferView(emitter.ParticleCount);
             
-            ref readonly var param = ref emitter.VisualParams();
+            ref readonly var param = ref emitter.GetVisualParams();
             ColorRgba startColor = param.StartColor.ToRgba(), endColor = param.EndColor.ToRgba();
             
             ProcessEmitter(gpuView.Length, gpuView, cpuView, param.SizeStartEnd, startColor, endColor, timeOffset);

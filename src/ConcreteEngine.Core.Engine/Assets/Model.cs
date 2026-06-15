@@ -9,7 +9,7 @@ public sealed class MeshEntry(string name, MeshInfo info)
     public readonly string Name = name;
     public MeshId MeshId;
     public MeshInfo Info = info;
-    public Matrix4x4 WorldTransform;
+    public Matrix4x4 Transform;
     public BoundingBox LocalBounds;
 }
 

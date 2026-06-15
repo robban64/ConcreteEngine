@@ -36,7 +36,7 @@ internal sealed class AnimationManager
 
         if (animationId == 0 || !_animations.TryGet(animationId.Index(), out var animation))
         {
-            animationId = new Id16<AnimationInstance>(_animations.AllocateNext() + 1);
+            animationId = new Id16<AnimationInstance>(_animations.AllocateNextId() + 1);
             animation = new AnimationInstance(rig, animationId);
             animation.SetClip(0);
             _animations[animationId.Index()] = animation;
@@ -115,8 +115,7 @@ public sealed class AnimationInstance : IComparable<AnimationInstance>
         ActiveClip = clipIndex;
 
         var clip = Rig.GetClip(clipIndex);
-        _animationTime.Duration = clip.Duration;
-        _animationTime.TicksPerSecond = clip.TicksPerSecond;
+        _animationTime.SetClip(clip.Duration,clip.TicksPerSecond);
     }
 
     public int CompareTo(AnimationInstance? other)
@@ -136,8 +135,16 @@ public struct AnimationTime
     public float Duration;
     public float TicksPerSecond;
 
+    public void SetClip(float duration, float ticksPerSecond)
+    {
+        Duration = duration;
+        TicksPerSecond = ticksPerSecond;
+        Time = 0;
+        PrevTime = 0;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void AdvanceTime(float deltaTime)
+    public void AdvanceTime(float deltaTime)
     {
         PrevTime = Time;
         Time += deltaTime * TicksPerSecond;
@@ -145,7 +152,7 @@ public struct AnimationTime
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal readonly float Interpolate(float alpha)
+    public readonly float Interpolate(float alpha)
     {
         if (Time < PrevTime)
             return float.Lerp(PrevTime, Time + Duration, alpha) % Duration;

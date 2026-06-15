@@ -91,14 +91,14 @@ public sealed class ModelInstance : RenderBlueprintInstance
         {
             var meshIndex = Ecs.Render.Core.GetSource(entity).MeshIndex;
 
-            MatrixMath.CreateModelMatrix(in Ecs.Render.Core.GetLocalTransform(entity), out var worldMatrix);
-            MatrixMath.MultiplyAffine(ref worldMatrix, in rootMatrix);
+            //MatrixMath.CreateModelMatrix(in Ecs.Render.Core.GetLocalTransform(entity), out var worldMatrix);
+            //MatrixMath.MultiplyAffine(ref worldMatrix, in rootMatrix);
 
             ref var finalMatrix = ref Ecs.Render.Core.GetWorldMatrix(entity);
             if (IsAnimated)
-                finalMatrix = worldMatrix;
+                finalMatrix = rootMatrix;
             else
-                MatrixMath.MultiplyAffine(ref finalMatrix, in meshes[meshIndex].WorldTransform, in worldMatrix);
+                MatrixMath.MultiplyAffine(ref finalMatrix, in meshes[meshIndex].Transform, in rootMatrix);
 
 
             ref readonly var localBounds = ref meshes[meshIndex].LocalBounds;

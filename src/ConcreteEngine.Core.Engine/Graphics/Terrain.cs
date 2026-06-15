@@ -71,7 +71,6 @@ public sealed class Terrain
         IsDirty = true;
     }
 
-
     public void SetMaterial(Material material)
     {
         material.State.DrawQueue = DrawCommandQueue.Terrain;

@@ -128,7 +128,9 @@ internal sealed class ParticleMesh : IDisposable
         if (_handles != null)
         {
             foreach (var handle in _handles)
-                _gfx.Disposer.EnqueueRemoval(new GfxId<TextureMeta>(handle.MeshId));
+            {
+                if(handle.MeshId.IsValid()) _gfx.Disposer.EnqueueRemoval(new GfxId<TextureMeta>(handle.MeshId));
+            }
         }
 
         _particleData.Dispose();

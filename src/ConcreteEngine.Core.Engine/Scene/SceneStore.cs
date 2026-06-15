@@ -117,6 +117,8 @@ public sealed class SceneStore
         sceneObject = null;
         return _byName.TryGetValue(name, out var id) && TryGet(id, out sceneObject);
     }
+    
+    internal void RegisterBlueprint(IBlueprint blueprint) => _blueprints.TryAdd(blueprint.GId, blueprint);
 
     //
     public void Rename(SceneObject sceneObject, string newName, Action<string> onSuccess)
@@ -131,24 +133,29 @@ public sealed class SceneStore
         onSuccess(newName);
     }
     //
-
-    public SceneObject Create(SceneObjectTemplate template)
+    internal SceneObject Create(string name, Guid? gid, bool enabled, params ReadOnlySpan<IBlueprint> blueprints)
     {
         var id = AllocateSlot();
         
-        var name = template.Name;
         if (string.IsNullOrEmpty(name))
             name = $"Unnamed({_unnamedCounter++})";
 
         if (!_byName.TryAdd(name, id))
-            _byName.Add(MakeName(template.Name), id);
+            _byName.Add(MakeName(name), id);
 
-        var sceneObject = _sceneObjects[id.Index()] = BlueprintFactory.BuildSceneObject(id, template);
+        var sceneObject = _sceneObjects[id.Index()] = new SceneObject(id, gid, name, enabled);
 
+        foreach (var bp in blueprints)
+        {
+            if (bp is RenderBlueprint renderBp)
+                BlueprintFactory.BuildRenderBlueprint(sceneObject, renderBp);
+            else if (bp is GameBlueprint gameBp){}
+            
+            _blueprints.TryAdd(bp.GId, bp);
+        }
+        
         _byKind[(int)sceneObject.Kind].Add(id);
 
-        foreach (var bp in template.Blueprints) _blueprints.TryAdd(bp.GId, bp);
-        
         return sceneObject;
     }
     

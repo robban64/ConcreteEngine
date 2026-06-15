@@ -64,7 +64,7 @@ public abstract class RenderBlueprint : IBlueprint, IAssetListener
 
     public int MaterialCount => Materials.Length;
     public ReadOnlySpan<RenderBlueprintInstance> GetInstanceSpan() => CollectionsMarshal.AsSpan(_instances);
-    
+
     public void AddInstance(RenderBlueprintInstance instance) 
     {
         if(_instances.Contains(instance)) return;

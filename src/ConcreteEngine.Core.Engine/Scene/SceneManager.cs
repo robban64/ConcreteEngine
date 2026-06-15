@@ -39,23 +39,28 @@ public sealed class SceneManager
             Store.GetInternal(id).Commit();
         }
     }
-
-    public SceneObject SpawnFrom(Model model, in Transform transform)
+    
+    public SceneObject Spawn(string name, in Transform transform, params ReadOnlySpan<IBlueprint> blueprints)
     {
-        return Store.Create(new SceneObjectTemplate(model.Name, in transform)
-        {
-            Blueprints = [new ModelBlueprint(model)]
-        });
+        var sceneObject = Store.Create(name, null, true, blueprints);
+        sceneObject.Transform.SetTransform(in transform);
+        return sceneObject;
     }
 
     public SceneObject SpawnFrom(Model model, in Transform transform, params ReadOnlySpan<Material> materials)
     {
-        return Store.Create(new SceneObjectTemplate(model.Name, in transform)
-        {
-            Blueprints = [new ModelBlueprint(model, materials)]
-        });
+        var sceneObject = Store.Create(model.Name, null,true, new ModelBlueprint(model, materials));
+        sceneObject.Transform.SetTransform(in transform);
+        return sceneObject;
     }
     
+    public SceneObject SpawnFrom(SceneObjectTemplate template)
+    {
+        var sceneObject = Store.Create(template.Name, template.GId, template.Enabled,template.Blueprints);
+        sceneObject.Transform.SetTransform(in template.Transform);
+        return sceneObject;
+    }
+
 
     public void MarkDirty(SceneObjectId sceneObjectId)
     {

@@ -24,7 +24,9 @@ internal readonly ref struct SkinningContext
     {
         if (parentIndices.Length != tracks.Length || parentIndices.Length != bindPose.Length ||
             parentIndices.Length != inverseBindPose.Length)
+        {
             Throwers.InvalidOperation("Length mismatch");
+        }
 
         if (tracks.IsNull) Throwers.NullPointer(nameof(tracks));
 

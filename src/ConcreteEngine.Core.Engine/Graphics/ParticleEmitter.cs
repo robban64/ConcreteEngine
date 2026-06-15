@@ -17,14 +17,17 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     private NativeArray<ParticleCpuInstance> _particles;
 
-    public int ParticleCount { get; private set; }
-
-    public int Slot { get; private set; } = -1;
     public readonly Id16<ParticleEmitter> Id;
-    public MeshId BoundMesh;
-
     public readonly string Name;
     
+    public int Slot { get; private set; } = -1;
+    public MeshId BoundMesh { get; private set; }
+    
+    public int ParticleCount { get; private set; }
+    public int PendingParticleCount { get; private set; }
+
+    private bool _isDirty;
+
     private FastRandom _rng;
 
     private EmitterVisualParams _visualsParams;
@@ -43,13 +46,28 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         Id = id;
         _spatialParams = def;
         _visualsParams = visualParams;
-        ParticleCount = particleCount;
+        ParticleCount  = PendingParticleCount = particleCount;
         _rng = new FastRandom((uint)Environment.TickCount + Id.Value);
 
         var length = int.Max(MinCapacity, IntMath.AlignUp(particleCount, 128));
         _particles = NativeArray.Allocate<ParticleCpuInstance>(length, zeroed: true);
         InitializeParticles(0, ParticleCount);
     }
+    
+    public bool IsDirty => _isDirty;
+    public bool IsAttached => Slot >= 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly BoundingBox LocalBounds() => ref _localBounds;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly EmitterVisualParams GetVisualParams() => ref _visualsParams;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly EmitterSpatialParams GetSpatialParams() => ref _spatialParams;
+    
+    public StateScope<EmitterVisualParams> VisualParams => new(ref _visualsParams, ref _isDirty);
+    public StateScope<EmitterSpatialParams> SpatialParams => new(ref _spatialParams, ref _isDirty);
 
     internal void Attach(int slot, MeshId meshId)
     {
@@ -60,17 +78,6 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         BoundMesh = meshId;
     }
 
-    public bool IsAttached => Slot >= 0;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly BoundingBox LocalBounds() => ref _localBounds;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref EmitterVisualParams VisualParams() => ref _visualsParams;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref EmitterSpatialParams SpatialParams() => ref _spatialParams;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal NativeView<ParticleCpuInstance> GetParticleView()
     {
@@ -80,26 +87,36 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         return _particles.Slice(0, ParticleCount);
     }
 
-
     public void SetCount(int count)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(count, MinCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(count, MaxCount);
+        
+        if (count == ParticleCount || count == PendingParticleCount) return;
+        PendingParticleCount = count;
+        _isDirty = true;
 
-        if (count == ParticleCount) return;
+    }
 
-        var newCapacity = int.Max(MinCapacity, IntMath.AlignUp(count, 128));
+    internal void Commit()
+    {
+        _isDirty = false;
+        
+        UpdateLocalBounds();
+        
+        if(PendingParticleCount == ParticleCount) return;
+        
+        var newCapacity = int.Max(MinCapacity, IntMath.AlignUp(PendingParticleCount, 128));
         if (newCapacity > _particles.Length)
         {
             _particles.Resize(newCapacity, true);
             Logger.LogString(LogScope.Engine, "ParticleEmitter: resized", LogLevel.Warn);
-            ParticleCount = count;
-            return;
         }
 
-        var previousCount = ParticleCount;
-        ParticleCount = count;
-        InitializeParticles(previousCount, ParticleCount - previousCount);
+        if (PendingParticleCount > ParticleCount)
+            InitializeParticles(ParticleCount, PendingParticleCount - ParticleCount);
+
+        ParticleCount = PendingParticleCount;
     }
 
     public int CompareTo(ParticleEmitter? other)
@@ -116,34 +133,11 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         Slot = -1;
         BoundMesh = default;
     }
-
-
-    internal void UpdateLocalBounds(out BoundingBox bounds)
-    {
-        var distance = _spatialParams.LifeMinMax.Y * _spatialParams.LifeMinMax.Y;
-        var extents = new Vector3(_spatialParams.Spread + distance);
-        var min = -extents;
-        var gravityOffset = 0.5f * _spatialParams.Gravity * (_spatialParams.LifeMinMax.Y * _spatialParams.LifeMinMax.Y);
-        _localBounds.Min = Vector3.Min(min, min + gravityOffset);
-        _localBounds.Max = Vector3.Max(extents, extents + gravityOffset);
-        bounds = _localBounds;
-    }
-
-    private void InitializeParticles(int start, int length)
-    {
-        var particles = _particles.Slice(start, length);
-        for (var i = 0; i < particles.Length; i++)
-        {
-            var randomMaxLife = _rng.RandomFloat(_spatialParams.LifeMinMax);
-            ref var p = ref particles[i];
-            p.MaxLife = randomMaxLife;
-            p.Life = _rng.RandomFloat(0, randomMaxLife);
-        }
-    }
-
     
-    internal void SimulateEmitter(float simDt)
+    internal void Simulate(float simDt)
     {
+        if(!IsAttached) return;
+
         var gravityStep = _spatialParams.Gravity * simDt;
         var particles = GetParticleView();
         var rng = _rng;
@@ -178,4 +172,31 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         p.Life = p.MaxLife;
         return rng;
     }
+    
+    private void InitializeParticles(int start, int length)
+    {
+        if((uint)start + (uint)length > (uint)_particles.Length) 
+            Throwers.IndexOutOfRange(nameof(_particles), start + length, _particles.Length);
+        
+        var particles = _particles.Slice(start, length);
+        for (var i = 0; i < particles.Length; i++)
+        {
+            var randomMaxLife = _rng.RandomFloat(_spatialParams.LifeMinMax);
+            ref var p = ref particles[i];
+            p.MaxLife = randomMaxLife;
+            p.Life = _rng.RandomFloat(0, randomMaxLife);
+        }
+    }
+    
+    private void UpdateLocalBounds()
+    {
+        ref readonly var param = ref _spatialParams;
+        var distance = param.LifeMinMax.Y * param.LifeMinMax.Y;
+        var extents = new Vector3(param.Spread + distance);
+        var min = -extents;
+        var gravityOffset = 0.5f * param.Gravity * (param.LifeMinMax.Y * param.LifeMinMax.Y);
+        _localBounds.Min = Vector3.Min(min, min + gravityOffset);
+        _localBounds.Max = Vector3.Max(extents, extents + gravityOffset);
+    }
+
 }

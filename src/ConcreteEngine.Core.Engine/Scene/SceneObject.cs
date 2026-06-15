@@ -61,18 +61,13 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     private readonly List<RenderBlueprintInstance> _instances = [];
 
-    internal SceneObject(
-        SceneObjectId id,
-        Guid gid,
-        string name,
-        bool enabled = true)
+    internal SceneObject(SceneObjectId id, Guid? gid, string name, bool enabled = true)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
-        ArgumentOutOfRangeException.ThrowIfEqual(gid, Guid.Empty);
         ArgumentException.ThrowIfNullOrEmpty(name);
 
         Id = id;
-        GId = gid;
+        GId = gid ?? Guid.NewGuid();
         Name = name;
         Enabled = enabled;
         Visible = true;
@@ -157,8 +152,13 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     private void CommitTransform()
     {
         Transform.GetTransformMatrix(out var rootMatrix);
-        foreach (var instance in GetInstances()) 
+        var worldBounds = BoundingBox.Infinite;
+        foreach (var instance in GetInstances())
+        {
             instance.ApplyTransform(in rootMatrix);
+            BoundingBox.Merge(in worldBounds, in instance.GetWorldBounds(), out worldBounds);
+        }
+        Transform.SetBounds(worldBounds);
     }
 
     private void CommitInstances()

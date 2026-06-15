@@ -41,7 +41,7 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         var source = new SourceComponent(default, materialId, 0, EntitySourceKind.Particle,
             DrawCommandQueue.Particles, PassMask.Main);
 
-        var entity = Ecs.RenderCore.AddEntity(source, in Blueprint.LocalTransform);
+        var entity = Ecs.RenderCore.AddEntity(source);
         var particle = new ParticleComponent(Emitter.Id);
         Ecs.GetRenderStore<ParticleComponent>().Add(entity, in particle);
         Ecs.SceneLink.BindSceneHandle(entity, Owner.Id);

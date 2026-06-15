@@ -13,19 +13,15 @@ public sealed class RenderEntityCore : EcsStore
 {
     private NativeArray<RenderEntity> _entities;
     private NativeArray<SourceComponent> _sources;
-    private NativeArray<Transform> _localTransforms;
     private NativeArray<BoundingBox> _worldBounds;
     private NativeArray<Matrix4x4> _worldMatrices;
-
 
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
         _entities = NativeArray.Allocate<RenderEntity>(initialCapacity);
         _sources = NativeArray.Allocate<SourceComponent>(initialCapacity);
-        _localTransforms = NativeArray.Allocate<Transform>(initialCapacity);
         _worldBounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
-
         _worldMatrices = NativeArray.AlignedAllocate<Matrix4x4>(initialCapacity, alignment: 16);
 
         StoreMeta.Listeners.EnsureCapacity(128);
@@ -36,13 +32,11 @@ public sealed class RenderEntityCore : EcsStore
 
     internal NativeView<RenderEntity> GetCoreEntityView() => _entities.Slice(0, Count);
     internal NativeView<SourceComponent> GetSourceView() => _sources.Slice(0, Count);
-    internal NativeView<Transform> GetLocalTransformView() => _localTransforms.Slice(0, Count);
     internal NativeView<Matrix4x4> GetWorldMatrixView() => _worldMatrices.Slice(0, Count);
     internal NativeView<BoundingBox> GetWorldBoundsView() => _worldBounds.Slice(0, Count);
 
     internal unsafe RenderEntity* GetCoreEntityPtr() => _entities;
     internal unsafe SourceComponent* GetSourcePtr() => _sources;
-    internal unsafe Transform* GetLocalTransformPtr() => _localTransforms;
     internal unsafe Matrix4x4* GetWorldMatrixPtr() => _worldMatrices;
     internal unsafe BoundingBox* GetWorldBoundsPtr() => _worldBounds;
 
@@ -64,9 +58,6 @@ public sealed class RenderEntityCore : EcsStore
     public ref SourceComponent GetSource(RenderEntityId e) => ref _sources[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Transform GetLocalTransform(RenderEntityId e) => ref _localTransforms[e.Index()];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref BoundingBox GetWorldBounds(RenderEntityId e) => ref _worldBounds[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -83,19 +74,17 @@ public sealed class RenderEntityCore : EcsStore
     {
         var newEntity = AllocateNewEntity();
         GetSource(newEntity) = GetSource(entity);
-        GetLocalTransform(newEntity) = GetLocalTransform(entity);
         GetWorldBounds(newEntity) = GetWorldBounds(entity);
         GetWorldMatrix(newEntity) = GetWorldMatrix(entity);
         return newEntity;
     }
 
-    public RenderEntityId AddEntity(SourceComponent source, in Transform transform)
+    public RenderEntityId AddEntity(SourceComponent source)
     {
         ValidateSource(source);
 
         var entity = AllocateNewEntity();
         _sources[entity.Index()] = source;
-        _localTransforms[entity.Index()] = transform;
         _worldBounds[entity.Index()] = BoundingBox.One;
         _worldMatrices[entity.Index()] = Matrix4x4.Identity;
 
@@ -126,7 +115,6 @@ public sealed class RenderEntityCore : EcsStore
 
         _entities[index] = default;
         _sources[index] = default;
-        _localTransforms[index] = default;
         _worldBounds[index] = default;
         _worldMatrices[index] = default;
 
@@ -140,15 +128,13 @@ public sealed class RenderEntityCore : EcsStore
     protected override void Resize(int newSize)
     {
         var curLen = _entities.Length;
-        if (_sources.Length != curLen || _localTransforms.Length != curLen ||
-            _worldBounds.Length != curLen || _worldMatrices.Length != curLen)
+        if (_sources.Length != curLen || _worldBounds.Length != curLen || _worldMatrices.Length != curLen)
         {
             Throwers.InvalidOperation("Length mismatch");
         }
 
         _entities.Resize(newSize, true);
         _sources.Resize(newSize, true);
-        _localTransforms.Resize(newSize, true);
         _worldBounds.Resize(newSize, true);
         _worldMatrices.Resize(newSize, true);
 
@@ -163,7 +149,6 @@ public sealed class RenderEntityCore : EcsStore
     {
         _entities.Dispose();
         _sources.Dispose();
-        _localTransforms.Dispose();
         _worldBounds.Dispose();
         _worldMatrices.Dispose();
     }

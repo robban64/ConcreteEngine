@@ -25,9 +25,6 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     public readonly string Name;
     
-    public Vector3 Translation;
-    public Vector3 Direction;
-    
     private FastRandom _rng;
 
     private EmitterVisualParams _visualsParams;
@@ -172,13 +169,11 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     {
         ref readonly var spatialParams = ref _spatialParams;
         var speed = rng.RandomFloat(spatialParams.SpeedMinMax);
-        var spread = new Vector2(-spatialParams.Spread, spatialParams.Spread);
         var randDir = new Vector3(rng.RandomFloat(-1, 1), rng.RandomFloat(-1, 1), rng.RandomFloat(-1, 1)) * 0.5f;
-
-        p.Position = Translation +
-                     new Vector3(rng.RandomFloat(spread), rng.RandomFloat(spread), rng.RandomFloat(spread));
-
-        p.Velocity = Vector3.Normalize(Direction + randDir) * speed;
+        var spread = new Vector2(-spatialParams.Spread, spatialParams.Spread);
+        
+        p.Position = new Vector3(rng.RandomFloat(spread), rng.RandomFloat(spread), rng.RandomFloat(spread));
+        p.Velocity = Vector3.Normalize(spatialParams.Direction + randDir) * speed;
         p.MaxLife = rng.RandomFloat(spatialParams.LifeMinMax);
         p.Life = p.MaxLife;
         return rng;

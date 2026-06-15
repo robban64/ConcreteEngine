@@ -20,14 +20,10 @@ public sealed class ParticleBlueprint : RenderBlueprint
     public required EmitterSpatialParams Definition;
     public required EmitterVisualParams VisualParams;
 
-    public Vector3 Offset = Vector3.Zero;
-    public Vector3 Direction = Vector3.UnitY;
-
     public ParticleBlueprint() : base(1)
     {
     }
 
-    public static Transform MakeTransform(ParticleBlueprint bp) => Transform.Identity with { Translation = bp.Offset };
 }
 public sealed class ParticleInstance : RenderBlueprintInstance, IAssetListener
 {
@@ -69,7 +65,6 @@ public sealed class ParticleInstance : RenderBlueprintInstance, IAssetListener
 
     internal override void ApplyTransform(in Matrix4x4 rootMatrix)
     {
-        Emitter.Translation = Owner.Transform.Translation;
         foreach (var entity in GetRenderEntities())
         {
             MatrixMath.CreateModelMatrix(in Ecs.Render.Core.GetLocalTransform(entity), out var worldMatrix);

@@ -12,10 +12,12 @@ out vec4 ParticleColor;
 
 @import ubo:EngineUniform
 @import ubo:CameraUniform
+@import ubo:DrawUniform
 
 void main() {
 
-    vec3 pos = aInstancePosition.xyz
+    vec3 translation = uModel[3].xyz;
+    vec3 pos = aInstancePosition.xyz + translation
     + uCameraRight.xyz * aLocalPos.x * aInstancePosition.w
     + uCameraUp.xyz * aLocalPos.y * aInstancePosition.w;
 

@@ -38,6 +38,7 @@ public struct EmitterSpatialParams
     public float Spread;
 
     // Spawn Parameters
+    public Vector3 Direction;
     public Vector2 SpeedMinMax;
     public Vector2 LifeMinMax;
 

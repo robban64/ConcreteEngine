@@ -139,7 +139,6 @@ public sealed class GfxBuffers
         var newMeta = UniformBufferMeta.MakeResizeCopy(in meta, capacity);
         _uboStore.ReplaceMeta(uboId, in newMeta, out _);
         _driverBuffer.ResizeUniformBuffer(handle, capacity, BufferUsage.DynamicDraw);
-        Console.WriteLine(capacity);
     }
 
     public void ClearUniformBufferData(UniformBufferId uboId)

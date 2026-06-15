@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
@@ -60,14 +61,9 @@ public static class BlueprintFactory
 
         var material = AssetStore.Get<Material>(bp.Material);
 
-        var transform = ParticleBlueprint.MakeTransform(bp);
-        emitter.Direction = bp.Direction;
-        emitter.Translation = transform.Translation;
-
         var instance = new ParticleInstance(sceneObject, bp, emitter);
         instance.ParticleMaterial = new AssetRef<Material>(material, instance);
-        bp.LocalTransform = transform;
-        
+        bp.LocalTransform = Transform.Identity;
         bp.AddInstance(instance);
         instance.OnCreate();
 

@@ -200,13 +200,9 @@ internal sealed class InspectParticleFields : InspectorFields<ParticleInstance>
             value => target.Emitter.SpatialParams().Spread = (float)value
         );
 
-        TranslationField.Bind(
-            () => target.Emitter.Translation,
-            value => target.Emitter.Translation = (Vector3)value
-        );
         DirectionField.Bind(
-            () => target.Emitter.Direction,
-            value => target.Emitter.Direction = (Vector3)value
+            () => target.Emitter.SpatialParams().Direction,
+            value => target.Emitter.SpatialParams().Direction = (Vector3)value
         );
     }
 }

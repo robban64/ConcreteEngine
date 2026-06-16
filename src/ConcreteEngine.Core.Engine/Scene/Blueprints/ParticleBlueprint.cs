@@ -64,7 +64,7 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         if (RenderEntityIds.Count == 0) return;
         var entity = RenderEntityIds[0];
         
-        Ecs.Render.Core.GetWorldMatrix(entity) = rootMatrix;
+        Ecs.Render.Core.GetModelMatrix(entity) = rootMatrix;
         BoundingBox.GetWorldBounds(in Emitter.LocalBounds(), in rootMatrix, out WorldBounds);
         Ecs.Render.Core.GetWorldBounds(entity) = WorldBounds;
 

@@ -14,19 +14,13 @@ out VS_OUT {
 @import ubo:CameraUniform
 @import ubo:DrawUniform
 
-mat3 getNormalMatrix() {
-    return mat3(uNormalCol0.xyz, uNormalCol1.xyz, uNormalCol2.xyz);
-}
-
 void main()
 {
-    mat3 normalMat = getNormalMatrix();
-
     vec4 worldPos = uModel * vec4(aPos, 1.0);
     vs_out.FragPos = worldPos.xyz;
     vs_out.TexCoord = aTexCoord;
 
-    vs_out.N_world = normalize(normalMat * aNormal);
+    vs_out.N_world = normalize(uNormalMat * aNormal);
 
     gl_Position = uProjViewMat * worldPos;
 }

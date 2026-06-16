@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Engine.Scene.Modules;
-using ConcreteEngine.Engine.Render;
 
 namespace ConcreteEngine.Engine;
 

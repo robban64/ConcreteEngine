@@ -3,10 +3,11 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Core;
 
-namespace ConcreteEngine.Engine.Processor;
+namespace ConcreteEngine.Engine.Render;
 
 public static unsafe class VisualUniformProcessor
 {
@@ -21,10 +22,10 @@ public static unsafe class VisualUniformProcessor
         };
     }
 
-    public static void Upload(UniformUploadContext ctx, Size2D outputSize, Vector2 mouse)
+    public static void Upload(UniformUploadContext ctx)
     {
         var visuals = VisualManager;
-        UploadEngineUniformRecord(ctx, outputSize, mouse);
+        UploadEngineUniformRecord(ctx, EngineWindow.Viewport.Size, EngineInput.Mouse.ViewportPos);
 
         if (!visuals.AnyWasDirty) return;
 

@@ -1,15 +1,8 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Engine.Input;
-using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Engine.Processor;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer;
@@ -27,7 +20,7 @@ public sealed class EngineRenderSystem : IDisposable
 
     private readonly TerrainSystem _terrainSystem;
     private readonly ParticleSystem _particleSystem;
-    private readonly AnimationProcessor _animationProcessor;
+    private readonly AnimationSystem _animationSystem;
 
     private readonly MaterialProcessor _materialProcessor;
 
@@ -41,7 +34,7 @@ public sealed class EngineRenderSystem : IDisposable
 
         _terrainSystem = new TerrainSystem(graphics.Gfx);
         _particleSystem = new ParticleSystem(graphics.Gfx);
-        _animationProcessor = new AnimationProcessor(AnimationManager.Instance, Program.UploadBuffers.Skinning);
+        _animationSystem = new AnimationSystem(AnimationManager.Instance, Program.UploadBuffers.Skinning);
         
         _renderDispatcher = new RenderDispatcher(_cameraManager,_terrainSystem, Program.UploadBuffers);
         _materialProcessor = new MaterialProcessor(Program);
@@ -86,11 +79,11 @@ public sealed class EngineRenderSystem : IDisposable
 
     internal void OnSimulate(float dt)
     {
-        _animationProcessor.Simulate(dt);
+        _animationSystem.Simulate(dt);
         _particleSystem.Simulate(dt);
     }
 
-    internal void Render(float dt, Size2D viewportSize)
+    internal void Render(float dt)
     {
         Program.PrepareFrame();
         
@@ -100,15 +93,14 @@ public sealed class EngineRenderSystem : IDisposable
         // process and upload draw commands
         _renderDispatcher.CullEntities();
         _particleSystem.Execute();
-        _animationProcessor.Execute();
-
+        _animationSystem.Execute();
         _renderDispatcher.Execute();
 
         // prepare buffers
         Program.CollectDrawBuffers();
 
         // upload buffers to gpu
-        VisualUniformProcessor.Upload(Program.GetUploadContext(), viewportSize, EngineInput.Mouse.ViewportPos);
+        VisualUniformProcessor.Upload(Program.GetUploadContext());
 
         Program.UploadUniforms();
         Program.Render();
@@ -118,7 +110,7 @@ public sealed class EngineRenderSystem : IDisposable
     public void Dispose()
     {
         _particleSystem.Dispose();
-        _animationProcessor.Dispose();
+        _animationSystem.Dispose();
         Program.Dispose();
     }
 }

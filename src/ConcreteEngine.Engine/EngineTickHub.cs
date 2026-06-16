@@ -70,7 +70,7 @@ internal sealed class EngineTickHub
             _engine.OnSystemTick(tickDt);
 
         if (_diagnosticTicker.DequeueTick(out tickDt))
-            _engine.OnDiagonsticTick(tickDt);
+            _engine.OnDiagnosticTick(tickDt);
 
         var tickCounter = 0;
         while (tickCounter < MaxTicksPerFrame && _gameTicker.DequeueTick(out tickDt))

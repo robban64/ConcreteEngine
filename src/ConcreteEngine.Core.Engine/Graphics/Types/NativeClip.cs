@@ -5,21 +5,28 @@ using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
-internal readonly struct NativeClip
+internal readonly unsafe struct NativeClip
 {
-    public readonly NativeView<NativeBoneTrack> BoneTracks;
+    public readonly NativeBoneTrack* BoneTracks;
+    public readonly int Length;
 
+    
     internal NativeClip(NativeView<NativeBoneTrack> boneTracks)
     {
         if(boneTracks.IsNull) Throwers.NullPointer(nameof(boneTracks));
         BoneTracks = boneTracks;
+        Length = boneTracks.Length;
     }
-    public bool IsNull => BoneTracks.IsNull;
-    public int Length
+    public bool IsNull => BoneTracks == null;
+    public NativeView<NativeBoneTrack> View => new(BoneTracks, Length);
+
+    public ref NativeBoneTrack this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => BoneTracks.Length;
+        get => ref BoneTracks[index];
     }
+
+
 }
 
 internal readonly unsafe struct NativeBoneTrack

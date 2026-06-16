@@ -25,7 +25,7 @@ public static partial class Ecs
             public ref Matrix4x4 Matrix
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => ref core.GetWorldMatrix(Entity);
+                get => ref core.GetModelMatrix(Entity);
             }
 
             public ref BoundingBox Bounds

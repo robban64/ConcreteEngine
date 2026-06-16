@@ -24,6 +24,7 @@ public sealed class ModelRig : IDisposable
 
     private NativeArray<byte> _clipsBuffer;
     private NativeView<NativeClip> _clipsView;
+    
 
     internal ModelRig(
         Dictionary<string, int> boneMapping,
@@ -62,15 +63,20 @@ public sealed class ModelRig : IDisposable
         _clipsView = GetValidateClipBuffer(_clipsBuffer, ClipCount);
     }
 
-    public AnimationClip GetClip(int index) => _clips[index];
+    public AnimationClip GetClip(int clip) => _clips[clip];
+
+    public ReadOnlySpan<byte> ParentIndices => _parentIndices;
+    public ReadOnlySpan<Matrix4x4> BindPose => _bindPose;
+    public ReadOnlySpan<Matrix4x4> InverseBindPose => _inverseBindPose;
+    internal NativeClip GetClipView(int clip) => _clipsView[clip];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal SkinningContext GetSkinningContext(int clip)
     {
-        if (_clipsView.IsNull || (uint)clip >= (uint)ClipCount)
+        if ((uint)clip >= (uint)ClipCount || _clipsView.IsNull || _clipsView[clip].IsNull)
             Throwers.InvalidOperation(nameof(_clipsBuffer));
 
-        return new SkinningContext(_parentIndices, _bindPose, _inverseBindPose, _clipsView[clip]);
+        return new SkinningContext(_parentIndices, _bindPose, _inverseBindPose, ref _clipsView[clip]);
     }
 
     public void Dispose()
@@ -86,7 +92,7 @@ public sealed class ModelRig : IDisposable
         {
             if (view + i == null) Throwers.NullPointer(nameof(buffer));
             var clip = view[i];
-            if (clip.IsNull || clip.BoneTracks.IsNull) Throwers.NullPointer(nameof(buffer));
+            if (clip.IsNull) Throwers.NullPointer(nameof(buffer));
             for (var j = 0; j < clip.Length; j++)
             {
                 if (clip.BoneTracks + j == null) Throwers.NullPointer(nameof(buffer));

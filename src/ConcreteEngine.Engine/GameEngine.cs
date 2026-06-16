@@ -1,12 +1,9 @@
-using System.Runtime;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
@@ -109,9 +106,8 @@ public sealed class GameEngine : IDisposable
 
     private void Draw(float dt)
     {
-        var vp = EngineWindow.Viewport.Size;
-        _graphics.BeginFrame(new GfxFrameArgs(dt, vp));
-        _renderSystem.Render(dt, vp);
+        _graphics.BeginFrame(new GfxFrameArgs(dt, EngineWindow.Viewport.Size));
+        _renderSystem.Render(dt);
         _graphics.EndFrame();
 
         _gateway.RenderEditor(dt);
@@ -141,7 +137,7 @@ public sealed class GameEngine : IDisposable
 
     }
 
-    internal void OnDiagonsticTick(float dt) => _gateway.UpdateDiagnostics(dt);
+    internal void OnDiagnosticTick(float dt) => _gateway.UpdateDiagnostics(dt);
 
     internal void Close()
     {

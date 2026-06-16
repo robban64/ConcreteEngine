@@ -1,29 +1,22 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.GameComponent;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Buffer;
 
-namespace ConcreteEngine.Engine.Processor;
+namespace ConcreteEngine.Engine.Render;
 
-internal sealed unsafe class AnimationProcessor : IDisposable
+internal sealed unsafe class AnimationSystem : IDisposable
 {
     private NativeArray<Matrix4x4> _globals;
 
     private readonly AnimationManager _animations;
     private readonly SkinningBuffer _skinningBuffer;
 
-    internal AnimationProcessor(AnimationManager animations, SkinningBuffer skinningBuffer)
+    internal AnimationSystem(AnimationManager animations, SkinningBuffer skinningBuffer)
     {
         _globals = NativeArray.AlignedAllocate<Matrix4x4>(RenderLimits.BoneCapacity, alignment: 16);
         _animations = animations;
@@ -55,18 +48,17 @@ internal sealed unsafe class AnimationProcessor : IDisposable
 
             var time = animation.Interpolate();
             var skinningContext = animation.GetSkinningContext();
-            var writer = _skinningBuffer.WriteSlot(skinningContext.Length);
-            WriteSkinned(time, skinningContext, writer);
+            WriteSkinned(time, skinningContext);
             ++slot;
         }
     }
 
-    private void WriteSkinned(float time, SkinningContext ctx, NativeView<Matrix4x4> writer)
+    private void WriteSkinned(float time, SkinningContext ctx)
     {
         var globals = _globals.Ptr;
         for (var i = 0; i < ctx.Length; i++)
         {
-            ref readonly var track = ref ctx.GetBoneTrack(i);
+            ref readonly var track = ref ctx.Tracks[i];
             if (track.IsEmpty)
             {
                 globals[i] = ctx.GetBindPose(i);
@@ -82,6 +74,8 @@ internal sealed unsafe class AnimationProcessor : IDisposable
             MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out globals[i]);
         }
 
+        var writer = _skinningBuffer.WriteSlot(ctx.Length);
+
         MatrixMath.MultiplyAffine(ref writer[0], in ctx.GetInverseBindPose(0), in globals[0]);
         for (var i = 1; i < ctx.Length; i++)
         {
@@ -90,7 +84,7 @@ internal sealed unsafe class AnimationProcessor : IDisposable
             MatrixMath.MultiplyAffine(ref writer[i], in ctx.GetInverseBindPose(i), in globals[i]);
         }
     }
-
+   
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector3 GetPosition(int posIndex, float posFactor, NativeView<Vector3> positions)
     {

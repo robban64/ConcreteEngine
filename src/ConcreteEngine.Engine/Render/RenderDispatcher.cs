@@ -1,18 +1,11 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Engine.Processor;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
 using Camera = ConcreteEngine.Core.Engine.Camera;
@@ -89,7 +82,7 @@ internal sealed class RenderDispatcher
     {
         var index = 0;
         var cmd = _commandBuffer.GetCommandMetaSpan();
-        foreach (var query in Ecs.RenderCore.VisibleQuery(Ecs.RenderCore.GetSourceView(), Ecs.RenderCore.GetWorldMatrixView()))
+        foreach (var query in Ecs.RenderCore.VisibleQuery(Ecs.RenderCore.GetSourceView(), Ecs.RenderCore.GetModelView()))
         {
             var depth = _camera.MakeDepthKey(query.Data.Item2.Translation);
             query.Data.Item1.WriteCommand(ref cmd.At1(index));
@@ -100,11 +93,11 @@ internal sealed class RenderDispatcher
 
     private void UploadDrawCommands()
     {
-        foreach (var entity in Ecs.RenderCore.VisibleQuery(Ecs.RenderCore.GetWorldMatrixView()))
+        foreach (var entity in Ecs.RenderCore.VisibleQuery(Ecs.RenderCore.GetModelView(), Ecs.RenderCore.GetNormalsView()))
         {
             ref var bufferData = ref _commandBuffer.SubmitDraw();
-            bufferData.Model = entity.Data.Value;
-            MatrixMath.CreateNormalMatrix(ref bufferData.Normal, in entity.Data.Value);
+            bufferData.Model = entity.Data.Item1;
+            bufferData.Normal = entity.Data.Item2;
         }
     }
 
@@ -135,7 +128,7 @@ internal sealed class RenderDispatcher
         foreach (var query in store.VisibilityQuery())
         {
             var slot = effects.Submit(new EffectUniformParams(query.Component.Color));
-            var depthKey = _camera.MakeDepthKey(ecs.GetWorldMatrix(query.Entity).Translation);
+            var depthKey = _camera.MakeDepthKey(ecs.GetModelMatrix(query.Entity).Translation);
             depthKey = (ushort)(ushort.MaxValue - depthKey);
 
             ctx.At1(index) = new DrawCommand(GfxMeshes.Cube, Material.BoundsMaterialId);

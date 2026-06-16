@@ -20,9 +20,6 @@ out VS_OUT {
 @import ubo:DrawUniform
 @import ubo:DrawAnimationUniform
 
-mat3 getNormalMatrix() {
-    return mat3(uNormalCol0.xyz, uNormalCol1.xyz, uNormalCol2.xyz);
-}
 
 void main() {
 
@@ -34,13 +31,11 @@ void main() {
 
     vec4 worldPos = uModel * skinnedPos;
 
-    mat3 normalMat = getNormalMatrix();
-
     vs_out.FragPos = worldPos.xyz;
     vs_out.TexCoord = aTexCoord;
 
-    vec3 N = normalize(normalMat * aNormal);
-    vec3 T = normalize(normalMat * aTangent.xyz);
+    vec3 N = normalize(uNormalMat * aNormal);
+    vec3 T = normalize(uNormalMat * aTangent.xyz);
     T = normalize(T - N * dot(T, N));
     vec3 B = normalize(cross(N, T)) * aTangent.w;
 

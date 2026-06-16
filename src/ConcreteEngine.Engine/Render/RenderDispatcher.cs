@@ -21,15 +21,15 @@ namespace ConcreteEngine.Engine.Render;
 
 internal sealed class RenderDispatcher
 {
-    public int VisibleCount { get; private set; }
+    public int VisibleEntities { get; private set; }
 
     private readonly Camera _camera;
     private readonly CameraFrustum _frustum;
     private readonly DrawCommandBuffer _commandBuffer;
     private readonly EffectBuffer _effectBuffer;
+    private readonly TerrainSystem _terrainSystem;
 
-
-    internal RenderDispatcher(CameraManager cameraManager, RenderUploadBuffers uploadBuffers)
+    internal RenderDispatcher(CameraManager cameraManager,TerrainSystem terrainSystem, RenderUploadBuffers uploadBuffers)
     {
         ArgumentNullException.ThrowIfNull(cameraManager);
         ArgumentNullException.ThrowIfNull(uploadBuffers);
@@ -40,38 +40,30 @@ internal sealed class RenderDispatcher
         _frustum = cameraManager.Frustum;
         _effectBuffer = uploadBuffers.Effects;
         _commandBuffer = uploadBuffers.Commands;
+        _terrainSystem = terrainSystem;
+
     }
 
-
-    public void Prepare(TerrainSystem terrain)
+    public void Execute()
     {
         _commandBuffer.EnsureCapacity(Ecs.Render.Core.Count + 64);
-        terrain.SubmitDrawTerrain(_commandBuffer, _frustum);
+        UploadOthers();
 
-        var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passes: PassMask.Main);
-        var cmd = new DrawCommand(Skybox.Current.MeshId, Skybox.Current.MaterialId);
-        _commandBuffer.SubmitIdentity(cmd, meta);
+        if (VisibleEntities == 0) return;
         
-        CullEntities();
-    }
-    
-
-    internal void Execute()
-    {
-        if (VisibleCount == 0) return;
-
         TagUploadSelectionEffect();
         CollectEntities();
         UploadDrawCommands();
+
         SubmitDebugBounds();
     }
 
-    private unsafe void CullEntities()
+    public void CullEntities()
     {
         var visibleCount = 0;
-        var length = Ecs.Render.Core.Count;
-        var bounds = Ecs.Render.Core.GetWorldBoundsPtr();
-        var coreEntities = Ecs.Render.Core.GetCoreEntityPtr();
+        var length = Ecs.RenderCore.Count;
+        var bounds = Ecs.RenderCore.GetWorldBoundsView();
+        var coreEntities = Ecs.RenderCore.GetCoreEntityView();
         for (var i = 0; i < length; i++)
         {
             if (!coreEntities[i].Alive) continue;
@@ -80,35 +72,39 @@ internal sealed class RenderDispatcher
             if (visible) visibleCount++;
         }
 
-        VisibleCount = visibleCount;
+        VisibleEntities = visibleCount;
+
     }
 
-    private unsafe void CollectEntities()
+    private void UploadOthers( )
+    {
+        _terrainSystem.SubmitDrawTerrain(_commandBuffer, _frustum);
+
+        var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passes: PassMask.Main);
+        var cmd = new DrawCommand(Skybox.Current.MeshId, Skybox.Current.MaterialId);
+        _commandBuffer.SubmitIdentity(cmd, meta);
+    }
+
+    private  void CollectEntities()
     {
         var index = 0;
-        var sources = Ecs.Render.Core.GetSourcePtr();
-        var worldMatrices = Ecs.Render.Core.GetWorldMatrixPtr();
-        var ctx = _commandBuffer.GetCommandMetaSpan();
-        foreach (var entity in Ecs.Render.Core.VisibilityQuery())
+        var cmd = _commandBuffer.GetCommandMetaSpan();
+        foreach (var query in Ecs.RenderCore.VisibleQuery(Ecs.RenderCore.GetSourceView(), Ecs.RenderCore.GetWorldMatrixView()))
         {
-            var depth = _camera.MakeDepthKey(worldMatrices[entity.Index()].Translation);
-
-            ref readonly var source = ref sources[entity.Index()];
-            source.WriteCommand(ref ctx.At1(index));
-            source.WriteMeta(ref ctx.At2(index), depth);
+            var depth = _camera.MakeDepthKey(query.Data.Item2.Translation);
+            query.Data.Item1.WriteCommand(ref cmd.At1(index));
+            query.Data.Item1.WriteMeta(ref cmd.At2(index), depth);
             ++index;
         }
     }
 
-    private unsafe void UploadDrawCommands()
+    private void UploadDrawCommands()
     {
-        var parentMatrices = Ecs.Render.Core.GetWorldMatrixPtr();
-        foreach (var entity in Ecs.Render.Core.VisibilityQuery())
+        foreach (var entity in Ecs.RenderCore.VisibleQuery(Ecs.RenderCore.GetWorldMatrixView()))
         {
-            ref readonly var world = ref parentMatrices[entity.Index()];
             ref var bufferData = ref _commandBuffer.SubmitDraw();
-            bufferData.Model = world;
-            MatrixMath.CreateNormalMatrix(ref bufferData.Normal, in world);
+            bufferData.Model = entity.Data.Value;
+            MatrixMath.CreateNormalMatrix(ref bufferData.Normal, in entity.Data.Value);
         }
     }
 

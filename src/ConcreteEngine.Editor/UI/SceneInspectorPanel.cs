@@ -131,7 +131,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
             }
         }
 
-        if (modelInstance.Model.Animation is { } animation)
+        if (modelInstance.Model.Rig is { } animation)
         {
             if (ImGui.CollapsingHeader("Animation"u8, CollapseFlags))
                 return;

@@ -43,11 +43,11 @@ public sealed class EngineRenderSystem : IDisposable
         _particleSystem = new ParticleSystem(graphics.Gfx);
         _animationProcessor = new AnimationProcessor(AnimationManager.Instance, Program.UploadBuffers.Skinning);
         
-        _renderDispatcher = new RenderDispatcher(_cameraManager, Program.UploadBuffers);
+        _renderDispatcher = new RenderDispatcher(_cameraManager,_terrainSystem, Program.UploadBuffers);
         _materialProcessor = new MaterialProcessor(Program);
     }
 
-    public int VisibleCount => _renderDispatcher.VisibleCount;
+    public int VisibleCount => _renderDispatcher.VisibleEntities;
 
     internal void Initialize()
     {
@@ -98,7 +98,7 @@ public sealed class EngineRenderSystem : IDisposable
         _cameraManager.CommitFrame(EngineTime.GameAlpha);
 
         // process and upload draw commands
-        _renderDispatcher.Prepare(_terrainSystem);
+        _renderDispatcher.CullEntities();
         _particleSystem.Execute();
         _animationProcessor.Execute();
 

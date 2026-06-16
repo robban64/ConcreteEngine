@@ -78,7 +78,7 @@ internal sealed class ModelImportContext(TextureLoader textureLoader)
         EmbeddedContext.Reset();
     }
 
-    public ModelInfo Compile(List<IEmbeddedAsset> embeddedSink, out ReadOnlySpan<MeshEntry> meshes,out ModelRig? rig)
+    public ModelInfo Compile(List<IEmbeddedAsset> embeddedSink, out ReadOnlySpan<Core.Engine.Graphics.Mesh> meshes,out ModelRig? rig)
     {
         rig = IsAnimated ? AnimationContext.Compile(BoneIndexByName) : null;
         meshes = MeshContext.Compile();
@@ -106,10 +106,10 @@ internal sealed class MeshImportContext
     
     public BoundingBox ModelBounds;
 
-    public MeshEntry[] Meshes = new MeshEntry[16];
+    public Core.Engine.Graphics.Mesh[] Meshes = new Core.Engine.Graphics.Mesh[16];
     public MemoryBlockPtr[] MeshMemory = new MemoryBlockPtr[16];
 
-    public ReadOnlySpan<MeshEntry> Compile()
+    public ReadOnlySpan<Core.Engine.Graphics.Mesh> Compile()
     {
         if(MeshCount == 0) Throwers.InvalidOperation(nameof(MeshCount));
         return Meshes.AsSpan(0, MeshCount);

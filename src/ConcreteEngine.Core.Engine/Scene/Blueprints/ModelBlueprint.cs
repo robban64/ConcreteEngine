@@ -46,7 +46,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
     public ModelInstance(SceneObject owner, ModelBlueprint blueprint) : base(owner)
     {
         Blueprint = blueprint;
-        IsAnimated = blueprint.Model.Animation is not null;
+        IsAnimated = blueprint.Model.Rig is not null;
     }
 
     public override ModelBlueprint GetBlueprint() => Blueprint;
@@ -57,10 +57,10 @@ public sealed class ModelInstance : RenderBlueprintInstance
 
     internal override void OnCreate()
     {
-        var meshes = Model.Meshes;
+        var meshes = Model.GetMeshes();
         for (int i = 0; i < meshes.Length; i++)
         {
-            var mesh = meshes[i];
+            var mesh = Model.GetMesh(i);
             var material = Blueprint.GetMaterial(i);
 
             var source = new SourceComponent(
@@ -76,7 +76,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
             RenderEntityIds.Add(entity);
         }
 
-        if (Model.Animation is { } rig)
+        if (Model.Rig is { } rig)
         {
             foreach (var entity in GetRenderEntities())
                 AnimationManager.Instance.AttachEntity(rig, entity);
@@ -86,7 +86,6 @@ public sealed class ModelInstance : RenderBlueprintInstance
     internal override void ApplyTransform(in Matrix4x4 rootMatrix)
     {
         var globalBounds = BoundingBox.Infinite;
-        var meshes = Model.Meshes;
         foreach (var entity in GetRenderEntities())
         {
             var meshIndex = Ecs.Render.Core.GetSource(entity).MeshIndex;
@@ -98,10 +97,10 @@ public sealed class ModelInstance : RenderBlueprintInstance
             if (IsAnimated)
                 finalMatrix = rootMatrix;
             else
-                MatrixMath.MultiplyAffine(ref finalMatrix, in meshes[meshIndex].Transform, in rootMatrix);
+                MatrixMath.MultiplyAffine(ref finalMatrix, in Model.GetMesh(meshIndex).Transform, in rootMatrix);
 
 
-            ref readonly var localBounds = ref meshes[meshIndex].Bounds;
+            ref readonly var localBounds = ref Model.GetMesh(meshIndex).Bounds;
             ref var worldBounds = ref Ecs.RenderCore.GetWorldBounds(entity);
             BoundingBox.GetWorldBounds(in localBounds, in finalMatrix, out worldBounds);
             BoundingBox.Merge(in globalBounds, in worldBounds, out globalBounds);

@@ -23,7 +23,7 @@ internal sealed unsafe class ModelInspectorUi(StateManager state)
 
 
         ImGui.SeparatorText("Meshes"u8);
-        foreach (var mesh in editModel.Asset.Meshes)
+        foreach (var mesh in editModel.Asset.GetMeshes())
         {
             if (!ImGui.TreeNodeEx(sw.Write(mesh.Name), ImGuiTreeNodeFlags.SpanFullWidth)) continue;
 
@@ -36,8 +36,8 @@ internal sealed unsafe class ModelInspectorUi(StateManager state)
             ImGui.TreePop();
         }
 
-        if (model.Animation != null)
-            DrawAnimated(model.Animation, sw);
+        if (model.Rig != null)
+            DrawAnimated(model.Rig, sw);
     }
 
     private static void DrawAnimated(ModelRig rig, NativeSpanWriter sw)

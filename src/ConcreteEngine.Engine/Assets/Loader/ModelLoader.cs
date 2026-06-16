@@ -79,7 +79,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
             modelInfo: in modelInfo,
             bounds: in bounds,
             meshes: meshes,
-            animation: rig
+            rig: rig
         );
         
         importer.Cleanup();

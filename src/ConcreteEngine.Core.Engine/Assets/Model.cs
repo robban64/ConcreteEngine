@@ -5,38 +5,17 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-public sealed class MeshEntry(string name, MeshInfo info)
-{
-    public readonly string Name = name;
-    public readonly MeshInfo Info = info;
-
-    public MeshId MeshId { get; private set; }
-    private Matrix4x4 _transform;
-    private BoundingBox _bounds;
-
-    public ref readonly Matrix4x4 Transform => ref _transform;
-    public ref readonly BoundingBox Bounds => ref _bounds;
-
-    internal void SetMeshId(MeshId meshId)
-    {
-        if (MeshId.IsValid() || !meshId.IsValid()) Throwers.InvalidOperation(nameof(MeshId));
-        MeshId = meshId;
-    }
-
-    internal void SetTransform(in Matrix4x4 transform) => _transform = transform;
-    internal void SetBounds(in BoundingBox bounds) => _bounds = bounds;
-}
 
 public sealed class Model : AssetObject
 {
-    public MeshEntry[] Meshes { get; }
-    public ModelRig? Animation { get; }
+    private readonly Mesh[] _meshes;
+    private readonly Texture[] _textures;
+    private readonly Material[] _materials;
+
+    public readonly ModelRig? Rig;
 
     public readonly ModelInfo Info;
     public readonly BoundingBox Bounds;
-
-    private readonly Texture[] _textures;
-    private readonly Material[] _materials;
 
     //
     public override AssetKind Kind => AssetKind.Model;
@@ -49,8 +28,8 @@ public sealed class Model : AssetObject
         Guid gid,
         in ModelInfo modelInfo,
         in BoundingBox bounds,
-        ReadOnlySpan<MeshEntry> meshes,
-        ModelRig? animation) : base(name, id, gid)
+        ReadOnlySpan<Mesh> meshes,
+        ModelRig? rig) : base(name, id, gid)
     {
         ArgumentOutOfRangeException.ThrowIfZero(meshes.Length, nameof(meshes));
         ArgumentOutOfRangeException.ThrowIfNotEqual(meshes.Length, modelInfo.MeshCount, nameof(meshes));
@@ -62,11 +41,16 @@ public sealed class Model : AssetObject
 
         Info = modelInfo;
         Bounds = bounds;
-        Meshes = meshes.ToArray();
-        Animation = animation;
+        _meshes = meshes.ToArray();
+        Rig = rig;
         _textures = modelInfo.TextureCount > 0 ? new Texture[modelInfo.TextureCount] : [];
         _materials = modelInfo.MaterialCount > 0 ? new Material[modelInfo.MaterialCount] : [];
     }
+    
+
+    public ReadOnlySpan<Mesh> GetMeshes() => _meshes;
+    public ReadOnlySpan<Texture> GetTextures() => _textures;
+    public ReadOnlySpan<Material> GetMaterials() => _materials;
 
     public Material GetMaterial(int index)
     {
@@ -79,10 +63,13 @@ public sealed class Model : AssetObject
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_textures.Length, nameof(index));
         return _textures[index];
     }
-
-    public ReadOnlySpan<Texture> GetTextures() => _textures;
-    public ReadOnlySpan<Material> GetMaterials() => _materials;
-
+    
+    public Mesh GetMesh(int index)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_meshes.Length, nameof(index));
+        return _meshes[index];
+    }
+    
     internal void SetTexture(int index, Texture texture)
     {
         if ((uint)index >= (uint)_textures.Length) throw new ArgumentOutOfRangeException(nameof(index));

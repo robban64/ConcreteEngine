@@ -9,43 +9,43 @@ public static class Throwers
 {
     // Basic
 
-    [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
     public static void InvalidArgument(string paramName, string? message = null) =>
         throw new ArgumentException(message, paramName);
 
-    [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
     public static void InvalidOperation(string? message = null) => throw new InvalidOperationException(message);
 
-    [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
     public static void NullPointer(string name) => throw new InvalidOperationException($"Null pointer: {name}");
-    [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
     public static void NullReference(string name) => throw new InvalidOperationException($"Null reference: {name}");
 
-    [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
     public static T Unreachable<T>(string name) => throw new UnreachableException(name);
 
-    [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
     public static void Unreachable(string name) => throw new UnreachableException(name);
 
 
-    [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
     public static void KeyNotFound<T>(T key) =>
         throw new InvalidOperationException($"{key} not found or incorrect type.");
 
-    [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
     public static void NotFoundBy<T>(string message, T handle) =>
         throw new InvalidOperationException($"{message}:  {handle}");
 
-    [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
     public static void InvalidHandle<T>(T handle) =>
         throw new InvalidOperationException($"Invalid handle ({typeof(T).Name}) = {handle}");
 
-    [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
     public static void IndexOutOfRange(string buffer, int index, int length) =>
         throw new InvalidOperationException($"OutOfRange {index} with '{buffer}' length {index}");
 
 
-    [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
     public static void BufferOverflow(string buffer, int size, int limit) =>
         throw new InsufficientMemoryException($"{buffer} with size {size} exceeded max limit:  {limit}");
 }
@@ -87,7 +87,7 @@ public static class ArgOutOfRangeThrower
 [StackTraceHidden]
 public static class InvalidOpThrower
 {
-    [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
     private static void ThrowOperation(string? param = null, string? message = null) =>
         throw new InvalidOperationException($"Invalid operation: {param}. {message}");
 

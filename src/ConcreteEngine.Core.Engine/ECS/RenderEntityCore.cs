@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using static ConcreteEngine.Core.Engine.ECS.Ecs.RenderQuery;
 
 namespace ConcreteEngine.Core.Engine.ECS;
 
@@ -53,6 +54,9 @@ public sealed class RenderEntityCore : EcsStore
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsVisible(RenderEntityId e) => _entities[e.Index()].IsVisible();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref RenderEntity GetCoreEntity(RenderEntityId e) => ref _entities[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref SourceComponent GetSource(RenderEntityId e) => ref _sources[e.Index()];
@@ -142,7 +146,21 @@ public sealed class RenderEntityCore : EcsStore
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe Ecs.RenderQuery.VisibleCoreEnumerator VisibilityQuery() => new(_entities, Count);
+    public  VisibleCoreEnumerator VisibilityQuery() => new(this);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public VisibleCoreEnumerator<T1> VisibleQuery<T1>(NativeView<T1> view1) 
+        where T1 : unmanaged 
+    {
+        return new VisibleCoreEnumerator<T1>(GetCoreEntityView(), view1);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public VisibleCoreEnumerator<T1, T2> VisibleQuery<T1, T2>(NativeView<T1> view1, NativeView<T2> view2) 
+        where T1 : unmanaged where T2 : unmanaged
+    {
+        return new VisibleCoreEnumerator<T1, T2>(GetCoreEntityView(), view1, view2);
+    }
 
 
     public override void Dispose()

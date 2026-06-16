@@ -218,7 +218,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
             var materialIndex = (byte)aiMesh->MMaterialIndex;
             var info = new MeshInfo(vertCount, faceCount, meshIndex, materialIndex, (ushort)aiMesh->MNumBones);
-            ctx.Meshes[meshIndex] = new MeshEntry(aiMesh->MName.AsString, info);
+            ctx.Meshes[meshIndex] = new Core.Engine.Graphics.Mesh(aiMesh->MName.AsString, info);
         }
 
     }

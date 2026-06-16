@@ -54,8 +54,9 @@ internal sealed unsafe class ModelInspectorUi(StateManager state)
 
             ImGui.TableHeadersRow();
 
-            foreach (var clip in rig.Clips)
+            for (int i = 0; i < rig.ClipCount; i++)
             {
+                var clip = rig.GetClip(i);
                 ImGui.TableNextRow();
                 float rowHeight = AppDraw.ColumnV(sw.Write(clip.Name));
                 AppDraw.ColumnV(sw.Write(clip.Duration), rowHeight);

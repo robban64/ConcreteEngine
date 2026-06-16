@@ -42,13 +42,13 @@ internal sealed class TerrainSystem
             if (!camera.IntersectsBox(in MainTerrain.GetChunk(it.Slot).GetBounds())) continue;
             var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
             var cmd = new DrawCommand(it.TerrainMeshId, material);
-            commandBuffer.Submit(cmd, meta, in DrawCommandBuffer.TransformIdentity);
+            commandBuffer.SubmitIdentity(cmd, meta);
 
             if (it.FoliageCount > 0)
             {
                 meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Transparent);
                 cmd = new DrawCommand(it.FoliageMeshId, foliageMaterial, instanceCount: (uint)it.FoliageCount);
-                commandBuffer.Submit(cmd, meta, in DrawCommandBuffer.TransformIdentity);
+                commandBuffer.SubmitIdentity(cmd, meta);
             }
         }
     }

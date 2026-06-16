@@ -16,28 +16,28 @@ using AssimpTexture = Silk.NET.Assimp.Texture;
 
 namespace ConcreteEngine.Engine.Assets.ImporterAssimp;
 
-internal sealed unsafe partial class ModelImporter
+internal static unsafe class MaterialModelImporter
 {
-    private static void ProcessMaterials(AssimpScene* scene, ModelImportContext ctx, AssimpSceneMeta meta)
+    public static void ProcessMaterials(AssimpScene* scene, ModelImportContext ctx)
     {
-        if (meta.MaterialCount == 0 || meta.TextureCount == 0) return;
-
+        var embeddedContext = ctx.EmbeddedContext;
+        if (embeddedContext.MaterialCount == 0 && embeddedContext.TextureCount == 0) return;
+        
+        int textureCount = embeddedContext.TextureCount, materialCount = embeddedContext.MaterialCount;
         // register textures
-        for (var i = 0; i < meta.TextureCount; i++)
+        for (var i = 0; i < textureCount; i++)
         {
-            var aiTexture = scene->MTextures[i];
-            var embeddedName = aiTexture->MFilename.AsString;
-            var assetName = AssetNameUtils.MakeEmbeddedName(AssetKind.Texture, ctx.ModelName, i);
+            var embeddedName = scene->MTextures[i]->MFilename.AsString;
+            var assetName = AssetNameUtils.MakeEmbeddedName(AssetKind.Texture, ctx.ModelName!, i);
             var texture = new EmbeddedSceneTexture(assetName, embeddedName, i);
-            ctx.Textures.Add(texture);
+            embeddedContext.Textures.Add(texture);
         }
 
-        for (var i = 0; i < meta.MaterialCount; i++)
+        for (var i = 0; i < materialCount; i++)
         {
-            var aiMat = scene->MMaterials[i];
-            var assetName = AssetNameUtils.MakeEmbeddedName(AssetKind.Material, ctx.ModelName, i);
-            var material = new EmbeddedSceneMaterial(assetName, i, ctx.Animation != null);
-            ProcessMaterialProperties(aiMat, material, ctx);
+            var assetName = AssetNameUtils.MakeEmbeddedName(AssetKind.Material, ctx.ModelName!, i);
+            var material = new EmbeddedSceneMaterial(assetName, i, ctx.IsAnimated);
+            ProcessMaterialProperties(scene->MMaterials[i], material, ctx);
 
             material.FileSpec = new AssetFile(
                 GId: Guid.NewGuid(),
@@ -49,7 +49,7 @@ internal sealed unsafe partial class ModelImporter
                 SizeBytes: 0,
                 Source: ctx.Filename);
 
-            ctx.Materials.Add(material);
+            embeddedContext.Materials.Add(material);
         }
 
         LoadTextures(scene, ctx);
@@ -58,11 +58,11 @@ internal sealed unsafe partial class ModelImporter
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void LoadTextures(AssimpScene* scene, ModelImportContext ctx)
     {
-        var textures = ctx.Textures;
+        var textures = ctx.EmbeddedContext.Textures;
         foreach (var texture in textures)
         {
             var aiTexture = scene->MTextures[texture.TextureIndex];
-            int textureSize = MatUtils.LoadTextureData(ctx, aiTexture, texture);
+            int textureSize = LoadTextureData(ctx.EmbeddedContext, aiTexture, texture);
             texture.FileSpec = new AssetFile(
                 GId: Guid.NewGuid(),
                 Id: AssetFileId.Empty,
@@ -96,7 +96,7 @@ internal sealed unsafe partial class ModelImporter
                     break;
                 case "$tex.file":
                     var texturePath = MatUtils.ParsePropertyString(prop, charBuffer);
-                    AttachTextureToMaterial(material, ctx.Textures, texturePath, (TextureType)prop->MSemantic);
+                    AttachTextureToMaterial(material, ctx.EmbeddedContext.Textures, texturePath, (TextureType)prop->MSemantic);
                     break;
                 case "$mat.opacity":
                     MatUtils.ParseFloatProp(prop, out matData.Color.A);
@@ -147,12 +147,9 @@ internal sealed unsafe partial class ModelImporter
         texture.PixelFormat = format;
         material.Textures.Add(new AssetIndexRef(texture.GId, textureIndex));
     }
-}
-
-file static unsafe class MatUtils
-{
+    
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static int LoadTextureData(ModelImportContext context, AssimpTexture* aiTex, EmbeddedSceneTexture texture)
+    private static int LoadTextureData(EmbeddedImportContext context, AssimpTexture* aiTex, EmbeddedSceneTexture texture)
     {
         int width = (int)aiTex->MWidth, height = (int)aiTex->MHeight;
         int sizeInBytes;
@@ -178,6 +175,11 @@ file static unsafe class MatUtils
         //return TextureImporter.ImportUnmanagedTexture(ptr, sizeInBytes, width, height, format, out size);
     }
 
+}
+
+file static unsafe class MatUtils
+{
+    
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static bool ToSystemEnums(TextureType type, out TextureUsage kind, out TexturePixelFormat format)
     {

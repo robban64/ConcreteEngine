@@ -79,7 +79,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     public void SetName(string newName)
     {
-        SceneStore.Instance.Rename(this, newName, (name) => Name = name);
+        SceneManager.SceneStore.Rename(this, newName, (name) => Name = name);
     }
 
     //

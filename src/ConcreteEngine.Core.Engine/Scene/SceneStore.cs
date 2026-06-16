@@ -15,14 +15,10 @@ public sealed class SceneStore
     
     private static int _unnamedCounter;
     private static int _nameTick = 1;
-    public static SceneStore Instance { get; private set; } = null!;
 
     public int Count { get; private set; }
 
     private SceneObject?[] _sceneObjects = new SceneObject?[DefaultCapacity];
-
-    private readonly List<SceneObjectId>[] _byKind =
-        new List<SceneObjectId>[EnumCache<SceneObjectKind>.Count];
 
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
     
@@ -32,15 +28,6 @@ public sealed class SceneStore
 
     internal SceneStore()
     {
-        if(Instance != null) throw new InvalidOperationException("SceneStore already initialized");
-
-        for (int i = 0; i < _byKind.Length; i++)
-        {
-            var cap = (SceneObjectKind)i == SceneObjectKind.Model ? DefaultCapacity : 32;
-            _byKind[i] = new List<SceneObjectId>(cap);
-        }
-
-        Instance = this;
     }
 
     public int FreeCount => _free.Count;
@@ -59,9 +46,6 @@ public sealed class SceneStore
     }
     
     //
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int GetCountBy(SceneObjectKind kind) => _byKind[(int)kind].Count;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(SceneObjectId id)
     {
@@ -154,7 +138,6 @@ public sealed class SceneStore
             _blueprints.TryAdd(bp.GId, bp);
         }
         
-        _byKind[(int)sceneObject.Kind].Add(id);
 
         return sceneObject;
     }

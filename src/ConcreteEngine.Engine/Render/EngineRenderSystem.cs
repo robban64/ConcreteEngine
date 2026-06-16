@@ -25,9 +25,9 @@ public sealed class EngineRenderSystem : IDisposable
     private readonly CameraManager _cameraManager;
     private readonly VisualManager _visualManager;
 
-    private readonly AnimationManager _animationManager;
     private readonly TerrainSystem _terrainSystem;
     private readonly ParticleSystem _particleSystem;
+    private readonly AnimationProcessor _animationProcessor;
 
     private readonly MaterialProcessor _materialProcessor;
 
@@ -41,9 +41,9 @@ public sealed class EngineRenderSystem : IDisposable
 
         _terrainSystem = new TerrainSystem(graphics.Gfx);
         _particleSystem = new ParticleSystem(graphics.Gfx);
-        _animationManager = AnimationManager.Instance;
+        _animationProcessor = new AnimationProcessor(AnimationManager.Instance, Program.UploadBuffers.Skinning);
         
-        _renderDispatcher = new RenderDispatcher(_cameraManager, _animationManager, Program.UploadBuffers);
+        _renderDispatcher = new RenderDispatcher(_cameraManager, Program.UploadBuffers);
         _materialProcessor = new MaterialProcessor(Program);
     }
 
@@ -86,7 +86,7 @@ public sealed class EngineRenderSystem : IDisposable
 
     internal void OnSimulate(float dt)
     {
-        _animationManager.Simulate(dt);
+        _animationProcessor.Simulate(dt);
         _particleSystem.Simulate(dt);
     }
 
@@ -98,8 +98,10 @@ public sealed class EngineRenderSystem : IDisposable
         _cameraManager.CommitFrame(EngineTime.GameAlpha);
 
         // process and upload draw commands
-        _particleSystem.Upload();
         _renderDispatcher.Prepare(_terrainSystem);
+        _particleSystem.Execute();
+        _animationProcessor.Execute();
+
         _renderDispatcher.Execute();
 
         // prepare buffers
@@ -115,8 +117,8 @@ public sealed class EngineRenderSystem : IDisposable
 
     public void Dispose()
     {
-        _renderDispatcher.Dispose();
         _particleSystem.Dispose();
+        _animationProcessor.Dispose();
         Program.Dispose();
     }
 }

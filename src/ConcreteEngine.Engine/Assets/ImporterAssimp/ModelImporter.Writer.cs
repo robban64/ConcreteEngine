@@ -42,13 +42,13 @@ internal sealed unsafe partial class ModelImporter
     private static void WriteVertices(
         AssimpMesh* aiMesh,
         int meshIndex,
-        ModelImportData model,
+        MeshImportContext ctx,
         NativeView<Vertex3D> vertices)
     {
         var count = (int)aiMesh->MNumVertices;
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
 
-        var meshEntry = model.Meshes[meshIndex];
+        var meshEntry = ctx.Meshes[meshIndex];
         var bounds = BoundingBox.Infinite;
         var texCoords = aiMesh->MTextureCoords[0];
         for (int i = 0; i < count; i++)
@@ -61,13 +61,12 @@ internal sealed unsafe partial class ModelImporter
             bounds.FromPoint(v.Position);
         }
 
-        meshEntry.LocalBounds = bounds;
+        meshEntry.SetBounds(in bounds) ;
     }
 
-    private static void WriteSkinningData(AssimpMesh* aMesh, ModelRig rig,
+    private static void WriteSkinningData(AssimpMesh* aMesh, ModelImportContext ctx,
         NativeView<SkinningData> vertices)
     {
-        ArgumentNullException.ThrowIfNull(rig);
         ArgumentOutOfRangeException.ThrowIfGreaterThan((int)aMesh->MNumBones, AssimpUtils.BoneLimit);
 
         // clear
@@ -77,11 +76,11 @@ internal sealed unsafe partial class ModelImporter
         {
             var boneLen = aMesh->MNumBones;
             var bones = aMesh->MBones;
-            var inverseBindPose = rig.InverseBindPose;
+            var inverseBindPose = ctx.AnimationContext.InverseBindPose;
             for (var i = 0; i < boneLen; i++)
             {
                 var bone = bones[i];
-                TryGetBoneIndex(AssimpUtils.GetNameHash(bone->MName), out var boneIndex);
+                ctx.TryGetBoneIndex(AssimpUtils.GetNameHash(bone->MName), out var boneIndex);
                 inverseBindPose[boneIndex] = bone->MOffsetMatrix;
 
                 WriteWeightAndIndices(bone, boneIndex, vertices);

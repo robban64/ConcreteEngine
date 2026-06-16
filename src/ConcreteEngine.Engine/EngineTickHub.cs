@@ -9,46 +9,34 @@ internal sealed class EngineTickHub
 {
     private const int MaxTicksPerFrame = 6;
 
+    private readonly GameEngine _engine;
+    
     private FrameTickTimer _gameTicker;
-    private FrameTickTimer _environmentTicker;
+    private FrameTickTimer _simulationTicker;
     private FrameTickTimer _diagnosticTicker;
     private FrameTickTimer _systemTicker;
 
-    private readonly Action<float> _onGameTick;
-    private readonly Action<float> _onEnvironmentTick;
-    private readonly Action<float> _onLogTick;
-    private readonly Action<float> _onSystemTick;
 
-    internal EngineTickHub(
-        Action<float> onGameTick,
-        Action<float> onEnvironmentTick,
-        Action<float> onLogTick,
-        Action<float> onSystemTick)
+    internal EngineTickHub(GameEngine engine)
     {
-        ArgumentNullException.ThrowIfNull(onGameTick);
-        ArgumentNullException.ThrowIfNull(onEnvironmentTick);
-        ArgumentNullException.ThrowIfNull(onLogTick);
-        ArgumentNullException.ThrowIfNull(onSystemTick);
+        ArgumentNullException.ThrowIfNull(engine);
         
         var sim = EngineSettings.Current.Simulation;
         _gameTicker = new FrameTickTimer(1.0f / sim.GameSimRate);
-        _environmentTicker = new FrameTickTimer(1.0f / sim.EnvironmentSimRate);
+        _simulationTicker = new FrameTickTimer(1.0f / sim.EnvironmentSimRate);
         _diagnosticTicker = new FrameTickTimer(1.0f / sim.DiagnosticSimRate);
         _systemTicker = new FrameTickTimer(0.25f);
 
-        _onLogTick = onLogTick;
-        _onEnvironmentTick = onEnvironmentTick;
-        _onGameTick = onGameTick;
-        _onSystemTick = onSystemTick;
+        _engine = engine;
 
         EngineTime.GameDelta = _gameTicker.TickDt;
-        EngineTime.EnvironmentDelta = _environmentTicker.TickDt;
+        EngineTime.EnvironmentDelta = _simulationTicker.TickDt;
     }
 
     public void Reset()
     {
         _gameTicker.Accumulator = 0;
-        _environmentTicker.Accumulator = 0;
+        _simulationTicker.Accumulator = 0;
         _diagnosticTicker.Accumulator = 0;
         _systemTicker.Accumulator = 0;
 
@@ -56,19 +44,19 @@ internal sealed class EngineTickHub
         EngineTime.GameTickId = 0;
 
         EngineTime.GameDelta = _gameTicker.TickDt;
-        EngineTime.EnvironmentDelta = _environmentTicker.TickDt;
+        EngineTime.EnvironmentDelta = _simulationTicker.TickDt;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AdvanceFrame(float deltaTime)
     {
-        EngineTime.AdvanceFrame(deltaTime, _gameTicker.Alpha, _environmentTicker.Alpha);
+        EngineTime.AdvanceFrame(deltaTime, _gameTicker.Alpha, _simulationTicker.Alpha);
     }
 
     private void Accumulate(float deltaTime)
     {
         _gameTicker.Accumulate(deltaTime);
-        _environmentTicker.Accumulate(deltaTime);
+        _simulationTicker.Accumulate(deltaTime);
         _diagnosticTicker.Accumulate(deltaTime);
         _systemTicker.Accumulate(deltaTime);
     }
@@ -79,23 +67,23 @@ internal sealed class EngineTickHub
 
         // Advance
         if (_systemTicker.DequeueTick(out var tickDt))
-            _onSystemTick(tickDt);
+            _engine.OnSystemTick(tickDt);
 
         if (_diagnosticTicker.DequeueTick(out tickDt))
-            _onLogTick(tickDt);
+            _engine.OnDiagonsticTick(tickDt);
 
         var tickCounter = 0;
         while (tickCounter < MaxTicksPerFrame && _gameTicker.DequeueTick(out tickDt))
         {
             tickCounter++;
             EngineTime.GameTickId++;
-            _onGameTick(tickDt);
+            _engine.OnGameTick(tickDt);
         }
 
         tickCounter = 0;
-        while (tickCounter < MaxTicksPerFrame && _environmentTicker.DequeueTick(out tickDt))
+        while (tickCounter < MaxTicksPerFrame && _simulationTicker.DequeueTick(out tickDt))
         {
-            _onEnvironmentTick(tickDt);
+            _engine.OnSimulateTick(tickDt);
             tickCounter++;
         }
     }

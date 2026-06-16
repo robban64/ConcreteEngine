@@ -23,12 +23,6 @@ internal sealed class AnimationManager
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<AnimationInstance?> GetAnimationSpan() => _animations.AsSpan();
 
-    internal void Simulate(float dt)
-    {
-        foreach (var it in _animations)
-            it.AdvanceTime(dt);
-    }
-
     public void AttachEntity(ModelRig rig, RenderEntityId entity, Id16<AnimationInstance> animationId = default)
     {
         if (animationId == 0 && TryGetFirstByRig(rig, out var firstEntry))

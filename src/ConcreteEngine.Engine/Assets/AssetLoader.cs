@@ -115,7 +115,6 @@ internal sealed class AssetLoader
         return _step == ProcessStepOrder.Finished;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     private void Load<TAsset, TRecord>(AssetTypeLoader<TAsset, TRecord> loader, TRecord record, string path)
         where TAsset : AssetObject where TRecord : AssetRecord
     {
@@ -127,7 +126,6 @@ internal sealed class AssetLoader
             ProcessEmbedded(model, modelLoader.EmbeddedAssets);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public void LoadShaders(Queue<AssetRecord> queue)
     {
         var loader = GetLoader<ShaderLoader>();
@@ -138,38 +136,28 @@ internal sealed class AssetLoader
         _step = ProcessStepOrder.Textures;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public void LoadTextures(Queue<AssetRecord> queue)
     {
         int n = 8;
-
-        var loader = GetLoader<TextureLoader>();
         while (n-- >= 0 && queue.TryDequeue(out var record))
-            Load(loader, (TextureRecord)record, EnginePath.TexturePath);
+            Load(_textureLoader, (TextureRecord)record, EnginePath.TexturePath);
 
         if (queue.Count == 0) _step = ProcessStepOrder.Meshes;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public void LoadModel(Queue<AssetRecord> queue)
     {
-        var loader = GetLoader<ModelLoader>();
-
         int n = 8;
         while (n-- >= 0 && queue.TryDequeue(out var record))
-        {
-            Load(loader, (ModelRecord)record, EnginePath.ModelPath);
-        }
+            Load(_modelLoader, (ModelRecord)record, EnginePath.ModelPath);
 
         if (queue.Count == 0) _step = ProcessStepOrder.Materials;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public void LoadMaterial(Queue<AssetRecord> queue)
     {
-        var loader = GetLoader<MaterialLoader>();
         while (queue.TryDequeue(out var record))
-            Load(loader, (MaterialRecord)record, EnginePath.MaterialPath);
+            Load(_materialLoader, (MaterialRecord)record, EnginePath.MaterialPath);
 
         _step = ProcessStepOrder.Finished;
     }
@@ -200,8 +188,6 @@ internal sealed class AssetLoader
     private void ProcessEmbedded(Model model, List<IEmbeddedAsset> embedded)
     {
         var hasTexture = false;
-        var textureLoader = GetLoader<TextureLoader>();
-        var materialLoader = GetLoader<MaterialLoader>();
         foreach (var it in embedded)
         {
             var assetId = _store.RegisterEmbedded(model.Id, it);
@@ -209,19 +195,19 @@ internal sealed class AssetLoader
             {
                 case EmbeddedSceneTexture tex:
                     hasTexture = true;
-                    var texture = textureLoader.LoadEmbedded(assetId, tex);
+                    var texture = _textureLoader.LoadEmbedded(assetId, tex);
                     _store.AddAsset(texture);
                     model.SetTexture(tex.TextureIndex, texture);
                     break;
                 case EmbeddedSceneMaterial mat:
-                    var material = materialLoader.LoadEmbedded(assetId, mat);
+                    var material = _materialLoader.LoadEmbedded(assetId, mat);
                     _store.AddAsset(material);
                     model.SetMaterial(mat.MaterialIndex, material);
                     break;
             }
         }
 
-        if (hasTexture && textureLoader.StoredEmbeddedCount > 0)
+        if (hasTexture && _textureLoader.StoredEmbeddedCount > 0)
             throw new InvalidOperationException("Texture loader has stored embedded assets");
 
         embedded.Clear();

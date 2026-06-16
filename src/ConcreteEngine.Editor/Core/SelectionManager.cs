@@ -98,7 +98,7 @@ internal sealed class SelectionManager
         if (SelectedSceneObject?.Id.IsValid() ?? false)
             DeselectSceneObject();
 
-        var sceneObject = SceneStore.Instance.Get(id);
+        var sceneObject = SceneManager.SceneStore.Get(id);
         foreach (var it in sceneObject.GetInstances())
             it.ToggleSelection(true);
 

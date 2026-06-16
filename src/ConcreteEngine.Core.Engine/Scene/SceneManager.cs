@@ -11,9 +11,9 @@ namespace ConcreteEngine.Core.Engine.Scene;
 public sealed class SceneManager
 {
     public static SceneManager Instance { get; private set; } = null!;
+    public static SceneStore SceneStore => Instance.Store;
     
     public readonly SceneStore Store;
-    public readonly Camera Camera;
     public readonly RayCaster Raycaster;
     
     private readonly List<int> _dirtyIds = new(SceneStore.DefaultCapacity);
@@ -24,9 +24,7 @@ public sealed class SceneManager
         Instance = this;
         
         Store = new SceneStore();
-        Camera = CameraManager.Instance.Camera;
-        
-        Raycaster = new RayCaster(Store, Camera.Transform);
+        Raycaster = new RayCaster(Store, CameraManager.Instance.Camera.Transform);
     }
     
     public int DirtyCount => _dirtyIds.Count;

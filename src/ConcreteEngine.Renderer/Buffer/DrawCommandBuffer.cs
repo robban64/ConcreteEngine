@@ -58,7 +58,7 @@ public sealed class DrawCommandBuffer : IDisposable
 
     private static bool _allocated = false;
 
-    public static DrawObjectUniform TransformIdentity;
+    private static DrawObjectUniform TransformIdentity;
 
     public int Count { get; private set; }
 
@@ -89,22 +89,14 @@ public sealed class DrawCommandBuffer : IDisposable
         => new(ref _commands[Count],ref _metas[Count], _commands.Length - Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int Submit(DrawCommand cmd, DrawCommandMeta meta, in DrawObjectUniform matrices)
+    public int SubmitIdentity(DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = Count++;
         _commands[idx] = cmd;
         _metas[idx] = meta;
         _indices[idx] = new DrawCommandRef(meta, idx);
-        _transforms[idx] = matrices;
+        _transforms[idx] = TransformIdentity;
         return idx;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitCommand(int index, DrawCommand cmd, DrawCommandMeta meta)
-    {
-        _commands[index] = cmd;
-        _metas[index] = meta;
-        _indices[index] = new DrawCommandRef(meta, index);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -144,7 +136,7 @@ public sealed class DrawCommandBuffer : IDisposable
         var heads = _rangeBuffer.CountHeads.Ptr;
 
         // Count pass tickets
-        for (var i = 0; i < Count; i++)
+        for (var i = 0; i < length; i++)
         {
             var idx = _indices[i].Index;
             var mask = (uint)_metas[idx].Passes;

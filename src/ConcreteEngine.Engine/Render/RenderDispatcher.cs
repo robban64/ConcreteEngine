@@ -19,49 +19,46 @@ using Camera = ConcreteEngine.Core.Engine.Camera;
 
 namespace ConcreteEngine.Engine.Render;
 
-internal sealed class RenderDispatcher : IDisposable
+internal sealed class RenderDispatcher
 {
     public int VisibleCount { get; private set; }
 
     private readonly Camera _camera;
     private readonly CameraFrustum _frustum;
     private readonly DrawCommandBuffer _commandBuffer;
-    private readonly RenderUploadBuffers _uploadBuffers;
-    private readonly AnimationProcessor _animationProcessor;
+    private readonly EffectBuffer _effectBuffer;
 
-    internal RenderDispatcher(CameraManager cameraManager, AnimationManager animations,
-        RenderUploadBuffers uploadBuffers)
+
+    internal RenderDispatcher(CameraManager cameraManager, RenderUploadBuffers uploadBuffers)
     {
         ArgumentNullException.ThrowIfNull(cameraManager);
-        ArgumentNullException.ThrowIfNull(animations);
         ArgumentNullException.ThrowIfNull(uploadBuffers);
         if (cameraManager.Camera == null! || cameraManager.Frustum == null!)
             throw new ArgumentNullException(nameof(cameraManager));
 
         _camera = cameraManager.Camera;
         _frustum = cameraManager.Frustum;
-        _uploadBuffers = uploadBuffers;
+        _effectBuffer = uploadBuffers.Effects;
         _commandBuffer = uploadBuffers.Commands;
-        _animationProcessor = new AnimationProcessor(animations, uploadBuffers.Skinning);
     }
 
 
     public void Prepare(TerrainSystem terrain)
     {
-        EnsureCommandBuffer();
+        _commandBuffer.EnsureCapacity(Ecs.Render.Core.Count + 64);
         terrain.SubmitDrawTerrain(_commandBuffer, _frustum);
 
         var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passes: PassMask.Main);
         var cmd = new DrawCommand(Skybox.Current.MeshId, Skybox.Current.MaterialId);
-        _commandBuffer.Submit(cmd, meta, in DrawCommandBuffer.TransformIdentity);
+        _commandBuffer.SubmitIdentity(cmd, meta);
+        
+        CullEntities();
     }
+    
 
     internal void Execute()
     {
-        VisibleCount = CullEntities();
-
         if (VisibleCount == 0) return;
-        _animationProcessor.Execute();
 
         TagUploadSelectionEffect();
         CollectEntities();
@@ -69,7 +66,7 @@ internal sealed class RenderDispatcher : IDisposable
         SubmitDebugBounds();
     }
 
-    private unsafe int CullEntities()
+    private unsafe void CullEntities()
     {
         var visibleCount = 0;
         var length = Ecs.Render.Core.Count;
@@ -83,7 +80,7 @@ internal sealed class RenderDispatcher : IDisposable
             if (visible) visibleCount++;
         }
 
-        return visibleCount;
+        VisibleCount = visibleCount;
     }
 
     private unsafe void CollectEntities()
@@ -120,10 +117,9 @@ internal sealed class RenderDispatcher : IDisposable
         var store = Ecs.GetRenderStore<SelectionComponent>();
         if (store.Count == 0) return;
 
-        var effects = _uploadBuffers.Effects;
         foreach (var query in store.VisibilityQuery())
         {
-            var slot = effects.Submit(new EffectUniformParams(query.Component.HighlightColor));
+            var slot = _effectBuffer.Submit(new EffectUniformParams(query.Component.HighlightColor));
             ref var source = ref Ecs.RenderCore.GetSource(query.Entity);
             source.Passes = PassMask.Effect | PassMask.Depth;
             source.Resolver = DrawCommandResolver.Highlight;
@@ -136,7 +132,7 @@ internal sealed class RenderDispatcher : IDisposable
         var store = Ecs.GetRenderStore<DebugBoundsComponent>();
         if (store.Count == 0) return;
 
-        var effects = _uploadBuffers.Effects;
+        var effects = _effectBuffer;
         var ecs = Ecs.Render.Core;
         var ctx = _commandBuffer.GetCommandMetaSpan();
         var index = 0;
@@ -164,13 +160,4 @@ internal sealed class RenderDispatcher : IDisposable
         }
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void EnsureCommandBuffer()
-    {
-        const int extraEntities = 64;
-        _uploadBuffers.Commands.EnsureCapacity(Ecs.Render.Core.Count + extraEntities);
-    }
-
-    public void Dispose() => _animationProcessor.Dispose();
 }

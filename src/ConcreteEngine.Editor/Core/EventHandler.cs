@@ -80,7 +80,7 @@ internal static class EventHandler
     {
         if (evt.Rename is { } name)
         {
-            var asset = SceneStore.Instance.Get(evt.SceneObject);
+            var asset = SceneManager.SceneStore.Get(evt.SceneObject);
             asset.SetName(name);
         }
     }

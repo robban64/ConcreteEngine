@@ -80,7 +80,7 @@ internal sealed class ParticleSystem : IDisposable
     }
 
     
-    internal unsafe void Upload()
+    internal unsafe void Execute()
     {
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
         foreach (var emitterId in CollectionsMarshal.AsSpan(_processedEmitters))

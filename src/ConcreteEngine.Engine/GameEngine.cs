@@ -1,4 +1,5 @@
 using System.Runtime;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
@@ -53,7 +54,7 @@ public sealed class GameEngine : IDisposable
 
         _gateway = new EngineGateway(_renderSystem.Program);
 
-        _tickHub = new EngineTickHub(OnGameTick, _renderSystem.OnSimulate, _gateway.UpdateDiagnostics, OnSystemTick);
+        _tickHub = new EngineTickHub(this);
 
         EngineSetupPipeline.Setup(new EngineSetupCtx
         {
@@ -116,7 +117,7 @@ public sealed class GameEngine : IDisposable
         _gateway.RenderEditor(dt);
     }
 
-    private void OnGameTick(float dt)
+    internal void OnGameTick(float dt)
     {
         CameraManager.Instance.BeginUpdate();
 
@@ -124,8 +125,10 @@ public sealed class GameEngine : IDisposable
         _gateway.UpdateGameTick(dt);
         _renderSystem.AfterUpdate();
     }
+    
+    internal void OnSimulateTick(float dt) => _renderSystem.OnSimulate(dt);
 
-    private void OnSystemTick(float dt)
+    internal void OnSystemTick(float dt)
     {
         var windowResized = _systemStepper.Tick() && EngineWindow.Commit();
         _renderSystem.OnSystemTick(windowResized);
@@ -137,6 +140,8 @@ public sealed class GameEngine : IDisposable
             _commandQueues.DrainDispatch();
 
     }
+
+    internal void OnDiagonsticTick(float dt) => _gateway.UpdateDiagnostics(dt);
 
     internal void Close()
     {

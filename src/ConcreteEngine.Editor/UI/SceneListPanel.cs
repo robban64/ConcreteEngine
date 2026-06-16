@@ -125,7 +125,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ArgumentOutOfRangeException.ThrowIfNegative(start);
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)length, (uint)_sceneIds.Length);
 
-        var store = SceneStore.Instance;
+        var store = SceneManager.SceneStore;
         var sw = TextBuffers.GetWriter();
         uint eyeIcon = StyleMap.GetIntIcon(Icons.Eye), eyeClosedIcon = StyleMap.GetIntIcon(Icons.EyeClosed);
         var selectedId = SelectedId;
@@ -169,7 +169,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         }
 
         var count = 0;
-        foreach (var it in SceneStore.Instance)
+        foreach (var it in SceneManager.SceneStore)
         {
             if (count >= AssetCapacity) break;
 

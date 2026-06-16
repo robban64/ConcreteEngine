@@ -85,7 +85,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
 
     internal override void ApplyTransform(in Matrix4x4 rootMatrix)
     {
-        BoundingBox globalBounds = default;
+        var globalBounds = BoundingBox.Infinite;
         var meshes = Model.Meshes;
         foreach (var entity in GetRenderEntities())
         {
@@ -101,7 +101,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
                 MatrixMath.MultiplyAffine(ref finalMatrix, in meshes[meshIndex].Transform, in rootMatrix);
 
 
-            ref readonly var localBounds = ref meshes[meshIndex].LocalBounds;
+            ref readonly var localBounds = ref meshes[meshIndex].Bounds;
             ref var worldBounds = ref Ecs.RenderCore.GetWorldBounds(entity);
             BoundingBox.GetWorldBounds(in localBounds, in finalMatrix, out worldBounds);
             BoundingBox.Merge(in globalBounds, in worldBounds, out globalBounds);

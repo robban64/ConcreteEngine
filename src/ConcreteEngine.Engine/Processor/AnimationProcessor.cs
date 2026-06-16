@@ -23,7 +23,7 @@ internal sealed unsafe class AnimationProcessor : IDisposable
     private readonly AnimationManager _animations;
     private readonly SkinningBuffer _skinningBuffer;
 
-    public AnimationProcessor(AnimationManager animations, SkinningBuffer skinningBuffer)
+    internal AnimationProcessor(AnimationManager animations, SkinningBuffer skinningBuffer)
     {
         _globals = NativeArray.AlignedAllocate<Matrix4x4>(RenderLimits.BoneCapacity, alignment: 16);
         _animations = animations;
@@ -31,6 +31,12 @@ internal sealed unsafe class AnimationProcessor : IDisposable
     }
 
     public void Dispose() => _globals.Dispose();
+
+    public void Simulate(float dt)
+    {
+        foreach (var it in _animations)
+            it.AdvanceTime(dt);
+    }
 
 
     public void Execute()

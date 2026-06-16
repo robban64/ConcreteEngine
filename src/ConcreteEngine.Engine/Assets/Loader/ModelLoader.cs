@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.ImporterAssimp;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Primitives;
@@ -30,7 +31,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
     protected override void OnActivate()
     {
         _allocator = new ArenaAllocator(TotalSize, zeroed: false);
-        _importer = new ModelImporter();
+        _importer = new ModelImporter(textureLoader);
     }
 
     protected override void OnDeActivate()
@@ -57,78 +58,48 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
         
         // load scene
         var modelContext = importer.StartImport(record.Name, EnginePath.ModelPath, filename);
-        AllocMeshBlocks(modelContext);
+
+        AllocMeshBlocks(modelContext.MeshContext);
 
         // write
-        modelContext.SetTextureLoader(textureLoader);
-        importer.ImportSceneData(modelContext);
+        importer.ImportSceneData();
 
         // upload
-        importer.Upload(modelContext, this);
+        importer.Upload(this);
 
         // store
-        var modelData = modelContext.Model;
-        var animation = modelContext.Animation;
-
-        var meshLength = (byte)modelData.Meshes.Length;
-        if (meshLength == 0) throw new InvalidOperationException("Model import resulted in zero meshes");
+        var modelInfo = modelContext.Compile(EmbeddedAssets, out var meshes, out var rig);
+        var bounds = modelContext.MeshContext.ModelBounds;
         
-        ProcessEmbedded(modelContext);
 
-        var modelInfo = new ModelInfo(
-            vertexCount: modelData.TotalVertexCount,
-            faceCount: modelData.TotalFaceCount,
-            boneCount: (ushort)(animation?.BoneCount ?? 0),
-            meshCount: meshLength,
-            materialCount: (byte)modelContext.Materials.Count,
-            textureCount: (byte)modelContext.Textures.Count,
-            isAnimated: animation != null
-        );
-
-        importer.Cleanup();
-        modelContext.Clear();
-
-        return new Model(
+        var model = new Model(
             name: record.Name,
             id: ctx.Id,
-            gid:record.GId,
+            gid: record.GId,
             modelInfo: in modelInfo,
-            bounds: in modelData.ModelBounds,
-            meshes: modelData.Meshes,
-            animation: animation
+            bounds: in bounds,
+            meshes: meshes,
+            animation: rig
         );
+        
+        importer.Cleanup();
+        return model;
     }
 
 
-    private void AllocMeshBlocks(ModelImportContext modelContext)
+    private void AllocMeshBlocks(MeshImportContext context)
     {
         if(_allocator is not {} allocator) throw new InvalidOperationException("Allocator is null");
+        var meshLength = context.MeshCount;
+        if (meshLength == 0) throw new InvalidOperationException("Model import resulted in zero meshes");
 
-        var modelImportData = modelContext.Model;
-        for (int i = 0; i < modelImportData.Meshes.Length; i++)
+        for (int i = 0; i < meshLength; i++)
         {
-            var info = modelImportData.Meshes[i].Info;
+            var info = context.Meshes[i].Info;
 
-            modelImportData.Blocks[i] = allocator.Alloc(info.VertexCount * Unsafe.SizeOf<Vertex3D>());
+            context.MeshMemory[i] = allocator.Alloc(info.VertexCount * Unsafe.SizeOf<Vertex3D>());
             allocator.Alloc(info.TrisCount * Unsafe.SizeOf<uint>() * 3);
             if (info.BoneCount > 0) allocator.Alloc(info.VertexCount * Unsafe.SizeOf<SkinningData>());
-        }
-    }
-
-    private void ProcessEmbedded(ModelImportContext modelContext)
-    {
-        int textureLen = modelContext.Textures.Count, materialLen = modelContext.Materials.Count;
-
-        if (textureLen > 0)
-        {
-            modelContext.Textures.Sort(static (it1, it2) => it1.TextureIndex.CompareTo(it2.TextureIndex));
-            EmbeddedAssets.AddRange(modelContext.Textures);
-        }
-
-        if (materialLen > 0)
-        {
-            modelContext.Materials.Sort(static (it1, it2) => it1.MaterialIndex.CompareTo(it2.MaterialIndex));
-            EmbeddedAssets.AddRange(modelContext.Materials);
         }
     }
 

@@ -5,12 +5,12 @@ using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-public enum MaterialProfile : byte
+public enum MaterialProfileId : byte
 {
     None,
-    StaticModel,
-    ModelTransparent,
-    AnimatedModel,
+    Opaque,
+    OpaqueAnimated, //TODO Remove
+    Transparent,
     Terrain,
     Sky,
     Water,
@@ -18,14 +18,22 @@ public enum MaterialProfile : byte
     Foliage
 }
 
-public sealed class MaterialProfileEntry(string shaderName, DrawCommandQueue drawQueue, params TextureUsage[] slots)
+public sealed class MaterialProfile(
+    string shaderName,
+    DrawCommandQueue drawQueue,
+    MaterialToggle toggle,
+    params TextureUsage[] slots)
 {
+    private const MaterialToggle DefaultToggle = MaterialToggle.DoubleSided | MaterialToggle.Shadows;
+
     public Shader Shader { get; private set; } = null!;
 
     public readonly string ShaderName = shaderName;
     public readonly DrawCommandQueue DrawQueue = drawQueue;
 
-    public MaterialParams StateValues = new (Color4.White, 0.12f, 12f);
+    public readonly MaterialToggle Toggle = toggle;
+
+    public MaterialParams StateValues = new(Color4.White, 0.12f, 12f);
 
     public GfxDrawState DrawState = GfxDrawState.Set(
         GfxDrawFlags.DepthTest | GfxDrawFlags.DepthWrite | GfxDrawFlags.Cull,
@@ -35,10 +43,16 @@ public sealed class MaterialProfileEntry(string shaderName, DrawCommandQueue dra
     public GfxDrawFunctions DrawFunctions =
         new(BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None);
 
-    public MaterialProfileEntry(string shaderName, params TextureUsage[] slots)
-        : this(shaderName, DrawCommandQueue.Opaque, slots)
+    public MaterialProfile(string shaderName, DrawCommandQueue drawQueue, params TextureUsage[] slots)
+        : this(shaderName, drawQueue, DefaultToggle, slots)
     {
     }
+
+    public MaterialProfile(string shaderName, params TextureUsage[] slots)
+        : this(shaderName, DrawCommandQueue.Opaque, DefaultToggle, slots)
+    {
+    }
+
 
     public int SlotsCount => slots.Length;
     public ReadOnlySpan<TextureUsage> Slots => slots;
@@ -78,4 +92,80 @@ public sealed class MaterialProfileEntry(string shaderName, DrawCommandQueue dra
         for (int i = 0; i < slots.Length; i++)
             ArgumentOutOfRangeException.ThrowIfNotEqual((int)sources[i].Usage, (int)slots[i], nameof(sources));
     }
+
+    // --
+
+    internal static MaterialProfile[] CreateProfiles()
+    {
+        var entries = new MaterialProfile[9];
+        entries[(int)MaterialProfileId.None] = OpaqueProfile;
+        entries[(int)MaterialProfileId.Opaque] = OpaqueProfile;
+        entries[(int)MaterialProfileId.Transparent] = TransparentProfile;
+        entries[(int)MaterialProfileId.OpaqueAnimated] = AnimatedProfile;
+        entries[(int)MaterialProfileId.Terrain] = TerrainProfile;
+        entries[(int)MaterialProfileId.Sky] = SkyProfile;
+        entries[(int)MaterialProfileId.Water] = SkyProfile;
+        entries[(int)MaterialProfileId.Particle] = ParticleProfile;
+        entries[(int)MaterialProfileId.Foliage] = FoliageProfile;
+        return entries;
+    }
+
+    private static MaterialProfile OpaqueProfile =>
+        new("Model", TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask);
+
+    private static MaterialProfile AnimatedProfile =>
+        new("ModelAnimated", TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask);
+
+    private static MaterialProfile TransparentProfile =>
+        new(
+            "Model", DrawCommandQueue.Transparent,
+            MaterialToggle.Shadows | MaterialToggle.Transparent,
+            TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask
+        )
+        {
+            StateValues = new MaterialParams(specular: 0, shininess: 0),
+            DrawState = GfxDrawState.Set(
+                GfxDrawFlags.DepthTest | GfxDrawFlags.DepthWrite | GfxDrawFlags.PolygonOffset | GfxDrawFlags.Ac2,
+                disable: GfxDrawFlags.Cull | GfxDrawFlags.Blend),
+            DrawFunctions = new GfxDrawFunctions(Depth: DepthMode.Lequal)
+        };
+
+
+    private static MaterialProfile ParticleProfile =>
+        new("Particle", DrawCommandQueue.Particles, MaterialToggle.Transparent, TextureUsage.Albedo)
+        {
+            DrawState = GfxDrawState.Set(
+                GfxDrawFlags.Blend,
+                GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2 | GfxDrawFlags.Cull
+            ),
+            DrawFunctions = new GfxDrawFunctions(BlendMode.Alpha)
+        };
+
+    private static MaterialProfile TerrainProfile =>
+        new("Terrain", TextureUsage.Albedo, TextureUsage.Splatmap)
+        {
+            StateValues = new MaterialParams(shininess: 4, specular: 0.02f)
+        };
+
+    private static MaterialProfile FoliageProfile =>
+        new(
+            "Foliage", DrawCommandQueue.Transparent,
+            MaterialToggle.Transparent | MaterialToggle.CastShadows,
+            TextureUsage.Albedo
+        )
+        {
+            DrawState = GfxDrawState.Set(
+                GfxDrawFlags.DepthTest | GfxDrawFlags.Ac2,
+                GfxDrawFlags.DepthWrite | GfxDrawFlags.Cull | GfxDrawFlags.Blend
+            ),
+            DrawFunctions = new GfxDrawFunctions(Depth: DepthMode.Lequal)
+        };
+
+    private static MaterialProfile SkyProfile =>
+        new("Skybox", DrawCommandQueue.Skybox, MaterialToggle.DoubleSided, TextureUsage.Albedo)
+        {
+            DrawState = GfxDrawState.Disable(GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2 | GfxDrawFlags.PolygonOffset |
+                                             GfxDrawFlags.Cull),
+            DrawFunctions = new GfxDrawFunctions(Depth: DepthMode.Lequal)
+        };
 }

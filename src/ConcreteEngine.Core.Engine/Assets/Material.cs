@@ -9,7 +9,7 @@ namespace ConcreteEngine.Core.Engine.Assets;
 public sealed class Material : AssetObject
 {
     public MaterialId MaterialId => State.MaterialId;
-    public MaterialProfile Profile { get; private set; }
+    public MaterialProfileId ProfileId { get; private set; }
 
     public readonly MaterialState State;
     private TextureSource[] _textureSources = [];
@@ -17,17 +17,17 @@ public sealed class Material : AssetObject
     public override AssetCategory Category => AssetCategory.Renderer;
     public override AssetKind Kind => AssetKind.Material;
 
-    private Material(string name, AssetId id, Guid gid, MaterialProfile profile)
+    private Material(string name, AssetId id, Guid gid, MaterialProfileId profileId)
         : base(name, id, gid)
     {
         State = new MaterialState(this);
 
-        SetProfile(profile);
+        SetProfile(profileId);
         MarkDirty(AssetDirtyFlag.Lifecycle | AssetDirtyFlag.State | AssetDirtyFlag.Structure);
     }
 
-    public Material(string name, AssetId id, Guid gid, MaterialProfile profile, in MaterialParams param)
-        : this(name, id, gid, profile)
+    public Material(string name, AssetId id, Guid gid, MaterialProfileId profileId, in MaterialParams param)
+        : this(name, id, gid, profileId)
     {
         State.Albedo = param.Color;
         State.Specular = param.Specular;
@@ -35,8 +35,8 @@ public sealed class Material : AssetObject
         State.Uv = param.UvRepeat;
     }
 
-    public Material(string name, AssetId id, Guid gid, MaterialProfile profile, MaterialParamsRecord param)
-        : this(name, id, gid, profile)
+    public Material(string name, AssetId id, Guid gid, MaterialProfileId profileId, MaterialParamsRecord param)
+        : this(name, id, gid, profileId)
     {
         ArgumentNullException.ThrowIfNull(param);
         param.WriteTo(State);
@@ -48,7 +48,7 @@ public sealed class Material : AssetObject
     public Shader BoundShader
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => AssetManager.GetMaterialProfile(Profile).Shader;
+        get => AssetManager.GetMaterialProfile(ProfileId).Shader;
     }
 
     protected override void OnCommit()
@@ -58,17 +58,17 @@ public sealed class Material : AssetObject
             State.DrawQueue = DrawCommandQueue.Transparent;
     }
 
-    public void SetProfile(MaterialProfile profile)
+    public void SetProfile(MaterialProfileId profileId)
     {
-        if (profile == Profile) return;
-        var profileEntry = AssetManager.GetMaterialProfile(profile);
+        if (profileId == ProfileId) return;
+        var profileEntry = AssetManager.GetMaterialProfile(profileId);
 
         if (profileEntry.SlotsCount != _textureSources.Length)
             _textureSources = profileEntry.MakeSourceArray();
         else
             profileEntry.WriteSources(_textureSources);
 
-        Profile = profile;
+        ProfileId = profileId;
         State.SetFromProfile(profileEntry);
         MarkDirty(AssetDirtyFlag.Structure);
     }
@@ -77,7 +77,7 @@ public sealed class Material : AssetObject
     public void SetSources(ReadOnlySpan<TextureSource> sources)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(sources.Length, _textureSources.Length, nameof(sources));
-        var profile = AssetManager.GetMaterialProfile(Profile);
+        var profile = AssetManager.GetMaterialProfile(ProfileId);
         profile.ValidateSources(sources);
         sources.CopyTo(_textureSources);
     }

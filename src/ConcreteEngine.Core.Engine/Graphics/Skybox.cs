@@ -16,7 +16,7 @@ public sealed class Skybox
 
     public void SetMaterial(Material material)
     {
-        ArgumentOutOfRangeException.ThrowIfNotEqual((int)material.Profile, (int)MaterialProfile.Sky, nameof(material));
+        ArgumentOutOfRangeException.ThrowIfNotEqual((int)material.ProfileId, (int)MaterialProfileId.Sky, nameof(material));
         Material = material;
     }
 }

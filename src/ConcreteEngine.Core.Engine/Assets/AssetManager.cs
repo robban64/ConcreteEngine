@@ -21,8 +21,8 @@ public sealed class AssetManager
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static MaterialProfileEntry GetMaterialProfile(MaterialProfile profile) =>
-        Instance._profileEntries[(int)profile];
+    public static MaterialProfile GetMaterialProfile(MaterialProfileId profileId) =>
+        Instance._profileEntries[(int)profileId];
 
     //
     public static readonly AssetManager Instance = new();
@@ -31,7 +31,7 @@ public sealed class AssetManager
     public readonly AssetStore Store;
     public readonly AssetFileRegistry Files;
 
-    private readonly MaterialProfileEntry[] _profileEntries;
+    private readonly MaterialProfile[] _profileEntries;
 
     private AssetManager()
     {
@@ -39,7 +39,7 @@ public sealed class AssetManager
         Store = new AssetStore(Files);
         Store.SetupStores();
 
-        _profileEntries = MaterialProfileFactory.CreateProfiles();
+        _profileEntries = MaterialProfile.CreateProfiles();
     }
 
     internal void AttachShaders()

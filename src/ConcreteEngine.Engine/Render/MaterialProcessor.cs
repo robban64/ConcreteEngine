@@ -25,16 +25,16 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
     {
         Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
         Shader lastShader = null!;
-        var lastProfile = MaterialProfile.None;
+        var lastProfile = MaterialProfileId.None;
         foreach (var id in _materialStore.GetDirtySpan())
         {
             var material = AssetManager.AssetStore.GetUnsafe<Material>(id);
             var flag = material.Commit();
             if ((flag & AssetDirtyFlag.State) == 0 && (flag & AssetDirtyFlag.Structure) == 0) continue;
 
-            if (lastProfile == MaterialProfile.None || material.Profile != lastProfile)
+            if (lastProfile == MaterialProfileId.None || material.ProfileId != lastProfile)
             {
-                lastProfile = material.Profile;
+                lastProfile = material.ProfileId;
                 lastShader = material.BoundShader;
             }
             var toggles = FillSamplers(material, slots);

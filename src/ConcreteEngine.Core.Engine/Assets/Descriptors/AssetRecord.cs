@@ -102,7 +102,7 @@ internal sealed class MaterialRecord : AssetRecord
     public bool ReceiveShadows { get; init; } = true;
     public bool CastShadows { get; init; } = true;
 
-    public MaterialProfile Profile { get; init; } = MaterialProfile.None;
+    public MaterialProfileId Profile { get; init; } = MaterialProfileId.None;
     public string?[] ProfileSlots { get; init; } = [];
 
     public MaterialParamsRecord Parameters { get; init; }
@@ -115,7 +115,7 @@ internal sealed class MaterialRecord : AssetRecord
     {
         return new MaterialRecord
         {
-            GId = Guid.NewGuid(), Files = { { "Source", binPath } }, Profile = MaterialProfile.StaticModel,
+            GId = Guid.NewGuid(), Files = { { "Source", binPath } }, Profile = MaterialProfileId.Opaque,
         };
     }
 

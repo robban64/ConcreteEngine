@@ -7,6 +7,7 @@ using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
+[Flags]
 public enum MaterialToggle : byte
 {
     None = 0,
@@ -14,6 +15,8 @@ public enum MaterialToggle : byte
     Transparent = 1 << 1,
     CastShadows = 1 << 2,
     ReceiveShadows = 1 << 3,
+    
+    Shadows = CastShadows | ReceiveShadows
 }
 
 
@@ -31,7 +34,7 @@ public sealed class MaterialState
         _material = material;
     }
 
-    internal void SetFromProfile(MaterialProfileEntry profile)
+    internal void SetFromProfile(MaterialProfile profile)
     {
         Albedo = profile.StateValues.Color;
         SpecularColor = SpecularColor with { A = profile.StateValues.Specular };

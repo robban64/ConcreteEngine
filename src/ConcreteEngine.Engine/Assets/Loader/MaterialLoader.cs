@@ -46,7 +46,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
     {
         ArgumentException.ThrowIfNullOrEmpty(embedded.Name);
 
-        var profile = embedded.IsAnimated ? MaterialProfile.AnimatedModel : MaterialProfile.StaticModel;
+        var profile = embedded.IsAnimated ? MaterialProfileId.OpaqueAnimated : MaterialProfileId.Opaque;
 
         var mat = new Material(embedded.Name, assetId, embedded.GId, profile, in embedded.Params);
 

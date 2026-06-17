@@ -53,11 +53,10 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
                 shader.DefaultBindings.ShadowMapBinding
             ));
 
-        state.FillValues(out var param);
-        uniform.MatColor = param.Color;
-        uniform.MatParams0 = new Vector4(param.Specular, param.UvRepeat, 1.0f, 1.0f);
+        uniform.MatColor = state.Albedo;
+        uniform.MatParams0 = new Vector4(state.SpecularColor.A, state.UvTransform.W, 1.0f, 1.0f);
         uniform.MatParams1 = new Vector4(
-            param.Shininess,
+            state.Shininess,
             toggles.HasNormal ? 1f : 0f,
             toggles.HasTransparency ? 1f : 0f,
             toggles.HasAlphaMask ? 1f : 0f

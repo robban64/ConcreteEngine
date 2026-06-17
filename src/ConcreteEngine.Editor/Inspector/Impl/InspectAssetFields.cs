@@ -1,3 +1,4 @@
+using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Editor.Lib.Field;
@@ -9,9 +10,9 @@ namespace ConcreteEngine.Editor.Inspector.Impl;
 internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
 {
     public readonly ColorField ColorField;
-    public readonly FloatField<Float1> SpecularField;
+    public readonly ColorField SpecularField;
     public readonly FloatField<Float1> ShininessField;
-    public readonly FloatField<Float1> UvRepeatField;
+    public readonly FloatField<Float4> UvRepeatField;
     public readonly ComboField BlendCombo;
     public readonly ComboField CullCombo;
     public readonly ComboField DepthCombo;
@@ -23,11 +24,11 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
 
     public InspectMaterialFields() : base(segmentCount: 2)
     {
-        ColorField = Register(new ColorField("Color", true));
-        SpecularField = Register(new FloatField<Float1>("Specular", FieldWidgetKind.Slider) { Min = 0, Max = 50 });
+        ColorField = Register(new ColorField("Albedo", true));
+        SpecularField = Register(new ColorField("Specular", true));
         ShininessField =
             Register(new FloatField<Float1>("Shininess", FieldWidgetKind.Slider) { Min = 0, Max = 50 });
-        UvRepeatField = Register(new FloatField<Float1>("UV Repeat", FieldWidgetKind.Slider));
+        UvRepeatField = Register(new FloatField<Float4>("UV Repeat", FieldWidgetKind.Slider));
 
         BlendCombo = Register(ComboField.MakeFromEnumCache<BlendMode>("Blend Mode"));
         CullCombo = Register(ComboField.MakeFromEnumCache<CullMode>("Cull Mode"));
@@ -40,20 +41,20 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
 
     public override void Bind(InspectMaterial target)
     {
-        ColorField.Bind(() => target.State.Color,
-            value => target.State.Color = (Color4)value
+        ColorField.Bind(() => target.State.Albedo,
+            value => target.State.Albedo = (Color4)value
         );
         SpecularField.Bind(
-            () => target.State.Specular,
-            value => target.State.Specular = (float)value
+            () => target.State.SpecularColor,
+            value => target.State.SpecularColor = (Color4)value
         );
         ShininessField.Bind(
             () => target.State.Shininess,
             value => target.State.Shininess = (float)value
         );
         UvRepeatField.Bind(
-            () => target.State.UvRepeat,
-            value => target.State.UvRepeat = (float)value
+            () => target.State.UvTransform,
+            value => target.State.UvTransform = (Vector4)value
         );
         BlendCombo.Bind(
             () => (int)target.State.DrawFunctions.Blend,

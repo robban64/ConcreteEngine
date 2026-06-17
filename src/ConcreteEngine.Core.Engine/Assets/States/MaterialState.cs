@@ -1,4 +1,4 @@
-
+using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Graphics.Gfx;
@@ -7,12 +7,22 @@ using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
+public enum MaterialToggle : byte
+{
+    None = 0,
+    DoubleSided = 1 << 0,
+    Transparent = 1 << 1,
+    CastShadows = 1 << 2,
+    ReceiveShadows = 1 << 3,
+}
+
+
 public sealed class MaterialState
 {
     private static int _materialIdCounter;
 
     public readonly MaterialId MaterialId = new(++_materialIdCounter);
-    
+
     private readonly Material _material;
 
     public MaterialState(Material material)
@@ -23,10 +33,13 @@ public sealed class MaterialState
 
     internal void SetFromProfile(MaterialProfileEntry profile)
     {
-        SetValues(in profile.StateValues);
+        Albedo = profile.StateValues.Color;
+        SpecularColor = SpecularColor with { A = profile.StateValues.Specular };
+        Shininess = profile.StateValues.Shininess;
+        UvTransform = UvTransform with { W = profile.StateValues.UvRepeat };
         DrawState = profile.DrawState;
         DrawFunctions = profile.DrawFunctions;
-        
+
         if (Transparency && profile.DrawQueue == DrawCommandQueue.Opaque)
             DrawQueue = DrawCommandQueue.Transparent;
         else
@@ -34,6 +47,18 @@ public sealed class MaterialState
 
         if (profile.Shader.HasShadowSampler) PassMasks |= PassMask.Depth;
         else PassMasks &= ~PassMask.Depth;
+    }
+
+    public float Specular
+    {
+        get => SpecularColor.A;
+        set => SpecularColor = SpecularColor with { A = value };
+    }
+
+    public float Uv
+    {
+        get => UvTransform.W;
+        set => UvTransform = UvTransform with { W = value };
     }
 
     public bool Transparency
@@ -97,7 +122,7 @@ public sealed class MaterialState
     } = new(BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None);
 
 
-    public Color4 Color
+    public Color4 Albedo
     {
         get;
         set
@@ -107,6 +132,31 @@ public sealed class MaterialState
             _material.MarkDirty(AssetDirtyFlag.State);
         }
     } = Color4.White;
+
+    public Color4 SpecularColor
+    {
+        get;
+        set
+        {
+            if (Color4.NearlyEqual(in field, in value)) return;
+            field = value;
+            field.A = float.Clamp(value.A, 0f, 1f);
+            _material.MarkDirty(AssetDirtyFlag.State);
+        }
+    } = new(1, 1, 1, 0.12f);
+
+    public Vector4 UvTransform
+    {
+        get;
+        set
+        {
+            if (VectorMath.NearlyEqual(field, value)) return;
+            field = value;
+            field.W = float.Max(value.W, 1f);
+
+            _material.MarkDirty(AssetDirtyFlag.State);
+        }
+    } = new (0, 0, 1f, 1f);
 
     public float Shininess
     {
@@ -119,7 +169,7 @@ public sealed class MaterialState
         }
     } = 12f;
 
-    public float Specular
+    public float Roughness
     {
         get;
         set
@@ -128,34 +178,16 @@ public sealed class MaterialState
             field = float.Max(value, 0f);
             _material.MarkDirty(AssetDirtyFlag.State);
         }
-    } = 0.12f;
+    }
 
-    public float UvRepeat
+    public float Metallic
     {
         get;
         set
         {
             if (FloatMath.NearlyEqual(field, value)) return;
-            field = float.Max(value, 1f);
+            field = float.Max(value, 0f);
             _material.MarkDirty(AssetDirtyFlag.State);
         }
-    } = 1f;
-    
-    
-    public void FillValues(out MaterialParams param)
-    {
-        param.Color = Color;
-        param.Shininess = Shininess;
-        param.Specular = Specular;
-        param.UvRepeat = UvRepeat;
     }
-
-    public void SetValues(in MaterialParams param)
-    {
-        Color = param.Color;
-        Shininess = param.Shininess;
-        Specular = param.Specular;
-        UvRepeat = param.UvRepeat;
-    }
-
 }

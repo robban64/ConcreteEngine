@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
@@ -83,6 +84,23 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
         G = float.Clamp(G, 0.0f, 1.0f);
         B = float.Clamp(G, 0.0f, 1.0f);
         A = float.Clamp(A, 0.0f, 1.0f);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool NearlyEqual(in Color4 b, float eps = FloatMath.DefaultEpsilon) =>
+        VectorMath.NearlyEqual(
+            in Unsafe.As<Color4, Vector4>(ref this),
+            in Unsafe.As<Color4, Vector4>(ref Unsafe.AsRef(in b)),
+            eps);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool NearlyEqual(in Color4 a, in Color4 b, float eps = FloatMath.DefaultEpsilon)
+    {
+        return VectorMath.NearlyEqual(
+            Unsafe.As<Color4, Vector4>(ref Unsafe.AsRef(in a)),
+            Unsafe.As<Color4, Vector4>(ref Unsafe.AsRef(in b)),
+            eps
+        );
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -29,14 +29,17 @@ public sealed class Material : AssetObject
     public Material(string name, AssetId id, Guid gid, MaterialProfile profile, in MaterialParams param)
         : this(name, id, gid, profile)
     {
-        State.SetValues(in param);
+        State.Albedo = param.Color;
+        State.Specular = param.Specular;
+        State.Shininess = param.Shininess;
+        State.Uv = param.UvRepeat;
     }
 
     public Material(string name, AssetId id, Guid gid, MaterialProfile profile, MaterialParamsRecord param)
         : this(name, id, gid, profile)
     {
         ArgumentNullException.ThrowIfNull(param);
-        FromParamRecord(param);
+        param.WriteTo(State);
     }
 
     public int SourceCount => _textureSources.Length;
@@ -90,12 +93,4 @@ public sealed class Material : AssetObject
     public void SetTextureSlot(int slot, Texture? texture) =>
         SetSourceSlot(slot, texture?.Id ?? default, texture?.GfxId ?? default);
 
-
-    private void FromParamRecord(MaterialParamsRecord param)
-    {
-        if (param.Color is { } color) State.Color = color;
-        if (param.Shininess is { } shininess) State.Shininess = shininess;
-        if (param.UvRepeat is { } uvRepeat) State.UvRepeat = uvRepeat;
-        if (param.Specular is { } spec) State.Specular = spec;
-    }
 }

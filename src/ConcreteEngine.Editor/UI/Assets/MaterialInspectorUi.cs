@@ -28,7 +28,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         ImGui.BeginGroup();
         if (material.Asset.TemplateId.IsValid())
         {
-            var template = AssetStore.Instance.Get<Material>(material.Asset.TemplateId);
+            var template = AssetManager.AssetStore.Get<Material>(material.Asset.TemplateId);
             ImGui.TextUnformatted("Template: "u8);
             ImGui.SameLine();
             ImGui.TextColored(Color4.White, sw.Write(template.Name));
@@ -103,7 +103,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         ImGui.TableSetupColumn("Slot"u8, ImGuiTableColumnFlags.WidthStretch);
 
         var usageNames = EnumCache<TextureUsage>.Names;
-        var bindings = asset.State.GetTextureSources();
+        var bindings = asset.GetSourceSpan();
 
         for (var i = 0; i < bindings.Length; i++)
         {
@@ -116,7 +116,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
 
             ImGui.TableNextColumn();
             if (binding.AssetTexture.IsValid())
-                DrawAssetSlot(asset, i, AssetStore.Instance.Get<Texture>(binding.AssetTexture), sw);
+                DrawAssetSlot(asset, i, AssetManager.AssetStore.Get<Texture>(binding.AssetTexture), sw);
             else
                 DrawAssetSlotEmptyTexture(asset, i, binding, sw);
 
@@ -141,7 +141,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         ImGui.SameLine();
 
         if (slotTexture.Id.IsValid() && ImGui.Button("X"u8, new Vector2(rowHeight, rowHeight)))
-            material.State.SetTexture(slot, null);
+            material.SetTextureSlot(slot, null);
 
         if (ImGui.IsItemHovered())
         {
@@ -179,8 +179,8 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         if (!payload.IsNull && payload.IsDelivery())
         {
             var droppedId = *(AssetId*)payload.Data;
-            if (droppedId.Value > 0 && AssetStore.Instance.TryGet<Texture>(droppedId, out var droppedTex))
-                material.State.SetTexture(slot, droppedTex);
+            if (droppedId.Value > 0 && AssetManager.AssetStore.TryGet<Texture>(droppedId, out var droppedTex))
+                material.SetTextureSlot(slot, droppedTex);
         }
 
         ImGui.EndDragDropTarget();

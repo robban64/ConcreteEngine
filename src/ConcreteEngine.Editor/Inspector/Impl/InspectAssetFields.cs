@@ -56,20 +56,20 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
             value => target.State.UvRepeat = (float)value
         );
         BlendCombo.Bind(
-            () => (int)target.State.PassFunctions.Blend,
-            value => target.State.PassFunctions = target.State.PassFunctions with {Blend = (BlendMode)value.X}
+            () => (int)target.State.DrawFunctions.Blend,
+            value => target.State.DrawFunctions = target.State.DrawFunctions with {Blend = (BlendMode)value.X}
         );
         CullCombo.Bind(
-            () => (int)target.State.PassFunctions.Cull,
-            value => target.State.PassFunctions = target.State.PassFunctions with { Cull = (CullMode)value.X }
+            () => (int)target.State.DrawFunctions.Cull,
+            value => target.State.DrawFunctions = target.State.DrawFunctions with { Cull = (CullMode)value.X }
         );
         DepthCombo.Bind(
-            () => (int)target.State.PassFunctions.Depth,
-            value => target.State.PassFunctions = target.State.PassFunctions with { Depth = (DepthMode)value.X }
+            () => (int)target.State.DrawFunctions.Depth,
+            value => target.State.DrawFunctions = target.State.DrawFunctions with { Depth = (DepthMode)value.X }
         );
         PolygonCombo.Bind(
-            () => (int)target.State.PassFunctions.PolygonOffset,
-            value => target.State.PassFunctions = target.State.PassFunctions with
+            () => (int)target.State.DrawFunctions.PolygonOffset,
+            value => target.State.DrawFunctions = target.State.DrawFunctions with
             {
                 PolygonOffset = (PolygonOffsetLevel)value.X
             }

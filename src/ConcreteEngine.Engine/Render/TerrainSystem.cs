@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
@@ -72,7 +73,7 @@ internal sealed class TerrainSystem
             if (MainTerrain.GroundAlbedoTextures.IsDirty)
             {
                 var textureId = MainTerrain.GroundAlbedoTextures.Compile(_gfx.Textures);
-                material.State.SetOverrideTexture(0, textureId);
+                material.SetSourceSlot(0, AssetId.Empty, textureId);
                 Logger.LogString(LogScope.Engine, "Ground albedo texture changed");
             }
         }
@@ -80,7 +81,7 @@ internal sealed class TerrainSystem
         if (MainTerrain.FoliageTextures.IsDirty && MainTerrain.FoliageMaterial is { } foliageMaterial)
         {
             var textureId = MainTerrain.FoliageTextures.Compile(_gfx.Textures);
-            foliageMaterial.State.SetOverrideTexture(0, textureId);
+            foliageMaterial.SetSourceSlot(0, AssetId.Empty, textureId);
             Logger.LogString(LogScope.Engine, "Foliage texture changed");
         }
     }

@@ -25,8 +25,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private const float ListItemHeight = 24f;
     private static float ListItemPad => GuiTheme.CellPadding.X * 2f;
 
-    private static AssetStore Assets => AssetStore.Instance;
-    private static AssetFileRegistry FileRegistry => AssetStore.Instance.FileRegistry;
+    private static AssetStore Assets => AssetManager.AssetStore;
+    private static AssetFileRegistry FileRegistry => AssetManager.FileRegistry;
 
     // Temp solution
     public static AssetId RenamedAsset;

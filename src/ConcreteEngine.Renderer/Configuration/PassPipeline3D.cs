@@ -16,7 +16,7 @@ internal static class PassPipeline3D
                 ctx.ActivateDepthMode(); // Note!
 
                 ctx.GfxCmd.BeginRenderPass(ctx.Target.FboId, state.PassState);
-                ctx.GfxCmd.ApplyStateFunctions(GfxPassFunctions.MakeDepth());
+                ctx.GfxCmd.ApplyStateFunctions(GfxDrawFunctions.MakeDepth());
                 return PassAction.DrawPassResult();
             }).OnPassEnd(static (ctx, in _) =>
             {
@@ -30,7 +30,7 @@ internal static class PassPipeline3D
             .OnPassBegin(static (ctx, in state) =>
             {
                 ctx.GfxCmd.BeginRenderPass(ctx.Target.FboId, state.PassState);
-                ctx.GfxCmd.ApplyStateFunctions(GfxPassFunctions.MakeDefault());
+                ctx.GfxCmd.ApplyStateFunctions(GfxDrawFunctions.MakeDefault());
                 return PassAction.DrawPassResult();
             });
 

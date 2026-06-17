@@ -18,7 +18,7 @@ namespace ConcreteEngine.Engine.Assets.ImporterAssimp;
 
 internal static unsafe class MaterialModelImporter
 {
-    public static void ProcessMaterials(AssimpScene* scene, ModelImportContext ctx)
+    public static void ProcessMaterials(Assimp assimp, AssimpScene* scene, ModelImportContext ctx)
     {
         var embeddedContext = ctx.EmbeddedContext;
         if (embeddedContext.MaterialCount == 0 && embeddedContext.TextureCount == 0) return;
@@ -36,8 +36,10 @@ internal static unsafe class MaterialModelImporter
         for (var i = 0; i < materialCount; i++)
         {
             var assetName = AssetNameUtils.MakeEmbeddedName(AssetKind.Material, ctx.ModelName!, i);
+            var aiMat = scene->MMaterials[i];
+
             var material = new EmbeddedSceneMaterial(assetName, i, ctx.IsAnimated);
-            ProcessMaterialProperties(scene->MMaterials[i], material, ctx);
+            ProcessMaterialProperties(aiMat, material, ctx);
 
             material.FileSpec = new AssetFile(
                 GId: Guid.NewGuid(),
@@ -136,16 +138,16 @@ internal static unsafe class MaterialModelImporter
                 $"Property texture index {textureIndex} does not match {texture.TextureIndex}");
         }
 
-        if (material.Textures.Contains(new AssetIndexRef(texture.GId, textureIndex))) return;
+        if (material.Textures.Contains(texture.GId)) return;
         if (!MatUtils.ToSystemEnums(type, out var kind, out var format))
         {
             kind = TextureUsage.Albedo;
             format = TexturePixelFormat.SrgbAlpha;
         }
-
+        
         texture.SlotKind = kind;
         texture.PixelFormat = format;
-        material.Textures.Add(new AssetIndexRef(texture.GId, textureIndex));
+        material.Textures.Add(texture.GId);
     }
     
     [MethodImpl(MethodImplOptions.NoInlining)]

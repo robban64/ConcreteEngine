@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer;
@@ -10,7 +11,7 @@ namespace ConcreteEngine.Engine.Render;
 internal sealed class MaterialProcessor(RenderProgram renderProgram)
 {
     private readonly MaterialBuffer _materialBuffer = renderProgram.UploadBuffers.Materials;
-    private readonly AssetTypeStore _materialStore = AssetStore.Instance.GetTypeStore(AssetKind.Material);
+    private readonly AssetTypeStore _materialStore = AssetManager.AssetStore.GetTypeStore(AssetKind.Material);
 
     internal void Commit()
     {
@@ -19,35 +20,40 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
         _materialStore.ClearDirty();
     }
 
+
     private void Submit()
     {
-        var assetStore = AssetStore.Instance;
-
         Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
+        Shader lastShader = null!;
+        var lastProfile = MaterialProfile.None;
         foreach (var id in _materialStore.GetDirtySpan())
         {
-            var material = assetStore.GetUnsafe<Material>(id);
+            var material = AssetManager.AssetStore.GetUnsafe<Material>(id);
             var flag = material.Commit();
             if ((flag & AssetDirtyFlag.State) == 0 && (flag & AssetDirtyFlag.Structure) == 0) continue;
-            var toggles = FillSamplers(slots, material.State, assetStore, _materialBuffer);
-            SubmitUniform(material, _materialBuffer, toggles);
+
+            if (lastProfile == MaterialProfile.None || material.Profile != lastProfile)
+            {
+                lastProfile = material.Profile;
+                lastShader = material.BoundShader;
+            }
+            var toggles = FillSamplers(material, slots);
+            SubmitUniform(material.State, lastShader, toggles);
         }
     }
 
-    private static void SubmitUniform(Material material, MaterialBuffer buffer, MaterialRenderToggles toggles)
+    private  void SubmitUniform(MaterialState state, Shader shader, MaterialRenderToggles toggles)
     {
-        var state = material.State;
-
-        ref var uniform = ref buffer.Submit(
+        ref var uniform = ref _materialBuffer.Submit(
             state.MaterialId,
             new RenderMaterialMeta(
-                material.BoundShader.GfxId,
+                shader.GfxId,
                 state.DrawState,
-                state.PassFunctions,
-                material.BoundShader.DefaultBindings.ShadowMapBinding
+                state.DrawFunctions,
+                shader.DefaultBindings.ShadowMapBinding
             ));
 
-        state.FillParams(out var param);
+        state.FillValues(out var param);
         uniform.MatColor = param.Color;
         uniform.MatParams0 = new Vector4(param.Specular, param.UvRepeat, 1.0f, 1.0f);
         uniform.MatParams1 = new Vector4(
@@ -58,18 +64,17 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
         );
     }
 
-    private static MaterialRenderToggles FillSamplers(Span<TextureBinding> slots, MaterialState material,
-        AssetStore assetStore, MaterialBuffer buffer)
+    private  MaterialRenderToggles FillSamplers(Material material, Span<TextureBinding> slots)
     {
         MaterialRenderToggles toggles = default;
-        toggles.HasTransparency = material.Transparency;
-        var textureSources = material.GetTextureSources();
+        toggles.HasTransparency = material.State.Transparency;
+        var textureSources = material.GetSourceSpan();
         for (var i = 0; i < textureSources.Length; i++)
         {
             var source = textureSources[i];
             if (!ResolveFallbackTextureId(source, out var textureId))
             {
-                textureId = assetStore.Get<Texture>(source.AssetTexture).GfxId;
+                textureId = AssetManager.AssetStore.Get<Texture>(source.AssetTexture).GfxId;
                 if (source.Usage == TextureUsage.Normal) toggles.HasNormal = true;
                 else if (source.Usage == TextureUsage.Mask) toggles.HasAlphaMask = true;
             }
@@ -77,7 +82,7 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
             slots[i] = new TextureBinding(textureId, source.Usage, (byte)i);
         }
 
-        buffer.SubmitBindings(material.MaterialId, slots.Slice(0, textureSources.Length));
+        _materialBuffer.SubmitBindings(material.MaterialId, slots.Slice(0, textureSources.Length));
         return toggles;
     }
 

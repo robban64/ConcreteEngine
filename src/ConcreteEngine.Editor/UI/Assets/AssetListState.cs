@@ -128,7 +128,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         var fileCount = currentNode.FileCount;
         var folderCount = currentNode.FolderCount;
 
-        var file = AssetStore.Instance.FileRegistry.GetAssetRootFile(assetId);
+        var file = AssetManager.FileRegistry.GetAssetRootFile(assetId);
         var fileId = file.Id;
         for (var i = 0; i < fileCount; i++)
         {
@@ -169,15 +169,14 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
                 FileBinding.Unknown);
         }
 
-        var assets = AssetStore.Instance;
-        var fileRegistry = AssetStore.Instance.FileRegistry;
+        var fileRegistry = AssetManager.FileRegistry;
         for (var i = 0; i < fileCount; i++)
         {
             var index = i + folderCount;
             var fileId = currentNode.FileIds[i];
 
             var name = fileRegistry.TryGetByRootFileId(fileId, out var assetId)
-                ? assets.Get<AssetObject>(assetId).Name
+                ? AssetManager.AssetStore.Get<AssetObject>(assetId).Name
                 : fileRegistry.Get(fileId).LogicalName;
 
             var status = fileRegistry.GetFileBindingStatus(fileId);

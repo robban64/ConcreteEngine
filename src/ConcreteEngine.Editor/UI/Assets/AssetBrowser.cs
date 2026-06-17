@@ -138,7 +138,7 @@ internal sealed class AssetBrowser
 
     public void BuildFullDirectory()
     {
-        var fileRegistry = AssetStore.Instance.FileRegistry;
+        var fileRegistry = AssetManager.FileRegistry;
 
         var addedFiles = new HashSet<int>(fileRegistry.Count);
 
@@ -155,9 +155,7 @@ internal sealed class AssetBrowser
 
         void AddAssetFilesFor(AssetKind kind, AssetFileRegistry provider, HashSet<int> filesAdded)
         {
-            var assets = AssetStore.Instance;
-
-            foreach (var assetId in assets.GetTypeStore(kind).AsSpan())
+            foreach (var assetId in AssetManager.AssetStore.GetTypeStore(kind).AsSpan())
             {
                 var file = provider.GetAssetRootFile(assetId);
                 if (!filesAdded.Add(file.Id) && file.Storage == AssetStorageKind.FileSystem)
@@ -165,7 +163,7 @@ internal sealed class AssetBrowser
                 AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
             }
 
-            foreach (var assetId in assets.GetTypeStore(kind).AsSpan())
+            foreach (var assetId in AssetManager.AssetStore.GetTypeStore(kind).AsSpan())
             {
                 var fileIds = provider.GetFileBindings(assetId);
                 if (fileIds.Length <= 1) continue;

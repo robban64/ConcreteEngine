@@ -45,10 +45,10 @@ public sealed class EngineRenderSystem : IDisposable
     internal void Initialize()
     {
         //
-        var boundsMaterial = AssetStore.Instance.CreateMaterial("EmptyMat", "EmptyMat1");
+        var boundsMaterial = AssetManager.AssetStore.CreateMaterial("EmptyMat", "EmptyMat1");
         boundsMaterial.State.DrawState =
             GfxDrawState.Set(GfxDrawFlags.Blend, GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2);
-        boundsMaterial.State.PassFunctions = new GfxPassFunctions(BlendMode.Alpha);
+        boundsMaterial.State.DrawFunctions = new GfxDrawFunctions(BlendMode.Alpha);
         Material.BoundsMaterialId = boundsMaterial.MaterialId;
     }
 

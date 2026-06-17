@@ -88,25 +88,30 @@ internal sealed class AssetLoader
         Logger.LogString(LogScope.Assets, "Asset Loader - Closed");
     }
 
-    public bool ProcessLoader()
+    public bool ProcessLoader(out AssetKind finishedKind)
     {
         if (_recordQueue.Length == 0)
             throw new InvalidOperationException("Asset Queue is empty");
 
+        finishedKind = AssetKind.Unknown;
         switch (_step)
         {
             case ProcessStepOrder.NotStarted: _step = ProcessStepOrder.Shaders; break;
             case ProcessStepOrder.Shaders:
                 LoadShaders(_recordQueue[AssetKind.Shader.ToIndex()]);
+                finishedKind = AssetKind.Shader;
                 break;
             case ProcessStepOrder.Textures:
                 LoadTextures(_recordQueue[AssetKind.Texture.ToIndex()]);
+                if(_step != ProcessStepOrder.Textures) finishedKind = AssetKind.Texture;
                 break;
             case ProcessStepOrder.Meshes:
                 LoadModel(_recordQueue[AssetKind.Model.ToIndex()]);
+                if(_step != ProcessStepOrder.Meshes) finishedKind = AssetKind.Model;
                 break;
             case ProcessStepOrder.Materials:
                 LoadMaterial(_recordQueue[AssetKind.Material.ToIndex()]);
+                finishedKind = AssetKind.Material;
                 break;
             default:
                 throw new ArgumentOutOfRangeException();

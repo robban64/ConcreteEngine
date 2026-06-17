@@ -82,7 +82,7 @@ internal sealed class DrawCommandProcessor
         if (!materialMeta.DrawState.IsEmpty())
         {
             _gfxCmd.ApplyState(materialMeta.DrawState);
-            _gfxCmd.ApplyStateFunctions(materialMeta.PassFunctions);
+            _gfxCmd.ApplyStateFunctions(materialMeta.DrawFunctions);
         }
 
         if (PassMode == PassStateMode.Depth && texSlots.Length > 0)

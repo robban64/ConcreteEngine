@@ -7,11 +7,11 @@ namespace ConcreteEngine.Renderer.Buffer;
 public readonly struct RenderMaterialMeta(
     ShaderId shaderId,
     GfxDrawState drawState,
-    GfxPassFunctions passFunctions,
+    GfxDrawFunctions drawFunctions,
     sbyte shadowMapBinding)
 {
     public readonly GfxDrawState DrawState = drawState;
-    public readonly GfxPassFunctions PassFunctions = passFunctions;
+    public readonly GfxDrawFunctions DrawFunctions = drawFunctions;
     public readonly ShaderId ShaderId = shaderId;
     public readonly sbyte ShadowMapBinding = shadowMapBinding;
 }

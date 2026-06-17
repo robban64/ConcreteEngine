@@ -86,19 +86,18 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void ImportSceneData()
     {
-        var scene = _scene;
-        if (scene == null) throw new InvalidOperationException("Scene cannot be null.");
+        if (_scene == null) throw new InvalidOperationException("Scene cannot be null.");
 
-        TraverseScene(scene->MRootNode, _context, Matrix4x4.Identity);
+        TraverseScene(_scene->MRootNode, _context, Matrix4x4.Identity);
 
         var meshCount = _sceneMeta.MeshCount;
         for (var i = 0; i < meshCount; i++)
-            ProcessMeshVertices(scene->MMeshes[i], i, _context);
+            ProcessMeshVertices(_scene->MMeshes[i], i, _context);
 
         if (_context.IsAnimated)
-            ProcessAnimations(scene->MAnimations, _context);
+            ProcessAnimations(_scene->MAnimations, _context);
 
-        MaterialModelImporter.ProcessMaterials(scene, _context);
+        MaterialModelImporter.ProcessMaterials(_assimp, _scene, _context);
     }
 
 

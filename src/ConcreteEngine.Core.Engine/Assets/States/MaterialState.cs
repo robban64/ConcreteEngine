@@ -13,46 +13,27 @@ public sealed class MaterialState
 
     public readonly MaterialId MaterialId = new(++_materialIdCounter);
     
-    private readonly TextureSource[] _textureSources;
-    
     private readonly Material _material;
 
-    public MaterialState(Material material, TextureSource[] textureSources)
+    public MaterialState(Material material)
     {
         ArgumentNullException.ThrowIfNull(material);
-        ArgumentNullException.ThrowIfNull(textureSources);
         _material = material;
-        _textureSources = textureSources;
     }
 
-    internal TextureSource[] TextureSources => _textureSources;
-    public ReadOnlySpan<TextureSource> GetTextureSources() => _textureSources;
-    
-    public void SetOverrideTexture(int slot, TextureId textureId)
+    internal void SetFromProfile(MaterialProfileEntry profile)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
-        _textureSources[slot] = _textureSources[slot] with { OverrideTextureId = textureId };
-        _material. MarkDirty(AssetDirtyFlag.State);
-    }
+        SetValues(in profile.StateValues);
+        DrawState = profile.DrawState;
+        DrawFunctions = profile.DrawFunctions;
+        
+        if (Transparency && profile.DrawQueue == DrawCommandQueue.Opaque)
+            DrawQueue = DrawCommandQueue.Transparent;
+        else
+            DrawQueue = profile.DrawQueue;
 
-    public void SetTexture(int slot, Texture? texture)
-    {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
-
-        ref var source = ref _textureSources[slot];
-
-        if (texture != null)
-        {
-            source = new TextureSource(texture.Id, texture.Usage);
-            _material.MarkDirty(AssetDirtyFlag.State);
-            return;
-        }
-
-        if (source != default)
-        {
-            source = source with { AssetTexture = AssetId.Empty };
-            _material.MarkDirty(AssetDirtyFlag.State);
-        }
+        if (profile.Shader.HasShadowSampler) PassMasks |= PassMask.Depth;
+        else PassMasks &= ~PassMask.Depth;
     }
 
     public bool Transparency
@@ -104,7 +85,7 @@ public sealed class MaterialState
         GfxDrawFlags.Blend | GfxDrawFlags.Ac2
     );
 
-    public GfxPassFunctions PassFunctions
+    public GfxDrawFunctions DrawFunctions
     {
         get;
         set
@@ -161,7 +142,7 @@ public sealed class MaterialState
     } = 1f;
     
     
-    public void FillParams(out MaterialParams param)
+    public void FillValues(out MaterialParams param)
     {
         param.Color = Color;
         param.Shininess = Shininess;
@@ -169,7 +150,7 @@ public sealed class MaterialState
         param.UvRepeat = UvRepeat;
     }
 
-    public void SetParams(in MaterialParams param)
+    public void SetValues(in MaterialParams param)
     {
         Color = param.Color;
         Shininess = param.Shininess;

@@ -1,8 +1,10 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
+
 
 public sealed class Material : AssetObject
 {
@@ -14,67 +16,95 @@ public sealed class Material : AssetObject
     public AssetId TemplateId { get; init; }
     public MaterialProfile Profile { get; private set; }
 
-    public Shader BoundShader { get; private set; }
-
     public readonly MaterialState State;
-    
+    private TextureSource[] _textureSources = [];
+
     public override AssetCategory Category => AssetCategory.Renderer;
     public override AssetKind Kind => AssetKind.Material;
 
-    private Material(string name, AssetId id, Guid gid, AssetId templateId, Shader? boundShader,
-        MaterialProfile profile,
-        TextureSource[] sources) : base(name, id, gid)
+    private Material(string name, AssetId id, Guid gid, AssetId templateId, MaterialProfile profile)
+        : base(name, id, gid)
     {
-        ArgumentNullException.ThrowIfNull(sources);
-
         TemplateId = templateId;
-        Profile = profile;
-        State = new MaterialState(this, sources);
+        State = new MaterialState(this);
 
-        SetShader(boundShader);
+        SetProfile(profile);
         MarkDirty(AssetDirtyFlag.Lifecycle | AssetDirtyFlag.State | AssetDirtyFlag.Structure);
     }
 
-    public Material(string name, AssetId id, Guid gid, AssetId templateId, Shader? boundShader, MaterialProfile profile,
-        in MaterialParams param,
-        TextureSource[] sources) : this(name, id, gid, templateId, boundShader, profile, sources)
+    public Material(string name, AssetId id, Guid gid, AssetId templateId, MaterialProfile profile,
+        in MaterialParams param)
+        : this(name, id, gid, templateId, profile)
     {
-        State.SetParams(in param);
+        State.SetValues(in param);
     }
 
-    public Material(string name, AssetId id, Guid gid, AssetId templateId, Shader? boundShader, MaterialProfile profile,
-        MaterialParamsRecord param, TextureSource[] sources) : this(name, id, gid, templateId, boundShader, profile,
-        sources)
+    public Material(string name, AssetId id, Guid gid, AssetId templateId, MaterialProfile profile,
+        MaterialParamsRecord param)
+        : this(name, id, gid, templateId, profile)
     {
         ArgumentNullException.ThrowIfNull(param);
         FromParamRecord(param);
     }
 
+    public int SourceCount => _textureSources.Length;
+    public ReadOnlySpan<TextureSource> GetSourceSpan() => _textureSources;
+
+    public Shader BoundShader
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => AssetManager.GetMaterialProfile(Profile).Shader;
+    }
+
     protected override void OnCommit()
     {
+        if((DirtyFlags & AssetDirtyFlag.Structure) == 0) return;
         if (State.Transparency && State.DrawQueue == DrawCommandQueue.Opaque)
             State.DrawQueue = DrawCommandQueue.Transparent;
     }
 
-    public void SetShader(Shader? newShader)
+    public void SetProfile(MaterialProfile profile)
     {
-        if (newShader is not { } shader)
-            shader = Shader.FallbackShader;
-        
-        if (BoundShader == shader) return;
+        if (profile == Profile) return;
+        var profileEntry = AssetManager.GetMaterialProfile(profile);
 
-        if (shader.HasShadowSampler) State.PassMasks |= PassMask.Depth;
-        else State.PassMasks &= ~PassMask.Depth;
+        if (profileEntry.SlotsCount != _textureSources.Length)
+            _textureSources = profileEntry.MakeSourceArray();
+        else
+            profileEntry.WriteSources(_textureSources);
 
-        BoundShader = shader;
-        MarkDirty(AssetDirtyFlag.Dependencies);
+        Profile = profile;
+        State.SetFromProfile(profileEntry);
+        MarkDirty(AssetDirtyFlag.Structure);
     }
+
+
+    public void SetSources(ReadOnlySpan<TextureSource> sources)
+    {
+        ArgumentOutOfRangeException.ThrowIfNotEqual(sources.Length, _textureSources.Length, nameof(sources));
+        var profile = AssetManager.GetMaterialProfile(Profile);
+        profile.ValidateSources(sources);
+        sources.CopyTo(_textureSources);
+    }
+
+    public void SetSourceSlot(int slot, AssetId assetId, TextureId textureId = default)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
+        ref var source = ref _textureSources[slot];
+        source = source with { AssetTexture = assetId, OverrideTextureId = textureId };
+        MarkDirty(AssetDirtyFlag.State);
+    }
+
+    public void SetTextureSlot(int slot, Texture? texture) =>
+        SetSourceSlot(slot, texture?.Id ?? default, texture?.GfxId ?? default);
 
 
     internal Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
     {
-        State.FillParams(out var param);
-        return new Material(newName, newId, newGId, Id, BoundShader, Profile, in param, State.TextureSources);
+        State.FillValues(out var param);
+        var mat = new Material(newName, newId, newGId, Id, Profile, in param);
+        mat.SetSources(GetSourceSpan());
+        return mat;
     }
 
     private void FromParamRecord(MaterialParamsRecord param)

@@ -37,16 +37,16 @@ public abstract class AssetObject : IComparable<AssetObject>
 
     public bool Rename(string newName)
     {
-        AssetStore.Instance.Rename(this, newName);
+        AssetManager.AssetStore.Rename(this, newName);
         Name = newName;
         return true;
     }
 
     protected internal void MarkDirty(AssetDirtyFlag flag)
     {
-        if (!Id.IsValid()) return;
+        if (!Id.IsValid() || (DirtyFlags & flag) != 0) return;
         DirtyFlags |= flag;
-        AssetStore.Instance.MarkDirty(this);
+        AssetManager.AssetStore.MarkDirty(this);
     }
 
     internal AssetDirtyFlag Commit()

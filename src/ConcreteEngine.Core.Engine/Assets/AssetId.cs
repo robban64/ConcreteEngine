@@ -24,5 +24,3 @@ public readonly record struct AssetId(int Value, ushort Gen) : IComparable<Asset
 
     public static AssetId Empty = new(0, 0);
 }
-
-public readonly record struct AssetIndexRef(Guid AssetGId, int Index);

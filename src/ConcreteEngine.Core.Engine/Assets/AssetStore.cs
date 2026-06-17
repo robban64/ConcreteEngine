@@ -4,23 +4,24 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Assets.Utils;
+using ConcreteEngine.Renderer.Buffer;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
+
 
 public sealed partial class AssetStore
 {
     private const int DefaultCap = 512;
     public static int StoreCount => EnumCache<AssetKind>.Count - 1;
-    
+
     private static class TypeStore<T> where T : AssetObject
     {
         public static readonly AssetTypeStore Store = new(AssetKindUtils.ToAssetKind(typeof(T)));
     }
-    
-    public static readonly AssetStore Instance = new();
 
     private static readonly Func<string, Type, bool> NameExistsDel =
-        static (name, type) => !Instance.GetTypeStore(AssetKindUtils.ToAssetKind(type)).HasName(name);
+        static (name, type) => !AssetManager.AssetStore.GetTypeStore(AssetKindUtils.ToAssetKind(type)).HasName(name);
 
     public int Count { get; private set; }
 
@@ -32,10 +33,7 @@ public sealed partial class AssetStore
 
     private readonly Stack<int> _free = [];
 
-    private AssetStore()
-    {
-        FileRegistry = new AssetFileRegistry();
-    }
+    internal AssetStore(AssetFileRegistry fileRegistry) => FileRegistry = fileRegistry;
 
     internal void SetupStores()
     {

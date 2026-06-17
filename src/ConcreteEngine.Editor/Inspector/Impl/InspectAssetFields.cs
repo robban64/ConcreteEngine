@@ -41,8 +41,8 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
 
     public override void Bind(InspectMaterial target)
     {
-        ColorField.Bind(() => target.State.Albedo,
-            value => target.State.Albedo = (Color4)value
+        ColorField.Bind(() => target.State.Color,
+            value => target.State.Color = (Color4)value
         );
         SpecularField.Bind(
             () => target.State.SpecularColor,

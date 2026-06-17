@@ -8,14 +8,14 @@ using ConcreteEngine.Renderer.Core;
 namespace ConcreteEngine.Core.Engine.Assets;
 
 [Flags]
-public enum MaterialToggle : byte
+public enum MaterialShading : byte
 {
     None = 0,
     DoubleSided = 1 << 0,
     Transparent = 1 << 1,
     CastShadows = 1 << 2,
     ReceiveShadows = 1 << 3,
-    
+
     Shadows = CastShadows | ReceiveShadows
 }
 
@@ -27,6 +27,7 @@ public sealed class MaterialState
     public readonly MaterialId MaterialId = new(++_materialIdCounter);
 
     private readonly Material _material;
+    private MaterialShading _shading;
 
     public MaterialState(Material material)
     {
@@ -34,22 +35,29 @@ public sealed class MaterialState
         _material = material;
     }
 
+    public bool CastShadow => (_shading & MaterialShading.CastShadows) != 0;
+    public bool ReceiveShadows => (_shading & MaterialShading.ReceiveShadows) != 0;
+    public bool IsTransparent => (_shading & MaterialShading.Transparent) != 0;
+
     internal void SetFromProfile(MaterialProfile profile)
     {
-        Albedo = profile.StateValues.Color;
+        Color = profile.StateValues.Color;
         SpecularColor = SpecularColor with { A = profile.StateValues.Specular };
         Shininess = profile.StateValues.Shininess;
         UvTransform = UvTransform with { W = profile.StateValues.UvRepeat };
+        
         DrawState = profile.DrawState;
         DrawFunctions = profile.DrawFunctions;
+        _shading = profile.Shading;
 
-        if (Transparency && profile.DrawQueue == DrawCommandQueue.Opaque)
+        if (CastShadow) PassMasks |= PassMask.Depth;
+        else PassMasks &= ~PassMask.Depth;
+
+        if (IsTransparent && profile.DrawQueue == DrawCommandQueue.Opaque)
             DrawQueue = DrawCommandQueue.Transparent;
         else
             DrawQueue = profile.DrawQueue;
 
-        if (profile.Shader.HasShadowSampler) PassMasks |= PassMask.Depth;
-        else PassMasks &= ~PassMask.Depth;
     }
 
     public float Specular
@@ -62,17 +70,6 @@ public sealed class MaterialState
     {
         get => UvTransform.W;
         set => UvTransform = UvTransform with { W = value };
-    }
-
-    public bool Transparency
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            _material.MarkDirty(AssetDirtyFlag.Structure);
-        }
     }
 
     public DrawCommandQueue DrawQueue
@@ -125,7 +122,7 @@ public sealed class MaterialState
     } = new(BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None);
 
 
-    public Color4 Albedo
+    public Color4 Color
     {
         get;
         set

@@ -48,7 +48,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
         var profile = embedded.IsAnimated ? MaterialProfileId.OpaqueAnimated : MaterialProfileId.Opaque;
 
-        var mat = new Material(embedded.Name, assetId, embedded.GId, profile, in embedded.Params);
+        var mat = new Material(embedded.Name, assetId, embedded.GId, profile, embedded.Params);
 
         var slot = 0;
         foreach (var textureGId in embedded.Textures)
@@ -57,10 +57,9 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
                 throw new InvalidOperationException($"Embedded texture [{textureGId}] not found");
 
             mat.SetSourceSlot(slot++, texture.Id);
-            if(slot == 3) break;
+            if (slot == 3) break;
         }
 
         return mat;
     }
-
 }

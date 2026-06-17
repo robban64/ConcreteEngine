@@ -80,7 +80,7 @@ internal static unsafe class MaterialModelImporter
     private static void ProcessMaterialProperties(AssimpMaterial* aiMat, EmbeddedSceneMaterial material,
         ModelImportContext ctx)
     {
-        MaterialParams matData = default;
+        var matParams = material.Params;
         Span<char> charBuffer = stackalloc char[256];
         Span<char> keyCharBuffer = stackalloc char[64];
         var propCount = aiMat->MNumProperties;
@@ -101,21 +101,25 @@ internal static unsafe class MaterialModelImporter
                     AttachTextureToMaterial(material, ctx.EmbeddedContext.Textures, texturePath, (TextureType)prop->MSemantic);
                     break;
                 case "$mat.opacity":
-                    MatUtils.ParseFloatProp(prop, out matData.Color.A);
+                    MatUtils.ParseFloatProp(prop, out var alpha);
+                    var color = matParams.Color ?? Color4.White;
+                    color.A = alpha;
+                    matParams.Color = color;
                     break;
                 case Assimp.MaterialShininessBase:
-                    MatUtils.ParseFloatProp(prop, out matData.Shininess);
+                    MatUtils.ParseFloatProp(prop, out var shininess);
+                    matParams.Shininess = shininess;
                     break;
                 case Assimp.MatkeySpecularFactor:
-                    MatUtils.ParseFloatProp(prop, out matData.Specular);
+                    MatUtils.ParseFloatProp(prop, out var specular);
+                    matParams.SpecularColor = Color4.White with { A = specular };
                     break;
                 case Assimp.MaterialColorDiffuseBase:
-                    MatUtils.ParseVectorProp(prop, out Unsafe.As<Color4, Vector4>(ref matData.Color));
+                    matParams.Color = (Color4)MatUtils.ParseVectorProp(prop);
                     break;
             }
         }
 
-        material.Params = matData;
     }
 
     private static void AttachTextureToMaterial(
@@ -220,7 +224,7 @@ file static unsafe class MatUtils
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ParseVectorProp(MaterialProperty* prop, out Vector4 data)
+    public static Vector4 ParseVectorProp(MaterialProperty* prop)
     {
         var length = (int)prop->MDataLength;
         if (length != 16 && length != 12)
@@ -229,7 +233,7 @@ file static unsafe class MatUtils
         ref var b0 = ref Unsafe.AsRef<byte>(prop->MData);
         var span = MemoryMarshal.CreateSpan(ref b0, length);
 
-        data = length == 16 ? MemoryMarshal.Read<Vector4>(span) : MemoryMarshal.Read<Vector3>(span).AsVector4();
+        return length == 16 ? MemoryMarshal.Read<Vector4>(span) : MemoryMarshal.Read<Vector3>(span).AsVector4();
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

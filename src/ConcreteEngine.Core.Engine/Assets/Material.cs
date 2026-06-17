@@ -29,7 +29,7 @@ public sealed class Material : AssetObject
     public Material(string name, AssetId id, Guid gid, MaterialProfileId profileId, in MaterialParams param)
         : this(name, id, gid, profileId)
     {
-        State.Albedo = param.Color;
+        State.Color = param.Color;
         State.Specular = param.Specular;
         State.Shininess = param.Shininess;
         State.Uv = param.UvRepeat;
@@ -49,13 +49,6 @@ public sealed class Material : AssetObject
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => AssetManager.GetMaterialProfile(ProfileId).Shader;
-    }
-
-    protected override void OnCommit()
-    {
-        if((DirtyFlags & AssetDirtyFlag.Structure) == 0) return;
-        if (State.Transparency && State.DrawQueue == DrawCommandQueue.Opaque)
-            State.DrawQueue = DrawCommandQueue.Transparent;
     }
 
     public void SetProfile(MaterialProfileId profileId)

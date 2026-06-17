@@ -42,7 +42,7 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
         }
     }
 
-    private  void SubmitUniform(MaterialState state, Shader shader, MaterialRenderToggles toggles)
+    private  void SubmitUniform(MaterialState state, Shader shader, (bool HasNormal, bool HasAlphaMask) toggles)
     {
         ref var uniform = ref _materialBuffer.Submit(
             state.MaterialId,
@@ -50,23 +50,22 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
                 shader.GfxId,
                 state.DrawState,
                 state.DrawFunctions,
-                shader.DefaultBindings.ShadowMapBinding
+                state.ReceiveShadows ? shader.DefaultBindings.ShadowMapBinding : (sbyte)-1
             ));
 
-        uniform.MatColor = state.Albedo;
+        uniform.MatColor = state.Color;
         uniform.MatParams0 = new Vector4(state.SpecularColor.A, state.UvTransform.W, 1.0f, 1.0f);
         uniform.MatParams1 = new Vector4(
             state.Shininess,
             toggles.HasNormal ? 1f : 0f,
-            toggles.HasTransparency ? 1f : 0f,
+            state.IsTransparent ? 1f : 0f,
             toggles.HasAlphaMask ? 1f : 0f
         );
     }
 
-    private  MaterialRenderToggles FillSamplers(Material material, Span<TextureBinding> slots)
+    private  (bool HasNormal, bool HasAlphaMask) FillSamplers(Material material, Span<TextureBinding> slots)
     {
-        MaterialRenderToggles toggles = default;
-        toggles.HasTransparency = material.State.Transparency;
+        bool hasNormal = false, hasAlphaMask = false;
         var textureSources = material.GetSourceSpan();
         for (var i = 0; i < textureSources.Length; i++)
         {
@@ -74,15 +73,15 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
             if (!ResolveFallbackTextureId(source, out var textureId))
             {
                 textureId = AssetManager.AssetStore.Get<Texture>(source.AssetTexture).GfxId;
-                if (source.Usage == TextureUsage.Normal) toggles.HasNormal = true;
-                else if (source.Usage == TextureUsage.Mask) toggles.HasAlphaMask = true;
+                if (source.Usage == TextureUsage.Normal) hasNormal = true;
+                else if (source.Usage == TextureUsage.Mask) hasAlphaMask = true;
             }
 
             slots[i] = new TextureBinding(textureId, source.Usage, (byte)i);
         }
 
         _materialBuffer.SubmitBindings(material.MaterialId, slots.Slice(0, textureSources.Length));
-        return toggles;
+        return (hasNormal, hasAlphaMask);
     }
 
     private static bool ResolveFallbackTextureId(TextureSource source, out TextureId textureId)

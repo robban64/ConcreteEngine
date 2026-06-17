@@ -1,20 +1,21 @@
 using System.Numerics;
+using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Engine.Assets.Descriptors;
 
 public sealed class MaterialParamsRecord
 {
-    public Color4? Color  { get; init; }
-    public Color4? SpecularColor  { get; init; }
-    public Vector4? UvTransform  { get; init; }
-    public float? Shininess  { get; init; }
-    public float? Roughness  { get; init; }
-    public float? Metallic { get; init; }
+    [JsonInclude] public Color4? Color;
+    [JsonInclude]public Color4? SpecularColor;
+    [JsonInclude]public Vector4? UvTransform;
+    [JsonInclude]public float? Shininess;
+    [JsonInclude]public float? Roughness;
+    [JsonInclude]public float? Metallic;
 
     public void WriteTo(MaterialState state)
     {
-        if (Color is { } color) state.Albedo = color;
+        if (Color is { } color) state.Color = color;
         if (SpecularColor is { } specColor) state.SpecularColor = specColor;
         if (Shininess is { } shininess) state.Shininess = shininess;
         if (UvTransform is { } uvTransform) state.UvTransform = uvTransform;

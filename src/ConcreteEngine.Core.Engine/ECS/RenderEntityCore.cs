@@ -64,6 +64,7 @@ public sealed class RenderEntityCore : EcsStore
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref Matrix4x4 GetModelMatrix(RenderEntityId e) => ref _modelMatrices[e.Index()];
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref Matrix3X4 GetNormalMatrix(RenderEntityId e) => ref _normalMatrices[e.Index()];
 

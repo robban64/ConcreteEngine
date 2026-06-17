@@ -44,10 +44,14 @@ public sealed class AssetManager
 
     internal void AttachShaders()
     {
+        AssetStore.Core.SetupShaders(Store);
+
         foreach (var entry in _profileEntries)
         {
             if (entry.Shader != null!) continue;
             entry.AttachShader(Store.GetByName<Shader>(entry.ShaderName));
         }
+
+        AssetStore.Core.CreateMaterials(Store);
     }
 }

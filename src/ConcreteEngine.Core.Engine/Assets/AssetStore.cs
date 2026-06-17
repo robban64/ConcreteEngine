@@ -13,15 +13,6 @@ namespace ConcreteEngine.Core.Engine.Assets;
 public sealed partial class AssetStore
 {
     private const int DefaultCap = 512;
-    public static int StoreCount => EnumCache<AssetKind>.Count - 1;
-
-    private static class TypeStore<T> where T : AssetObject
-    {
-        public static readonly AssetTypeStore Store = new(AssetKindUtils.ToAssetKind(typeof(T)));
-    }
-
-    private static readonly Func<string, Type, bool> NameExistsDel =
-        static (name, type) => !AssetManager.AssetStore.GetTypeStore(AssetKindUtils.ToAssetKind(type)).HasName(name);
 
     public int Count { get; private set; }
 
@@ -171,21 +162,6 @@ public sealed partial class AssetStore
         assetList.Add(asset);
         MarkDirty(asset);
     }
-
-    public Material CreateMaterial(string materialName, string newName)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(materialName);
-        ArgumentException.ThrowIfNullOrEmpty(newName);
-
-        var originalMaterial = GetByName<Material>(materialName);
-
-        var gid = Guid.NewGuid();
-        var assetId = RegisterPlainAsset(gid, AssetKind.Material, newName, AssetStorageKind.InMemory);
-        var material = originalMaterial.MakeNewAsTemplate(assetId, gid, newName);
-        AddAsset(material);
-        return material;
-    }
-
 
     internal void RegisterExistingBindings(AssetId assetId, AssetFile[] fileSpecs)
     {

@@ -8,12 +8,7 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 public sealed class Material : AssetObject
 {
-    public static Material FallbackMaterial { get; internal set; } = null!;
-    public static MaterialId BoundsMaterialId;
-
     public MaterialId MaterialId => State.MaterialId;
-
-    public AssetId TemplateId { get; init; }
     public MaterialProfile Profile { get; private set; }
 
     public readonly MaterialState State;
@@ -22,26 +17,23 @@ public sealed class Material : AssetObject
     public override AssetCategory Category => AssetCategory.Renderer;
     public override AssetKind Kind => AssetKind.Material;
 
-    private Material(string name, AssetId id, Guid gid, AssetId templateId, MaterialProfile profile)
+    private Material(string name, AssetId id, Guid gid, MaterialProfile profile)
         : base(name, id, gid)
     {
-        TemplateId = templateId;
         State = new MaterialState(this);
 
         SetProfile(profile);
         MarkDirty(AssetDirtyFlag.Lifecycle | AssetDirtyFlag.State | AssetDirtyFlag.Structure);
     }
 
-    public Material(string name, AssetId id, Guid gid, AssetId templateId, MaterialProfile profile,
-        in MaterialParams param)
-        : this(name, id, gid, templateId, profile)
+    public Material(string name, AssetId id, Guid gid, MaterialProfile profile, in MaterialParams param)
+        : this(name, id, gid, profile)
     {
         State.SetValues(in param);
     }
 
-    public Material(string name, AssetId id, Guid gid, AssetId templateId, MaterialProfile profile,
-        MaterialParamsRecord param)
-        : this(name, id, gid, templateId, profile)
+    public Material(string name, AssetId id, Guid gid, MaterialProfile profile, MaterialParamsRecord param)
+        : this(name, id, gid, profile)
     {
         ArgumentNullException.ThrowIfNull(param);
         FromParamRecord(param);
@@ -98,14 +90,6 @@ public sealed class Material : AssetObject
     public void SetTextureSlot(int slot, Texture? texture) =>
         SetSourceSlot(slot, texture?.Id ?? default, texture?.GfxId ?? default);
 
-
-    internal Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
-    {
-        State.FillValues(out var param);
-        var mat = new Material(newName, newId, newGId, Id, Profile, in param);
-        mat.SetSources(GetSourceSpan());
-        return mat;
-    }
 
     private void FromParamRecord(MaterialParamsRecord param)
     {

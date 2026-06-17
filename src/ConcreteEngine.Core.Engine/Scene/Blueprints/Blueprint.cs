@@ -89,7 +89,7 @@ public abstract class RenderBlueprint : IBlueprint, IAssetListener
     {
         if ((uint)index >= (uint)Materials.Length) Throwers.InvalidArgument(nameof(index));
         var material = Materials[index];
-        return material is null ? Material.FallbackMaterial : material.Asset;
+        return material is null ? AssetStore.Core.FallbackMaterial : material.Asset;
     }
 
     public void SetMaterial(int index, Material material)
@@ -115,6 +115,6 @@ public abstract class RenderBlueprint : IBlueprint, IAssetListener
     {
         if (asset is not Material) return;
         foreach (var instance in GetInstanceSpan())
-            instance.ApplyMaterial(Material.FallbackMaterial.State);
+            instance.ApplyMaterial(AssetStore.Core.FallbackMaterial.State);
     }
 }

@@ -121,22 +121,21 @@ internal sealed class RenderDispatcher
         var store = Ecs.GetRenderStore<DebugBoundsComponent>();
         if (store.Count == 0) return;
 
-        var effects = _effectBuffer;
-        var ecs = Ecs.Render.Core;
-        var ctx = _commandBuffer.GetCommandMetaSpan();
         var index = 0;
+        var materialId = AssetStore.Core.DebugBoundsMaterial.MaterialId;
+        var ctx = _commandBuffer.GetCommandMetaSpan();
         foreach (var query in store.VisibilityQuery())
         {
-            var slot = effects.Submit(new EffectUniformParams(query.Component.Color));
-            var depthKey = _camera.MakeDepthKey(ecs.GetModelMatrix(query.Entity).Translation);
+            var slot = _effectBuffer.Submit(new EffectUniformParams(query.Component.Color));
+            var depthKey = _camera.MakeDepthKey(Ecs.RenderCore.GetModelMatrix(query.Entity).Translation);
             depthKey = (ushort)(ushort.MaxValue - depthKey);
 
-            ctx.At1(index) = new DrawCommand(GfxMeshes.Cube, Material.BoundsMaterialId);
+            ctx.At1(index) = new DrawCommand(GfxMeshes.Cube, materialId);
             ctx.At2(index) =
                 new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey,
                     DrawCommandResolver.BoundingVolume, resolverSlot: slot);
 
-            ref readonly var worldBounds = ref ecs.GetWorldBounds(query.Entity);
+            ref readonly var worldBounds = ref Ecs.RenderCore.GetWorldBounds(query.Entity);
             ref var data = ref _commandBuffer.SubmitDraw();
             MatrixMath.CreateModelMatrix(
                 worldBounds.Center,

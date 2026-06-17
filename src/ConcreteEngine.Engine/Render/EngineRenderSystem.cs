@@ -42,15 +42,7 @@ public sealed class EngineRenderSystem : IDisposable
 
     public int VisibleCount => _renderDispatcher.VisibleEntities;
 
-    internal void Initialize()
-    {
-        //
-        var boundsMaterial = AssetManager.AssetStore.CreateMaterial("EmptyMat", "EmptyMat1");
-        boundsMaterial.State.DrawState =
-            GfxDrawState.Set(GfxDrawFlags.Blend, GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2);
-        boundsMaterial.State.DrawFunctions = new GfxDrawFunctions(BlendMode.Alpha);
-        Material.BoundsMaterialId = boundsMaterial.MaterialId;
-    }
+    internal void Initialize() { }
 
     internal void AfterUpdate()
     {

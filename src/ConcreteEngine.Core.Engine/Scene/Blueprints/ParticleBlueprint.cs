@@ -16,7 +16,7 @@ public sealed class ParticleBlueprint : RenderBlueprint
 
     public ParticleBlueprint(ParticleEmitter emitter, Material? material) : base(1)
     {
-        if(material == null) material = Material.FallbackMaterial;
+        if(material == null) material = AssetStore.Core.FallbackMaterial;
         Materials[0] = new AssetRef<Material>(material, this);
         Emitter = emitter;
         DisplayName = emitter.Name;

@@ -26,21 +26,9 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
 
         ImGui.SeparatorText("Material Info"u8);
         ImGui.BeginGroup();
-        if (material.Asset.TemplateId.IsValid())
-        {
-            var template = AssetManager.AssetStore.Get<Material>(material.Asset.TemplateId);
-            ImGui.TextUnformatted("Template: "u8);
-            ImGui.SameLine();
-            ImGui.TextColored(Color4.White, sw.Write(template.Name));
-        }
-
-        if (material.Asset.BoundShader is { } shader)
-        {
-            ImGui.TextUnformatted("Shader: "u8);
-            ImGui.SameLine();
-            ImGui.TextColored(Color4.White, sw.Write(shader.Name));
-        }
-
+        ImGui.TextUnformatted("Shader: "u8);
+        ImGui.SameLine();
+        ImGui.TextColored(Color4.White, sw.Write(material.Asset.BoundShader.Name));
         ImGui.EndGroup();
 
         ImGui.Spacing();

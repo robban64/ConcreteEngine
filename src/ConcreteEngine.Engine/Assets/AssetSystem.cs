@@ -50,10 +50,7 @@ public sealed class AssetSystem
     {
         var finished =  _loader.ProcessLoader(out var finishedKind);
         if (finishedKind == AssetKind.Shader)
-        {
             _assetManager.AttachShaders();
-            AssetSystemSetup.CreateFallbackAssets(_assets);
-        }
         
         return finished;
     }
@@ -84,9 +81,7 @@ public sealed class AssetSystem
     {
         foreach (var it in _assets.GetTypeStoreSpan()) it.Sort();
 
-        Shader.FallbackShader = _assets.GetByName<Shader>("Model");
-        Material.FallbackMaterial.SetProfile(MaterialProfile.StaticModel);
-        _loader?.DeactivateLoader();
+        _loader.DeactivateLoader();
 
         CurrentStatus = Status.Ready;
         AssetSystemSetup.End();

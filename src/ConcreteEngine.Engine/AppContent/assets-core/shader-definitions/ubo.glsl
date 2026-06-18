@@ -42,10 +42,10 @@ uniform ShadowUniform {
 };
 
 uniform MaterialUniform {
-    vec4 uMatColor;
-    vec4 uMatParams0;
-    vec4 uMatParams1;
-};
+    vec4 Color;
+    vec4 Params0;
+    vec4 Params1;
+} uMat;
 
 uniform DrawUniform {
     mat4 uModel;

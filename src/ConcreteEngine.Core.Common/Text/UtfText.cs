@@ -25,7 +25,8 @@ public static class UtfText
 
         return true;
     }
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SliceNullTerminate(Span<byte> byteSpan, out Span<byte> dest)
     {
         var length = byteSpan.IndexOf((byte)0);

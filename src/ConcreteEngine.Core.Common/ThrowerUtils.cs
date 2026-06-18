@@ -44,6 +44,8 @@ public static class Throwers
     public static void IndexOutOfRange(string buffer, int index, int length) =>
         throw new InvalidOperationException($"OutOfRange {index} with '{buffer}' length {index}");
 
+    [DoesNotReturn]
+    public static void BufferOverflow(string message) => throw new InsufficientMemoryException(message);
 
     [DoesNotReturn]
     public static void BufferOverflow(string buffer, int size, int limit) =>

@@ -128,17 +128,17 @@ float halfLambert(float ndl) {
 }
 void main()
 {
-    float uvRepeat = uMatParams1.y;
+    float uvRepeat = uMat.Params1.y;
     vec2 uv = fs_in.TexCoord * uvRepeat;
 
     //  Albedo and Alpha 
     vec4 baseTex = texture(uTexture, uv);
-    float a = (uMatParams1.w > 0.5) ? texture(uAlpha, uv).r : baseTex.a;
+    float a = (uMat.Params1.w > 0.5) ? texture(uAlpha, uv).r : baseTex.a;
     
-    float cutoff = uMatParams1.z;
+    float cutoff = uMat.Params1.z;
     if (a < cutoff) discard;
 
-    vec3 baseColor = baseTex.rgb * uMatColor.rgb;
+    vec3 baseColor = baseTex.rgb * uMat.Color.rgb;
 
     //  Geometric Normal
     vec3 N_geo = normalize(fs_in.N_world);
@@ -169,8 +169,8 @@ void main()
     float diffTerm = halfLambert(ndl);
     vec3 diffuse = baseColor * diffTerm;
 
-    float shininess = uMatParams0.x;
-    float specularStrength = uMatParams1.x;
+    float shininess = uMat.Params0.x;
+    float specularStrength = uMat.Params1.x;
     float specD = blinnPhongSpec(N_vis, V, Ld, shininess);
     vec3 specular = vec3(specularStrength) * specD * uLightSpecularIntensity.x;
 

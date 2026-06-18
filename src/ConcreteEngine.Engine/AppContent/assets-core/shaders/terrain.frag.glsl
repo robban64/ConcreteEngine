@@ -139,10 +139,10 @@ vec3 terrainAlbedo(vec2 texCoords, float uvRepeat) {
 }
 
 void main() {
-    float uvRepeat = uMatParams1.y;
+    float uvRepeat = uMat.Params1.y;
 
     vec3 baseTex = terrainAlbedo(fs_in.TexCoord, uvRepeat);
-    vec3 baseColor = baseTex * uMatColor.rgb;
+    vec3 baseColor = baseTex * uMat.Color.rgb;
 
     vec3 P = fs_in.FragPos;
     vec3 V = normalize(uCameraPos.xyz - P);
@@ -158,8 +158,8 @@ void main() {
     float NdotLd = max(dot(N, Ld), 0.0);
     vec3 diffuse = baseColor * NdotLd;
 
-    float shininess = uMatParams0.x;
-    float specularStrength = uMatParams1.x;
+    float shininess = uMat.Params0.x;
+    float specularStrength = uMat.Params1.x;
     float specD = blinnPhongSpec(N, V, Ld, shininess);
     vec3 specular = vec3(specularStrength) * specD * uLightSpecularIntensity.x;
 

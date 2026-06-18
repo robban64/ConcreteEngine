@@ -130,11 +130,18 @@ public struct MaterialUniform : IUniform
 [StructLayout(LayoutKind.Sequential)]
 public struct MaterialUniformV2 : IUniform
 {
-    public Color4 MatColor;
-    public Color4 MatSpecularColor; // x = SpecularStrength, y = uvRepeat, z,w reserved
-    public Vector4 MatUvTransform;
-    public Vector4 MatSurface;
-    public Vector4 MatFlags;
+    public Color4 Color;
+    public Color4 SpecularColor;
+    public Vector4 UvTransform;
+    public Vector4 Surface;
+    
+    public float Shininess;
+    public float Roughness;
+    public float Metallic;
+    public float AlphaCutoff;
+    
+    public float HasAlphaMask;
+    private float _pad1, _pad2, _pad3;
 
     public static int OverrideSize => 0;
 

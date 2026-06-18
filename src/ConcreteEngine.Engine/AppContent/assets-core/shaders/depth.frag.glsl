@@ -9,7 +9,7 @@ layout(binding = 1) uniform sampler2D uAlpha;
 
 void main()
 {
-    float uvRepeat = uMatParams0.y;
+    float uvRepeat = uMatParams1.y;
     vec2 uv = TexCoord * uvRepeat;
 
     // default alpha from main texture

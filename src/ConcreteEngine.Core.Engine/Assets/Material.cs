@@ -57,23 +57,30 @@ public sealed class Material : AssetObject
     }
 
 
-    public void SetSources(ReadOnlySpan<TextureSource> sources)
-    {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(sources.Length, _textureSources.Length, nameof(sources));
-        var profile = AssetManager.GetMaterialProfile(ProfileId);
-        profile.ValidateSources(sources);
-        sources.CopyTo(_textureSources);
-    }
 
     public void SetSourceSlot(int slot, AssetId assetId, TextureId textureId = default)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
         ref var source = ref _textureSources[slot];
-        source = source with { AssetTexture = assetId, OverrideTextureId = textureId };
+        source = source.WithTexture(assetId, textureId);
+        if (source.Usage == TextureUsage.Mask) State.HasAlphaMask = source.IsBound();
         MarkDirty(AssetDirtyFlag.State);
     }
 
     public void SetTextureSlot(int slot, Texture? texture) =>
         SetSourceSlot(slot, texture?.Id ?? default, texture?.GfxId ?? default);
+    
+    public void SetSources(ReadOnlySpan<TextureSource> sources)
+    {
+        ArgumentOutOfRangeException.ThrowIfNotEqual(sources.Length, _textureSources.Length, nameof(sources));
+        var profile = AssetManager.GetMaterialProfile(ProfileId);
+        profile.ValidateSources(sources);
+        for (var i = 0; i < sources.Length; i++)
+        {
+            var source = sources[i];
+            SetSourceSlot(i, source.AssetTexture, source.OverrideTexture);
+        }
+    }
+
 
 }

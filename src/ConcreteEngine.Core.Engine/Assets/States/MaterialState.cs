@@ -38,6 +38,8 @@ public sealed class MaterialState
     public bool CastShadow => (_shading & MaterialShading.CastShadows) != 0;
     public bool ReceiveShadows => (_shading & MaterialShading.ReceiveShadows) != 0;
     public bool IsTransparent => (_shading & MaterialShading.Transparent) != 0;
+    
+    public bool HasAlphaMask { get; internal set; }
 
     internal void SetFromProfile(MaterialProfile profile)
     {
@@ -47,8 +49,8 @@ public sealed class MaterialState
         DrawFunctions = profile.DrawFunctions;
         _shading = profile.Shading;
 
-        if (CastShadow) PassMasks |= PassMask.Depth;
-        else PassMasks &= ~PassMask.Depth;
+        if (CastShadow) Passes |= PassMask.Depth;
+        else Passes &= ~PassMask.Depth;
 
         if (IsTransparent && profile.DrawQueue == DrawCommandQueue.Opaque)
             DrawQueue = DrawCommandQueue.Transparent;
@@ -68,31 +70,7 @@ public sealed class MaterialState
         get => UvTransform.W;
         set => UvTransform = UvTransform with { W = value };
     }
-
-    public DrawCommandQueue DrawQueue
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            _material.MarkDirty(AssetDirtyFlag.Structure);
-        }
-    } = DrawCommandQueue.Opaque;
-
-
-    public PassMask PassMasks
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            _material.MarkDirty(AssetDirtyFlag.Structure);
-        }
-    } = PassMask.Default;
-
-
+    
     public GfxDrawState DrawState
     {
         get;
@@ -117,16 +95,38 @@ public sealed class MaterialState
             _material.MarkDirty(AssetDirtyFlag.State);
         }
     } = new(BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None);
+    
+    public DrawCommandQueue DrawQueue
+    {
+        get;
+        set
+        {
+            if (field == value) return;
+            field = value;
+            _material.MarkDirty(AssetDirtyFlag.Structure);
+        }
+    } = DrawCommandQueue.Opaque;
 
+
+    public PassMask Passes
+    {
+        get;
+        set
+        {
+            if (field == value) return;
+            field = value;
+            _material.MarkDirty(AssetDirtyFlag.Structure);
+        }
+    } = PassMask.Default;
 
     public Color4 Color
     {
         get;
         set
         {
-            if (Color4.NearlyEqual(in field, in value)) return;
-            field = value;
-            field.A = float.Clamp(value.A, 0f, 1f);
+            var color = value.AsClampedAlpha();
+            if (Color4.NearlyEqual(in field, in color)) return;
+            field = color;
             _material.MarkDirty(AssetDirtyFlag.State);
         }
     } = Color4.White;
@@ -136,9 +136,9 @@ public sealed class MaterialState
         get;
         set
         {
-            if (Color4.NearlyEqual(in field, in value)) return;
-            field = value;
-            field.A = float.Clamp(value.A, 0f, 1f);
+            var color = value.AsClampedAlpha();
+            if (Color4.NearlyEqual(in field, in color)) return;
+            field = color;
             _material.MarkDirty(AssetDirtyFlag.State);
         }
     } = new(1, 1, 1, 0.12f);
@@ -148,10 +148,9 @@ public sealed class MaterialState
         get;
         set
         {
-            if (VectorMath.NearlyEqual(in field, in value)) return;
-            field = value;
-            field.W = float.Max(value.W, 1f);
-
+            var uv = value with { Z = float.Max(value.Z, 1f), W = float.Max(value.W, 1f)};
+            if (VectorMath.NearlyEqual(in field, in uv)) return;
+            field = uv;
             _material.MarkDirty(AssetDirtyFlag.State);
         }
     } = new (0, 0, 1f, 1f);

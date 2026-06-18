@@ -128,7 +128,7 @@ float halfLambert(float ndl) {
 }
 void main()
 {
-    float uvRepeat = uMatParams0.y;
+    float uvRepeat = uMatParams1.y;
     vec2 uv = fs_in.TexCoord * uvRepeat;
 
     //  Albedo and Alpha 
@@ -149,16 +149,15 @@ void main()
     // Visual Normal 
     vec3 N_vis = N_geo;
 
-    if (uMatParams1.y > 0.5) {
-        //(Gram-Schmidt)
-        vec3 Tw = normalize(fs_in.T_world);
-        Tw = normalize(Tw - N_geo * dot(Tw, N_geo));
-        vec3 Bw = normalize(fs_in.B_world);
-        mat3 TBN = mat3(Tw, Bw, N_geo);
+    // Normals (Gram-Schmidt)
+    vec3 Tw = normalize(fs_in.T_world);
+    Tw = normalize(Tw - N_geo * dot(Tw, N_geo));
+    vec3 Bw = normalize(fs_in.B_world);
+    mat3 TBN = mat3(Tw, Bw, N_geo);
 
-        vec3 nTex = texture(uNormal, fs_in.TexCoord).rgb * 2.0 - 1.0;
-        N_vis = normalize(TBN * nTex);
-    }
+    vec3 nTex = texture(uNormal, fs_in.TexCoord).rgb * 2.0 - 1.0;
+    N_vis = normalize(TBN * nTex);
+    //
 
     // Positions & Vectors
     vec3 P = fs_in.FragPos;
@@ -173,8 +172,8 @@ void main()
     float diffTerm = halfLambert(ndl);
     vec3 diffuse = baseColor * diffTerm;
 
-    float shininess = uMatParams1.x;
-    float specularStrength = uMatParams0.x;
+    float shininess = uMatParams0.x;
+    float specularStrength = uMatParams1.x;
     float specD = blinnPhongSpec(N_vis, V, Ld, shininess);
     vec3 specular = vec3(specularStrength) * specD * uLightSpecularIntensity.x;
 

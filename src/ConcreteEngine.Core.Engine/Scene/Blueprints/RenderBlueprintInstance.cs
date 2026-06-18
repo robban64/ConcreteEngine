@@ -54,7 +54,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
             ref var source = ref Ecs.Render.Core.GetSource(entity);
             if (source.Material.Id > 0 && source.Material != material.MaterialId) continue;
             source.Queue = material.DrawQueue;
-            source.Passes = material.PassMasks;
+            source.Passes = material.Passes;
         }
     }
 

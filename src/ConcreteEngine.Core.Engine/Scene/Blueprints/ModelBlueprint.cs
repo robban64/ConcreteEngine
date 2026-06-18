@@ -69,7 +69,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
                 mesh.Info.MeshIndex, 
                 EntitySourceKind.Model,
                 material.State.DrawQueue, 
-                material.State.PassMasks);
+                material.State.Passes);
 
             var entity = Ecs.RenderCore.AddEntity(source);
             Ecs.SceneLink.BindSceneHandle(entity, Owner.Id);

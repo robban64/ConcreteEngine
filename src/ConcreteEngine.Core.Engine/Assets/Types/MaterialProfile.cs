@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Graphics.Gfx;
@@ -60,7 +62,7 @@ public sealed class MaterialProfile
 
     public int SlotsCount => _slots.Length;
     public ReadOnlySpan<TextureUsage> Slots => _slots;
-    
+
     internal void AttachShader(Shader shader)
     {
         if (Shader != null!) throw new InvalidOperationException("Shader already attached");
@@ -77,24 +79,39 @@ public sealed class MaterialProfile
     public TextureSource[] MakeSourceArray()
     {
         var sources = new TextureSource[_slots.Length];
-        for (int i = 0; i < _slots.Length; i++)
-            sources[i] = new TextureSource(default, _slots[i]);
+        WriteSources(sources);
         return sources;
     }
 
     public void WriteSources(TextureSource[] sources)
     {
-        ValidateSources(sources);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(sources.Length, _slots.Length, nameof(sources));
         for (int i = 0; i < sources.Length; i++)
-            sources[i] = sources[i] with { Usage = _slots[i] };
+        {
+            var usage = _slots[i];
+            sources[i] = new TextureSource(default, _slots[i], GetFallbackTexture(usage));
+        }
     }
-
 
     public void ValidateSources(ReadOnlySpan<TextureSource> sources)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(sources.Length, _slots.Length, nameof(sources));
         for (int i = 0; i < _slots.Length; i++)
             ArgumentOutOfRangeException.ThrowIfNotEqual((int)sources[i].Usage, (int)_slots[i], nameof(sources));
+    }
+
+    // --
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TextureId GetFallbackTexture(TextureUsage usage)
+    {
+        return usage switch
+        {
+            TextureUsage.Albedo or TextureUsage.Specular or TextureUsage.Roughness or TextureUsage.Emissive
+                or TextureUsage.Splatmap or TextureUsage.Heightmap => GfxTextures.Fallback.AlbedoId,
+            TextureUsage.Normal => GfxTextures.Fallback.NormalId,
+            TextureUsage.Mask => GfxTextures.Fallback.AlphaMaskId,
+            _ => Throwers.Unreachable<TextureId>(nameof(usage))
+        };
     }
 
     // --
@@ -127,7 +144,7 @@ public sealed class MaterialProfile
             StateValues = MaterialStateRecord.Make(0.12f, 12f)
         };
 
-    
+
     private static MaterialProfile TransparentProfile =>
         new(
             "Model", DrawCommandQueue.Transparent,
@@ -135,7 +152,7 @@ public sealed class MaterialProfile
             TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask
         )
         {
-            StateValues = MaterialStateRecord.Make(0,0),
+            StateValues = MaterialStateRecord.Make(0, 0),
             DrawState = GfxDrawState.Set(
                 GfxDrawFlags.Blend,
                 GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2 | GfxDrawFlags.Cull
@@ -150,7 +167,7 @@ public sealed class MaterialProfile
             TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask
         )
         {
-            StateValues = MaterialStateRecord.Make(0,0),
+            StateValues = MaterialStateRecord.Make(0, 0),
             DrawState = GfxDrawState.Set(
                 GfxDrawFlags.DepthTest | GfxDrawFlags.DepthWrite | GfxDrawFlags.PolygonOffset | GfxDrawFlags.Ac2,
                 disable: GfxDrawFlags.Cull | GfxDrawFlags.Blend),
@@ -161,7 +178,7 @@ public sealed class MaterialProfile
     private static MaterialProfile ParticleProfile =>
         new("Particle", DrawCommandQueue.Particles, MaterialShading.Transparent, TextureUsage.Albedo)
         {
-            StateValues = MaterialStateRecord.Make(0,0),
+            StateValues = MaterialStateRecord.Make(0, 0),
             DrawState = GfxDrawState.Set(
                 GfxDrawFlags.Blend,
                 GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2 | GfxDrawFlags.Cull
@@ -182,7 +199,7 @@ public sealed class MaterialProfile
             TextureUsage.Albedo
         )
         {
-            StateValues = MaterialStateRecord.Make(0,0),
+            StateValues = MaterialStateRecord.Make(0, 0),
             DrawState = GfxDrawState.Set(
                 GfxDrawFlags.DepthTest | GfxDrawFlags.Ac2,
                 GfxDrawFlags.DepthWrite | GfxDrawFlags.Cull | GfxDrawFlags.Blend
@@ -193,7 +210,7 @@ public sealed class MaterialProfile
     private static MaterialProfile SkyProfile =>
         new("Skybox", DrawCommandQueue.Skybox, MaterialShading.DoubleSided, TextureUsage.Albedo)
         {
-            StateValues = MaterialStateRecord.Make(0,0),
+            StateValues = MaterialStateRecord.Make(0, 0),
             DrawState = GfxDrawState.Disable(GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2 | GfxDrawFlags.PolygonOffset |
                                              GfxDrawFlags.Cull),
             DrawFunctions = new GfxDrawFunctions(Depth: DepthMode.Lequal)

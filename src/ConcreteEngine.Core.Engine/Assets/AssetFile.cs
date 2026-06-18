@@ -16,8 +16,9 @@ public sealed record AssetFile(
     long SizeBytes,
     string LogicalName,
     string RelativePath,
-    string? ContentHash = null,
-    string? Source = null) : IComparable<AssetFile>
+    string? Source = null,
+    string? ContentHash = null
+) : IComparable<AssetFile>
 {
     public int CompareTo(AssetFile? other)
     {

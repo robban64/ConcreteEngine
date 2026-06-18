@@ -43,77 +43,73 @@ public sealed class AssetManager
 
         _profileEntries = MaterialProfile.CreateProfiles();
     }
-    
+
     public void Rename(AssetObject asset, string newName)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(newName, asset.Name);
         AssetNameUtils.ValidateAssetName(newName);
         Store.GetTypeStore(asset.Kind).Rename(asset.Name, newName);
     }
-    
-    internal AssetId RegisterPlainAsset(Guid gid, AssetKind kind, string name, AssetStorage storage)
+
+    internal AssetId RegisterInMemoryAsset(Guid gid, AssetKind kind, string name)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentOutOfRangeException.ThrowIfEqual(gid, Guid.Empty);
-        ArgumentOutOfRangeException.ThrowIfEqual((int)storage, (int)AssetStorage.FileSystem);
 
         var assetId = Store.AllocateSlot(gid);
-        Files.Register(assetId, name, name, 0, new FileScanInfo(0, kind, storage));
+        Files.Register(assetId, 0, new FileScanInfo(0, name, name));
         return assetId;
     }
-    
-    internal AssetId RegisterScannedAsset(AssetRecord record, string relativePath, in FileScanInfo fileInfo)
+
+    internal AssetId RegisterScannedAsset(AssetRecord record, in FileScanInfo fileInfo)
     {
         ArgumentException.ThrowIfNullOrEmpty(record.Name);
         ArgumentOutOfRangeException.ThrowIfEqual(record.GId, Guid.Empty);
 
         if (Store.GetTypeStore(record.Kind).HasName(record.Name))
-            throw new InvalidOperationException($"Asset name {record.Name} already registered");
+            Throwers.InvalidArgument($"Asset name {record.Name} already registered");
 
         var assetId = Store.AllocateSlot(record.GId);
-        Files.Register(assetId, record.Name, relativePath, record.Files.Count, in fileInfo);
+        Files.Register(assetId, record.Files.Count, in fileInfo);
         return assetId;
     }
-    
-    
-    internal void RegisterAssetBinding(AssetId assetId, string assetName, string relativePath, in FileScanInfo scanInfo)
+
+
+    internal void RegisterAssetBinding(AssetId assetId, in FileScanInfo scanInfo)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Value);
-        ArgumentException.ThrowIfNullOrEmpty(assetName);
-        ArgumentException.ThrowIfNullOrEmpty(relativePath);
 
         if (Store.Has(assetId))
-            Throwers.InvalidOperation($"AssetId {assetId} not found for register scanned file {relativePath}");
+            Throwers.InvalidArgument($"AssetId {assetId} not found for register scanned file {scanInfo.Name}");
 
-        var name = Path.GetFileNameWithoutExtension(relativePath);
-        if (!Files.TryGetFileByPath(relativePath, out var fileSpec))
-            fileSpec = Files.Register(AssetId.Empty, name, relativePath, 1, in scanInfo);
+        if (!Files.TryGetFileByPath(scanInfo.RelativePath, out var fileSpec))
+            fileSpec = Files.Register(AssetId.Empty, 1, in scanInfo);
 
         var fileIds = Files.GetFileBindings(assetId);
         if (fileIds[scanInfo.FileIndex].Value > 0)
-            throw new InvalidOperationException($"FileSpec {name} already set for {assetName}");
+            Throwers.InvalidArgument($"FileSpec {scanInfo.Name} already set for {assetId}");
 
         fileIds[scanInfo.FileIndex] = fileSpec.Id;
     }
-    
-    
+
+
     internal AssetId RegisterEmbedded(AssetId sourceId, IEmbeddedAsset embedded)
     {
         ArgumentNullException.ThrowIfNull(embedded);
         ArgumentNullException.ThrowIfNull(embedded.FileSpec);
 
         if (!Files.HasBinding(sourceId))
-            throw new InvalidOperationException($"Missing original asset for {embedded.Name}");
+            Throwers.InvalidArgument($"Missing original asset for {embedded.Name}");
 
-        var assetId = RegisterPlainAsset(embedded.GId, embedded.Kind, embedded.Name, AssetStorage.Embedded);
+        var assetId = RegisterInMemoryAsset(embedded.GId, embedded.Kind, embedded.Name);
         RegisterExistingBindings(assetId, [embedded.FileSpec]);
         return assetId;
     }
-    
+
     internal void RegisterExistingBindings(AssetId assetId, AssetFile[] fileSpecs)
     {
         if (!Files.TryGetFileBindings(assetId, out var bindings))
-            throw new InvalidOperationException($"Missing file bindings for {assetId}");
+            Throwers.InvalidArgument($"Missing file bindings for {assetId}");
 
         for (var i = 0; i < fileSpecs.Length; i++)
             Files.Replace(bindings[i], fileSpecs[i]);

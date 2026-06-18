@@ -34,7 +34,7 @@ public sealed partial class AssetStore
             
             {
                 var gid = Guid.Parse("f28fbc18-9e84-41bf-b490-4b900b1d8598");
-                var assetId = manager.RegisterPlainAsset(gid, AssetKind.Material, "Fallback", AssetStorage.InMemory);
+                var assetId = manager.RegisterInMemoryAsset(gid, AssetKind.Material, "Fallback");
                 var material= new Material("Fallback", assetId, gid, MaterialProfileId.Opaque);
                 manager.Store.AddAsset(material);
                 FallbackMaterial = material;
@@ -42,7 +42,7 @@ public sealed partial class AssetStore
 
             {
                 var gid = Guid.Parse("747a4dcf-e9b0-47cd-a5b9-6a5b34ae40d6");
-                var assetId = manager.RegisterPlainAsset(gid, AssetKind.Material, "DebugBounds", AssetStorage.InMemory);
+                var assetId = manager.RegisterInMemoryAsset(gid, AssetKind.Material, "DebugBounds");
                 var material= new Material("DebugBounds", assetId, gid, MaterialProfileId.Opaque);
                 material.State.DrawState =
                     GfxDrawState.Set(GfxDrawFlags.Blend, GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2);

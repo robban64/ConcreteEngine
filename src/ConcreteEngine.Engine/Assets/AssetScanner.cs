@@ -28,7 +28,6 @@ internal sealed class AssetScannerEntry
 
 internal sealed class AssetScanner(AssetManager assetManager)
 {
-
     public void ScanAll(Queue<AssetRecord>[] result)
     {
         ArgumentNullException.ThrowIfNull(result);
@@ -40,10 +39,10 @@ internal sealed class AssetScanner(AssetManager assetManager)
         var materialQueue = result[AssetKind.Material.ToIndex()] = new Queue<AssetRecord>(64);
 
         avg1.BeginSample();
-        ScanFiles(AssetKind.Shader, EnginePath.ShaderPath, FileUtils.ValidShaderExt, shaderQueue);
-        ScanFiles(AssetKind.Texture, EnginePath.TexturePath, FileUtils.ValidTextureExt, textureQueue);
-        ScanFiles(AssetKind.Model, EnginePath.ModelPath, FileUtils.ValidModelExt, modelQueue);
-        ScanFiles(AssetKind.Material, EnginePath.MaterialPath, default, materialQueue);
+        ScanFiles(AssetKind.Shader, EnginePath.ShaderPath,  shaderQueue);
+        ScanFiles(AssetKind.Texture, EnginePath.TexturePath,  textureQueue);
+        ScanFiles(AssetKind.Model, EnginePath.ModelPath,  modelQueue);
+        ScanFiles(AssetKind.Material, EnginePath.MaterialPath, materialQueue);
         avg1.EndSample();
         avg1.ResetAndPrint("Scanner took");
     }
@@ -53,109 +52,66 @@ internal sealed class AssetScanner(AssetManager assetManager)
     private void ScanFiles(
         AssetKind kind,
         string directory,
-        ReadOnlySpan<string> validExt,
         Queue<AssetRecord> result)
     {
-        var assets = assetManager;
-
-        var di = new DirectoryInfo(directory);
-        var files = di.GetFiles("*.*", SearchOption.AllDirectories);
+        var fileRegistry = assetManager.Files;
         var relativeDirectory = directory.Substring(directory.LastIndexOf('/') + 1);
 
-        // register assets and related files
-        foreach (var fileInfo in files)
+        // register files
+        foreach (var filePath in Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories))
         {
-            if (!fileInfo.Name.EndsWith(".asset")) continue;
+            var fileInfo = new FileInfo(filePath);
+            var fileName = fileInfo.Name;
+            if(!FileUtils.TestFileName(kind, fileName, out var isAssetFile))
+                continue;
 
-            var filePath = fileInfo.FullName;
-            var record = AssetSerializer.LoadRecord(filePath);
-            result.Enqueue(record);
+            var relativeSpan = filePath.AsSpan();
+            relativeSpan = relativeSpan.Slice(relativeSpan.LastIndexOf(directory) + directory.Length + 1);
+            var relativePath = Path.Join(relativeDirectory, relativeSpan);
 
-            // Root file
-            var info = new FileScanInfo(0, kind, AssetStorage.FileSystem);
-            ExtractFileInfo(record.Name, fileInfo, ref info);
+            if (fileRegistry.HasFilePath(relativePath)) continue;
 
-            var relativePath = Path.GetRelativePath(directory, filePath);
-            relativePath = Path.Join(relativeDirectory, relativePath);
-            var assetId = assets.RegisterScannedAsset(record, relativePath, in info);
+            FileScanInfo scanInfo;
+            if (isAssetFile)
+            {
+                var record = AssetSerializer.LoadRecord(filePath);
+                ExtractFileInfo(0, record.Name, relativePath, fileInfo, out scanInfo);
+                var assetId = assetManager.RegisterScannedAsset(record, in scanInfo);
+                result.Enqueue(record);
 
-            // Dependent files
-            RegisterBindings(assets, assetId, record, directory, relativeDirectory);
+                // Dependent files
+                RegisterBindings(assetId, record, directory, relativeDirectory);
+                continue;
+            }
+            ExtractFileInfo(0, fileName, relativePath, fileInfo, out scanInfo);
+            fileRegistry.RegisterUnbound(in scanInfo);
         }
-
-        // register unimported files
-        foreach (var fileInfo in files)
-        {
-            RegisterUnimportedFile(assets.Files, fileInfo, kind, directory, relativeDirectory, validExt);
-        }
-
     }
+    
 
-    private static void RegisterBindings(AssetManager assets, AssetId assetId, AssetRecord record, string directory,
-        string relativeDirectory)
+    private void RegisterBindings(AssetId assetId, AssetRecord record, string directory, string relativeDirectory)
     {
         var fileIndex = 1;
-        var info = new FileScanInfo(0, record.Kind, AssetStorage.FileSystem);
         foreach (var (_, localPath) in record.Files)
         {
-            var bindingFullPath = Path.Join(directory, localPath);
-            var bindingPath = Path.Join(relativeDirectory, localPath);
-
-            info = new FileScanInfo((byte)fileIndex++, record.Kind, AssetStorage.FileSystem);
-            ExtractFileInfo(record.Name, new FileInfo(bindingFullPath), ref info);
-            assets.RegisterAssetBinding(assetId, record.Name, bindingPath, in info);
+            var relativePath = Path.Join(relativeDirectory, localPath);
+            var fileInfo = new FileInfo(Path.Join(directory, localPath));
+            ExtractFileInfo(fileIndex++, fileInfo.Name, relativePath, fileInfo, out var info);
+            assetManager.RegisterAssetBinding(assetId, in info);
         }
     }
-
-    private static void RegisterUnimportedFile(AssetFileRegistry fileRegistry, FileInfo fileInfo, AssetKind kind,
-        string directory, string relativeDirectory, ReadOnlySpan<string> validExt)
+    
+    private static void ExtractFileInfo(int index, string name, string relativePath, FileInfo info, out FileScanInfo scanInfo)
     {
-        var filePath = fileInfo.FullName;
-        var fileSpan = fileInfo.Name.AsSpan();
-        if (fileSpan.EndsWith(".asset") || fileSpan.StartsWith('.')) return;
-
-        var extIndex = fileSpan.LastIndexOf('.');
-        if (extIndex < 0) return;
-
-        var ext = fileSpan.Slice(extIndex);
-        if (!validExt.ContainsCharSpan(ext, StringComparison.OrdinalIgnoreCase))
-            return;
-
-        var relativePath = Path.GetRelativePath(directory, filePath);
-        relativePath = Path.Join(relativeDirectory, relativePath);
-
-        if (fileRegistry.HasFilePath(relativePath)) return;
-
-        var filename = Path.GetFileNameWithoutExtension(filePath);
-
-        var info = new FileScanInfo(0, kind, AssetStorage.FileSystem);
-        ExtractFileInfo(filename, fileInfo, ref info);
-
-        fileRegistry.RegisterUnbound(filename, relativePath, in info);
-    }
-
-
-    private static bool ExtractFileInfo(string name, FileInfo info, scoped ref FileScanInfo scanInfo)
-    {
-        if (!info.Exists) return false;
-
         //var expectedMagic = GetMagicBytesForPath(fullPath);
         //if (expectedMagic != null && !IsFileHeaderValid(fullPath, expectedMagic))
         //    return false;
-
-        scanInfo.Source = name;
-        scanInfo.LastWriteTime = info.LastWriteTime;
-        scanInfo.SizeBytes = info.Length;
-        scanInfo.IsValid = true;
-        scanInfo.Storage = AssetStorage.FileSystem;
-        return true;
-    }
-    
-    public static void ScanExisting(string path, AssetFile file, ref FileScanInfo info)
-    {
-        if (!File.Exists(path)) throw new FileNotFoundException(path);
-        var fileInfo = new FileInfo(path);
-        ExtractFileInfo(file.LogicalName, fileInfo, ref info);
+        
+        //TODO FIX
+        if (!info.Exists)
+            scanInfo = new FileScanInfo((byte)index, name, relativePath);
+        else
+            scanInfo = new FileScanInfo((byte)index, name, relativePath, info.Length, info.LastWriteTime);
     }
 
 }

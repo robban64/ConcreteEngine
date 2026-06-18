@@ -1,4 +1,7 @@
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Engine.Assets;
 
 // ReSharper disable UseUtf8StringLiteral
 
@@ -6,7 +9,12 @@ namespace ConcreteEngine.Core.Engine.Configuration;
 
 public static class FileUtils
 {
-    public static readonly string[] ValidTextureExt = [".png", ".jpg", ".jpeg", ".tga", ".bmp"];
+    private const string ValidTextureExtension = ".png;.jpg;.jpeg;.tga;.bmp";
+    private const string ValidModelExtension = ".glb;.gltf;.fbx;.obj";
+    private const string ValidShaderExtension = ".glsl";
+    private const string ValidMaterialExtension = ".mat";
+
+    public static readonly string[] ValidTextureExt = [".glb;.gltf;.fbx;.tga;.bmp", "", ".jpeg", ".tga", ".bmp"];
     public static readonly string[] ValidModelExt = [".glb", ".gltf", ".fbx", ".obj"];
     public static readonly string[] ValidShaderExt = [".glsl"];
 
@@ -14,6 +22,24 @@ public static class FileUtils
     public static readonly byte[] JpgHeader = [0xFF, 0xD8, 0xFF];
     public static readonly byte[] FbxHeader = [0x4B, 0x61, 0x79, 0x64];
     public static readonly byte[] GltfHeader = [0x67, 0x6C, 0x54, 0x46];
+
+    public static string GetValidExtensions(AssetKind kind) => kind switch
+    {
+        AssetKind.Shader => ValidShaderExtension,
+        AssetKind.Model => ValidModelExtension,
+        AssetKind.Texture => ValidTextureExtension,
+        AssetKind.Material => ValidMaterialExtension,
+        _ => Throwers.Unreachable<string>(nameof(kind))
+    };
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TestFileName(AssetKind kind, ReadOnlySpan<char> fileName, out bool isAssetFile)
+    {
+        var ext = Path.GetExtension(fileName);
+        if (fileName.StartsWith('.') || ext.IsEmpty) return isAssetFile = false;
+        isAssetFile = ext is ".asset";
+        return isAssetFile || GetValidExtensions(kind).Contains(ext, StringComparison.OrdinalIgnoreCase);
+    }
 
     public static string ComputeSha256Hex(string path)
     {

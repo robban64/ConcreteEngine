@@ -20,7 +20,6 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
 
     private void Submit()
     {
-        Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
         Shader lastShader = null!;
         var lastProfile = MaterialProfileId.None;
         foreach (var id in _materialStore.GetDirtySpan())
@@ -35,7 +34,7 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
                 lastShader = material.BoundShader;
             }
 
-            FillSamplers(material, slots);
+            FillSamplers(material);
             SubmitUniform(material.State, lastShader);
         }
     }
@@ -64,9 +63,11 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
 
     }
 
-    private void FillSamplers(Material material, Span<TextureBinding> slots)
+    private void FillSamplers(Material material)
     {
         var textureSources = material.GetSourceSpan();
+        Span<TextureBinding> slots = stackalloc TextureBinding[textureSources.Length];
+
         for (var i = 0; i < textureSources.Length; i++)
         {
             var source = textureSources[i];
@@ -78,6 +79,6 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
             slots[i] = new TextureBinding(textureId, source.Usage, (byte)i);
         }
 
-        _materialBuffer.SubmitBindings(material.MaterialId, slots.Slice(0, textureSources.Length));
+        _materialBuffer.SubmitBindings(material.MaterialId, slots);
     }
 }

@@ -16,7 +16,7 @@ public sealed class AssetFileRegistry
     public int Count { get; private set; }
 
     private AssetFile?[] _files = new AssetFile?[DefaultCap];
-    
+
     private readonly Dictionary<string, AssetFileId> _fileByPath = new(DefaultCap);
 
     private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = new(DefaultBindingCap);
@@ -38,15 +38,17 @@ public sealed class AssetFileRegistry
     public int RootFileCount => _rootBindings.Count;
     public int DependentFileCount => _dependentFiles.Count;
     public int UnboundFileCount => _unboundFiles.Count;
-    
+
     public bool HasFilePath(string relativePath) => _fileByPath.ContainsKey(relativePath);
     public bool HasBinding(AssetId assetId) => _fileBindings.ContainsKey(assetId);
+    public bool IsRootFile(AssetFileId fileId) => _rootBindings.ContainsKey(fileId);
+
     public bool HasFile(AssetFileId fileId)
     {
         var index = fileId.Index();
         return (uint)index < (uint)_files.Length && _files[index]?.Id == fileId;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<AssetFileId> GetRootFileIdSpan() => CollectionsMarshal.AsSpan(_rootFiles);
 
@@ -108,7 +110,7 @@ public sealed class AssetFileRegistry
         return !bindings.IsEmpty;
     }
 
-   // [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FileBinding GetFileBindingStatus(AssetFileId fileId)
     {
         if (_rootBindings.ContainsKey(fileId)) return FileBinding.RootFile;
@@ -116,29 +118,9 @@ public sealed class AssetFileRegistry
     }
 
     //
-    private AssetFile AddFile(string name, string relativePath, int fileCount, in FileScanInfo fileInfo)
+    internal AssetFile Register(AssetId assetRootId, int fileCount, in FileScanInfo fileInfo)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(fileCount);
-        ArgumentException.ThrowIfNullOrEmpty(name);
-        ArgumentException.ThrowIfNullOrEmpty(relativePath);
-
-        if (_fileByPath.ContainsKey(relativePath))
-            throw new InvalidOperationException($"AssetFile {relativePath} already registered");
-
-        var fileId = AllocateSlot();
-        var fileSpec = MakeFileSpec(fileId, name, relativePath, in fileInfo);
-
-        _files[fileId.Index()] = fileSpec;
-        _fileByPath.Add(relativePath, fileId);
-
-        return fileSpec;
-    }
-
-    internal AssetFile Register(AssetId assetRootId, string name, string relativePath, int fileCount,
-        in FileScanInfo fileInfo)
-    {
-        var fileSpec = AddFile(name, relativePath, fileCount, in fileInfo);
-
+        var fileSpec = AddFile(in fileInfo);
         if (!assetRootId.IsValid())
         {
             _dependentFiles.Add(fileSpec.Id);
@@ -154,32 +136,53 @@ public sealed class AssetFileRegistry
         return fileSpec;
     }
 
-    internal AssetFile RegisterUnbound(string name, string relativePath, in FileScanInfo fileInfo)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(name);
-        ArgumentException.ThrowIfNullOrEmpty(relativePath);
-        if (_fileByPath.ContainsKey(relativePath))
-            throw new InvalidOperationException($"Unbound File '{relativePath}' already registered");
 
-        var file = AddFile(name, relativePath, 0, in fileInfo);
+    internal AssetFile RegisterUnbound(in FileScanInfo fileInfo)
+    {
+        var file = AddFile(in fileInfo);
         _unboundFiles.Add(file.Id);
         return file;
     }
-
-
+    
     internal void Replace(AssetFileId id, AssetFile file)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
         ArgumentNullException.ThrowIfNull(file);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
         _files[id.Index()] = file;
     }
 
     internal AssetFile UpdateFileSpec(AssetFileId fileId, in FileScanInfo fileInfo)
     {
-        if (!TryGetFile(fileId, out var file))
-            throw new ArgumentException($"File {fileId} does not exist", nameof(fileId));
-
+        if (!TryGetFile(fileId, out var file)) Throwers.InvalidArgument($"File {fileId} not found", nameof(fileId));
         return _files[fileId.Index()] = MakeFileSpecCopy(file, in fileInfo);
+    }
+    
+    
+    private AssetFile AddFile(in FileScanInfo scanInfo)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(scanInfo.Name);
+        ArgumentException.ThrowIfNullOrEmpty(scanInfo.RelativePath);
+        ArgumentOutOfRangeException.ThrowIfEqual(scanInfo.IsValid, false);
+
+        if (_fileByPath.ContainsKey(scanInfo.RelativePath))
+            Throwers.InvalidArgument($"AssetFile {scanInfo.RelativePath} already registered");
+
+        var fileId = AllocateSlot();
+        var fileSpec = new AssetFile(
+            Id: fileId,
+            GId: Guid.NewGuid(),
+            LogicalName: scanInfo.Name,
+            RelativePath: scanInfo.RelativePath,
+            Storage: scanInfo.Storage,
+            SizeBytes: scanInfo.SizeBytes,
+            LastWriteTime: scanInfo.LastWriteTime,
+            Source: scanInfo.SourcePath,
+            ContentHash: null
+        );
+
+        _files[fileId.Index()] = fileSpec;
+        _fileByPath.Add(scanInfo.RelativePath, fileId);
+        return fileSpec;
     }
 
     private AssetFileId AllocateSlot()
@@ -192,9 +195,11 @@ public sealed class AssetFileRegistry
 
         return new AssetFileId(++Count);
     }
+    
     //
     public ActiveObjectEnumerator<AssetFile> GetEnumerator() => new(_files.AsSpan(0, Count));
     public AssetBindingEnumerator AssetBindingsEnumerator(AssetId assetId) => new(assetId, this);
+    
 
     private static AssetFile MakeFileSpecCopy(AssetFile file, in FileScanInfo scanInfo)
     {
@@ -203,22 +208,22 @@ public sealed class AssetFileRegistry
             SizeBytes = scanInfo.SizeBytes,
             LastWriteTime = scanInfo.LastWriteTime,
             ContentHash = null,
-            Source = scanInfo.Source
+            Source = scanInfo.SourcePath
         };
     }
 
-    private static AssetFile MakeFileSpec(AssetFileId id, string name, string path, in FileScanInfo scanInfo)
+    private static AssetFile MakeFileSpec(AssetFileId id, in FileScanInfo scanInfo)
     {
         return new AssetFile(
             Id: id,
             GId: Guid.NewGuid(),
-            LogicalName: name,
-            RelativePath: path,
+            LogicalName: scanInfo.Name,
+            RelativePath: scanInfo.RelativePath,
             Storage: scanInfo.Storage,
             SizeBytes: scanInfo.SizeBytes,
             LastWriteTime: scanInfo.LastWriteTime,
             ContentHash: null,
-            Source: scanInfo.Source
+            Source: scanInfo.SourcePath
         );
     }
 }

@@ -15,6 +15,8 @@ internal sealed class AssetLoader
 {
     private ProcessStepOrder _step;
 
+    private readonly AssetManager _assetManager;
+
     private readonly AssetStore _store;
 
     private readonly ShaderLoader _shaderLoader;
@@ -26,9 +28,10 @@ internal sealed class AssetLoader
 
     private readonly Queue<AssetRecord>[] _recordQueue;
 
-    public AssetLoader(AssetStore store, GfxContext gfx)
+    public AssetLoader(AssetManager assetManager, GfxContext gfx)
     {
-        _store = store;
+        _assetManager = assetManager;   
+        _store = assetManager.Store;
         
         _loaders = new IAssetTypeLoader[AssetKindUtils.AssetTypeCount];
 
@@ -172,10 +175,10 @@ internal sealed class AssetLoader
     {
         ArgumentNullException.ThrowIfNull(asset);
         
-        _store.FileRegistry.TryGetFileBindings(asset.Id, out var fileIds);
+        _assetManager.Files.TryGetFileBindings(asset.Id, out var fileIds);
         var files = new AssetFile[fileIds.Length];
         for (var i = 0; i < fileIds.Length; i++)
-            files[i] = _store.FileRegistry.Get(fileIds[i]);
+            files[i] = _assetManager.Files.Get(fileIds[i]);
 
         var loader = _loaders[asset.Kind.ToIndex()];
         if (loader is not IAssetTypeLoader<TAsset> tLoader) 
@@ -186,7 +189,7 @@ internal sealed class AssetLoader
 
         tLoader.Reload(asset, files);
 
-        if (files.Length > 0) _store.RegisterExistingBindings(asset.Id, files);
+        if (files.Length > 0) _assetManager.RegisterExistingBindings(asset.Id, files);
 
     }
     
@@ -195,7 +198,7 @@ internal sealed class AssetLoader
         var hasTexture = false;
         foreach (var it in embedded)
         {
-            var assetId = _store.RegisterEmbedded(model.Id, it);
+            var assetId = _assetManager.RegisterEmbedded(model.Id, it);
             switch (it)
             {
                 case EmbeddedSceneTexture tex:

@@ -48,9 +48,9 @@ public sealed partial class AssetStore
     public AssetTypeStore GetTypeStore<T>() where T : AssetObject => TypeStore<T>.Store;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void MarkDirty(AssetObject asset) => GetTypeStore(asset.Kind).MarkDirty(asset);
+    internal void MarkDirty(AssetObject asset) => GetTypeStore(asset.Kind).MarkDirty(asset);
 
-    public void Rename(AssetObject asset, string newName)
+    internal void Rename(AssetObject asset, string newName)
     {
         AssetNameUtils.ValidateAssetName(newName);
         if (asset.Name == newName)
@@ -59,7 +59,7 @@ public sealed partial class AssetStore
         GetTypeStore(asset.Kind).Rename(asset.Name, newName);
     }
 
-    private AssetId AllocateSlot()
+    internal AssetId AllocateSlot(Guid gid)
     {
         var freeIndex = SlotHelper.NextSlot(_free, Count);
         if (freeIndex >= 0) return new AssetId(freeIndex + 1, 1);
@@ -67,73 +67,10 @@ public sealed partial class AssetStore
         if (SlotHelper.EnsureCapacity(ref _assets, Count, 1, out var oldSize))
             Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetStore), oldSize, _assets.Length));
 
-        return new AssetId(++Count, 1);
-    }
-
-
-    internal AssetId RegisterPlainAsset(Guid gid, AssetKind kind, string name, AssetStorageKind storageKind)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(name);
-        ArgumentOutOfRangeException.ThrowIfEqual(gid, Guid.Empty);
-        ArgumentOutOfRangeException.ThrowIfEqual((int)storageKind, (int)AssetStorageKind.FileSystem);
-
-        var assetId = AllocateSlot();
+        var assetId = new AssetId(++Count, 1);
         _byGid.Add(gid, assetId);
-        FileRegistry.Add(assetId, name, name, 0, new FileScanInfo(0, kind, storageKind));
         return assetId;
     }
-
-
-    internal AssetId RegisterScannedAsset(AssetRecord record, string relativePath, in FileScanInfo fileInfo)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(record.Name);
-        ArgumentOutOfRangeException.ThrowIfEqual(record.GId, Guid.Empty);
-
-        if (GetTypeStore(record.Kind).HasName(record.Name))
-            throw new InvalidOperationException($"Asset name {record.Name} already registered");
-
-        var assetId = AllocateSlot();
-        _byGid.Add(record.GId, assetId);
-        FileRegistry.Add(assetId, record.Name, relativePath, record.Files.Count, in fileInfo);
-        return assetId;
-    }
-
-    internal void RegisterAssetBinding(AssetId assetId, string assetName, string relativePath, in FileScanInfo scanInfo)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Value);
-        ArgumentException.ThrowIfNullOrEmpty(assetName);
-        ArgumentException.ThrowIfNullOrEmpty(relativePath);
-
-        if (Has(assetId))
-        {
-            throw new InvalidOperationException(
-                $"AssetId {assetId} not found for register scanned file {relativePath}");
-        }
-
-        var name = Path.GetFileNameWithoutExtension(relativePath);
-        if (!FileRegistry.TryGetFileByPath(relativePath, out var fileSpec))
-            fileSpec = FileRegistry.Add(AssetId.Empty, name, relativePath, 1, in scanInfo);
-
-        var fileIds = FileRegistry.GetFileBindings(assetId);
-        if (fileIds[scanInfo.FileIndex].Value > 0)
-            throw new InvalidOperationException($"FileSpec {name} already set for {assetName}");
-
-        fileIds[scanInfo.FileIndex] = fileSpec.Id;
-    }
-
-    internal AssetId RegisterEmbedded(AssetId sourceId, IEmbeddedAsset embedded)
-    {
-        ArgumentNullException.ThrowIfNull(embedded);
-        ArgumentNullException.ThrowIfNull(embedded.FileSpec);
-
-        if (!FileRegistry.HasBinding(sourceId))
-            throw new InvalidOperationException($"Missing original asset for {embedded.Name}");
-
-        var assetId = RegisterPlainAsset(embedded.GId, embedded.Kind, embedded.Name, AssetStorageKind.Embedded);
-        RegisterExistingBindings(assetId, [embedded.FileSpec]);
-        return assetId;
-    }
-
 
     public void AddAsset<TAsset>(TAsset asset) where TAsset : AssetObject
     {
@@ -149,28 +86,14 @@ public sealed partial class AssetStore
 
         var assetList = GetTypeStore(asset.Kind);
 
-        var name = asset.Name;
-
-        if (assetList.HasName(name))
-        {
-            name = AssetNameUtils.IncrementName(name, typeof(TAsset), NameExistsDel);
-            asset.Name = name;
-        }
+        if (assetList.HasName(asset.Name))
+            asset.Name = AssetNameUtils.IncrementName(asset.Name, typeof(TAsset), NameExistsDel);
 
         _assets[asset.Id.Index()] = asset;
-
         assetList.Add(asset);
         MarkDirty(asset);
     }
 
-    internal void RegisterExistingBindings(AssetId assetId, AssetFile[] fileSpecs)
-    {
-        if (!FileRegistry.TryGetFileBindings(assetId, out var bindings))
-            throw new InvalidOperationException($"Missing file bindings for {assetId}");
-
-        for (var i = 0; i < fileSpecs.Length; i++)
-            FileRegistry.Replace(bindings[i], fileSpecs[i]);
-    }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void EnsureStoreCapacity(Queue<AssetRecord>[] queues)

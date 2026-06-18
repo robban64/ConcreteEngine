@@ -11,17 +11,17 @@ public sealed class AssetSystem
 {
     public Status CurrentStatus { get; private set; } = Status.None;
 
-    private readonly AssetStore _assets;
     private readonly AssetManager _assetManager;
     private readonly AssetPendingQueue _pendingQueue;
     private readonly AssetLoader _loader;
+    private readonly AssetScanner _scanner;
 
     internal AssetSystem(GfxContext gfx)
     {
         _assetManager = AssetManager.Instance;
-        _assets = _assetManager.Store;
         _pendingQueue = new AssetPendingQueue();
-        _loader = new AssetLoader(_assets, gfx);
+        _loader = new AssetLoader(_assetManager, gfx);
+        _scanner = new AssetScanner(_assetManager);
     }
 
     public int PendingAssetCount => _pendingQueue.Count;
@@ -43,7 +43,8 @@ public sealed class AssetSystem
 
     internal void ProcessPendingQueue()
     {
-        _pendingQueue.TryDrain(_loader!, _assets);
+        if (_pendingQueue.Count == 0) return;
+        _pendingQueue.TryDrain(_loader, _assetManager.Store);
     }
 
     internal bool ProcessLoader()
@@ -66,8 +67,8 @@ public sealed class AssetSystem
 
         AssetSystemSetup.Start();
 
-        AssetScanner.ScanAll(_assets, _loader.GetQueues());
-        _assets.EnsureStoreCapacity(_loader.GetQueues());
+        _scanner.ScanAll(_loader.GetQueues());
+        _assetManager.Store.EnsureStoreCapacity(_loader.GetQueues());
 
         var models = _loader.GetQueues()[AssetKind.Model.ToIndex()];
         graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
@@ -79,7 +80,7 @@ public sealed class AssetSystem
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void FinishLoading()
     {
-        foreach (var it in _assets.GetTypeStoreSpan()) it.Sort();
+        foreach (var it in _assetManager.Store.GetTypeStoreSpan()) it.Sort();
 
         _loader.DeactivateLoader();
 

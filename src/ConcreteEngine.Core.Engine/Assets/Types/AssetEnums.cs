@@ -32,7 +32,7 @@ public enum AssetCategory : byte
     Script = 5
 }
 
-public enum AssetStorageKind : byte
+public enum AssetStorage : byte
 {
     None = 0,
     FileSystem = 1,

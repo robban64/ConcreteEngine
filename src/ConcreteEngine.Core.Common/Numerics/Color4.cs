@@ -54,7 +54,7 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
     // 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ColorRgba ToRgba()
     {
@@ -66,7 +66,6 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
         return result;
     }
 
-    // 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly uint ToPackedRgba()
     {
@@ -85,13 +84,6 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
         B = float.Clamp(G, 0.0f, 1.0f);
         A = float.Clamp(A, 0.0f, 1.0f);
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool NearlyEqual(in Color4 b, float eps = FloatMath.DefaultEpsilon) =>
-        VectorMath.NearlyEqual(
-            in Unsafe.As<Color4, Vector4>(ref this),
-            in Unsafe.As<Color4, Vector4>(ref Unsafe.AsRef(in b)),
-            eps);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool NearlyEqual(in Color4 a, in Color4 b, float eps = FloatMath.DefaultEpsilon)

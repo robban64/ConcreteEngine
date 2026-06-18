@@ -158,7 +158,7 @@ internal sealed class AssetBrowser
             foreach (var assetId in AssetManager.AssetStore.GetTypeStore(kind).AsSpan())
             {
                 var file = provider.GetAssetRootFile(assetId);
-                if (!filesAdded.Add(file.Id) && file.Storage == AssetStorageKind.FileSystem)
+                if (!filesAdded.Add(file.Id) && file.Storage == AssetStorage.FileSystem)
                     Throwers.InvalidOperation();
                 AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
             }
@@ -181,7 +181,7 @@ internal sealed class AssetBrowser
     {
         ArgumentNullException.ThrowIfNull(file);
 
-        if (file.Storage != AssetStorageKind.FileSystem) return;
+        if (file.Storage != AssetStorage.FileSystem) return;
 
         var node = RootNode;
         while (true)

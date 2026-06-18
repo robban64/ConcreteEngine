@@ -1,3 +1,5 @@
+using ConcreteEngine.Graphics.Gfx;
+
 namespace ConcreteEngine.Core.Engine.Assets;
 
 public record struct MaterialSurface

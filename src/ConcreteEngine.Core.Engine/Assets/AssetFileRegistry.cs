@@ -204,7 +204,7 @@ public sealed class AssetFileRegistry
             GId: Guid.NewGuid(),
             LogicalName: name,
             RelativePath: path,
-            Storage: scanInfo.StorageKind,
+            Storage: scanInfo.Storage,
             SizeBytes: scanInfo.SizeBytes,
             LastWriteTime: scanInfo.LastWriteTime,
             ContentHash: null,

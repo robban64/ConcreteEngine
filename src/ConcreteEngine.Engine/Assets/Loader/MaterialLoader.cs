@@ -48,7 +48,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
         var profile = embedded.IsAnimated ? MaterialProfileId.OpaqueAnimated : MaterialProfileId.Opaque;
 
-        var mat = new Material(embedded.Name, assetId, embedded.GId, profile, embedded.Params);
+        var mat = new Material(embedded.Name, assetId, embedded.GId, profile, embedded.State);
 
         var slot = 0;
         foreach (var textureGId in embedded.Textures)

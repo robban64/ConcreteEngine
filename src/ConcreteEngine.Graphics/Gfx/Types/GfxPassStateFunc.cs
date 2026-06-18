@@ -6,6 +6,16 @@ public record struct GfxDrawFunctions(
     DepthMode Depth = DepthMode.Unset,
     PolygonOffsetLevel PolygonOffset = PolygonOffsetLevel.Unset)
 {
+
+    public readonly GfxDrawFunctions Patch(GfxDrawFunctions patch)
+    {
+        return new GfxDrawFunctions(
+            Blend == BlendMode.Unset ? patch.Blend : Blend,
+            Cull == CullMode.Unset ? patch.Cull : Cull,
+            Depth == DepthMode.Unset ? patch.Depth : Depth,
+            PolygonOffset == PolygonOffsetLevel.Unset ? patch.PolygonOffset : PolygonOffset
+        );
+    }
     public static GfxDrawFunctions MakeDefault() =>
         new(BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None);
 

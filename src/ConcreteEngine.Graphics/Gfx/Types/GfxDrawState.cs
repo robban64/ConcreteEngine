@@ -20,7 +20,6 @@ public readonly record struct GfxDrawState(GfxDrawFlags Enabled, GfxDrawFlags De
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxDrawState WithDisabled(GfxDrawFlags flag) => new(Enabled & ~flag, Defined | flag);
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GfxDrawState Enable(GfxDrawFlags flags) => new(flags, flags);
 

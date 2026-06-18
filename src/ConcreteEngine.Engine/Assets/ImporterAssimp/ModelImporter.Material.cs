@@ -13,6 +13,7 @@ using Silk.NET.Assimp;
 using AssimpMaterial = Silk.NET.Assimp.Material;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpTexture = Silk.NET.Assimp.Texture;
+using BlendMode = ConcreteEngine.Graphics.Gfx.BlendMode;
 
 namespace ConcreteEngine.Engine.Assets.ImporterAssimp;
 
@@ -44,7 +45,7 @@ internal static unsafe class MaterialModelImporter
             material.FileSpec = new AssetFile(
                 GId: Guid.NewGuid(),
                 Id: AssetFileId.Empty,
-                Storage: AssetStorageKind.Embedded,
+                Storage: AssetStorage.Embedded,
                 RelativePath: assetName,
                 LogicalName: material.EmbeddedName,
                 LastWriteTime: DateTime.MinValue,
@@ -68,7 +69,7 @@ internal static unsafe class MaterialModelImporter
             texture.FileSpec = new AssetFile(
                 GId: Guid.NewGuid(),
                 Id: AssetFileId.Empty,
-                Storage: AssetStorageKind.Embedded,
+                Storage: AssetStorage.Embedded,
                 RelativePath: texture.Name,
                 LogicalName: texture.EmbeddedName,
                 SizeBytes: textureSize,
@@ -80,7 +81,7 @@ internal static unsafe class MaterialModelImporter
     private static void ProcessMaterialProperties(AssimpMaterial* aiMat, EmbeddedSceneMaterial material,
         ModelImportContext ctx)
     {
-        var matParams = material.Params;
+        var matParams = material.State;
         Span<char> charBuffer = stackalloc char[256];
         Span<char> keyCharBuffer = stackalloc char[64];
         var propCount = aiMat->MNumProperties;
@@ -93,30 +94,53 @@ internal static unsafe class MaterialModelImporter
 
             switch (key)
             {
-                case "?mat.name":
+                case Assimp.MaterialNameBase:
                     material.EmbeddedName = MatUtils.ParsePropertyString(prop, charBuffer).ToString();
                     break;
-                case "$tex.file":
+                case Assimp.MatkeyTextureBase:
                     var texturePath = MatUtils.ParsePropertyString(prop, charBuffer);
-                    AttachTextureToMaterial(material, ctx.EmbeddedContext.Textures, texturePath, (TextureType)prop->MSemantic);
+                    var textureType = (TextureType)prop->MSemantic;
+                    AttachTextureToMaterial(material, ctx.EmbeddedContext.Textures, texturePath, textureType);
                     break;
-                case "$mat.opacity":
-                    MatUtils.ParseFloatProp(prop, out var alpha);
+                case Assimp.MaterialOpacityBase:
                     var color = matParams.Color ?? Color4.White;
-                    color.A = alpha;
+                    color.A = MatUtils.ParseFloatProp(prop);
                     matParams.Color = color;
                     break;
-                case Assimp.MaterialShininessBase:
-                    MatUtils.ParseFloatProp(prop, out var shininess);
-                    matParams.Shininess = shininess;
+                case Assimp.MaterialShininessStrengthBase:
+                    matParams.Shininess = MatUtils.ParseFloatProp(prop);
                     break;
                 case Assimp.MatkeySpecularFactor:
-                    MatUtils.ParseFloatProp(prop, out var specular);
-                    matParams.SpecularColor = Color4.White with { A = specular };
+                    var matSpecColor = matParams.SpecularColor ?? Color4.White;
+                    matSpecColor.A = MatUtils.ParseFloatProp(prop);
+                    matParams.SpecularColor = matSpecColor;
                     break;
                 case Assimp.MaterialColorDiffuseBase:
                     matParams.Color = (Color4)MatUtils.ParseVectorProp(prop);
                     break;
+                case Assimp.MaterialColorSpecularBase:
+                    var specularColor = (Color4)MatUtils.ParseVectorProp(prop);
+                    if(matParams.SpecularColor.HasValue) 
+                        matParams.SpecularColor = specularColor with { A = matParams.SpecularColor.Value.A };
+                    else
+                        matParams.SpecularColor = specularColor;
+                    break;
+                case Assimp.MaterialTwosidedBase:
+                    if(MatUtils.ParseIntProp(prop) == 1) matParams.DisableFlags |= GfxDrawFlags.Cull;
+                    break;
+                case Assimp.MaterialBlendFuncBase:
+                    var blend = (Silk.NET.Assimp.BlendMode)MatUtils.ParseIntProp(prop);
+                    if(blend == 0) break;
+                    matParams.DrawFunctions = matParams.DrawFunctions.Patch(new GfxDrawFunctions(BlendMode.Additive));
+                    matParams.EnableFlags |= GfxDrawFlags.Blend;
+                    break;
+                case "$mat.gltf.pbrMetallicRoughness.metallicFactor":
+                    matParams.Metallic = MatUtils.ParseFloatProp(prop);
+                    break;
+                case "$mat.gltf.pbrMetallicRoughness.roughnessFactor":
+                    matParams.Roughness = MatUtils.ParseFloatProp(prop);
+                    break;
+
             }
         }
 
@@ -214,21 +238,29 @@ file static unsafe class MatUtils
         }
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ParseFloatProp(MaterialProperty* prop, out float value)
+    public static float ParseFloatProp(MaterialProperty* prop)
     {
         if (prop == null || prop->MData == null || prop->MDataLength < sizeof(float))
-            throw new ArgumentOutOfRangeException(nameof(prop));
+            Throwers.InvalidArgument(nameof(prop));
 
-        value = MemoryMarshal.Read<float>(new ReadOnlySpan<byte>(prop->MData, (int)prop->MDataLength));
+        return MemoryMarshal.Read<float>(new ReadOnlySpan<byte>(prop->MData, (int)prop->MDataLength));
+    }
+    
+    public static int ParseIntProp(MaterialProperty* prop)
+    {
+        var length = (int)prop->MDataLength;
+        if (prop == null || prop->MData == null || (length != 4 && length != 1))
+            Throwers.InvalidArgument(nameof(prop));
+
+        return length == 1 ? *prop->MData : MemoryMarshal.Read<int>(new ReadOnlySpan<byte>(prop->MData, sizeof(int)));
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
+
     public static Vector4 ParseVectorProp(MaterialProperty* prop)
     {
         var length = (int)prop->MDataLength;
-        if (length != 16 && length != 12)
-            throw new ArgumentOutOfRangeException(nameof(prop));
+        if (prop == null || prop->MData == null || (length != 16 && length != 12))
+            Throwers.InvalidArgument(nameof(prop));
 
         ref var b0 = ref Unsafe.AsRef<byte>(prop->MData);
         var span = MemoryMarshal.CreateSpan(ref b0, length);
@@ -240,7 +272,7 @@ file static unsafe class MatUtils
     public static Span<char> ParsePropertyString(MaterialProperty* prop, Span<char> charBuffer)
     {
         if (prop->MType != PropertyTypeInfo.String)
-            throw new ArgumentOutOfRangeException(nameof(prop));
+            Throwers.InvalidArgument(nameof(prop));
 
         // 4-byte integer followed by the string
         var length = *(int*)prop->MData;

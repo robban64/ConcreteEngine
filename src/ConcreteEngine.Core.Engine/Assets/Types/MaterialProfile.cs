@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
@@ -30,7 +31,7 @@ public sealed class MaterialProfile
 
     public readonly MaterialShading Shading;
 
-    public MaterialParams StateValues = new(Color4.White, 0.12f, 12f);
+    public required MaterialStateRecord StateValues { get; init; }
 
     public GfxDrawState DrawState = GfxDrawState.Set(
         GfxDrawFlags.DepthTest | GfxDrawFlags.DepthWrite | GfxDrawFlags.Cull,
@@ -43,14 +44,10 @@ public sealed class MaterialProfile
     private readonly TextureUsage[] _slots;
 
     public MaterialProfile(string shaderName, DrawCommandQueue drawQueue, params TextureUsage[] slots)
-        : this(shaderName, drawQueue, DefaultToggle, slots)
-    {
-    }
+        : this(shaderName, drawQueue, DefaultToggle, slots) { }
 
     public MaterialProfile(string shaderName, params TextureUsage[] slots)
-        : this(shaderName, DrawCommandQueue.Opaque, DefaultToggle, slots)
-    {
-    }
+        : this(shaderName, DrawCommandQueue.Opaque, DefaultToggle, slots) { }
 
     public MaterialProfile(string shader, DrawCommandQueue queue, MaterialShading shading, params TextureUsage[] slots)
     {
@@ -63,7 +60,6 @@ public sealed class MaterialProfile
 
     public int SlotsCount => _slots.Length;
     public ReadOnlySpan<TextureUsage> Slots => _slots;
-    
     
     internal void AttachShader(Shader shader)
     {
@@ -120,10 +116,16 @@ public sealed class MaterialProfile
     }
 
     private static MaterialProfile OpaqueProfile =>
-        new("Model", TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask);
+        new("Model", TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask)
+        {
+            StateValues = MaterialStateRecord.Make(0.12f, 12f)
+        };
 
     private static MaterialProfile AnimatedProfile =>
-        new("ModelAnimated", TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask);
+        new("ModelAnimated", TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask)
+        {
+            StateValues = MaterialStateRecord.Make(0.12f, 12f)
+        };
 
     
     private static MaterialProfile TransparentProfile =>
@@ -133,7 +135,7 @@ public sealed class MaterialProfile
             TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask
         )
         {
-            StateValues = new MaterialParams(specular: 0, shininess: 0),
+            StateValues = MaterialStateRecord.Make(0,0),
             DrawState = GfxDrawState.Set(
                 GfxDrawFlags.Blend,
                 GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2 | GfxDrawFlags.Cull
@@ -148,7 +150,7 @@ public sealed class MaterialProfile
             TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask
         )
         {
-            StateValues = new MaterialParams(specular: 0, shininess: 0),
+            StateValues = MaterialStateRecord.Make(0,0),
             DrawState = GfxDrawState.Set(
                 GfxDrawFlags.DepthTest | GfxDrawFlags.DepthWrite | GfxDrawFlags.PolygonOffset | GfxDrawFlags.Ac2,
                 disable: GfxDrawFlags.Cull | GfxDrawFlags.Blend),
@@ -159,6 +161,7 @@ public sealed class MaterialProfile
     private static MaterialProfile ParticleProfile =>
         new("Particle", DrawCommandQueue.Particles, MaterialShading.Transparent, TextureUsage.Albedo)
         {
+            StateValues = MaterialStateRecord.Make(0,0),
             DrawState = GfxDrawState.Set(
                 GfxDrawFlags.Blend,
                 GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2 | GfxDrawFlags.Cull
@@ -169,7 +172,7 @@ public sealed class MaterialProfile
     private static MaterialProfile TerrainProfile =>
         new("Terrain", TextureUsage.Albedo, TextureUsage.Splatmap)
         {
-            StateValues = new MaterialParams(shininess: 4, specular: 0.02f)
+            StateValues = MaterialStateRecord.Make(0.02f, 4f)
         };
 
     private static MaterialProfile FoliageProfile =>
@@ -179,6 +182,7 @@ public sealed class MaterialProfile
             TextureUsage.Albedo
         )
         {
+            StateValues = MaterialStateRecord.Make(0,0),
             DrawState = GfxDrawState.Set(
                 GfxDrawFlags.DepthTest | GfxDrawFlags.Ac2,
                 GfxDrawFlags.DepthWrite | GfxDrawFlags.Cull | GfxDrawFlags.Blend
@@ -189,6 +193,7 @@ public sealed class MaterialProfile
     private static MaterialProfile SkyProfile =>
         new("Skybox", DrawCommandQueue.Skybox, MaterialShading.DoubleSided, TextureUsage.Albedo)
         {
+            StateValues = MaterialStateRecord.Make(0,0),
             DrawState = GfxDrawState.Disable(GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2 | GfxDrawFlags.PolygonOffset |
                                              GfxDrawFlags.Cull),
             DrawFunctions = new GfxDrawFunctions(Depth: DepthMode.Lequal)

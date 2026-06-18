@@ -41,10 +41,7 @@ public sealed class MaterialState
 
     internal void SetFromProfile(MaterialProfile profile)
     {
-        Color = profile.StateValues.Color;
-        SpecularColor = SpecularColor with { A = profile.StateValues.Specular };
-        Shininess = profile.StateValues.Shininess;
-        UvTransform = UvTransform with { W = profile.StateValues.UvRepeat };
+        profile.StateValues.WriteTo(this);
         
         DrawState = profile.DrawState;
         DrawFunctions = profile.DrawFunctions;
@@ -127,8 +124,9 @@ public sealed class MaterialState
         get;
         set
         {
-            if (value == field) return;
+            if (Color4.NearlyEqual(in field, in value)) return;
             field = value;
+            field.A = float.Clamp(value.A, 0f, 1f);
             _material.MarkDirty(AssetDirtyFlag.State);
         }
     } = Color4.White;
@@ -150,7 +148,7 @@ public sealed class MaterialState
         get;
         set
         {
-            if (VectorMath.NearlyEqual(field, value)) return;
+            if (VectorMath.NearlyEqual(in field, in value)) return;
             field = value;
             field.W = float.Max(value.W, 1f);
 

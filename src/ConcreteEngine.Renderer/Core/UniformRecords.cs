@@ -127,6 +127,18 @@ public struct MaterialUniform : IUniform
     public static int OverrideSize => 0;
 
 }
+[StructLayout(LayoutKind.Sequential)]
+public struct MaterialUniformV2 : IUniform
+{
+    public Color4 MatColor;
+    public Color4 MatSpecularColor; // x = SpecularStrength, y = uvRepeat, z,w reserved
+    public Vector4 MatUvTransform;
+    public Vector4 MatSurface;
+    public Vector4 MatFlags;
+
+    public static int OverrideSize => 0;
+
+}
 
 [StructLayout(LayoutKind.Sequential)]
 public struct DrawObjectUniform : IUniform

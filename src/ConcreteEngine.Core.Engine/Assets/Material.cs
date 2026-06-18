@@ -17,7 +17,7 @@ public sealed class Material : AssetObject
     public override AssetCategory Category => AssetCategory.Renderer;
     public override AssetKind Kind => AssetKind.Material;
 
-    private Material(string name, AssetId id, Guid gid, MaterialProfileId profileId)
+    public Material(string name, AssetId id, Guid gid, MaterialProfileId profileId)
         : base(name, id, gid)
     {
         State = new MaterialState(this);
@@ -26,20 +26,10 @@ public sealed class Material : AssetObject
         MarkDirty(AssetDirtyFlag.Lifecycle | AssetDirtyFlag.State | AssetDirtyFlag.Structure);
     }
 
-    public Material(string name, AssetId id, Guid gid, MaterialProfileId profileId, in MaterialParams param)
+    public Material(string name, AssetId id, Guid gid, MaterialProfileId profileId, MaterialStateRecord? state)
         : this(name, id, gid, profileId)
     {
-        State.Color = param.Color;
-        State.Specular = param.Specular;
-        State.Shininess = param.Shininess;
-        State.Uv = param.UvRepeat;
-    }
-
-    public Material(string name, AssetId id, Guid gid, MaterialProfileId profileId, MaterialParamsRecord param)
-        : this(name, id, gid, profileId)
-    {
-        ArgumentNullException.ThrowIfNull(param);
-        param.WriteTo(State);
+        state?.WriteTo(State);
     }
 
     public int SourceCount => _textureSources.Length;

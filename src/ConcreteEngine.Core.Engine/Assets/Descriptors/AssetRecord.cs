@@ -96,17 +96,9 @@ internal sealed class ModelRecord : AssetRecord
 
 internal sealed class MaterialRecord : AssetRecord
 {
-    public string? Shader { get; init; }
-
-    public bool DepthWrite { get; init; } = true;
-    public bool ReceiveShadows { get; init; } = true;
-    public bool CastShadows { get; init; } = true;
-
-    public MaterialProfileId Profile { get; init; } = MaterialProfileId.None;
+    public MaterialProfileId Profile { get; init; } = MaterialProfileId.Opaque;
     public string?[] ProfileSlots { get; init; } = [];
-
-    public MaterialParamsRecord Parameters { get; init; }
-    public TextureSlot[] TextureSlots { get; init; } = [];
+    public MaterialStateRecord? Parameters { get; init; }
 
     [JsonIgnore]
     public override AssetKind Kind => AssetKind.Material;
@@ -117,19 +109,5 @@ internal sealed class MaterialRecord : AssetRecord
         {
             GId = Guid.NewGuid(), Files = { { "Source", binPath } }, Profile = MaterialProfileId.Opaque,
         };
-    }
-
-    public sealed class TextureSlot
-    {
-        public string Name { get; init; }
-        public int Slot { get; init; }
-
-        [JsonPropertyName("slotKind")]
-        public TextureUsage SlotKind { get; init; }
-
-        [JsonPropertyName("textureKind")]
-        public TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
-
-        public bool Srgb { get; init; } = true;
     }
 }

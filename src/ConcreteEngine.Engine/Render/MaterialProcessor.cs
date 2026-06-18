@@ -42,7 +42,7 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
         }
     }
 
-    private  void SubmitUniform(MaterialState state, Shader shader, (bool HasNormal, bool HasAlphaMask) toggles)
+    private void SubmitUniform(MaterialState state, Shader shader, (bool HasNormal, bool HasAlphaMask) toggles)
     {
         ref var uniform = ref _materialBuffer.Submit(
             state.MaterialId,

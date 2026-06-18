@@ -24,7 +24,7 @@ internal sealed class EmbeddedSceneMaterial(string name, int materialIndex, bool
     public readonly int MaterialIndex = materialIndex;
     public readonly bool IsAnimated = isAnimated;
 
-    public readonly MaterialParamsRecord Params = new();
+    public readonly MaterialStateRecord State = new();
 
     public readonly List<Guid> Textures = new(4);
 }

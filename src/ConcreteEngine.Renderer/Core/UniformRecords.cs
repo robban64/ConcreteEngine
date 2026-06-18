@@ -120,7 +120,7 @@ public struct ShadowUniform : IUniform
 [StructLayout(LayoutKind.Sequential)]
 public struct MaterialUniform : IUniform
 {
-    public Vector4 MatColor; // rgb = tint
+    public Color4 MatColor; // rgb = tint
     public Vector4 MatParams0; // x = SpecularStrength, y = uvRepeat, z,w reserved
     public Vector4 MatParams1; // x = Shininess, y = HasNormals z = Transparency, w = HasAlpha
     

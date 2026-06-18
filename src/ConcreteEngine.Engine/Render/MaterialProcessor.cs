@@ -60,13 +60,16 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
             ));
 
         uniform.MatColor = state.Color;
-        uniform.MatParams0 = new Vector4(state.Shininess, state.Roughness, state.Metallic, 1.0f);
-        uniform.MatParams1 = new Vector4(
-            state.SpecularColor.A,
-            state.UvTransform.W,
-            state.IsTransparent ? 1f : 0f,
-            state.HasAlphaMask ? 1f : 0f
-        );
+        uniform.MatParams0.X = state.Shininess;
+        uniform.MatParams0.Y = state.Roughness;
+        uniform.MatParams0.W = state.Metallic;
+            
+        uniform.MatParams1.X = state.SpecularColor.A;
+        uniform.MatParams1.Y = state.UvTransform.W;
+
+        var cutoff = state.IsTransparent ? (state.HasAlphaMask ? 0.5f : 0.1f) : 0f;
+        uniform.MatParams1.Z = cutoff;
+        uniform.MatParams1.W = state.HasAlphaMask ? 1f : 0f;
     }
 
     private void FillSamplers(Material material, Span<TextureBinding> slots)

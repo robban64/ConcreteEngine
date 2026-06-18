@@ -133,13 +133,10 @@ void main()
 
     //  Albedo and Alpha 
     vec4 baseTex = texture(uTexture, uv);
-    float a = baseTex.a;
-    if (uMatParams1.w > 0.5) {
-        a = texture(uAlpha, uv).r;
-    }
-
-    float cutoff = (uMatParams1.w > 0.5) ? 0.25 : 0.05;
-    if (uMatParams1.z > 0.5 && a < cutoff) discard;
+    float a = (uMatParams1.w > 0.5) ? texture(uAlpha, uv).r : baseTex.a;
+    
+    float cutoff = uMatParams1.z;
+    if (a < cutoff) discard;
 
     vec3 baseColor = baseTex.rgb * uMatColor.rgb;
 

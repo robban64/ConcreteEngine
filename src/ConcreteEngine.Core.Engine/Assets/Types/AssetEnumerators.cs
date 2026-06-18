@@ -2,17 +2,6 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-public ref struct AssetFilesEnumerator(AssetId assetId, AssetFileRegistry fileRegistry)
-{
-    private int _i = -1;
-    private readonly ReadOnlySpan<AssetFileId> _fileIds = fileRegistry.GetFileBindings(assetId);
-
-    public bool MoveNext() => ++_i < _fileIds.Length;
-    public readonly AssetFile Current => fileRegistry.Get(_fileIds[_i]);
-
-    public readonly AssetFilesEnumerator GetEnumerator() => new(assetId, fileRegistry);
-}
-
 public ref struct AssetEnumerator(ReadOnlySpan<AssetId> assetIds, ReadOnlySpan<AssetObject?> assets)
 {
     private int _i = -1;
@@ -42,16 +31,28 @@ public ref struct AssetEnumerator<T>(ReadOnlySpan<AssetId> assetIds, ReadOnlySpa
     public readonly AssetEnumerator<T> GetEnumerator() => new(_assetIds, _assets);
 }
 
-public ref struct FileSpecEnumerator(ReadOnlySpan<AssetFileId> ids, ReadOnlySpan<AssetFile?> entries)
+public ref struct AssetBindingEnumerator(AssetId assetId, AssetFileRegistry fileRegistry)
 {
     private int _i = -1;
-    private readonly ReadOnlySpan<AssetFileId> _ids = ids;
+    private readonly ReadOnlySpan<AssetFileId> _fileIds = fileRegistry.GetFileBindings(assetId);
+
+    public bool MoveNext() => ++_i < _fileIds.Length;
+    public readonly AssetFile Current => fileRegistry.Get(_fileIds[_i]);
+
+    public readonly AssetBindingEnumerator GetEnumerator() => new(assetId, fileRegistry);
+}
+
+
+public ref struct FileBindingEnumerator(ReadOnlySpan<FileBinding> bindings, ReadOnlySpan<AssetFile?> entries)
+{
+    private int _i = -1;
+    private readonly ReadOnlySpan<FileBinding> _bindings = bindings;
     private readonly ReadOnlySpan<AssetFile?> _entries = entries;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool MoveNext() => ++_i < _ids.Length;
+    public bool MoveNext() => ++_i < _bindings.Length && _bindings[_i] != FileBinding.Unknown;
 
-    public readonly AssetFile Current => _entries[_ids[_i].Index()]!;
+    public readonly (AssetFile file, FileBinding binding) Current => (_entries[_i]!, _bindings[_i]);
 
-    public readonly FileSpecEnumerator GetEnumerator() => new(_ids, _entries);
+    public readonly FileBindingEnumerator GetEnumerator() => new(_bindings, _entries);
 }

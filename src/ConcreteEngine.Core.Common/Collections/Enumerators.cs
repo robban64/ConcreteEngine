@@ -8,6 +8,7 @@ public ref struct ActiveObjectEnumerator<T>(ReadOnlySpan<T?> span) where T : cla
     private readonly ReadOnlySpan<T?> _span = span;
     private int _i = -1;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext()
     {
         while (++_i < _span.Length)
@@ -18,8 +19,12 @@ public ref struct ActiveObjectEnumerator<T>(ReadOnlySpan<T?> span) where T : cla
         return false;
     }
 
-    public readonly T Current => _span[_i]!;
-    
+    public readonly T Current
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _span[_i]!;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ActiveObjectEnumerator<T> GetEnumerator() => new (_span);
 }

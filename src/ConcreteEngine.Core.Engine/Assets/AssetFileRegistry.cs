@@ -11,18 +11,21 @@ namespace ConcreteEngine.Core.Engine.Assets;
 public sealed class AssetFileRegistry
 {
     private const int DefaultCap = 512;
+    private const int DefaultBindingCap = 256;
 
     public int Count { get; private set; }
 
     private AssetFile?[] _files = new AssetFile?[DefaultCap];
-
-    private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = new(DefaultCap);
-    private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultCap);
-
+    
     private readonly Dictionary<string, AssetFileId> _fileByPath = new(DefaultCap);
 
-    private readonly List<AssetFileId> _dependentFiles = new(64);
-    private readonly List<AssetFileId> _unboundFiles = new(64);
+    private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = new(DefaultBindingCap);
+    private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultBindingCap);
+
+
+    private readonly List<AssetFileId> _rootFiles = new(DefaultBindingCap);
+    private readonly List<AssetFileId> _dependentFiles = new(DefaultBindingCap);
+    private readonly List<AssetFileId> _unboundFiles = new(DefaultBindingCap);
 
     private readonly Stack<int> _free = [];
 
@@ -35,21 +38,24 @@ public sealed class AssetFileRegistry
     public int RootFileCount => _rootBindings.Count;
     public int DependentFileCount => _dependentFiles.Count;
     public int UnboundFileCount => _unboundFiles.Count;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<AssetFileId> GetUnboundFileIdSpan() => CollectionsMarshal.AsSpan(_unboundFiles);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<AssetFileId> GetDependentFileIdSpan() => CollectionsMarshal.AsSpan(_dependentFiles);
-
+    
     public bool HasFilePath(string relativePath) => _fileByPath.ContainsKey(relativePath);
     public bool HasBinding(AssetId assetId) => _fileBindings.ContainsKey(assetId);
-
     public bool HasFile(AssetFileId fileId)
     {
         var index = fileId.Index();
         return (uint)index < (uint)_files.Length && _files[index]?.Id == fileId;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<AssetFileId> GetRootFileIdSpan() => CollectionsMarshal.AsSpan(_rootFiles);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<AssetFileId> GetDependentFileIdSpan() => CollectionsMarshal.AsSpan(_dependentFiles);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<AssetFileId> GetUnboundFileIdSpan() => CollectionsMarshal.AsSpan(_unboundFiles);
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetFile Get(AssetFileId id)
@@ -143,6 +149,7 @@ public sealed class AssetFileRegistry
         fileBindings[0] = fileSpec.Id;
         _fileBindings.Add(assetRootId, fileBindings);
         _rootBindings.Add(fileSpec.Id, assetRootId);
+        _rootFiles.Add(fileSpec.Id);
 
         return fileSpec;
     }
@@ -186,9 +193,8 @@ public sealed class AssetFileRegistry
         return new AssetFileId(++Count);
     }
     //
-
-    public AssetFilesEnumerator AssetBindingsEnumerator(AssetId assetId) => new(assetId, this);
-
+    public ActiveObjectEnumerator<AssetFile> GetEnumerator() => new(_files.AsSpan(0, Count));
+    public AssetBindingEnumerator AssetBindingsEnumerator(AssetId assetId) => new(assetId, this);
 
     private static AssetFile MakeFileSpecCopy(AssetFile file, in FileScanInfo scanInfo)
     {

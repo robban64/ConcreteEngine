@@ -139,6 +139,20 @@ internal sealed class AssetBrowser
     public void BuildFullDirectory()
     {
         var fileRegistry = AssetManager.FileRegistry;
+        foreach (var fileId in fileRegistry.GetRootFileIdSpan())
+            AddFile(fileRegistry.Get(fileId));
+        
+        foreach (var fileId in fileRegistry.GetDependentFileIdSpan())
+            AddFile(fileRegistry.Get(fileId));
+        
+        foreach (var fileId in fileRegistry.GetUnboundFileIdSpan())
+            AddFile(fileRegistry.Get(fileId));
+
+    }
+
+    public void BuildFullDirectory2()
+    {
+        var fileRegistry = AssetManager.FileRegistry;
 
         var addedFiles = new HashSet<int>(fileRegistry.Count);
 
@@ -148,7 +162,7 @@ internal sealed class AssetBrowser
         foreach (var fileId in fileRegistry.GetUnboundFileIdSpan())
         {
             var file = fileRegistry.Get(fileId);
-            AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
+            AddFile(file);
         }
 
         return;
@@ -162,7 +176,7 @@ internal sealed class AssetBrowser
                 var file = provider.GetAssetRootFile(assetId);
                 if (!filesAdded.Add(file.Id) && file.Storage == AssetStorage.FileSystem)
                     Throwers.InvalidOperation();
-                AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
+                AddFile(file);
             }
 
             foreach (var assetId in store.AsSpan())
@@ -173,18 +187,20 @@ internal sealed class AssetBrowser
                 {
                     if (!filesAdded.Add(fileId)) continue;
                     var file = provider.Get(fileId);
-                    AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
+                    AddFile(file);
                 }
             }
         }
     }
 
-    private void AddFile(AssetFile file, ReadOnlySpan<char> path)
+    private void AddFile(AssetFile file)
     {
         ArgumentNullException.ThrowIfNull(file);
 
         if (file.Storage != AssetStorage.FileSystem) return;
 
+        ReadOnlySpan<char> path = Path.GetDirectoryName(file.RelativePath.AsSpan());
+        
         var node = RootNode;
         while (true)
         {

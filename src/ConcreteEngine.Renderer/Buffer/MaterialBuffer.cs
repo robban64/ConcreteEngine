@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
 using static ConcreteEngine.Renderer.RenderLimits;
 
@@ -50,19 +51,22 @@ public sealed class MaterialBuffer : IDisposable
         _slotCount = slotIdx;
     }
 
-    public ref MaterialUniform Submit(MaterialId id, in RenderMaterialMeta payload)
+    public ref MaterialUniform Submit(
+        MaterialId id,     
+        ShaderId shaderId,
+        GfxDrawState drawState,
+        GfxDrawFunctions drawFunctions,
+        sbyte shadowMapBinding)
     {
         var index = id.Index();
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_metas.Length, nameof(id));
-
         EnsureCapacity(id.Id);
 
-        _metas[index] = payload;
+        _metas[index] = new RenderMaterialMeta(shaderId, drawState, drawFunctions, shadowMapBinding);
 
         Count = int.Max(Count, index);
         return ref _buffer[index];
     }
-
+    
 
     internal NativeView<MaterialUniform> DrainBuffer()
     {

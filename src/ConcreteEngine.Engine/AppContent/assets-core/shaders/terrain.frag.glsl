@@ -139,7 +139,7 @@ vec3 terrainAlbedo(vec2 texCoords, float uvRepeat) {
 }
 
 void main() {
-    float uvRepeat = uMat.Params1.y;
+    float uvRepeat = uMat.UvTransform.w;
 
     vec3 baseTex = terrainAlbedo(fs_in.TexCoord, uvRepeat);
     vec3 baseColor = baseTex * uMat.Color.rgb;
@@ -158,9 +158,8 @@ void main() {
     float NdotLd = max(dot(N, Ld), 0.0);
     vec3 diffuse = baseColor * NdotLd;
 
-    float shininess = uMat.Params0.x;
-    float specularStrength = uMat.Params1.x;
-    float specD = blinnPhongSpec(N, V, Ld, shininess);
+    float specularStrength = uMat.SpecularColor.w;
+    float specD = blinnPhongSpec(N, V, Ld, uMat.Shininess);
     vec3 specular = vec3(specularStrength) * specD * uLightSpecularIntensity.x;
 
     // Shadow
@@ -194,7 +193,7 @@ void main() {
         if (NdotLp <= 0.0) continue;
 
         vec3 diffP = baseColor * NdotLp;
-        float specP = blinnPhongSpec(N, V, Lp, shininess);
+        float specP = blinnPhongSpec(N, V, Lp, uMat.Shininess);
         vec3 specPCol = vec3(specularStrength) * specP * uLightSpecularIntensity.x;
 
         direct += (diffP + specPCol) * LiP * atten;

@@ -1,8 +1,4 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
@@ -17,14 +13,10 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
     internal void Commit()
     {
         if (_materialStore.DirtyCount == 0) return;
-        avg.BeginSample();
         Submit();
-        avg.EndSample();
-        avg.ResetAndPrint("Materials: ");
         _materialStore.ClearDirty();
     }
 
-    private AvgFrameTimer avg;
 
     private void Submit()
     {
@@ -52,24 +44,24 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
     {
         ref var uniform = ref _materialBuffer.Submit(
             state.MaterialId,
-            new RenderMaterialMeta(
-                shader.GfxId,
-                state.DrawState,
-                state.DrawFunctions,
-                state.ReceiveShadows ? shader.DefaultBindings.ShadowMapBinding : (sbyte)-1
-            ));
+            shader.GfxId,
+            state.DrawState,
+            state.DrawFunctions,
+            state.ReceiveShadows ? shader.DefaultBindings.ShadowMapBinding : (sbyte)-1
+        );
 
-        uniform.MatColor = state.Color;
-        uniform.MatParams0.X = state.Shininess;
-        uniform.MatParams0.Y = state.Roughness;
-        uniform.MatParams0.W = state.Metallic;
-            
-        uniform.MatParams1.X = state.SpecularColor.A;
-        uniform.MatParams1.Y = state.UvTransform.W;
+        uniform.Color = state.Color;
+        uniform.SpecularColor = state.SpecularColor;
+        uniform.UvTransform = state.UvTransform;
+        
+        uniform.Shininess = state.Shininess;
+        uniform.Roughness = state.Roughness;
+        uniform.Metallic = state.Metallic;
 
         var cutoff = state.IsTransparent ? (state.HasAlphaMask ? 0.5f : 0.1f) : 0f;
-        uniform.MatParams1.Z = cutoff;
-        uniform.MatParams1.W = state.HasAlphaMask ? 1f : 0f;
+        uniform.AlphaMaskToggle =  state.HasAlphaMask ? 1f : 0f;
+        uniform.AlphaCutoff = cutoff;
+
     }
 
     private void FillSamplers(Material material, Span<TextureBinding> slots)
@@ -79,10 +71,10 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
         {
             var source = textureSources[i];
             var textureId = source.FallbackTexture;
-            if(source.OverrideTexture > 0) textureId = source.OverrideTexture;
+            if (source.OverrideTexture > 0) textureId = source.OverrideTexture;
             else if (source.AssetTexture.Value > 0)
                 textureId = AssetManager.AssetStore.Get<Texture>(source.AssetTexture).GfxId;
-            
+
             slots[i] = new TextureBinding(textureId, source.Usage, (byte)i);
         }
 

@@ -9,10 +9,9 @@ layout(binding = 1) uniform sampler2D uAlpha;
 
 void main()
 {
-    float uvRepeat = uMat.Params1.y;
+    float uvRepeat = uMat.UvTransform.w;
     vec2 uv = TexCoord * uvRepeat;
 
-    float a = (uMat.Params1.w > 0.5) ? texture(uAlpha, uv).r : texture(uTexture, uv).a;
-    float cutoff = uMat.Params1.z;
-    if (a < cutoff) discard;
+    float a = (uMat.AlphaMaskToggle > 0.5) ? texture(uAlpha, uv).r : texture(uTexture, uv).a;
+    if (a < uMat.AlphaCutoff) discard;
 }

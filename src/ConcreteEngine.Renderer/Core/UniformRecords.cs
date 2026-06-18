@@ -120,28 +120,18 @@ public struct ShadowUniform : IUniform
 [StructLayout(LayoutKind.Sequential)]
 public struct MaterialUniform : IUniform
 {
-    public Color4 MatColor; // rgb = tint
-    public Vector4 MatParams0; // x = SpecularStrength, y = uvRepeat, z,w reserved
-    public Vector4 MatParams1; // x = Shininess, y = HasNormals z = Transparency, w = HasAlpha
-    
-    public static int OverrideSize => 0;
-
-}
-[StructLayout(LayoutKind.Sequential)]
-public struct MaterialUniformV2 : IUniform
-{
     public Color4 Color;
     public Color4 SpecularColor;
     public Vector4 UvTransform;
-    public Vector4 Surface;
     
     public float Shininess;
     public float Roughness;
     public float Metallic;
-    public float AlphaCutoff;
+    private float _pad13;
     
-    public float HasAlphaMask;
-    private float _pad1, _pad2, _pad3;
+    public float AlphaMaskToggle;
+    public float AlphaCutoff;
+    private float _pad22, _pad23;
 
     public static int OverrideSize => 0;
 

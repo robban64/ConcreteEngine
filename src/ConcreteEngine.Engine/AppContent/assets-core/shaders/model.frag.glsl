@@ -128,15 +128,14 @@ float halfLambert(float ndl) {
 }
 void main()
 {
-    float uvRepeat = uMat.Params1.y;
+    float uvRepeat = uMat.UvTransform.w;
     vec2 uv = fs_in.TexCoord * uvRepeat;
 
     //  Albedo and Alpha 
     vec4 baseTex = texture(uTexture, uv);
-    float a = (uMat.Params1.w > 0.5) ? texture(uAlpha, uv).r : baseTex.a;
+    float a = (uMat.AlphaMaskToggle > 0.5) ? texture(uAlpha, uv).r : baseTex.a;
     
-    float cutoff = uMat.Params1.z;
-    if (a < cutoff) discard;
+    if (a < uMat.AlphaCutoff) discard;
 
     vec3 baseColor = baseTex.rgb * uMat.Color.rgb;
 
@@ -169,9 +168,8 @@ void main()
     float diffTerm = halfLambert(ndl);
     vec3 diffuse = baseColor * diffTerm;
 
-    float shininess = uMat.Params0.x;
-    float specularStrength = uMat.Params1.x;
-    float specD = blinnPhongSpec(N_vis, V, Ld, shininess);
+    float specularStrength = uMat.SpecularColor.w;
+    float specD = blinnPhongSpec(N_vis, V, Ld, uMat.Shininess);
     vec3 specular = vec3(specularStrength) * specD * uLightSpecularIntensity.x;
 
     // Shadow Calculation (Use N_geo) 
@@ -194,7 +192,7 @@ void main()
         if (diffP <= 0.0) continue;
 
         vec3 diffuseP = baseColor * diffP;
-        float specP = blinnPhongSpec(N_vis, V, Lp, shininess);
+        float specP = blinnPhongSpec(N_vis, V, Lp, uMat.Shininess);
         vec3 specularP = vec3(specularStrength) * specP * uLightSpecularIntensity.x;
 
         direct += (diffuseP + specularP) * LiP * atten;

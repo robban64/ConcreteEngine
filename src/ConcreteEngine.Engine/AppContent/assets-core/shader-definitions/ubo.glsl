@@ -43,8 +43,17 @@ uniform ShadowUniform {
 
 uniform MaterialUniform {
     vec4 Color;
-    vec4 Params0;
-    vec4 Params1;
+    vec4 SpecularColor;
+    vec4 UvTransform;
+    
+    float Shininess;
+    float Roughness;
+    float Metallic;
+    float _pad13;
+        
+    float AlphaMaskToggle;
+    float AlphaCutoff;
+    float _pad22, _pad23;
 } uMat;
 
 uniform DrawUniform {

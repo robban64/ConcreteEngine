@@ -19,7 +19,7 @@ void main()
 
     vec4 baseTex = texture(uTexture, uv);
     float a = baseTex.a;
-    if (uMat.AlphaMaskToggle > 0.5) {
+    if (uMat.AlphaMaskToggle == 1) {
         a = texture(uAlpha, uv).r;
     }
 

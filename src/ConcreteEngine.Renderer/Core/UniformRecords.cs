@@ -127,11 +127,11 @@ public struct MaterialUniform : IUniform
     public float Shininess;
     public float Roughness;
     public float Metallic;
-    private float _pad13;
-    
-    public float AlphaMaskToggle;
     public float AlphaCutoff;
-    private float _pad22, _pad23;
+    
+    public int AlphaMaskToggle;
+    public int ShadowToggle;
+    private int _pad22, _pad23;
 
     public static int OverrideSize => 0;
 

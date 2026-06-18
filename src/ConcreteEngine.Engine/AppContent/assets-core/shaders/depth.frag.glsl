@@ -12,6 +12,6 @@ void main()
     float uvRepeat = uMat.UvTransform.w;
     vec2 uv = TexCoord * uvRepeat;
 
-    float a = (uMat.AlphaMaskToggle > 0.5) ? texture(uAlpha, uv).r : texture(uTexture, uv).a;
+    float a = (uMat.AlphaMaskToggle == 1) ? texture(uAlpha, uv).r : texture(uTexture, uv).a;
     if (a < uMat.AlphaCutoff) discard;
 }

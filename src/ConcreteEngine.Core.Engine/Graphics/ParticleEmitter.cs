@@ -190,6 +190,9 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     
     private void UpdateLocalBounds()
     {
+        var max = Vector3.One * 5;
+        _localBounds = new BoundingBox(-max, max);
+        /*
         ref readonly var param = ref _spatialParams;
         var distance = param.LifeMinMax.Y * param.LifeMinMax.Y;
         var extents = new Vector3(param.Spread + distance);
@@ -197,6 +200,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         var gravityOffset = 0.5f * param.Gravity * (param.LifeMinMax.Y * param.LifeMinMax.Y);
         _localBounds.Min = Vector3.Min(min, min + gravityOffset);
         _localBounds.Max = Vector3.Max(extents, extents + gravityOffset);
+        */
     }
 
 }

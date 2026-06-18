@@ -49,11 +49,11 @@ uniform MaterialUniform {
     float Shininess;
     float Roughness;
     float Metallic;
-    float _pad13;
-        
-    float AlphaMaskToggle;
     float AlphaCutoff;
-    float _pad22, _pad23;
+        
+    int AlphaMaskToggle;
+    int ShadowToggle;
+    int _pad22, _pad23;
 } uMat;
 
 uniform DrawUniform {

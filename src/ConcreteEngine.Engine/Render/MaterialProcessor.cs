@@ -29,7 +29,7 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
             var flag = material.Commit();
             if ((flag & AssetDirtyFlag.State) == 0 && (flag & AssetDirtyFlag.Structure) == 0) continue;
 
-            if (lastProfile == MaterialProfileId.None || material.ProfileId != lastProfile)
+            if (lastShader == null! || material.ProfileId != lastProfile)
             {
                 lastProfile = material.ProfileId;
                 lastShader = material.BoundShader;
@@ -57,10 +57,10 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
         uniform.Shininess = state.Shininess;
         uniform.Roughness = state.Roughness;
         uniform.Metallic = state.Metallic;
+        uniform.AlphaCutoff = state.IsTransparent ? (state.HasAlphaMask ? 0.5f : 0.1f) : 0f;
 
-        var cutoff = state.IsTransparent ? (state.HasAlphaMask ? 0.5f : 0.1f) : 0f;
-        uniform.AlphaMaskToggle =  state.HasAlphaMask ? 1f : 0f;
-        uniform.AlphaCutoff = cutoff;
+        uniform.AlphaMaskToggle =  state.HasAlphaMask ? 1 : 0;
+        uniform.ShadowToggle =  state.ReceiveShadows ? 1 : 0;
 
     }
 

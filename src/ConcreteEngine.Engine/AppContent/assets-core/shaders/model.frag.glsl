@@ -133,7 +133,7 @@ void main()
 
     //  Albedo and Alpha 
     vec4 baseTex = texture(uTexture, uv);
-    float a = (uMat.AlphaMaskToggle > 0.5) ? texture(uAlpha, uv).r : baseTex.a;
+    float a = (uMat.AlphaMaskToggle == 1) ? texture(uAlpha, uv).r : baseTex.a;
     
     if (a < uMat.AlphaCutoff) discard;
 

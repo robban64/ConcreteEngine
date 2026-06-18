@@ -58,7 +58,7 @@ public sealed class AssetManager
         ArgumentOutOfRangeException.ThrowIfEqual((int)storage, (int)AssetStorage.FileSystem);
 
         var assetId = Store.AllocateSlot(gid);
-        Files.Add(assetId, name, name, 0, new FileScanInfo(0, kind, storage));
+        Files.Register(assetId, name, name, 0, new FileScanInfo(0, kind, storage));
         return assetId;
     }
     
@@ -71,7 +71,7 @@ public sealed class AssetManager
             throw new InvalidOperationException($"Asset name {record.Name} already registered");
 
         var assetId = Store.AllocateSlot(record.GId);
-        Files.Add(assetId, record.Name, relativePath, record.Files.Count, in fileInfo);
+        Files.Register(assetId, record.Name, relativePath, record.Files.Count, in fileInfo);
         return assetId;
     }
     
@@ -87,7 +87,7 @@ public sealed class AssetManager
 
         var name = Path.GetFileNameWithoutExtension(relativePath);
         if (!Files.TryGetFileByPath(relativePath, out var fileSpec))
-            fileSpec = Files.Add(AssetId.Empty, name, relativePath, 1, in scanInfo);
+            fileSpec = Files.Register(AssetId.Empty, name, relativePath, 1, in scanInfo);
 
         var fileIds = Files.GetFileBindings(assetId);
         if (fileIds[scanInfo.FileIndex].Value > 0)

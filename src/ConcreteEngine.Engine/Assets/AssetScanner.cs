@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Configuration;
@@ -27,12 +28,6 @@ internal sealed class AssetScannerEntry
 
 internal sealed class AssetScanner(AssetManager assetManager)
 {
-    public static void ScanExisting(string path, AssetFile file, ref FileScanInfo info)
-    {
-        if (!File.Exists(path)) throw new FileNotFoundException(path);
-        var fileInfo = new FileInfo(path);
-        ExtractFileInfo(file.LogicalName, fileInfo, ref info);
-    }
 
     public void ScanAll(Queue<AssetRecord>[] result)
     {
@@ -44,12 +39,16 @@ internal sealed class AssetScanner(AssetManager assetManager)
         var modelQueue = result[AssetKind.Model.ToIndex()] = new Queue<AssetRecord>(64);
         var materialQueue = result[AssetKind.Material.ToIndex()] = new Queue<AssetRecord>(64);
 
+        avg1.BeginSample();
         ScanFiles(AssetKind.Shader, EnginePath.ShaderPath, FileUtils.ValidShaderExt, shaderQueue);
         ScanFiles(AssetKind.Texture, EnginePath.TexturePath, FileUtils.ValidTextureExt, textureQueue);
         ScanFiles(AssetKind.Model, EnginePath.ModelPath, FileUtils.ValidModelExt, modelQueue);
         ScanFiles(AssetKind.Material, EnginePath.MaterialPath, default, materialQueue);
+        avg1.EndSample();
+        avg1.ResetAndPrint("Scanner took");
     }
 
+    private AvgFrameTimer avg1;
 
     private void ScanFiles(
         AssetKind kind,
@@ -89,6 +88,7 @@ internal sealed class AssetScanner(AssetManager assetManager)
         {
             RegisterUnimportedFile(assets.Files, fileInfo, kind, directory, relativeDirectory, validExt);
         }
+
     }
 
     private static void RegisterBindings(AssetManager assets, AssetId assetId, AssetRecord record, string directory,
@@ -131,7 +131,7 @@ internal sealed class AssetScanner(AssetManager assetManager)
         var info = new FileScanInfo(0, kind, AssetStorage.FileSystem);
         ExtractFileInfo(filename, fileInfo, ref info);
 
-        fileRegistry.AddUnbound(filename, relativePath, in info);
+        fileRegistry.RegisterUnbound(filename, relativePath, in info);
     }
 
 
@@ -150,4 +150,12 @@ internal sealed class AssetScanner(AssetManager assetManager)
         scanInfo.Storage = AssetStorage.FileSystem;
         return true;
     }
+    
+    public static void ScanExisting(string path, AssetFile file, ref FileScanInfo info)
+    {
+        if (!File.Exists(path)) throw new FileNotFoundException(path);
+        var fileInfo = new FileInfo(path);
+        ExtractFileInfo(file.LogicalName, fileInfo, ref info);
+    }
+
 }

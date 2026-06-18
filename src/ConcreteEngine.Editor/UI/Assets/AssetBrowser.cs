@@ -145,7 +145,7 @@ internal sealed class AssetBrowser
         for (var i = 1; i < EnumCache<AssetKind>.Count; i++)
             AddAssetFilesFor((AssetKind)i, fileRegistry, addedFiles);
 
-        foreach (var fileId in fileRegistry.GetUnboundFileIds())
+        foreach (var fileId in fileRegistry.GetUnboundFileIdSpan())
         {
             var file = fileRegistry.Get(fileId);
             AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
@@ -155,7 +155,9 @@ internal sealed class AssetBrowser
 
         void AddAssetFilesFor(AssetKind kind, AssetFileRegistry provider, HashSet<int> filesAdded)
         {
-            foreach (var assetId in AssetManager.AssetStore.GetTypeStore(kind).AsSpan())
+            var store = AssetManager.AssetStore.GetTypeStore(kind);
+            
+            foreach (var assetId in store.AsSpan())
             {
                 var file = provider.GetAssetRootFile(assetId);
                 if (!filesAdded.Add(file.Id) && file.Storage == AssetStorage.FileSystem)
@@ -163,7 +165,7 @@ internal sealed class AssetBrowser
                 AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
             }
 
-            foreach (var assetId in AssetManager.AssetStore.GetTypeStore(kind).AsSpan())
+            foreach (var assetId in store.AsSpan())
             {
                 var fileIds = provider.GetFileBindings(assetId);
                 if (fileIds.Length <= 1) continue;

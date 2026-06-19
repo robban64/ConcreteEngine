@@ -62,7 +62,7 @@ internal sealed class AssetScanner(AssetManager assetManager)
             if (!isAssetFile)
             {
                 ExtractFileInfo(0, fileName, relativePath, fileInfo, out scanInfo);
-                files.RegisterUnbound(in scanInfo);
+                files.RegisterFile(FileBinding.UnboundFile, in scanInfo);
                 continue;
             }
             

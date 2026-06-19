@@ -51,7 +51,7 @@ internal sealed class AssetLoader
     {
         if (!_store.TryGetIdByGuid(record.GId, out var asset))
             throw new InvalidOperationException($"AssetRecord '{record.Name}' no registered Guid");
-        return new LoaderContext(asset, _store);
+        return new LoaderContext(asset, _assetManager);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -175,7 +175,7 @@ internal sealed class AssetLoader
     {
         ArgumentNullException.ThrowIfNull(asset);
         
-        _assetManager.Files.TryGetFileBindings(asset.Id, out var fileIds);
+        _store.TryGetFileBindings(asset.Id, out var fileIds);
         var files = new AssetFile[fileIds.Length];
         for (var i = 0; i < fileIds.Length; i++)
             files[i] = _assetManager.Files.Get(fileIds[i]);

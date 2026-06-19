@@ -10,16 +10,16 @@ using ConcreteEngine.Core.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Editor.UI.Assets;
 
-internal record struct FileDisplayItem(
-    AssetFileId FileId,
-    ushort FolderIndex,
-    RangeU16 NameHandle,
-    FileBinding Binding) : IComparable<FileDisplayItem>
+internal readonly struct FileDisplayItem(
+    AssetFileId fileId,
+    ushort folderIndex,
+    RangeU16 nameHandle,
+    FileBinding binding) : IComparable<FileDisplayItem>
 {
-    public readonly AssetFileId FileId = FileId;
-    public RangeU16 NameHandle = NameHandle;
-    public readonly ushort FolderIndex = FolderIndex;
-    public readonly FileBinding Binding = Binding;
+    public readonly AssetFileId FileId = fileId;
+    public readonly RangeU16 NameHandle = nameHandle;
+    public readonly ushort FolderIndex = folderIndex;
+    public readonly FileBinding Binding = binding;
 
     public readonly int CompareTo(FileDisplayItem other)
     {
@@ -139,7 +139,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         var fileCount = currentNode.FileCount;
         var folderCount = currentNode.FolderCount;
 
-        var file = AssetManager.FileRegistry.GetAssetRootFile(assetId);
+        var file = AssetManager.Instance.GetAssetRootFile(assetId);
         var fileId = file.Id;
         for (var i = 0; i < fileCount; i++)
         {
@@ -180,15 +180,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         }
 
         var fileRegistry = AssetManager.FileRegistry;
-        /*
-        for (var i = 0; i < fileCount; i++)
-        {
-            var index = i + folderCount;
-            var fileId = currentNode.FileIds[i];
-            var file = fileRegistry.Get(fileId);
-            displayItems[index] = new FileDisplayItem(fileId, 0, default, file.Binding);
-        }
-        */
+
         for (var i = 0; i < fileCount; i++)
         {
             var index = i + folderCount;
@@ -198,59 +190,12 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
             var offset = index > 0 ? displayItems[index - 1].NameHandle.End : 0;
             var written = dataPtr.SliceFrom(offset).Writer().Append(file.LogicalName).End();
             displayItems[index] = new FileDisplayItem(fileId, 0, (offset, written.Length), file.Binding);
-            //displayItems[index].NameHandle = (offset, written.Length);
         }
         displayItems.AsSpan(folderCount, fileCount).Sort();
 
         SetSearch(default);
     }
-    private void UpdateFolderAndEntries2()
-    {
-        var currentNode = assetBrowser.CurrentNode;
-
-        var prevSize = currentNode.FolderCount * 64 +
-                       currentNode.FileCount * 64;
-
-        var dataPtr = Memory.Data;
-
-        if (prevSize > 0) dataPtr.Slice(0, prevSize).Clear();
-
-        int folderCount = currentNode.FolderCount, fileCount = currentNode.FileCount;
-        if (folderCount + fileCount > MaxItems)
-            Throwers.InvalidOperation("Overflow, fix size management");
-
-        var displayItems = _displayItems;
-        for (var i = 0; i < folderCount; i++)
-        {
-            var name = currentNode.Children[i].FolderName;
-            var offset = i > 0 ? displayItems[i - 1].NameHandle.End : 0;
-            var written = dataPtr.SliceFrom(offset).Writer().Append(name).End();
-
-            displayItems[i] = new FileDisplayItem(AssetFileId.Empty, (ushort)i, (offset, written.Length),
-                FileBinding.Unknown);
-        }
-
-        var fileRegistry = AssetManager.FileRegistry;
-        for (var i = 0; i < fileCount; i++)
-        {
-            var index = i + folderCount;
-            var fileId = currentNode.FileIds[i];
-
-            var name = fileRegistry.TryGetByRootFileId(fileId, out var assetId)
-                ? AssetManager.Assets.Get<AssetObject>(assetId).Name
-                : fileRegistry.Get(fileId).LogicalName;
-
-            var status = fileRegistry.GetFileBindingStatus(fileId);
-
-            var offset = index > 0 ? displayItems[index - 1].NameHandle.End : 0;
-            var written = dataPtr.SliceFrom(offset).Writer().Append(name).End();
-
-            displayItems[index] = new FileDisplayItem(fileId, 0, (offset, written.Length), status);
-        }
-
-        SetSearch(default);
-    }
-
+    
     public void SetSearch(ReadOnlySpan<byte> searchString)
     {
         var fileCount = assetBrowser.FileCount;

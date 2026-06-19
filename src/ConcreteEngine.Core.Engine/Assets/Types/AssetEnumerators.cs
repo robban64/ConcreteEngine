@@ -31,28 +31,15 @@ public ref struct AssetEnumerator<T>(ReadOnlySpan<AssetId> assetIds, ReadOnlySpa
     public readonly AssetEnumerator<T> GetEnumerator() => new(_assetIds, _assets);
 }
 
-public ref struct AssetBindingEnumerator(AssetId assetId, AssetFileRegistry fileRegistry)
+public ref struct AssetBindingEnumerator(ReadOnlySpan<AssetFileId> fileIds, AssetFileRegistry fileRegistry)
 {
     private int _i = -1;
-    private readonly ReadOnlySpan<AssetFileId> _fileIds = fileRegistry.GetFileBindings(assetId);
+    private readonly ReadOnlySpan<AssetFileId> _fileIds = fileIds;
 
     public bool MoveNext() => ++_i < _fileIds.Length;
     public readonly AssetFile Current => fileRegistry.Get(_fileIds[_i]);
 
-    public readonly AssetBindingEnumerator GetEnumerator() => new(assetId, fileRegistry);
+    public readonly AssetBindingEnumerator GetEnumerator() => new(_fileIds, fileRegistry);
 }
 
 
-public ref struct FileBindingEnumerator(ReadOnlySpan<FileBinding> bindings, ReadOnlySpan<AssetFile?> entries)
-{
-    private int _i = -1;
-    private readonly ReadOnlySpan<FileBinding> _bindings = bindings;
-    private readonly ReadOnlySpan<AssetFile?> _entries = entries;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool MoveNext() => ++_i < _bindings.Length && _bindings[_i] != FileBinding.Unknown;
-
-    public readonly (AssetFile file, FileBinding binding) Current => (_entries[_i]!, _bindings[_i]);
-
-    public readonly FileBindingEnumerator GetEnumerator() => new(_bindings, _entries);
-}

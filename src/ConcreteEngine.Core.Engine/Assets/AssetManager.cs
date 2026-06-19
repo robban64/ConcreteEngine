@@ -38,11 +38,14 @@ public sealed class AssetManager
     private AssetManager()
     {
         Files = new AssetFileRegistry();
-        Store = new AssetStore(Files);
+        Store = new AssetStore();
         Store.SetupStores();
 
         _profileEntries = MaterialProfile.CreateProfiles();
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public AssetFile GetAssetRootFile(AssetId id) => Files.Get(Store.GetFileBindings(id)[0]);
 
     public void Rename(AssetObject asset, string newName)
     {
@@ -56,8 +59,9 @@ public sealed class AssetManager
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentOutOfRangeException.ThrowIfEqual(gid, Guid.Empty);
 
-        var assetId = Store.AllocateSlot(gid);
-        Files.Register(assetId, 0, new FileScanInfo(0, name, name));
+        var assetId = Store.Register(gid, 0);
+        var file = Files.RegisterRoot(assetId, new FileScanInfo(0, name, name));
+        Store.SetAssetBinding(assetId, file.Id, 0);
         return assetId;
     }
 
@@ -69,8 +73,9 @@ public sealed class AssetManager
         if (AssetStore.GetTypeStore(record.Kind).HasName(record.Name))
             Throwers.InvalidArgument($"Asset name {record.Name} already registered");
 
-        var assetId = Store.AllocateSlot(record.GId);
-        Files.Register(assetId, record.Files.Count, in fileInfo);
+        var assetId = Store.Register(record.GId, record.Files.Count);
+        var file = Files.RegisterRoot(assetId, in fileInfo);
+        Store.SetAssetBinding(assetId, file.Id, 0);
         return assetId;
     }
 
@@ -82,13 +87,9 @@ public sealed class AssetManager
             Throwers.InvalidArgument($"AssetId {assetId} not found for register scanned file {scanInfo.Name}");
 
         if (!Files.TryGetFileByPath(scanInfo.RelativePath, out var fileSpec))
-            fileSpec = Files.Register(AssetId.Empty, 1, in scanInfo);
+            fileSpec = Files.RegisterFile(FileBinding.DependentFile,in scanInfo);
 
-        var fileIds = Files.GetFileBindings(assetId);
-        if (fileIds[scanInfo.FileIndex].Value > 0)
-            Throwers.InvalidArgument($"FileSpec {scanInfo.Name} already set for {assetId}");
-
-        fileIds[scanInfo.FileIndex] = fileSpec.Id;
+        Store.SetAssetBinding(assetId, fileSpec.Id, scanInfo.FileIndex);
     }
 
 
@@ -97,7 +98,7 @@ public sealed class AssetManager
         ArgumentNullException.ThrowIfNull(embedded);
         ArgumentNullException.ThrowIfNull(embedded.FileSpec);
 
-        if (!Files.HasBinding(sourceId))
+        if (!Store.HasBinding(sourceId))
             Throwers.InvalidArgument($"Missing original asset for {embedded.Name}");
 
         var assetId = RegisterInMemoryAsset(embedded.GId, embedded.Kind, embedded.Name);
@@ -107,7 +108,7 @@ public sealed class AssetManager
 
     internal void RegisterExistingBindings(AssetId assetId, AssetFile[] fileSpecs)
     {
-        if (!Files.TryGetFileBindings(assetId, out var bindings))
+        if (!Store.TryGetFileBindings(assetId, out var bindings))
             Throwers.InvalidArgument($"Missing file bindings for {assetId}");
 
         for (var i = 0; i < fileSpecs.Length; i++)
@@ -127,4 +128,8 @@ public sealed class AssetManager
 
         AssetStore.Core.CreateMaterials(this);
     }
+    
+    public static AssetBindingEnumerator GetAssetBindingsEnumerator(AssetId assetId) 
+        => new(Assets.GetFileBindings(assetId), FileRegistry);
+
 }

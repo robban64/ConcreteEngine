@@ -85,7 +85,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     public override void OnEnter(NativeAllocator allocator)
     {
         _selectedFile = State.Context.Selection.HasAsset
-            ? FileRegistry.GetAssetRootFile(State.Context.Selection.SelectedAssetId).Id
+            ? AssetManager.Instance.GetAssetRootFile(State.Context.Selection.SelectedAssetId).Id
             : default;
 
         _searchInput.SetTextBuffer(allocator.AllocSlice(8));
@@ -140,16 +140,12 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         if (ImGui.BeginTable("asset-list"u8, 1, GuiTheme.ListTableFlags))
         {
             ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
-            avg.BeginSample();
             DrawList();
-            if (avg.EndSample() >= 40) avg.ResetAndPrint();
             ImGui.EndTable();
             DragDrop();
         }
         ImGui.PopStyleVar();
     }
-
-    private AvgFrameTimer avg;
 
     private void DrawList()
     {

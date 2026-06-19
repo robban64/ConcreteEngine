@@ -12,6 +12,11 @@ public static class Throwers
     [DoesNotReturn]
     public static void InvalidArgument(string paramName, string? message = null) =>
         throw new ArgumentException(message, paramName);
+    
+    [DoesNotReturn]
+    public static T InvalidArgument<T>(string paramName, string? message = null) =>
+        throw new ArgumentException(message, paramName);
+
 
     [DoesNotReturn]
     public static void InvalidOperation(string? message = null) => throw new InvalidOperationException(message);

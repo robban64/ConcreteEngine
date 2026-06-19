@@ -18,14 +18,7 @@ public sealed class AssetFileRegistry
     private AssetFile?[] _files = new AssetFile?[DefaultCap];
 
     private readonly Dictionary<string, AssetFileId> _fileByPath = new(DefaultCap);
-
-    private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = new(DefaultBindingCap);
     private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultBindingCap);
-
-
-    private readonly List<AssetFileId> _rootFiles = new(DefaultBindingCap);
-    private readonly List<AssetFileId> _dependentFiles = new(DefaultBindingCap);
-    private readonly List<AssetFileId> _unboundFiles = new(DefaultBindingCap);
 
     private readonly Stack<int> _free = [];
 
@@ -36,11 +29,8 @@ public sealed class AssetFileRegistry
     public int Capacity => _files.Length;
 
     public int RootFileCount => _rootBindings.Count;
-    public int DependentFileCount => _dependentFiles.Count;
-    public int UnboundFileCount => _unboundFiles.Count;
 
     public bool HasFilePath(string relativePath) => _fileByPath.ContainsKey(relativePath);
-    public bool HasBinding(AssetId assetId) => _fileBindings.ContainsKey(assetId);
     public bool IsRootFile(AssetFileId fileId) => _rootBindings.ContainsKey(fileId);
 
     public bool HasFile(AssetFileId fileId)
@@ -50,25 +40,11 @@ public sealed class AssetFileRegistry
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<AssetFileId> GetRootFileIdSpan() => CollectionsMarshal.AsSpan(_rootFiles);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<AssetFileId> GetDependentFileIdSpan() => CollectionsMarshal.AsSpan(_dependentFiles);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<AssetFileId> GetUnboundFileIdSpan() => CollectionsMarshal.AsSpan(_unboundFiles);
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetFile Get(AssetFileId id)
     {
-        var it = _files[id.Index()];
-        if (it is null) Throwers.InvalidHandle(id);
-        return it;
+        if (_files[id.Index()] is { } file && file.Id == id) return file;
+        return Throwers.InvalidArgument<AssetFile>($"File {id} not found", nameof(id));
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetFile GetAssetRootFile(AssetId id) => Get(_fileBindings[id][0]);
 
     public bool TryGetFile(AssetFileId id, [NotNullWhen(true)] out AssetFile? entry)
     {
@@ -85,66 +61,19 @@ public sealed class AssetFileRegistry
 
     public bool TryGetFileByPath(string relativePath, [NotNullWhen(true)] out AssetFile? entry)
     {
-        entry = null!;
-        return _fileByPath.TryGetValue(relativePath, out var fileId) && TryGetFile(fileId, out entry);
+        if (!_fileByPath.TryGetValue(relativePath, out var fileId))
+        {
+            entry = null;
+            return false;
+        }
+        return TryGetFile(fileId, out entry);
     }
 
-    public bool TryGetByRootFileId(AssetFileId fileId, out AssetId assetId)
-    {
-        var res = _rootBindings.TryGetValue(fileId, out var handle);
-        assetId = res ? handle : default;
-        return res;
-    }
-
-    public Span<AssetFileId> GetFileBindings(AssetId id)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
-        return _fileBindings[id];
-    }
-
-    public bool TryGetFileBindings(AssetId id, out Span<AssetFileId> bindings)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
-        bindings = Span<AssetFileId>.Empty;
-        if (_fileBindings.TryGetValue(id, out var res)) bindings = res;
-        return !bindings.IsEmpty;
-    }
-
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public FileBinding GetFileBindingStatus(AssetFileId fileId)
-    {
-        if (_rootBindings.ContainsKey(fileId)) return FileBinding.RootFile;
-        return _dependentFiles.BinarySearchUnmanaged(fileId) >= 0 ? FileBinding.DependentFile : FileBinding.UnboundFile;
-    }
+    public bool TryGetByRootFileId(AssetFileId fileId, out AssetId assetId) =>
+        _rootBindings.TryGetValue(fileId, out assetId);
 
     //
-    internal AssetFile Register(AssetId assetRootId, int fileCount, in FileScanInfo fileInfo)
-    {
-        var binding = assetRootId.IsValid() ? FileBinding.RootFile : FileBinding.DependentFile;
-        var fileSpec = AddFile(binding, in fileInfo);
-        if (binding == FileBinding.DependentFile)
-        {
-            _dependentFiles.Add(fileSpec.Id);
-            return fileSpec;
-        }
 
-        var fileBindings = new AssetFileId[fileCount + 1];
-        fileBindings[0] = fileSpec.Id;
-        _fileBindings.Add(assetRootId, fileBindings);
-        _rootBindings.Add(fileSpec.Id, assetRootId);
-        _rootFiles.Add(fileSpec.Id);
-
-        return fileSpec;
-    }
-
-
-    internal AssetFile RegisterUnbound(in FileScanInfo fileInfo)
-    {
-        var file = AddFile(FileBinding.UnboundFile,in fileInfo);
-        _unboundFiles.Add(file.Id);
-        return file;
-    }
-    
     internal void Replace(AssetFileId id, AssetFile file)
     {
         ArgumentNullException.ThrowIfNull(file);
@@ -157,9 +86,16 @@ public sealed class AssetFileRegistry
         if (!TryGetFile(fileId, out var file)) Throwers.InvalidArgument($"File {fileId} not found", nameof(fileId));
         return _files[fileId.Index()] = MakeFileSpecCopy(file, in fileInfo);
     }
-    
-    
-    private AssetFile AddFile(FileBinding binding, in FileScanInfo scanInfo)
+
+    internal AssetFile RegisterRoot(AssetId assetRootId, in FileScanInfo fileInfo)
+    {
+        if (!assetRootId.IsValid()) Throwers.InvalidArgument(nameof(assetRootId));
+        var fileSpec = RegisterFile(FileBinding.RootFile, in fileInfo);
+        _rootBindings.Add(fileSpec.Id, assetRootId);
+        return fileSpec;
+    }
+
+    internal AssetFile RegisterFile(FileBinding binding, in FileScanInfo scanInfo)
     {
         ArgumentException.ThrowIfNullOrEmpty(scanInfo.Name);
         ArgumentException.ThrowIfNullOrEmpty(scanInfo.RelativePath);
@@ -198,11 +134,10 @@ public sealed class AssetFileRegistry
 
         return new AssetFileId(++Count);
     }
-    
+
     //
     public ActiveObjectEnumerator<AssetFile> GetEnumerator() => new(_files.AsSpan(0, Count));
-    public AssetBindingEnumerator AssetBindingsEnumerator(AssetId assetId) => new(assetId, this);
-    
+
 
     private static AssetFile MakeFileSpecCopy(AssetFile file, in FileScanInfo scanInfo)
     {

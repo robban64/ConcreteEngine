@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 
 namespace ConcreteEngine.Core.Engine.Assets;
-
+/*
 public readonly record struct AssetId(int Value, ushort Gen) : IComparable<AssetId>
 {
     public AssetId(int id, int gen) : this(id, (ushort)gen) { }
@@ -24,3 +24,4 @@ public readonly record struct AssetId(int Value, ushort Gen) : IComparable<Asset
 
     public static AssetId Empty = new(0, 0);
 }
+*/

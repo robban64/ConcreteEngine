@@ -1,4 +1,8 @@
+global using AssetId = ConcreteEngine.Core.Common.Handle32<ConcreteEngine.Core.Engine.Assets.AssetObject>;
 global using AssetFileId = ConcreteEngine.Core.Common.Id32<ConcreteEngine.Core.Engine.Assets.AssetFile>;
+global using SceneObjectId = ConcreteEngine.Core.Common.Handle32<ConcreteEngine.Core.Engine.Scene.SceneObject>;
+
+//
 global using TextureId = ConcreteEngine.Graphics.Handles.GfxId<ConcreteEngine.Graphics.Handles.TextureMeta>;
 global using ShaderId = ConcreteEngine.Graphics.Handles.GfxId<ConcreteEngine.Graphics.Handles.ShaderMeta>;
 global using MeshId = ConcreteEngine.Graphics.Handles.GfxId<ConcreteEngine.Graphics.Handles.MeshMeta>;

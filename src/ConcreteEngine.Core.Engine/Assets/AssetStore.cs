@@ -60,7 +60,10 @@ public sealed partial class AssetStore
         if (freeIndex >= 0) return new AssetId(freeIndex + 1, 1);
 
         if (SlotHelper.EnsureCapacity(ref _assets, Count, 1, out var oldSize))
+        {
+            Array.Resize(ref _fileBindings, _assets.Length);
             Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetStore), oldSize, _assets.Length));
+        }
 
         var assetId = new AssetId(++Count, 1);
         _byGid.Add(gid, assetId);

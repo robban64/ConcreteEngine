@@ -62,7 +62,6 @@ public readonly record struct Handle32<T>(int Value, ushort Gen)
 
     public static implicit operator int(Handle32<T> id) => id.Value;
 
-
     public int CompareTo(int other) => Value.CompareTo((ushort)other);
     public int CompareTo(Handle32<T> other) => Value.CompareTo(other.Value);
 

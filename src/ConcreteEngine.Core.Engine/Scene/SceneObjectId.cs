@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 
 namespace ConcreteEngine.Core.Engine.Scene;
-
+/*
 public readonly record struct SceneObjectId(int Value, ushort Gen) : IComparable<SceneObjectId>
 {
     public SceneObjectId(int id, int gen) : this(id, (ushort)gen) { }
@@ -22,4 +22,4 @@ public readonly record struct SceneObjectId(int Value, ushort Gen) : IComparable
     public int CompareTo(SceneObjectId other) => Value.CompareTo(other.Value);
 
     public static SceneObjectId Empty = new(0, 0);
-}
+}*/

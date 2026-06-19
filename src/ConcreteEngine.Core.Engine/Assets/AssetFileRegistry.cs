@@ -127,12 +127,12 @@ public sealed class AssetFileRegistry
     private AssetFileId AllocateSlot()
     {
         var freeIndex = SlotHelper.NextSlot(_free, Count);
-        if (freeIndex >= 0) return new AssetFileId(freeIndex + 1);
+        if (freeIndex >= 0) return new AssetFileId(freeIndex + 1, 1);
 
         if (SlotHelper.EnsureCapacity(ref _files, Count, 1, out var oldSize))
             Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetFileRegistry), oldSize, _files.Length));
 
-        return new AssetFileId(++Count);
+        return new AssetFileId(++Count, 1);
     }
 
     //

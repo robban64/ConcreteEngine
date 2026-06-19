@@ -8,11 +8,8 @@ public interface IRange
     int Length { get; }
 }
 
-public readonly record struct RangeU16 : IRange
+public readonly record struct RangeU16(ushort Offset16, ushort Length16) : IRange
 {
-    public readonly ushort Offset16;
-    public readonly ushort Length16;
-
     public int Offset => Offset16;
     public int Length => Length16;
 
@@ -22,17 +19,8 @@ public readonly record struct RangeU16 : IRange
         get => Offset + Length;
     }
 
-    public RangeU16(int offset, int length)
-    {
-        Offset16 = (ushort)offset;
-        Length16 = (ushort)length;
-    }
-
-    public RangeU16(ushort Offset, ushort Length)
-    {
-        Offset16 = Offset;
-        Length16 = Length;
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public RangeU16(int offset, int length) : this((ushort)offset, (ushort)length) { }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator RangeU16((int, int) it) => new(it.Item1, it.Item2);

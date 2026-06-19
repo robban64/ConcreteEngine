@@ -125,6 +125,7 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
         Buffer[written] = 0;
         return new NativeView<byte>(Buffer, written);
     }
+    
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter Append(byte* value)
@@ -135,6 +136,16 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
         _cursor += index;
         return ref this;
     }
+    
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter Append(NativeView<byte> value)
+    {
+        if (value.Length == 0) return ref this;
+        Unsafe.CopyBlockUnaligned(Buffer + _cursor, value, (uint)value.Length);
+        _cursor += value.Length;
+        return ref this;
+    }
+
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter Append(scoped ReadOnlySpan<byte> value)

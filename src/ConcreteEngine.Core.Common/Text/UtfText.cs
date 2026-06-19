@@ -34,6 +34,16 @@ public static class UtfText
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetNullTerminateIndex(ref byte str, int capacity)
+    {
+        var i = 0;
+        while (Unsafe.Add(ref str, i) != 0)
+        {
+            if (++i >= capacity) return -1;
+        }
+        return i;
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetNullTerminateIndex(ref byte str)
     {
         var i = 0;
@@ -48,7 +58,6 @@ public static class UtfText
         Unsafe.CopyBlockUnaligned(ref dest, ref str, (uint)len + 1);
         return len;
     }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int WriteCharToByteSpan(ReadOnlySpan<char> span, Span<byte> dst)
     {

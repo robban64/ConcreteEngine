@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
@@ -135,29 +136,36 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             _state.EnqueueNewAssetKind((AssetKind)_assetCombo.Value.X);
 
         // List
+        ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
         if (ImGui.BeginTable("asset-list"u8, 1, GuiTheme.ListTableFlags))
         {
             ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
+            avg.BeginSample();
             DrawList();
+            if (avg.EndSample() >= 40) avg.ResetAndPrint();
             ImGui.EndTable();
             DragDrop();
         }
+        ImGui.PopStyleVar();
     }
+
+    private AvgFrameTimer avg;
 
     private void DrawList()
     {
-        var clipper = new ImGuiListClipper();
+        var selectedFileId = _selectedFile;
+        var currentKind = _assetBrowser.CurrentKind;
+
+        ImGuiListClipper clipper = default;
         clipper.Begin(TotalDrawCount, ListItemHeight + ListItemPad);
         while (clipper.Step())
         {
             int start = clipper.DisplayStart, end = clipper.DisplayEnd;
-            var currentKind = _assetBrowser.CurrentKind;
-            var indices = _state.GetSearchIndices();
             for (var i = 0; i < 4; i++)
             {
                 var (icon, color) = GetIconAndColor((FileBinding)i, currentKind);
                 ImGui.PushStyleColor(ImGuiCol.Text, color);
-                start = DrawList(start, end, icon, (FileBinding)i, indices);
+                start = DrawList(start, end, icon,selectedFileId,currentKind, (FileBinding)i);
                 ImGui.PopStyleColor();
             }
         }
@@ -165,42 +173,38 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         clipper.End();
     }
 
-    private int DrawList(int start, int end, uint icon, FileBinding binding, UnsafeSpan<byte> indices)
+    private int DrawList(int start, int end, uint icon, AssetFileId selectedId, AssetKind kind, FileBinding binding)
     {
         const ImGuiSelectableFlags selectFlags = ImGuiSelectableFlags.AllowDoubleClick;
 
         if ((uint)start >= (uint)end) return start;
 
-        var hasSelection = _selectedFile.IsValid();
-        var isFolder = binding == FileBinding.Unknown;
-        var isModel = _assetBrowser.CurrentKind == AssetKind.Model;
+        var writer = TextBuffers.GetWriter();
+        var indices = _state.GetSearchIndices();
 
         for (var i = start; i < end; i++)
         {
             var name = _state.GetDrawData(indices[i], out var it);
             if (it.Binding != binding) return i;
 
-            bool selected = hasSelection && it.FileId == _selectedFile;
-            ImGui.PushID(isFolder ? -it.FolderIndex : it.FileId.Value);
+            var selected = selectedId.Value > 0 && it.FileId == selectedId;
+            ImGui.PushID(binding == FileBinding.Unknown ? -it.FolderIndex : it.FileId.Value);
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
 
-            if (ImGui.Selectable("##select"u8, selected, selectFlags, ListItemSelectSize))
+            var text = writer.AppendIcon((byte*)&icon).PadRight(2).Append(name).End();
+            if (ImGui.Selectable(text, selected, selectFlags, ListItemSelectSize))
                 OnListItemClick(it);
-
-            if (isModel && binding == FileBinding.RootFile && ImGui.BeginDragDropSource())
+/*
+            if (kind == AssetKind.Model && binding == FileBinding.RootFile && ImGui.BeginDragDropSource())
             {
-                FileRegistry.TryGetByRootFileId(it.FileId, out var modelId);
+                AssetManager.FileRegistry.TryGetByRootFileId(it.FileId, out var modelId);
                 ImGui.SetDragDropPayload("ASSET_MODEL"u8, &modelId, (nuint)Unsafe.SizeOf<AssetId>());
                 AppDraw.Text(name);
                 ImGui.EndDragDropSource();
             }
-
-            ImGui.SetCursorPosY(i * (ListItemHeight + ListItemPad) + (ListItemPad - 1));
-
-            ImGui.TextUnformatted((byte*)&icon);
-            ImGui.SameLine();
-            AppDraw.Text(name);
+*/
+            //ImGui.SetCursorPosY(i * (ListItemHeight + ListItemPad) + (ListItemPad - 1));
             ImGui.PopID();
         }
 

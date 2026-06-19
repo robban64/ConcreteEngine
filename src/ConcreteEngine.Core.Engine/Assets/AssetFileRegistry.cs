@@ -120,8 +120,9 @@ public sealed class AssetFileRegistry
     //
     internal AssetFile Register(AssetId assetRootId, int fileCount, in FileScanInfo fileInfo)
     {
-        var fileSpec = AddFile(in fileInfo);
-        if (!assetRootId.IsValid())
+        var binding = assetRootId.IsValid() ? FileBinding.RootFile : FileBinding.DependentFile;
+        var fileSpec = AddFile(binding, in fileInfo);
+        if (binding == FileBinding.DependentFile)
         {
             _dependentFiles.Add(fileSpec.Id);
             return fileSpec;
@@ -139,7 +140,7 @@ public sealed class AssetFileRegistry
 
     internal AssetFile RegisterUnbound(in FileScanInfo fileInfo)
     {
-        var file = AddFile(in fileInfo);
+        var file = AddFile(FileBinding.UnboundFile,in fileInfo);
         _unboundFiles.Add(file.Id);
         return file;
     }
@@ -158,11 +159,12 @@ public sealed class AssetFileRegistry
     }
     
     
-    private AssetFile AddFile(in FileScanInfo scanInfo)
+    private AssetFile AddFile(FileBinding binding, in FileScanInfo scanInfo)
     {
         ArgumentException.ThrowIfNullOrEmpty(scanInfo.Name);
         ArgumentException.ThrowIfNullOrEmpty(scanInfo.RelativePath);
         ArgumentOutOfRangeException.ThrowIfEqual(scanInfo.IsValid, false);
+        ArgumentOutOfRangeException.ThrowIfZero((int)binding, nameof(binding));
 
         if (_fileByPath.ContainsKey(scanInfo.RelativePath))
             Throwers.InvalidArgument($"AssetFile {scanInfo.RelativePath} already registered");
@@ -171,9 +173,10 @@ public sealed class AssetFileRegistry
         var fileSpec = new AssetFile(
             Id: fileId,
             GId: Guid.NewGuid(),
+            Binding: binding,
+            Storage: scanInfo.Storage,
             LogicalName: scanInfo.Name,
             RelativePath: scanInfo.RelativePath,
-            Storage: scanInfo.Storage,
             SizeBytes: scanInfo.SizeBytes,
             LastWriteTime: scanInfo.LastWriteTime,
             Source: scanInfo.SourcePath,
@@ -210,20 +213,5 @@ public sealed class AssetFileRegistry
             ContentHash = null,
             Source = scanInfo.SourcePath
         };
-    }
-
-    private static AssetFile MakeFileSpec(AssetFileId id, in FileScanInfo scanInfo)
-    {
-        return new AssetFile(
-            Id: id,
-            GId: Guid.NewGuid(),
-            LogicalName: scanInfo.Name,
-            RelativePath: scanInfo.RelativePath,
-            Storage: scanInfo.Storage,
-            SizeBytes: scanInfo.SizeBytes,
-            LastWriteTime: scanInfo.LastWriteTime,
-            ContentHash: null,
-            Source: scanInfo.SourcePath
-        );
     }
 }

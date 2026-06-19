@@ -11,6 +11,7 @@ public enum FileBinding : byte
 public sealed record AssetFile(
     AssetFileId Id,
     Guid GId,
+    FileBinding Binding,
     AssetStorage Storage,
     DateTime LastWriteTime,
     long SizeBytes,

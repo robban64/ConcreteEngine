@@ -45,6 +45,7 @@ internal static unsafe class MaterialModelImporter
             material.FileSpec = new AssetFile(
                 GId: Guid.NewGuid(),
                 Id: AssetFileId.Empty,
+                Binding: FileBinding.RootFile,
                 Storage: AssetStorage.Embedded,
                 RelativePath: assetName,
                 LogicalName: material.EmbeddedName,
@@ -69,6 +70,7 @@ internal static unsafe class MaterialModelImporter
             texture.FileSpec = new AssetFile(
                 GId: Guid.NewGuid(),
                 Id: AssetFileId.Empty,
+                Binding: FileBinding.RootFile,
                 Storage: AssetStorage.Embedded,
                 RelativePath: texture.Name,
                 LogicalName: texture.EmbeddedName,

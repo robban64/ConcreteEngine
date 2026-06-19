@@ -136,18 +136,33 @@ internal sealed class AssetBrowser
         CurrentDirectory = directory;
     }
 
+    private void Traverse(AssetDirectoryNode node)
+    {
+        node.FileIds.Sort();
+        foreach (var it in node.Children)
+        {
+            Traverse(it);
+        }
+    }
+
     public void BuildFullDirectory()
     {
         var fileRegistry = AssetManager.FileRegistry;
+        foreach (var file in fileRegistry)
+            AddFile(file);
+
+        //Traverse(RootNode);
+
+/*
         foreach (var fileId in fileRegistry.GetRootFileIdSpan())
             AddFile(fileRegistry.Get(fileId));
-        
+
         foreach (var fileId in fileRegistry.GetDependentFileIdSpan())
             AddFile(fileRegistry.Get(fileId));
-        
+
         foreach (var fileId in fileRegistry.GetUnboundFileIdSpan())
             AddFile(fileRegistry.Get(fileId));
-
+*/
     }
 
     private void AddFile(AssetFile file)

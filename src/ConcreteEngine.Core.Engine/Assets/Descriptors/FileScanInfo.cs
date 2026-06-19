@@ -8,7 +8,6 @@ internal readonly ref struct FileScanInfo(
     string relativePath,
     long sizeBytes = 0,
     DateTime lastWriteTime = default,
-    string? sourcePath = null,
     AssetStorage storage = AssetStorage.FileSystem,
     bool isValid = true)
 {
@@ -17,7 +16,6 @@ internal readonly ref struct FileScanInfo(
 
     public readonly string Name = name;
     public readonly string RelativePath = relativePath;
-    public readonly string? SourcePath = sourcePath;
 
     public readonly byte FileIndex = fileIndex;
     public readonly AssetStorage Storage = storage;

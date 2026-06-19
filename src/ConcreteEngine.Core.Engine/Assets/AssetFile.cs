@@ -9,16 +9,14 @@ public enum FileBinding : byte
 }
 
 public sealed record AssetFile(
-    AssetFileId Id,
     Guid GId,
+    AssetFileId Id,
     FileBinding Binding,
     AssetStorage Storage,
     DateTime LastWriteTime,
     long SizeBytes,
     string LogicalName,
-    string RelativePath,
-    string? Source = null,
-    string? ContentHash = null
+    string RelativePath
 ) : IComparable<AssetFile>
 {
     public int CompareTo(AssetFile? other)

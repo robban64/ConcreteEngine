@@ -50,8 +50,9 @@ internal static unsafe class MaterialModelImporter
                 RelativePath: assetName,
                 LogicalName: material.EmbeddedName,
                 LastWriteTime: DateTime.MinValue,
-                SizeBytes: 0,
-                Source: ctx.Filename);
+                SizeBytes: 0
+                //Source: ctx.Filename
+            );
 
             embeddedContext.Materials.Add(material);
         }
@@ -75,8 +76,9 @@ internal static unsafe class MaterialModelImporter
                 RelativePath: texture.Name,
                 LogicalName: texture.EmbeddedName,
                 SizeBytes: textureSize,
-                LastWriteTime: DateTime.MinValue,
-                Source: ctx.Filename);
+                LastWriteTime: DateTime.MinValue
+                //Source: ctx.Filename
+            );
         }
     }
 

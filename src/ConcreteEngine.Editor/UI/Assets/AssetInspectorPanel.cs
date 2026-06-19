@@ -159,24 +159,26 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
     private static void DrawFilesTable(AssetId assetId)
     {
         ImGui.SeparatorText("Files"u8);
-        if (!ImGui.BeginTable("##asset_store_files_tbl"u8, 4, ImGuiTableFlags.Borders)) return;
+        if (!ImGui.BeginTable("##asset_store_files_tbl"u8, 5, ImGuiTableFlags.Borders)) return;
 
         ImGui.TableSetupColumn("ID"u8, ImGuiTableColumnFlags.WidthFixed);
+        ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthFixed);
         ImGui.TableSetupColumn("Path"u8, ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableSetupColumn("Size"u8, ImGuiTableColumnFlags.WidthFixed);
-        ImGui.TableSetupColumn("Hash"u8, ImGuiTableColumnFlags.WidthFixed);
+        ImGui.TableSetupColumn("LastWritten"u8, ImGuiTableColumnFlags.WidthFixed);
 
         ImGui.TableHeadersRow();
 
         var sw = TextBuffers.GetWriter();
         foreach (var it in AssetManager.GetAssetBindingsEnumerator(assetId))
         {
-            ImGui.PushID(it.Id.Id);
+            ImGui.PushID(it.Id);
             ImGui.TableNextRow();
-            AppDraw.TextColumn(sw.Write(it.Id.Id));
+            AppDraw.TextColumn(sw.Write(it.Id));
+            AppDraw.TextColumn(sw.Write(it.LogicalName));
             AppDraw.TextColumn(sw.Write(it.RelativePath));
             AppDraw.TextColumn(sw.Write(it.SizeBytes));
-            AppDraw.TextColumn(sw.Write(it.ContentHash ?? ""));
+            AppDraw.TextColumn(sw.Write(it.LastWriteTime, "yy-MM-dd HH:mm:ss"));
             ImGui.PopID();
         }
 

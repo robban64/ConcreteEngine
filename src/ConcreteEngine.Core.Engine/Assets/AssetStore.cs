@@ -16,9 +16,9 @@ public sealed partial class AssetStore
 
     public int Count { get; private set; }
 
-
     private AssetObject?[] _assets = new AssetObject?[DefaultCap];
-    private AssetFileId[]?[] _fileBindings = new AssetFileId[DefaultCap][];
+    private AssetFileId[]?[] _bindings = new AssetFileId[DefaultCap][];
+    //private Dictionary<AssetId, AssetFileId[]> _bindings;
 
     private readonly AssetTypeStore[] _storeCollection = new AssetTypeStore[AssetKindUtils.AssetTypeCount];
     private readonly Dictionary<Guid, AssetId> _byGid = new(DefaultCap);
@@ -61,7 +61,7 @@ public sealed partial class AssetStore
 
         if (SlotHelper.EnsureCapacity(ref _assets, Count, 1, out var oldSize))
         {
-            Array.Resize(ref _fileBindings, _assets.Length);
+            Array.Resize(ref _bindings, _assets.Length);
             Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetStore), oldSize, _assets.Length));
         }
 
@@ -75,7 +75,7 @@ public sealed partial class AssetStore
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Id);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fileId.Id);
 
-        var fileBinding = _fileBindings[assetId.Index()]!;
+        var fileBinding = _bindings[assetId.Index()]!;
         if (fileBinding[fileIndex].Id > 0)
             Throwers.InvalidArgument($"File {fileIndex}:{fileId} already set for asset {assetId}");
 
@@ -85,7 +85,7 @@ public sealed partial class AssetStore
     internal AssetId Register(Guid gid, int fileCount)
     {
         var assetId = AllocateSlot(gid);
-        _fileBindings[assetId.Index()] = new AssetFileId[fileCount + 1];
+        _bindings[assetId.Index()] = new AssetFileId[fileCount + 1];
         return assetId;
     }
 
@@ -96,16 +96,13 @@ public sealed partial class AssetStore
         ArgumentOutOfRangeException.ThrowIfEqual(asset.GId, Guid.Empty);
 
         if (Has(asset.Id))
-            throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is already registered.");
+            Throwers.InvalidArgument(nameof(asset), $"Asset '{asset.Name}:{asset.Id}' is already registered.");
 
-
-        var assetList = GetTypeStore(asset.Kind);
-
-        if (assetList.HasName(asset.Name))
+        if (TypeStore<TAsset>.Store.HasName(asset.Name))
             asset.Name = AssetNameUtils.IncrementName(asset.Name, typeof(TAsset), NameExistsDel);
 
         _assets[asset.Id.Index()] = asset;
-        assetList.Add(asset);
+        TypeStore<TAsset>.Store.Add(asset);
         MarkDirty(asset);
     }
 
@@ -120,17 +117,17 @@ public sealed partial class AssetStore
     public bool HasBinding(AssetId id)
     {
         var index = id.Index();
-        return (uint)index < (uint)_fileBindings.Length && _fileBindings[index] != null;
+        return (uint)index < (uint)_bindings.Length && _bindings[index] != null;
     }
     public ReadOnlySpan<AssetFileId> GetFileBindings(AssetId id)
     {
-        return _fileBindings[id.Index()] ?? throw new ArgumentException( $"Bindings not found for {id}");
+        return _bindings[id.Index()] ?? throw new ArgumentException( $"Bindings not found for {id}");
     }
 
     public bool TryGetFileBindings(AssetId id, out ReadOnlySpan<AssetFileId> bindings)
     {
         var index = id.Index();
-        if ((uint)index >= (uint)_fileBindings.Length || _fileBindings[index] is not { } fileBinding)
+        if ((uint)index >= (uint)_bindings.Length || _bindings[index] is not { } fileBinding)
         {
             bindings = default;
             return false;
@@ -200,8 +197,6 @@ public sealed partial class AssetStore
     public bool TryGetIdByGuid(Guid gid, out AssetId id) => _byGid.TryGetValue(gid, out id);
     
     
-
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetEnumerator GetAssetEnumerator(AssetKind kind) => new(GetTypeStore(kind).AsSpan(), _assets.AsSpan());
 
@@ -209,6 +204,7 @@ public sealed partial class AssetStore
     public AssetEnumerator<T> GetAssetEnumerator<T>() where T : AssetObject =>
         new(TypeStore<T>.Store.AsSpan(), _assets.AsSpan());
 
+    
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void EnsureStoreCapacity(Queue<AssetRecord>[] queues)
     {

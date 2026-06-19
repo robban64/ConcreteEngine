@@ -49,14 +49,13 @@ public sealed class AssetFileRegistry
     public bool TryGetFile(AssetFileId id, [NotNullWhen(true)] out AssetFile? entry)
     {
         var index = id.Index();
-        if ((uint)index >= (uint)_files.Length || _files[index] is not { } file || file.Id != id)
+        if ((uint)index < (uint)_files.Length && _files[index] is { } file && file.Id == id)
         {
-            entry = null;
-            return false;
+            entry = file;
+            return true;
         }
-
-        entry = file;
-        return true;
+        entry = null;
+        return false;
     }
 
     public bool TryGetFileByPath(string relativePath, [NotNullWhen(true)] out AssetFile? entry)
@@ -81,12 +80,6 @@ public sealed class AssetFileRegistry
         _files[id.Index()] = file;
     }
 
-    internal AssetFile UpdateFileSpec(AssetFileId fileId, in FileScanInfo fileInfo)
-    {
-        if (!TryGetFile(fileId, out var file)) Throwers.InvalidArgument($"File {fileId} not found", nameof(fileId));
-        return _files[fileId.Index()] = MakeFileSpecCopy(file, in fileInfo);
-    }
-
     internal AssetFile RegisterRoot(AssetId assetRootId, in FileScanInfo fileInfo)
     {
         if (!assetRootId.IsValid()) Throwers.InvalidArgument(nameof(assetRootId));
@@ -107,16 +100,14 @@ public sealed class AssetFileRegistry
 
         var fileId = AllocateSlot();
         var fileSpec = new AssetFile(
-            Id: fileId,
             GId: Guid.NewGuid(),
+            Id: fileId,
             Binding: binding,
             Storage: scanInfo.Storage,
             LogicalName: scanInfo.Name,
             RelativePath: scanInfo.RelativePath,
             SizeBytes: scanInfo.SizeBytes,
-            LastWriteTime: scanInfo.LastWriteTime,
-            Source: scanInfo.SourcePath,
-            ContentHash: null
+            LastWriteTime: scanInfo.LastWriteTime
         );
 
         _files[fileId.Index()] = fileSpec;
@@ -138,15 +129,4 @@ public sealed class AssetFileRegistry
     //
     public ActiveObjectEnumerator<AssetFile> GetEnumerator() => new(_files.AsSpan(0, Count));
 
-
-    private static AssetFile MakeFileSpecCopy(AssetFile file, in FileScanInfo scanInfo)
-    {
-        return file with
-        {
-            SizeBytes = scanInfo.SizeBytes,
-            LastWriteTime = scanInfo.LastWriteTime,
-            ContentHash = null,
-            Source = scanInfo.SourcePath
-        };
-    }
 }

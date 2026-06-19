@@ -58,10 +58,10 @@ public sealed class AssetTypeStore(AssetKind kind)
 
     internal void MarkDirty(AssetObject asset)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Value, nameof(asset.Id));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Id, nameof(asset.Id));
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)asset.Kind, (int)Kind, nameof(asset));
 
-        var id = asset.Id.Value;
+        var id = asset.Id.Id;
         if (_dirtyIds.Count == 0)
         {
             _dirtyIds.Add(id);

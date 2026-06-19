@@ -72,11 +72,11 @@ public sealed partial class AssetStore
 
     internal void SetAssetBinding(AssetId assetId, AssetFileId fileId, int fileIndex)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Value);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fileId.Value);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Id);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fileId.Id);
 
         var fileBinding = _fileBindings[assetId.Index()]!;
-        if (fileBinding[fileIndex].Value > 0)
+        if (fileBinding[fileIndex].Id > 0)
             Throwers.InvalidArgument($"File {fileIndex}:{fileId} already set for asset {assetId}");
 
         fileBinding[fileIndex] = fileId;
@@ -92,7 +92,7 @@ public sealed partial class AssetStore
     public void AddAsset<TAsset>(TAsset asset) where TAsset : AssetObject
     {
         ArgumentNullException.ThrowIfNull(asset);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Value);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Id);
         ArgumentOutOfRangeException.ThrowIfEqual(asset.GId, Guid.Empty);
 
         if (Has(asset.Id))

@@ -77,7 +77,7 @@ public sealed class AssetFileRegistry
     internal void Replace(AssetFileId id, AssetFile file)
     {
         ArgumentNullException.ThrowIfNull(file);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id));
         _files[id.Index()] = file;
     }
 

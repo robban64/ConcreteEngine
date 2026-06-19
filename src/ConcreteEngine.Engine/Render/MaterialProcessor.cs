@@ -73,7 +73,7 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
             var source = textureSources[i];
             var textureId = source.FallbackTexture;
             if (source.OverrideTexture > 0) textureId = source.OverrideTexture;
-            else if (source.AssetTexture.Value > 0)
+            else if (source.AssetTexture.Id > 0)
                 textureId = AssetManager.Assets.Get<Texture>(source.AssetTexture).GfxId;
 
             slots[i] = new TextureBinding(textureId, source.Usage, (byte)i);

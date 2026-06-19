@@ -81,7 +81,7 @@ public sealed class AssetManager
 
     internal void RegisterAssetBinding(AssetId assetId, in FileScanInfo scanInfo)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Value);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Id);
 
         if (Store.Has(assetId))
             Throwers.InvalidArgument($"AssetId {assetId} not found for register scanned file {scanInfo.Name}");

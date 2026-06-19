@@ -16,7 +16,10 @@ public readonly record struct Id16<T>(ushort Value) : IComparable<ushort>, IComp
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsValid() => Value > 0;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator ushort(Id16<T> slot) => slot.Value;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Id16<T>(ushort i) => new(i);
 
     public int CompareTo(ushort other) => Value.CompareTo(other);
@@ -46,24 +49,25 @@ public readonly record struct Id32<T>(int Value) : IComparable<int>, IComparable
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly record struct Handle32<T>(int Value, ushort Gen)
+public readonly record struct Handle32<T>(int Id, ushort Gen)
     : IComparable<int>, IComparable<Handle32<T>> where T : class
 {
     public Handle32(int id, int gen) : this(id, (ushort)gen) { }
 
-    public readonly int Value = Value;
+    public readonly int Id = Id;
     public readonly ushort Gen = Gen;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int Index() => Value - 1;
+    public int Index() => Id - 1;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsValid() => Value > 0;
+    public bool IsValid() => Id > 0;
 
-    public static implicit operator int(Handle32<T> id) => id.Value;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator int(Handle32<T> id) => id.Id;
 
-    public int CompareTo(int other) => Value.CompareTo((ushort)other);
-    public int CompareTo(Handle32<T> other) => Value.CompareTo(other.Value);
+    public int CompareTo(int other) => Id.CompareTo((ushort)other);
+    public int CompareTo(Handle32<T> other) => Id.CompareTo(other.Id);
 
     public static readonly Handle32<T> Empty = default;
 }

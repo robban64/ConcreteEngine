@@ -24,6 +24,6 @@ public sealed record AssetFile(
     public int CompareTo(AssetFile? other)
     {
         if (ReferenceEquals(this, other)) return 0;
-        return other is null ? 1 : Id.Value.CompareTo(other.Id.Value);
+        return other is null ? 1 : Id.Id.CompareTo(other.Id.Id);
     }
 }

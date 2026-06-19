@@ -62,8 +62,8 @@ public sealed class SceneManager
 
     public void MarkDirty(SceneObjectId sceneObjectId)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sceneObjectId.Value, nameof(sceneObjectId));
-        var id = sceneObjectId.Value;
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sceneObjectId.Id, nameof(sceneObjectId));
+        var id = sceneObjectId.Id;
         if (_dirtyIds.Count == 0)
         {
             _dirtyIds.Add(id);

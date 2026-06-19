@@ -19,9 +19,9 @@ internal sealed class AssetPendingQueue
 
     public bool Enqueue(AssetRecreateRequest request)
     {
-        if (!_enqueuedIds.Add(request.AssetId.Value))
+        if (!_enqueuedIds.Add(request.AssetId.Id))
         {
-            Logger.LogString(LogScope.Assets, $"Asset already in pending queue: {request.AssetId.Value}");
+            Logger.LogString(LogScope.Assets, $"Asset already in pending queue: {request.AssetId.Id}");
             return false;
         }
 
@@ -35,7 +35,7 @@ internal sealed class AssetPendingQueue
 
         while (_queue.TryDequeue(out var request))
         {
-            _enqueuedIds.Remove(request.AssetId.Value);
+            _enqueuedIds.Remove(request.AssetId.Id);
             OnDrain(loader, store, request);
         }
 

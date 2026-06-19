@@ -63,7 +63,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     internal SceneObject(SceneObjectId id, Guid? gid, string name, bool enabled = true)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id));
         ArgumentException.ThrowIfNullOrEmpty(name);
 
         Id = id;

@@ -167,7 +167,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         if (!payload.IsNull && payload.IsDelivery())
         {
             var droppedId = *(AssetId*)payload.Data;
-            if (droppedId.Value > 0 && AssetManager.Assets.TryGet<Texture>(droppedId, out var droppedTex))
+            if (droppedId.Id > 0 && AssetManager.Assets.TryGet<Texture>(droppedId, out var droppedTex))
                 material.SetTextureSlot(slot, droppedTex);
         }
 

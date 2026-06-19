@@ -93,7 +93,7 @@ public sealed class SceneStore
     {
         if (_byName.TryGetValue(name, out var handle)) id = handle;
         id = default;
-        return id.Value > 0;
+        return id.Id > 0;
     }
 
     public bool TryGetByName(string name, [NotNullWhen(true)] out SceneObject? sceneObject)

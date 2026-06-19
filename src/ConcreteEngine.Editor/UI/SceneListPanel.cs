@@ -176,7 +176,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             if (_selectedKind > SceneObjectKind.Empty && _selectedKind != it.Kind)
                 continue;
 
-            if (searchKey <= 0 || searchId == it.Id.Value || (it.PackedName & searchMask) == searchKey)
+            if (searchKey <= 0 || searchId == it.Id.Id || (it.PackedName & searchMask) == searchKey)
                 _sceneIds[count++] = it.Id;
         }
 

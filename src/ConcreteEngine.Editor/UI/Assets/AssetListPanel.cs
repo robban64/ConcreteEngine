@@ -183,8 +183,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             var name = _state.GetDrawData(indices[i], out var it);
             if (it.Binding != binding) return i;
 
-            var selected = selectedId.Value > 0 && it.FileId == selectedId;
-            ImGui.PushID(binding == FileBinding.Unknown ? -it.FolderIndex : it.FileId.Value);
+            var selected = selectedId.Id > 0 && it.FileId == selectedId;
+            ImGui.PushID(binding == FileBinding.Unknown ? -it.FolderIndex : it.FileId.Id);
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
 

@@ -52,7 +52,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
         foreach (var entity in GetRenderEntities())
         {
             ref var source = ref Ecs.Render.Core.GetSource(entity);
-            if (source.Material.Id > 0 && source.Material != material.MaterialId) continue;
+            if (source.Material.Value > 0 && source.Material != material.MaterialId) continue;
             source.Queue = material.DrawQueue;
             source.Passes = material.Passes;
         }

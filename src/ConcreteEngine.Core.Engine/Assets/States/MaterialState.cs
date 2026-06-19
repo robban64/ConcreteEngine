@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Graphics.Gfx;
@@ -24,7 +25,7 @@ public sealed class MaterialState
 {
     private static int _materialIdCounter;
 
-    public readonly MaterialId MaterialId = new(++_materialIdCounter);
+    public readonly Id16<MaterialSlot> MaterialId = new(++_materialIdCounter);
 
     private readonly Material _material;
     private MaterialShading _shading;

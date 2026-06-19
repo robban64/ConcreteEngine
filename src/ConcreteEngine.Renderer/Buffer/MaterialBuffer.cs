@@ -30,7 +30,7 @@ public sealed class MaterialBuffer : IDisposable
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ReadOnlySpan<TextureBinding> GetMetaAndSlots(MaterialId materialId, out RenderMaterialMeta meta)
+    internal ReadOnlySpan<TextureBinding> GetMetaAndSlots(Id16<MaterialSlot> materialId, out RenderMaterialMeta meta)
     {
         var index = materialId.Index();
         meta = _metas[index];
@@ -38,7 +38,7 @@ public sealed class MaterialBuffer : IDisposable
         return _textureSlots.AsSpan(range.Offset, range.Length);
     }
 
-    public void SubmitBindings(MaterialId id, ReadOnlySpan<TextureBinding> slots)
+    public void SubmitBindings(Id16<MaterialSlot> id, ReadOnlySpan<TextureBinding> slots)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(slots.Length, TextureSlots);
         EnsureTextureSlotCapacity(slots.Length);
@@ -52,14 +52,14 @@ public sealed class MaterialBuffer : IDisposable
     }
 
     public ref MaterialUniform Submit(
-        MaterialId id,     
+        Id16<MaterialSlot> id,     
         ShaderId shaderId,
         GfxDrawState drawState,
         GfxDrawFunctions drawFunctions,
         sbyte shadowMapBinding)
     {
         var index = id.Index();
-        EnsureCapacity(id.Id);
+        EnsureCapacity(id.Value);
 
         _metas[index] = new RenderMaterialMeta(shaderId, drawState, drawFunctions, shadowMapBinding);
 

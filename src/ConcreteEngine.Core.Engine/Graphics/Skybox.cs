@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
@@ -12,7 +13,7 @@ public sealed class Skybox
 
     private Skybox() { }
 
-    public MaterialId MaterialId => Material?.MaterialId ?? MaterialId.Empty;
+    public Id16<MaterialSlot> MaterialId => Material?.MaterialId ?? Id16<MaterialSlot>.Empty;
 
     public void SetMaterial(Material material)
     {

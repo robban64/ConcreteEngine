@@ -75,7 +75,7 @@ internal sealed class DrawCommandProcessor
         _gfxDraw.BindDraw(cmd.MeshId, cmd.InstanceCount);
     }
 
-    private void BindMaterial(MaterialId materialId)
+    private void BindMaterial(Id16<MaterialSlot> materialId)
     {
         var texSlots = _buffers.ResolveMaterial(materialId, out var materialMeta);
 

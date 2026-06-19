@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
 
@@ -8,7 +9,7 @@ namespace ConcreteEngine.Core.Engine.ECS.RenderComponent;
 [StructLayout(LayoutKind.Sequential)]
 public struct SourceComponent(
     MeshId mesh,
-    MaterialId material,
+    Id16<MaterialSlot> material,
     int meshIndex,
     EntitySourceKind kind,
     DrawCommandQueue queue,
@@ -16,7 +17,7 @@ public struct SourceComponent(
     : IRenderComponent<SourceComponent>
 {
     public MeshId Mesh = mesh;
-    public MaterialId Material = material;
+    public Id16<MaterialSlot> Material = material;
 
     public PassMask Passes = passes;
     public byte MeshIndex = (byte)meshIndex;

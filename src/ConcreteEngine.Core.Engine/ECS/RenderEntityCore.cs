@@ -180,7 +180,7 @@ public sealed class RenderEntityCore : EcsStore
     {
         if (source.Kind == EntitySourceKind.Particle) return;
         ArgumentOutOfRangeException.ThrowIfZero(source.Mesh.Id, nameof(source.Mesh));
-        ArgumentOutOfRangeException.ThrowIfZero(source.Material.Id, nameof(source.Material));
+        ArgumentOutOfRangeException.ThrowIfZero(source.Material.Value, nameof(source.Material));
         ArgumentOutOfRangeException.ThrowIfEqual((int)source.Kind, (int)EntitySourceKind.Unknown, nameof(source.Kind));
     }
 }

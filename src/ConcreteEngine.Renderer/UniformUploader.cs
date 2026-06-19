@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics;
@@ -21,7 +22,7 @@ internal sealed unsafe class UniformUploader
     private readonly SkinningBuffer _skinningBuffer;
     private readonly EffectBuffer _effectBuffer;
 
-    public MaterialId PrevMaterial { get; private set; } = new(-1);
+    public Id16<MaterialSlot> PrevMaterial { get; private set; } = new(-1);
 
 
     internal UniformUploader(GfxContext gfx, RenderRegistry renderRegistry, RenderUploadBuffers buffers)
@@ -65,7 +66,7 @@ internal sealed unsafe class UniformUploader
         }
     }
 
-    internal ReadOnlySpan<TextureBinding> ResolveMaterial(MaterialId materialId, out RenderMaterialMeta materialMeta)
+    internal ReadOnlySpan<TextureBinding> ResolveMaterial(Id16<MaterialSlot> materialId, out RenderMaterialMeta materialMeta)
     {
         if (PrevMaterial != materialId)
         {
@@ -80,7 +81,7 @@ internal sealed unsafe class UniformUploader
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void BindMaterialObject(MaterialId matId)
+    internal void BindMaterialObject(Id16<MaterialSlot> matId)
     {
         var cursor = _materialUbo.SetDrawCursor(matId.Index());
         _gfxBuffers.BindUniformBufferRange(_materialUbo.Id, _materialUbo.Slot, cursor, _materialUbo.Stride);

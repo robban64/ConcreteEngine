@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
@@ -54,8 +55,8 @@ public sealed class Terrain
 
     public ReadOnlySpan<TerrainChunk> GetChunks() => _chunks;
 
-    public MaterialId MaterialId => GroundMaterial?.MaterialId ?? AssetStore.Core.FallbackMaterial.MaterialId;
-    public MaterialId FoliageMaterialId => FoliageMaterial?.MaterialId ?? AssetStore.Core.FallbackMaterial.MaterialId;
+    public Id16<MaterialSlot> MaterialId => GroundMaterial?.MaterialId ?? AssetStore.Core.FallbackMaterial.MaterialId;
+    public Id16<MaterialSlot> FoliageMaterialId => FoliageMaterial?.MaterialId ?? AssetStore.Core.FallbackMaterial.MaterialId;
 
     public void SetTexture(int slot, Texture texture)
     {

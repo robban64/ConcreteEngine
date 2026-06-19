@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
@@ -8,7 +9,7 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 public sealed class Material : AssetObject
 {
-    public MaterialId MaterialId => State.MaterialId;
+    public Id16<MaterialSlot> MaterialId => State.MaterialId;
     public MaterialProfileId ProfileId { get; private set; }
 
     public readonly MaterialState State;

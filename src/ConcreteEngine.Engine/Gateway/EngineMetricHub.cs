@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Scene;
@@ -22,7 +23,7 @@ internal sealed class EngineMetricHub
     public void ConnectEditor(MetricSystem metricSystem)
     {
         _metricSystem = metricSystem;
-        metricSystem.BindStore(GfxMetrics.StoreCount, AssetStore.StoreCount, WriteStoreMeta);
+        metricSystem.BindStore(GfxMetrics.StoreCount, AssetKindUtils.AssetTypeCount, WriteStoreMeta);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -71,7 +72,7 @@ internal sealed class EngineMetricHub
     {
         GfxMetrics.DrainStoreMetrics(gfxResult);
 
-        var storeSpan = AssetManager.AssetStore.GetTypeStoreSpan();
+        var storeSpan = AssetManager.Assets.GetTypeStoreSpan();
         for (var i = 0; i < storeSpan.Length; i++)
             assetResult[i] = storeSpan[i].ToSnapshot();
     }

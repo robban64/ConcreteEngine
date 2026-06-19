@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
@@ -6,26 +8,24 @@ using ConcreteEngine.Core.Engine.Configuration;
 using static ConcreteEngine.Core.Engine.Assets.Utils.AssetKindUtils;
 
 namespace ConcreteEngine.Engine.Assets;
-
+/*
 internal sealed class AssetScannerEntry
 {
     public readonly AssetKind Kind;
-    public readonly string Directory;
-    public readonly string[] ValidExtensions;
+    public readonly string ValidExt;
     public readonly string AssetExtension;
 
     private Queue<AssetRecord> _records;
 
-    public AssetScannerEntry(AssetKind kind, string directory, string[] validExt, string assetExt = "asset")
+    public AssetScannerEntry(AssetKind kind, string validExt, string assetExt = ".asset")
     {
         Kind = kind;
-        Directory = directory;
-        ValidExtensions = validExt;
+        ValidExt = validExt;
         AssetExtension = assetExt;
         _records = new Queue<AssetRecord>(kind == AssetKind.Shader ? 16 : 64);
     }
 }
-
+*/
 internal sealed class AssetScanner(AssetManager assetManager)
 {
     public void ScanAll(Queue<AssetRecord>[] result)
@@ -38,64 +38,55 @@ internal sealed class AssetScanner(AssetManager assetManager)
         var modelQueue = result[AssetKind.Model.ToIndex()] = new Queue<AssetRecord>(64);
         var materialQueue = result[AssetKind.Material.ToIndex()] = new Queue<AssetRecord>(64);
 
-        avg1.BeginSample();
-        ScanFiles(AssetKind.Shader, EnginePath.ShaderPath,  shaderQueue);
-        ScanFiles(AssetKind.Texture, EnginePath.TexturePath,  textureQueue);
-        ScanFiles(AssetKind.Model, EnginePath.ModelPath,  modelQueue);
-        ScanFiles(AssetKind.Material, EnginePath.MaterialPath, materialQueue);
-        avg1.EndSample();
-        avg1.ResetAndPrint("Scanner took");
+        ScanFiles(result);
     }
 
-    private AvgFrameTimer avg1;
-
-    private void ScanFiles(
-        AssetKind kind,
-        string directory,
-        Queue<AssetRecord> result)
+    private void ScanFiles(Queue<AssetRecord>[] result)
     {
-        var fileRegistry = assetManager.Files;
-        var relativeDirectory = directory.Substring(directory.LastIndexOf('/') + 1);
+        const SearchOption searchOption = SearchOption.AllDirectories;
 
-        // register files
-        foreach (var filePath in Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories))
+        var files = assetManager.Files;
+        var relativeOffset = EnginePath.AssetBasePath.Length + 1;
+        foreach (var filePath in Directory.EnumerateFiles(EnginePath.AssetBasePath, "*.*", searchOption))
         {
             var fileInfo = new FileInfo(filePath);
             var fileName = fileInfo.Name;
-            if(!FileUtils.TestFileName(kind, fileName, out var isAssetFile))
+            if(!FileUtils.TestFileName(fileName, out _, out var isAssetFile))
                 continue;
 
-            var relativeSpan = filePath.AsSpan();
-            relativeSpan = relativeSpan.Slice(relativeSpan.LastIndexOf(directory) + directory.Length + 1);
-            var relativePath = Path.Join(relativeDirectory, relativeSpan);
+            var relativePath = filePath.AsSpan(relativeOffset).ToString();
 
-            if (fileRegistry.HasFilePath(relativePath)) continue;
+            if (files.HasFilePath(relativePath)) continue;
 
             FileScanInfo scanInfo;
-            if (isAssetFile)
+            if (!isAssetFile)
             {
-                var record = AssetSerializer.LoadRecord(filePath);
-                ExtractFileInfo(0, record.Name, relativePath, fileInfo, out scanInfo);
-                var assetId = assetManager.RegisterScannedAsset(record, in scanInfo);
-                result.Enqueue(record);
-
-                // Dependent files
-                RegisterBindings(assetId, record, directory, relativeDirectory);
+                ExtractFileInfo(0, fileName, relativePath, fileInfo, out scanInfo);
+                files.RegisterUnbound(in scanInfo);
                 continue;
             }
-            ExtractFileInfo(0, fileName, relativePath, fileInfo, out scanInfo);
-            fileRegistry.RegisterUnbound(in scanInfo);
+            
+            var record = AssetSerializer.LoadRecord(filePath);
+            result[record.Kind.ToIndex()].Enqueue(record);
+            ExtractFileInfo(0, record.Name, relativePath, fileInfo, out scanInfo);
+                
+            // Asset file
+            var assetId = assetManager.RegisterScannedAsset(record, in scanInfo);
+                
+            // Dependent files
+            RegisterBindings(assetId, record, filePath, Path.GetDirectoryName(relativePath.AsSpan()));
         }
     }
     
 
-    private void RegisterBindings(AssetId assetId, AssetRecord record, string directory, string relativeDirectory)
+    private void RegisterBindings(AssetId assetId, AssetRecord record, string filePath, ReadOnlySpan<char> relativeDirectory)
     {
         var fileIndex = 1;
-        foreach (var (_, localPath) in record.Files)
+        var path = filePath.AsSpan(0, filePath.LastIndexOf('/'));
+        foreach (var localPath in record.Files.Values)
         {
             var relativePath = Path.Join(relativeDirectory, localPath);
-            var fileInfo = new FileInfo(Path.Join(directory, localPath));
+            var fileInfo = new FileInfo(Path.Join(path, localPath));
             ExtractFileInfo(fileIndex++, fileInfo.Name, relativePath, fileInfo, out var info);
             assetManager.RegisterAssetBinding(assetId, in info);
         }

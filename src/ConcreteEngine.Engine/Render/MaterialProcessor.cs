@@ -8,7 +8,7 @@ namespace ConcreteEngine.Engine.Render;
 internal sealed class MaterialProcessor(RenderProgram renderProgram)
 {
     private readonly MaterialBuffer _materialBuffer = renderProgram.UploadBuffers.Materials;
-    private readonly AssetTypeStore _materialStore = AssetManager.AssetStore.GetTypeStore(AssetKind.Material);
+    private readonly AssetTypeStore _materialStore = AssetStore.GetTypeStore(AssetKind.Material);
 
     internal void Commit()
     {
@@ -24,7 +24,7 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
         var lastProfile = MaterialProfileId.None;
         foreach (var id in _materialStore.GetDirtySpan())
         {
-            var material = AssetManager.AssetStore.GetUnsafe<Material>(id);
+            var material = AssetManager.Assets.GetUnsafe<Material>(id);
             var flag = material.Commit();
             if ((flag & AssetDirtyFlag.State) == 0 && (flag & AssetDirtyFlag.Structure) == 0) continue;
 
@@ -74,7 +74,7 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
             var textureId = source.FallbackTexture;
             if (source.OverrideTexture > 0) textureId = source.OverrideTexture;
             else if (source.AssetTexture.Value > 0)
-                textureId = AssetManager.AssetStore.Get<Texture>(source.AssetTexture).GfxId;
+                textureId = AssetManager.Assets.Get<Texture>(source.AssetTexture).GfxId;
 
             slots[i] = new TextureBinding(textureId, source.Usage, (byte)i);
         }

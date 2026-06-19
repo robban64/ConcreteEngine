@@ -10,7 +10,7 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 public sealed class AssetManager
 {
-    public static AssetStore AssetStore
+    public static AssetStore Assets
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => Instance.Store;
@@ -48,7 +48,7 @@ public sealed class AssetManager
     {
         ArgumentOutOfRangeException.ThrowIfEqual(newName, asset.Name);
         AssetNameUtils.ValidateAssetName(newName);
-        Store.GetTypeStore(asset.Kind).Rename(asset.Name, newName);
+        AssetStore.GetTypeStore(asset.Kind).Rename(asset.Name, newName);
     }
 
     internal AssetId RegisterInMemoryAsset(Guid gid, AssetKind kind, string name)
@@ -66,14 +66,13 @@ public sealed class AssetManager
         ArgumentException.ThrowIfNullOrEmpty(record.Name);
         ArgumentOutOfRangeException.ThrowIfEqual(record.GId, Guid.Empty);
 
-        if (Store.GetTypeStore(record.Kind).HasName(record.Name))
+        if (AssetStore.GetTypeStore(record.Kind).HasName(record.Name))
             Throwers.InvalidArgument($"Asset name {record.Name} already registered");
 
         var assetId = Store.AllocateSlot(record.GId);
         Files.Register(assetId, record.Files.Count, in fileInfo);
         return assetId;
     }
-
 
     internal void RegisterAssetBinding(AssetId assetId, in FileScanInfo scanInfo)
     {

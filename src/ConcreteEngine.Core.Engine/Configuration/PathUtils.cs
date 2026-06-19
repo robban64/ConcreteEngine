@@ -21,4 +21,6 @@ public static class PathUtils
 
         return bytes.Writer().Append(chars.Slice(0, written)).End();
     }
+    
+
 }

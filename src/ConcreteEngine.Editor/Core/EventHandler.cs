@@ -89,7 +89,7 @@ internal static class EventHandler
     {
         if (evt.Rename is { } name)
         {
-            var asset = AssetManager.AssetStore.Get<AssetObject>(evt.Asset);
+            var asset = AssetManager.Assets.Get<AssetObject>(evt.Asset);
             if (asset.Rename(name))
                 AssetListPanel.RenamedAsset = asset.Id;
         }

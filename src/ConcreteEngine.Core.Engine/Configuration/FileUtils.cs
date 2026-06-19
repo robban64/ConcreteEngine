@@ -33,12 +33,24 @@ public static class FileUtils
     };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TestFileName(AssetKind kind, ReadOnlySpan<char> fileName, out bool isAssetFile)
+    public static bool TestFileName(ReadOnlySpan<char> fileName, out AssetKind kind, out bool isAssetFile)
     {
+        kind = AssetKind.Unknown;
+
         var ext = Path.GetExtension(fileName);
         if (fileName.StartsWith('.') || ext.IsEmpty) return isAssetFile = false;
+
         isAssetFile = ext is ".asset";
-        return isAssetFile || GetValidExtensions(kind).Contains(ext, StringComparison.OrdinalIgnoreCase);
+        if (isAssetFile) return true;
+
+        if (ValidShaderExtension.Contains(ext, StringComparison.OrdinalIgnoreCase)) kind = AssetKind.Shader;
+        else if (ValidModelExtension.Contains(ext, StringComparison.OrdinalIgnoreCase)) kind = AssetKind.Model;
+        else if (ValidTextureExtension.Contains(ext, StringComparison.OrdinalIgnoreCase)) kind = AssetKind.Texture;
+        else Throwers.Unreachable(nameof(fileName));
+        return true;
+        //if( ValidMaterialExtension.Contains(ext, StringComparison.OrdinalIgnoreCase))kind = AssetKind.Material;
+
+        //return isAssetFile || GetValidExtensions(kind).Contains(ext, StringComparison.OrdinalIgnoreCase);
     }
 
     public static string ComputeSha256Hex(string path)

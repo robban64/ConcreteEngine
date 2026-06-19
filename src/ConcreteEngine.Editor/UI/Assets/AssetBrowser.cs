@@ -150,49 +150,6 @@ internal sealed class AssetBrowser
 
     }
 
-    public void BuildFullDirectory2()
-    {
-        var fileRegistry = AssetManager.FileRegistry;
-
-        var addedFiles = new HashSet<int>(fileRegistry.Count);
-
-        for (var i = 1; i < EnumCache<AssetKind>.Count; i++)
-            AddAssetFilesFor((AssetKind)i, fileRegistry, addedFiles);
-
-        foreach (var fileId in fileRegistry.GetUnboundFileIdSpan())
-        {
-            var file = fileRegistry.Get(fileId);
-            AddFile(file);
-        }
-
-        return;
-
-        void AddAssetFilesFor(AssetKind kind, AssetFileRegistry provider, HashSet<int> filesAdded)
-        {
-            var store = AssetManager.AssetStore.GetTypeStore(kind);
-            
-            foreach (var assetId in store.AsSpan())
-            {
-                var file = provider.GetAssetRootFile(assetId);
-                if (!filesAdded.Add(file.Id) && file.Storage == AssetStorage.FileSystem)
-                    Throwers.InvalidOperation();
-                AddFile(file);
-            }
-
-            foreach (var assetId in store.AsSpan())
-            {
-                var fileIds = provider.GetFileBindings(assetId);
-                if (fileIds.Length <= 1) continue;
-                foreach (var fileId in fileIds)
-                {
-                    if (!filesAdded.Add(fileId)) continue;
-                    var file = provider.Get(fileId);
-                    AddFile(file);
-                }
-            }
-        }
-    }
-
     private void AddFile(AssetFile file)
     {
         ArgumentNullException.ThrowIfNull(file);
@@ -209,9 +166,16 @@ internal sealed class AssetBrowser
             var index = path.IndexOf('/');
             var folder = index > 0 ? path.Slice(0, index) : path;
 
+            
             var foundChild = node.FindChild(folder);
             if (foundChild is null)
             {
+                if(index < 0 && folder.SequenceEqual(node.FolderName))
+                {
+                    node.FileIds.Add(file.Id);
+                    return;
+                }
+
                 foundChild = new AssetDirectoryNode(folder.ToString());
                 node.Children.Add(foundChild);
             }

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets.Utils;
@@ -8,15 +9,28 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 public sealed partial class AssetStore
 {
-    public static int StoreCount => EnumCache<AssetKind>.Count - 1;
+
+    private static readonly Func<string, Type, bool> NameExistsDel =
+        static (name, type) => !GetTypeStore(AssetKindUtils.ToAssetKind(type)).HasName(name);
 
     private static class TypeStore<T> where T : AssetObject
     {
         public static readonly AssetTypeStore Store = new(AssetKindUtils.ToAssetKind(typeof(T)));
     }
 
-    private static readonly Func<string, Type, bool> NameExistsDel =
-        static (name, type) => !AssetManager.AssetStore.GetTypeStore(AssetKindUtils.ToAssetKind(type)).HasName(name);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AssetTypeStore GetTypeStore<T>() where T : AssetObject => TypeStore<T>.Store;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AssetTypeStore GetTypeStore(AssetKind kind) => kind switch
+    {
+        AssetKind.Shader => TypeStore<Shader>.Store,
+        AssetKind.Model => TypeStore<Model>.Store,
+        AssetKind.Texture => TypeStore<Texture>.Store,
+        AssetKind.Material => TypeStore<Material>.Store,
+        _ => Throwers.Unreachable<AssetTypeStore>(nameof(kind))
+    };
+
 
 
     public static class Core

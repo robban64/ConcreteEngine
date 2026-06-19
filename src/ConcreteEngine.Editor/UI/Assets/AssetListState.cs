@@ -176,7 +176,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
             var fileId = currentNode.FileIds[i];
 
             var name = fileRegistry.TryGetByRootFileId(fileId, out var assetId)
-                ? AssetManager.AssetStore.Get<AssetObject>(assetId).Name
+                ? AssetManager.Assets.Get<AssetObject>(assetId).Name
                 : fileRegistry.Get(fileId).LogicalName;
 
             var status = fileRegistry.GetFileBindingStatus(fileId);

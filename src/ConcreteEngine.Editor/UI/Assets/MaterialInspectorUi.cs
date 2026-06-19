@@ -104,7 +104,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
 
             ImGui.TableNextColumn();
             if (binding.AssetTexture.IsValid())
-                DrawAssetSlot(asset, i, AssetManager.AssetStore.Get<Texture>(binding.AssetTexture), sw);
+                DrawAssetSlot(asset, i, AssetManager.Assets.Get<Texture>(binding.AssetTexture), sw);
             else
                 DrawAssetSlotEmptyTexture(asset, i, binding, sw);
 
@@ -167,7 +167,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         if (!payload.IsNull && payload.IsDelivery())
         {
             var droppedId = *(AssetId*)payload.Data;
-            if (droppedId.Value > 0 && AssetManager.AssetStore.TryGet<Texture>(droppedId, out var droppedTex))
+            if (droppedId.Value > 0 && AssetManager.Assets.TryGet<Texture>(droppedId, out var droppedTex))
                 material.SetTextureSlot(slot, droppedTex);
         }
 

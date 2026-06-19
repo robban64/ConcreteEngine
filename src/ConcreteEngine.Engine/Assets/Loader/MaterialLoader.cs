@@ -14,7 +14,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
     internal MaterialLoader()
     {
-        _store = AssetManager.AssetStore;
+        _store = AssetManager.Assets;
     }
 
 

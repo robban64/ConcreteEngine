@@ -14,14 +14,14 @@ public static class FileUtils
     private const string ValidShaderExtension = ".glsl";
     private const string ValidMaterialExtension = ".mat";
 
-    public static readonly string[] ValidTextureExt = [".glb;.gltf;.fbx;.tga;.bmp", "", ".jpeg", ".tga", ".bmp"];
-    public static readonly string[] ValidModelExt = [".glb", ".gltf", ".fbx", ".obj"];
-    public static readonly string[] ValidShaderExt = [".glsl"];
+    //public static readonly string[] ValidTextureExt = [".glb;.gltf;.fbx;.tga;.bmp", "", ".jpeg", ".tga", ".bmp"];
+    //public static readonly string[] ValidModelExt = [".glb", ".gltf", ".fbx", ".obj"];
+    //public static readonly string[] ValidShaderExt = [".glsl"];
 
-    public static readonly byte[] PngHeader = [0x89, 0x50, 0x4E, 0x47];
-    public static readonly byte[] JpgHeader = [0xFF, 0xD8, 0xFF];
-    public static readonly byte[] FbxHeader = [0x4B, 0x61, 0x79, 0x64];
-    public static readonly byte[] GltfHeader = [0x67, 0x6C, 0x54, 0x46];
+    private static readonly byte[] PngHeader = [0x89, 0x50, 0x4E, 0x47];
+    private static readonly byte[] JpgHeader = [0xFF, 0xD8, 0xFF];
+    private static readonly byte[] FbxHeader = [0x4B, 0x61, 0x79, 0x64];
+    private static readonly byte[] GltfHeader = [0x67, 0x6C, 0x54, 0x46];
 
     public static string GetValidExtensions(AssetKind kind) => kind switch
     {
@@ -48,9 +48,19 @@ public static class FileUtils
         else if (ValidTextureExtension.Contains(ext, StringComparison.OrdinalIgnoreCase)) kind = AssetKind.Texture;
         else Throwers.Unreachable(nameof(fileName));
         return true;
-        //if( ValidMaterialExtension.Contains(ext, StringComparison.OrdinalIgnoreCase))kind = AssetKind.Material;
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TestFileName2(ReadOnlySpan<char> fileName, out AssetKind kind)
+    {
+        kind = AssetKind.Unknown;
+        var ext = Path.GetExtension(fileName);
+        if (fileName.StartsWith('.') || ext.IsEmpty || ext is ".asset") return false;
 
-        //return isAssetFile || GetValidExtensions(kind).Contains(ext, StringComparison.OrdinalIgnoreCase);
+        if (ValidShaderExtension.Contains(ext, StringComparison.OrdinalIgnoreCase)) kind = AssetKind.Shader;
+        else if (ValidModelExtension.Contains(ext, StringComparison.OrdinalIgnoreCase)) kind = AssetKind.Model;
+        else if (ValidTextureExtension.Contains(ext, StringComparison.OrdinalIgnoreCase)) kind = AssetKind.Texture;
+        else return false;
+        return true;
     }
 
     public static string ComputeSha256Hex(string path)

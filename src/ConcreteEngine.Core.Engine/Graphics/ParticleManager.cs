@@ -56,7 +56,7 @@ internal sealed class ParticleManager : IDisposable
     public ParticleEmitter Get(Id16<ParticleEmitter> emitterId)
     {
         if (!_emitters.TryGet(emitterId.Index(), out var emitter))
-            Throwers.NotFoundBy("Missing emitter emitterId", emitterId);
+            Throwers.NotFoundBy("Emitter", emitterId);
 
         return emitter;
     }

@@ -49,9 +49,10 @@ internal sealed class AssetLoader
 
     private LoaderContext MakeContext(AssetRecord record, string path, bool isHotReload = false)
     {
-        if (!_store.TryGetIdByGuid(record.GId, out var asset))
+        if (!_store.TryGetIdByGuid(record.GId, out var assetId))
             throw new InvalidOperationException($"AssetRecord '{record.Name}' no registered Guid");
-        return new LoaderContext(asset, _assetManager);
+        var filePath = _assetManager.GetAssetRootFile(assetId).RelativePath;
+        return new LoaderContext(assetId, _assetManager,filePath);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

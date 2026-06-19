@@ -39,7 +39,7 @@ public static class Throwers
 
     [DoesNotReturn]
     public static void NotFoundBy<T>(string message, T handle) =>
-        throw new InvalidOperationException($"{message}:  {handle}");
+        throw new InvalidOperationException($"{message} not found:  {handle}");
 
     [DoesNotReturn]
     public static void InvalidHandle<T>(T handle) =>

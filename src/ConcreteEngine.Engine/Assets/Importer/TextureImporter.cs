@@ -12,19 +12,6 @@ namespace ConcreteEngine.Engine.Assets.Importer;
 internal static unsafe class TextureImporter
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static ReadOnlyMemory<byte> LoadInMemory(string filePath, TextureRecord record)
-    {
-        var path = Path.Join(filePath, AssetRecord.GetDefaultFilename(record));
-        if (!File.Exists(path)) throw new FileNotFoundException("File not found.", path);
-
-        using var stream = File.OpenRead(path);
-        var image = ImageResult.FromStream(stream, GetColorComponent(record.PixelFormat));
-        var size = new Size2D(image.Width, image.Height);
-        ValidateImageResult(image);
-        return image.Data;
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public static NativeArray<byte> ImportUnmanagedTexture(byte* data, int length,
         TexturePixelFormat format, out Size2D size)
     {
@@ -44,13 +31,10 @@ internal static unsafe class TextureImporter
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static NativeArray<byte> LoadTexture(TextureRecord record, string path, string filename, out Size2D size)
+    public static NativeArray<byte> LoadTexture(TextureRecord record, string filePath, out Size2D size)
     {
-        path = Path.Join(path, filename);
-        if (!File.Exists(path)) throw new FileNotFoundException("File not found.", path);
-
         int x, y, comp;
-        using var stream = File.OpenRead(path);
+        using var stream = File.OpenRead(filePath);
         var ctx = new StbImage.stbi__context(stream);
         var imageData = StbImage.stbi__load_and_postprocess_8bit(ctx, &x, &y, &comp, (int)GetColorComponent(record.PixelFormat));
 

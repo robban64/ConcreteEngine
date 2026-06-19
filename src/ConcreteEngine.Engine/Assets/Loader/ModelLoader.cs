@@ -52,10 +52,10 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
         
         allocator.Clear();
 
-        var filename = record.Files.First().Value;
-        
+        var filePath = ctx.GetFile(1).RelativePath;
+
         // load scene
-        var modelContext = importer.StartImport(record.Name, EnginePath.ModelPath, filename);
+        var modelContext = importer.StartImport(record.Name, filePath);
 
         AllocMeshBlocks(modelContext.MeshContext);
 

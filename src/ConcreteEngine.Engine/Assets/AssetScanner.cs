@@ -1,3 +1,4 @@
+using System.IO.Enumeration;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
@@ -37,44 +38,122 @@ internal sealed class AssetScanner(AssetManager assetManager)
         var textureQueue = result[AssetKind.Texture.ToIndex()] = new Queue<AssetRecord>(64);
         var modelQueue = result[AssetKind.Model.ToIndex()] = new Queue<AssetRecord>(64);
         var materialQueue = result[AssetKind.Material.ToIndex()] = new Queue<AssetRecord>(64);
+        
+        avg1.BeginSample();
+        ScanAllFiles();
+        ScanAllAssets(result);
+        //ScanFiles(result);
+        avg1.EndSample();
+        avg1.ResetAndPrint("Scanner took");
 
-        ScanFiles(result);
+    }
+    private AvgFrameTimer avg1;
+
+    private void ScanAllFiles()
+    {
+        var enumeration = new FileSystemEnumerable<FileScanInfo>(
+            directory: EnginePath.AssetBasePath,
+            transform: Transform, 
+            options: new EnumerationOptions() { RecurseSubdirectories = true, }
+            )
+        {
+            ShouldIncludePredicate = static (ref entry) =>
+            {
+                if(entry.IsDirectory || entry.IsHidden) return false;
+                if (AssetManager.FileRegistry.HasFilePath(entry.ToSpecifiedFullPath())) return false;
+                if(!FileUtils.TestFileName2(entry.FileName, out var kind) || kind == AssetKind.Unknown) return false;
+                return true;
+            },
+        };
+
+        foreach (var scanInfo in enumeration)
+        {
+            AssetManager.FileRegistry.RegisterFile(FileBinding.UnboundFile, scanInfo.Name, in scanInfo);
+        }
+
+        return;
+        static FileScanInfo Transform(ref FileSystemEntry entry)
+        {
+            return new FileScanInfo(0, entry.FileName.ToString(), entry.ToSpecifiedFullPath(), entry.Length, entry.LastWriteTimeUtc.DateTime);
+        }
+    }
+    
+    private void ScanAllAssets(Queue<AssetRecord>[] result)
+    {
+        var enumeration = new FileSystemEnumerable<FileScanInfo>(
+            directory: EnginePath.AssetBasePath,
+            transform: Transform, 
+            options: new EnumerationOptions() { RecurseSubdirectories = true, }
+        )
+        {
+            ShouldIncludePredicate = static (ref entry) =>
+            {
+                if(entry.IsDirectory || entry.IsHidden || Path.GetExtension(entry.FileName) is not ".asset") 
+                    return false;
+                
+                return !AssetManager.FileRegistry.HasFilePath(entry.ToSpecifiedFullPath());
+            },
+        };
+        
+        foreach (var scanInfo in enumeration)
+        {
+            var record = AssetSerializer.LoadRecord(scanInfo.RelativePath);
+            var assetId = AssetManager.Instance.RegisterScannedAsset(record, in scanInfo);
+            result[record.Kind.ToIndex()].Enqueue(record);
+
+            var fileIndex = 1;
+            var path = scanInfo.RelativePath.AsSpan(0, scanInfo.RelativePath.LastIndexOf('/'));
+            foreach (var localPath in record.Files.Values)
+            {
+                var filePath = Path.Join(path, localPath);
+                assetManager.RegisterAssetBinding(fileIndex++, assetId, record.Kind, filePath);
+            }
+        }
+
+        return;
+        static FileScanInfo Transform(ref FileSystemEntry entry)
+        {
+            var filePath = entry.ToSpecifiedFullPath();
+            return new FileScanInfo(0, string.Empty, filePath, entry.Length, entry.LastWriteTimeUtc.DateTime);
+        }
     }
 
+/*
     private void ScanFiles(Queue<AssetRecord>[] result)
     {
         const SearchOption searchOption = SearchOption.AllDirectories;
 
-        var files = assetManager.Files;
-        var relativeOffset = EnginePath.AssetBasePath.Length + 1;
         foreach (var filePath in Directory.EnumerateFiles(EnginePath.AssetBasePath, "*.*", searchOption))
         {
             var fileInfo = new FileInfo(filePath);
             var fileName = fileInfo.Name;
-            if(!FileUtils.TestFileName(fileName, out _, out var isAssetFile))
+            if(!FileUtils.TestFileName2(fileName, out AssetKind kind))
                 continue;
 
-            var relativePath = filePath.AsSpan(relativeOffset).ToString();
-
-            if (files.HasFilePath(relativePath)) continue;
-
-            FileScanInfo scanInfo;
-            if (!isAssetFile)
-            {
-                ExtractFileInfo(0, fileName, relativePath, fileInfo, out scanInfo);
-                files.RegisterFile(FileBinding.UnboundFile, in scanInfo);
-                continue;
-            }
+            if (AssetManager.FileRegistry.HasFilePath(filePath)) continue;
             
+            ExtractFileInfo(0, fileName, filePath, fileInfo, out var scanInfo);
+            AssetManager.FileRegistry.RegisterFile(FileBinding.UnboundFile, in scanInfo);
+        }
+        
+        foreach (var filePath in Directory.EnumerateFiles(EnginePath.AssetBasePath, "*.asset", searchOption))
+        {
+            var fileInfo = new FileInfo(filePath);
+            var fileName = fileInfo.Name;
+            if(!FileUtils.TestFileName(fileName, out _, out _))
+                continue;
+
+            if (AssetManager.FileRegistry.HasFilePath(filePath)) continue;
+
             var record = AssetSerializer.LoadRecord(filePath);
             result[record.Kind.ToIndex()].Enqueue(record);
-            ExtractFileInfo(0, record.Name, relativePath, fileInfo, out scanInfo);
                 
             // Asset file
+            ExtractFileInfo(0, record.Name, filePath, fileInfo, out var scanInfo);
             var assetId = assetManager.RegisterScannedAsset(record, in scanInfo);
                 
             // Dependent files
-            RegisterBindings(assetId, record, filePath, Path.GetDirectoryName(relativePath.AsSpan()));
+            RegisterBindings(assetId, record, filePath, Path.GetDirectoryName(filePath.AsSpan()));
         }
     }
     
@@ -104,5 +183,5 @@ internal sealed class AssetScanner(AssetManager assetManager)
         else
             scanInfo = new FileScanInfo((byte)index, name, relativePath, info.Length, info.LastWriteTime);
     }
-
+*/
 }

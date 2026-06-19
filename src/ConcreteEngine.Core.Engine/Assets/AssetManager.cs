@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Assets.Utils;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
@@ -45,7 +46,7 @@ public sealed class AssetManager
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetFile GetAssetRootFile(AssetId id) => Files.Get(Store.GetFileBindings(id)[0]);
+    public AssetFile GetAssetRootFile(AssetId id) => Files.Get(Store.GetAssetBinding(id, 0));
 
     public void Rename(AssetObject asset, string newName)
     {
@@ -56,11 +57,8 @@ public sealed class AssetManager
 
     internal AssetId RegisterInMemoryAsset(Guid gid, AssetKind kind, string name)
     {
-        ArgumentException.ThrowIfNullOrEmpty(name);
-        ArgumentOutOfRangeException.ThrowIfEqual(gid, Guid.Empty);
-
         var assetId = Store.Register(gid, 0);
-        var file = Files.RegisterRoot(assetId, new FileScanInfo(0, name, name));
+        var file = Files.RegisterRoot(assetId, name, new FileScanInfo(0, string.Empty, name));
         Store.SetAssetBinding(assetId, file.Id, 0);
         return assetId;
     }
@@ -68,28 +66,26 @@ public sealed class AssetManager
     internal AssetId RegisterScannedAsset(AssetRecord record, in FileScanInfo fileInfo)
     {
         ArgumentException.ThrowIfNullOrEmpty(record.Name);
-        ArgumentOutOfRangeException.ThrowIfEqual(record.GId, Guid.Empty);
 
-        if (AssetStore.GetTypeStore(record.Kind).HasName(record.Name))
+        if (Store.HasName(record.Kind, record.Name))
             Throwers.InvalidArgument($"Asset name {record.Name} already registered");
 
         var assetId = Store.Register(record.GId, record.Files.Count);
-        var file = Files.RegisterRoot(assetId, in fileInfo);
-        Store.SetAssetBinding(assetId, file.Id, 0);
+        var file = Files.RegisterRoot(assetId, record.Name, in fileInfo);
+        Assets.SetAssetBinding(assetId, file.Id, 0); // root
         return assetId;
     }
 
-    internal void RegisterAssetBinding(AssetId assetId, in FileScanInfo scanInfo)
+    internal void RegisterAssetBinding(int fileIndex, AssetId assetId, AssetKind kind, string relativePath)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Id);
+        if (!Assets.HasBinding(assetId)) Throwers.NotFoundBy(nameof(AssetId), assetId);
+        if (kind == AssetKind.Shader) return;
+        
+        if (!Files.TryGetFileByPath(relativePath, out var file))
+            Throwers.InvalidArgument(nameof(relativePath),$"Invalid file path {relativePath}");
 
-        if (Store.Has(assetId))
-            Throwers.InvalidArgument($"AssetId {assetId} not found for register scanned file {scanInfo.Name}");
-
-        if (!Files.TryGetFileByPath(scanInfo.RelativePath, out var fileSpec))
-            fileSpec = Files.RegisterFile(FileBinding.DependentFile,in scanInfo);
-
-        Store.SetAssetBinding(assetId, fileSpec.Id, scanInfo.FileIndex);
+        file.Binding = FileBinding.DependentFile;
+        Assets.SetAssetBinding(assetId, file.Id, fileIndex);
     }
 
 
@@ -130,6 +126,6 @@ public sealed class AssetManager
     }
     
     public static AssetBindingEnumerator GetAssetBindingsEnumerator(AssetId assetId) 
-        => new(Assets.GetFileBindings(assetId), FileRegistry);
+        => new(Assets.GetAllAssetBindings(assetId), FileRegistry);
 
 }

@@ -12,6 +12,9 @@ namespace ConcreteEngine.Core.Engine.Assets.Descriptors;
 [JsonDerivedType(typeof(MaterialRecord), typeDiscriminator: nameof(AssetKind.Material))]
 public abstract class AssetRecord
 {
+    [JsonIgnore]
+    public AssetId AttachedAssetId;
+    
     public required Guid GId { get; init; }
 
     public string Name { get; init; } = null!;

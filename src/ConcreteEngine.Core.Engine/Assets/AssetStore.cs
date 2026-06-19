@@ -18,7 +18,6 @@ public sealed partial class AssetStore
 
     private AssetObject?[] _assets = new AssetObject?[DefaultCap];
     private AssetFileId[]?[] _bindings = new AssetFileId[DefaultCap][];
-    //private Dictionary<AssetId, AssetFileId[]> _bindings;
 
     private readonly AssetTypeStore[] _storeCollection = new AssetTypeStore[AssetKindUtils.AssetTypeCount];
     private readonly Dictionary<Guid, AssetId> _byGid = new(DefaultCap);
@@ -54,58 +53,9 @@ public sealed partial class AssetStore
         GetTypeStore(asset.Kind).Rename(asset.Name, newName);
     }
 
-    internal AssetId AllocateSlot(Guid gid)
-    {
-        var freeIndex = SlotHelper.NextSlot(_free, Count);
-        if (freeIndex >= 0) return new AssetId(freeIndex + 1, 1);
 
-        if (SlotHelper.EnsureCapacity(ref _assets, Count, 1, out var oldSize))
-        {
-            Array.Resize(ref _bindings, _assets.Length);
-            Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetStore), oldSize, _assets.Length));
-        }
-
-        var assetId = new AssetId(++Count, 1);
-        _byGid.Add(gid, assetId);
-        return assetId;
-    }
-
-    internal void SetAssetBinding(AssetId assetId, AssetFileId fileId, int fileIndex)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Id);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fileId.Id);
-
-        var fileBinding = _bindings[assetId.Index()]!;
-        if (fileBinding[fileIndex].Id > 0)
-            Throwers.InvalidArgument($"File {fileIndex}:{fileId} already set for asset {assetId}");
-
-        fileBinding[fileIndex] = fileId;
-    }
-
-    internal AssetId Register(Guid gid, int fileCount)
-    {
-        var assetId = AllocateSlot(gid);
-        _bindings[assetId.Index()] = new AssetFileId[fileCount + 1];
-        return assetId;
-    }
-
-    public void AddAsset<TAsset>(TAsset asset) where TAsset : AssetObject
-    {
-        ArgumentNullException.ThrowIfNull(asset);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Id);
-        ArgumentOutOfRangeException.ThrowIfEqual(asset.GId, Guid.Empty);
-
-        if (Has(asset.Id))
-            Throwers.InvalidArgument(nameof(asset), $"Asset '{asset.Name}:{asset.Id}' is already registered.");
-
-        if (TypeStore<TAsset>.Store.HasName(asset.Name))
-            asset.Name = AssetNameUtils.IncrementName(asset.Name, typeof(TAsset), NameExistsDel);
-
-        _assets[asset.Id.Index()] = asset;
-        TypeStore<TAsset>.Store.Add(asset);
-        MarkDirty(asset);
-    }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool HasName(AssetKind kind, string name) => GetTypeStore(kind).HasName(name);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(AssetId id)
@@ -114,30 +64,6 @@ public sealed partial class AssetStore
         return (uint)index < (uint)_assets.Length && _assets[index]?.Id == id;
     }
 
-    public bool HasBinding(AssetId id)
-    {
-        var index = id.Index();
-        return (uint)index < (uint)_bindings.Length && _bindings[index] != null;
-    }
-    public ReadOnlySpan<AssetFileId> GetFileBindings(AssetId id)
-    {
-        return _bindings[id.Index()] ?? throw new ArgumentException( $"Bindings not found for {id}");
-    }
-
-    public bool TryGetFileBindings(AssetId id, out ReadOnlySpan<AssetFileId> bindings)
-    {
-        var index = id.Index();
-        if ((uint)index >= (uint)_bindings.Length || _bindings[index] is not { } fileBinding)
-        {
-            bindings = default;
-            return false;
-        }
-
-        bindings = fileBinding;
-        return true;
-    }
-
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal T GetUnsafe<T>(int id) where T : AssetObject => (T)_assets[id - 1]!;
 
@@ -145,20 +71,21 @@ public sealed partial class AssetStore
     public T Get<T>(AssetId id) where T : AssetObject
     {
         if (_assets[id.Index()] is T tAsset && tAsset.Id == id) return tAsset;
-        Throwers.InvalidOperation("Invalid asset type");
+        Throwers.NotFoundBy(nameof(T), id);
         return null;
     }
 
     public T GetByName<T>(string name) where T : AssetObject
     {
         if (TryGetByName<T>(name, out var value)) return value;
-        return Throwers.InvalidArgument<T>(name);
+         Throwers.NotFoundBy(nameof(T),name);
+         return null;
     }
 
     public T GetByGuid<T>(Guid gid) where T : AssetObject
     {
         if (TryGetByGuid<T>(gid, out var value)) return value;
-        Throwers.KeyNotFound(gid);
+        Throwers.NotFoundBy(nameof(T), gid);
         return null;
     }
 
@@ -193,10 +120,101 @@ public sealed partial class AssetStore
         return asset != null;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetIdByGuid(Guid gid, out AssetId id) => _byGid.TryGetValue(gid, out id);
+
+    //
+    public bool HasBinding(AssetId id)
+    {
+        var index = id.Index();
+        return (uint)index < (uint)_bindings.Length && _bindings[index] != null;
+    }
     
+    internal void SetAssetBinding(AssetId assetId, AssetFileId fileId, int fileIndex)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Id);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fileId.Id);
+
+        var fileBinding = _bindings[assetId.Index()]!;
+        if (fileBinding[fileIndex].Id > 0)
+            Throwers.InvalidArgument($"File {fileIndex}:{fileId} already set for asset {assetId}");
+
+        fileBinding[fileIndex] = fileId;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public AssetFileId GetAssetBinding(AssetId id, int fileIndex)
+    {
+        var bindings = _bindings[id.Index()];
+        if(bindings is null || (uint)fileIndex >= (uint)bindings.Length) Throwers.InvalidArgument(nameof(id));
+        var fileId = bindings[fileIndex];
+        if (!fileId.IsValid()) Throwers.InvalidArgument(nameof(fileIndex));
+        return fileId;
+    }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<AssetFileId> GetAllAssetBindings(AssetId id)
+        => _bindings[id.Index()] ?? throw new ArgumentException($"Bindings not found for {id}");
+
+    public bool TryGetFileBindings(AssetId id, out ReadOnlySpan<AssetFileId> bindings)
+    {
+        var index = id.Index();
+        if ((uint)index >= (uint)_bindings.Length || _bindings[index] is not { } fileBinding)
+        {
+            bindings = default;
+            return false;
+        }
+
+        bindings = fileBinding;
+        return true;
+    }
+    
+    //
+
+    public void AddAsset<TAsset>(TAsset asset) where TAsset : AssetObject
+    {
+        ArgumentNullException.ThrowIfNull(asset);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Id);
+        ArgumentOutOfRangeException.ThrowIfEqual(asset.GId, Guid.Empty);
+
+        if (Has(asset.Id))
+            Throwers.InvalidArgument(nameof(asset), $"Asset '{asset.Name}:{asset.Id}' is already registered.");
+
+        if (TypeStore<TAsset>.Store.HasName(asset.Name))
+            asset.Name = AssetNameUtils.IncrementName(asset.Name, typeof(TAsset), NameExistsDel);
+
+        _assets[asset.Id.Index()] = asset;
+        TypeStore<TAsset>.Store.Add(asset);
+        MarkDirty(asset);
+    }
+
+    internal AssetId Register(Guid gid, int fileCount)
+    {
+        ArgumentOutOfRangeException.ThrowIfEqual(gid, Guid.Empty);
+        ArgumentOutOfRangeException.ThrowIfNegative(fileCount);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(fileCount, 16);
+
+        var assetId = AllocateSlot(gid);
+        _bindings[assetId.Index()] = new AssetFileId[fileCount + 1];
+        return assetId;
+    }
+    private AssetId AllocateSlot(Guid gid)
+    {
+        var freeIndex = SlotHelper.NextSlot(_free, Count);
+        if (freeIndex >= 0) return new AssetId(freeIndex + 1, 1);
+
+        if (SlotHelper.EnsureCapacity(ref _assets, Count, 1, out var oldSize))
+        {
+            Array.Resize(ref _bindings, _assets.Length);
+            Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetStore), oldSize, _assets.Length));
+        }
+
+        var assetId = new AssetId(++Count, 1);
+        _byGid.Add(gid, assetId);
+        return assetId;
+    }
+    
+    //
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetEnumerator GetAssetEnumerator(AssetKind kind) => new(GetTypeStore(kind).AsSpan(), _assets.AsSpan());
 
@@ -204,7 +222,7 @@ public sealed partial class AssetStore
     public AssetEnumerator<T> GetAssetEnumerator<T>() where T : AssetObject =>
         new(TypeStore<T>.Store.AsSpan(), _assets.AsSpan());
 
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void EnsureStoreCapacity(Queue<AssetRecord>[] queues)
     {

@@ -1,5 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
@@ -10,6 +12,7 @@ using static ConcreteEngine.Engine.Assets.ImporterAssimp.AssimpUtils;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 using AssimpNode = Silk.NET.Assimp.Node;
 using AssimpScene = Silk.NET.Assimp.Scene;
+using Buffer = Silk.NET.OpenGL.Buffer;
 
 namespace ConcreteEngine.Engine.Assets.ImporterAssimp;
 
@@ -48,20 +51,21 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private AssimpScene* LoadScene(string path, string filename)
+    private AssimpScene* LoadScene(string filePath)
     {
-        var buffer = stackalloc char[PathUtils.JoinPathLength];
-        var bytes = PathUtils.JoinPath(buffer, path, filename);
-        return _assimp.ImportFile(bytes, (uint)AssimpFlags);
+        const int length = PathUtils.MaxPathLength * 2;
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        var buffer = stackalloc byte[length];
+        int written = Encoding.UTF8.GetBytes(filePath, MemoryMarshal.CreateSpan(ref *buffer, length));
+        buffer[written] = 0;
+        return _assimp.ImportFile(buffer, (uint)AssimpFlags);
     }
 
-    public ModelImportContext StartImport(string name, string path, string filename)
+    public ModelImportContext StartImport(string name, string filePath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        ArgumentException.ThrowIfNullOrWhiteSpace(filename);
         
-        var scene = LoadScene(path, filename);
+        var scene = LoadScene(filePath);
         
         if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
             Throwers.InvalidOperation(_assimp.GetErrorStringS());
@@ -69,7 +73,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         if ((int)scene->MNumMeshes == 0)
             Throwers.InvalidOperation($"Model {name} contains no meshes");
 
-        _context.StartContext(name, filename);
+        _context.StartContext(name, filePath);
 
         _scene = scene;
 

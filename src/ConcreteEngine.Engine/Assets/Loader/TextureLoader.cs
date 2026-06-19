@@ -41,11 +41,12 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
         if (record.TextureKind == TextureKind.CubeMap)
             return LoadCubeMap(record, ctx);
 
-        var filename = AssetRecord.GetDefaultFilename(record);
+        //var filename = AssetRecord.GetDefaultFilename(record);
+        var filePath = ctx.GetFile(1).RelativePath;
         var textureData = NativeArray<byte>.MakeNull();
         try
         {
-            textureData = TextureImporter.LoadTexture(record, EnginePath.TexturePath, filename, out var size);
+            textureData = TextureImporter.LoadTexture(record,  filePath, out var size);
             var props = TextureImporter.CreateTextureProps(record);
             
             var textureId = gfx.CreateTexture2D(size, in props, textureData.AsSpan());
@@ -78,8 +79,9 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
         Size2D size = default;
         for (var i = 0; i < 6; i++)
         {
-            var filename = record.Files[$"face:{i}"];
-            using var data = TextureImporter.LoadTexture(record, EnginePath.TexturePath, filename, out var faceSize);
+            var filePath = ctx.GetFile(i + 1).RelativePath;
+
+            using var data = TextureImporter.LoadTexture(record, filePath, out var faceSize);
             if (textureId == default)
             {
                 var props = TextureImporter.CreateTextureProps(record);

@@ -43,7 +43,9 @@ public sealed class AssetFileRegistry
     public AssetFile Get(AssetFileId id)
     {
         if (_files[id.Index()] is { } file && file.Id == id) return file;
-        return Throwers.InvalidArgument<AssetFile>($"File {id} not found", nameof(id));
+        Throwers.NotFoundBy(nameof(AssetFile), id);
+        return null;
+        //        
     }
 
     public bool TryGetFile(AssetFileId id, [NotNullWhen(true)] out AssetFile? entry)
@@ -54,6 +56,7 @@ public sealed class AssetFileRegistry
             entry = file;
             return true;
         }
+
         entry = null;
         return false;
     }
@@ -65,6 +68,7 @@ public sealed class AssetFileRegistry
             entry = null;
             return false;
         }
+
         return TryGetFile(fileId, out entry);
     }
 
@@ -80,17 +84,17 @@ public sealed class AssetFileRegistry
         _files[id.Index()] = file;
     }
 
-    internal AssetFile RegisterRoot(AssetId assetRootId, in FileScanInfo fileInfo)
+    internal AssetFile RegisterRoot(AssetId assetRootId, string name, in FileScanInfo fileInfo)
     {
         if (!assetRootId.IsValid()) Throwers.InvalidArgument(nameof(assetRootId));
-        var fileSpec = RegisterFile(FileBinding.RootFile, in fileInfo);
+        var fileSpec = RegisterFile(FileBinding.RootFile, name, in fileInfo);
         _rootBindings.Add(fileSpec.Id, assetRootId);
         return fileSpec;
     }
 
-    internal AssetFile RegisterFile(FileBinding binding, in FileScanInfo scanInfo)
+    internal AssetFile RegisterFile(FileBinding binding, string name, in FileScanInfo scanInfo)
     {
-        ArgumentException.ThrowIfNullOrEmpty(scanInfo.Name);
+        ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentException.ThrowIfNullOrEmpty(scanInfo.RelativePath);
         ArgumentOutOfRangeException.ThrowIfEqual(scanInfo.IsValid, false);
         ArgumentOutOfRangeException.ThrowIfZero((int)binding, nameof(binding));
@@ -104,7 +108,7 @@ public sealed class AssetFileRegistry
             Id: fileId,
             Binding: binding,
             Storage: scanInfo.Storage,
-            LogicalName: scanInfo.Name,
+            LogicalName: name,
             RelativePath: scanInfo.RelativePath,
             SizeBytes: scanInfo.SizeBytes,
             LastWriteTime: scanInfo.LastWriteTime
@@ -128,5 +132,4 @@ public sealed class AssetFileRegistry
 
     //
     public ActiveObjectEnumerator<AssetFile> GetEnumerator() => new(_files.AsSpan(0, Count));
-
 }

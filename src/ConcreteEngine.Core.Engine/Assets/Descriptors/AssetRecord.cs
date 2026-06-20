@@ -17,38 +17,34 @@ public abstract class AssetRecord
 
     [JsonPropertyOrder(-9)]
     public required Guid Id { get; init; }
-    
+
     [JsonPropertyOrder(-8)]
     public required string Name { get; init; }
-    
-    [JsonPropertyOrder(-7)]
-    public Dictionary<string, string>? Files { get; init; }
 
     [JsonIgnore]
     public abstract AssetKind Kind { get; }
 
+    [JsonIgnore]
+    public abstract int FileCount { get; }
+
+    public abstract string GetFile(int fileIndex);
 }
 
 internal sealed class ShaderRecord : AssetRecord
 {
     public const string VertexFileKey = "Vertex";
     public const string FragmentFileKey = "Fragment";
-    
-    //public string VertexShader { get; init; }
-    //public string FragmentShader { get; init; }
+
+    public string VertexShader { get; set; }
+    public string FragmentShader { get; set; }
 
     [JsonIgnore]
     public override AssetKind Kind => AssetKind.Shader;
-    
-    public static (string, string) SetFileNames(ShaderRecord record)
-    {
-        return (record.Files![VertexFileKey], record.Files[FragmentFileKey]);
-    }
 
-    public static (string, string) GetFilenames(ShaderRecord record)
-    {
-        return (record.Files![VertexFileKey], record.Files[FragmentFileKey]);
-    }
+    [JsonIgnore]
+    public override int FileCount => 2;
+
+    public override string GetFile(int fileIndex) => fileIndex == 0 ? VertexShader : FragmentShader;
 }
 
 internal sealed class TextureRecord : AssetRecord
@@ -61,8 +57,15 @@ internal sealed class TextureRecord : AssetRecord
     public TexturePixelFormat PixelFormat { get; init; } = TexturePixelFormat.SrgbAlpha;
     public AnisotropyLevel Anisotropy { get; init; } = AnisotropyLevel.Off;
 
+    public required string[] TextureFiles { get; init; }
+
     [JsonIgnore]
     public override AssetKind Kind => AssetKind.Texture;
+
+    [JsonIgnore]
+    public override int FileCount => TextureFiles.Length;
+
+    public override string GetFile(int fileIndex) => TextureFiles[fileIndex];
 
     public static TextureRecord Create(string filename, string relativePath)
     {
@@ -75,18 +78,28 @@ internal sealed class TextureRecord : AssetRecord
             PixelFormat = isNormal ? TexturePixelFormat.Rgba : TexturePixelFormat.SrgbAlpha,
             Preset = isNormal ? TexturePreset.LinearMipmapRepeat : TexturePreset.LinearClamp,
             LoadMode = AssetLoadingMode.MemoryOnly,
-            Files = { { "Source", relativePath } }
+            TextureFiles = [relativePath]
         };
     }
 }
 
 internal sealed class ModelRecord : AssetRecord
 {
+    public required string ModelFile { get; init; }
     public int SubMeshCount { get; init; }
     public bool HasAnimation { get; init; }
 
     [JsonIgnore]
     public override AssetKind Kind => AssetKind.Model;
+
+    [JsonIgnore]
+    public override int FileCount => 1;
+
+    public override string GetFile(int fileIndex)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(fileIndex, 1);
+        return ModelFile;
+    }
 
     public static ModelRecord Create(string filename, string relativePath)
     {
@@ -95,7 +108,7 @@ internal sealed class ModelRecord : AssetRecord
             Id = Guid.NewGuid(),
             Name = Path.GetFileNameWithoutExtension(filename),
             LoadMode = AssetLoadingMode.Processed,
-            Files = { { "Source", relativePath } }
+            ModelFile = relativePath
         };
     }
 }
@@ -109,4 +122,8 @@ internal sealed class MaterialRecord : AssetRecord
     [JsonIgnore]
     public override AssetKind Kind => AssetKind.Material;
 
+    [JsonIgnore]
+    public override int FileCount => 0;
+
+    public override string GetFile(int fileIndex) => throw new InvalidOperationException("Materials have no files");
 }

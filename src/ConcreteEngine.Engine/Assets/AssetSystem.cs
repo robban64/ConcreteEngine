@@ -67,12 +67,12 @@ public sealed class AssetSystem
 
         AssetSystemSetup.Start();
 
-        _scanner.RunFullScan(_loader.GetQueues());
-        _assetManager.Store.EnsureStoreCapacity(_loader.GetQueues());
+        _scanner.RunFullScan(_loader.LoaderContext);
+        //_assetManager.Store.EnsureStoreCapacity(_loader.GetQueues());
         _loader.ActivateFullLoader();
 
-        var models = _loader.GetQueues()[AssetKind.Model.ToIndex()];
-        graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
+        //var models = _loader.GetQueues()[AssetKind.Model.ToIndex()];
+        //graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
 
     }
 

@@ -1,7 +1,5 @@
 using System.IO.Enumeration;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
@@ -12,24 +10,6 @@ namespace ConcreteEngine.Engine.Assets;
 
 internal sealed class AssetScanner(AssetManager assetManager)
 {
-    public void RunFullScan(Queue<AssetRecord>[] result)
-    {
-        ArgumentNullException.ThrowIfNull(result);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(result.Length, AssetTypeCount);
-
-        RunMigration();
-        
-        var shaderQueue = result[AssetKind.Shader.ToIndex()] = new Queue<AssetRecord>(16);
-        var textureQueue = result[AssetKind.Texture.ToIndex()] = new Queue<AssetRecord>(64);
-        var modelQueue = result[AssetKind.Model.ToIndex()] = new Queue<AssetRecord>(64);
-        var materialQueue = result[AssetKind.Material.ToIndex()] = new Queue<AssetRecord>(64);
-
-        avg1.BeginSample();
-        ScanAllFiles(result);
-        avg1.EndSample();
-        avg1.ResetAndPrint("Scanner took");
-    }
-
     private AvgFrameTimer avg1;
 
     private void RunMigration()
@@ -43,30 +23,43 @@ internal sealed class AssetScanner(AssetManager assetManager)
         throw new InvalidOperationException("Done");
     }
 
-    private void ScanAllFiles(Queue<AssetRecord>[] result)
+    public void RunFullScan(AssetLoadContext ctx)
+    {
+        ArgumentNullException.ThrowIfNull(ctx);
+
+        //RunMigration();
+
+        avg1.BeginSample();
+        ScanFiles();
+        ScanAssets(ctx);
+        avg1.EndSample();
+        avg1.ResetAndPrint("Scanner took");
+    }
+
+    private void ScanFiles()
     {
         foreach (var scanInfo in MakeFileEnumerable())
         {
-            AssetManager.FileRegistry.RegisterFile(FileBinding.UnboundFile, scanInfo.Name, in scanInfo);
+            assetManager.Files.RegisterFile(FileBinding.UnboundFile, scanInfo.Name, in scanInfo);
         }
+    }
 
+    private void ScanAssets(AssetLoadContext ctx)
+    {
         foreach (var scanInfo in MakeAssetEnumerable())
         {
             var record = AssetSerializer.LoadRecord(scanInfo.RelativePath);
+            ctx.Enqueue(record);
+
             var assetId = assetManager.RegisterScannedAsset(record, in scanInfo);
 
             var fileIndex = 1;
-            var path = scanInfo.RelativePath.AsSpan(0, scanInfo.RelativePath.LastIndexOf('/'));
-            if (record.Files is not null)
+            var path = Path.GetDirectoryName(scanInfo.RelativePath.AsSpan());
+            for (int i = 0; i < record.FileCount; i++)
             {
-                foreach (var localPath in record.Files.Values)
-                {
-                    var filePath = Path.Join(path, localPath);
-                    assetManager.RegisterAssetBinding(fileIndex++, assetId, record.Kind, filePath);
-                }
+                var filePath = Path.Join(path, record.GetFile(i));
+                assetManager.RegisterAssetBinding(fileIndex++, assetId, record.Kind, filePath);
             }
-
-            result[record.Kind.ToIndex()].Enqueue(record);
         }
     }
 
@@ -90,7 +83,7 @@ internal sealed class AssetScanner(AssetManager assetManager)
 
     private static FileSystemEnumerable<FileScanInfo> MakeAssetEnumerable(string root = EnginePath.AssetBasePath)
     {
-        if(!root.StartsWith(EnginePath.Root)) Throwers.InvalidArgument(nameof(root), root);
+        if (!root.StartsWith(EnginePath.Root)) Throwers.InvalidArgument(nameof(root), root);
         return new FileSystemEnumerable<FileScanInfo>(
             directory: root,
             options: new EnumerationOptions() { RecurseSubdirectories = true, },
@@ -100,10 +93,9 @@ internal sealed class AssetScanner(AssetManager assetManager)
                 return new FileScanInfo(string.Empty, filePath, entry.Length, entry.LastWriteTimeUtc.DateTime);
             }
         )
-        {   
+        {
             ShouldIncludePredicate = static (ref entry) =>
                 !entry.IsDirectory && !entry.IsHidden && Path.GetExtension(entry.FileName) is ".asset",
         };
     }
-
 }

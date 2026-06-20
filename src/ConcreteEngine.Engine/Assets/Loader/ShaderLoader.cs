@@ -57,7 +57,8 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
 
         foreach (var record in queue)
         {
-            var (vsFile, fsFile) = ShaderRecord.GetFilenames((ShaderRecord)record);
+            var shaderRecord = (ShaderRecord)record;
+            string vsFile = shaderRecord.VertexShader, fsFile = shaderRecord.FragmentShader;
             if (!_blocks.ContainsKey(vsFile))
             {
                 var block = ImportShaderFile(allocator, importer, vsFile);
@@ -89,10 +90,8 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
         if (_allocator == null) throw new InvalidOperationException("Allocator is null");
         if (_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
 
-        var (vsFile, fsFile) = ShaderRecord.GetFilenames(record);
-
-        var vsPtr = (MemoryBlockPtr)_blocks[vsFile];
-        var fsPtr = (MemoryBlockPtr)_blocks[fsFile];
+        var vsPtr = (MemoryBlockPtr)_blocks[record.VertexShader];
+        var fsPtr = (MemoryBlockPtr)_blocks[record.FragmentShader];
         
         if (vsPtr.IsNull || vsPtr.Length <= 0) throw new InvalidOperationException("Vertex Shader pointer is null");
         if (fsPtr.IsNull || fsPtr.Length <= 0) throw new InvalidOperationException("Fragment Shader pointer is null");

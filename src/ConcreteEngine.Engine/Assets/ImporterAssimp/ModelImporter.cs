@@ -12,7 +12,6 @@ using static ConcreteEngine.Engine.Assets.ImporterAssimp.AssimpUtils;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 using AssimpNode = Silk.NET.Assimp.Node;
 using AssimpScene = Silk.NET.Assimp.Scene;
-using Buffer = Silk.NET.OpenGL.Buffer;
 
 namespace ConcreteEngine.Engine.Assets.ImporterAssimp;
 

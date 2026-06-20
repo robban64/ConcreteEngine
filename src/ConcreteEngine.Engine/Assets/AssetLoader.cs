@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Assets.Utils;
-using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Graphics;
 
@@ -26,7 +25,7 @@ internal sealed class AssetLoader
 
     private readonly IAssetTypeLoader[] _loaders;
 
-    private readonly Queue<AssetRecord>[] _recordQueue;
+    public AssetLoadContext LoaderContext { get; private set; }
 
     public AssetLoader(AssetManager assetManager, GfxContext gfx)
     {
@@ -39,11 +38,10 @@ internal sealed class AssetLoader
         _loaders[AssetKind.Texture.ToIndex()] =_textureLoader = new TextureLoader(gfx.Textures);
         _loaders[AssetKind.Model.ToIndex()] =_modelLoader = new ModelLoader(_textureLoader, gfx.Meshes);
         _loaders[AssetKind.Material.ToIndex()] =_materialLoader = new MaterialLoader();
-        
-        _recordQueue = new Queue<AssetRecord>[AssetKindUtils.AssetTypeCount];
+
+        LoaderContext = new AssetLoadContext();
     }
 
-    public Queue<AssetRecord>[] GetQueues() => _recordQueue;
     
     public bool IsActive => _shaderLoader.IsActive || _textureLoader.IsActive || _modelLoader.IsActive || _materialLoader.IsActive;
 
@@ -94,27 +92,27 @@ internal sealed class AssetLoader
 
     public bool ProcessLoader(out AssetKind finishedKind)
     {
-        if (_recordQueue.Length == 0)
-            Throwers.InvalidOperation("Asset Queue is empty");
+       // if (_recordQueue.Length == 0)
+       //     Throwers.InvalidOperation("Asset Queue is empty");
 
         finishedKind = AssetKind.Unknown;
         switch (_step)
         {
             case ProcessStepOrder.NotStarted: _step = ProcessStepOrder.Shaders; break;
             case ProcessStepOrder.Shaders:
-                LoadShaders(_recordQueue[AssetKind.Shader.ToIndex()]);
+                LoadShaders();
                 finishedKind = AssetKind.Shader;
                 break;
             case ProcessStepOrder.Textures:
-                LoadTextures(_recordQueue[AssetKind.Texture.ToIndex()]);
+                LoadTextures();
                 if(_step != ProcessStepOrder.Textures) finishedKind = AssetKind.Texture;
                 break;
             case ProcessStepOrder.Meshes:
-                LoadModel(_recordQueue[AssetKind.Model.ToIndex()]);
+                LoadModel();
                 if(_step != ProcessStepOrder.Meshes) finishedKind = AssetKind.Model;
                 break;
             case ProcessStepOrder.Materials:
-                LoadMaterial(_recordQueue[AssetKind.Material.ToIndex()]);
+                LoadMaterial();
                 finishedKind = AssetKind.Material;
                 break;
             default:
@@ -164,9 +162,10 @@ internal sealed class AssetLoader
             ProcessEmbedded(model, modelLoader.EmbeddedAssets);
     }
 
-    public void LoadShaders(Queue<AssetRecord> queue)
+    public void LoadShaders()
     {
         var loader = GetLoader<ShaderLoader>();
+        var queue = LoaderContext.GetQueue(AssetKind.Shader);
         loader.LoadAllShaders(queue);
         while (queue.TryDequeue(out var record))
             Load(loader, (ShaderRecord)record);
@@ -174,8 +173,10 @@ internal sealed class AssetLoader
         _step = ProcessStepOrder.Textures;
     }
 
-    public void LoadTextures(Queue<AssetRecord> queue)
+    public void LoadTextures()
     {
+        var queue = LoaderContext.GetQueue(AssetKind.Texture);
+
         int n = 8;
         while (n-- >= 0 && queue.TryDequeue(out var record))
             Load(_textureLoader, (TextureRecord)record);
@@ -183,8 +184,10 @@ internal sealed class AssetLoader
         if (queue.Count == 0) _step = ProcessStepOrder.Meshes;
     }
 
-    public void LoadModel(Queue<AssetRecord> queue)
+    public void LoadModel()
     {
+        var queue = LoaderContext.GetQueue(AssetKind.Model);
+
         int n = 8;
         while (n-- >= 0 && queue.TryDequeue(out var record))
             Load(_modelLoader, (ModelRecord)record);
@@ -192,8 +195,10 @@ internal sealed class AssetLoader
         if (queue.Count == 0) _step = ProcessStepOrder.Materials;
     }
 
-    public void LoadMaterial(Queue<AssetRecord> queue)
+    public void LoadMaterial()
     {
+        var queue = LoaderContext.GetQueue(AssetKind.Material);
+
         while (queue.TryDequeue(out var record))
             Load(_materialLoader, (MaterialRecord)record);
 

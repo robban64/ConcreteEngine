@@ -11,10 +11,9 @@ internal static class AssetSerializer
 
     public static AssetRecord LoadRecord(string path)
     {
-        var text = File.ReadAllText(path);
+        var text = File.ReadAllBytes(path);
         var record = JsonSerializer.Deserialize<AssetRecord>(text, _jsonOptions);
         if(record is null) Throwers.InvalidArgument(nameof(path), path);
-
         return record;
     }
 
@@ -24,7 +23,6 @@ internal static class AssetSerializer
                    throw new InvalidDataException("Invalid record.");
         File.WriteAllText(path, text);
     }
-
 
     public static void ClearCache() => _jsonOptions = null;
 

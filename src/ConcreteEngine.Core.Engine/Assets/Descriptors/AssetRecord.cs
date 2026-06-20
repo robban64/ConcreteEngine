@@ -12,19 +12,16 @@ namespace ConcreteEngine.Core.Engine.Assets.Descriptors;
 [JsonDerivedType(typeof(MaterialRecord), typeDiscriminator: nameof(AssetKind.Material))]
 public abstract class AssetRecord
 {
-    [JsonIgnore]
-    public AssetId AttachedAssetId;
-    
     public required Guid GId { get; init; }
 
     public string Name { get; init; } = null!;
 
     public Dictionary<string, string> Files { get; init; } = new();
 
+    public AssetLoadingMode LoadMode { get; init; } = AssetLoadingMode.Processed;
+
     [JsonIgnore]
     public abstract AssetKind Kind { get; }
-
-    public AssetLoadingMode LoadMode { get; init; } = AssetLoadingMode.Processed;
 
     public static string GetDefaultFilename(AssetRecord record) => record.Files.First().Value;
 }

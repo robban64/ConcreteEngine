@@ -29,14 +29,14 @@ public sealed class RenderUbo(UniformBufferId id, UboSlot slot, in UniformBuffer
     public void SetCapacity(int capacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, Stride);
-        InvalidOpThrower.ThrowIf(_uploadCursor > 0 || _drawCursor > 0);
+        if(_drawCursor > 0 || _uploadCursor > 0) Throwers.InvalidOperation("Cursor not zero");
         Capacity = capacity;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int NextUploadCursor()
     {
-        InvalidOpThrower.ThrowIfNot(HasNextCapacity());
+        Debug.Assert(HasNextCapacity(), "Ubo overflow. Increase capacity.");
 
         var offset = _uploadCursor;
         _uploadCursor += Stride;

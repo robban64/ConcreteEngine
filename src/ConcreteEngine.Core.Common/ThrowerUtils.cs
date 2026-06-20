@@ -5,26 +5,27 @@ using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Common;
 
+[StackTraceHidden]
 public static class Throwers
 {
-    // Basic
-
+    // Arguments
     [DoesNotReturn]
     public static void InvalidArgument(string paramName, string? message = null) =>
         throw new ArgumentException(message, paramName);
-    
-    [DoesNotReturn]
-    public static T InvalidArgument<T>(string paramName, string? message = null) =>
-        throw new ArgumentException(message, paramName);
-
 
     [DoesNotReturn]
-    public static void InvalidOperation(string? message = null) => throw new InvalidOperationException(message);
+    public static void IndexOutOfRange(string buffer, int index, int length) =>
+        throw new ArgumentOutOfRangeException(buffer, $"OutOfRange {index} with length {length}");
 
     [DoesNotReturn]
-    public static void NullPointer(string name) => throw new InvalidOperationException($"Null pointer: {name}");
+    public static void NullReference(string name) => throw new ArgumentNullException(name, "Null arg reference");
+
     [DoesNotReturn]
-    public static void NullReference(string name) => throw new InvalidOperationException($"Null reference: {name}");
+    public static void NotFoundBy<T>(string name, T handle) => throw new ArgumentException(handle?.ToString(), name);
+
+    [DoesNotReturn]
+    public static void NotFound(string name, string message) =>
+        throw new ArgumentException($"{message} not found", name);
 
     [DoesNotReturn]
     public static T Unreachable<T>(string name) => throw new UnreachableException(name);
@@ -32,22 +33,19 @@ public static class Throwers
     [DoesNotReturn]
     public static void Unreachable(string name) => throw new UnreachableException(name);
 
+    [DoesNotReturn]
+    public static void InvalidOperation(string? message = null) => throw new InvalidOperationException(message);
+
+    [DoesNotReturn]
+    public static void NullPointer(string name) => throw new InvalidOperationException($"Null pointer: {name}");
 
     [DoesNotReturn]
     public static void KeyNotFound<T>(T key) =>
         throw new InvalidOperationException($"{key} not found or incorrect type.");
 
     [DoesNotReturn]
-    public static void NotFoundBy<T>(string message, T handle) =>
-        throw new InvalidOperationException($"{message} not found:  {handle}");
-
-    [DoesNotReturn]
     public static void InvalidHandle<T>(T handle) =>
         throw new InvalidOperationException($"Invalid handle ({typeof(T).Name}) = {handle}");
-
-    [DoesNotReturn]
-    public static void IndexOutOfRange(string buffer, int index, int length) =>
-        throw new InvalidOperationException($"OutOfRange {index} with '{buffer}' length {index}");
 
     [DoesNotReturn]
     public static void BufferOverflow(string message) => throw new InsufficientMemoryException(message);
@@ -60,12 +58,6 @@ public static class Throwers
 [StackTraceHidden]
 public static class ArgOutOfRangeThrower
 {
-    public static void ThrowIfNotEqual(Size2D a, Size2D b)
-    {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(a.Width, b.Width, nameof(a));
-        ArgumentOutOfRangeException.ThrowIfNotEqual(a.Height, b.Height, nameof(a));
-    }
-
     public static void ThrowIfSizeTooSmall(Size2D size, int min)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(size.Width, min, nameof(size));
@@ -98,82 +90,9 @@ public static class InvalidOpThrower
     private static void ThrowOperation(string? param = null, string? message = null) =>
         throw new InvalidOperationException($"Invalid operation: {param}. {message}");
 
-    public static void ThrowIfSizeTooSmall(Size2D size, int min, string? message = null)
-    {
-        if (size.Width < min || size.Height < min)
-            ThrowOperation(message ?? $"Size too small: ({size.Width}x{size.Height}) < {min}");
-    }
-
-    public static void ThrowIfSizeTooBig(Size2D size, int max, string? message = null)
-    {
-        if (size.Width > max || size.Height > max)
-            ThrowOperation(message ?? $"Size too big: ({size.Width}x{size.Height}) > {max}");
-    }
-
-    public static void ThrowIfSizeTooSmall(Size2D size, Size2D min, string? message = null)
-    {
-        if (size.Width < min.Width || size.Height < min.Height)
-            ThrowOperation(message ?? $"Size too small: ({size.Width}x{size.Height}) < ({min.Width}x{min.Height})");
-    }
-
-    public static void ThrowIfSizeTooBig(Size2D size, Size2D max, string? message = null)
-    {
-        if (size.Width > max.Width || size.Height > max.Height)
-            ThrowOperation(message ?? $"Size too big: ({size.Width}x{size.Height}) > ({max.Width}x{max.Height})");
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ThrowIfNull(object? obj, string? param = null, string? message = null)
-    {
-        if (obj is null) ThrowOperation(param, message);
-    }
-
-    public static void ThrowIfAnyNull(object? o1, object? o2, string? param = null, string? message = null)
-    {
-        if (o1 is null || o2 is null) ThrowOperation(param, message);
-    }
-
-    public static void ThrowIfAnyNull(object? o1, object? o2, object? o3, string? param = null, string? message = null)
-    {
-        if (o1 is null || o2 is null || o3 is null) ThrowOperation(param, message);
-    }
-
-    public static void ThrowIfAnyNull(object? o1, object? o2, object? o3, object? o4, string? param = null,
-        string? message = null)
-    {
-        if (o1 is null || o2 is null || o3 is null || o4 is null) ThrowOperation(param, message);
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ThrowIfNotNull(object? obj, string? param = null, string? message = null)
-    {
-        if (obj is not null) ThrowOperation(param, message);
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIf(bool condition, string? param = null, string? message = null)
     {
         if (condition) ThrowOperation(param, message);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ThrowIfNot(bool condition, string? param = null, string? message = null)
-    {
-        if (!condition) ThrowOperation(param, message);
-    }
-
-    public static void ThrowIfNullOrEmptyCollection<T>(IReadOnlyCollection<T>? collection, string? paramName = null,
-        string? message = null)
-    {
-        if (collection is null || collection.Count == 0) ThrowOperation(paramName, message);
-    }
-
-    public static void ThrowIfCapacityExceed<T>(T[]? array, int capacity)
-    {
-        ArgumentNullException.ThrowIfNull(array, nameof(array));
-        if (capacity > array.Length)
-            ThrowOperation(nameof(capacity), $"Capacity exceed {capacity} > {array.Length}");
     }
 }

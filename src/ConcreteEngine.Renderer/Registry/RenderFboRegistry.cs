@@ -32,7 +32,7 @@ public sealed class RenderFboRegistry
         var meta = GfxResourceApi.GetMeta(fboId);
 
         var renderFbo = GetById(fboId);
-        if (renderFbo is null) throw new InvalidOperationException($"FrameBuffer with id: {fboId} not found");
+        if (renderFbo is null) Throwers.NotFoundBy(nameof(FrameBufferId), id);
 
         renderFbo.UpdateFromMeta(in meta);
     }
@@ -60,8 +60,8 @@ public sealed class RenderFboRegistry
         ArgOutOfRangeThrower.ThrowIfSizeTooSmall(outputSize, new Size2D(RenderLimits.MinOutputSize));
         ArgOutOfRangeThrower.ThrowIfSizeTooBig(outputSize, new Size2D(RenderLimits.MaxOutputSize));
 
-        InvalidOpThrower.ThrowIf(_fboCount >= RenderLimits.FboSlots);
-        InvalidOpThrower.ThrowIfNotNull(_fboRegistry[_fboCount]);
+        if(_fboCount > RenderLimits.FboSlots) Throwers.InvalidOperation(nameof(_fboCount));
+        if(_fboRegistry[_fboCount] != null!) Throwers.InvalidOperation(nameof(RenderFboRegistry));
 
         var gfxDescriptor = entry.Build(outputSize);
         var fboId = _gfxFbo.CreateFrameBuffer(gfxDescriptor);
@@ -73,7 +73,7 @@ public sealed class RenderFboRegistry
         if (typeof(TTag) == typeof(ShadowPassTag))
         {
             if (entry.FboSizePolicy!.Mode != FboResizeMode.Fixed)
-                throw new ArgumentException("Shadow map require fixed size policy");
+                Throwers.InvalidArgument("Shadow map require fixed size policy");
 
             renderFbo.HasShadowMap = true;
             ShadowMapSize = entry.FboSizePolicy!.FixedSize;
@@ -125,17 +125,16 @@ public sealed class RenderFboRegistry
 
     public void RecreateFixedFrameBuffer<TTag>(FboVariant variant, Size2D outputSize) where TTag : class
     {
-        if (variant < 0 || variant > RenderLimits.MaxFboVariants)
-            throw new ArgumentOutOfRangeException(nameof(variant));
+        if (variant < 0 || variant > RenderLimits.MaxFboVariants) Throwers.InvalidArgument(nameof(variant));
 
         ValidateOutputSize(outputSize, typeof(TTag) == typeof(ShadowPassTag));
 
         var key = PassTags<TTag>.FboKey(variant);
         var fbo = GetByKey(key);
 
-        if (fbo == null) throw new InvalidOperationException($"FrameBuffer with key: {key} not found");
+        if (fbo == null) Throwers.NotFoundBy(nameof(variant),variant.Value);
         ArgumentOutOfRangeException.ThrowIfEqual(outputSize, fbo.Size);
-        InvalidOpThrower.ThrowIfNot(fbo.IsFixedSize, nameof(fbo.IsFixedSize));
+        ArgumentOutOfRangeException.ThrowIfEqual(fbo.IsFixedSize, false);
 
         fbo.ChangeSizePolicy(RenderFboSizePolicy.MakeFixed(outputSize));
 

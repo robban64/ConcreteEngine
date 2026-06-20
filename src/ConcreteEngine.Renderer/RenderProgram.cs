@@ -39,14 +39,17 @@ public sealed class RenderProgram : IDisposable
     }
 
     public int PassCount => _passPipeline.PassCount;
-    public TextureId OutputTexture => RenderContext.Instance.OutputTexture;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TextureId GetOutputTexture() => RenderContext.Instance.OutputTexture;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UniformUploadContext GetUploadContext() => _drawPipeline.UniformUploader.GetUploadContext();
 
-    //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
-
+    //
     public void PrepareFrame()
     {
         Debug.Assert(Initialized);
@@ -74,14 +77,10 @@ public sealed class RenderProgram : IDisposable
             fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.V0, new Size2D(shadowSize));
     }
 
-
-    public void UploadUniforms()
-    {
-        _drawPipeline.UploadUniforms();
-    }
-
     public void Render()
     {
+        _drawPipeline.UploadUniforms();
+
         while (_passPipeline.NextPass(out var nextPassRes))
         {
             if (nextPassRes.Action == NextPassAction.Skip) continue;
@@ -115,7 +114,7 @@ public sealed class RenderProgram : IDisposable
 
     public void ApplyBuilder(RenderSetupBuilder builder)
     {
-        InvalidOpThrower.ThrowIf(builder.IsDone, nameof(builder.IsDone));
+        ArgumentOutOfRangeException.ThrowIfEqual(builder.IsDone, true, nameof(builder.IsDone));
 
         var plan = builder.Build();
 

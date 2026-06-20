@@ -60,20 +60,20 @@ public sealed class AssetSystem
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void StartLoader(GraphicsRuntime graphics)
     {
-        InvalidOpThrower.ThrowIfNot(CurrentStatus == Status.ManifestLoaded, nameof(CurrentStatus));
+        if(CurrentStatus != Status.ManifestLoaded) Throwers.InvalidOperation(nameof(CurrentStatus));
         ArgumentNullException.ThrowIfNull(graphics);
 
         CurrentStatus = Status.Booting;
 
         AssetSystemSetup.Start();
 
-        _scanner.ScanAll(_loader.GetQueues());
+        _scanner.RunFullScan(_loader.GetQueues());
         _assetManager.Store.EnsureStoreCapacity(_loader.GetQueues());
+        _loader.ActivateFullLoader();
 
         var models = _loader.GetQueues()[AssetKind.Model.ToIndex()];
         graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
 
-        _loader.ActivateFullLoader();
     }
 
 

@@ -31,26 +31,9 @@ public static class FileUtils
         AssetKind.Material => ValidMaterialExtension,
         _ => Throwers.Unreachable<string>(nameof(kind))
     };
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TestFileName(ReadOnlySpan<char> fileName, out AssetKind kind, out bool isAssetFile)
-    {
-        kind = AssetKind.Unknown;
-
-        var ext = Path.GetExtension(fileName);
-        if (fileName.StartsWith('.') || ext.IsEmpty) return isAssetFile = false;
-
-        isAssetFile = ext is ".asset";
-        if (isAssetFile) return true;
-
-        if (ValidShaderExtension.Contains(ext, StringComparison.OrdinalIgnoreCase)) kind = AssetKind.Shader;
-        else if (ValidModelExtension.Contains(ext, StringComparison.OrdinalIgnoreCase)) kind = AssetKind.Model;
-        else if (ValidTextureExtension.Contains(ext, StringComparison.OrdinalIgnoreCase)) kind = AssetKind.Texture;
-        else Throwers.Unreachable(nameof(fileName));
-        return true;
-    }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TestFileName2(ReadOnlySpan<char> fileName, out AssetKind kind)
+    public static bool TestFileExtension(ReadOnlySpan<char> fileName, out AssetKind kind)
     {
         kind = AssetKind.Unknown;
         var ext = Path.GetExtension(fileName);
@@ -59,8 +42,7 @@ public static class FileUtils
         if (ValidShaderExtension.Contains(ext, StringComparison.OrdinalIgnoreCase)) kind = AssetKind.Shader;
         else if (ValidModelExtension.Contains(ext, StringComparison.OrdinalIgnoreCase)) kind = AssetKind.Model;
         else if (ValidTextureExtension.Contains(ext, StringComparison.OrdinalIgnoreCase)) kind = AssetKind.Texture;
-        else return false;
-        return true;
+        return kind != AssetKind.Unknown;
     }
 
     public static string ComputeSha256Hex(string path)

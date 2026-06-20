@@ -53,7 +53,7 @@ internal sealed class EngineGateway : IDisposable
     public void RenderEditor(float deltaTime)
     {
         if (!Enabled) return;
-        _editor.Render(deltaTime, _renderProgram.OutputTexture);
+        _editor.Render(deltaTime, _renderProgram.GetOutputTexture());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

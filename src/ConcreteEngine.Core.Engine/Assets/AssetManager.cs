@@ -48,6 +48,9 @@ public sealed class AssetManager
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetFile GetAssetRootFile(AssetId id) => Files.Get(Store.GetAssetBinding(id, 0));
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public AssetFile GetAssetFile(AssetId id, int fileIndex) => Files.Get(Store.GetAssetBinding(id, fileIndex));
+
     public void Rename(AssetObject asset, string newName)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(newName, asset.Name);
@@ -58,7 +61,7 @@ public sealed class AssetManager
     internal AssetId RegisterInMemoryAsset(Guid gid, AssetKind kind, string name)
     {
         var assetId = Store.Register(gid, 0);
-        var file = Files.RegisterRoot(assetId, name, new FileScanInfo(0, string.Empty, name));
+        var file = Files.RegisterRoot(assetId, name, new FileScanInfo( string.Empty, name));
         Store.SetAssetBinding(assetId, file.Id, 0);
         return assetId;
     }
@@ -72,20 +75,20 @@ public sealed class AssetManager
 
         var assetId = Store.Register(record.GId, record.Files.Count);
         var file = Files.RegisterRoot(assetId, record.Name, in fileInfo);
-        Assets.SetAssetBinding(assetId, file.Id, 0); // root
+        Store.SetAssetBinding(assetId, file.Id, 0); // root
         return assetId;
     }
 
     internal void RegisterAssetBinding(int fileIndex, AssetId assetId, AssetKind kind, string relativePath)
     {
-        if (!Assets.HasBinding(assetId)) Throwers.NotFoundBy(nameof(AssetId), assetId);
+        if (!Store.HasBinding(assetId)) Throwers.NotFoundBy(nameof(AssetId), assetId);
         if (kind == AssetKind.Shader) return;
         
         if (!Files.TryGetFileByPath(relativePath, out var file))
             Throwers.InvalidArgument(nameof(relativePath),$"Invalid file path {relativePath}");
 
         file.Binding = FileBinding.DependentFile;
-        Assets.SetAssetBinding(assetId, file.Id, fileIndex);
+        Store.SetAssetBinding(assetId, file.Id, fileIndex);
     }
 
 

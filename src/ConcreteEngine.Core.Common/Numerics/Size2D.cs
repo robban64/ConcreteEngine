@@ -6,8 +6,11 @@ using System.Text.Json.Serialization;
 namespace ConcreteEngine.Core.Common.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly record struct Size2D(int Width, int Height)
+public readonly record struct Size2D(int Width, int Height) : IEquatable<int>, IComparable<Size2D>, IComparable<int>
 {
+    public static Size2D Zero => new(0, 0);
+    public static Size2D One => new(1, 1);
+
     public Size2D(int size) : this(size, size) { }
     public Size2D(float x, float y) : this((int)x, (int)y) { }
 
@@ -26,8 +29,7 @@ public readonly record struct Size2D(int Width, int Height)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Size2D(Size3D v) => new(v.Width, v.Height);
-
-
+    
     public Size2D ScaleUniform(float factor) => new((int)(Width * factor), (int)(Height * factor));
     public Size2D Scale(float fx, float fy) => new((int)(Width * fx), (int)(Height * fy));
     public Size2D Scale(Vector2 v) => new((int)(Width * v.X), (int)(Height * v.Y));
@@ -55,18 +57,39 @@ public readonly record struct Size2D(int Width, int Height)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsNegativeOrZero() => IsNegative() || IsZero();
-
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator >(Size2D a, Size2D b) => a.Width > b.Width && a.Height > b.Height;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator <(Size2D a, Size2D b) => a.Width < b.Width && a.Height < b.Height;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator >(Size2D a, int b) => a.Width > b && a.Height > b;
 
-    public static Size2D Zero => new(0, 0);
-    public static Size2D One => new(1, 1);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator <(Size2D a, int b) => a.Width < b && a.Height < b;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator ==(Size2D a, int b) => a.Equals(b);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator !=(Size2D a, int b) =>! a.Equals(b);
+    
+    public bool Equals(int other) => Width == other && Height == other;
+
+    public int CompareTo(Size2D other)
+    {
+        var c = Width.CompareTo(other.Width);
+        return c != 0 ? c : Height.CompareTo(other.Height);
+    }
+
+    public int CompareTo(int other)
+    {
+        var c = Width.CompareTo(other);
+        return c != 0 ? c : Height.CompareTo(other);
+    }
+    
     public override string ToString()
     {
         return $"{Width}x{Height}";

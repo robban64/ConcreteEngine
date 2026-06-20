@@ -47,18 +47,18 @@ internal sealed class AssetLoader
     
     public bool IsActive => _shaderLoader.IsActive || _textureLoader.IsActive || _modelLoader.IsActive || _materialLoader.IsActive;
 
-    private LoaderContext MakeContext(AssetRecord record, string path, bool isHotReload = false)
+    private LoaderContext MakeContext(AssetRecord record, bool isHotReload = false)
     {
         if (!_store.TryGetIdByGuid(record.GId, out var assetId))
-            throw new InvalidOperationException($"AssetRecord '{record.Name}' no registered Guid");
-        var filePath = _assetManager.GetAssetRootFile(assetId).RelativePath;
-        return new LoaderContext(assetId, _assetManager,filePath);
+            Throwers.NotFound(nameof(record.GId), $"AssetRecord '{record.Name}'");
+        
+        return new LoaderContext(assetId, _assetManager);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void ActivateFullLoader()
     {
-        InvalidOpThrower.ThrowIf(IsActive);
+        if(IsActive) Throwers.InvalidOperation(nameof(IsActive));
 
         foreach (var loader in _loaders)
             loader.Activate(true);
@@ -95,7 +95,7 @@ internal sealed class AssetLoader
     public bool ProcessLoader(out AssetKind finishedKind)
     {
         if (_recordQueue.Length == 0)
-            throw new InvalidOperationException("Asset Queue is empty");
+            Throwers.InvalidOperation("Asset Queue is empty");
 
         finishedKind = AssetKind.Unknown;
         switch (_step)
@@ -118,80 +118,10 @@ internal sealed class AssetLoader
                 finishedKind = AssetKind.Material;
                 break;
             default:
-                throw new ArgumentOutOfRangeException();
+                return Throwers.Unreachable<bool>(nameof(_step));
         }
 
         return _step == ProcessStepOrder.Finished;
-    }
-
-    private void Load<TAsset, TRecord>(AssetTypeLoader<TAsset, TRecord> loader, TRecord record, string path)
-        where TAsset : AssetObject where TRecord : AssetRecord
-    {
-        var ctx = MakeContext(record, path);
-        var asset = loader.LoadAsset(record, ctx);
-        _store.AddAsset(asset);
-
-        if (loader is ModelLoader modelLoader && asset is Model model)
-            ProcessEmbedded(model, modelLoader.EmbeddedAssets);
-    }
-
-    public void LoadShaders(Queue<AssetRecord> queue)
-    {
-        var loader = GetLoader<ShaderLoader>();
-        loader.LoadAllShaders(queue);
-        while (queue.TryDequeue(out var record))
-            Load(loader, (ShaderRecord)record, EnginePath.ShaderPath);
-
-        _step = ProcessStepOrder.Textures;
-    }
-
-    public void LoadTextures(Queue<AssetRecord> queue)
-    {
-        int n = 8;
-        while (n-- >= 0 && queue.TryDequeue(out var record))
-            Load(_textureLoader, (TextureRecord)record, EnginePath.TexturePath);
-
-        if (queue.Count == 0) _step = ProcessStepOrder.Meshes;
-    }
-
-    public void LoadModel(Queue<AssetRecord> queue)
-    {
-        int n = 8;
-        while (n-- >= 0 && queue.TryDequeue(out var record))
-            Load(_modelLoader, (ModelRecord)record, EnginePath.ModelPath);
-
-        if (queue.Count == 0) _step = ProcessStepOrder.Materials;
-    }
-
-    public void LoadMaterial(Queue<AssetRecord> queue)
-    {
-        while (queue.TryDequeue(out var record))
-            Load(_materialLoader, (MaterialRecord)record, EnginePath.MaterialPath);
-
-        _step = ProcessStepOrder.Finished;
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public void Reload<TAsset>(TAsset asset) where TAsset : AssetObject
-    {
-        ArgumentNullException.ThrowIfNull(asset);
-        
-        _store.TryGetFileBindings(asset.Id, out var fileIds);
-        var files = new AssetFile[fileIds.Length];
-        for (var i = 0; i < fileIds.Length; i++)
-            files[i] = _assetManager.Files.Get(fileIds[i]);
-
-        var loader = _loaders[asset.Kind.ToIndex()];
-        if (loader is not IAssetTypeLoader<TAsset> tLoader) 
-            throw new InvalidOperationException($"Loader {typeof(TAsset).Name} is null");
-
-        if (!tLoader.IsActive)
-           ReactiveLoader(asset.Kind);
-
-        tLoader.Reload(asset, files);
-
-        if (files.Length > 0) _assetManager.RegisterExistingBindings(asset.Id, files);
-
     }
     
     private void ProcessEmbedded(Model model, List<IEmbeddedAsset> embedded)
@@ -217,18 +147,91 @@ internal sealed class AssetLoader
         }
 
         if (hasTexture && _textureLoader.StoredEmbeddedCount > 0)
-            throw new InvalidOperationException("Texture loader has stored embedded assets");
+            Throwers.InvalidOperation("Texture loader has stored embedded assets");
 
         embedded.Clear();
     }
 
+
+    private void Load<TAsset, TRecord>(AssetTypeLoader<TAsset, TRecord> loader, TRecord record)
+        where TAsset : AssetObject where TRecord : AssetRecord
+    {
+        var ctx = MakeContext(record);
+        var asset = loader.LoadAsset(record, ctx);
+        _store.AddAsset(asset);
+
+        if (loader is ModelLoader modelLoader && asset is Model model)
+            ProcessEmbedded(model, modelLoader.EmbeddedAssets);
+    }
+
+    public void LoadShaders(Queue<AssetRecord> queue)
+    {
+        var loader = GetLoader<ShaderLoader>();
+        loader.LoadAllShaders(queue);
+        while (queue.TryDequeue(out var record))
+            Load(loader, (ShaderRecord)record);
+
+        _step = ProcessStepOrder.Textures;
+    }
+
+    public void LoadTextures(Queue<AssetRecord> queue)
+    {
+        int n = 8;
+        while (n-- >= 0 && queue.TryDequeue(out var record))
+            Load(_textureLoader, (TextureRecord)record);
+
+        if (queue.Count == 0) _step = ProcessStepOrder.Meshes;
+    }
+
+    public void LoadModel(Queue<AssetRecord> queue)
+    {
+        int n = 8;
+        while (n-- >= 0 && queue.TryDequeue(out var record))
+            Load(_modelLoader, (ModelRecord)record);
+
+        if (queue.Count == 0) _step = ProcessStepOrder.Materials;
+    }
+
+    public void LoadMaterial(Queue<AssetRecord> queue)
+    {
+        while (queue.TryDequeue(out var record))
+            Load(_materialLoader, (MaterialRecord)record);
+
+        _step = ProcessStepOrder.Finished;
+    }
+
+    public void Reload<TAsset>(TAsset asset) where TAsset : AssetObject
+    {
+        ArgumentNullException.ThrowIfNull(asset);
+        
+        _store.TryGetFileBindings(asset.Id, out var fileIds);
+        var files = new AssetFile[fileIds.Length];
+        for (var i = 0; i < fileIds.Length; i++)
+            files[i] = _assetManager.Files.Get(fileIds[i]);
+
+        var loader = _loaders[asset.Kind.ToIndex()];
+        if (loader is not IAssetTypeLoader<TAsset> tLoader)
+        {
+            Throwers.InvalidArgument(nameof(asset.Kind), $"Loader {typeof(TAsset).Name} is null");
+            return;
+        }
+
+        if (!tLoader.IsActive)
+           ReactiveLoader(asset.Kind);
+
+        tLoader.Reload(asset, files);
+
+        if (files.Length > 0) _assetManager.RegisterExistingBindings(asset.Id, files);
+
+    }
+    
     private TLoader GetLoader<TLoader>() where TLoader : class, IAssetTypeLoader
     {
         var loader = _loaders[TLoader.Kind.ToIndex()];
-        if (loader is not TLoader tLoader)
-            throw new InvalidOperationException($"Loader: {TLoader.Kind} is null or wrong type");
+        if (loader is TLoader tLoader) return tLoader;
 
-        return tLoader;
+        Throwers.InvalidArgument($"Loader: {TLoader.Kind} is null or wrong type");
+        return null;
     }
 
      private enum ProcessStepOrder

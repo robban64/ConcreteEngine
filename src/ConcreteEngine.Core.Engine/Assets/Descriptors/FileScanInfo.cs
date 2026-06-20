@@ -1,9 +1,6 @@
-using System.Runtime.CompilerServices;
-
 namespace ConcreteEngine.Core.Engine.Assets.Descriptors;
 
-internal  struct FileScanInfo(
-    byte fileIndex,
+internal readonly struct FileScanInfo(
     string name,
     string relativePath,
     long sizeBytes = 0,
@@ -11,13 +8,12 @@ internal  struct FileScanInfo(
     AssetStorage storage = AssetStorage.FileSystem,
     bool isValid = true)
 {
-    public  long SizeBytes = sizeBytes;
-    public  DateTime LastWriteTime = lastWriteTime;
+    public readonly long SizeBytes = sizeBytes;
+    public readonly DateTime LastWriteTime = lastWriteTime;
 
-    public  string Name = name;
-    public  string RelativePath = relativePath;
+    public readonly string Name = name;
+    public readonly string RelativePath = relativePath;
 
-    public  byte FileIndex = fileIndex;
-    public  AssetStorage Storage = storage;
-    public  bool IsValid = isValid;
+    public readonly AssetStorage Storage = storage;
+    public readonly bool IsValid = isValid;
 }

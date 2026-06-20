@@ -35,7 +35,7 @@ public sealed class AssetTypeStore(AssetKind kind)
     public AssetId GetByName(string name)
     {
         if (TryGetByName(name, out var value)) return value;
-        Throwers.KeyNotFound(name);
+        Throwers.NotFoundBy(nameof(name), name);
         return AssetId.Empty;
     }
 

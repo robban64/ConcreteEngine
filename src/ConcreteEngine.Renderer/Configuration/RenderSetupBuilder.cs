@@ -27,8 +27,8 @@ public sealed class RenderSetupBuilder
     internal RenderBuilderContext Build()
     {
         EnsureNotDone();
-        InvalidOpThrower.ThrowIf(Ctx.Version == RenderPipelineVersion.None, nameof(Ctx.Version));
-        InvalidOpThrower.ThrowIfAnyNull(Ctx.FboSetup, Ctx.ShaderIds);
+        if(Ctx.FboSetup == null! | Ctx.ShaderIds == null! || Ctx.Version == RenderPipelineVersion.None)
+            Throwers.InvalidOperation(nameof(Ctx));
 
         Ctx.Done = true;
         return Ctx;
@@ -39,7 +39,7 @@ public sealed class RenderSetupBuilder
         where TTag : class
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(variant.Value, 0, nameof(variant));
-        ArgumentNullException.ThrowIfNull(entry, nameof(entry));
+        ArgumentNullException.ThrowIfNull(entry);
 
         Ctx.FboSetup.Add(new RenderBuilderContext.FboSetupRecord(variant, entry, Action));
         return this;

@@ -94,7 +94,6 @@ public sealed class EngineRenderSystem : IDisposable
         // upload buffers to gpu
         VisualUniformProcessor.Upload(Program.GetUploadContext());
 
-        Program.UploadUniforms();
         Program.Render();
     }
 

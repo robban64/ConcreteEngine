@@ -159,7 +159,7 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore
 
     public void BindOnUpdateCallback(Action<int> callback)
     {
-        InvalidOpThrower.ThrowIfNotNull(_onUpdate);
+        if(_onUpdate is not null) Throwers.InvalidOperation(nameof(_onUpdate));
         _onUpdate = callback;
     }
 

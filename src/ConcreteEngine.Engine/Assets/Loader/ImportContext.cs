@@ -2,7 +2,7 @@ using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
-internal readonly ref struct LoaderContext(AssetId id, AssetManager assetManager)
+internal readonly ref struct ImportContext(AssetId id, AssetManager assetManager)
 {
     public readonly AssetId Id = id;
 

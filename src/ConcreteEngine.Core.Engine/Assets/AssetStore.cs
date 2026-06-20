@@ -19,8 +19,9 @@ public sealed partial class AssetStore
     private AssetObject?[] _assets = new AssetObject?[DefaultCap];
     private AssetFileId[]?[] _bindings = new AssetFileId[DefaultCap][];
 
-    private readonly AssetTypeStore[] _storeCollection = new AssetTypeStore[AssetKindUtils.AssetTypeCount];
     private readonly Dictionary<Guid, AssetId> _byGid = new(DefaultCap);
+
+    private readonly AssetTypeStore[] _storeCollection = new AssetTypeStore[AssetKindUtils.AssetTypeCount];
 
     private readonly Stack<int> _free = [];
 
@@ -223,12 +224,4 @@ public sealed partial class AssetStore
         new(TypeStore<T>.Store.AsSpan(), _assets.AsSpan());
 
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    internal void EnsureStoreCapacity(Queue<AssetRecord>[] queues)
-    {
-        GetTypeStore(AssetKind.Shader).EnsureCapacity(queues[AssetKind.Shader.ToIndex()].Count);
-        GetTypeStore(AssetKind.Model).EnsureCapacity(queues[AssetKind.Model.ToIndex()].Count);
-        GetTypeStore(AssetKind.Texture).EnsureCapacity(queues[AssetKind.Texture.ToIndex()].Count);
-        GetTypeStore(AssetKind.Material).EnsureCapacity(queues[AssetKind.Material.ToIndex()].Count);
-    }
 }

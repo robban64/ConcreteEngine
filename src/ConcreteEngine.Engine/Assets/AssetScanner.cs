@@ -23,7 +23,7 @@ internal sealed class AssetScanner(AssetManager assetManager)
         throw new InvalidOperationException("Done");
     }
 
-    public void RunFullScan(AssetLoadContext ctx)
+    public void RunFullScan(AssetLoaderContext ctx)
     {
         ArgumentNullException.ThrowIfNull(ctx);
 
@@ -44,7 +44,7 @@ internal sealed class AssetScanner(AssetManager assetManager)
         }
     }
 
-    private void ScanAssets(AssetLoadContext ctx)
+    private void ScanAssets(AssetLoaderContext ctx)
     {
         foreach (var scanInfo in MakeAssetEnumerable())
         {

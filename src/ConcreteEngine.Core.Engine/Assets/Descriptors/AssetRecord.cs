@@ -32,11 +32,8 @@ public abstract class AssetRecord
 
 internal sealed class ShaderRecord : AssetRecord
 {
-    public const string VertexFileKey = "Vertex";
-    public const string FragmentFileKey = "Fragment";
-
-    public string VertexShader { get; set; }
-    public string FragmentShader { get; set; }
+    public required string VertexShader { get; init; }
+    public required string FragmentShader { get; init; }
 
     [JsonIgnore]
     public override AssetKind Kind => AssetKind.Shader;
@@ -49,8 +46,9 @@ internal sealed class ShaderRecord : AssetRecord
 
 internal sealed class TextureRecord : AssetRecord
 {
+    // TODO
     public float LodBias { get; init; }
-    public bool InMemory { get; init; }
+    public bool InMemory { get; init; } 
 
     public TexturePreset Preset { get; init; } = TexturePreset.LinearClamp;
     public TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
@@ -67,27 +65,11 @@ internal sealed class TextureRecord : AssetRecord
 
     public override string GetFile(int fileIndex) => TextureFiles[fileIndex];
 
-    public static TextureRecord Create(string filename, string relativePath)
-    {
-        var name = Path.GetFileNameWithoutExtension(filename);
-        var isNormal = name.Contains("normal", StringComparison.OrdinalIgnoreCase);
-        return new TextureRecord
-        {
-            Id = Guid.NewGuid(),
-            Name = name,
-            PixelFormat = isNormal ? TexturePixelFormat.Rgba : TexturePixelFormat.SrgbAlpha,
-            Preset = isNormal ? TexturePreset.LinearMipmapRepeat : TexturePreset.LinearClamp,
-            LoadMode = AssetLoadingMode.MemoryOnly,
-            TextureFiles = [relativePath]
-        };
-    }
 }
 
 internal sealed class ModelRecord : AssetRecord
 {
     public required string ModelFile { get; init; }
-    public int SubMeshCount { get; init; }
-    public bool HasAnimation { get; init; }
 
     [JsonIgnore]
     public override AssetKind Kind => AssetKind.Model;
@@ -99,17 +81,6 @@ internal sealed class ModelRecord : AssetRecord
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(fileIndex, 1);
         return ModelFile;
-    }
-
-    public static ModelRecord Create(string filename, string relativePath)
-    {
-        return new ModelRecord
-        {
-            Id = Guid.NewGuid(),
-            Name = Path.GetFileNameWithoutExtension(filename),
-            LoadMode = AssetLoadingMode.Processed,
-            ModelFile = relativePath
-        };
     }
 }
 

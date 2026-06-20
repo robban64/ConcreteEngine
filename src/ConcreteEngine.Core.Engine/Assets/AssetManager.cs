@@ -91,12 +91,9 @@ public sealed class AssetManager
         Store.SetAssetBinding(assetId, file.Id, fileIndex);
     }
 
-
     internal AssetId RegisterEmbedded(AssetId sourceId, IEmbeddedAsset embedded)
     {
-        ArgumentNullException.ThrowIfNull(embedded);
         ArgumentNullException.ThrowIfNull(embedded.FileSpec);
-
         if (!Store.HasBinding(sourceId))
             Throwers.InvalidArgument($"Missing original asset for {embedded.Name}");
 

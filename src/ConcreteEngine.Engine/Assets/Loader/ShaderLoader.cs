@@ -50,7 +50,7 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
         _allocator = null;
     }
 
-    public void LoadAllShaders(Queue<AssetRecord> queue)
+    public void ImportAllShaders(Queue<AssetRecord> queue)
     {
         if(_allocator is not {} allocator) throw new InvalidOperationException("Allocator is null");
         if (_shaderImporter is not {} importer) throw new InvalidOperationException("ShaderImporter is null");
@@ -85,7 +85,7 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    protected override Shader Load(ShaderRecord record, LoaderContext ctx)
+    protected override Shader Load(ShaderRecord record, ImportContext ctx)
     {
         if (_allocator == null) throw new InvalidOperationException("Allocator is null");
         if (_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
@@ -101,7 +101,7 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
         return new Shader(record.Name, ctx.Id, record.Id, shaderId, samplers);
     }
 
-    protected override Shader LoadInMemory(ShaderRecord record, LoaderContext ctx) =>
+    protected override Shader LoadInMemory(ShaderRecord record, ImportContext ctx) =>
         throw new NotImplementedException();
 
     [MethodImpl(MethodImplOptions.NoInlining)]

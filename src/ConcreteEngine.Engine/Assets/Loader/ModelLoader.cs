@@ -43,7 +43,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
     }
 
 
-    protected override Model Load(ModelRecord record, LoaderContext ctx)
+    protected override Model Load(ModelRecord record, ImportContext ctx)
     {
         if(_allocator is not {} allocator) throw new InvalidOperationException("Allocator is null");
         if (_importer is not {} importer) throw new InvalidOperationException("ModelImport is null");
@@ -101,7 +101,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
     }
 
 
-    protected override Model LoadInMemory(ModelRecord record, LoaderContext ctx) => throw new NotImplementedException();
+    protected override Model LoadInMemory(ModelRecord record, ImportContext ctx) => throw new NotImplementedException();
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public MeshId UploadMesh(NativeView<Vertex3D> vertices, NativeView<byte> indices, bool is16Bit)

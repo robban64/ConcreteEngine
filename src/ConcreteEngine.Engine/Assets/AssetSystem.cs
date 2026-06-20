@@ -47,33 +47,29 @@ public sealed class AssetSystem
         _pendingQueue.TryDrain(_loader, _assetManager.Store);
     }
 
-    internal bool ProcessLoader()
-    {
-        var finished =  _loader.ProcessLoader(out var finishedKind);
-        if (finishedKind == AssetKind.Shader)
-            _assetManager.AttachShaders();
-        
-        return finished;
-    }
+    internal bool ProcessLoader() => _loader.ProcessLoader();
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void StartLoader(GraphicsRuntime graphics)
     {
-        if(CurrentStatus != Status.ManifestLoaded) Throwers.InvalidOperation(nameof(CurrentStatus));
         ArgumentNullException.ThrowIfNull(graphics);
 
+        if (CurrentStatus != Status.ManifestLoaded) Throwers.InvalidOperation(nameof(CurrentStatus));
         CurrentStatus = Status.Booting;
 
         AssetSystemSetup.Start();
 
-        _scanner.RunFullScan(_loader.LoaderContext);
-        //_assetManager.Store.EnsureStoreCapacity(_loader.GetQueues());
-        _loader.ActivateFullLoader();
+        var ctx = _loader.ActivateFullLoader();
+        
+        _scanner.RunFullScan(ctx);
+        
+        AssetStore.EnsureStoreCapacity(
+            ctx.GetCount(AssetKind.Shader), ctx.GetCount(AssetKind.Model),
+            ctx.GetCount(AssetKind.Texture), ctx.GetCount(AssetKind.Material)
+        );
 
-        //var models = _loader.GetQueues()[AssetKind.Model.ToIndex()];
         //graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
-
     }
 
 

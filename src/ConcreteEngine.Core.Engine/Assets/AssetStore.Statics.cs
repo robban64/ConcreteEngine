@@ -9,7 +9,6 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 public sealed partial class AssetStore
 {
-
     private static readonly Func<string, Type, bool> NameExistsDel =
         static (name, type) => !GetTypeStore(AssetKindUtils.ToAssetKind(type)).HasName(name);
 
@@ -31,7 +30,13 @@ public sealed partial class AssetStore
         _ => Throwers.Unreachable<AssetTypeStore>(nameof(kind))
     };
 
-
+    internal static void EnsureStoreCapacity(int shader, int model, int texture, int material)
+    {
+        TypeStore<Shader>.Store.EnsureCapacity(shader);
+        TypeStore<Model>.Store.EnsureCapacity(model);
+        TypeStore<Texture>.Store.EnsureCapacity(texture);
+        TypeStore<Material>.Store.EnsureCapacity(material);
+    }
 
     public static class Core
     {
@@ -43,13 +48,13 @@ public sealed partial class AssetStore
         {
             FallbackShader = store.GetByName<Shader>("Model");
         }
+
         internal static void CreateMaterials(AssetManager manager)
         {
-            
             {
                 var gid = Guid.Parse("f28fbc18-9e84-41bf-b490-4b900b1d8598");
                 var assetId = manager.RegisterInMemoryAsset(gid, AssetKind.Material, "Fallback");
-                var material= new Material("Fallback", assetId, gid, MaterialProfileId.Opaque);
+                var material = new Material("Fallback", assetId, gid, MaterialProfileId.Opaque);
                 manager.Store.AddAsset(material);
                 FallbackMaterial = material;
             }
@@ -57,17 +62,15 @@ public sealed partial class AssetStore
             {
                 var gid = Guid.Parse("747a4dcf-e9b0-47cd-a5b9-6a5b34ae40d6");
                 var assetId = manager.RegisterInMemoryAsset(gid, AssetKind.Material, "DebugBounds");
-                var material= new Material("DebugBounds", assetId, gid, MaterialProfileId.Opaque);
+                var material = new Material("DebugBounds", assetId, gid, MaterialProfileId.Opaque);
                 material.State.DrawState =
                     GfxDrawState.Set(GfxDrawFlags.Blend, GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2);
                 material.State.DrawFunctions = new GfxDrawFunctions(BlendMode.Alpha);
-                
+
                 manager.Store.AddAsset(material);
-                
+
                 DebugBoundsMaterial = material;
             }
-
-
         }
     }
 }

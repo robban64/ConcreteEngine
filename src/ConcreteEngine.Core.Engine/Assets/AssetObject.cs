@@ -8,6 +8,7 @@ public abstract class AssetObject : IComparable<AssetObject>
     public const int MaxNameLength = 64;
 
     private readonly List<AssetRef> _listeners = [];
+    
     public AssetDirtyFlag DirtyFlags { get; private set; }
     public AssetId Id { get; }
     public Guid GId { get; }

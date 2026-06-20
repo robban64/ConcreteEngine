@@ -35,7 +35,7 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
         _embeddedTextures.Add(guid, new TextureData(guid, in textureData));
     }
     
-    protected override Texture Load(TextureRecord record, LoaderContext ctx)
+    protected override Texture Load(TextureRecord record, ImportContext ctx)
     {
         if (record.TextureKind == TextureKind.CubeMap)
             return LoadCubeMap(record, ctx);
@@ -64,7 +64,7 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
     }
 
     //?
-    protected override Texture LoadInMemory(TextureRecord record, LoaderContext ctx)
+    protected override Texture LoadInMemory(TextureRecord record, ImportContext ctx)
     {
         throw new NotImplementedException();
         
@@ -72,7 +72,7 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private Texture LoadCubeMap(TextureRecord record, LoaderContext ctx)
+    private Texture LoadCubeMap(TextureRecord record, ImportContext ctx)
     {
         TextureId textureId = default;
         Size2D size = default;

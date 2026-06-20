@@ -15,7 +15,6 @@ internal sealed class AssetLoader
     private ProcessStepOrder _step;
 
     private readonly AssetManager _assetManager;
-
     private readonly AssetStore _store;
 
     private readonly ShaderLoader _shaderLoader;
@@ -25,190 +24,76 @@ internal sealed class AssetLoader
 
     private readonly IAssetTypeLoader[] _loaders;
 
-    public AssetLoadContext LoaderContext { get; private set; }
+    private AssetLoaderContext? _loaderContext;
 
     public AssetLoader(AssetManager assetManager, GfxContext gfx)
     {
-        _assetManager = assetManager;   
+        _assetManager = assetManager;
         _store = assetManager.Store;
-        
+
         _loaders = new IAssetTypeLoader[AssetKindUtils.AssetTypeCount];
 
         _loaders[AssetKind.Shader.ToIndex()] = _shaderLoader = new ShaderLoader(gfx.Shaders);
-        _loaders[AssetKind.Texture.ToIndex()] =_textureLoader = new TextureLoader(gfx.Textures);
-        _loaders[AssetKind.Model.ToIndex()] =_modelLoader = new ModelLoader(_textureLoader, gfx.Meshes);
-        _loaders[AssetKind.Material.ToIndex()] =_materialLoader = new MaterialLoader();
-
-        LoaderContext = new AssetLoadContext();
+        _loaders[AssetKind.Texture.ToIndex()] = _textureLoader = new TextureLoader(gfx.Textures);
+        _loaders[AssetKind.Model.ToIndex()] = _modelLoader = new ModelLoader(_textureLoader, gfx.Meshes);
+        _loaders[AssetKind.Material.ToIndex()] = _materialLoader = new MaterialLoader();
     }
 
-    
-    public bool IsActive => _shaderLoader.IsActive || _textureLoader.IsActive || _modelLoader.IsActive || _materialLoader.IsActive;
+    public bool IsActive => _loaderContext != null;
 
-    private LoaderContext MakeContext(AssetRecord record, bool isHotReload = false)
+    public AssetLoaderContext GetLoaderContext()
+    {
+        if(_loaderContext is null) Throwers.InvalidOperation("Loader context is null");
+        return _loaderContext;
+    }
+
+    private ImportContext MakeContext(AssetRecord record)
     {
         if (!_store.TryGetIdByGuid(record.Id, out var assetId))
             Throwers.NotFound(nameof(record.Id), $"AssetRecord '{record.Name}'");
-        
-        return new LoaderContext(assetId, _assetManager);
+
+        return new ImportContext(assetId, _assetManager);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public void ActivateFullLoader()
+    public AssetLoaderContext ActivateFullLoader()
     {
-        if(IsActive) Throwers.InvalidOperation(nameof(IsActive));
-
-        foreach (var loader in _loaders)
-            loader.Activate(true);
-
+        if (IsActive || _loaderContext != null) Throwers.InvalidOperation("Invalid states");
+        _loaderContext = new AssetLoaderContext(true);
+        foreach (var loader in _loaders) loader.Activate(true);
         Logger.LogString(LogScope.Assets, "Startup Asset Loader - Activated");
+        return _loaderContext;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public void ReactiveLoader(AssetKind kind)
     {
-        if(_loaders[kind.ToIndex()].IsActive) return;
-        
+        if (_loaders[kind.ToIndex()].IsActive) return;
+
+        _loaderContext ??= new AssetLoaderContext(false);
+
         if (kind == AssetKind.Model)
         {
             ReactiveLoader(AssetKind.Texture);
             ReactiveLoader(AssetKind.Material);
         }
-        
+
         _loaders[kind.ToIndex()].Activate(false);
-        
-        var assetKindName = EnumCache<AssetKind>.Names[(int)kind];
-        Logger.LogString(LogScope.Assets, $"Loader ({assetKindName}) - Reactivated");
+
+        Logger.LogString(LogScope.Assets, $"Loader ({EnumCache<AssetKind>.Names[(int)kind]}) - Reactivated");
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public void DeactivateLoader()
     {
-        foreach (var loader in _loaders)
-            loader.DeActivate();
+        _loaderContext = null;
+        foreach (var loader in _loaders) loader.DeActivate();
 
         Logger.LogString(LogScope.Assets, "Asset Loader - Closed");
     }
 
-    public bool ProcessLoader(out AssetKind finishedKind)
-    {
-       // if (_recordQueue.Length == 0)
-       //     Throwers.InvalidOperation("Asset Queue is empty");
-
-        finishedKind = AssetKind.Unknown;
-        switch (_step)
-        {
-            case ProcessStepOrder.NotStarted: _step = ProcessStepOrder.Shaders; break;
-            case ProcessStepOrder.Shaders:
-                LoadShaders();
-                finishedKind = AssetKind.Shader;
-                break;
-            case ProcessStepOrder.Textures:
-                LoadTextures();
-                if(_step != ProcessStepOrder.Textures) finishedKind = AssetKind.Texture;
-                break;
-            case ProcessStepOrder.Meshes:
-                LoadModel();
-                if(_step != ProcessStepOrder.Meshes) finishedKind = AssetKind.Model;
-                break;
-            case ProcessStepOrder.Materials:
-                LoadMaterial();
-                finishedKind = AssetKind.Material;
-                break;
-            default:
-                return Throwers.Unreachable<bool>(nameof(_step));
-        }
-
-        return _step == ProcessStepOrder.Finished;
-    }
-    
-    private void ProcessEmbedded(Model model, List<IEmbeddedAsset> embedded)
-    {
-        var hasTexture = false;
-        foreach (var it in embedded)
-        {
-            var assetId = _assetManager.RegisterEmbedded(model.Id, it);
-            switch (it)
-            {
-                case EmbeddedSceneTexture tex:
-                    hasTexture = true;
-                    var texture = _textureLoader.LoadEmbedded(assetId, tex);
-                    _store.AddAsset(texture);
-                    model.SetTexture(tex.TextureIndex, texture);
-                    break;
-                case EmbeddedSceneMaterial mat:
-                    var material = _materialLoader.LoadEmbedded(assetId, mat);
-                    _store.AddAsset(material);
-                    model.SetMaterial(mat.MaterialIndex, material);
-                    break;
-            }
-        }
-
-        if (hasTexture && _textureLoader.StoredEmbeddedCount > 0)
-            Throwers.InvalidOperation("Texture loader has stored embedded assets");
-
-        embedded.Clear();
-    }
-
-
-    private void Load<TAsset, TRecord>(AssetTypeLoader<TAsset, TRecord> loader, TRecord record)
-        where TAsset : AssetObject where TRecord : AssetRecord
-    {
-        var ctx = MakeContext(record);
-        var asset = loader.LoadAsset(record, ctx);
-        _store.AddAsset(asset);
-
-        if (loader is ModelLoader modelLoader && asset is Model model)
-            ProcessEmbedded(model, modelLoader.EmbeddedAssets);
-    }
-
-    public void LoadShaders()
-    {
-        var loader = GetLoader<ShaderLoader>();
-        var queue = LoaderContext.GetQueue(AssetKind.Shader);
-        loader.LoadAllShaders(queue);
-        while (queue.TryDequeue(out var record))
-            Load(loader, (ShaderRecord)record);
-
-        _step = ProcessStepOrder.Textures;
-    }
-
-    public void LoadTextures()
-    {
-        var queue = LoaderContext.GetQueue(AssetKind.Texture);
-
-        int n = 8;
-        while (n-- >= 0 && queue.TryDequeue(out var record))
-            Load(_textureLoader, (TextureRecord)record);
-
-        if (queue.Count == 0) _step = ProcessStepOrder.Meshes;
-    }
-
-    public void LoadModel()
-    {
-        var queue = LoaderContext.GetQueue(AssetKind.Model);
-
-        int n = 8;
-        while (n-- >= 0 && queue.TryDequeue(out var record))
-            Load(_modelLoader, (ModelRecord)record);
-
-        if (queue.Count == 0) _step = ProcessStepOrder.Materials;
-    }
-
-    public void LoadMaterial()
-    {
-        var queue = LoaderContext.GetQueue(AssetKind.Material);
-
-        while (queue.TryDequeue(out var record))
-            Load(_materialLoader, (MaterialRecord)record);
-
-        _step = ProcessStepOrder.Finished;
-    }
 
     public void Reload<TAsset>(TAsset asset) where TAsset : AssetObject
     {
         ArgumentNullException.ThrowIfNull(asset);
-        
+
         _store.TryGetFileBindings(asset.Id, out var fileIds);
         var files = new AssetFile[fileIds.Length];
         for (var i = 0; i < fileIds.Length; i++)
@@ -222,24 +107,111 @@ internal sealed class AssetLoader
         }
 
         if (!tLoader.IsActive)
-           ReactiveLoader(asset.Kind);
+            ReactiveLoader(asset.Kind);
 
         tLoader.Reload(asset, files);
 
         if (files.Length > 0) _assetManager.RegisterExistingBindings(asset.Id, files);
-
     }
-    
-    private TLoader GetLoader<TLoader>() where TLoader : class, IAssetTypeLoader
+
+    public bool ProcessLoader()
     {
-        var loader = _loaders[TLoader.Kind.ToIndex()];
-        if (loader is TLoader tLoader) return tLoader;
+        if (_loaderContext is null) Throwers.InvalidOperation("Loader context is null");
+        if (_loaderContext.TotalQueued == 0) return true;
 
-        Throwers.InvalidArgument($"Loader: {TLoader.Kind} is null or wrong type");
-        return null;
+        if (_step == ProcessStepOrder.NotStarted) _step++;
+
+        bool done = _step switch
+        {
+            ProcessStepOrder.Shaders => LoadShaders(),
+            ProcessStepOrder.Textures => LoadTextures(),
+            ProcessStepOrder.Meshes => LoadModels(),
+            ProcessStepOrder.Materials => LoadMaterial(),
+            ProcessStepOrder.Finished => true,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        if (done && _step != ProcessStepOrder.Finished) _step++;
+        return _step == ProcessStepOrder.Finished;
     }
 
-     private enum ProcessStepOrder
+    private void ProcessEmbedded(Model model, List<IEmbeddedAsset> embedded)
+    {
+        int i;
+        for (i = 0; i < embedded.Count; i++)
+        {
+            if (embedded[i] is not EmbeddedSceneTexture tex) break;
+            var assetId = _assetManager.RegisterEmbedded(model.Id, tex);
+            var texture = _textureLoader.LoadEmbedded(assetId, tex);
+            _store.AddAsset(texture);
+            model.SetTexture(tex.TextureIndex, texture);
+        }
+
+        for (; i < embedded.Count; i++)
+        {
+            if (embedded[i] is not EmbeddedSceneMaterial mat) continue;
+            var assetId = _assetManager.RegisterEmbedded(model.Id, mat);
+            var material = _materialLoader.LoadEmbedded(assetId, mat);
+            _store.AddAsset(material);
+            model.SetMaterial(mat.MaterialIndex, material);
+        }
+
+        if (_textureLoader.StoredEmbeddedCount > 0)
+            Throwers.InvalidOperation("Texture loader has stored embedded assets");
+
+        embedded.Clear();
+    }
+
+    private TAsset Load<TAsset, TRecord>(AssetTypeLoader<TAsset, TRecord> loader, TRecord record)
+        where TAsset : AssetObject where TRecord : AssetRecord
+    {
+        var asset = loader.LoadAsset(record, MakeContext(record));
+        _store.AddAsset(asset);
+        return asset;
+    }
+
+    private bool LoadShaders()
+    {
+        _shaderLoader.ImportAllShaders(_loaderContext!.GetQueue(AssetKind.Shader));
+        bool done = _loaderContext.DrainQueue<ShaderRecord>(AssetKind.Shader, 0,
+            record => Load(_shaderLoader, record)
+        );
+
+        if (done) _assetManager.AttachShaders();
+        return done;
+    }
+
+    private bool LoadTextures()
+    {
+        return _loaderContext!.DrainQueue<TextureRecord>(AssetKind.Texture, 8,
+            record => Load(_textureLoader, record)
+        );
+    }
+
+    private bool LoadModels()
+    {
+        return _loaderContext!.DrainQueue<ModelRecord>(AssetKind.Model, 8,
+            record =>
+            {
+                var model = Load(_modelLoader, record);
+                ProcessEmbedded(model, _modelLoader.EmbeddedAssets);
+            });
+    }
+
+    private bool LoadMaterial()
+    {
+        return _loaderContext!.DrainQueue<MaterialRecord>(AssetKind.Material, 0,
+            record => Load(_materialLoader, record)
+        );
+    }
+
+/*
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private TLoader GetLoader<TLoader>() where TLoader : class, IAssetTypeLoader
+        => (TLoader)_loaders[TLoader.Kind.ToIndex()];
+*/
+
+    private enum ProcessStepOrder
     {
         NotStarted,
         Shaders,

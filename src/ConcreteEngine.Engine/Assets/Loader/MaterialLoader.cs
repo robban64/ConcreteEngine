@@ -17,10 +17,10 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
     protected override void OnDeActivate() { }
 
-    protected override Material LoadInMemory(MaterialRecord record, LoaderContext ctx) =>
+    protected override Material LoadInMemory(MaterialRecord record, ImportContext ctx) =>
         throw new NotImplementedException();
 
-    protected override Material Load(MaterialRecord record, LoaderContext ctx)
+    protected override Material Load(MaterialRecord record, ImportContext ctx)
     {
         var mat = new Material(record.Name, ctx.Id, record.Id, record.Profile, record.Parameters);
 

@@ -73,7 +73,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
         var model = new Model(
             name: record.Name,
             id: ctx.Id,
-            gid: record.GId,
+            gid: record.Id,
             modelInfo: in modelInfo,
             bounds: in bounds,
             meshes: meshes,

@@ -17,6 +17,8 @@ internal sealed class AssetScanner(AssetManager assetManager)
         ArgumentNullException.ThrowIfNull(result);
         ArgumentOutOfRangeException.ThrowIfNotEqual(result.Length, AssetTypeCount);
 
+        RunMigration();
+        
         var shaderQueue = result[AssetKind.Shader.ToIndex()] = new Queue<AssetRecord>(16);
         var textureQueue = result[AssetKind.Texture.ToIndex()] = new Queue<AssetRecord>(64);
         var modelQueue = result[AssetKind.Model.ToIndex()] = new Queue<AssetRecord>(64);
@@ -29,6 +31,17 @@ internal sealed class AssetScanner(AssetManager assetManager)
     }
 
     private AvgFrameTimer avg1;
+
+    private void RunMigration()
+    {
+        foreach (var scanInfo in MakeAssetEnumerable())
+        {
+            var record = AssetSerializer.LoadRecord(scanInfo.RelativePath);
+            AssetSerializer.WriteRecord(scanInfo.RelativePath, record);
+        }
+
+        throw new InvalidOperationException("Done");
+    }
 
     private void ScanAllFiles(Queue<AssetRecord>[] result)
     {
@@ -44,10 +57,13 @@ internal sealed class AssetScanner(AssetManager assetManager)
 
             var fileIndex = 1;
             var path = scanInfo.RelativePath.AsSpan(0, scanInfo.RelativePath.LastIndexOf('/'));
-            foreach (var localPath in record.Files.Values)
+            if (record.Files is not null)
             {
-                var filePath = Path.Join(path, localPath);
-                assetManager.RegisterAssetBinding(fileIndex++, assetId, record.Kind, filePath);
+                foreach (var localPath in record.Files.Values)
+                {
+                    var filePath = Path.Join(path, localPath);
+                    assetManager.RegisterAssetBinding(fileIndex++, assetId, record.Kind, filePath);
+                }
             }
 
             result[record.Kind.ToIndex()].Enqueue(record);
@@ -72,10 +88,11 @@ internal sealed class AssetScanner(AssetManager assetManager)
         };
     }
 
-    private static FileSystemEnumerable<FileScanInfo> MakeAssetEnumerable()
+    private static FileSystemEnumerable<FileScanInfo> MakeAssetEnumerable(string root = EnginePath.AssetBasePath)
     {
+        if(!root.StartsWith(EnginePath.Root)) Throwers.InvalidArgument(nameof(root), root);
         return new FileSystemEnumerable<FileScanInfo>(
-            directory: EnginePath.AssetBasePath,
+            directory: root,
             options: new EnumerationOptions() { RecurseSubdirectories = true, },
             transform: static (ref entry) =>
             {

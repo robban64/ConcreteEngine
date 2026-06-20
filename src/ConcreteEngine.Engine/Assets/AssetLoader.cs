@@ -49,8 +49,8 @@ internal sealed class AssetLoader
 
     private LoaderContext MakeContext(AssetRecord record, bool isHotReload = false)
     {
-        if (!_store.TryGetIdByGuid(record.GId, out var assetId))
-            Throwers.NotFound(nameof(record.GId), $"AssetRecord '{record.Name}'");
+        if (!_store.TryGetIdByGuid(record.Id, out var assetId))
+            Throwers.NotFound(nameof(record.Id), $"AssetRecord '{record.Name}'");
         
         return new LoaderContext(assetId, _assetManager);
     }

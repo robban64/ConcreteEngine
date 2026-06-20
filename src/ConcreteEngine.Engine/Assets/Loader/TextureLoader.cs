@@ -135,7 +135,7 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
         return new Texture(
             record.Name,
             id,
-            record.GId,
+            record.Id,
             textureId,
             size,
             new TextureProperties(

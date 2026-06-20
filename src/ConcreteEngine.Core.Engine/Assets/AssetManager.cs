@@ -73,7 +73,7 @@ public sealed class AssetManager
         if (Store.HasName(record.Kind, record.Name))
             Throwers.InvalidArgument($"Asset name {record.Name} already registered");
 
-        var assetId = Store.Register(record.GId, record.Files.Count);
+        var assetId = Store.Register(record.Id, record.Files?.Count ?? 0);
         var file = Files.RegisterRoot(assetId, record.Name, in fileInfo);
         Store.SetAssetBinding(assetId, file.Id, 0); // root
         return assetId;

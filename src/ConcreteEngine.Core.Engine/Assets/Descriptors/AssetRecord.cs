@@ -12,36 +12,42 @@ namespace ConcreteEngine.Core.Engine.Assets.Descriptors;
 [JsonDerivedType(typeof(MaterialRecord), typeDiscriminator: nameof(AssetKind.Material))]
 public abstract class AssetRecord
 {
-    public required Guid GId { get; init; }
-
-    public string Name { get; init; } = null!;
-
-    public Dictionary<string, string> Files { get; init; } = new();
-
+    [JsonPropertyOrder(-10)]
     public AssetLoadingMode LoadMode { get; init; } = AssetLoadingMode.Processed;
+
+    [JsonPropertyOrder(-9)]
+    public required Guid Id { get; init; }
+    
+    [JsonPropertyOrder(-8)]
+    public required string Name { get; init; }
+    
+    [JsonPropertyOrder(-7)]
+    public Dictionary<string, string>? Files { get; init; }
 
     [JsonIgnore]
     public abstract AssetKind Kind { get; }
 
-    public static string GetDefaultFilename(AssetRecord record) => record.Files.First().Value;
 }
 
 internal sealed class ShaderRecord : AssetRecord
 {
     public const string VertexFileKey = "Vertex";
     public const string FragmentFileKey = "Fragment";
+    
+    //public string VertexShader { get; init; }
+    //public string FragmentShader { get; init; }
 
     [JsonIgnore]
     public override AssetKind Kind => AssetKind.Shader;
-
+    
     public static (string, string) SetFileNames(ShaderRecord record)
     {
-        return (record.Files[VertexFileKey], record.Files[FragmentFileKey]);
+        return (record.Files![VertexFileKey], record.Files[FragmentFileKey]);
     }
 
     public static (string, string) GetFilenames(ShaderRecord record)
     {
-        return (record.Files[VertexFileKey], record.Files[FragmentFileKey]);
+        return (record.Files![VertexFileKey], record.Files[FragmentFileKey]);
     }
 }
 
@@ -64,7 +70,7 @@ internal sealed class TextureRecord : AssetRecord
         var isNormal = name.Contains("normal", StringComparison.OrdinalIgnoreCase);
         return new TextureRecord
         {
-            GId = Guid.NewGuid(),
+            Id = Guid.NewGuid(),
             Name = name,
             PixelFormat = isNormal ? TexturePixelFormat.Rgba : TexturePixelFormat.SrgbAlpha,
             Preset = isNormal ? TexturePreset.LinearMipmapRepeat : TexturePreset.LinearClamp,
@@ -86,7 +92,7 @@ internal sealed class ModelRecord : AssetRecord
     {
         return new ModelRecord
         {
-            GId = Guid.NewGuid(),
+            Id = Guid.NewGuid(),
             Name = Path.GetFileNameWithoutExtension(filename),
             LoadMode = AssetLoadingMode.Processed,
             Files = { { "Source", relativePath } }
@@ -103,11 +109,4 @@ internal sealed class MaterialRecord : AssetRecord
     [JsonIgnore]
     public override AssetKind Kind => AssetKind.Material;
 
-    public static MaterialRecord Create(string binPath)
-    {
-        return new MaterialRecord
-        {
-            GId = Guid.NewGuid(), Files = { { "Source", binPath } }, Profile = MaterialProfileId.Opaque,
-        };
-    }
 }

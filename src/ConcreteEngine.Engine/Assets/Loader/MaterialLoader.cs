@@ -27,7 +27,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
     protected override Material Load(MaterialRecord record, LoaderContext ctx)
     {
-        var mat = new Material(record.Name, ctx.Id, record.GId, record.Profile, record.Parameters);
+        var mat = new Material(record.Name, ctx.Id, record.Id, record.Profile, record.Parameters);
 
         var sourceCount = mat.SourceCount;
         for (int i = 0; i < sourceCount; i++)

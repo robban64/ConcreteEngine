@@ -53,8 +53,7 @@ public abstract class AssetObject : IComparable<AssetObject>
     internal AssetDirtyFlag Commit()
     {
         var f = DirtyFlags;
-        var shouldTrigger = (f & AssetDirtyFlag.Structure) != 0 ||
-                            (f & AssetDirtyFlag.Dependencies) != 0 ||
+        var shouldTrigger = (f & AssetDirtyFlag.Structure) != 0 || (f & AssetDirtyFlag.Dependencies) != 0 || 
                             (f & AssetDirtyFlag.Lifecycle) != 0;
         if (shouldTrigger)
         {

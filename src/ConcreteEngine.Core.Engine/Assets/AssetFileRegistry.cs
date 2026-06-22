@@ -19,6 +19,8 @@ public sealed class AssetFileRegistry
 
     private readonly Dictionary<string, AssetFileId> _fileByPath = new(DefaultCap);
     private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultBindingCap);
+    
+    private readonly Dictionary<string, List<AssetFileId>> _byDirectory = new(32);
 
     private readonly Stack<int> _free = [];
 
@@ -30,6 +32,7 @@ public sealed class AssetFileRegistry
 
     public int RootFileCount => _rootBindings.Count;
 
+    //
     public bool HasFilePath(string relativePath) => _fileByPath.ContainsKey(relativePath);
     public bool IsRootFile(AssetFileId fileId) => _rootBindings.ContainsKey(fileId);
 
@@ -51,14 +54,14 @@ public sealed class AssetFileRegistry
     public bool TryGetFile(AssetFileId id, [NotNullWhen(true)] out AssetFile? entry)
     {
         var index = id.Index();
-        if ((uint)index < (uint)_files.Length && _files[index] is { } file && file.Id == id)
+        if ((uint)index >= (uint)_files.Length || _files[index] is not { } file || file.Id != id)
         {
-            entry = file;
-            return true;
+            entry = null;
+            return false;
         }
 
-        entry = null;
-        return false;
+        entry = file;
+        return true;
     }
 
     public bool TryGetFileByPath(string relativePath, [NotNullWhen(true)] out AssetFile? entry)
@@ -87,12 +90,18 @@ public sealed class AssetFileRegistry
     internal AssetFile RegisterRoot(AssetId assetRootId, string name, in FileScanInfo fileInfo)
     {
         if (!assetRootId.IsValid()) Throwers.InvalidArgument(nameof(assetRootId));
-        var fileSpec = RegisterFile(FileBinding.RootFile, name, in fileInfo);
+        var fileSpec = AddFile(FileBinding.RootFile, name, in fileInfo);
         _rootBindings.Add(fileSpec.Id, assetRootId);
         return fileSpec;
     }
 
     internal AssetFile RegisterFile(FileBinding binding, string name, in FileScanInfo scanInfo)
+    {
+        ArgumentOutOfRangeException.ThrowIfEqual((int)binding, (int)FileBinding.RootFile, nameof(binding));
+        return AddFile(binding, name, in scanInfo);
+    }
+
+    private AssetFile AddFile(FileBinding binding, string name, in FileScanInfo scanInfo)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentException.ThrowIfNullOrEmpty(scanInfo.RelativePath);
@@ -100,19 +109,25 @@ public sealed class AssetFileRegistry
         ArgumentOutOfRangeException.ThrowIfZero((int)binding, nameof(binding));
 
         if (_fileByPath.ContainsKey(scanInfo.RelativePath))
-            Throwers.InvalidArgument($"AssetFile {scanInfo.RelativePath} already registered");
+            Throwers.InvalidArgument(nameof(scanInfo), $"AssetFile {scanInfo.RelativePath} already registered");
 
         var fileId = AllocateSlot();
         var fileSpec = new AssetFile(
-            GId: Guid.NewGuid(),
-            Id: fileId,
-            Binding: binding,
-            Storage: scanInfo.Storage,
-            LogicalName: name,
-            RelativePath: scanInfo.RelativePath,
-            SizeBytes: scanInfo.SizeBytes,
-            LastWriteTime: scanInfo.LastWriteTime
+            gId: Guid.NewGuid(),
+            id: fileId,
+            binding: binding,
+            storage: scanInfo.Storage,
+            logicalName: name,
+            relativePath: scanInfo.RelativePath,
+            sizeBytes: scanInfo.SizeBytes,
+            lastWriteTime: scanInfo.LastWriteTime
         );
+
+        var dirSpan = Path.GetDirectoryName(scanInfo.RelativePath.AsSpan());
+        if (!_byDirectory.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(dirSpan, out var fileIds))
+            _byDirectory.GetAlternateLookup<ReadOnlySpan<char>>().TryAdd(dirSpan, fileIds = new List<AssetFileId>(9));
+
+        fileIds.Add(fileId);
 
         _files[fileId.Index()] = fileSpec;
         _fileByPath.Add(scanInfo.RelativePath, fileId);

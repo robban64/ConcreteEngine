@@ -43,14 +43,14 @@ internal static unsafe class MaterialModelImporter
             ProcessMaterialProperties(aiMat, material, ctx);
 
             material.FileSpec = new AssetFile(
-                GId: Guid.NewGuid(),
-                Id: AssetFileId.Empty,
-                Binding: FileBinding.RootFile,
-                Storage: AssetStorage.Embedded,
-                RelativePath: assetName,
-                LogicalName: material.EmbeddedName,
-                LastWriteTime: DateTime.MinValue,
-                SizeBytes: 0
+                gId: Guid.NewGuid(),
+                id: AssetFileId.Empty,
+                binding: FileBinding.RootFile,
+                storage: AssetStorage.Embedded,
+                relativePath: assetName,
+                logicalName: material.EmbeddedName,
+                lastWriteTime: DateTime.MinValue,
+                sizeBytes: 0
                 //Source: ctx.Filename
             );
 
@@ -69,14 +69,14 @@ internal static unsafe class MaterialModelImporter
             var aiTexture = scene->MTextures[texture.TextureIndex];
             int textureSize = LoadTextureData(ctx.EmbeddedContext, aiTexture, texture);
             texture.FileSpec = new AssetFile(
-                GId: Guid.NewGuid(),
-                Id: AssetFileId.Empty,
-                Binding: FileBinding.RootFile,
-                Storage: AssetStorage.Embedded,
-                RelativePath: texture.Name,
-                LogicalName: texture.EmbeddedName,
-                SizeBytes: textureSize,
-                LastWriteTime: DateTime.MinValue
+                gId: Guid.NewGuid(),
+                id: AssetFileId.Empty,
+                binding: FileBinding.RootFile,
+                storage: AssetStorage.Embedded,
+                relativePath: texture.Name,
+                logicalName: texture.EmbeddedName,
+                sizeBytes: textureSize,
+                lastWriteTime: DateTime.MinValue
                 //Source: ctx.Filename
             );
         }

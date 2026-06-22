@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace ConcreteEngine.Core.Engine.Assets;
 
 public enum FileBinding : byte
@@ -8,25 +10,27 @@ public enum FileBinding : byte
     UnboundFile
 }
 
-public sealed record AssetFile(
-    Guid GId,
-    AssetFileId Id,
-    FileBinding Binding,
-    AssetStorage Storage,
-    DateTime LastWriteTime,
-    long SizeBytes,
-    string LogicalName,
-    string RelativePath)
-    : IComparable<AssetFile>
+public sealed class AssetFile(
+    Guid gId,
+    AssetFileId id,
+    FileBinding binding,
+    AssetStorage storage,
+    DateTime lastWriteTime,
+    long sizeBytes,
+    string logicalName,
+    string relativePath) : IComparable<AssetFile>
 {
-    public Guid GId { get; } = GId;
-    public AssetFileId Id { get; } = Id;
-    public FileBinding Binding { get; internal set; } = Binding;
-    public AssetStorage Storage { get; internal set; } = Storage;
-    public DateTime LastWriteTime { get; internal set; } = LastWriteTime;
-    public long SizeBytes { get; internal set; } = SizeBytes;
-    public string LogicalName { get; internal set; } = LogicalName;
-    public string RelativePath { get; internal set; } = RelativePath;
+    public Guid GId { get; } = gId;
+    
+    [JsonIgnore]
+    public AssetFileId Id { get; } = id;
+
+    public FileBinding Binding { get; internal set; } = binding;
+    public AssetStorage Storage { get; internal set; } = storage;
+    public DateTime LastWriteTime { get; internal set; } = lastWriteTime;
+    public long SizeBytes { get; internal set; } = sizeBytes;
+    public string LogicalName { get; internal set; } = logicalName;
+    public string RelativePath { get; internal set; } = relativePath;
     
     public bool IsRoot() => Binding == FileBinding.RootFile;
 

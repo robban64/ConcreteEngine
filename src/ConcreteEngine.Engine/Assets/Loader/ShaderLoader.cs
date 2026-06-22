@@ -125,7 +125,10 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
         gfxShaders.RecreateShader(asset.GfxId, _vsBlock.Data, _fsBlock.Data, out var samplers);
         asset.SetSamplers(samplers);
 
-        files[1] = vsFile with { LastWriteTime = File.GetLastWriteTime(vsPath), SizeBytes = vsLength };
-        files[2] = fsFile with { LastWriteTime = File.GetLastWriteTime(fsPath), SizeBytes = fsLength };
+        vsFile.LastWriteTime = File.GetLastWriteTime(vsPath);
+        vsFile.SizeBytes = vsLength;
+
+        fsFile.LastWriteTime = File.GetLastWriteTime(fsPath);
+        fsFile.SizeBytes = fsLength;
     }
 }

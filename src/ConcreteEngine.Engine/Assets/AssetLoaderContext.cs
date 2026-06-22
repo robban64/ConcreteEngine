@@ -29,7 +29,7 @@ internal sealed class AssetLoaderContext
     }
 
     public int GetCount(AssetKind kind) => _queues[kind.ToIndex()].Count;
-    public bool IsCompleted => TotalProcessed >= TotalQueued && TotalQueued > 0;
+    public bool IsCompleted => TotalQueued == 0 && TotalProcessed > 0;
 
     public Queue<AssetRecord> GetQueue(AssetKind  kind) => _queues[kind.ToIndex()];
 

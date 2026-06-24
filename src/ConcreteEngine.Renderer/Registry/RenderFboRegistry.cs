@@ -57,8 +57,8 @@ public sealed class RenderFboRegistry
 
     internal void Register<TTag>(FboVariant variant, RegisterFboEntry entry, Size2D outputSize) where TTag : class
     {
-        ArgOutOfRangeThrower.ThrowIfSizeTooSmall(outputSize, new Size2D(RenderLimits.MinOutputSize));
-        ArgOutOfRangeThrower.ThrowIfSizeTooBig(outputSize, new Size2D(RenderLimits.MaxOutputSize));
+        if(outputSize < RenderLimits.MinOutputSize) Throwers.InvalidArgument(nameof(outputSize));
+        if(outputSize > RenderLimits.MaxOutputSize) Throwers.InvalidArgument(nameof(outputSize));
 
         if(_fboCount > RenderLimits.FboSlots) Throwers.InvalidOperation(nameof(_fboCount));
         if(_fboRegistry[_fboCount] != null!) Throwers.InvalidOperation(nameof(RenderFboRegistry));
@@ -172,15 +172,15 @@ public sealed class RenderFboRegistry
 
     private static void ValidateOutputSize(Size2D outputSize, bool isShadowMap)
     {
-        ArgOutOfRangeThrower.ThrowIfSizeTooSmall(outputSize, new Size2D(RenderLimits.MinOutputSize));
+        if(outputSize < RenderLimits.MinOutputSize) Throwers.InvalidArgument(nameof(outputSize));
         if (isShadowMap)
         {
-            ArgOutOfRangeThrower.ThrowIfSizeTooBig(outputSize, new Size2D(RenderLimits.MaxShadowMapSize));
-            ArgOutOfRangeThrower.ThrowIfSizeTooSmall(outputSize, new Size2D(RenderLimits.MinShadowMapSize));
+            if(outputSize > RenderLimits.MaxShadowMapSize) Throwers.InvalidArgument(nameof(outputSize));
+            if(outputSize < RenderLimits.MinShadowMapSize) Throwers.InvalidArgument(nameof(outputSize));
         }
-        else
+        else if( outputSize > RenderLimits.MaxOutputSize)
         {
-            ArgOutOfRangeThrower.ThrowIfSizeTooBig(outputSize, new Size2D(RenderLimits.MaxOutputSize));
+            Throwers.InvalidArgument(nameof(outputSize));
         }
     }
 

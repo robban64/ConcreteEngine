@@ -24,7 +24,7 @@ internal sealed unsafe class FieldMemory
         ArgumentOutOfRangeException.ThrowIfLessThan(valueSize, 4);
 
         var nameLength = Encoding.UTF8.GetByteCount(name);
-        var labelLength = nameLength + IntMath.GetDigits(id) + 2 + 1;
+        var labelLength = nameLength + IntMath.GetDigits(id) + 8 + 1;
 
         var builder = allocator.MakeBuilder();
 

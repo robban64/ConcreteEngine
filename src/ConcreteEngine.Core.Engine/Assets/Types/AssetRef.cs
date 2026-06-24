@@ -11,17 +11,17 @@ public interface IAssetListener
 
 public abstract class AssetRef
 {
-    protected AssetObject? AssetObjectRef;
+    protected AssetObject? AssetObj;
     private readonly IAssetListener _listener;
 
-    protected AssetRef(AssetObject? assetObjectRef, IAssetListener listener)
+    protected AssetRef(AssetObject? assetObj, IAssetListener listener)
     {
-        ArgumentNullException.ThrowIfNull(assetObjectRef);
+        ArgumentNullException.ThrowIfNull(assetObj);
         ArgumentNullException.ThrowIfNull(listener);
-        AssetObjectRef = assetObjectRef;
+        AssetObj = assetObj;
         _listener = listener;
         
-        assetObjectRef.AddRef(this);
+        assetObj.AddRef(_listener);
     }
 
     public abstract AssetObject Asset { get; }
@@ -32,8 +32,8 @@ public abstract class AssetRef
     internal void Detach()
     {
         _listener.OnAssetRemoved(Asset);
-        Asset.RemoveRef(this);
-        AssetObjectRef = null!;
+        Asset.RemoveRef(_listener);
+        AssetObj = null!;
     }}
 
 public sealed class AssetRef<TAsset>(TAsset assetObject, IAssetListener listener) : AssetRef(assetObject, listener)
@@ -44,8 +44,8 @@ public sealed class AssetRef<TAsset>(TAsset assetObject, IAssetListener listener
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {   
-            if (AssetObjectRef is null) Throwers.InvalidOperation("Asset is not bound");
-            return (TAsset)AssetObjectRef;
+            if (AssetObj is null) Throwers.InvalidOperation("Asset is not bound");
+            return (TAsset)AssetObj;
         }
     }
     

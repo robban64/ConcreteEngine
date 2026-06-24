@@ -8,7 +8,6 @@ namespace ConcreteEngine.Core.Engine.ECS.GameComponent;
 public struct AnimationComponent(Id16<ModelRig> rigId, short clip = 0)
     : IGameComponent<AnimationComponent>
 {
-    //public ushort RigInstanceId = rigInstanceId;
     public Id16<ModelRig> RigId = rigId;
     public short Clip = clip;
     

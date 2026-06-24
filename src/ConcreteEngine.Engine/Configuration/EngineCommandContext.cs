@@ -6,13 +6,7 @@ namespace ConcreteEngine.Engine.Configuration;
 
 internal sealed class EngineCommandContext(AssetSystem assetSystem)
 {
-    public readonly RenderCommandSurface Renderer = new();
-    public readonly AssetCommandSurface Assets = new(assetSystem);
-}
-
-internal sealed class AssetCommandSurface(AssetSystem assetSystem)
-{
-    public void Apply(AssetCommandRecord cmd)
+    public void ApplyAsset(AssetCommandRecord cmd)
     {
         switch (cmd.Action)
         {
@@ -23,19 +17,15 @@ internal sealed class AssetCommandSurface(AssetSystem assetSystem)
                 throw new ArgumentOutOfRangeException();
         }
     }
-}
 
-internal sealed class RenderCommandSurface
-{
-    private static VisualManager Visuals => VisualManager.Instance;
-
-    public void Apply(FboCommandRecord cmd)
+    public void ApplyRender(FboCommandRecord cmd)
     {
         switch (cmd.Action)
         {
-            case CommandFboAction.ShadowSize: Visuals.Shadow.ShadowMapSize = cmd.Size.Width; break;
+            case CommandFboAction.ShadowSize: VisualManager.Instance.Shadow.ShadowMapSize = cmd.Size.Width; break;
             case CommandFboAction.None: break;
             default: throw new ArgumentOutOfRangeException();
         }
     }
+
 }

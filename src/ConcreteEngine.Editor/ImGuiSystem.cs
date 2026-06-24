@@ -92,7 +92,7 @@ internal static unsafe class ImGuiSystem
 
         if (Io.IsNull) Io = ImGui.GetIO();
         var io = IoPtr;
-        io->DisplaySize = EngineWindow.OutputSize.ToVector2();
+        io->DisplaySize = EngineWindow.OutputSize;
         io->DisplayFramebufferScale = Vector2.One;
         io->DeltaTime = deltaTime;
 

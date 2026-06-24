@@ -43,21 +43,7 @@ public static class UtfText
         }
         return i;
     }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetNullTerminateIndex(ref byte str)
-    {
-        var i = 0;
-        while (Unsafe.Add(ref str, i) != 0) i++;
-        return i;
-    }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CopyByteNullTerminated(ref byte str, ref byte dest)
-    {
-        var len = GetNullTerminateIndex(ref str);
-        Unsafe.CopyBlockUnaligned(ref dest, ref str, (uint)len + 1);
-        return len;
-    }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int WriteCharToByteSpan(ReadOnlySpan<char> span, Span<byte> dst)
     {

@@ -22,7 +22,10 @@ public sealed class RenderSetupBuilder
         Ctx = new RenderBuilderContext(programCtx.Gfx, outputSize);
     }
 
-    private void EnsureNotDone() => InvalidOpThrower.ThrowIf(IsDone, nameof(IsDone));
+    private void EnsureNotDone()
+    {
+        if(IsDone) Throwers.InvalidOperation(nameof(IsDone));
+    }
 
     internal RenderBuilderContext Build()
     {

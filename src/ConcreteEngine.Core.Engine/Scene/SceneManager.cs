@@ -8,6 +8,12 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
+public interface ISceneListener
+{
+   void OnSceneObjectRenamed(SceneObject asset);
+   void OnSceneObjectRemoved(SceneObject sceneObject);
+}
+
 public sealed class SceneManager
 {
     public static SceneManager Instance { get; private set; } = null!;
@@ -17,6 +23,7 @@ public sealed class SceneManager
     public readonly RayCaster Raycaster;
     
     private readonly List<int> _dirtyIds = new(SceneStore.DefaultCapacity);
+    private readonly List<ISceneListener> _listeners = new();
 
     internal SceneManager()
     {
@@ -34,8 +41,16 @@ public sealed class SceneManager
         if(_dirtyIds.Count == 0) return;
         foreach (var id in CollectionsMarshal.AsSpan(_dirtyIds))
         {
-            Store.GetInternal(id).Commit();
+            var sceneObject = Store.GetInternal(id);
+            if ((sceneObject.Dirty & SceneDirtyFlags.Name) != 0)
+                InvokeRenameListener(sceneObject);
+            sceneObject.Commit();
         }
+    }
+
+    private void InvokeRenameListener(SceneObject sceneObject)
+    {
+        foreach (var listener in _listeners) listener.OnSceneObjectRenamed(sceneObject);
     }
     
     public SceneObject Spawn(string name, in Transform transform, params ReadOnlySpan<IBlueprint> blueprints)
@@ -60,7 +75,7 @@ public sealed class SceneManager
     }
 
 
-    public void MarkDirty(SceneObjectId sceneObjectId)
+    internal void MarkDirty(SceneObjectId sceneObjectId)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sceneObjectId.Id, nameof(sceneObjectId));
         var id = sceneObjectId.Id;

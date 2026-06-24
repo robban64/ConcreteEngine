@@ -56,6 +56,8 @@ public sealed class AssetManager
         ArgumentOutOfRangeException.ThrowIfEqual(newName, asset.Name);
         AssetNameUtils.ValidateAssetName(newName);
         AssetStore.GetTypeStore(asset.Kind).Rename(asset.Name, newName);
+        var assetFile = GetAssetRootFile(asset.Id);
+        assetFile.LogicalName = newName;
     }
 
     internal AssetId RegisterInMemoryAsset(Guid gid, AssetKind kind, string name)

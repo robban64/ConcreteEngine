@@ -29,8 +29,8 @@ public sealed class RenderFboSizePolicy
         switch (mode)
         {
             case FboResizeMode.Fixed:
-                ArgOutOfRangeThrower.ThrowIfSizeTooSmall(fixedSize, RenderLimits.MinOutputSize);
-                ArgOutOfRangeThrower.ThrowIfSizeTooBig(fixedSize, RenderLimits.MaxOutputSize);
+                if(fixedSize < RenderLimits.MinOutputSize || fixedSize > RenderLimits.MaxOutputSize)
+                    Throwers.InvalidArgument(nameof(fixedSize));
                 break;
             case FboResizeMode.Calculated:
                 ArgumentOutOfRangeException.ThrowIfEqual(ratio.X, 0, nameof(ratio));

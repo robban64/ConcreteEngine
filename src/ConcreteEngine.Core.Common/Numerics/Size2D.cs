@@ -37,12 +37,6 @@ public readonly record struct Size2D(int Width, int Height) : IEquatable<int>, I
     public (uint Width, uint Height) ToUnsigned() => ((uint)Width, (uint)Height);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Vector2I ToVector2I() => new(Width, Height);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Vector2 ToVector2() => new(Width, Height);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Size3D ToSize3D(int depth) => Size3D.From(this, depth);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -50,13 +44,19 @@ public readonly record struct Size2D(int Width, int Height) : IEquatable<int>, I
         new(int.Clamp(Width, min.Width, max.Width), int.Clamp(Height, min.Height, max.Height));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsNegative() => Width < 0 || Height < 0;
+    public bool AnyNegative() => Width < 0 || Height < 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsNegative() => Width < 0 && Height < 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool AnyZero() => Width == 0 || Height == 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsZero() => Width == 0 && Height == 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsNegativeOrZero() => IsNegative() || IsZero();
+    public bool IsNegativeOrZero() => Width <= 0 && Height <= 0;
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator >(Size2D a, Size2D b) => a.Width > b.Width && a.Height > b.Height;

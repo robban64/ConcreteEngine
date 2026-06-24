@@ -40,7 +40,7 @@ public sealed class Camera
 
     public Camera(Size2D viewport)
     {
-        ArgOutOfRangeThrower.ThrowIfSizeTooSmall(viewport, 128);
+        if(viewport < 128) Throwers.InvalidArgument(nameof(viewport));
         Transform = new CameraTransform();
         AspectRatio = viewport.AspectRatio;
         Ensure();

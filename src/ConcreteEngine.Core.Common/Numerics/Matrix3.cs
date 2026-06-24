@@ -4,14 +4,6 @@ using System.Runtime.InteropServices;
 namespace ConcreteEngine.Core.Common.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct Matrix3
-{
-    public Vector3 V0;
-    public Vector3 V1;
-    public Vector3 V2;
-}
-
-[StructLayout(LayoutKind.Sequential)]
 public struct Matrix3X4
 {
     public float M11, M12, M13, M14;

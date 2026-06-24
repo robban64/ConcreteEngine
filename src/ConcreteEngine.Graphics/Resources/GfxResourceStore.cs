@@ -42,7 +42,7 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, GfxLimits.StoreLimit);
 
-        InvalidOpThrower.ThrowIf(GraphicsKind == GraphicsKind.Invalid);
+        if(GraphicsKind == GraphicsKind.Invalid) Throwers.InvalidOperation(nameof(GraphicsKind));
 
         _meta = NativeArray.Allocate<TMeta>(initialCapacity);
         _handle = NativeArray.Allocate<GfxHandle>(initialCapacity);

@@ -42,6 +42,14 @@ public readonly record struct Id32<T>(int Value) : IComparable<int>, IComparable
     public static implicit operator int(Id32<T> id) => id.Value;
     public static explicit operator Id32<T>(int i) => new(i);
 
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator >(Id32<T> a, int b) => a.Value > b && a.Value > b;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator <(Id32<T> a, int b) => a.Value < b && a.Value < b;
+
+
     public int CompareTo(int other) => Value.CompareTo(other);
     public int CompareTo(Id32<T> other) => Value.CompareTo(other.Value);
 
@@ -66,7 +74,13 @@ public readonly record struct Handle32<T>(int Id, ushort Gen)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator int(Handle32<T> id) => id.Id;
 
-    public int CompareTo(int other) => Id.CompareTo((ushort)other);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator >(Handle32<T> a, int b) => a.Id > b && a.Id > b;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator <(Handle32<T> a, int b) => a.Id < b && a.Id < b;
+
+    public int CompareTo(int other) => Id.CompareTo(other);
     public int CompareTo(Handle32<T> other) => Id.CompareTo(other.Id);
 
     public static readonly Handle32<T> Empty = default;

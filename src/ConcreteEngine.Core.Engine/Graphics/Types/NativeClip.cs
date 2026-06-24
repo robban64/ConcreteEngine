@@ -1,15 +1,16 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
+[StructLayout(LayoutKind.Sequential)]
 internal readonly unsafe struct NativeClip
 {
-    public readonly NativeBoneTrack* BoneTracks;
     public readonly int Length;
-
+    public readonly NativeBoneTrack* BoneTracks;
     
     internal NativeClip(NativeView<NativeBoneTrack> boneTracks)
     {
@@ -29,12 +30,13 @@ internal readonly unsafe struct NativeClip
 
 }
 
+[StructLayout(LayoutKind.Sequential)]
 internal readonly unsafe struct NativeBoneTrack
 {
-    private readonly float* _data;
-
     public readonly int PosCount;
     public readonly int RotCount;
+
+    private readonly float* _data;
 
     public NativeBoneTrack(float* data, int posCount, int rotCount)
     {

@@ -7,7 +7,7 @@ public abstract class AssetObject : IComparable<AssetObject>
 {
     public const int MaxNameLength = 64;
 
-    private readonly List<AssetRef> _listeners = [];
+    private readonly List<IAssetListener> _listeners = [];
     
     public AssetDirtyFlag DirtyFlags { get; private set; }
     public AssetId Id { get; }
@@ -19,6 +19,7 @@ public abstract class AssetObject : IComparable<AssetObject>
         internal set
         {
             if (field == value) return;
+            if(!string.IsNullOrEmpty(field)) MarkDirty(AssetDirtyFlag.Name);
             field = value.Length > MaxNameLength ? value.Substring(0, MaxNameLength) : value;
             PackedName = StringPacker.PackAscii(field, true);
         }
@@ -36,10 +37,11 @@ public abstract class AssetObject : IComparable<AssetObject>
     public abstract AssetCategory Category { get; }
     public abstract AssetKind Kind { get; }
 
-    public bool Rename(string newName)
+    public bool SetName(string newName)
     {
-        AssetManager.Assets.Rename(this, newName);
+        AssetManager.Instance.Rename(this, newName);
         Name = newName;
+        MarkDirty(AssetDirtyFlag.Name);
         return true;
     }
 
@@ -59,7 +61,7 @@ public abstract class AssetObject : IComparable<AssetObject>
         {
             OnCommit();
             foreach (var it in _listeners)
-                it.Trigger();
+                it.OnAssetChanged(this);
         }
 
         DirtyFlags = 0;
@@ -67,8 +69,8 @@ public abstract class AssetObject : IComparable<AssetObject>
     }
     protected virtual void OnCommit(){}
 
-    public void AddRef(AssetRef assetRef) => _listeners.Add(assetRef);
-    public void RemoveRef(AssetRef assetRef) => _listeners.Remove(assetRef);
+    public void AddRef(IAssetListener listener) => _listeners.Add(listener);
+    public void RemoveRef(IAssetListener listener) => _listeners.Remove(listener);
 
     public int CompareTo(AssetObject? other)
     {

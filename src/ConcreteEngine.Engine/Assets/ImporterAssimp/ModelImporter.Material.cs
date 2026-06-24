@@ -200,8 +200,8 @@ internal static unsafe class MaterialModelImporter
         {
             sizeInBytes = width * height * 4;
         }
+        if(sizeInBytes < 4) Throwers.InvalidOperation(nameof(sizeInBytes));
 
-        InvalidOpThrower.ThrowIf(sizeInBytes < 4, nameof(sizeInBytes));
         var ptr = (byte*)aiTex->PcData;
         //texture.PixelDataBlock =
         context.RegisterTexture(texture, ptr, sizeInBytes);

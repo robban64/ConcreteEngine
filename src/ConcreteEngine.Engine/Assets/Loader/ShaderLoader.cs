@@ -107,12 +107,12 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
     [MethodImpl(MethodImplOptions.NoInlining)]
     public override void Reload(Shader asset, AssetFile[] files)
     {
-        if (_allocator == null) throw new InvalidOperationException("Allocator is null");
-        if (_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
-        if (_vsBlock.IsNull || _fsBlock.IsNull) throw new InvalidOperationException(nameof(_vsBlock));
+        if(!IsActive) Throwers.InvalidOperation(nameof(IsActive));
+        if (_allocator == null) Throwers.InvalidOperation("Allocator is null");
+        if (_shaderImporter == null) Throwers.InvalidOperation("ShaderImporter is null");
+        if (_vsBlock.IsNull || _fsBlock.IsNull) Throwers.InvalidOperation(nameof(_vsBlock));
 
         ArgumentOutOfRangeException.ThrowIfNotEqual(files.Length, 3);
-        InvalidOpThrower.ThrowIf(!IsActive, nameof(IsActive));
 
         AssetFile vsFile = files[1], fsFile = files[2];
 

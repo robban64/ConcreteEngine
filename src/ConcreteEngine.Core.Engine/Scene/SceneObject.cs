@@ -23,6 +23,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         private set
         {
             if (field == value) return;
+            if(!string.IsNullOrEmpty(field)) MarkDirty(SceneDirtyFlags.Name);
             field = value;
             PackedName = StringPacker.PackAscii(value.AsSpan(), true);
         }
@@ -79,7 +80,8 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     public void SetName(string newName)
     {
-        SceneManager.SceneStore.Rename(this, newName, (name) => Name = name);
+        SceneManager.SceneStore.Rename(this, newName);
+        Name = newName;
     }
 
     //

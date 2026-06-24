@@ -105,7 +105,7 @@ public sealed class SceneStore
     internal void RegisterBlueprint(IBlueprint blueprint) => _blueprints.TryAdd(blueprint.GId, blueprint);
 
     //
-    public void Rename(SceneObject sceneObject, string newName, Action<string> onSuccess)
+    public void Rename(SceneObject sceneObject, string newName)
     {
         if (sceneObject.Name == newName)
             throw new ArgumentException("Rename: Identical name", nameof(newName));
@@ -114,7 +114,6 @@ public sealed class SceneStore
 
         _byName.Remove(newName);
         _byName.Add(newName, sceneObject.Id);
-        onSuccess(newName);
     }
     //
     internal SceneObject Create(string name, Guid? gid, bool enabled, params ReadOnlySpan<IBlueprint> blueprints)

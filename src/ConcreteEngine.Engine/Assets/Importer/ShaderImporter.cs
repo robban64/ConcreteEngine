@@ -79,8 +79,6 @@ internal sealed unsafe class ShaderImporter
             return;
         }
 
-        sw.Validate();
-
         if (line.StartsWith(Identifier))
         {
             line = line.Slice(Identifier.Length);
@@ -134,7 +132,6 @@ internal sealed unsafe class ShaderImporter
             cursor = 0;
 
             if (span.IsEmpty) continue;
-            sw.Validate();
 
             if (span.StartsWith(identifier))
             {

@@ -1,7 +1,5 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Common;
 
@@ -53,46 +51,4 @@ public static class Throwers
     [DoesNotReturn]
     public static void BufferOverflow(string buffer, int size, int limit) =>
         throw new InsufficientMemoryException($"{buffer} with size {size} exceeded max limit:  {limit}");
-}
-
-[StackTraceHidden]
-public static class ArgOutOfRangeThrower
-{
-    public static void ThrowIfSizeTooSmall(Size2D size, int min)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(size.Width, min, nameof(size));
-        ArgumentOutOfRangeException.ThrowIfLessThan(size.Height, min, nameof(size));
-    }
-
-    public static void ThrowIfSizeTooBig(Size2D size, int max)
-    {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(size.Width, max, nameof(size));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(size.Height, max, nameof(size));
-    }
-
-    public static void ThrowIfSizeTooSmall(Size2D size, Size2D min)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(size.Width, min.Width, nameof(size));
-        ArgumentOutOfRangeException.ThrowIfLessThan(size.Height, min.Height, nameof(size));
-    }
-
-    public static void ThrowIfSizeTooBig(Size2D size, Size2D max)
-    {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(size.Width, max.Width, nameof(size));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(size.Height, max.Height, nameof(size));
-    }
-}
-
-[StackTraceHidden]
-public static class InvalidOpThrower
-{
-    [DoesNotReturn]
-    private static void ThrowOperation(string? param = null, string? message = null) =>
-        throw new InvalidOperationException($"Invalid operation: {param}. {message}");
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ThrowIf(bool condition, string? param = null, string? message = null)
-    {
-        if (condition) ThrowOperation(param, message);
-    }
 }

@@ -1,9 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
+using ConcreteEngine.Core.Engine.Configuration;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
@@ -31,6 +33,7 @@ public sealed class AssetFileRegistry
 
     public int RootFileCount => _rootBindings.Count;
 
+    public Dictionary<string, List<AssetFileId>>.KeyCollection GetDirectories() => _byDirectory.Keys;
     //
     public bool HasFilePath(string relativePath) => _fileByPath.ContainsKey(relativePath);
     public bool IsRootFile(AssetFileId fileId) => _rootBindings.ContainsKey(fileId);
@@ -76,6 +79,19 @@ public sealed class AssetFileRegistry
 
     public bool TryGetByRootFileId(AssetFileId fileId, out AssetId assetId) =>
         _rootBindings.TryGetValue(fileId, out assetId);
+    
+    public bool TryGetDirectoryFileIds(string path, out ReadOnlySpan<AssetFileId> fileIds)
+    {
+        if (!_byDirectory.TryGetValue(path, out var fileIdList))
+        {
+            fileIds = default;
+            return false;
+        }
+
+        fileIds = CollectionsMarshal.AsSpan(fileIdList);
+        return true;
+    }
+
 
     //
 
@@ -122,11 +138,14 @@ public sealed class AssetFileRegistry
             lastWriteTime: scanInfo.LastWriteTime
         );
 
-        var dirSpan = Path.GetDirectoryName(scanInfo.RelativePath.AsSpan());
-        if (!_byDirectory.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(dirSpan, out var fileIds))
-            _byDirectory.GetAlternateLookup<ReadOnlySpan<char>>().TryAdd(dirSpan, fileIds = new List<AssetFileId>(9));
-
-        fileIds.Add(fileId);
+        if (scanInfo.Storage == AssetStorage.FileSystem && scanInfo.RelativePath.StartsWith(EnginePath.AssetBasePath))
+        {
+            var dirSpan = Path.GetDirectoryName(scanInfo.RelativePath.AsSpan());
+            if (!_byDirectory.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(dirSpan, out var fileIds))
+                _byDirectory.Add(dirSpan.ToString(), fileIds = new List<AssetFileId>(9));
+            
+            fileIds.Add(fileId);
+        }
 
         _files[fileId.Index()] = fileSpec;
         _fileByPath.Add(scanInfo.RelativePath, fileId);

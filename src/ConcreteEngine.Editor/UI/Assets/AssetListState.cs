@@ -7,9 +7,10 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Utils;
+using ConcreteEngine.Editor.Core;
 
 namespace ConcreteEngine.Editor.UI.Assets;
-
+/*
 internal readonly struct FileDisplayItem(
     AssetFileId fileId,
     ushort folderIndex,
@@ -231,4 +232,4 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         PendingFilter = true;
         FilteredCount = count;
     }
-}
+}*/

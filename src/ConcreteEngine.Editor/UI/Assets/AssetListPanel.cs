@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
@@ -32,7 +33,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private static readonly Vector2 ListItemSelectSize = new(0, ListItemHeight);
 
-    private readonly AssetListState _state;
+   // private readonly AssetListState _state;
     private readonly AssetBrowser _assetBrowser;
 
     private readonly TextInput _searchInput;
@@ -44,16 +45,16 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
 
-    private int TotalDrawCount => _state.FilteredCount;
+  //  private int TotalDrawCount => _state.FilteredCount;
 
     public AssetListPanel(StateManager state) : base(StateEnums.AssetList, state)
     {
         _assetBrowser = new AssetBrowser();
-        _state = new AssetListState(_assetBrowser, AssetKind.Texture);
+        //_state = new AssetListState(_assetBrowser, AssetKind.Texture);
         _searchInput = new TextInput("search", 8)
             .WithFilter(TextInputFilter.None, allowEmpty: true)
-            .WithTransformer(trimmed: true, lowercase: true)
-            .WithCallbackU8((searchString) => _state.SetSearch(searchString));
+            .WithTransformer(trimmed: true, lowercase: true);
+           // .WithCallbackU8((searchString) => _state.SetSearch(searchString));
 
         _assetCombo = ComboInput.MakeFromEnumCache<AssetKind>("asset-combo");
         _assetCombo.StartAt = 1;
@@ -62,21 +63,29 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     public override void OnCreate()
     {
-        _state.Memory = TextBuffers.PersistentArena.Alloc(AssetListState.NameListCapacity);
+        //_state.Memory = TextBuffers.PersistentArena.Alloc(AssetListState.NameListCapacity);
+        avg.BeginSample();
         _assetBrowser.BuildFullDirectory();
+        avg.EndSample();
+        avg.ResetAndPrint("Build full directory");
     }
 
+    private AvgFrameTimer avg;
     private void UpdateTitleText()
     {
-        var dirSpan = _assetBrowser.CurrentDirectory.AsSpan();
         var sw = BreadcrumbStr.Writer();
+        sw.Write("asdasd");
+        /*
         sw.Append('[').Append(_state.FilteredCount).Append(']').PadRight(2).Append('/');
+        
+        var dirSpan = _assetBrowser.CurrentNode.Path.AsSpan();
         foreach (var range in dirSpan.Split('/'))
             sw.Append(dirSpan[range]).Append('/');
 
         // remove last '/'
         sw.SetCursor(sw.Cursor - 1);
         sw.Append((char)0);
+        */
     }
 
 
@@ -99,23 +108,23 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private void Refresh()
     {
-        _assetCombo.Value = _state.PendingKind != 0 ? (int)_state.PendingKind : (int)_assetBrowser.CurrentKind;
+        //_assetCombo.Value = _state.PendingKind != 0 ? (int)_state.PendingKind : (int)_assetBrowser.CurrentKind;
         UpdateTitleText();
         RenamedAsset = default;
     }
 
     public override void OnDraw()
     {
-        var isRootPath = _assetBrowser.IsRootPath;
-
-        if (_state.Sync(RenamedAsset))
-            Refresh();
+        //if (_state.Sync(RenamedAsset))
+            //Refresh();
 
         // Row 1
+        var isRootPath = _assetBrowser.IsRootPath;
         if (isRootPath) ImGui.BeginDisabled(true);
 
-        if (ImGui.ArrowButton("##PrevFolder"u8, ImGuiDir.Left))
-            _state.EnqueueDirectory(AssetListState.GoBackString);
+        if (ImGui.ArrowButton("##PrevFolder"u8, ImGuiDir.Left)) 
+            _assetBrowser.GoToParent();
+           // _state.EnqueueDirectory(AssetListState.GoBackString);
 
         if (isRootPath) ImGui.EndDisabled();
 
@@ -130,22 +139,36 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         ImGui.SameLine();
 
         ImGui.SetNextItemWidth(width * 0.38f);
-        if (_assetCombo.Draw())
-            _state.EnqueueNewAssetKind((AssetKind)_assetCombo.Value.X);
+        if (_assetCombo.Draw()) ;
+            //_state.EnqueueNewAssetKind((AssetKind)_assetCombo.Value.X);
 
         // List
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
         if (ImGui.BeginTable("asset-list"u8, 1, GuiTheme.ListTableFlags))
         {
+            var sw = TextBuffers.GetWriter();
             ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
-            DrawList();
+           // DrawList();
+           foreach (var it in _assetBrowser.CurrentNode.Children)
+           {
+               ImGui.TableNextRow();
+               ImGui.TableNextColumn();
+               if (ImGui.Selectable(sw.Write(it.GetFolderName()), false, 0, ListItemSelectSize))
+                   _assetBrowser.GoToChild(it.GetFolderName());
+
+           }
+           foreach (var it in _assetBrowser.CurrentNode.GetFileIds())
+           {
+               AppDraw.TextColumn(sw.Write(AssetManager.FileRegistry.Get(it).LogicalName));
+           }
+
             ImGui.EndTable();
-            DragDrop();
+           // DragDrop();
         }
 
         ImGui.PopStyleVar();
     }
-
+/*
     private void DrawList()
     {
         var selectedFileId = _selectedFile;
@@ -190,7 +213,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             var text = writer.AppendIcon((byte*)&icon).PadRight(2).Append(name).End();
             if (ImGui.Selectable(text, selected, selectFlags, ListItemSelectSize))
                 OnListItemClick(it);
-/*
+
             if (kind == AssetKind.Model && binding == FileBinding.RootFile && ImGui.BeginDragDropSource())
             {
                 AssetManager.FileRegistry.TryGetByRootFileId(it.FileId, out var modelId);
@@ -198,7 +221,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
                 AppDraw.Text(name);
                 ImGui.EndDragDropSource();
             }
-*/
+
             //ImGui.SetCursorPosY(i * (ListItemHeight + ListItemPad) + (ListItemPad - 1));
             ImGui.PopID();
         }
@@ -242,7 +265,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             SceneManager.Instance.SpawnFrom(model, in transform);
         }
     }
-
+*/
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static (uint icon, uint color) GetIconAndColor(FileBinding binding, AssetKind kind)
     {

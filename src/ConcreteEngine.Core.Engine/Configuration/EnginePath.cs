@@ -19,8 +19,8 @@ public static class EnginePath
     public const string EditorContentRoot = "editor";
 
     // Assets
-    public static readonly string AssetBasePath = Path.Join(Root, AssetRoot);
-    public static readonly string AssetCoreBasePath = Path.Join(Root, AssetCoreRoot);
+    public const string AssetBasePath = Root + "/" + AssetRoot;
+    public const string AssetCoreBasePath = Root + "/" + AssetCoreRoot;
 
     public static readonly string ShaderPath = Path.Join(AssetBasePath, ShaderFolder);
     public static readonly string TexturePath = Path.Join(AssetBasePath, TextureFolder);

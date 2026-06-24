@@ -48,15 +48,14 @@ public sealed class SlotArray<T> where T : class
         return entry != null;
     }
 
-    public int Add(T entry)
+    public void Set(T entry, int index)
     {
         ArgumentNullException.ThrowIfNull(entry);
-        var index = AllocateNext();
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)Count, nameof(index));
         _entries[index] = entry;
-        return index;
     }
 
-    public int AllocateNext()
+    public int AllocateNextId()
     {
         var index = SlotHelper.NextSlot(_free, Count);
         if (index >= 0) return index;

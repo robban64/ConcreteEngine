@@ -1,9 +1,9 @@
 namespace ConcreteEngine.Renderer.Passes;
 
-internal readonly struct TexSlot(TextureId texture, int slot)
+internal readonly struct TexSlot(TextureId texture, byte slot)
 {
     public readonly TextureId Texture = texture;
-    public readonly int Slot = slot;
+    public readonly byte Slot = slot;
 
     public static TexSlot Slot0(TextureId id) => new(id, 0);
     public static TexSlot Slot1(TextureId id) => new(id, 1);

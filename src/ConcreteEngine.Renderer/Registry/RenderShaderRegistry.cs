@@ -13,9 +13,7 @@ public sealed class RenderShaderRegistry
     private RenderShader[] _shaderRegistry = [];
 
 
-    internal RenderShaderRegistry()
-    {
-    }
+    internal RenderShaderRegistry() { }
 
     public static ref readonly CoreShaders CoreShaders => ref _coreShaders;
 
@@ -25,7 +23,7 @@ public sealed class RenderShaderRegistry
 
     internal void RegisterCollection(ShaderId[] shaders)
     {
-        InvalidOpThrower.ThrowIf(_count > 0, nameof(_count));
+        if (_count > 0) Throwers.InvalidOperation(nameof(_count));
 
         _shaderRegistry = new RenderShader[shaders.Length];
         _count = shaders.Length;
@@ -42,7 +40,7 @@ public sealed class RenderShaderRegistry
 
     internal void RegisterCoreShader(in CoreShaders shaders)
     {
-        InvalidOpThrower.ThrowIf(_count == 0, nameof(_count));
+        if (_count == 0) Throwers.InvalidOperation(nameof(_count));
         _coreShaders = shaders;
     }
 }

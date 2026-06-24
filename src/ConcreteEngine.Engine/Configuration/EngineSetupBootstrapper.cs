@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Gateway;
@@ -19,16 +18,13 @@ namespace ConcreteEngine.Engine.Configuration;
 internal sealed class EngineSetupCtx
 {
     public required GraphicsRuntime Graphics;
-    public required EngineWindow Window;
     public required EngineGateway EngineGateway;
-    public required EngineCoreSystem CoreSystem;
-    public required EngineCommandQueue CommandQueue;
     public required EngineTickHub TickHub;
 
-    public AssetSystem Assets => CoreSystem.GetSystem<AssetSystem>();
-    public EngineRenderSystem Renderer => CoreSystem.GetSystem<EngineRenderSystem>();
-    public SceneSystem SceneSystem => CoreSystem.GetSystem<SceneSystem>();
-    public InputSystem InputSystem => CoreSystem.GetSystem<InputSystem>();
+    public required EngineCommandQueue CommandQueue;
+    public required AssetSystem Assets;
+    public required EngineRenderSystem Renderer;
+    public required SceneSystem SceneSystem;
 }
 
 internal static class EngineSetupBootstrapper
@@ -67,21 +63,20 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnSetupRender(EngineSetupCtx ctx)
     {
-        var builder = ctx.Renderer.Program.StartBuilder(ctx.Window.Viewport.Size);
-        var store = ctx.Assets.Assets;
-        var shaderCount = store.GetMetaSnapshot<Shader>().Count;
+        var builder = ctx.Renderer.Program.StartBuilder(EngineWindow.Viewport.Size);
+        var shaderCount = AssetStore.GetTypeStore<Shader>().Count;
 
         var shaderIndex = 0;
         var shaderIds = new ShaderId[shaderCount];
-        foreach (var it in store.GetAssetEnumerator<Shader>())
+        foreach (var it in AssetManager.Assets.GetAssetEnumerator<Shader>())
             shaderIds[shaderIndex++] = it.GfxId;
 
-        builder.RegisterShaders(shaderIds, SetupUtils.GetCoreShaders(store));
+        builder.RegisterShaders(shaderIds, SetupUtils.GetCoreShaders(AssetManager.Assets));
         SetupUtils.RegisterFrameBuffers(builder);
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
         ctx.Renderer.Program.ApplyBuilder(builder);
 
-        ctx.Renderer.Initialize(ctx.Assets.Assets, ctx.Assets.MaterialStore);
+        ctx.Renderer.Initialize();
 
         return true;
     }
@@ -99,7 +94,6 @@ internal static class EngineSetupBootstrapper
     private static bool OnLoadWorld(EngineSetupCtx ctx)
     {
         ctx.SceneSystem.QueueSwitch(0);
-        CameraSystem.Instance.AttachRaycast(ctx.SceneSystem.SceneStore, ctx.Renderer);
         return true;
     }
 
@@ -107,7 +101,7 @@ internal static class EngineSetupBootstrapper
     private static bool OnLoadScene(EngineSetupCtx ctx)
     {
         var builder = new GameSceneConfigBuilder();
-        ctx.SceneSystem.ApplyPendingScene(builder, ctx.CoreSystem);
+        ctx.SceneSystem.ApplyPendingScene(builder);
         ctx.SceneSystem.SetEnabled(true);
 
         return true;
@@ -116,7 +110,7 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnLoadEditor(EngineSetupCtx ctx)
     {
-        ctx.EngineGateway.SetupEditor(ctx.CoreSystem, ctx.Window, ctx.CommandQueue, ctx.Graphics.Gfx);
+        ctx.EngineGateway.SetupEditor(ctx.CommandQueue, ctx.Graphics.Gfx);
         Logger.ToggleGfxLog(true);
 
         for (int i = 0; i < 3; i++) EngineWarmup.YeetGenerics();
@@ -127,7 +121,7 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnWarmup(EngineSetupCtx ctx)
     {
-        ctx.Graphics.BeginFrame(new GfxFrameArgs(0, ctx.Window.Viewport.Size));
+        ctx.Graphics.BeginFrame(new GfxFrameArgs(0, EngineWindow.Viewport.Size));
         //ctx.Renderer.Program.PrepareFrameWarmup(ctx.Window.WindowSize, ctx.Window.OutputSize);
 
         ctx.Renderer.Program.Render();

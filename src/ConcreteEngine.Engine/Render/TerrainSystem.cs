@@ -3,23 +3,21 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Renderer.Buffer;
 
 namespace ConcreteEngine.Engine.Render;
 
 internal sealed class TerrainSystem
 {
-    public bool IsDirty => MainTerrain.IsDirty;
+    public bool IsDirty => MainTerrain?.IsDirty ?? false;
 
     private readonly GfxContext _gfx;
-    public readonly Terrain MainTerrain;
     public readonly TerrainMesh TerrainMesh;
 
-    public static TerrainSystem Instance { get; private set; } = null!;
-    public static TerrainSystem Make(GfxContext gfx) => Instance = new TerrainSystem(gfx);
+    public readonly Terrain MainTerrain;
 
-    private TerrainSystem(GfxContext gfx)
+    internal TerrainSystem(GfxContext gfx)
     {
-        if (Instance is not null) throw new InvalidOperationException("TerrainSystem already created");
         _gfx = gfx;
         MainTerrain = new Terrain();
         Terrain.Main = MainTerrain;
@@ -27,24 +25,45 @@ internal sealed class TerrainSystem
         TerrainMesh = new TerrainMesh(gfx);
     }
 
-    public void OnTick()
+    public void Commit()
     {
-        if (!IsDirty) return;
+        if (!MainTerrain.IsDirty) return;
         MainTerrain.IsDirty = false;
         Allocate();
     }
 
+    public void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, CameraFrustum camera)
+    {
+        var material = MainTerrain.MaterialId;
+        var foliageMaterial = MainTerrain.FoliageMaterialId;
+
+        foreach (var it in TerrainMesh.GetMeshChunks())
+        {
+            if (!camera.IntersectsBox(in MainTerrain.GetChunk(it.Slot).GetBounds())) continue;
+            var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
+            var cmd = new DrawCommand(it.TerrainMeshId, material);
+            commandBuffer.SubmitIdentity(cmd, meta);
+
+            if (it.FoliageCount > 0)
+            {
+                meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Transparent);
+                cmd = new DrawCommand(it.FoliageMeshId, foliageMaterial, instanceCount: (uint)it.FoliageCount);
+                commandBuffer.SubmitIdentity(cmd, meta);
+            }
+        }
+    }
+
     private void Allocate()
     {
-        if (!TerrainMesh.TerrainIboId.IsValid() && MainTerrain.Heightmap?.PixelData is { } heightmap)
+        if (!TerrainMesh.TerrainIboId.IsValid() && MainTerrain.Heightmap?.TryGetPixelSpan(out var heightData) == true)
         {
-            TerrainMesh.Allocate(MainTerrain.GetChunks(), heightmap.Span, MainTerrain.Dimension, MainTerrain.MaxHeight);
+            TerrainMesh.Allocate(MainTerrain.GetChunks(), heightData, MainTerrain.Dimension, MainTerrain.MaxHeight);
             Logger.LogString(LogScope.Engine, "Terrain: allocated terrain");
         }
 
-        if (!TerrainMesh.HasFoliage && MainTerrain.Splatmap?.PixelData is { } splatMap)
+        if (!TerrainMesh.HasFoliage && MainTerrain.Splatmap?.TryGetPixelSpan(out var splatMapData) == true)
         {
-            TerrainMesh.AllocateFoliage(MainTerrain, splatMap.Span);
+            TerrainMesh.AllocateFoliage(MainTerrain, splatMapData);
             Logger.LogString(LogScope.Engine, "Terrain: allocated foliage");
         }
 
@@ -53,7 +72,7 @@ internal sealed class TerrainSystem
             if (MainTerrain.GroundAlbedoTextures.IsDirty)
             {
                 var textureId = MainTerrain.GroundAlbedoTextures.Compile(_gfx.Textures);
-                material.SetOverrideTexture(0, textureId);
+                material.SetSourceSlot(0, AssetId.Empty, textureId);
                 Logger.LogString(LogScope.Engine, "Ground albedo texture changed");
             }
         }
@@ -61,7 +80,7 @@ internal sealed class TerrainSystem
         if (MainTerrain.FoliageTextures.IsDirty && MainTerrain.FoliageMaterial is { } foliageMaterial)
         {
             var textureId = MainTerrain.FoliageTextures.Compile(_gfx.Textures);
-            foliageMaterial.SetOverrideTexture(0, textureId);
+            foliageMaterial.SetSourceSlot(0, AssetId.Empty, textureId);
             Logger.LogString(LogScope.Engine, "Foliage texture changed");
         }
     }

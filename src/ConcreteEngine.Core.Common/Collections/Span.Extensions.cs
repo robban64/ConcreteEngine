@@ -10,6 +10,17 @@ public static class SpanExtensions
     public static ReadOnlySpan<T> Truncate<T>(this ReadOnlySpan<T> span, int length) =>
         span.Slice(0, int.Min(length, span.Length));
 
+    public static bool ContainsCharSpan(this ReadOnlySpan<string> span, ReadOnlySpan<char> value,
+        StringComparison comparison = StringComparison.Ordinal)
+    {
+        foreach (var s in span)
+        {
+            if (value.Equals(s, comparison)) return true;
+        }
+
+        return false;
+    }
+
     extension(Span<byte> span)
     {
         public Span<byte> SliceNullTerminate()
@@ -52,17 +63,5 @@ public static class SpanExtensions
 
             return span;
         }
-    }
-
-    public static bool ContainsCharSpan(this ReadOnlySpan<string> span, ReadOnlySpan<char> value,
-        StringComparison comparison = StringComparison.Ordinal)
-    {
-        foreach (var s in span)
-        {
-            if (value.Equals(s, comparison))
-                return true;
-        }
-
-        return false;
     }
 }

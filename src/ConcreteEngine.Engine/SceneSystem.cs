@@ -1,35 +1,28 @@
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Engine.Scene.Modules;
-using ConcreteEngine.Engine.Assets;
 
 namespace ConcreteEngine.Engine;
 
-internal sealed class SceneSystem : IGameEngineSystem
+internal sealed class SceneSystem
 {
     public GameScene? Current { get; private set; }
     public bool Enabled { get; private set; }
 
-    internal GameSystem GameSystem { get; }
-    internal SceneSpawner SceneSpawner { get; }
-    internal SceneStore SceneStore { get; }
+    private readonly SceneManager _sceneManager;
 
     private readonly ModuleManager _modules;
 
-    private int _pendingIndex = -1;
     private readonly List<Func<GameScene>> _sceneFactories;
 
+    private int _pendingIndex = -1;
 
-    internal SceneSystem(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem)
+
+    internal SceneSystem(List<Func<GameScene>> sceneFactories)
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
+        _sceneManager = new SceneManager();
 
-        var factory = new EngineBlueprintFactory(assetSystem.Assets);
-        SceneStore = new SceneStore(factory);
-        SceneSpawner = new SceneSpawner(SceneStore, assetSystem.Assets);
-
-        GameSystem = new GameSystem(SceneStore);
         _modules = new ModuleManager();
     }
 
@@ -49,12 +42,11 @@ internal sealed class SceneSystem : IGameEngineSystem
 
         _modules.UpdateTick(deltaTime);
         Current.UpdateTick(deltaTime);
-
-        GameSystem.Update(deltaTime);
+        _sceneManager.CommitTick();
     }
 
 
-    public void ApplyPendingScene(GameSceneConfigBuilder builder, IEngineSystemManager systems)
+    public void ApplyPendingScene(GameSceneConfigBuilder builder)
     {
         if (_pendingIndex < 0) return;
 
@@ -64,7 +56,7 @@ internal sealed class SceneSystem : IGameEngineSystem
 
         Current?.Unload();
 
-        var sceneContext = new GameSceneContext(systems, _modules, SceneSpawner);
+        var sceneContext = new GameSceneContext(_modules, _sceneManager);
 
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);
@@ -83,5 +75,8 @@ internal sealed class SceneSystem : IGameEngineSystem
         _modules.Load(new GameModuleContext(sceneContext));
     }
 
-    public void Shutdown() { }
+    public void Shutdown()
+    {
+        Current?.Unload();
+    }
 }

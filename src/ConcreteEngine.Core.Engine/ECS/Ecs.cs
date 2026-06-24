@@ -8,9 +8,12 @@ namespace ConcreteEngine.Core.Engine.ECS;
 public static partial class Ecs
 {
     private const int DefaultRenderCap = 1024;
-    private const int DefaultGameCap = 128;
+    private const int DefaultGameCap = 32;
 
     public static EntitySceneLink SceneLink { get; private set; } = null!;
+
+    public static RenderEntityCore RenderCore => Render.Core;
+    public static GameEntityCore GameCore => Game.Core;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GameEntityStore<T> GetGameStore<T>() where T : unmanaged, IGameComponent<T> => Game.Stores<T>.Store;
@@ -34,7 +37,6 @@ public static partial class Ecs
             throw new InvalidOperationException("Ecs.Render already initialized");
 
         Render.Stores<SkinningComponent>.CreateStore(16);
-        Render.Stores<SkinLinkComponent>.CreateStore(64);
         Render.Stores<ParticleComponent>.CreateStore(16);
         Render.Stores<SelectionComponent>.CreateStore(16);
         Render.Stores<DebugBoundsComponent>.CreateStore(16);
@@ -45,11 +47,12 @@ public static partial class Ecs
     {
         if (Game.StoreCount > 0)
             throw new InvalidOperationException("Ecs.Game already initialized");
-
+/*
+        Game.Stores<AnimationComponent>.CreateStore(DefaultGameCap);
         Game.Stores<RenderLink>.CreateStore(DefaultGameCap);
         Game.Stores<TransformComponent>.CreateStore(DefaultGameCap);
         Game.Stores<BoxComponent>.CreateStore(DefaultGameCap);
-        Game.Stores<AnimationComponent>.CreateStore(64);
-        Game.Stores<TagComponent>.CreateStore(32);
+        Game.Stores<TagComponent>.CreateStore(DefaultGameCap);
+*/
     }
 }

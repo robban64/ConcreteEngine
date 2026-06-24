@@ -1,13 +1,12 @@
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.Assets.Loader.Data;
 
 public sealed class ModelImportData(int meshCount)
 {
-    public readonly MeshEntry[] Meshes = new MeshEntry[meshCount];
+    public readonly Core.Engine.Graphics.Mesh[] Meshes = new Core.Engine.Graphics.Mesh[meshCount];
     public readonly MemoryBlockPtr[] Blocks = new MemoryBlockPtr[meshCount];
 
     public BoundingBox ModelBounds;

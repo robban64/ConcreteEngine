@@ -53,4 +53,16 @@ public static class SlotHelper
 
         return count;
     }
+
+    public static bool EnsureCapacity<T>(ref T[] array, int count, int amount, out int oldSize)
+    {
+        oldSize = array.Length;
+
+        var len = count + amount;
+        if (oldSize >= len) return false;
+
+        var newSize = CapacityUtils.CapacityGrowthToFit(oldSize, len);
+        Array.Resize(ref array, newSize);
+        return true;
+    }
 }

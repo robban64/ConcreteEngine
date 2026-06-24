@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
 using static ConcreteEngine.Renderer.RenderLimits;
 
@@ -29,7 +30,7 @@ public sealed class MaterialBuffer : IDisposable
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ReadOnlySpan<TextureBinding> GetMetaAndSlots(MaterialId materialId, out RenderMaterialMeta meta)
+    internal ReadOnlySpan<TextureBinding> GetMetaAndSlots(Id16<MaterialSlot> materialId, out RenderMaterialMeta meta)
     {
         var index = materialId.Index();
         meta = _metas[index];
@@ -37,26 +38,32 @@ public sealed class MaterialBuffer : IDisposable
         return _textureSlots.AsSpan(range.Offset, range.Length);
     }
 
-    public ref MaterialUniform Submit(in RenderMaterialMeta payload, ReadOnlySpan<TextureBinding> slots)
+    public void SubmitBindings(Id16<MaterialSlot> id, ReadOnlySpan<TextureBinding> slots)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(slots.Length, TextureSlots);
-
-        var index = payload.MaterialId.Index();
-
-        EnsureCapacity(index + 1);
         EnsureTextureSlotCapacity(slots.Length);
-
-        _metas[index] = payload;
 
         var slotIdx = _slotCount;
         for (var i = 0; i < slots.Length; i++, slotIdx++)
             _textureSlots[slotIdx] = slots[i];
 
-        _slotRanges[index] = new RangeU16((ushort)_slotCount, (ushort)slots.Length);
+        _slotRanges[id.Index()] = new RangeU16(_slotCount, slots.Length);
+        _slotCount = slotIdx;
+    }
+
+    public ref MaterialUniform Submit(
+        Id16<MaterialSlot> id,
+        ShaderId shaderId,
+        GfxDrawState drawState,
+        GfxDrawFunctions drawFunctions,
+        sbyte shadowMapBinding)
+    {
+        var index = id.Index();
+        EnsureCapacity(id.Value);
+
+        _metas[index] = new RenderMaterialMeta(shaderId, drawState, drawFunctions, shadowMapBinding);
 
         Count = int.Max(Count, index);
-        _slotCount = slotIdx;
-
         return ref _buffer[index];
     }
 
@@ -72,10 +79,8 @@ public sealed class MaterialBuffer : IDisposable
         return _buffer.Slice(0, Count);
     }
 
-    internal void Reset()
+    internal void NewFrame()
     {
-        _slotCount = 0;
-        Count = 0;
         HasDrained = false;
     }
 
@@ -95,7 +100,7 @@ public sealed class MaterialBuffer : IDisposable
 
     private void EnsureTextureSlotCapacity(int amount)
     {
-        if (_textureSlots.Length > amount) return;
+        if (_textureSlots.Length > _slotCount + amount) return;
         var newCap = CapacityUtils.CapacityGrowthToFit(_textureSlots.Length, amount);
         if (newCap > MaxTextureSlotBuffCapacity)
             Throwers.BufferOverflow("MaterialTextureBuffer", newCap, MaxMaterialBufferCapacity);

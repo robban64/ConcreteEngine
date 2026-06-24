@@ -1,134 +1,101 @@
-using ConcreteEngine.Core.Common.Collections;
+using System.IO.Enumeration;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Configuration;
-using static ConcreteEngine.Core.Engine.Assets.Utils.AssetKindUtils;
 
 namespace ConcreteEngine.Engine.Assets;
 
-internal static class AssetScanner
+internal sealed class AssetScanner(AssetManager assetManager)
 {
-    public static void ScanExisting(string path, AssetFile file, ref FileScanInfo info)
+    private AvgFrameTimer avg1;
+
+    private void RunMigration()
     {
-        if (!File.Exists(path)) throw new FileNotFoundException(path);
-        var fileInfo = new FileInfo(path);
-        ExtractFileInfo(file.LogicalName, fileInfo, ref info);
-    }
-
-    public static void ScanAll(AssetStore store, AssetFileRegistry files, Queue<AssetRecord>[] result)
-    {
-        ArgumentNullException.ThrowIfNull(result);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(result.Length, AssetTypeCount);
-
-        var shaderQueue = result[AssetKind.Shader.ToIndex()] = new Queue<AssetRecord>(16);
-        var textureQueue = result[AssetKind.Texture.ToIndex()] = new Queue<AssetRecord>(64);
-        var modelQueue = result[AssetKind.Model.ToIndex()] = new Queue<AssetRecord>(64);
-        var materialQueue = result[AssetKind.Material.ToIndex()] = new Queue<AssetRecord>(64);
-
-        ScanFiles(store, files, AssetKind.Shader, EnginePath.ShaderPath, FileUtils.ValidShaderExt, shaderQueue);
-        ScanFiles(store, files, AssetKind.Texture, EnginePath.TexturePath, FileUtils.ValidTextureExt, textureQueue);
-        ScanFiles(store, files, AssetKind.Model, EnginePath.ModelPath, FileUtils.ValidModelExt, modelQueue);
-        ScanFiles(store, files, AssetKind.Material, EnginePath.MaterialPath, default, materialQueue);
-    }
-
-
-    private static void ScanFiles(
-        AssetStore store,
-        AssetFileRegistry fileRegistry,
-        AssetKind kind,
-        string directory,
-        ReadOnlySpan<string> validExt,
-        Queue<AssetRecord> result)
-    {
-        var di = new DirectoryInfo(directory);
-        var files = di.GetFiles("*.*", SearchOption.AllDirectories);
-        var relativeDirectory = directory.Substring(directory.LastIndexOf('/') + 1);
-
-        // register assets and related files
-        foreach (var fileInfo in files)
+        foreach (var scanInfo in MakeAssetEnumerable())
         {
-            if (!fileInfo.Name.EndsWith(".asset")) continue;
-
-            var filePath = fileInfo.FullName;
-            var record = AssetSerializer.LoadRecord(filePath);
-            result.Enqueue(record);
-
-            // Root file
-            var info = new FileScanInfo(0, kind, AssetStorageKind.FileSystem);
-            ExtractFileInfo(record.Name, fileInfo, ref info);
-
-            var relativePath = Path.GetRelativePath(directory, filePath);
-            relativePath = Path.Join(relativeDirectory, relativePath);
-            var assetId = store.RegisterScannedAsset(record, relativePath, in info);
-
-            // Dependent files
-            RegisterBindings(store, assetId, record, directory, relativeDirectory);
+            var record = AssetSerializer.LoadRecord(scanInfo.RelativePath);
+            AssetSerializer.WriteRecord(scanInfo.RelativePath, record);
         }
 
-        // register unimported files
-        foreach (var fileInfo in files)
+        throw new InvalidOperationException("Done");
+    }
+
+    public void RunFullScan(AssetLoaderContext ctx)
+    {
+        ArgumentNullException.ThrowIfNull(ctx);
+
+        //RunMigration();
+
+        avg1.BeginSample();
+        ScanFiles();
+        ScanAssets(ctx);
+        avg1.EndSample();
+        avg1.ResetAndPrint("Scanner took");
+    }
+
+    private void ScanFiles()
+    {
+        var fileRegistry = assetManager.Files;
+        foreach (var scanInfo in MakeFileEnumerable())
         {
-            RegisterUnimportedFile(fileRegistry, fileInfo, kind, directory, relativeDirectory, validExt);
+            fileRegistry.RegisterFile(FileBinding.UnboundFile, scanInfo.Name, in scanInfo);
         }
     }
 
-    private static void RegisterBindings(AssetStore store, AssetId assetId, AssetRecord record, string directory,
-        string relativeDirectory)
+    private void ScanAssets(AssetLoaderContext ctx)
     {
-        var fileIndex = 1;
-        var info = new FileScanInfo(0, record.Kind, AssetStorageKind.FileSystem);
-        foreach (var (_, localPath) in record.Files)
+        foreach (var scanInfo in MakeAssetEnumerable())
         {
-            var bindingFullPath = Path.Join(directory, localPath);
-            var bindingPath = Path.Join(relativeDirectory, localPath);
+            var record = AssetSerializer.LoadRecord(scanInfo.RelativePath);
+            ctx.Enqueue(record);
 
-            info = new FileScanInfo((byte)fileIndex++, record.Kind, AssetStorageKind.FileSystem);
-            ExtractFileInfo(record.Name, new FileInfo(bindingFullPath), ref info);
-            store.RegisterAssetBinding(assetId, record.Name, bindingPath, in info);
+            var assetId = assetManager.RegisterScannedAsset(record, in scanInfo);
+
+            var fileIndex = 1;
+            var path = Path.GetDirectoryName(scanInfo.RelativePath.AsSpan());
+            for (int i = 0; i < record.FileCount; i++)
+            {
+                var filePath = Path.Join(path, record.GetFile(i));
+                assetManager.RegisterAssetBinding(fileIndex++, assetId, record.Kind, filePath);
+            }
         }
     }
 
-    private static void RegisterUnimportedFile(AssetFileRegistry fileRegistry, FileInfo fileInfo, AssetKind kind,
-        string directory, string relativeDirectory, ReadOnlySpan<string> validExt)
+    private static FileSystemEnumerable<FileScanInfo> MakeFileEnumerable()
     {
-        var filePath = fileInfo.FullName;
-        var fileSpan = fileInfo.Name.AsSpan();
-        if (fileSpan.EndsWith(".asset") || fileSpan.StartsWith('.')) return;
-
-        var extIndex = fileSpan.LastIndexOf('.');
-        if (extIndex < 0) return;
-
-        var ext = fileSpan.Slice(extIndex);
-        if (!validExt.ContainsCharSpan(ext, StringComparison.OrdinalIgnoreCase))
-            return;
-
-        var relativePath = Path.GetRelativePath(directory, filePath);
-        relativePath = Path.Join(relativeDirectory, relativePath);
-
-        if (fileRegistry.HasFilePath(relativePath)) return;
-
-        var filename = Path.GetFileNameWithoutExtension(filePath);
-
-        var info = new FileScanInfo(0, kind, AssetStorageKind.FileSystem);
-        ExtractFileInfo(filename, fileInfo, ref info);
-
-        fileRegistry.AddUnbound(filename, relativePath, in info);
+        return new FileSystemEnumerable<FileScanInfo>(
+            directory: EnginePath.AssetBasePath,
+            options: new EnumerationOptions { RecurseSubdirectories = true, },
+            transform: static (ref entry) =>
+            {
+                var fileName = entry.FileName.ToString();
+                var path = entry.ToSpecifiedFullPath();
+                return new FileScanInfo(fileName, path, entry.Length, entry.LastWriteTimeUtc.DateTime);
+            }
+        )
+        {
+            ShouldIncludePredicate = static (ref entry) =>
+                !entry.IsDirectory && !entry.IsHidden && FileUtils.TestFileExtension(entry.FileName, out _)
+        };
     }
 
-
-    private static bool ExtractFileInfo(string name, FileInfo info, scoped ref FileScanInfo scanInfo)
+    private static FileSystemEnumerable<FileScanInfo> MakeAssetEnumerable(string root = EnginePath.AssetBasePath)
     {
-        if (!info.Exists) return false;
-
-        //var expectedMagic = GetMagicBytesForPath(fullPath);
-        //if (expectedMagic != null && !IsFileHeaderValid(fullPath, expectedMagic))
-        //    return false;
-
-        scanInfo.Source = name;
-        scanInfo.LastWriteTime = info.LastWriteTime;
-        scanInfo.SizeBytes = info.Length;
-        scanInfo.IsValid = true;
-        scanInfo.StorageKind = AssetStorageKind.FileSystem;
-        return true;
+        if (!root.StartsWith(EnginePath.Root)) Throwers.InvalidArgument(nameof(root), root);
+        return new FileSystemEnumerable<FileScanInfo>(
+            directory: root,
+            options: new EnumerationOptions() { RecurseSubdirectories = true, },
+            transform: static (ref entry) =>
+            {
+                var filePath = entry.ToSpecifiedFullPath();
+                return new FileScanInfo(string.Empty, filePath, entry.Length, entry.LastWriteTimeUtc.DateTime);
+            }
+        )
+        {
+            ShouldIncludePredicate = static (ref entry) =>
+                !entry.IsDirectory && !entry.IsHidden && Path.GetExtension(entry.FileName) is ".asset",
+        };
     }
 }

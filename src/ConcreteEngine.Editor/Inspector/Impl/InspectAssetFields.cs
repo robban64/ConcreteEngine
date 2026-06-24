@@ -1,3 +1,4 @@
+using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Editor.Lib.Field;
@@ -9,9 +10,9 @@ namespace ConcreteEngine.Editor.Inspector.Impl;
 internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
 {
     public readonly ColorField ColorField;
-    public readonly FloatField<Float1> SpecularField;
+    public readonly ColorField SpecularField;
     public readonly FloatField<Float1> ShininessField;
-    public readonly FloatField<Float1> UvRepeatField;
+    public readonly FloatField<Float4> UvRepeatField;
     public readonly ComboField BlendCombo;
     public readonly ComboField CullCombo;
     public readonly ComboField DepthCombo;
@@ -23,11 +24,11 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
 
     public InspectMaterialFields() : base(segmentCount: 2)
     {
-        ColorField = Register(new ColorField("Color", true));
-        SpecularField = Register(new FloatField<Float1>("Specular", FieldWidgetKind.Slider) { Min = 0, Max = 50 });
+        ColorField = Register(new ColorField("Albedo", true));
+        SpecularField = Register(new ColorField("Specular", true));
         ShininessField =
             Register(new FloatField<Float1>("Shininess", FieldWidgetKind.Slider) { Min = 0, Max = 50 });
-        UvRepeatField = Register(new FloatField<Float1>("UV Repeat", FieldWidgetKind.Slider));
+        UvRepeatField = Register(new FloatField<Float4>("UV Repeat", FieldWidgetKind.Slider));
 
         BlendCombo = Register(ComboField.MakeFromEnumCache<BlendMode>("Blend Mode"));
         CullCombo = Register(ComboField.MakeFromEnumCache<CullMode>("Cull Mode"));
@@ -40,39 +41,39 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
 
     public override void Bind(InspectMaterial target)
     {
-        ColorField.Bind(() => target.Asset.Color,
-            value => target.Asset.Color = (Color4)value
+        ColorField.Bind(() => target.State.Color,
+            value => target.State.Color = (Color4)value
         );
         SpecularField.Bind(
-            () => target.Asset.Specular,
-            value => target.Asset.Specular = (float)value
+            () => target.State.SpecularColor,
+            value => target.State.SpecularColor = (Color4)value
         );
         ShininessField.Bind(
-            () => target.Asset.Shininess,
-            value => target.Asset.Shininess = (float)value
+            () => target.State.Shininess,
+            value => target.State.Shininess = (float)value
         );
         UvRepeatField.Bind(
-            () => target.Asset.UvRepeat,
-            value => target.Asset.UvRepeat = (float)value
+            () => target.State.UvTransform,
+            value => target.State.UvTransform = (Vector4)value
         );
         BlendCombo.Bind(
-            () => (int)target.PassFunctions.Blend,
-            value => target.Asset.SetPassFunction(target.PassFunctions with { Blend = (BlendMode)value.X })
+            () => (int)target.State.DrawFunctions.Blend,
+            value => target.State.DrawFunctions = target.State.DrawFunctions with { Blend = (BlendMode)value.X }
         );
         CullCombo.Bind(
-            () => (int)target.PassFunctions.Cull,
-            value => target.Asset.SetPassFunction(target.PassFunctions with { Cull = (CullMode)value.X })
+            () => (int)target.State.DrawFunctions.Cull,
+            value => target.State.DrawFunctions = target.State.DrawFunctions with { Cull = (CullMode)value.X }
         );
         DepthCombo.Bind(
-            () => (int)target.PassFunctions.Depth,
-            value => target.Asset.SetPassFunction(target.PassFunctions with { Depth = (DepthMode)value.X })
+            () => (int)target.State.DrawFunctions.Depth,
+            value => target.State.DrawFunctions = target.State.DrawFunctions with { Depth = (DepthMode)value.X }
         );
         PolygonCombo.Bind(
-            () => (int)target.PassFunctions.PolygonOffset,
-            value => target.Asset.SetPassFunction(target.PassFunctions with
+            () => (int)target.State.DrawFunctions.PolygonOffset,
+            value => target.State.DrawFunctions = target.State.DrawFunctions with
             {
                 PolygonOffset = (PolygonOffsetLevel)value.X
-            })
+            }
         );
     }
 }
@@ -88,7 +89,7 @@ internal sealed class InspectTextureFields : InspectorFields<InspectTexture>
     protected override FieldLayout DefaultLayout => FieldLayout.Inline;
     protected override FieldGetDelay DefaultDelay => FieldGetDelay.High;
 
-    public InspectTextureFields() : base(segmentCount: 1)
+    public InspectTextureFields() : base(segmentCount: 2)
     {
         LodBias = Register(new FloatField<Float1>("Lod Level", FieldWidgetKind.Input) { Format = "%.3f" });
         Preset = Register(ComboField.MakeFromEnumCache<TexturePreset>("Preset").WithStartAt(1));
@@ -97,30 +98,31 @@ internal sealed class InspectTextureFields : InspectorFields<InspectTexture>
         PixelFormat = Register(ComboField.MakeFromEnumCache<TexturePixelFormat>("Format").WithPlaceholder("None")
             .WithStartAt(1));
 
-        CreateSegment("Texture State", [LodBias, Preset, Anisotropy, Usage, PixelFormat]);
+        CreateSegment("Texture State", [Usage]);
+        CreateSegment("Gpu State", [LodBias, Preset, Anisotropy, PixelFormat]);
     }
 
     public override void Bind(InspectTexture target)
     {
         LodBias.Bind(
-            () => target.Asset.LodBias,
-            (value) => target.Asset.LodBias = (float)value
+            () => target.GpuState.LodBias,
+            (value) => target.GpuState.LodBias = (float)value
         );
         Preset.Bind(
-            () => (int)target.Asset.Preset,
-            value => target.Asset.Preset = (TexturePreset)value.X
+            () => (int)target.GpuState.Preset,
+            value => target.GpuState.Preset = (TexturePreset)value.X
         );
         Anisotropy.Bind(
-            () => (int)target.Asset.Anisotropy,
-            value => target.Asset.Anisotropy = (AnisotropyLevel)value.X
+            () => (int)target.GpuState.Anisotropy,
+            value => target.GpuState.Anisotropy = (AnisotropyLevel)value.X
         );
         Usage.Bind(
             () => (int)target.Asset.Usage,
             value => target.Asset.Usage = (TextureUsage)value.X
         );
         PixelFormat.Bind(
-            () => (int)target.Asset.PixelFormat,
-            value => target.Asset.PixelFormat = (TexturePixelFormat)value.X
+            () => (int)target.GpuState.PixelFormat,
+            value => target.GpuState.PixelFormat = (TexturePixelFormat)value.X
         );
     }
 }

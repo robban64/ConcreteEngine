@@ -1,13 +1,10 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Engine.ECS.GameComponent;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
-
 namespace ConcreteEngine.Core.Engine.ECS;
 
 public static partial class Ecs
 {
     internal static class Internals
     {
+        /*
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void Warmup()
         {
@@ -17,10 +14,10 @@ public static partial class Ecs
             _ = Render.Core.Count;
             _ = Render.Core.Capacity;
             _ = Render.Core.Has(new RenderEntityId(1));
-            _ = Render.Core.GetBounds(new RenderEntityId(1));
+            _ = Render.Core.GetWorldBounds(new RenderEntityId(1));
             _ = Render.Core.GetSource(new RenderEntityId(1));
-            _ = Render.Core.GetTransform(new RenderEntityId(1));
-            _ = Render.Core.GetMatrix(new RenderEntityId(1));
+            _ = Render.Core.GetLocalTransform(new RenderEntityId(1));
+            _ = Render.Core.GetWorldMatrix(new RenderEntityId(1));
             _ = Render.Core.IsVisible(new RenderEntityId(1));
 
             _ = Render.Stores<SkinningComponent>.Store.Has(new RenderEntityId(1));
@@ -50,11 +47,9 @@ public static partial class Ecs
             _ = Game.Stores<BoxComponent>.Store.Has(new GameEntityId(0));
             _ = Game.Stores<BoxComponent>.Store.TryGet(new GameEntityId(1));
 
-            _ = Game.Stores<AnimationComponent>.Store.Has(new GameEntityId(1));
-            _ = Game.Stores<AnimationComponent>.Store.TryGet(new GameEntityId(0));
-
             _ = Game.Stores<TagComponent>.Store.Has(new GameEntityId(0));
             _ = Game.Stores<TagComponent>.Store.TryGet(new GameEntityId(1));
         }
+        */
     }
 }

@@ -14,17 +14,16 @@ layout(binding = 1) uniform sampler2D uAlpha;
 
 void main()
 {
-    float uvRepeat = uMatParams0.y;
+    float uvRepeat = uMat.UvTransform.w;
     vec2 uv = TexCoord * uvRepeat;
 
     vec4 baseTex = texture(uTexture, uv);
     float a = baseTex.a;
-    if (uMatParams1.w > 0.5) {
+    if (uMat.AlphaMaskToggle == 1) {
         a = texture(uAlpha, uv).r;
     }
 
-    float cutoff = (uMatParams1.w > 0.5) ? 0.25 : 0.05;
-    if (uMatParams1.z > 0.5 && a < cutoff) discard;
+    if (a < uMat.AlphaCutoff) discard;
 
     vec4 finalColor = vec4(baseTex.rgb * uEffectColor1.rgb, a);
 

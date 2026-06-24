@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Data;
@@ -79,7 +80,7 @@ internal static class EventHandler
     {
         if (evt.Rename is { } name)
         {
-            var asset = EngineObjectStore.SceneStore.Get(evt.SceneObject);
+            var asset = SceneManager.SceneStore.Get(evt.SceneObject);
             asset.SetName(name);
         }
     }
@@ -88,8 +89,8 @@ internal static class EventHandler
     {
         if (evt.Rename is { } name)
         {
-            var asset = EngineObjectStore.Assets.Get(evt.Asset);
-            if (asset.Rename(name))
+            var asset = AssetManager.Assets.Get<AssetObject>(evt.Asset);
+            if (asset.SetName(name))
                 AssetListPanel.RenamedAsset = asset.Id;
         }
         else if (evt.Reload)

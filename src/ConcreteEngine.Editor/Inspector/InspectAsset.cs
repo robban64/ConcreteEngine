@@ -1,7 +1,8 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Editor.Inspector;
 
@@ -19,8 +20,7 @@ internal abstract class InspectAsset()
 internal class InspectMaterial : InspectAsset
 {
     public override Material Asset { get; }
-    public GfxPassFunctions PassFunctions => Asset.Pipeline.PassFunctions;
-    public GfxDrawState DrawState => Asset.Pipeline.DrawState;
+    public MaterialState State => Asset.State;
 
     internal override Icons GetIcon() => AssetIcons.GetMaterialIcon(Asset);
 
@@ -41,11 +41,14 @@ internal class InspectModel(Model asset) : InspectAsset
 internal class InspectTexture : InspectAsset
 {
     public override Texture Asset { get; }
+    public GpuTextureState GpuState => Asset.GpuState;
+    public readonly TextureMeta GfxMeta;
     internal override Icons GetIcon() => Icons.Image;
 
     public InspectTexture(Texture asset) : base()
     {
         Asset = asset;
+        GfxMeta = GfxResourceApi.GetMeta(asset.GfxId);
         InspectorFieldProvider.Instance.TextureFields.Bind(this);
     }
 }
@@ -69,5 +72,6 @@ internal static class AssetIcons
 
     public static Icons GetModelIcon(Model model) => model.Info.MeshCount > 1 ? Icons.Boxes : Icons.Box;
 
-    public static Icons GetMaterialIcon(Material material) => material.Transparency ? Icons.CircleDashed : Icons.Circle;
+    public static Icons GetMaterialIcon(Material material) =>
+        material.State.IsTransparent ? Icons.CircleDashed : Icons.Circle;
 }

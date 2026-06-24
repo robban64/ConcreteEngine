@@ -7,7 +7,7 @@ namespace ConcreteEngine.Graphics.Diagnostic;
 
 public static class GfxMetrics
 {
-    public static int StoreCount => EnumCache<GraphicsKind>.Count - 1;
+    public static readonly int StoreCount = EnumCache<GraphicsKind>.Count - 1;
     private static readonly IStoreMetrics[] StoreMetrics = new IStoreMetrics[StoreCount];
 
     public static GpuFrameMeta FrameMeta;

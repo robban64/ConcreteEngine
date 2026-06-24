@@ -17,12 +17,6 @@ public sealed class RenderRegistry
         FboRegistry = new RenderFboRegistry(gfx);
     }
 
-    private void SetupGateway()
-    {
-        GfxResourceApi.BindMetaChanged(GraphicsKind.FrameBuffer, FboRegistry.OnFboChange);
-        GfxResourceApi.BindMetaChanged(GraphicsKind.UniformBuffer, UboRegistry.OnUboChanged);
-    }
-
     internal void BeginRegistration(Size2D outputSize)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Width, 1, nameof(outputSize));
@@ -37,5 +31,8 @@ public sealed class RenderRegistry
         UboRegistry.FinishRegistration();
         FboRegistry.FinishRegistration();
         ShaderRegistry.FinishRegistration();
+
+        GfxResourceApi.BindMetaChanged(GraphicsKind.FrameBuffer, FboRegistry.OnFboChange);
+        GfxResourceApi.BindMetaChanged(GraphicsKind.UniformBuffer, UboRegistry.OnUboChanged);
     }
 }

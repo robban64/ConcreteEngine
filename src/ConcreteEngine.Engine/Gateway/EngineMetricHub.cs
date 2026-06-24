@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Assets.Data;
+using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Scene;
@@ -12,7 +12,7 @@ using ConcreteEngine.Graphics.Diagnostic;
 
 namespace ConcreteEngine.Engine.Gateway;
 
-internal sealed class EngineMetricHub(SceneStore store, AssetStore assets)
+internal sealed class EngineMetricHub
 {
     private MetricSystem? _metricSystem;
 
@@ -23,7 +23,7 @@ internal sealed class EngineMetricHub(SceneStore store, AssetStore assets)
     public void ConnectEditor(MetricSystem metricSystem)
     {
         _metricSystem = metricSystem;
-        metricSystem.BindStore(GfxMetrics.StoreCount, AssetStore.StoreCount, WriteStoreMeta);
+        metricSystem.BindStore(GfxMetrics.StoreCount, AssetKindUtils.AssetTypeCount, WriteStoreMeta);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -57,7 +57,7 @@ internal sealed class EngineMetricHub(SceneStore store, AssetStore assets)
 
         var frameMeta = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha);
         var sceneMeta = new SceneMeta(
-            store.ActiveCount,
+            SceneManager.SceneStore.ActiveCount,
             0,
             Ecs.Game.ActiveCount,
             Ecs.Render.ActiveCount
@@ -71,7 +71,9 @@ internal sealed class EngineMetricHub(SceneStore store, AssetStore assets)
     private void WriteStoreMeta(GfxStoreMeta[] gfxResult, AssetsMetaInfo[] assetResult)
     {
         GfxMetrics.DrainStoreMetrics(gfxResult);
-        for (var i = 0; i < assets.Collections.Count; i++)
-            assetResult[i] = assets.Collections[i].ToSnapshot();
+
+        var storeSpan = AssetManager.Assets.GetTypeStoreSpan();
+        for (var i = 0; i < storeSpan.Length; i++)
+            assetResult[i] = storeSpan[i].ToSnapshot();
     }
 }

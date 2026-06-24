@@ -1,154 +1,151 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Collections;
+using System.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Engine.Render.Data;
-using ConcreteEngine.Engine.Render.Processor;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
+using Camera = ConcreteEngine.Core.Engine.Camera;
 
 namespace ConcreteEngine.Engine.Render;
 
-internal sealed class RenderDispatcher : IDisposable
+internal sealed class RenderDispatcher
 {
-    public int VisibleCount { get; private set; }
+    public int VisibleEntities { get; private set; }
 
-    private RenderEntityId[] _visibleEntities;
-    private int[] _visibleByIndices;
+    private readonly Camera _camera;
+    private readonly CameraFrustum _frustum;
+    private readonly DrawCommandBuffer _commandBuffer;
+    private readonly EffectBuffer _effectBuffer;
+    private readonly TerrainSystem _terrainSystem;
 
-    private readonly RenderEntityCore _ecs;
-    private readonly CameraSystem _cameraSystem;
-
-    private AnimatorProcessor _animatorProcessor = null!;
-    private RenderUploadBuffers _uploadBuffers = null!;
-
-    private readonly AnimationTable _animationTable;
-    private readonly ParticleSystem _particleSystem;
-
-    internal RenderDispatcher(AnimationTable animations, ParticleSystem particleSystem)
+    internal RenderDispatcher(CameraManager cameraManager, TerrainSystem terrainSystem,
+        RenderUploadBuffers uploadBuffers)
     {
-        _ecs = Ecs.Render.Core;
-        _visibleEntities = new RenderEntityId[_ecs.Capacity];
-        _visibleByIndices = new int[_ecs.Capacity];
+        ArgumentNullException.ThrowIfNull(cameraManager);
+        ArgumentNullException.ThrowIfNull(uploadBuffers);
+        if (cameraManager.Camera == null! || cameraManager.Frustum == null!)
+            throw new ArgumentNullException(nameof(cameraManager));
 
-        _animationTable = animations;
-        _particleSystem = particleSystem;
-        _cameraSystem = CameraSystem.Instance;
+        _camera = cameraManager.Camera;
+        _frustum = cameraManager.Frustum;
+        _effectBuffer = uploadBuffers.Effects;
+        _commandBuffer = uploadBuffers.Commands;
+        _terrainSystem = terrainSystem;
     }
 
-    public ReadOnlySpan<RenderEntityId> GetVisibleEntities() => _visibleEntities.AsSpan(0, VisibleCount);
-
-    public void Attach(RenderUploadBuffers uploadBuffers)
+    public void Execute()
     {
-        _uploadBuffers = uploadBuffers;
-        _animatorProcessor = new AnimatorProcessor(_animationTable, uploadBuffers.Skinning);
-        EnvironmentProcessor.RefreshMatrices();
+        _commandBuffer.EnsureCapacity(Ecs.Render.Core.Count + 64);
+        UploadOthers();
+
+        if (VisibleEntities == 0) return;
+
+        TagUploadSelectionEffect();
+        CollectEntities();
+        UploadDrawCommands();
+
+        SubmitDebugBounds();
     }
 
-    private int PrepareExecute()
+    public void CullEntities()
     {
-        EnsureCommandBuffer();
-        EnsureCapacity();
-
-        EnvironmentProcessor.SubmitDrawTerrain(_uploadBuffers.Commands, TerrainSystem.Instance,
-            _cameraSystem.Frustum);
-        EnvironmentProcessor.SubmitDrawSkybox(_uploadBuffers.Commands, Skybox.Instance);
-
-        return VisibleCount = SpatialProcessor.CullEntities(
-            _visibleEntities,
-            new UnsafeSpan<int>(_visibleByIndices),
-            _cameraSystem.Frustum
-        );
-    }
-
-    internal void Execute()
-    {
-        var len = PrepareExecute();
-        if (len == 0) return;
-        if ((uint)len > (uint)_visibleEntities.Length || (uint)_ecs.Count > (uint)_visibleByIndices.Length)
-            Throwers.InvalidOperation();
-
-        var visibleEntities = _visibleEntities.AsSpan(0, len);
-        var visibleByIndices = _visibleByIndices.AsSpan(0, _ecs.Count);
-        var submitOffset = _uploadBuffers.Commands.Count;
-
-        ProcessEntities(submitOffset, visibleEntities, visibleByIndices);
-        _animatorProcessor.Execute();
-
-        UploadDrawCommands(visibleEntities);
-        DrawTagProcessor.UploadDebugBounds(submitOffset, visibleByIndices, _uploadBuffers.Commands,
-            _uploadBuffers.Effects);
-
-        ParticleProcessor.Execute(_particleSystem);
-    }
-
-    private void ProcessEntities(int submitOffset, Span<RenderEntityId> visibleEntities, Span<int> visibleByIndices)
-    {
-        var drawCommands = _uploadBuffers.Commands.GetDrawCommands(submitOffset);
-        var ctx = new DrawEntityContext(visibleEntities, visibleByIndices, drawCommands);
-
-        CollectEntities(in ctx);
-        DrawTagProcessor.TagUploadSelectionEffect(in ctx, _uploadBuffers.Effects);
-        ParticleProcessor.TagParticles(in ctx, _particleSystem);
-        SpatialProcessor.TagDepthKeys(in ctx, _cameraSystem);
-        _animatorProcessor.Tag(in ctx);
-    }
-
-    private void CollectEntities(in DrawEntityContext ctx)
-    {
-        var sources = _ecs.GetSourceView();
-        foreach (var it in ctx)
+        var visibleCount = 0;
+        var length = Ecs.RenderCore.Count;
+        var bounds = Ecs.RenderCore.GetWorldBoundsView();
+        var coreEntities = Ecs.RenderCore.GetCoreEntityView();
+        for (var i = 0; i < length; i++)
         {
-            ref readonly var source = ref sources[it.Entity.Index()];
-            it.Command = new DrawCommand(source.Mesh, source.Material);
-            it.Meta = new DrawCommandMeta(DrawCommandId.Model, source.Queue, source.Mask);
+            if (!coreEntities[i].Alive) continue;
+            var visible = _frustum.IntersectsBox(in bounds[i]);
+            visible &= coreEntities[i].ToggleVisibility(VisibilityFlags.Culled, visible) == 0;
+            if (visible) visibleCount++;
+        }
+
+        VisibleEntities = visibleCount;
+    }
+
+    private void UploadOthers()
+    {
+        _terrainSystem.SubmitDrawTerrain(_commandBuffer, _frustum);
+
+        var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passes: PassMask.Main);
+        var cmd = new DrawCommand(Skybox.Current.MeshId, Skybox.Current.MaterialId);
+        _commandBuffer.SubmitIdentity(cmd, meta);
+    }
+
+    private void CollectEntities()
+    {
+        var index = 0;
+        var cmd = _commandBuffer.GetCommandMetaSpan();
+        foreach (var query in
+                 Ecs.RenderCore.VisibleQuery(Ecs.RenderCore.GetSourceView(), Ecs.RenderCore.GetModelView()))
+        {
+            var depth = _camera.MakeDepthKey(query.Data.Item2.Translation);
+            query.Data.Item1.WriteCommand(ref cmd.At1(index));
+            query.Data.Item1.WriteMeta(ref cmd.At2(index), depth);
+            ++index;
         }
     }
 
-    private void UploadDrawCommands(Span<RenderEntityId> visibleEntities)
+    private void UploadDrawCommands()
     {
-        var buffer = _uploadBuffers.Commands;
-        var parentMatrices = _ecs.GetMatrixView();
-        var len = visibleEntities.Length;
-        for (var i = 0; i < len; i++)
+        foreach (var entity in Ecs.RenderCore.VisibleQuery(Ecs.RenderCore.GetModelView(),
+                     Ecs.RenderCore.GetNormalsView()))
         {
-            ref readonly var world = ref parentMatrices[visibleEntities[i].Index()];
-            ref var bufferData = ref buffer.SubmitDraw();
-            bufferData.Model = world;
-            MatrixMath.CreateNormalMatrix(ref bufferData.Normal, in world);
+            ref var bufferData = ref _commandBuffer.SubmitDraw();
+            bufferData.Model = entity.Data.Item1;
+            bufferData.Normal = entity.Data.Item2;
         }
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void EnsureCommandBuffer()
+    public void TagUploadSelectionEffect()
     {
-        const int extraEntities = 64;
-        const int extraAnimations = 8;
+        var store = Ecs.GetRenderStore<SelectionComponent>();
+        if (store.Count == 0) return;
 
-        var entityLen = Ecs.Render.Core.Count + extraEntities;
-        var animationLen = Ecs.Render.Stores<SkinningComponent>.Store.Count + extraAnimations;
-
-        _uploadBuffers.Commands.EnsureCapacity(entityLen);
-        _uploadBuffers.Skinning.EnsureCapacity(animationLen);
+        foreach (var query in store.VisibilityQuery())
+        {
+            var slot = _effectBuffer.Submit(new EffectUniformParams(query.Component.HighlightColor));
+            ref var source = ref Ecs.RenderCore.GetSource(query.Entity);
+            source.Passes = PassMask.Effect | PassMask.Depth;
+            source.Resolver = DrawCommandResolver.Highlight;
+            source.ResolverSlot = slot;
+        }
     }
 
-    private void EnsureCapacity()
+    private void SubmitDebugBounds()
     {
-        var len = _visibleEntities.Length;
-        if (_ecs.Capacity <= len) return;
+        var store = Ecs.GetRenderStore<DebugBoundsComponent>();
+        if (store.Count == 0) return;
 
-        _visibleEntities = new RenderEntityId[_ecs.Capacity];
-        _visibleByIndices = new int[_ecs.Capacity];
+        var index = 0;
+        var materialId = AssetStore.Core.DebugBoundsMaterial.MaterialId;
+        var ctx = _commandBuffer.GetCommandMetaSpan();
+        foreach (var query in store.VisibilityQuery())
+        {
+            var slot = _effectBuffer.Submit(new EffectUniformParams(query.Component.Color));
+            var depthKey = _camera.MakeDepthKey(Ecs.RenderCore.GetModelMatrix(query.Entity).Translation);
+            depthKey = (ushort)(ushort.MaxValue - depthKey);
 
-        if (len > 0)
-            Logger.LogString(LogScope.Ecs, $"{nameof(RenderDispatcher)} _drawEntities resize {_ecs.Capacity}",
-                LogLevel.Warn);
+            ctx.At1(index) = new DrawCommand(GfxMeshes.Cube, materialId);
+            ctx.At2(index) =
+                new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey,
+                    DrawCommandResolver.BoundingVolume, resolverSlot: slot);
+
+            ref readonly var worldBounds = ref Ecs.RenderCore.GetWorldBounds(query.Entity);
+            ref var data = ref _commandBuffer.SubmitDraw();
+            MatrixMath.CreateModelMatrix(
+                worldBounds.Center,
+                worldBounds.Extent,
+                Quaternion.Identity,
+                out data.Model
+            );
+            data.Normal = Matrix3X4.Identity;
+            index++;
+        }
     }
-
-    public void Dispose() => _animatorProcessor.Dispose();
 }

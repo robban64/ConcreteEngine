@@ -82,20 +82,21 @@ public sealed class GfxBuffers
     public UniformBufferId CreateUniformBuffer<T>(
         UboSlot slot,
         BufferStorage storage = BufferStorage.Dynamic,
-        BufferAccess access = BufferAccess.MapWrite) where T : unmanaged
+        BufferAccess access = BufferAccess.MapWrite) where T : unmanaged, IUniform
     {
-        if (!UniformBufferUtils.IsStd140Aligned<T>())
-            throw GraphicsException.InvalidStd140Layout(Unsafe.SizeOf<T>());
+        var stride = T.OverrideSize > 0 ? T.OverrideSize : Unsafe.SizeOf<T>();
 
-        var blockSize = (uint)Unsafe.SizeOf<T>();
-        var stride = IntMath.AlignUp(blockSize, UniformBufferUtils.UboOffsetAlign);
+        if (!UniformBufferUtils.IsStd140Aligned(stride))
+            throw GraphicsException.InvalidStd140Layout(stride);
 
-        var meta = new UniformBufferMeta(slot, (int)stride, stride,
+        stride = IntMath.AlignUp(stride, UniformBufferUtils.UboOffsetAlign);
+
+        var meta = new UniformBufferMeta(slot, stride, stride,
             BufferUsage.DynamicDraw,
             BufferStorage.Dynamic,
             BufferAccess.MapWrite);
 
-        var uboRef = _driverBuffer.CreateUniformBuffer(slot, new CreateBufferInfo(stride, storage, access));
+        var uboRef = _driverBuffer.CreateUniformBuffer(slot, new CreateBufferInfo((uint)stride, storage, access));
         return _uboStore.Add(meta, uboRef);
     }
 
@@ -129,11 +130,12 @@ public sealed class GfxBuffers
         _iboStore.ReplaceMeta(iboId, in newMeta, out _);
     }
 
-    public void SetUniformBufferCapacity(UniformBufferId uboId, uint capacity)
+    public void SetUniformBufferCapacity(UniformBufferId uboId, int capacity)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(0, (int)capacity);
+        ArgumentOutOfRangeException.ThrowIfEqual(0, capacity);
         var handle = _uboStore.GetHandleAndMeta(uboId, out var meta);
         if (meta.Capacity == capacity) return;
+        capacity = IntMath.AlignUp(capacity, meta.Stride);
         var newMeta = UniformBufferMeta.MakeResizeCopy(in meta, capacity);
         _uboStore.ReplaceMeta(uboId, in newMeta, out _);
         _driverBuffer.ResizeUniformBuffer(handle, capacity, BufferUsage.DynamicDraw);
@@ -180,39 +182,36 @@ public sealed class GfxBuffers
     }
 
 
-    public unsafe void UploadSingleUniform<T>(UniformBufferId uboId, T* data, uint offset) where T : unmanaged
+    public unsafe void UploadSingleUniform<T>(UniformBufferId id, T* data, int offset) where T : unmanaged, IUniform
     {
-        var size = (uint)Unsafe.SizeOf<T>();
-        var uboRef = _uboStore.GetHandle(uboId);
-        _driverBuffer.UploadUniformBufferData(uboRef, (byte*)data, offset, size);
-        _uboUploadSize += size;
+        var uboRef = _uboStore.GetHandleAndMeta(id, out var meta);
+        _driverBuffer.UploadUniformBufferData(uboRef, (byte*)data, offset, meta.Stride);
+        _uboUploadSize += meta.Stride;
     }
 
-    public unsafe void UploadUniform<T>(UniformBufferId uboId, NativeView<T> data, uint offset) where T : unmanaged
+    public unsafe void UploadUniform<T>(UniformBufferId id, NativeView<T> data, int offset) where T : unmanaged
     {
-        var stride = Unsafe.SizeOf<T>();
-        var sizeInBytes = (uint)stride * (uint)data.Length;
-
-        var handle = _uboStore.GetHandleAndMeta(uboId, out var meta);
+        var handle = _uboStore.GetHandleAndMeta(id, out var meta);
+        var sizeInBytes = Unsafe.SizeOf<T>() * data.Length;
 
         if (offset + sizeInBytes > meta.Capacity)
-            GraphicsException.ThrowCapabilityExceeded(nameof(T), (int)sizeInBytes, (int)meta.Capacity);
+            GraphicsException.ThrowCapabilityExceeded(nameof(T), sizeInBytes, (int)meta.Capacity);
 
         _driverBuffer.UploadUniformBufferData(handle, (byte*)data.Ptr, offset, sizeInBytes);
         _uboUploadSize += sizeInBytes;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindUniformBufferRange(UniformBufferId uboId, uint offset, uint size)
+    public void BindUniformBufferRange(UniformBufferId id, int offset, int size)
     {
-        var handle = _uboStore.GetHandleAndMeta(uboId, out var meta);
+        var handle = _uboStore.GetHandleAndMeta(id, out var meta);
         _driverBuffer.BindUniformBufferRange(handle, meta.Slot, offset, size);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindUniformBufferRange(UniformBufferId uboId, UboSlot slot, uint offset, uint size)
+    public void BindUniformBufferRange(UniformBufferId id, UboSlot slot, int offset, int size)
     {
-        _driverBuffer.BindUniformBufferRange(_uboStore.GetHandle(uboId), slot, offset, size);
+        _driverBuffer.BindUniformBufferRange(_uboStore.GetHandle(id), slot, offset, size);
     }
 
 

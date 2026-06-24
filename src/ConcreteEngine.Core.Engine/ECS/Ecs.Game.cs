@@ -29,11 +29,11 @@ public static partial class Ecs
         public static int StoreCount => All.Count;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static GameQuery<T1>.EntityEnumerator Query<T1>() where T1 : unmanaged, IGameComponent<T1> =>
+        public static GameQuery<T1>.QueryEnumerator Query<T1>() where T1 : unmanaged, IGameComponent<T1> =>
             new(Stores<T1>.Store);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static GameQuery<T1, T2>.EntityEnumerator Query<T1, T2>()
+        public static GameQuery<T1, T2>.LeftQueryEnumerator Query<T1, T2>()
             where T1 : unmanaged, IGameComponent<T1> where T2 : unmanaged, IGameComponent<T2> =>
             new(Stores<T1>.Store, Stores<T2>.Store);
     }

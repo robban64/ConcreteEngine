@@ -1,5 +1,5 @@
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
 
@@ -7,20 +7,18 @@ namespace ConcreteEngine.Core.Engine.Graphics;
 
 public sealed class Skybox
 {
-    public static readonly Skybox Instance = new();
-
+    public static readonly Skybox Current = new();
     public MeshId MeshId { get; } = GfxMeshes.SkyboxCube;
     public Material? Material { get; private set; }
 
-    private Skybox()
-    {
-    }
+    private Skybox() { }
 
-    public MaterialId MaterialId => Material?.MaterialId ?? MaterialId.Empty;
+    public Id16<MaterialSlot> MaterialId => Material?.MaterialId ?? Id16<MaterialSlot>.Empty;
 
     public void SetMaterial(Material material)
     {
-        ArgumentOutOfRangeException.ThrowIfNotEqual((int)material.Profile, (int)MaterialProfile.Sky, nameof(material));
+        ArgumentOutOfRangeException.ThrowIfNotEqual((int)material.ProfileId, (int)MaterialProfileId.Sky,
+            nameof(material));
         Material = material;
     }
 }

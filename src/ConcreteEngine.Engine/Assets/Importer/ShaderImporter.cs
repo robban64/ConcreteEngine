@@ -1,5 +1,5 @@
-using System.Runtime.CompilerServices;
 using System.Text;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
@@ -40,14 +40,13 @@ internal sealed unsafe class ShaderImporter
         if (!File.Exists(path)) throw new FileNotFoundException("Shader Path not found.", path);
 
         using var fs = File.OpenRead(path);
-        using var bs = new BufferedStream(fs, 8192);
         length = fs.Length;
 
         var sw = new NativeSpanWriter(buffer);
         Span<byte> line = stackalloc byte[1024];
 
         var cursor = 0;
-        while (ReadLine(bs, line, ref cursor))
+        while (ReadLine(fs, line, ref cursor))
         {
             ParseShader(line.Slice(0, cursor), ref sw);
             cursor = 0;
@@ -70,7 +69,7 @@ internal sealed unsafe class ShaderImporter
     private void ParseShader(scoped Span<byte> line, scoped ref NativeSpanWriter sw)
     {
         if (sw.BytesLeft < line.Length || sw.BytesLeft < 16)
-            throw new InsufficientMemoryException("Insufficient memory for loading shader, increase limit");
+            Throwers.BufferOverflow("Insufficient memory for loading shader, increase limit");
 
         line = line.TrimWhitespace();
         if (line.IsEmpty || line.StartsWith("//"u8))
@@ -78,8 +77,6 @@ internal sealed unsafe class ShaderImporter
             sw.Append('\n');
             return;
         }
-
-        sw.Validate();
 
         if (line.StartsWith(Identifier))
         {
@@ -96,13 +93,9 @@ internal sealed unsafe class ShaderImporter
                 sw.Append(uboEntry.Data).Append('\n');
             }
             else if (type.SequenceEqual("struct"u8))
-            {
                 sw.Append(_structsDict[strName]).Append('\n');
-            }
             else
-            {
-                throw new InvalidOperationException(nameof(type));
-            }
+                Throwers.InvalidOperation(nameof(type));
 
             return;
         }
@@ -127,18 +120,15 @@ internal sealed unsafe class ShaderImporter
     )
     {
         using var fs = File.OpenRead(Path.Join(ShaderDefPath, filename));
-        using var bs = new BufferedStream(fs, 8192);
-
         string? activeName = null;
 
         var cursor = 0;
-        while (ReadLine(bs, line, ref cursor))
+        while (ReadLine(fs, line, ref cursor))
         {
             var span = line.Slice(0, cursor).TrimWhitespace();
             cursor = 0;
 
             if (span.IsEmpty) continue;
-            sw.Validate();
 
             if (span.StartsWith(identifier))
             {
@@ -155,9 +145,9 @@ internal sealed unsafe class ShaderImporter
             sw.Append(span.Slice(0, fieldEnd + 1));
             sw.Append('\n');
 
-            if (span.IndexOf("};"u8) >= 0)
+            if (span.StartsWith((byte)'}') && fieldEnd > 0)
             {
-                if (activeName == null) throw new InvalidOperationException("Invalid shader def");
+                if (activeName == null!) Throwers.InvalidOperation("Invalid shader def");
                 onAdd(activeName, sw.EndSpan().ToArray(), this);
 
                 activeName = null;
@@ -165,9 +155,12 @@ internal sealed unsafe class ShaderImporter
             }
         }
 
-        if (cursor > 0 && activeName != null && line.Slice(0, cursor).IndexOf("};"u8) >= 0)
+        if (cursor <= 0 || activeName == null) return;
+
+        var lastLine = line.Slice(0, cursor);
+        if (lastLine.StartsWith((byte)'}') && lastLine.EndsWith((byte)';'))
         {
-            sw.Append(line.Slice(0, cursor));
+            sw.Append(lastLine);
             onAdd(activeName, sw.EndSpan().ToArray(), this);
         }
     }
@@ -179,11 +172,10 @@ internal sealed unsafe class ShaderImporter
         importer._uboDict.Add(name, new UboDictEntry(importer._uboSlot++, data));
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool ReadLine(BufferedStream bs, Span<byte> line, scoped ref int cursor)
+    private static bool ReadLine(FileStream fs, Span<byte> line, scoped ref int cursor)
     {
         int b;
-        while ((b = bs.ReadByte()) != -1)
+        while ((b = fs.ReadByte()) != -1)
         {
             if (b == '\n')
             {
@@ -204,7 +196,7 @@ internal sealed unsafe class ShaderImporter
         var name = s.MoveNext() ? line[s.Current] : ReadOnlySpan<byte>.Empty;
 
         if (name.Length < 3)
-            throw new InvalidOperationException("Shader def name require least 3 characters");
+            Throwers.InvalidOperation("Shader def name require least 3 characters");
 
         return Encoding.UTF8.GetString(name);
     }

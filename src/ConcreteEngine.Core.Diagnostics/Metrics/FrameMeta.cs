@@ -8,9 +8,9 @@ public struct GpuFrameMeta(in GpuBufferMeta buffer, in RenderFrameMeta frame)
     public RenderFrameMeta Frame = frame;
 }
 
-public readonly struct FrameMeta(long frameId, float fps, float alpha)
+public readonly struct FrameMeta(ulong frameId, float fps, float alpha)
 {
-    public readonly long FrameId = frameId;
+    public readonly ulong FrameId = frameId;
     public readonly float Fps = fps;
     public readonly float Alpha = alpha;
 }

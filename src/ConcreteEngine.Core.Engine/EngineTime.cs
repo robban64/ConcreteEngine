@@ -8,8 +8,8 @@ public static class EngineTime
 {
     private static FastRandom _rng = new(12323);
 
-    public static long FrameId;
-    public static long GameTickId;
+    public static ulong FrameId;
+    public static ulong GameTickId;
     public static float FrameRng;
     public static float Time;
     public static float DeltaTime;
@@ -21,7 +21,7 @@ public static class EngineTime
     public static float GameDelta;
     public static float EnvironmentDelta;
 
-    public static readonly int SystemTickRate = 1;
+    public const int SystemTickRate = 1;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void AdvanceFrame(float deltaTime, float gameAlpha, float envAlpha)

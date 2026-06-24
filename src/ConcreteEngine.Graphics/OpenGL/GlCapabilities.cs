@@ -10,9 +10,7 @@ public sealed class GlCapabilities
     public OpenGlVersion GlVersion { get; private set; }
     public GpuDeviceCapabilities Capabilities { get; private set; } = null!;
 
-    internal GlCapabilities()
-    {
-    }
+    internal GlCapabilities() { }
 
     public void CreateDeviceCapabilities(GL gl)
     {

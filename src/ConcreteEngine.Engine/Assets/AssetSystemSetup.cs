@@ -1,12 +1,7 @@
 using System.Diagnostics;
 using System.Runtime;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Engine.Assets.Loader;
-using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -44,36 +39,5 @@ internal static class AssetSystemSetup
         GC.WaitForPendingFinalizers();
         GC.Collect();
         GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-    }
-
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void CreateFallbackAssets(AssetStore assets, MaterialStore materials)
-    {
-        // Texture
-        {
-            var gid = Guid.Parse("196d3a4f-99e9-4d5a-971b-b42aa0012970");
-            var textureId = assets.RegisterPlainAsset(gid, AssetKind.Texture, "White", AssetStorageKind.InMemory);
-            assets.AddAsset(new Texture(
-                "White",
-                GfxTextures.Fallback.AlbedoId,
-                new Size2D(1),
-                new TextureProperties(
-                    lod: 0,
-                    kind: TextureKind.Texture2D,
-                    preset: TexturePreset.NearestClamp,
-                    anisotropy: AnisotropyLevel.Off,
-                    pixelFormat: TexturePixelFormat.Rgba
-                )) { Id = textureId, GId = gid });
-        }
-
-        // Material
-        {
-            var gid = Guid.Parse("f28fbc18-9e84-41bf-b490-4b900b1d8598");
-            var materialId = assets.RegisterPlainAsset(gid, AssetKind.Material, "Fallback", AssetStorageKind.InMemory);
-            var material = MaterialLoader.CreateFallback(materialId, gid);
-            materials.AddFallbackMaterial(material);
-            assets.AddAsset(material);
-        }
     }
 }

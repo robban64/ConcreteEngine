@@ -6,10 +6,11 @@ public abstract class AssetObject : IComparable<AssetObject>
 {
     public const int MaxNameLength = 64;
 
-    private IAssetChangeNotifier? _changeNotifier;
+    private readonly List<IAssetListener> _listeners = [];
 
-    public AssetId Id { get; internal set; }
-    public required Guid GId { get; init; } = Guid.NewGuid();
+    public AssetDirtyFlag DirtyFlags { get; private set; }
+    public AssetId Id { get; }
+    public Guid GId { get; }
 
     public string Name
     {
@@ -17,41 +18,63 @@ public abstract class AssetObject : IComparable<AssetObject>
         internal set
         {
             if (field == value) return;
-            field = value;
-            PackedName = StringPacker.PackAscii(value.AsSpan(), true);
+            if (!string.IsNullOrEmpty(field)) MarkDirty(AssetDirtyFlag.Name);
+            field = value.Length > MaxNameLength ? value.Substring(0, MaxNameLength) : value;
+            PackedName = StringPacker.PackAscii(field, true);
         }
     }
 
     public ulong PackedName { get; private set; }
 
-    protected AssetObject(string name)
+    protected AssetObject(string name, AssetId id, Guid gId)
     {
         Name = name;
+        Id = id;
+        GId = gId;
     }
 
     public abstract AssetCategory Category { get; }
     public abstract AssetKind Kind { get; }
 
-    public bool Rename(string newName)
+    public bool SetName(string newName)
     {
-        if (_changeNotifier is not { } changeNotifier)
-            throw new InvalidOperationException(nameof(_changeNotifier));
-
-        changeNotifier.Rename(this, newName);
+        AssetManager.Instance.Rename(this, newName);
         Name = newName;
+        MarkDirty(AssetDirtyFlag.Name);
         return true;
     }
 
-    protected void MarkDirty() => _changeNotifier?.MarkDirty(this);
-
-    internal void AttachNotifier(IAssetChangeNotifier changeNotifier)
+    protected internal void MarkDirty(AssetDirtyFlag flag)
     {
-        if (string.IsNullOrWhiteSpace(Name)) throw new InvalidOperationException("Name is null or empty");
-        _changeNotifier = changeNotifier;
+        if (!Id.IsValid() || (DirtyFlags & flag) != 0) return;
+        DirtyFlags |= flag;
+        AssetManager.Assets.MarkDirty(this);
     }
+
+    internal AssetDirtyFlag Commit()
+    {
+        var f = DirtyFlags;
+        var shouldTrigger = (f & AssetDirtyFlag.Structure) != 0 || (f & AssetDirtyFlag.Dependencies) != 0 ||
+                            (f & AssetDirtyFlag.Lifecycle) != 0;
+        if (shouldTrigger)
+        {
+            OnCommit();
+            foreach (var it in _listeners)
+                it.OnAssetChanged(this);
+        }
+
+        DirtyFlags = 0;
+        return f;
+    }
+
+    protected virtual void OnCommit() { }
+
+    public void AddRef(IAssetListener listener) => _listeners.Add(listener);
+    public void RemoveRef(IAssetListener listener) => _listeners.Remove(listener);
 
     public int CompareTo(AssetObject? other)
     {
-        return other is null ? 1 : Id.Value.CompareTo(other.Id.Value);
+        if (ReferenceEquals(this, other)) return 0;
+        return other is null ? 1 : Id.Id.CompareTo(other.Id.Id);
     }
 }

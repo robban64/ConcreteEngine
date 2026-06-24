@@ -7,34 +7,29 @@ namespace ConcreteEngine.Core.Common.Memory;
 
 public static unsafe class NativeArray
 {
+    public static NativeArray<T> From<T>(T* ptr, int length, int alignment = 0) where T : unmanaged
+    {
+        Validate(length, Unsafe.SizeOf<T>(), alignment);
+        return new NativeArray<T>(ptr, length, alignment);
+    }
+
     public static NativeArray<T> Allocate<T>(int capacity, bool zeroed = true) where T : unmanaged
     {
-        return new NativeArray<T>(capacity, 0, zeroed);
+        var ptr = AllocMemory(capacity, Unsafe.SizeOf<T>(), 0, zeroed);
+        return new NativeArray<T>((T*)ptr, capacity, 0);
     }
 
     public static NativeArray<T> AlignedAllocate<T>(int capacity, int alignment = 16, bool zeroed = true)
         where T : unmanaged
     {
-        return new NativeArray<T>(capacity, alignment, zeroed);
+        var ptr = AllocMemory(capacity, Unsafe.SizeOf<T>(), alignment, zeroed);
+        return new NativeArray<T>((T*)ptr, capacity, alignment);
     }
-
-    [MethodImpl(MethodImplOptions.NoInlining), StackTraceHidden]
-    internal static void Validate(int capacity, int alignment)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 4);
-        if (alignment != 0)
-        {
-            ArgumentOutOfRangeException.ThrowIfLessThan(alignment, 16);
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 64);
-            ArgumentOutOfRangeException.ThrowIfNotEqual(IntMath.IsPowerOfTwo(alignment), true, nameof(alignment));
-        }
-    }
-
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void* AllocMemory(int length, int stride, int alignment, bool zeroed)
+    private static void* AllocMemory(int length, int stride, int alignment, bool zeroed)
     {
-        Validate(length, alignment);
+        Validate(length, stride, alignment);
 
         if (alignment > 0)
         {
@@ -49,6 +44,19 @@ public static unsafe class NativeArray
             : NativeMemory.Alloc((nuint)length, (nuint)stride);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining), StackTraceHidden]
+    private static void Validate(int capacity, int stride, int alignment)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 4);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(stride);
+        if (alignment != 0)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(alignment, 16);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 64);
+            ArgumentOutOfRangeException.ThrowIfNotEqual(IntMath.IsPowerOfTwo(alignment), true, nameof(alignment));
+        }
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void* Resize(void* ptr, int length, int newLength, int stride, int alignment,
         bool zeroed)
@@ -56,7 +64,7 @@ public static unsafe class NativeArray
         var capacity = (nuint)length * (nuint)stride;
         var newCapacity = (nuint)newLength * (nuint)stride;
 
-        Validate((int)newCapacity, alignment);
+        Validate((int)newCapacity, stride, alignment);
 
         ptr = alignment > 0
             ? NativeMemory.AlignedRealloc(ptr, newCapacity, (nuint)alignment)
@@ -67,6 +75,7 @@ public static unsafe class NativeArray
             var clearBytes = newCapacity - capacity;
             NativeMemory.Clear((byte*)ptr + capacity, clearBytes);
         }
+
 #if DEBUG
         Console.WriteLine($"Reallocate {nameof(NativeArray)}: {newCapacity} bytes");
 #endif
@@ -80,22 +89,24 @@ public static unsafe class NativeArray
 
         if (alignment > 0) NativeMemory.AlignedFree(ptr);
         else NativeMemory.Free(ptr);
-
+/*
 #if DEBUG
         Console.WriteLine($"Disposed {nameof(NativeArray)}: {capacity} bytes");
 #endif
+*/
     }
 }
 
+[StructLayout(LayoutKind.Sequential)]
 public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 {
     public T* Ptr;
     public int Length;
     public readonly int Alignment;
 
-    internal NativeArray(int length, int alignment, bool zeroed)
+    internal NativeArray(T* ptr, int length, int alignment)
     {
-        Ptr = (T*)NativeArray.AllocMemory(length, Unsafe.SizeOf<T>(), alignment, zeroed);
+        Ptr = ptr;
         Length = length;
         Alignment = alignment;
     }
@@ -122,7 +133,11 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     public readonly ref T this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref Ptr[index];
+        get
+        {
+            Debug.Assert((uint)index < (uint)Length);
+            return ref Ptr[index];
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

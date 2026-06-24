@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer.Buffer;
@@ -10,7 +9,7 @@ using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer;
 
-public sealed class RenderProgram
+public sealed class RenderProgram : IDisposable
 {
     private readonly DrawCommandPipeline _drawPipeline;
     private readonly RenderPassPipeline _passPipeline;
@@ -39,14 +38,17 @@ public sealed class RenderProgram
     }
 
     public int PassCount => _passPipeline.PassCount;
-    public TextureId OutputTexture => RenderContext.Instance.OutputTexture;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TextureId GetOutputTexture() => RenderContext.Instance.OutputTexture;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UniformUploadContext GetUploadContext() => _drawPipeline.UniformUploader.GetUploadContext();
 
-    //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
-
+    //
     public void PrepareFrame()
     {
         Debug.Assert(Initialized);
@@ -55,7 +57,7 @@ public sealed class RenderProgram
         _drawPipeline.Prepare();
     }
 
-    public void ResizeFrameBuffers(Size2D outputSize, int shadowSize)
+    public void ResizeScreenFrameBuffers(Size2D outputSize)
     {
         RenderContext.Instance.OutputSize = outputSize;
 
@@ -63,19 +65,21 @@ public sealed class RenderProgram
 
         if (outputSize != fboRegistry.OutputSize)
             fboRegistry.RecreateScreenDependentFbo(outputSize);
+    }
+
+
+    public void ResizeShadowFrameBuffers(int shadowSize)
+    {
+        var fboRegistry = Registry.FboRegistry;
 
         if (shadowSize != fboRegistry.ShadowMapSize.Width)
             fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.V0, new Size2D(shadowSize));
     }
 
-
-    public void UploadUniforms()
-    {
-        _drawPipeline.UploadUniforms();
-    }
-
     public void Render()
     {
+        _drawPipeline.UploadUniforms();
+
         while (_passPipeline.NextPass(out var nextPassRes))
         {
             if (nextPassRes.Action == NextPassAction.Skip) continue;
@@ -109,7 +113,7 @@ public sealed class RenderProgram
 
     public void ApplyBuilder(RenderSetupBuilder builder)
     {
-        InvalidOpThrower.ThrowIf(builder.IsDone, nameof(builder.IsDone));
+        ArgumentOutOfRangeException.ThrowIfEqual(builder.IsDone, true, nameof(builder.IsDone));
 
         var plan = builder.Build();
 
@@ -130,5 +134,10 @@ public sealed class RenderProgram
 
         PassPipeline3D.RegisterPassPipeline(_passPipeline, in RenderShaderRegistry.CoreShaders);
         Initialized = true;
+    }
+
+    public void Dispose()
+    {
+        UploadBuffers.Dispose();
     }
 }

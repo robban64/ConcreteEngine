@@ -30,7 +30,7 @@ public sealed class GfxCommands
     private ShaderId _boundShaderId;
 
     private GfxStateFlags _passFlags;
-    private GfxPassFunctions _stateFunctions;
+    private GfxDrawFunctions _stateFunctions;
 
     private GfxDrawState _lastDrawState;
 
@@ -173,7 +173,7 @@ public sealed class GfxCommands
         _cmdStates.ToggleSampleAlphaCoverage((d & Ac2) != 0 ? (e & Ac2) != 0 : (p & Ac2) != 0);
     }
 
-    public void ApplyStateFunctions(GfxPassFunctions stateFunctions)
+    public void ApplyStateFunctions(GfxDrawFunctions stateFunctions)
     {
         if (_stateFunctions == stateFunctions) return;
 

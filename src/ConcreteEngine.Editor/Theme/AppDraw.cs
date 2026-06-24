@@ -43,6 +43,15 @@ internal static unsafe class AppDraw
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void DrawTextProperty(ReadOnlySpan<byte> name, ReadOnlySpan<byte> text)
+    {
+        ImGui.TextUnformatted(name);
+        ImGui.SameLine();
+        ImGui.TextUnformatted(text);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void DrawSameLineProperty(char separator = '-')
     {
         ImGui.SameLine();

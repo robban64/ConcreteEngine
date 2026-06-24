@@ -58,9 +58,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
     private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
 
 
-    public override void OnCreate()
-    {
-    }
+    public override void OnCreate() { }
 
     public override void OnEnter(NativeAllocator allocator)
     {
@@ -81,7 +79,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         RestoreName(inspector);
         _previousId = inspector.Id;
 
-        TitleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id.Value).Append(']').End();
+        TitleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id.Id).Append(']').End();
     }
 
     private void RestoreName(InspectAsset inspector)
@@ -97,7 +95,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         if (_previousId != inspector.Id)
             OnNewInspector(inspector);
 
-        ImGui.PushID(inspector.Id.Value);
+        ImGui.PushID(inspector.Id.Id);
 
         DrawHeader(inspector);
         ImGui.Spacing();
@@ -159,24 +157,26 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
     private static void DrawFilesTable(AssetId assetId)
     {
         ImGui.SeparatorText("Files"u8);
-        if (!ImGui.BeginTable("##asset_store_files_tbl"u8, 4, ImGuiTableFlags.Borders)) return;
+        if (!ImGui.BeginTable("##asset_store_files_tbl"u8, 5, ImGuiTableFlags.Borders)) return;
 
         ImGui.TableSetupColumn("ID"u8, ImGuiTableColumnFlags.WidthFixed);
+        ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthFixed);
         ImGui.TableSetupColumn("Path"u8, ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableSetupColumn("Size"u8, ImGuiTableColumnFlags.WidthFixed);
-        ImGui.TableSetupColumn("Hash"u8, ImGuiTableColumnFlags.WidthFixed);
+        ImGui.TableSetupColumn("LastWritten"u8, ImGuiTableColumnFlags.WidthFixed);
 
         ImGui.TableHeadersRow();
 
         var sw = TextBuffers.GetWriter();
-        foreach (var it in EngineObjectStore.FileRegistry.AssetBindingsEnumerator(assetId))
+        foreach (var it in AssetManager.GetAssetBindingsEnumerator(assetId))
         {
-            ImGui.PushID(it.Id.Value);
+            ImGui.PushID(it.Id);
             ImGui.TableNextRow();
-            AppDraw.TextColumn(sw.Write(it.Id.Value));
+            AppDraw.TextColumn(sw.Write(it.Id));
+            AppDraw.TextColumn(sw.Write(it.LogicalName));
             AppDraw.TextColumn(sw.Write(it.RelativePath));
             AppDraw.TextColumn(sw.Write(it.SizeBytes));
-            AppDraw.TextColumn(sw.Write(it.ContentHash ?? ""));
+            AppDraw.TextColumn(sw.Write(it.LastWriteTime, "yy-MM-dd HH:mm:ss"));
             ImGui.PopID();
         }
 

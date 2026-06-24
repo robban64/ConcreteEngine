@@ -1,0 +1,83 @@
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Renderer;
+using ConcreteEngine.Renderer.Buffer;
+using ConcreteEngine.Renderer.Core;
+
+namespace ConcreteEngine.Engine.Render;
+
+internal sealed class MaterialProcessor(RenderProgram renderProgram)
+{
+    private readonly MaterialBuffer _materialBuffer = renderProgram.UploadBuffers.Materials;
+    private readonly AssetTypeStore _materialStore = AssetStore.GetTypeStore(AssetKind.Material);
+
+    internal void Commit()
+    {
+        if (_materialStore.DirtyCount == 0) return;
+        Submit();
+        _materialStore.ClearDirty();
+    }
+
+
+    private void Submit()
+    {
+        Shader lastShader = null!;
+        var lastProfile = MaterialProfileId.None;
+        foreach (var id in _materialStore.GetDirtySpan())
+        {
+            var material = AssetManager.Assets.GetUnsafe<Material>(id);
+            var flag = material.Commit();
+            if ((flag & AssetDirtyFlag.State) == 0 && (flag & AssetDirtyFlag.Structure) == 0) continue;
+
+            if (lastShader == null! || material.ProfileId != lastProfile)
+            {
+                lastProfile = material.ProfileId;
+                lastShader = material.BoundShader;
+            }
+
+            FillSamplers(material);
+            SubmitUniform(material.State, lastShader);
+        }
+    }
+
+    private void SubmitUniform(MaterialState state, Shader shader)
+    {
+        ref var uniform = ref _materialBuffer.Submit(
+            state.MaterialId,
+            shader.GfxId,
+            state.DrawState,
+            state.DrawFunctions,
+            state.ReceiveShadows ? shader.DefaultBindings.ShadowMapBinding : (sbyte)-1
+        );
+
+        uniform.Color = state.Color;
+        uniform.SpecularColor = state.SpecularColor;
+        uniform.UvTransform = state.UvTransform;
+
+        uniform.Shininess = state.Shininess;
+        uniform.Roughness = state.Roughness;
+        uniform.Metallic = state.Metallic;
+        uniform.AlphaCutoff = state.IsTransparent ? (state.HasAlphaMask ? 0.5f : 0.1f) : 0f;
+
+        uniform.AlphaMaskToggle = state.HasAlphaMask ? 1 : 0;
+        uniform.ShadowToggle = state.ReceiveShadows ? 1 : 0;
+    }
+
+    private void FillSamplers(Material material)
+    {
+        var textureSources = material.GetSourceSpan();
+        Span<TextureBinding> slots = stackalloc TextureBinding[textureSources.Length];
+
+        for (var i = 0; i < textureSources.Length; i++)
+        {
+            var source = textureSources[i];
+            var textureId = source.FallbackTexture;
+            if (source.OverrideTexture > 0) textureId = source.OverrideTexture;
+            else if (source.AssetTexture.Id > 0)
+                textureId = AssetManager.Assets.Get<Texture>(source.AssetTexture).GfxId;
+
+            slots[i] = new TextureBinding(textureId, source.Usage, (byte)i);
+        }
+
+        _materialBuffer.SubmitBindings(material.MaterialId, slots);
+    }
+}

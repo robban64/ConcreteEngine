@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Collections;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
+[StructLayout(LayoutKind.Sequential)]
 public readonly unsafe struct NativeView<T>(T* ptr, int offset, int length)
     : IEquatable<NativeView<T>> where T : unmanaged
 {
@@ -36,7 +37,11 @@ public readonly unsafe struct NativeView<T>(T* ptr, int offset, int length)
     public ref T this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref Ptr[index];
+        get
+        {
+            Debug.Assert((uint)index < (uint)Length);
+            return ref Ptr[index];
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

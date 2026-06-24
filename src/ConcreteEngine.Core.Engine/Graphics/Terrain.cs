@@ -1,8 +1,10 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
@@ -45,16 +47,16 @@ public sealed class Terrain
     public Texture? Heightmap { get; private set; }
     public Texture? Splatmap { get; private set; }
 
-    internal Terrain()
-    {
-    }
+    internal Terrain() { }
 
-    public bool HasHeightmap => _chunks.Length > 0 && Heightmap is { PixelData: not null };
+    public bool HasHeightmap => _chunks.Length > 0 && Heightmap is { HasPixelData: true };
 
     public ReadOnlySpan<TerrainChunk> GetChunks() => _chunks;
 
-    public MaterialId MaterialId => GroundMaterial?.MaterialId ?? MaterialStore.FallbackMaterial.MaterialId;
-    public MaterialId FoliageMaterialId => FoliageMaterial?.MaterialId ?? MaterialStore.FallbackMaterial.MaterialId;
+    public Id16<MaterialSlot> MaterialId => GroundMaterial?.MaterialId ?? AssetStore.Core.FallbackMaterial.MaterialId;
+
+    public Id16<MaterialSlot> FoliageMaterialId =>
+        FoliageMaterial?.MaterialId ?? AssetStore.Core.FallbackMaterial.MaterialId;
 
     public void SetTexture(int slot, Texture texture)
     {
@@ -70,15 +72,16 @@ public sealed class Terrain
         IsDirty = true;
     }
 
-
     public void SetMaterial(Material material)
     {
+        material.State.DrawQueue = DrawCommandQueue.Terrain;
         GroundMaterial = material;
         IsDirty = true;
     }
 
     public void SetFoliageMaterial(Material material)
     {
+        material.State.DrawQueue = DrawCommandQueue.Transparent;
         FoliageMaterial = material;
         IsDirty = true;
     }
@@ -89,13 +92,14 @@ public sealed class Terrain
         ArgumentOutOfRangeException.ThrowIfNotEqual(heightmap.Size.Width, heightmap.Size.Height, nameof(heightmap));
 
         ArgumentNullException.ThrowIfNull(heightmap);
-        if (!heightmap.PixelData.HasValue) throw new ArgumentNullException(nameof(heightmap));
 
         var dimension = heightmap.Size.Width;
 
         var powDim = dimension - 1;
         if (!IntMath.IsPowerOfTwo(powDim))
             throw new ArgumentOutOfRangeException(nameof(heightmap.Size), "Heightmap dimension must be pow2 + 1");
+
+        if (!heightmap.TryGetPixelSpan(out var pixelData)) throw new ArgumentNullException(nameof(heightmap));
 
         Heightmap = heightmap;
         Dimension = dimension;
@@ -104,7 +108,7 @@ public sealed class Terrain
 
         _chunks = new TerrainChunk[GridDimension * GridDimension];
 
-        CreateTerrainChunks(heightmap.PixelData.Value.Span);
+        CreateTerrainChunks(pixelData);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

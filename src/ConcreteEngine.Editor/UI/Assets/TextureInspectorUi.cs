@@ -14,22 +14,24 @@ internal sealed class TextureInspectorUi(StateManager state)
     public readonly InspectTextureFields InspectFields = InspectorFieldProvider.Instance.TextureFields;
 
 
-    public unsafe void Draw(InspectTexture editTexture)
+    public void Draw(InspectTexture editTexture)
     {
         var sw = TextBuffers.GetWriter();
         var texture = editTexture.Asset;
-        var gfxLink = editTexture.Asset.GfxLink;
 
         ImGui.SeparatorText("Texture Info"u8);
 
-        AppDraw.DrawTextProperty("Size:"u8,
+        AppDraw.DrawTextProperty("Dimension:"u8,
             sw.Append(texture.Size.Width).Append('x').Append(texture.Size.Height).End());
 
-        AppDraw.DrawTextProperty("Kind:"u8, sw.Write(gfxLink.Meta.Kind.ToText()));
-        AppDraw.DrawSameLineProperty();
-        AppDraw.DrawTextProperty("Format:"u8, sw.Write(gfxLink.Meta.PixelFormat.ToText()));
+        AppDraw.DrawTextProperty("InMemory:"u8, texture.HasPixelData ? "Yes"u8 : "No"u8);
 
-        AppDraw.DrawTextProperty("Mips:"u8, sw.Write(gfxLink.Meta.MipLevels));
+        ImGui.SeparatorText("GPU Metadata"u8);
+
+        AppDraw.DrawTextProperty("Kind:"u8, sw.Write(editTexture.GfxMeta.Kind.ToText()));
+        AppDraw.DrawSameLineProperty();
+        AppDraw.DrawTextProperty("Format:"u8, sw.Write(editTexture.GfxMeta.PixelFormat.ToText()));
+        AppDraw.DrawTextProperty("Mips:"u8, sw.Write(editTexture.GfxMeta.MipLevels));
 
         InspectFields.Draw();
 
@@ -42,7 +44,7 @@ internal sealed class TextureInspectorUi(StateManager state)
 
         if (ImGui.BeginPopup("##image-popup"u8))
         {
-            state.GetOrSetTextureHandle(gfxLink.GfxId, ref AssetInspectorPanel.PopupTextureHandle);
+            state.GetOrSetTextureHandle(texture.GfxId, ref AssetInspectorPanel.PopupTextureHandle);
             ImGui.Image(AssetInspectorPanel.PopupTextureHandle, new Vector2(256, 256));
 
             if (ImGui.Button("Close"u8)) ImGui.CloseCurrentPopup();

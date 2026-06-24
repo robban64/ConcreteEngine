@@ -13,7 +13,7 @@ public enum GfxUniformType : byte
     IntSampler3D,
 }
 
-public readonly struct GfxUniformSampler(string name, byte binding, GfxUniformType uniformType)
+public sealed class GfxUniformSampler(string name, byte binding, GfxUniformType uniformType)
 {
     public readonly string Name = name;
     public readonly byte Binding = binding;

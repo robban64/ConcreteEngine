@@ -1,8 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
@@ -21,74 +19,43 @@ public struct TextureProperties(
     public TexturePixelFormat PixelFormat = pixelFormat;
 }
 
-public sealed class Texture(string name, TextureId gfxId, Size2D size, TextureProperties properties) : AssetObject(name)
+public sealed class Texture : AssetObject
 {
-    // WIP
-    public GfxAssetLink<TextureMeta> GfxLink { get; } = new(gfxId);
+    public readonly TextureId GfxId;
 
-    public Size2D Size { get; } = size;
+    public readonly GpuTextureState GpuState;
 
-    private TextureProperties _properties = properties;
+    public readonly Size2D Size;
+
+    private TextureData? _textureData;
 
     //
     public override AssetCategory Category => AssetCategory.Graphic;
     public override AssetKind Kind => AssetKind.Texture;
 
-    //TODO remove
-    public ReadOnlyMemory<byte>? PixelData { get; private set; }
-    public void SetPixelData(ReadOnlyMemory<byte> pixelData) => PixelData = pixelData;
 
-    //
-    public float LodBias
+    public Texture(string name, AssetId id, Guid gid, TextureId gfxId, Size2D size, TextureProperties props) :
+        base(name, id, gid)
     {
-        get => _properties.Lod;
-        set
-        {
-            if (FloatMath.NearlyEqual(_properties.Lod, value)) return;
-            _properties.Lod = value;
-            MarkDirty();
-        }
+        GfxId = gfxId;
+        Size = size;
+        GpuState = new GpuTextureState(this, props);
     }
 
-    public TexturePixelFormat PixelFormat
+    public bool HasPixelData => _textureData is not null;
+
+    public bool TryGetPixelSpan(out ReadOnlySpan<byte> pixelData)
     {
-        get => _properties.PixelFormat;
-        set
-        {
-            _properties.PixelFormat = value;
-            MarkDirty();
-        }
+        pixelData = Span<byte>.Empty;
+        if (_textureData is not { } textureData) return false;
+        pixelData = textureData.GetPixelData();
+        return true;
     }
 
-    public TexturePreset Preset
+    internal void SetPixelData(TextureData textureData)
     {
-        get => _properties.Preset;
-        set
-        {
-            _properties.Preset = value;
-            MarkDirty();
-        }
-    }
-
-    public TextureKind TextureKind
-    {
-        get => _properties.Kind;
-        set
-        {
-            _properties.Kind = value;
-            MarkDirty();
-        }
-    }
-
-
-    public AnisotropyLevel Anisotropy
-    {
-        get => _properties.Anisotropy;
-        set
-        {
-            _properties.Anisotropy = value;
-            MarkDirty();
-        }
+        if (_textureData is not null) throw new InvalidOperationException("Texture already has a data entry.");
+        _textureData = textureData;
     }
 
     public TextureUsage Usage
@@ -98,7 +65,7 @@ public sealed class Texture(string name, TextureId gfxId, Size2D size, TexturePr
         {
             if (field == value) return;
             field = value;
-            MarkDirty();
+            MarkDirty(AssetDirtyFlag.Metadata);
         }
     }
 }

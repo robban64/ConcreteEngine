@@ -1,13 +1,19 @@
 namespace ConcreteEngine.Core.Engine.Assets.Descriptors;
 
-internal ref struct FileScanInfo(byte index, AssetKind kind, AssetStorageKind storageKind, bool isValid = true)
+internal readonly struct FileScanInfo(
+    string name,
+    string relativePath,
+    long sizeBytes = 0,
+    DateTime lastWriteTime = default,
+    AssetStorage storage = AssetStorage.FileSystem,
+    bool isValid = true)
 {
-    public long SizeBytes;
-    public DateTime LastWriteTime;
-    public string? Source;
+    public readonly long SizeBytes = sizeBytes;
+    public readonly DateTime LastWriteTime = lastWriteTime;
 
-    public AssetKind Kind = kind;
-    public AssetStorageKind StorageKind = storageKind;
-    public bool IsValid = isValid;
-    public byte FileIndex = index;
+    public readonly string Name = name;
+    public readonly string RelativePath = relativePath;
+
+    public readonly AssetStorage Storage = storage;
+    public readonly bool IsValid = isValid;
 }

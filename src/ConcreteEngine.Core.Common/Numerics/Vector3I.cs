@@ -58,18 +58,16 @@ public struct Vector3I(int x, int y, int z) : IEquatable<Vector3I>, IComparable<
     // 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector3I Min(Vector3I a, Vector3I b) =>
-        new(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y), Math.Min(a.Z, b.Z));
+    public static Vector3I Min(Vector3I a, Vector3I b) => new(int.Min(a.X, b.X), int.Min(a.Y, b.Y), int.Min(a.Z, b.Z));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector3I Max(Vector3I a, Vector3I b) =>
-        new(Math.Max(a.X, b.X), Math.Max(a.Y, b.Y), Math.Max(a.Z, b.Z));
+    public static Vector3I Max(Vector3I a, Vector3I b) => new(int.Max(a.X, b.X), int.Max(a.Y, b.Y), int.Max(a.Z, b.Z));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3I Clamp(Vector3I v, Vector3I min, Vector3I max) => Max(min, Min(v, max));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector3I Abs(Vector3I v) => new(Math.Abs(v.X), Math.Abs(v.Y), Math.Abs(v.Z));
+    public static Vector3I Abs(Vector3I v) => new(int.Abs(v.X), int.Abs(v.Y), int.Abs(v.Z));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int Dot(Vector3I a, Vector3I b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
@@ -88,7 +86,7 @@ public struct Vector3I(int x, int y, int z) : IEquatable<Vector3I>, IComparable<
 
     public readonly float LengthSquared() => X * X + Y * Y + Z * Z;
 
-    public readonly int ManhattanLength() => Math.Abs(X) + Math.Abs(Y) + Math.Abs(Z);
+    public readonly int ManhattanLength() => int.Abs(X) + int.Abs(Y) + int.Abs(Z);
 
     // 
 
@@ -103,7 +101,7 @@ public struct Vector3I(int x, int y, int z) : IEquatable<Vector3I>, IComparable<
 
     public override readonly bool Equals(object? obj) => obj is Vector3I v && Equals(v);
     public override readonly int GetHashCode() => HashCode.Combine(X, Y, Z);
-    public override readonly string ToString() => $"<{X}, {Y}, {Z}>";
+    public override readonly string ToString() => $"({X}, {Y}, {Z})";
 
 
     public readonly int CompareTo(Vector3I other)

@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 
@@ -136,54 +135,42 @@ internal sealed class AssetBrowser
         CurrentDirectory = directory;
     }
 
-    public void BuildFullDirectory()
+    private void Traverse(AssetDirectoryNode node)
     {
-        var fileRegistry = EngineObjectStore.FileRegistry;
-
-        var addedFiles = new HashSet<int>(fileRegistry.Count);
-
-        for (var i = 1; i < EnumCache<AssetKind>.Count; i++)
-            AddAssetFilesFor((AssetKind)i, fileRegistry, addedFiles);
-
-        foreach (var fileId in fileRegistry.GetUnboundFileIds())
+        node.FileIds.Sort();
+        foreach (var it in node.Children)
         {
-            var file = fileRegistry.Get(fileId);
-            AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
-        }
-
-        return;
-
-        void AddAssetFilesFor(AssetKind kind, AssetFileRegistry provider, HashSet<int> filesAdded)
-        {
-            var assets = EngineObjectStore.Assets;
-
-            foreach (var assetId in assets.GetAssetList(kind).AsSpan())
-            {
-                var file = provider.GetAssetRootFile(assetId);
-                if (!filesAdded.Add(file.Id) && file.Storage == AssetStorageKind.FileSystem)
-                    Throwers.InvalidOperation();
-                AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
-            }
-
-            foreach (var assetId in assets.GetAssetList(kind).AsSpan())
-            {
-                var fileIds = provider.GetFileBindings(assetId);
-                if (fileIds.Length <= 1) continue;
-                foreach (var fileId in fileIds)
-                {
-                    if (!filesAdded.Add(fileId)) continue;
-                    var file = provider.Get(fileId);
-                    AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
-                }
-            }
+            Traverse(it);
         }
     }
 
-    private void AddFile(AssetFile file, ReadOnlySpan<char> path)
+    public void BuildFullDirectory()
+    {
+        var fileRegistry = AssetManager.FileRegistry;
+        foreach (var file in fileRegistry)
+            AddFile(file);
+
+        //Traverse(RootNode);
+
+/*
+        foreach (var fileId in fileRegistry.GetRootFileIdSpan())
+            AddFile(fileRegistry.Get(fileId));
+
+        foreach (var fileId in fileRegistry.GetDependentFileIdSpan())
+            AddFile(fileRegistry.Get(fileId));
+
+        foreach (var fileId in fileRegistry.GetUnboundFileIdSpan())
+            AddFile(fileRegistry.Get(fileId));
+*/
+    }
+
+    private void AddFile(AssetFile file)
     {
         ArgumentNullException.ThrowIfNull(file);
 
-        if (file.Storage != AssetStorageKind.FileSystem) return;
+        if (file.Storage != AssetStorage.FileSystem) return;
+
+        ReadOnlySpan<char> path = Path.GetDirectoryName(file.RelativePath.AsSpan());
 
         var node = RootNode;
         while (true)
@@ -193,9 +180,16 @@ internal sealed class AssetBrowser
             var index = path.IndexOf('/');
             var folder = index > 0 ? path.Slice(0, index) : path;
 
+
             var foundChild = node.FindChild(folder);
             if (foundChild is null)
             {
+                if (index < 0 && folder.SequenceEqual(node.FolderName))
+                {
+                    node.FileIds.Add(file.Id);
+                    return;
+                }
+
                 foundChild = new AssetDirectoryNode(folder.ToString());
                 node.Children.Add(foundChild);
             }

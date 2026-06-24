@@ -32,13 +32,12 @@ public sealed class GraphicsRuntime : IDisposable
 
     public GfxContext Gfx { get; private set; } = null!;
 
-    public GraphicsRuntime()
-    {
-    }
+    public GraphicsRuntime() { }
 
     public GpuDeviceCapabilities Initialize<T>(IGfxStartupConfig<T> config, out OpenGlVersion version) where T : class
     {
-        InvalidOpThrower.ThrowIf(_isInitialized, "GFX has already been initialized.");
+        if (_isInitialized) Throwers.InvalidOperation("GFX has already been initialized.");
+
 
         if (config is not GlStartupConfig glConfig)
             throw GraphicsException.UnsupportedFeature("Only OpenGL is supported");

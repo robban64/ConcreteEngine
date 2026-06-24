@@ -45,9 +45,7 @@ public sealed class EngineSettings
     public GpuDeviceCapabilities GpuCapabilities { get; private set; } = null!;
 
 
-    private EngineSettings()
-    {
-    }
+    private EngineSettings() { }
 
 
     internal void LoadGraphicsSettings(OpenGlVersion version, GpuDeviceCapabilities caps)

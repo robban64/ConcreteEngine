@@ -1,102 +1,106 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Engine.Render.Processor;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Render;
 
-public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
+public sealed class EngineRenderSystem : IDisposable
 {
     internal RenderProgram Program { get; }
 
-    private readonly CameraSystem _cameraSystem;
-    private readonly VisualManager _visualManager;
-
-    private readonly MaterialProcessor _materialProcessor;
     private readonly RenderDispatcher _renderDispatcher;
 
-    internal EngineRenderSystem(GraphicsRuntime graphics, AssetStore assetStore)
+    private readonly CameraManager _cameraManager;
+    private readonly VisualManager _visualManager;
+
+    private readonly TerrainSystem _terrainSystem;
+    private readonly ParticleSystem _particleSystem;
+    private readonly AnimationSystem _animationSystem;
+
+    private readonly MaterialProcessor _materialProcessor;
+
+    internal EngineRenderSystem(GraphicsRuntime graphics)
     {
-        _cameraSystem = CameraSystem.Instance;
+        _cameraManager = CameraManager.Instance;
         _visualManager = VisualManager.Instance;
         _visualManager.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
 
-        TerrainSystem.Make(graphics.Gfx);
-        var particles = ParticleSystem.Make(graphics.Gfx);
-        var animations = AnimationTable.Make();
-
-        _renderDispatcher = new RenderDispatcher(animations, particles);
-        _materialProcessor = new MaterialProcessor(assetStore);
-
         Program = new RenderProgram(graphics, VisualUniformProcessor.MakeCallbacks());
+
+        _terrainSystem = new TerrainSystem(graphics.Gfx);
+        _particleSystem = new ParticleSystem(graphics.Gfx);
+        _animationSystem = new AnimationSystem(AnimationManager.Instance, Program.UploadBuffers.Skinning);
+
+        _renderDispatcher = new RenderDispatcher(_cameraManager, _terrainSystem, Program.UploadBuffers);
+        _materialProcessor = new MaterialProcessor(Program);
     }
 
-    public override int VisibleCount => _renderDispatcher.VisibleCount;
-    public override ReadOnlySpan<RenderEntityId> VisibleEntities() => _renderDispatcher.GetVisibleEntities();
+    public int VisibleCount => _renderDispatcher.VisibleEntities;
 
-
-    internal void Initialize(AssetStore assetStore, MaterialStore materialStore)
-    {
-        AnimationTable.Instance.Setup(assetStore);
-        _renderDispatcher.Attach(Program.UploadBuffers);
-
-        //
-        var mat = materialStore.CreateMaterial("EmptyMat", "EmptyMat1");
-        mat.Pipeline = new MaterialPipeline
-        {
-            DrawState = GfxDrawState.Set(GfxDrawFlags.Blend, GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2),
-            PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
-        };
-
-        DrawTagProcessor.BoundsMaterial = mat.MaterialId;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void BeforeUpdate()
-    {
-        _cameraSystem.BeginUpdate();
-    }
+    internal void Initialize() { }
 
     internal void AfterUpdate()
     {
         _visualManager.Ensure();
-        _cameraSystem.CommitUpdate(_visualManager);
+        _cameraManager.CommitUpdate(_visualManager);
+        _materialProcessor.Commit();
     }
 
+    internal void OnSystemTick(bool screenResize)
+    {
+        _particleSystem.Commit();
+        _terrainSystem.Commit();
 
-    internal void Render(float dt, Size2D viewportSize, Vector2 mousePos)
+        if (screenResize)
+        {
+            Logger.LogString(LogScope.Engine, "Recreating screen framebuffers");
+            Program.ResizeScreenFrameBuffers(EngineWindow.Viewport.Size);
+        }
+
+        if (_visualManager.CommitShadowSize())
+        {
+            Logger.LogString(LogScope.Engine, "Recreating shadow framebuffers");
+            Program.ResizeShadowFrameBuffers(_visualManager.Shadow.ShadowMapSize);
+        }
+    }
+
+    internal void OnSimulate(float dt)
+    {
+        _animationSystem.Simulate(dt);
+        _particleSystem.Simulate(dt);
+    }
+
+    internal void Render(float dt)
     {
         Program.PrepareFrame();
 
-        if (_visualManager.HasPendingFrameBufferResize)
-            Program.ResizeFrameBuffers(viewportSize, _visualManager.Shadow.ShadowMapSize);
-
         // frame update
-        _cameraSystem.CommitFrame(EngineTime.GameAlpha);
-        _materialProcessor.SubmitMaterialData(Program);
+        _cameraManager.CommitFrame(EngineTime.GameAlpha);
 
         // process and upload draw commands
+        _renderDispatcher.CullEntities();
+        _particleSystem.Execute();
+        _animationSystem.Execute();
         _renderDispatcher.Execute();
 
         // prepare buffers
         Program.CollectDrawBuffers();
 
         // upload buffers to gpu
-        VisualUniformProcessor.Upload(Program.GetUploadContext(), viewportSize, mousePos);
+        VisualUniformProcessor.Upload(Program.GetUploadContext());
 
-        Program.UploadUniforms();
         Program.Render();
-
-        VisualManager.Instance.ClearDirty();
     }
 
-    public void Shutdown() => _renderDispatcher.Dispose();
+
+    public void Dispose()
+    {
+        _particleSystem.Dispose();
+        _animationSystem.Dispose();
+        Program.Dispose();
+    }
 }

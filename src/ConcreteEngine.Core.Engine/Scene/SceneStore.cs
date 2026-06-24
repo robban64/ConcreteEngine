@@ -3,55 +3,51 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
-public sealed class SceneStore : ISceneObjectNotifier
+public sealed class SceneStore
 {
-    private const int DefaultCapacity = 512;
+    public const int DefaultCapacity = 512;
 
-    private readonly SlotArray<SceneObject> _sceneObjects = new(DefaultCapacity);
+    private static int _unnamedCounter;
+    private static int _nameTick = 1;
 
-    private readonly List<Handle32<SceneObject>>[] _byKind =
-        new List<Handle32<SceneObject>>[EnumCache<SceneObjectKind>.Count];
+    public int Count { get; private set; }
 
-    private readonly Dictionary<string, Handle32<SceneObject>> _byName = new(DefaultCapacity);
+    private SceneObject?[] _sceneObjects = new SceneObject?[DefaultCapacity];
 
-    private readonly BlueprintFactory _factory;
+    private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
 
-    internal readonly HashSet<int> DirtyIds = new(DefaultCapacity);
+    private readonly Dictionary<Guid, IBlueprint> _blueprints = new(128);
 
-    internal SceneStore(BlueprintFactory factory)
+    private readonly Stack<int> _free = [];
+
+    internal SceneStore() { }
+
+    public int FreeCount => _free.Count;
+    public int ActiveCount => Count - _free.Count;
+    public int Capacity => _sceneObjects.Length;
+
+    private SceneObjectId AllocateSlot()
     {
-        ArgumentNullException.ThrowIfNull(factory);
+        var freeIndex = SlotHelper.NextSlot(_free, Count);
+        if (freeIndex >= 0) return new SceneObjectId(freeIndex + 1, 1);
 
-        for (int i = 0; i < _byKind.Length; i++)
-        {
-            var cap = (SceneObjectKind)i == SceneObjectKind.Model ? DefaultCapacity : 32;
-            _byKind[i] = new List<Handle32<SceneObject>>(cap);
-        }
+        if (SlotHelper.EnsureCapacity(ref _sceneObjects, Count, 1, out var oldSize))
+            Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetFileRegistry), oldSize,
+                _sceneObjects.Length));
 
-        _factory = factory;
-
-        _sceneObjects.OnResize = static (oldSize, newSize) =>
-            Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(SceneStore), oldSize, newSize));
+        return new SceneObjectId(++Count, 1);
     }
 
-    public int ActiveCount => _sceneObjects.ActiveCount;
-    public int Capacity => _sceneObjects.Capacity;
-
     //
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int GetCountBy(SceneObjectKind kind) => _byKind[(int)kind].Count;
-
-    //
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(SceneObjectId id)
     {
         var index = id.Index();
-        return (uint)index < (uint)_sceneObjects.Capacity && _sceneObjects[index]?.Id == id;
+        return (uint)index < (uint)_sceneObjects.Length && _sceneObjects[index]?.Id == id;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -72,25 +68,41 @@ public sealed class SceneStore : ISceneObjectNotifier
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGet(SceneObjectId id, [NotNullWhen(true)] out SceneObject? sceneObject)
     {
-        return _sceneObjects.TryGet(id.Index(), out sceneObject) && sceneObject.Id == id;
+        var index = id.Index();
+        if ((uint)index >= (uint)_sceneObjects.Length)
+        {
+            sceneObject = null;
+            return false;
+        }
+
+        if (_sceneObjects[index] is { } file && file.Id == id)
+        {
+            sceneObject = file;
+            return true;
+        }
+
+        sceneObject = null;
+        return false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetIdByName(string name, out SceneObjectId id)
     {
-        if (_byName.TryGetValue(name, out var handle)) id = (SceneObjectId)handle;
+        if (_byName.TryGetValue(name, out var handle)) id = handle;
         id = default;
-        return id.Value > 0;
+        return id.Id > 0;
     }
 
     public bool TryGetByName(string name, [NotNullWhen(true)] out SceneObject? sceneObject)
     {
         sceneObject = null;
-        return _byName.TryGetValue(name, out var id) && TryGet((SceneObjectId)id, out sceneObject);
+        return _byName.TryGetValue(name, out var id) && TryGet(id, out sceneObject);
     }
 
+    internal void RegisterBlueprint(IBlueprint blueprint) => _blueprints.TryAdd(blueprint.GId, blueprint);
+
     //
-    public void Rename(SceneObject sceneObject, string newName, Action<string> onSuccess)
+    public void Rename(SceneObject sceneObject, string newName)
     {
         if (sceneObject.Name == newName)
             throw new ArgumentException("Rename: Identical name", nameof(newName));
@@ -99,42 +111,47 @@ public sealed class SceneStore : ISceneObjectNotifier
 
         _byName.Remove(newName);
         _byName.Add(newName, sceneObject.Id);
-        onSuccess(newName);
     }
-
-    public void MarkDirty(SceneObjectId id)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(id.Index(), _sceneObjects.Capacity, nameof(id));
-        DirtyIds.Add((int)id);
-    }
-
-    internal void ClearDirty() => DirtyIds.Clear();
 
     //
-
-    private static int _unnamedCounter;
-
-    internal SceneObject Create(SceneObjectTemplate bp)
+    internal SceneObject Create(string name, Guid? gid, bool enabled, params ReadOnlySpan<IBlueprint> blueprints)
     {
-        var id = new SceneObjectId(_sceneObjects.AllocateNext() + 1, 1);
+        var id = AllocateSlot();
 
-        var name = bp.Name;
         if (string.IsNullOrEmpty(name))
             name = $"Unnamed({_unnamedCounter++})";
 
         if (!_byName.TryAdd(name, id))
-            throw new InvalidOperationException($"SceneObject with name {name} already exists");
+            _byName.Add(MakeName(name), id);
 
-        var sceneObject = _sceneObjects[id.Index()] = _factory.BuildSceneObject(id, bp);
+        var sceneObject = _sceneObjects[id.Index()] = new SceneObject(id, gid, name, enabled);
 
-        _byKind[(int)sceneObject.Kind].Add(id);
+        foreach (var bp in blueprints)
+        {
+            if (bp is RenderBlueprint renderBp)
+                BlueprintFactory.BuildRenderBlueprint(sceneObject, renderBp);
+            else if (bp is GameBlueprint gameBp) { }
 
-        sceneObject.Attach(this);
-        MarkDirty(id);
+            _blueprints.TryAdd(bp.GId, bp);
+        }
+
+
         return sceneObject;
     }
 
+    private string MakeName(string baseName)
+    {
+        var ticks = 0;
+        var name = $"{baseName}-{_nameTick++}";
+        while (_byName.ContainsKey(name))
+        {
+            name = $"{baseName}-{_nameTick++}";
+            if (ticks++ > 100) Throwers.InvalidOperation($"Too many retries for {name}");
+        }
+
+        return name;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActiveObjectEnumerator<SceneObject> GetEnumerator() => _sceneObjects.GetEnumerator();
+    public ActiveObjectEnumerator<SceneObject> GetEnumerator() => new(_sceneObjects.AsSpan(0, Count));
 }

@@ -1,31 +1,25 @@
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Graphics.Utility;
 
 public static class UniformBufferUtils
 {
-    public const uint MinCapacityBytes = 16 * 1024; // 16 KiB
-    public const uint DefaultLowerCapacityBytes = 32 * 1024; // 64 KiB
-    public const uint DefaultMediumCapacityBytes = 512 * 1024; // 512 KiB
-    public const uint DefaultUpperCapacityBytes = 2 * 1024 * 1024; // 2 MiB
+    public const int MinCapacityBytes = 16 * 1024; // 16 KiB
+    public const int DefaultLowerCapacityBytes = 32 * 1024; // 64 KiB
+    public const int DefaultMediumCapacityBytes = 512 * 1024; // 512 KiB
+    public const int DefaultUpperCapacityBytes = 2 * 1024 * 1024; // 2 MiB
 
-
-    public static uint UboOffsetAlign { get; private set; }
+    public static int UboOffsetAlign { get; private set; }
 
 
     internal static void Init(int uniformBufferOffsetAlignment)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(uniformBufferOffsetAlignment, 0,
-            nameof(uniformBufferOffsetAlignment));
-
-        UboOffsetAlign = (uint)int.Max(16, uniformBufferOffsetAlignment);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(uniformBufferOffsetAlignment, 0);
+        UboOffsetAlign = int.Max(16, uniformBufferOffsetAlignment);
     }
 
-    public static uint GetDefaultCapacity(uint stride, UboDefaultCapacity defaultCapacity)
+    public static int GetDefaultCapacity(int stride, UboDefaultCapacity defaultCapacity)
     {
         var size = defaultCapacity switch
         {
@@ -34,40 +28,23 @@ public static class UniformBufferUtils
             UboDefaultCapacity.Upper => DefaultUpperCapacityBytes,
             _ => throw new ArgumentOutOfRangeException(nameof(defaultCapacity))
         };
-        uint q = size / stride;
+        var q = size / stride;
         return q == 0 ? stride : q * stride;
     }
 
-    public static uint GetCapacityForEntities<T>(int entities) where T : unmanaged
+    public static int GetCapacityForEntities<T>(int entities) where T : unmanaged
     {
-        uint blockSize = (uint)Unsafe.SizeOf<T>();
-        uint uboAlign = UboOffsetAlign;
-        uint stride = (blockSize + (uboAlign - 1)) & ~(uboAlign - 1);
-        return stride * (uint)entities;
+        var stride = (Unsafe.SizeOf<T>() + (UboOffsetAlign - 1)) & ~(UboOffsetAlign - 1);
+        return stride * entities;
     }
 
-    public static uint GetRequiredCapacity(int stride, int expectedRecords) =>
-        (uint)stride * (uint)int.Max(1, expectedRecords);
-
-    public static uint NextCapacity(uint currentBytes, uint requiredBytes)
+    public static int NextCapacity(int currentBytes, int requiredBytes)
     {
-        uint cap = currentBytes < MinCapacityBytes ? MinCapacityBytes : currentBytes;
+        int cap = currentBytes < MinCapacityBytes ? MinCapacityBytes : currentBytes;
         while (cap < requiredBytes) cap *= 2;
         return cap;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsStd140Aligned<T>() where T : unmanaged => Unsafe.SizeOf<T>() % 16 == 0;
-
-
-    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
-    private static void ThrowStd140NotAligned<T>() where T : unmanaged =>
-        throw new GraphicsException($"Invalid struct layout: {Unsafe.SizeOf<T>()} bytes for {typeof(T).Name}");
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void IsStd140AlignedOrThrow<T>(out nint stride) where T : unmanaged
-    {
-        stride = Unsafe.SizeOf<T>();
-        if (stride % 16 != 0) ThrowStd140NotAligned<T>();
-    }
+    public static bool IsStd140Aligned(int stride) => stride % 16 == 0;
 }

@@ -14,7 +14,5 @@ internal sealed class StringArena
         _memory = memory;
     }
 
-    public void AllocUtf8(ReadOnlySpan<char> text)
-    {
-    }
+    public void AllocUtf8(ReadOnlySpan<char> text) { }
 }

@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internals;
@@ -68,20 +66,10 @@ public sealed class GfxTextures
         return textureId;
     }
 
-
-    public unsafe TextureId CreateCubeMap(Size2D size, in CreateTextureProps props, NativeView<byte>* faces)
+    public TextureId CreateCubeMap(Size2D size, in CreateTextureProps props)
     {
-        if (faces == null) throw new ArgumentNullException(nameof(faces));
-
+        ArgumentOutOfRangeException.ThrowIfNotEqual(props.Kind, TextureKind.CubeMap, nameof(props.Kind));
         var textureId = CreateTexture(size.ToSize3D(1), in props);
-        for (int i = 0; i < 6; i++)
-        {
-            if (faces + i == null || (faces + i)->IsNull)
-                Throwers.NullPointer($"Null pointer for face {i}");
-
-            UploadCubeMapFace(textureId, faces[i].AsSpan(), size, i);
-        }
-
         ApplyProperties(textureId);
         return textureId;
     }
@@ -184,16 +172,10 @@ public sealed class GfxTextures
         _driver.UploadTexture3D_Data(texRef, data, meta.PixelFormat, size, zOffset: 0);
     }
 
-    public void GenerateMipMaps(TextureId textureId)
+    public void UploadCubeMapFace(TextureId textureId, ReadOnlySpan<byte> data, Size2D size, int faceIndex)
     {
-        var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
-        Debug.Assert(meta.MipLevels > 1);
-        _driver.GenerateMipMaps(texRef);
-    }
-
-
-    private void UploadCubeMapFace(TextureId textureId, ReadOnlySpan<byte> data, Size2D size, int faceIndex)
-    {
+        ArgumentOutOfRangeException.ThrowIfZero(textureId.Id, nameof(textureId.Id));
+        ArgumentOutOfRangeException.ThrowIfZero(data.Length, nameof(data.Length));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(faceIndex, 5);
 
         var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
@@ -202,6 +184,13 @@ public sealed class GfxTextures
         ValidateUploadSize(size, meta.AsSize2D());
 
         _driver.UploadTexture3D_Data(texRef, data, meta.PixelFormat, size.ToSize3D(1), faceIndex);
+    }
+
+    public void GenerateMipMaps(TextureId textureId)
+    {
+        var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
+        Debug.Assert(meta.MipLevels > 1);
+        _driver.GenerateMipMaps(texRef);
     }
 
     private void ApplyTextureProperties(GfxHandle texRef, in TextureMeta meta, bool wrapR)

@@ -1,287 +1,82 @@
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine.Assets.Data;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-public sealed class MaterialState
-{
-    private void MarkDirty() { }
-
-    public GfxDrawState DrawState
-    {
-        get;
-        set
-        {
-            if (value == field) return;
-            field = value;
-            MarkDirty();
-        }
-    }
-
-    public GfxPassFunctions PassFunctions
-    {
-        get;
-        set
-        {
-            if (value == field) return;
-            field = value;
-            MarkDirty();
-        }
-    }
-
-    public Color4 Color
-    {
-        get;
-        set
-        {
-            if (value == field) return;
-            field = value;
-            MarkDirty();
-        }
-    } = Color4.White;
-
-    public float Shininess
-    {
-        get;
-        set
-        {
-            if (FloatMath.NearlyEqual(field, value)) return;
-            field = float.Max(value, 0f);
-            MarkDirty();
-        }
-    } = 12f;
-
-    public float Specular
-    {
-        get;
-        set
-        {
-            if (FloatMath.NearlyEqual(field, value)) return;
-            field = float.Max(value, 0f);
-            MarkDirty();
-        }
-    } = 0.12f;
-
-    public float UvRepeat
-    {
-        get;
-        set
-        {
-            if (FloatMath.NearlyEqual(field, value)) return;
-            field = float.Max(value, 1f);
-            MarkDirty();
-        }
-    } = 1f;
-
-    public bool Transparency
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            MarkDirty();
-        }
-    }
-}
-
 public sealed class Material : AssetObject
 {
-    public AssetId TemplateId { get; init; }
-    public MaterialId MaterialId { get; internal set; }
-    public MaterialProfile Profile { get; internal set; }
-    public MaterialRenderProps RenderProps { get; private set; }
+    public Id16<MaterialSlot> MaterialId => State.MaterialId;
+    public MaterialProfileId ProfileId { get; private set; }
 
-    public Shader? BoundShader { get; internal set; }
-
-    private readonly TextureSource[] _textureSources;
+    public readonly MaterialState State;
+    private TextureSource[] _textureSources = [];
 
     public override AssetCategory Category => AssetCategory.Renderer;
     public override AssetKind Kind => AssetKind.Material;
 
-    private Material(string name, AssetId templateId, Shader? boundShader, MaterialProfile profile,
-        TextureSource[] sources) : base(name)
+    public Material(string name, AssetId id, Guid gid, MaterialProfileId profileId)
+        : base(name, id, gid)
     {
-        ArgumentNullException.ThrowIfNull(sources);
+        State = new MaterialState(this);
 
-        TemplateId = templateId;
-        BoundShader = boundShader;
-        _textureSources = sources;
-        Profile = profile;
-
-        CalculateProperties();
+        SetProfile(profileId);
+        MarkDirty(AssetDirtyFlag.Lifecycle | AssetDirtyFlag.State | AssetDirtyFlag.Structure);
     }
 
-    public Material(string name, AssetId templateId, Shader? boundShader, MaterialProfile profile,
-        in MaterialParams param,
-        TextureSource[] sources) : this(name, templateId, boundShader, profile, sources)
+    public Material(string name, AssetId id, Guid gid, MaterialProfileId profileId, MaterialStateRecord? state)
+        : this(name, id, gid, profileId)
     {
-        SetParams(in param);
+        state?.WriteTo(State);
     }
 
-    public Material(string name, AssetId templateId, Shader? boundShader, MaterialProfile profile,
-        MaterialParamsRecord param, TextureSource[] sources) : this(name, templateId, boundShader, profile, sources)
-    {
-        ArgumentNullException.ThrowIfNull(param);
+    public int SourceCount => _textureSources.Length;
+    public ReadOnlySpan<TextureSource> GetSourceSpan() => _textureSources;
 
-        FromParamRecord(param);
+    public Shader BoundShader
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => AssetManager.GetMaterialProfile(ProfileId).Shader;
+    }
+
+    public void SetProfile(MaterialProfileId profileId)
+    {
+        if (profileId == ProfileId) return;
+        var profileEntry = AssetManager.GetMaterialProfile(profileId);
+
+        if (profileEntry.SlotsCount != _textureSources.Length)
+            _textureSources = profileEntry.MakeSourceArray();
+        else
+            profileEntry.WriteSources(_textureSources);
+
+        ProfileId = profileId;
+        State.SetFromProfile(profileEntry);
+        MarkDirty(AssetDirtyFlag.Structure);
     }
 
 
-    public ReadOnlySpan<TextureSource> GetTextureSources() => _textureSources;
-
-    public void SetOverrideTexture(int slot, TextureId textureId)
+    public void SetSourceSlot(int slot, AssetId assetId, TextureId textureId = default)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
-        _textureSources[slot] = _textureSources[slot] with { OverrideTextureId = textureId };
-    }
-
-    public void SetTexture(int slot, Texture? texture)
-    {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
-
         ref var source = ref _textureSources[slot];
-
-        if (texture is { } tex)
-        {
-            source = new TextureSource(tex.Id, tex.Usage, tex.TextureKind, tex.PixelFormat);
-            MarkDirty();
-            return;
-        }
-
-        if (source != default)
-        {
-            source = source with { AssetTexture = AssetId.Empty };
-            MarkDirty();
-        }
+        source = source.WithTexture(assetId, textureId);
+        if (source.Usage == TextureUsage.Mask) State.HasAlphaMask = source.IsBound();
+        MarkDirty(AssetDirtyFlag.State);
     }
 
-    public void SetPassFunction(GfxPassFunctions passFunctions) =>
-        Pipeline = new MaterialPipeline(Pipeline.DrawState, passFunctions);
+    public void SetTextureSlot(int slot, Texture? texture) =>
+        SetSourceSlot(slot, texture?.Id ?? default, texture?.GfxId ?? default);
 
-    public void SetPassState(GfxDrawState drawState) =>
-        Pipeline = new MaterialPipeline(drawState, Pipeline.PassFunctions);
-
-
-    public MaterialPipeline Pipeline
+    public void SetSources(ReadOnlySpan<TextureSource> sources)
     {
-        get;
-        set
+        ArgumentOutOfRangeException.ThrowIfNotEqual(sources.Length, _textureSources.Length, nameof(sources));
+        var profile = AssetManager.GetMaterialProfile(ProfileId);
+        profile.ValidateSources(sources);
+        for (var i = 0; i < sources.Length; i++)
         {
-            if (field == value) return;
-            field = value;
-            MarkDirty();
+            var source = sources[i];
+            SetSourceSlot(i, source.AssetTexture, source.OverrideTexture);
         }
-    } = MaterialPipeline.MakeModel();
-
-    public Color4 Color
-    {
-        get;
-        set
-        {
-            if (value == field) return;
-            field = value;
-            MarkDirty();
-        }
-    } = Color4.White;
-
-    public float Shininess
-    {
-        get;
-        set
-        {
-            if (FloatMath.NearlyEqual(field, value)) return;
-            field = float.Max(value, 0f);
-            MarkDirty();
-        }
-    } = 12f;
-
-    public float Specular
-    {
-        get;
-        set
-        {
-            if (FloatMath.NearlyEqual(field, value)) return;
-            field = float.Max(value, 0f);
-            MarkDirty();
-        }
-    } = 0.12f;
-
-    public float UvRepeat
-    {
-        get;
-        set
-        {
-            if (FloatMath.NearlyEqual(field, value)) return;
-            field = float.Max(value, 1f);
-            MarkDirty();
-        }
-    } = 1f;
-
-    public bool Transparency
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            MarkDirty();
-        }
-    }
-
-
-    public void FillParams(out MaterialParams param)
-    {
-        param.Color = Color;
-        param.Shininess = Shininess;
-        param.Specular = Specular;
-        param.UvRepeat = UvRepeat;
-    }
-
-    public void SetParams(in MaterialParams param)
-    {
-        Color = param.Color;
-        Shininess = param.Shininess;
-        Specular = param.Specular;
-        UvRepeat = param.UvRepeat;
-    }
-
-    internal Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
-    {
-        FillParams(out var param);
-        return new Material(newName, Id, BoundShader, Profile, in param, _textureSources) { Id = newId, GId = newGId };
-    }
-
-    internal void Commit()
-    {
-        CalculateProperties();
-    }
-
-    private void CalculateProperties()
-    {
-        var props = new MaterialRenderProps
-        {
-            HasTransparency = Transparency, HasShadowMap = BoundShader?.DefaultBindings.ShadowMapBinding >= 0
-        };
-        foreach (var source in _textureSources)
-        {
-            if (!source.AssetTexture.IsValid()) continue;
-            if (!props.HasNormal) props.HasNormal = source.Usage == TextureUsage.Normal;
-            if (!props.HasAlphaMask) props.HasAlphaMask = source.Usage == TextureUsage.Mask;
-        }
-
-        RenderProps = props;
-    }
-
-    private void FromParamRecord(MaterialParamsRecord param)
-    {
-        if (param.Color is { } color) Color = color;
-        if (param.Shininess is { } shininess) Shininess = shininess;
-        if (param.UvRepeat is { } uvRepeat) UvRepeat = uvRepeat;
-        if (param.Specular is { } spec) Specular = spec;
     }
 }

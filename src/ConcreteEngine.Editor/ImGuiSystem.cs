@@ -1,7 +1,5 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Visuals;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Input;
@@ -23,9 +21,6 @@ internal static unsafe class ImGuiSystem
     private static bool _hasCachedDrawData;
 
     public static TextureId OutputTexture;
-    public static Size2D OutputSize;
-
-    public static ViewportRect ResizedViewport;
 
     public static ImGuiViewportPtr MainViewportPtr;
 
@@ -34,7 +29,7 @@ internal static unsafe class ImGuiSystem
 
     private static ImGuiIO* IoPtr => Io.Handle;
 
-    public static void Setup(EngineWindow window, float scale)
+    public static void Setup(float scale)
     {
         if (Initialized) throw new InvalidOperationException("ImGuiSystem already initialized");
 
@@ -44,15 +39,15 @@ internal static unsafe class ImGuiSystem
         Io = ImGui.GetIO();
         var io = IoPtr;
         io->IniFilename = null;
-        io->DisplaySize.X = window.WindowSize.Width;
-        io->DisplaySize.Y = window.WindowSize.Height;
+        io->DisplaySize.X = EngineWindow.WindowSize.Width;
+        io->DisplaySize.Y = EngineWindow.WindowSize.Height;
         io->ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard | ImGuiConfigFlags.IsSrgb |
                            ImGuiConfigFlags.DockingEnable;
 
 
         ImGuiImplGLFW.SetCurrentContext(imGuiContext);
 
-        var windowPtr = (GLFWwindow*)window.PlatformWindowPtr;
+        var windowPtr = (GLFWwindow*)EngineWindow.PlatformWindowPtr;
         ImGuiImplOpenGL3.SetCurrentContext(imGuiContext);
         ImGuiImplOpenGL3.Init("#version 420"u8);
         ImGuiImplGLFW.InitForOpenGL(windowPtr, false);
@@ -72,33 +67,32 @@ internal static unsafe class ImGuiSystem
     }
 
 
-    public static void FillInput(InputController input)
+    public static void FillInput()
     {
         var io = IoPtr;
-        io->MousePos = input.Mouse.ScreenPos;
-        io->MouseWheel = input.Mouse.Scroll.Y;
-        io->MouseWheelH = input.Mouse.Scroll.X;
-        io->MouseDown_0 = input.IsMouseDown(MouseButton.Left);
-        io->MouseDown_1 = input.IsMouseDown(MouseButton.Right);
-        io->MouseDown_2 = input.IsMouseDown(MouseButton.Middle);
+        io->MousePos = EngineInput.Mouse.ScreenPos;
+        io->MouseWheel = EngineInput.Mouse.Scroll.Y;
+        io->MouseWheelH = EngineInput.Mouse.Scroll.X;
+        io->MouseDown_0 = EditorInput.Layer.IsMouseDown(MouseButton.Left);
+        io->MouseDown_1 = EditorInput.Layer.IsMouseDown(MouseButton.Right);
+        io->MouseDown_2 = EditorInput.Layer.IsMouseDown(MouseButton.Middle);
 
-        if (input is { HasEmptyKeyChars: true, HasEmptyKeyInput: true }) return;
+        if (EngineInput.Keyboard.HasEmptyKeyInput && EngineInput.Keyboard.HasEmptyKeyChars) return;
 
-        foreach (var key in input.GetActiveKeys())
-            io->AddKeyEvent(ImGuiKeyMapper.AsImGuiKey(key), !input.IsKeyUp(key));
+        foreach (var key in EngineInput.Keyboard.GetActiveKeys())
+            io->AddKeyEvent(ImGuiKeyMapper.AsImGuiKey(key), !EditorInput.Layer.IsKeyUp(key));
 
-        foreach (var key in input.GetKeyChars())
+        foreach (var key in EngineInput.Keyboard.GetKeyChars())
             io->AddInputCharacter(key);
     }
 
-    public static void NewFrame(float deltaTime, Size2D outputSize, TextureId outputTexture)
+    public static void NewFrame(float deltaTime, TextureId outputTexture)
     {
         OutputTexture = outputTexture;
-        OutputSize = outputSize;
 
         if (Io.IsNull) Io = ImGui.GetIO();
         var io = IoPtr;
-        io->DisplaySize = OutputSize.ToVector2();
+        io->DisplaySize = EngineWindow.OutputSize;
         io->DisplayFramebufferScale = Vector2.One;
         io->DeltaTime = deltaTime;
 

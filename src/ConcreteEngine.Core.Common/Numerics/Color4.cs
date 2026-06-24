@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
@@ -51,8 +52,18 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
     public static Color4 operator *(Color4 a, Color4 b) => new(a.R * b.R, a.G * b.G, a.B * b.B, a.A * b.A);
 
     // 
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);
+    public void Clamp()
+    {
+        R = float.Clamp(R, 0.0f, 1.0f);
+        G = float.Clamp(G, 0.0f, 1.0f);
+        B = float.Clamp(G, 0.0f, 1.0f);
+        A = float.Clamp(A, 0.0f, 1.0f);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly Color4 AsClampedAlpha() => this with { A = float.Clamp(A, 0f, 1f) };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ColorRgba ToRgba()
@@ -65,7 +76,6 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
         return result;
     }
 
-    // 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly uint ToPackedRgba()
     {
@@ -77,12 +87,16 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Clamp()
+    public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool NearlyEqual(in Color4 a, in Color4 b, float eps = FloatMath.DefaultEpsilon)
     {
-        R = float.Clamp(R, 0.0f, 1.0f);
-        G = float.Clamp(G, 0.0f, 1.0f);
-        B = float.Clamp(G, 0.0f, 1.0f);
-        A = float.Clamp(A, 0.0f, 1.0f);
+        return VectorMath.NearlyEqual(
+            Unsafe.As<Color4, Vector4>(ref Unsafe.AsRef(in a)),
+            Unsafe.As<Color4, Vector4>(ref Unsafe.AsRef(in b)),
+            eps
+        );
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

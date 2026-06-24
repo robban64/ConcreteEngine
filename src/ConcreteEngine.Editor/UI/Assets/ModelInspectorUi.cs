@@ -23,7 +23,7 @@ internal sealed unsafe class ModelInspectorUi(StateManager state)
 
 
         ImGui.SeparatorText("Meshes"u8);
-        foreach (var mesh in editModel.Asset.Meshes)
+        foreach (var mesh in editModel.Asset.GetMeshes())
         {
             if (!ImGui.TreeNodeEx(sw.Write(mesh.Name), ImGuiTreeNodeFlags.SpanFullWidth)) continue;
 
@@ -36,14 +36,14 @@ internal sealed unsafe class ModelInspectorUi(StateManager state)
             ImGui.TreePop();
         }
 
-        if (model.Animation != null)
-            DrawAnimated(model.Animation, sw);
+        if (model.Rig != null)
+            DrawAnimated(model.Rig, sw);
     }
 
-    private static void DrawAnimated(ModelAnimation animation, NativeSpanWriter sw)
+    private static void DrawAnimated(ModelRig rig, NativeSpanWriter sw)
     {
         ImGui.SeparatorText("Animation"u8);
-        AppDraw.DrawTextProperty("Bone Count:"u8, sw.Write(animation.BoneCount));
+        AppDraw.DrawTextProperty("Bone Count:"u8, sw.Write(rig.BoneCount));
 
         if (ImGui.BeginTable("##anim_table"u8, 4, GuiTheme.TableFlags))
         {
@@ -54,13 +54,14 @@ internal sealed unsafe class ModelInspectorUi(StateManager state)
 
             ImGui.TableHeadersRow();
 
-            foreach (var clip in animation.Clips)
+            for (int i = 0; i < rig.ClipCount; i++)
             {
+                var clip = rig.GetClip(i);
                 ImGui.TableNextRow();
                 float rowHeight = AppDraw.ColumnV(sw.Write(clip.Name));
                 AppDraw.ColumnV(sw.Write(clip.Duration), rowHeight);
                 AppDraw.ColumnV(sw.Write(clip.TicksPerSecond), rowHeight);
-                AppDraw.ColumnV(sw.Write(clip.Length), rowHeight);
+                AppDraw.ColumnV(sw.Write(clip.ActiveChannelCount), rowHeight);
             }
 
             ImGui.EndTable();

@@ -192,7 +192,5 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
         CreateSegment("Fog Effect", [FogColorField, FogHeightFields, FogOpticsFields]);
     }
 
-    public override void Bind(VisualManager target)
-    {
-    }
+    public override void Bind(VisualManager target) { }
 }

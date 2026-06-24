@@ -14,7 +14,7 @@ internal static class EditorInput
         ImGuiHoveredFlags.AllowWhenBlockedByPopup |
         ImGuiHoveredFlags.AllowWhenBlockedByActiveItem;
 
-    public static InputController Input = null!;
+    public static InputLayer Layer = null!;
 
     public static InputStateToggles State;
 
@@ -26,8 +26,13 @@ internal static class EditorInput
     public static bool IsBlockingKeyboard => State.IsBlockingKeyboard;
     public static bool IsBlocking => State.IsBlockingMouse || State.IsBlockingKeyboard;
 
-    public static bool IsGizmoBlocked => DragState != DragState.None || Input.IsKeyDown(Key.ControlLeft);
+    public static bool IsGizmoBlocked => DragState != DragState.None || Layer.IsKeyDown(Key.ControlLeft);
 
+    public static void ToggleBlockLayers()
+    {
+        if (IsBlocking) EngineInput.SetActiveLayer(InputLayerKind.Ui);
+        else EngineInput.ActiveAllLayers();
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool UpdateInputState()
@@ -35,8 +40,8 @@ internal static class EditorInput
         var io = ImGuiSystem.Io;
         ref var state = ref State;
         state.IsDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
-        state.IsLeftClick = Input.IsMouseDown(MouseButton.Left);
-        state.IsRightClick = Input.IsMouseDown(MouseButton.Right);
+        state.IsLeftClick = Layer.IsMouseDown(MouseButton.Left);
+        state.IsRightClick = Layer.IsMouseDown(MouseButton.Right);
 
         state.IsUsingGizmo = ImGuizmo.IsUsing();
         state.IsHoveringGizmo = ImGuizmo.IsOver();

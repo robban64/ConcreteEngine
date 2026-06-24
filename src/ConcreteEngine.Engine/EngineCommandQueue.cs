@@ -17,7 +17,7 @@ internal sealed class CommandQueueEntry<TCommand>(CommandScope scope, Action<TCo
     public override void Dispatch(EngineCommandRecord cmd, EngineCommandContext ctx)
     {
         if (cmd is not TCommand tCommand)
-            throw new InvalidOperationException($"Invalid command type {cmd.Scope}");
+            throw new ArgumentException($"Invalid command type {cmd.Scope}");
 
         dispatch(tCommand, ctx);
     }
@@ -38,8 +38,8 @@ internal sealed class EngineCommandQueue
     public EngineCommandQueue(EngineCommandContext context)
     {
         _context = context;
-        RegisterHandler<FboCommandRecord>(CommandScope.Render, static (cmd, ctx) => ctx.Renderer.Apply(cmd));
-        RegisterHandler<AssetCommandRecord>(CommandScope.Asset, static (cmd, ctx) => ctx.Assets.Apply(cmd));
+        RegisterHandler<FboCommandRecord>(CommandScope.Render, static (cmd, ctx) => ctx.ApplyRender(cmd));
+        RegisterHandler<AssetCommandRecord>(CommandScope.Asset, static (cmd, ctx) => ctx.ApplyAsset(cmd));
     }
 
     private void RegisterHandler<TCommand>(CommandScope commandScope, Action<TCommand, EngineCommandContext> handler)

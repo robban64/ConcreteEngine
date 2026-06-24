@@ -76,10 +76,10 @@ internal sealed unsafe class GlBuffers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ResizeUniformBuffer(GfxHandle uboRef, uint size, BufferUsage usage)
+    public void ResizeUniformBuffer(GfxHandle uboRef, int size, BufferUsage usage)
 
     {
-        _gl.NamedBufferData(_uboStore.Get(uboRef), size, (void*)0, usage.ToGlEnum());
+        _gl.NamedBufferData(_uboStore.Get(uboRef), (nuint)size, (void*)0, usage.ToGlEnum());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -95,16 +95,16 @@ internal sealed unsafe class GlBuffers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UploadUniformBufferData(GfxHandle uboRef, byte* data, uint offset, uint size)
+    public void UploadUniformBufferData(GfxHandle uboRef, byte* data, int offset, int size)
     {
-        _gl.NamedBufferSubData(_uboStore.Get(uboRef), (nint)offset, size, data);
+        _gl.NamedBufferSubData(_uboStore.Get(uboRef), offset, (nuint)size, data);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindUniformBufferRange(GfxHandle uboRef, uint slot, uint offset, uint size)
+    public void BindUniformBufferRange(GfxHandle uboRef, uint slot, int offset, int size)
     {
         var nHandle = _uboStore.Get(uboRef);
-        _gl.BindBufferRange(BufferTargetARB.UniformBuffer, slot, nHandle, (nint)offset, size);
+        _gl.BindBufferRange(BufferTargetARB.UniformBuffer, slot, nHandle, offset, (nuint)size);
     }
 
     private NativeHandle CreateBufferNative(byte* data, in CreateBufferInfo desc, bool nullData)

@@ -13,43 +13,48 @@ using Silk.NET.Assimp;
 using AssimpMaterial = Silk.NET.Assimp.Material;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpTexture = Silk.NET.Assimp.Texture;
+using BlendMode = ConcreteEngine.Graphics.Gfx.BlendMode;
 
 namespace ConcreteEngine.Engine.Assets.ImporterAssimp;
 
-internal sealed unsafe partial class ModelImporter
+internal static unsafe class MaterialModelImporter
 {
-    private static void ProcessMaterials(AssimpScene* scene, ModelImportContext ctx, AssimpSceneMeta meta)
+    public static void ProcessMaterials(Assimp assimp, AssimpScene* scene, ModelImportContext ctx)
     {
-        if (meta.MaterialCount == 0 || meta.TextureCount == 0) return;
+        var embeddedContext = ctx.EmbeddedContext;
+        if (embeddedContext.MaterialCount == 0 && embeddedContext.TextureCount == 0) return;
 
+        int textureCount = embeddedContext.TextureCount, materialCount = embeddedContext.MaterialCount;
         // register textures
-        for (var i = 0; i < meta.TextureCount; i++)
+        for (var i = 0; i < textureCount; i++)
         {
-            var aiTexture = scene->MTextures[i];
-            var embeddedName = aiTexture->MFilename.AsString;
-            var assetName = AssetNameUtils.MakeEmbeddedName(AssetKind.Texture, ctx.ModelName, i);
+            var embeddedName = scene->MTextures[i]->MFilename.AsString;
+            var assetName = AssetNameUtils.MakeEmbeddedName(AssetKind.Texture, ctx.ModelName!, i);
             var texture = new EmbeddedSceneTexture(assetName, embeddedName, i);
-            ctx.Textures.Add(texture);
+            embeddedContext.Textures.Add(texture);
         }
 
-        for (var i = 0; i < meta.MaterialCount; i++)
+        for (var i = 0; i < materialCount; i++)
         {
+            var assetName = AssetNameUtils.MakeEmbeddedName(AssetKind.Material, ctx.ModelName!, i);
             var aiMat = scene->MMaterials[i];
-            var assetName = AssetNameUtils.MakeEmbeddedName(AssetKind.Material, ctx.ModelName, i);
-            var material = new EmbeddedSceneMaterial(assetName, i, ctx.Animation != null);
+
+            var material = new EmbeddedSceneMaterial(assetName, i, ctx.IsAnimated);
             ProcessMaterialProperties(aiMat, material, ctx);
 
             material.FileSpec = new AssetFile(
-                GId: Guid.NewGuid(),
-                Id: AssetFileId.Empty,
-                Storage: AssetStorageKind.Embedded,
-                RelativePath: assetName,
-                LogicalName: material.EmbeddedName,
-                LastWriteTime: DateTime.MinValue,
-                SizeBytes: 0,
-                Source: ctx.Filename);
+                gId: Guid.NewGuid(),
+                id: AssetFileId.Empty,
+                binding: FileBinding.RootFile,
+                storage: AssetStorage.Embedded,
+                relativePath: assetName,
+                logicalName: material.EmbeddedName,
+                lastWriteTime: DateTime.MinValue,
+                sizeBytes: 0
+                //Source: ctx.Filename
+            );
 
-            ctx.Materials.Add(material);
+            embeddedContext.Materials.Add(material);
         }
 
         LoadTextures(scene, ctx);
@@ -58,32 +63,29 @@ internal sealed unsafe partial class ModelImporter
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void LoadTextures(AssimpScene* scene, ModelImportContext ctx)
     {
-        var textures = ctx.Textures;
-        for (var i = 0; i < textures.Count; i++)
-        {
-            if (textures[i].Discard) textures.RemoveAt(i);
-        }
-
+        var textures = ctx.EmbeddedContext.Textures;
         foreach (var texture in textures)
         {
             var aiTexture = scene->MTextures[texture.TextureIndex];
-            int textureSize = MatUtils.LoadTextureData(ctx, aiTexture, texture);
+            int textureSize = LoadTextureData(ctx.EmbeddedContext, aiTexture, texture);
             texture.FileSpec = new AssetFile(
-                GId: Guid.NewGuid(),
-                Id: AssetFileId.Empty,
-                Storage: AssetStorageKind.Embedded,
-                RelativePath: texture.Name,
-                LogicalName: texture.EmbeddedName,
-                SizeBytes: textureSize,
-                LastWriteTime: DateTime.MinValue,
-                Source: ctx.Filename);
+                gId: Guid.NewGuid(),
+                id: AssetFileId.Empty,
+                binding: FileBinding.RootFile,
+                storage: AssetStorage.Embedded,
+                relativePath: texture.Name,
+                logicalName: texture.EmbeddedName,
+                sizeBytes: textureSize,
+                lastWriteTime: DateTime.MinValue
+                //Source: ctx.Filename
+            );
         }
     }
 
     private static void ProcessMaterialProperties(AssimpMaterial* aiMat, EmbeddedSceneMaterial material,
         ModelImportContext ctx)
     {
-        MaterialParams matData = default;
+        var matParams = material.State;
         Span<char> charBuffer = stackalloc char[256];
         Span<char> keyCharBuffer = stackalloc char[64];
         var propCount = aiMat->MNumProperties;
@@ -96,29 +98,54 @@ internal sealed unsafe partial class ModelImporter
 
             switch (key)
             {
-                case "?mat.name":
+                case Assimp.MaterialNameBase:
                     material.EmbeddedName = MatUtils.ParsePropertyString(prop, charBuffer).ToString();
                     break;
-                case "$tex.file":
+                case Assimp.MatkeyTextureBase:
                     var texturePath = MatUtils.ParsePropertyString(prop, charBuffer);
-                    AttachTextureToMaterial(material, ctx.Textures, texturePath, (TextureType)prop->MSemantic);
+                    var textureType = (TextureType)prop->MSemantic;
+                    AttachTextureToMaterial(material, ctx.EmbeddedContext.Textures, texturePath, textureType);
                     break;
-                case "$mat.opacity":
-                    MatUtils.ParseFloatProp(prop, out matData.Color.A);
+                case Assimp.MaterialOpacityBase:
+                    var color = matParams.Color ?? Color4.White;
+                    color.A = MatUtils.ParseFloatProp(prop);
+                    matParams.Color = color;
                     break;
-                case Assimp.MaterialShininessBase:
-                    MatUtils.ParseFloatProp(prop, out matData.Shininess);
+                case Assimp.MaterialShininessStrengthBase:
+                    matParams.Shininess = MatUtils.ParseFloatProp(prop);
                     break;
                 case Assimp.MatkeySpecularFactor:
-                    MatUtils.ParseFloatProp(prop, out matData.Specular);
+                    var matSpecColor = matParams.SpecularColor ?? Color4.White;
+                    matSpecColor.A = MatUtils.ParseFloatProp(prop);
+                    matParams.SpecularColor = matSpecColor;
                     break;
                 case Assimp.MaterialColorDiffuseBase:
-                    MatUtils.ParseVectorProp(prop, out Unsafe.As<Color4, Vector4>(ref matData.Color));
+                    matParams.Color = (Color4)MatUtils.ParseVectorProp(prop);
+                    break;
+                case Assimp.MaterialColorSpecularBase:
+                    var specularColor = (Color4)MatUtils.ParseVectorProp(prop);
+                    if (matParams.SpecularColor.HasValue)
+                        matParams.SpecularColor = specularColor with { A = matParams.SpecularColor.Value.A };
+                    else
+                        matParams.SpecularColor = specularColor;
+                    break;
+                case Assimp.MaterialTwosidedBase:
+                    if (MatUtils.ParseIntProp(prop) == 1) matParams.DisableFlags |= GfxDrawFlags.Cull;
+                    break;
+                case Assimp.MaterialBlendFuncBase:
+                    var blend = (Silk.NET.Assimp.BlendMode)MatUtils.ParseIntProp(prop);
+                    if (blend == 0) break;
+                    matParams.DrawFunctions = matParams.DrawFunctions.Patch(new GfxDrawFunctions(BlendMode.Additive));
+                    matParams.EnableFlags |= GfxDrawFlags.Blend;
+                    break;
+                case "$mat.gltf.pbrMetallicRoughness.metallicFactor":
+                    matParams.Metallic = MatUtils.ParseFloatProp(prop);
+                    break;
+                case "$mat.gltf.pbrMetallicRoughness.roughnessFactor":
+                    matParams.Roughness = MatUtils.ParseFloatProp(prop);
                     break;
             }
         }
-
-        material.Params = matData;
     }
 
     private static void AttachTextureToMaterial(
@@ -141,24 +168,21 @@ internal sealed unsafe partial class ModelImporter
                 $"Property texture index {textureIndex} does not match {texture.TextureIndex}");
         }
 
-        if (material.Textures.Contains(new AssetIndexRef(texture.GId, textureIndex))) return;
+        if (material.Textures.Contains(texture.GId)) return;
         if (!MatUtils.ToSystemEnums(type, out var kind, out var format))
         {
-            texture.Discard = true;
-            return;
+            kind = TextureUsage.Albedo;
+            format = TexturePixelFormat.SrgbAlpha;
         }
 
         texture.SlotKind = kind;
         texture.PixelFormat = format;
-        texture.Discard = false;
-        material.Textures.Add(new AssetIndexRef(texture.GId, textureIndex));
+        material.Textures.Add(texture.GId);
     }
-}
 
-file static unsafe class MatUtils
-{
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static int LoadTextureData(ModelImportContext context, AssimpTexture* aiTex, EmbeddedSceneTexture texture)
+    private static int LoadTextureData(EmbeddedImportContext context, AssimpTexture* aiTex,
+        EmbeddedSceneTexture texture)
     {
         int width = (int)aiTex->MWidth, height = (int)aiTex->MHeight;
         int sizeInBytes;
@@ -176,13 +200,18 @@ file static unsafe class MatUtils
             sizeInBytes = width * height * 4;
         }
 
-        InvalidOpThrower.ThrowIf(sizeInBytes < 4, nameof(sizeInBytes));
+        if (sizeInBytes < 4) Throwers.InvalidOperation(nameof(sizeInBytes));
+
         var ptr = (byte*)aiTex->PcData;
-        texture.PixelDataBlock = context.RegisterTexture(ptr, sizeInBytes, texture.PixelFormat, out texture.Dimensions);
+        //texture.PixelDataBlock =
+        context.RegisterTexture(texture, ptr, sizeInBytes);
         return sizeInBytes;
         //return TextureImporter.ImportUnmanagedTexture(ptr, sizeInBytes, width, height, format, out size);
     }
+}
 
+file static unsafe class MatUtils
+{
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static bool ToSystemEnums(TextureType type, out TextureUsage kind, out TexturePixelFormat format)
     {
@@ -200,6 +229,10 @@ file static unsafe class MatUtils
                 kind = TextureUsage.Mask;
                 format = TexturePixelFormat.Red;
                 return true;
+            case TextureType.GltfMetallicRoughness:
+                kind = TextureUsage.Roughness;
+                format = TexturePixelFormat.Rgba;
+                return true;
             default:
                 kind = 0;
                 format = 0;
@@ -207,33 +240,41 @@ file static unsafe class MatUtils
         }
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ParseFloatProp(MaterialProperty* prop, out float value)
+    public static float ParseFloatProp(MaterialProperty* prop)
     {
         if (prop == null || prop->MData == null || prop->MDataLength < sizeof(float))
-            throw new ArgumentOutOfRangeException(nameof(prop));
+            Throwers.InvalidArgument(nameof(prop));
 
-        value = MemoryMarshal.Read<float>(new ReadOnlySpan<byte>(prop->MData, (int)prop->MDataLength));
+        return MemoryMarshal.Read<float>(new ReadOnlySpan<byte>(prop->MData, (int)prop->MDataLength));
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ParseVectorProp(MaterialProperty* prop, out Vector4 data)
+    public static int ParseIntProp(MaterialProperty* prop)
     {
         var length = (int)prop->MDataLength;
-        if (length != 16 && length != 12)
-            throw new ArgumentOutOfRangeException(nameof(prop));
+        if (prop == null || prop->MData == null || (length != 4 && length != 1))
+            Throwers.InvalidArgument(nameof(prop));
+
+        return length == 1 ? *prop->MData : MemoryMarshal.Read<int>(new ReadOnlySpan<byte>(prop->MData, sizeof(int)));
+    }
+
+
+    public static Vector4 ParseVectorProp(MaterialProperty* prop)
+    {
+        var length = (int)prop->MDataLength;
+        if (prop == null || prop->MData == null || (length != 16 && length != 12))
+            Throwers.InvalidArgument(nameof(prop));
 
         ref var b0 = ref Unsafe.AsRef<byte>(prop->MData);
         var span = MemoryMarshal.CreateSpan(ref b0, length);
 
-        data = length == 16 ? MemoryMarshal.Read<Vector4>(span) : MemoryMarshal.Read<Vector3>(span).AsVector4();
+        return length == 16 ? MemoryMarshal.Read<Vector4>(span) : MemoryMarshal.Read<Vector3>(span).AsVector4();
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static Span<char> ParsePropertyString(MaterialProperty* prop, Span<char> charBuffer)
     {
         if (prop->MType != PropertyTypeInfo.String)
-            throw new ArgumentOutOfRangeException(nameof(prop));
+            Throwers.InvalidArgument(nameof(prop));
 
         // 4-byte integer followed by the string
         var length = *(int*)prop->MData;

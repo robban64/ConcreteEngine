@@ -33,14 +33,15 @@ internal sealed class RenderPassPipeline
         where TTag : class
     {
         var existingKey = PassTags<TTag>.PassKey(variant);
-        InvalidOpThrower.ThrowIf(existingKey.Pass == passId);
+
+        if (existingKey.Pass == passId) Throwers.InvalidArgument(nameof(passId));
 
         var newKey = existingKey with { Pass = passId };
 
         foreach (var e in _entries)
         {
             if (e.PassKey.Pass == passId || e.PassKey == newKey)
-                throw new InvalidOperationException("Duplicated passes");
+                Throwers.InvalidArgument("Duplicated passes");
         }
 
         var entry = new RenderPassEntry(newKey, op, initial);
@@ -57,7 +58,7 @@ internal sealed class RenderPassPipeline
         foreach (var e in _entries)
         {
             if (e.PassKey.Pass == passId || e.PassKey == key)
-                throw new InvalidOperationException("Duplicated passes");
+                Throwers.InvalidArgument("Duplicated passes");
         }
 
         var entry = new RenderPassEntry(key, op, initial);

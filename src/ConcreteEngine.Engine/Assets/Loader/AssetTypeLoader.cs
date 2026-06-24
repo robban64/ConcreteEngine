@@ -1,4 +1,5 @@
-using ConcreteEngine.Core.Common.Memory;
+using System.Diagnostics;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Assets.Utils;
@@ -7,10 +8,12 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal interface IAssetTypeLoader
 {
-    AssetKind Kind { get; }
     bool IsActive { get; }
-    void Setup(bool isSetup);
-    void Teardown();
+
+    void Activate(bool isSetup);
+    void DeActivate();
+
+    static abstract AssetKind Kind { get; }
 }
 
 internal interface IAssetTypeLoader<in TAsset> : IAssetTypeLoader where TAsset : AssetObject
@@ -21,63 +24,48 @@ internal interface IAssetTypeLoader<in TAsset> : IAssetTypeLoader where TAsset :
 internal abstract class AssetTypeLoader<TAsset, TRecord> : IAssetTypeLoader<TAsset>
     where TAsset : AssetObject where TRecord : AssetRecord
 {
-    public AssetKind Kind => AssetKindUtils.ToAssetKind(typeof(TAsset));
-    protected abstract int SetupAllocSize { get; }
-    protected abstract int DefaultAllocSize { get; }
-
     public bool IsActive { get; private set; }
     public bool IsSetup { get; private set; }
 
-    public readonly List<IEmbeddedAsset> EmbeddedAssets = [];
+    public static AssetKind Kind => AssetKindUtils.ToAssetKind(typeof(TAsset));
 
-    private ArenaAllocator? _allocator;
-
-    protected ArenaAllocator Allocator => _allocator ?? throw new InvalidOperationException("Allocator is null");
-
-    public TAsset LoadAsset(TRecord record, LoaderContext ctx)
+    public TAsset LoadAsset(TRecord record, ImportContext ctx)
     {
-        if (!IsActive) throw new InvalidOperationException(nameof(IsActive));
+        if (!IsActive) Throwers.InvalidOperation(nameof(IsActive));
         return record.LoadMode switch
         {
             AssetLoadingMode.Processed => Load(record, ctx),
             AssetLoadingMode.MemoryOnly => LoadInMemory(record, ctx),
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new UnreachableException()
         };
     }
 
-    public void Setup(bool isSetup)
+    public void Activate(bool isSetup)
     {
-        if (IsActive) throw new InvalidOperationException(nameof(IsActive));
+        if (IsActive) Throwers.InvalidOperation(nameof(IsActive));
 
         IsSetup = isSetup;
         IsActive = true;
 
-        if (SetupAllocSize > 0 && DefaultAllocSize > 0)
-        {
-            var capacity = isSetup ? SetupAllocSize : DefaultAllocSize;
-            _allocator = new ArenaAllocator(capacity, zeroed: false);
-        }
-
-        OnSetup();
+        OnActivate();
     }
 
-    public void Teardown()
+    public void DeActivate()
     {
-        if (!IsActive) throw new InvalidOperationException(nameof(IsActive));
+        if (!IsActive) Throwers.InvalidOperation(nameof(IsActive));
 
-        _allocator?.Dispose();
-        _allocator = null;
         IsActive = false;
         IsSetup = false;
 
-        OnTeardown();
+        OnDeActivate();
     }
 
-    protected abstract void OnSetup();
-    protected abstract void OnTeardown();
 
-    protected abstract TAsset Load(TRecord record, LoaderContext ctx);
-    protected abstract TAsset LoadInMemory(TRecord record, LoaderContext ctx);
+    protected abstract void OnActivate();
+    protected abstract void OnDeActivate();
+
+    protected abstract TAsset Load(TRecord record, ImportContext ctx);
+    protected abstract TAsset LoadInMemory(TRecord record, ImportContext ctx);
 
     public virtual void Reload(TAsset asset, AssetFile[] files) => throw new NotImplementedException();
 }

@@ -26,6 +26,7 @@ public static class UtfText
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SliceNullTerminate(Span<byte> byteSpan, out Span<byte> dest)
     {
         var length = byteSpan.IndexOf((byte)0);
@@ -33,19 +34,15 @@ public static class UtfText
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetNullTerminateIndex(ref byte str)
+    public static int GetNullTerminateIndex(ref byte str, int capacity)
     {
         var i = 0;
-        while (Unsafe.Add(ref str, i) != 0) i++;
-        return i;
-    }
+        while (Unsafe.Add(ref str, i) != 0)
+        {
+            if (++i >= capacity) return -1;
+        }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CopyByteNullTerminated(ref byte str, ref byte dest)
-    {
-        var len = GetNullTerminateIndex(ref str);
-        Unsafe.CopyBlockUnaligned(ref dest, ref str, (uint)len + 1);
-        return len;
+        return i;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

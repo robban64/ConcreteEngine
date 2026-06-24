@@ -24,7 +24,7 @@ public sealed class EngineHost
         public WindowOptions Options = options;
     }
 
-    private bool _disposed;
+    private static bool _disposed;
     internal static bool IsSetupSimulation = false;
     internal static bool IsSetup = true;
 
@@ -32,8 +32,6 @@ public sealed class EngineHost
 
     private IWindow _window = null!;
     private GameEngine _engine = null!;
-    private EngineWindow _engineWindow = null!;
-    private EngineInputSource _inputSource = null!;
 
     private SetupContainer? _setup;
 
@@ -51,8 +49,23 @@ public sealed class EngineHost
     public void Run(GameEngineBuilder builder)
     {
         EngineSettingsLoader.LoadGraphicSettings();
-        var display = EngineSettings.Current.Display;
 
+        Load(builder);
+
+        RunSetupLoop();
+        RunMainLoop();
+
+        OnClosing();
+        _window.Dispose();
+    }
+
+
+    private void Load(GameEngineBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        if (_setup == null) throw new InvalidOperationException("Builder not initialized");
+
+        var display = EngineSettings.Current.Display;
         _setup!.Builder = builder;
         _setup.Options.Size = new Vector2D<int>(display.WindowSize.Width, display.WindowSize.Height);
         _setup.Options.VSync = false;
@@ -64,27 +77,6 @@ public sealed class EngineHost
         _window = Window.Create(_setup.Options);
         _window.Initialize();
 
-        OnLoad();
-
-        _window.VSync = false;
-        RunSetupLoop();
-        RunMainLoop();
-
-        OnClosing();
-        _window.Dispose();
-    }
-
-
-    private void OnLoad()
-    {
-        if (_setup!.Builder == null) throw new InvalidOperationException("Builder not initialized");
-
-        var graphics = Backend switch
-        {
-            GraphicsBackend.OpenGl => new GfxRuntimeBundle<GL>(new GraphicsRuntime(),
-                new GlStartupConfig(_window.CreateOpenGL())),
-            _ => throw new GraphicsException("Invalid GraphicsBackend. Only OpenGL supported")
-        };
 
         if (_window.GLContext != null)
         {
@@ -94,9 +86,19 @@ public sealed class EngineHost
             glfw.SwapInterval(0);
         }
 
-        _engineWindow = new EngineWindow(_window);
-        _inputSource = new EngineInputSource(_window.CreateInput());
-        _engine = _setup.Builder.Build(_engineWindow, _inputSource, graphics);
+        var graphics = Backend switch
+        {
+            GraphicsBackend.OpenGl => new GfxRuntimeBundle<GL>(new GraphicsRuntime(),
+                new GlStartupConfig(_window.CreateOpenGL())),
+            _ => throw new GraphicsException("Invalid GraphicsBackend. Only OpenGL supported")
+        };
+
+        _window.VSync = false;
+
+        EngineWindow.Attach(_window);
+        EngineInput.Attach(_window.CreateInput());
+
+        _engine = _setup.Builder.Build(graphics);
         _setup.Builder = null;
         _setup = null;
     }
@@ -148,7 +150,7 @@ public sealed class EngineHost
 
             _window.DoEvents();
 
-            _engine.Render(deltaTime);
+            _engine.Render((float)deltaTime);
 
             _window.SwapBuffers();
 
@@ -179,8 +181,7 @@ public sealed class EngineHost
     {
         if (_disposed) return;
         _engine.Close();
-        _inputSource.Dispose();
-        _window?.Dispose();
+        _window.Dispose();
         _disposed = true;
     }
 }

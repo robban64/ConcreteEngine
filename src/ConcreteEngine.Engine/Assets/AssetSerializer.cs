@@ -1,4 +1,5 @@
 using System.Text.Json;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Configuration;
 
@@ -10,10 +11,9 @@ internal static class AssetSerializer
 
     public static AssetRecord LoadRecord(string path)
     {
-        var text = File.ReadAllText(path);
-        var record = JsonSerializer.Deserialize<AssetRecord>(text, _jsonOptions) ??
-                     throw new InvalidDataException("Invalid file.");
-
+        var text = File.ReadAllBytes(path);
+        var record = JsonSerializer.Deserialize<AssetRecord>(text, _jsonOptions);
+        if (record is null) Throwers.InvalidArgument(nameof(path), path);
         return record;
     }
 
@@ -23,7 +23,6 @@ internal static class AssetSerializer
                    throw new InvalidDataException("Invalid record.");
         File.WriteAllText(path, text);
     }
-
 
     public static void ClearCache() => _jsonOptions = null;
 

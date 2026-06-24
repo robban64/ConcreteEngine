@@ -1,5 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Passes;
@@ -57,7 +56,7 @@ public sealed class RegisterFboEntry
         FboSizePolicy ??= RenderFboSizePolicy.MakeDefault();
         var size = FboSizePolicy.Calculate(outputSize);
 
-        InvalidOpThrower.ThrowIf(size.Width < 1 || size.Height < 1, nameof(size));
+        if (size.AnyZero()) throw new InvalidOperationException("Invalid size");
 
         if (ColorTexture is { PixelFormat: TexturePixelFormat.Unknown or TexturePixelFormat.Depth } ct)
             throw new InvalidOperationException($"Invalid PixelFormat for ColorTexture {ct.PixelFormat}");

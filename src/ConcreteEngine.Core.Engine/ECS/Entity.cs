@@ -11,6 +11,14 @@ public struct RenderEntity
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool IsVisible() => Alive && Visibility == 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public VisibilityFlags ToggleVisibility(VisibilityFlags flag, bool isVisible)
+    {
+        if (isVisible) Visibility &= ~flag;
+        else Visibility |= flag;
+        return Visibility;
+    }
 }
 
 public readonly record struct RenderEntityId(int Id) : IComparable<RenderEntityId>

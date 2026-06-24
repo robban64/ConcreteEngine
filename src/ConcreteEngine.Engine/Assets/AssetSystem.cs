@@ -1,31 +1,26 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public sealed class AssetSystem : IGameEngineSystem
+public sealed class AssetSystem
 {
     public Status CurrentStatus { get; private set; } = Status.None;
 
-    public AssetStore Assets { get; }
-    public AssetFileRegistry Files { get; }
-    public MaterialStore MaterialStore { get; }
-
+    private readonly AssetManager _assetManager;
     private readonly AssetPendingQueue _pendingQueue;
-    private AssetLoader? _loader;
+    private readonly AssetLoader _loader;
+    private readonly AssetScanner _scanner;
 
-    internal AssetSystem()
+    internal AssetSystem(GfxContext gfx)
     {
-        Files = new AssetFileRegistry();
-        Assets = new AssetStore(Files);
-        MaterialStore = new MaterialStore(Assets);
-
+        _assetManager = AssetManager.Instance;
         _pendingQueue = new AssetPendingQueue();
+        _loader = new AssetLoader(_assetManager, gfx);
+        _scanner = new AssetScanner(_assetManager);
     }
 
     public int PendingAssetCount => _pendingQueue.Count;
@@ -47,42 +42,42 @@ public sealed class AssetSystem : IGameEngineSystem
 
     internal void ProcessPendingQueue()
     {
-        _pendingQueue.TryDrain(_loader!, Assets);
+        if (_pendingQueue.Count == 0) return;
+        _pendingQueue.TryDrain(_loader, _assetManager.Store);
     }
 
-    internal bool ProcessLoader() => _loader!.ProcessLoader();
+    internal bool ProcessLoader() => _loader.ProcessLoader();
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void StartLoader(GraphicsRuntime graphics)
     {
-        InvalidOpThrower.ThrowIfNot(CurrentStatus == Status.ManifestLoaded, nameof(CurrentStatus));
         ArgumentNullException.ThrowIfNull(graphics);
 
+        if (CurrentStatus != Status.ManifestLoaded) Throwers.InvalidOperation(nameof(CurrentStatus));
         CurrentStatus = Status.Booting;
 
         AssetSystemSetup.Start();
-        AssetSystemSetup.CreateFallbackAssets(Assets, MaterialStore);
 
-        _loader = new AssetLoader(Assets, graphics.Gfx);
+        var ctx = _loader.ActivateFullLoader();
 
-        AssetScanner.ScanAll(Assets, Files, _loader.GetQueues());
-        Assets.EnsureStoreCapacity(_loader.GetQueues());
+        _scanner.RunFullScan(ctx);
 
-        var models = _loader.GetQueues()[AssetKind.Model.ToIndex()];
-        graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
+        AssetStore.EnsureStoreCapacity(
+            ctx.GetCount(AssetKind.Shader), ctx.GetCount(AssetKind.Model),
+            ctx.GetCount(AssetKind.Texture), ctx.GetCount(AssetKind.Material)
+        );
 
-        _loader.ActivateFullLoader();
+        //graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
     }
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void FinishLoading()
     {
-        foreach (var it in Assets.Collections) it.Sort();
+        foreach (var it in _assetManager.Store.GetTypeStoreSpan()) it.Sort();
 
-        MaterialStore.InitializeStore();
-        _loader?.DeactivateLoader();
+        _loader.DeactivateLoader();
 
         CurrentStatus = Status.Ready;
         AssetSystemSetup.End();

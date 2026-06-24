@@ -1,7 +1,5 @@
 // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
 
-using ConcreteEngine.Core.Engine.Scene;
-
 namespace ConcreteEngine.Core.Engine.ECS.Integration;
 
 public sealed class EntitySceneLink
@@ -9,18 +7,14 @@ public sealed class EntitySceneLink
     private SceneObjectId[] _renderToSceneId;
     private SceneObjectId[] _gameToSceneId;
 
-    private readonly RenderEntityCore _renderEcs;
-    private readonly GameEntityCore _gameEcs;
 
     public EntitySceneLink(RenderEntityCore renderEcs, GameEntityCore gameEcs)
     {
         _renderToSceneId = new SceneObjectId[renderEcs.Capacity];
         _gameToSceneId = new SceneObjectId[gameEcs.Capacity];
-        _renderEcs = renderEcs;
-        _gameEcs = gameEcs;
 
-        _renderEcs.AddResizeCallback(RenderResizeCallback);
-        _gameEcs.AddResizeCallback(GameResizeCallback);
+        renderEcs.AddResizeCallback(RenderResizeCallback);
+        gameEcs.AddResizeCallback(GameResizeCallback);
     }
 
     public void RenderResizeCallback(EcsStore store) => Array.Resize(ref _renderToSceneId, store.Capacity);

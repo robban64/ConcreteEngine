@@ -1,32 +1,14 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Engine.ECS;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
-public interface ISceneObjectNotifier
-{
-    void MarkDirty(SceneObjectId id);
-    void Rename(SceneObject asset, string newName, Action<string> onSuccess);
-}
-
 public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObject>
 {
-    [Flags]
-    public enum DirtyFlags : byte
-    {
-        None = 0,
-        Enabled = 1 << 0,
-        Visibility = 1 << 1,
-        Instance = 1 << 2,
-        Transform = 1 << 3,
-    }
-
     public SceneObjectId Id { get; }
     public Guid GId { get; }
 
@@ -39,6 +21,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         private set
         {
             if (field == value) return;
+            if (!string.IsNullOrEmpty(field)) MarkDirty(SceneDirtyFlags.Name);
             field = value;
             PackedName = StringPacker.PackAscii(value.AsSpan(), true);
         }
@@ -51,7 +34,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         {
             if (value == field) return;
             field = value;
-            MarkDirty(DirtyFlags.Enabled);
+            MarkDirty(SceneDirtyFlags.Enabled);
         }
     }
 
@@ -62,69 +45,50 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         {
             if (value == field) return;
             field = value;
-            MarkDirty(DirtyFlags.Visibility);
+            MarkDirty(SceneDirtyFlags.Visibility);
         }
     }
-
 
     public SceneObjectKind Kind { get; private set; }
 
     [JsonIgnore]
-    public DirtyFlags Dirty { get; private set; }
+    public SceneDirtyFlags Dirty { get; private set; }
 
-    public SceneObjectTransform Transform { get; }
+    public SceneTransform Transform { get; }
 
-    private readonly List<BlueprintInstance> _instances = [];
-    private readonly List<RenderEntityId> _renderEntities = [];
-    private readonly List<GameEntityId> _gameEntities = [];
+    private readonly List<RenderBlueprintInstance> _instances = [];
 
-    private ISceneObjectNotifier? _notifier;
-
-    internal SceneObject(
-        SceneObjectId id,
-        Guid gId,
-        string name,
-        bool enabled,
-        in Transform transform,
-        in BoundingBox bounds)
+    internal SceneObject(SceneObjectId id, Guid? gid, string name, bool enabled = true)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
-        ArgumentOutOfRangeException.ThrowIfEqual(gId, Guid.Empty);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id));
         ArgumentException.ThrowIfNullOrEmpty(name);
 
         Id = id;
-        GId = gId;
+        GId = gid ?? Guid.NewGuid();
         Name = name;
         Enabled = enabled;
         Visible = true;
 
-        Transform = new SceneObjectTransform(this, in transform, in bounds);
+        Transform = new SceneTransform(this);
+        MarkDirty(SceneDirtyFlags.Transform);
+        MarkDirty(SceneDirtyFlags.Instance);
     }
 
     public void SetName(string newName)
     {
-        if (_notifier is not { } notifier) return;
-        notifier.Rename(this, newName, (name) => Name = name);
+        SceneManager.SceneStore.Rename(this, newName);
+        Name = newName;
     }
 
     //
     public int InstanceCount => _instances.Count;
-    public int RenderEntitiesCount => _renderEntities.Count;
-    public int GameEntitiesCount => _gameEntities.Count;
-
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(_renderEntities);
+    public ReadOnlySpan<RenderBlueprintInstance> GetInstances() => CollectionsMarshal.AsSpan(_instances);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(_gameEntities);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<BlueprintInstance> GetInstances() => CollectionsMarshal.AsSpan(_instances);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TInstance GetInstance<TInstance>() where TInstance : BlueprintInstance
+    public TInstance GetInstance<TInstance>() where TInstance : RenderBlueprintInstance
     {
         foreach (var it in GetInstances())
         {
@@ -135,7 +99,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         return null!;
     }
 
-    public bool TryGetInstance<TInstance>(out TInstance instance) where TInstance : BlueprintInstance
+    public bool TryGetInstance<TInstance>(out TInstance instance) where TInstance : RenderBlueprintInstance
     {
         foreach (var it in GetInstances())
         {
@@ -152,47 +116,63 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
 
     //
-    internal void Attach(ISceneObjectNotifier notifier)
-    {
-        _notifier = notifier;
-        MarkDirty(DirtyFlags.Transform);
-        MarkDirty(DirtyFlags.Instance);
-    }
-
-    internal void AddInstance(BlueprintInstance instance)
+    internal void AddInstance(RenderBlueprintInstance instance)
     {
         _instances.Add(instance);
-        _renderEntities.AddRange(instance.GetRenderEntities());
-        _gameEntities.AddRange(instance.GetGameEntities());
-
-        foreach (var entity in instance.GetRenderEntities())
-            Ecs.SceneLink.BindSceneHandle(entity, Id);
-
-        foreach (var entity in instance.GetGameEntities())
-            Ecs.SceneLink.BindSceneHandle(entity, Id);
-
         if (instance is ModelInstance) Kind = SceneObjectKind.Model;
         else if (instance is ParticleInstance) Kind = SceneObjectKind.Particle;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void MarkDirty(DirtyFlags flags)
+    internal void MarkDirty(SceneDirtyFlags flags)
     {
         if ((Dirty & flags) != 0) return;
         Dirty |= flags;
-        _notifier?.MarkDirty(Id);
+        SceneManager.Instance.MarkDirty(Id);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void ClearDirty() => Dirty = DirtyFlags.None;
-
-    internal void EnsureCapacity(int renderEcsCapacity, int gameEcsCapacity)
+    internal void Commit()
     {
-        _renderEntities.EnsureCapacity(renderEcsCapacity);
-        _gameEntities.EnsureCapacity(gameEcsCapacity);
+        var flag = Dirty;
+        if ((flag & SceneDirtyFlags.Visibility) != 0) CommitVisibility();
+        if ((flag & SceneDirtyFlags.Transform) != 0) CommitTransform();
+        if ((flag & SceneDirtyFlags.Instance) != 0) CommitInstances();
+        Dirty = SceneDirtyFlags.None;
     }
 
-    public int CompareTo(SceneObject? other) => other is null ? 1 : Id.CompareTo(other.Id);
+
+    private void CommitVisibility()
+    {
+        foreach (var it in GetInstances()) it.ToggleVisibility(Visible);
+    }
+
+    private void CommitTransform()
+    {
+        Transform.GetTransformMatrix(out var rootMatrix);
+        var worldBounds = BoundingBox.Infinite;
+        foreach (var instance in GetInstances())
+        {
+            instance.ApplyTransform(in rootMatrix);
+            BoundingBox.Merge(in worldBounds, in instance.GetWorldBounds(), out worldBounds);
+        }
+
+        Transform.SetBounds(worldBounds);
+    }
+
+    private void CommitInstances()
+    {
+        foreach (var it in GetInstances())
+        {
+            if (it.IsDirty) it.Commit();
+        }
+    }
+
+    public int CompareTo(SceneObject? other)
+    {
+        if (ReferenceEquals(this, other)) return 0;
+        return other is null ? 1 : Id.CompareTo(other.Id);
+    }
 
     public bool Equals(SceneObject? other)
     {
@@ -205,57 +185,4 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     public override bool Equals(object? obj) => ReferenceEquals(this, obj) || obj is SceneObject other && Equals(other);
 
     public override int GetHashCode() => HashCode.Combine(Id, GId);
-}
-
-public sealed class SceneObjectTransform(SceneObject sceneObject, in Transform transform, in BoundingBox bounds)
-{
-    private Transform _transform = transform;
-    private BoundingBox _bounds = bounds;
-
-    public ref readonly Transform GetTransform() => ref _transform;
-    public ref readonly BoundingBox GetBounds() => ref _bounds;
-
-    //
-    public Vector3 Translation
-    {
-        get => _transform.Translation;
-        set
-        {
-            _transform.Translation = value;
-            sceneObject.MarkDirty(SceneObject.DirtyFlags.Transform);
-        }
-    }
-
-    public Vector3 Scale
-    {
-        get => _transform.Scale;
-        set
-        {
-            _transform.Scale = value;
-            sceneObject.MarkDirty(SceneObject.DirtyFlags.Transform);
-        }
-    }
-
-    public Quaternion Rotation
-    {
-        get => _transform.Rotation;
-        set
-        {
-            _transform.Rotation = value;
-            sceneObject.MarkDirty(SceneObject.DirtyFlags.Transform);
-        }
-    }
-
-    //
-    public void SetTransform(in Transform transform)
-    {
-        _transform = transform;
-        sceneObject.MarkDirty(SceneObject.DirtyFlags.Transform);
-    }
-
-    public void SetBounds(in BoundingBox bounds)
-    {
-        _bounds = bounds;
-        sceneObject.MarkDirty(SceneObject.DirtyFlags.Transform);
-    }
 }

@@ -48,9 +48,7 @@ public readonly struct LogFilterWildcard
     }
 
     public LogFilterWildcard(LogTopic topic, LogScope scope, LogAction action, LogLevel level)
-        : this((byte)topic, (byte)scope, (byte)action, (byte)level)
-    {
-    }
+        : this((byte)topic, (byte)scope, (byte)action, (byte)level) { }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int IndexAt(uint packed, ReadOnlySpan<LogFilterWildcard> filter)

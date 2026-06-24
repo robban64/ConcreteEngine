@@ -1,11 +1,7 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Command;
-using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
@@ -18,24 +14,18 @@ internal sealed class EngineGateway : IDisposable
 
     public readonly EngineMetricHub Metrics;
 
-    private readonly EngineWindow _window;
     private readonly RenderProgram _renderProgram;
     private EditorPortal _editor = null!;
 
-    internal EngineGateway(EngineWindow window, EngineCoreSystem coreSystem)
+    internal EngineGateway(RenderProgram renderProgram)
     {
-        var scene = coreSystem.GetSystem<SceneSystem>();
-        var asset = coreSystem.GetSystem<AssetSystem>();
-        _renderProgram = coreSystem.GetSystem<EngineRenderSystem>().Program;
-        _window = window;
-        Metrics = new EngineMetricHub(scene.SceneStore, asset.Assets);
+        _renderProgram = renderProgram;
+        Metrics = new EngineMetricHub();
     }
 
-    public void SetupEditor(EngineCoreSystem coreSystem, EngineWindow window, EngineCommandQueue commandQueues,
-        GfxContext gfxContext)
+    public void SetupEditor(EngineCommandQueue commandQueue, GfxContext gfxContext)
     {
-        ArgumentNullException.ThrowIfNull(coreSystem);
-        ArgumentNullException.ThrowIfNull(window);
+        ArgumentNullException.ThrowIfNull(commandQueue);
         ArgumentNullException.ThrowIfNull(gfxContext);
 
         if (Enabled) throw new InvalidOperationException(nameof(Enabled));
@@ -43,28 +33,13 @@ internal sealed class EngineGateway : IDisposable
 
         Enabled = true;
 
-        var inputSystem = coreSystem.GetSystem<InputSystem>();
-
-        var engineBundle = new EditorEngineBundle
-        {
-            SceneStore = coreSystem.Scene.SceneStore,
-            SceneSpawner = coreSystem.Scene.SceneSpawner,
-            Assets = coreSystem.Assets.Assets,
-            FileRegistry = coreSystem.Assets.Files,
-        };
-
-        var engineContext = new EditorEngineContext
-        {
-            Input = new InputLayerController(inputSystem, InputLayerKind.Ui), Window = window,
-        };
-
-        _editor = new EditorPortal(engineContext, engineBundle);
+        _editor = new EditorPortal();
         Metrics.ConnectEditor(_editor.GetMetricSystem());
 
         EditorSetup.RegisterCommands();
-        EngineCommandRouter.CommandCommandQueues = commandQueues;
+        EngineCommandRouter.CommandCommandQueues = commandQueue;
 
-        _editor.Start(_window.OutputSize);
+        _editor.Start();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -78,7 +53,7 @@ internal sealed class EngineGateway : IDisposable
     public void RenderEditor(float deltaTime)
     {
         if (!Enabled) return;
-        _editor.Render(deltaTime, _window.OutputSize, _renderProgram.OutputTexture);
+        _editor.Render(deltaTime, _renderProgram.GetOutputTexture());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

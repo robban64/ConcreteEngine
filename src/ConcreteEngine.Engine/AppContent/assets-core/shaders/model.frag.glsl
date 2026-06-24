@@ -128,20 +128,16 @@ float halfLambert(float ndl) {
 }
 void main()
 {
-    float uvRepeat = uMatParams0.y;
+    float uvRepeat = uMat.UvTransform.w;
     vec2 uv = fs_in.TexCoord * uvRepeat;
 
     //  Albedo and Alpha 
     vec4 baseTex = texture(uTexture, uv);
-    float a = baseTex.a;
-    if (uMatParams1.w > 0.5) {
-        a = texture(uAlpha, uv).r;
-    }
+    float a = (uMat.AlphaMaskToggle == 1) ? texture(uAlpha, uv).r : baseTex.a;
+    
+    if (a < uMat.AlphaCutoff) discard;
 
-    float cutoff = (uMatParams1.w > 0.5) ? 0.25 : 0.05;
-    if (uMatParams1.z > 0.5 && a < cutoff) discard;
-
-    vec3 baseColor = baseTex.rgb * uMatColor.rgb;
+    vec3 baseColor = baseTex.rgb * uMat.Color.rgb;
 
     //  Geometric Normal
     vec3 N_geo = normalize(fs_in.N_world);
@@ -149,16 +145,15 @@ void main()
     // Visual Normal 
     vec3 N_vis = N_geo;
 
-    if (uMatParams1.y > 0.5) {
-        //(Gram-Schmidt)
-        vec3 Tw = normalize(fs_in.T_world);
-        Tw = normalize(Tw - N_geo * dot(Tw, N_geo));
-        vec3 Bw = normalize(fs_in.B_world);
-        mat3 TBN = mat3(Tw, Bw, N_geo);
+    // Normals (Gram-Schmidt)
+    vec3 Tw = normalize(fs_in.T_world);
+    Tw = normalize(Tw - N_geo * dot(Tw, N_geo));
+    vec3 Bw = normalize(fs_in.B_world);
+    mat3 TBN = mat3(Tw, Bw, N_geo);
 
-        vec3 nTex = texture(uNormal, fs_in.TexCoord).rgb * 2.0 - 1.0;
-        N_vis = normalize(TBN * nTex);
-    }
+    vec3 nTex = texture(uNormal, fs_in.TexCoord).rgb * 2.0 - 1.0;
+    N_vis = normalize(TBN * nTex);
+    //
 
     // Positions & Vectors
     vec3 P = fs_in.FragPos;
@@ -173,9 +168,8 @@ void main()
     float diffTerm = halfLambert(ndl);
     vec3 diffuse = baseColor * diffTerm;
 
-    float shininess = uMatParams1.x;
-    float specularStrength = uMatParams0.x;
-    float specD = blinnPhongSpec(N_vis, V, Ld, shininess);
+    float specularStrength = uMat.SpecularColor.w;
+    float specD = blinnPhongSpec(N_vis, V, Ld, uMat.Shininess);
     vec3 specular = vec3(specularStrength) * specD * uLightSpecularIntensity.x;
 
     // Shadow Calculation (Use N_geo) 
@@ -198,7 +192,7 @@ void main()
         if (diffP <= 0.0) continue;
 
         vec3 diffuseP = baseColor * diffP;
-        float specP = blinnPhongSpec(N_vis, V, Lp, shininess);
+        float specP = blinnPhongSpec(N_vis, V, Lp, uMat.Shininess);
         vec3 specularP = vec3(specularStrength) * specP * uLightSpecularIntensity.x;
 
         direct += (diffuseP + specularP) * LiP * atten;

@@ -42,17 +42,23 @@ uniform ShadowUniform {
 };
 
 uniform MaterialUniform {
-    vec4 uMatColor;
-    vec4 uMatParams0;
-    vec4 uMatParams1;
-};
+    vec4 Color;
+    vec4 SpecularColor;
+    vec4 UvTransform;
+    
+    float Shininess;
+    float Roughness;
+    float Metallic;
+    float AlphaCutoff;
+        
+    int AlphaMaskToggle;
+    int ShadowToggle;
+    int _pad22, _pad23;
+} uMat;
 
 uniform DrawUniform {
     mat4 uModel;
-    vec4 uNormalCol0;
-    vec4 uNormalCol1;
-    vec4 uNormalCol2;
-    vec4 _paddingCol3;
+    mat3 uNormalMat;
 };
 
 uniform DrawAnimationUniform {

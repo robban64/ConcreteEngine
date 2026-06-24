@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -19,7 +18,7 @@ internal sealed class EditorService
     private readonly PanelRouter _router;
     private readonly SelectionManager _selectionManager;
 
-    public EditorService(EngineWindow engineWindow)
+    public EditorService()
     {
         _eventDispatcher = new EventDispatcher();
 
@@ -28,7 +27,7 @@ internal sealed class EditorService
         _selectionManager = new SelectionManager(_stateManager);
         _interactionHandler = new InteractionHandler(_stateManager, _selectionManager);
 
-        _windowManager = new WindowManager(_stateManager, engineWindow);
+        _windowManager = new WindowManager(_stateManager);
         _router = new PanelRouter(_stateManager, _windowManager);
 
         RegisterEvents();

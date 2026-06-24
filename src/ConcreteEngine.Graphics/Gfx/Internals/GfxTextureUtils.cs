@@ -50,7 +50,7 @@ internal static class GfxTextureUtils
 
     public static void ValidateUploadSize(Size2D size, Size2D metaSize)
     {
-        if (size.IsZero() || metaSize.IsNegative()) throw new ArgumentOutOfRangeException(nameof(size));
+        if (size.IsZero() || metaSize.AnyNegative()) throw new ArgumentOutOfRangeException(nameof(size));
         if (size != metaSize)
             throw new GraphicsException($"Size {size} must match TextureMeta size {metaSize}");
     }

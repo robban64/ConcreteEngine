@@ -1,5 +1,9 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Graphics;
+using Silk.NET.Assimp;
 using AssimpAnimation = Silk.NET.Assimp.Animation;
 using AssimpScene = Silk.NET.Assimp.Scene;
 
@@ -7,71 +11,119 @@ namespace ConcreteEngine.Engine.Assets.ImporterAssimp;
 
 internal sealed unsafe partial class ModelImporter
 {
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private ModelAnimation? RegisterAnimation(AssimpScene* scene)
+    private static bool HasAnimationChannels(AssimpScene* scene)
     {
-        if (!HasAnimationChannels(scene) || _boneIndexByName.Count == 0)
-            return null;
-
-        var animationCount = _sceneMeta.AnimationCount;
-        var boneMap = new Dictionary<string, int>(_boneIndexByName);
-
-        return new ModelAnimation(animationCount, boneMap);
-
-        static bool HasAnimationChannels(AssimpScene* scene)
+        var len = scene->MNumAnimations;
+        for (uint i = 0; i < len; i++)
         {
-            var len = scene->MNumAnimations;
-            for (uint i = 0; i < len; i++)
-            {
-                var anim = scene->MAnimations[i];
-                if (anim->MNumChannels > 0) return true;
-            }
-
-            return false;
+            var anim = scene->MAnimations[i];
+            if (anim->MNumChannels > 0) return true;
         }
+
+        return false;
     }
 
-    private static void ProcessAnimation(AssimpAnimation* aiAnim, ModelAnimation? animation)
+
+    private static void ProcessAnimations(AssimpAnimation** mAnimations, ModelImportContext context)
     {
-        ArgumentNullException.ThrowIfNull(animation);
+        var ctx = context.AnimationContext;
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(ctx.BoneCount, nameof(ctx.BoneCount));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(ctx.AnimationCount, nameof(ctx.AnimationCount));
+        if (!ctx.ClipBuffer.IsNull) Throwers.InvalidArgument(nameof(ctx.ClipBuffer));
 
-        var name = aiAnim->MName.AsString;
-        var duration = (float)aiAnim->MDuration;
-        var ticksPerSecond = (float)(aiAnim->MTicksPerSecond != 0 ? aiAnim->MTicksPerSecond : 25.0f);
+        int animationCount = ctx.AnimationCount, boneCount = ctx.BoneCount;
+        int totalAllocSize = GetAllocSize(mAnimations, context);
 
-        var clip = new AnimationClip(name, animation.BoneCount, duration, ticksPerSecond);
-        animation.Clips.Add(clip);
+        NativeArray<byte> clipBuffer = NativeArray.Allocate<byte>(totalAllocSize);
 
-        var channelLen = (int)aiAnim->MNumChannels;
-        var channels = aiAnim->MChannels;
-        for (var c = 0; c < channelLen; c++)
+        int cursor = 0;
+        NativeAllocator allocator = new NativeAllocator(clipBuffer, ref cursor);
+        NativeView<NativeClip> clips = allocator.AllocSlice<NativeClip>(animationCount);
+
+        for (int i = 0; i < animationCount; i++)
         {
-            var aiChannel = channels[c];
-            if (!TryGetBoneIndex(AssimpUtils.GetNameHash(aiChannel->MNodeName), out var boneIndex))
-                continue;
+            var aiAnim = mAnimations[i];
 
-            // Position
-            var posKeys = aiChannel->MPositionKeys;
-            var posCount = (int)aiChannel->MNumPositionKeys;
+            NativeView<NativeBoneTrack> tracks = allocator.AllocSlice<NativeBoneTrack>(boneCount);
+            clips[i] = new NativeClip(tracks);
 
-            var rotKeys = aiChannel->MRotationKeys;
-            var rotCount = (int)aiChannel->MNumRotationKeys;
-
-            var channel = new AnimationClip.Channel(posCount, rotCount);
-
-            for (var k = 0; k < posCount; k++)
+            var channelLength = (int)aiAnim->MNumChannels;
+            for (var c = 0; c < channelLength; c++)
             {
-                channel.PositionTimes[k] = (float)posKeys[k].MTime;
-                channel.Positions[k] = posKeys[k].MValue;
+                var aiChannel = aiAnim->MChannels[c];
+                if (!context.TryGetBoneIndex(AssimpUtils.GetNameHash(aiChannel->MNodeName), out var boneIndex))
+                    continue;
+
+                var posCount = (int)aiChannel->MNumPositionKeys;
+                var rotCount = (int)aiChannel->MNumRotationKeys;
+
+                int floatCount = posCount + rotCount + (posCount * 3) + (rotCount * 4);
+
+                if (floatCount == 0)
+                {
+                    tracks[boneIndex] = new NativeBoneTrack(null, 0, 0);
+                    continue;
+                }
+
+                var trackData = allocator.AllocSlice<float>(floatCount);
+                var track = new NativeBoneTrack(trackData.Ptr, posCount, rotCount);
+                WriteChannels(aiChannel, track);
+                tracks[boneIndex] = track;
             }
 
-            for (var k = 0; k < rotCount; k++)
-            {
-                channel.RotationTimes[k] = (float)rotKeys[k].MTime;
-                channel.Rotations[k] = rotKeys[k].MValue.AsQuaternion;
-            }
-
-            clip.Channels[boneIndex] = channel;
+            var name = aiAnim->MName.AsString;
+            var duration = (float)aiAnim->MDuration;
+            var ticksPerSecond = (float)(aiAnim->MTicksPerSecond != 0 ? aiAnim->MTicksPerSecond : 25.0f);
+            ctx.Clips[i] = new AnimationClip(name, channelLength, duration, ticksPerSecond);
         }
+
+        ctx.ClipBuffer = clipBuffer;
+    }
+
+    private static int GetAllocSize(AssimpAnimation** mAnimations, ModelImportContext context)
+    {
+        var ctx = context.AnimationContext;
+        int animationCount = ctx.AnimationCount, boneCount = ctx.BoneCount;
+        int totalAllocSize = animationCount * Unsafe.SizeOf<NativeClip>();
+
+        for (int i = 0; i < animationCount; i++)
+        {
+            var aiAnim = mAnimations[i];
+
+            totalAllocSize += boneCount * Unsafe.SizeOf<NativeBoneTrack>();
+
+            var channelLength = (int)aiAnim->MNumChannels;
+            for (var c = 0; c < channelLength; c++)
+            {
+                var aiChannel = aiAnim->MChannels[c];
+                if (!context.TryGetBoneIndex(AssimpUtils.GetNameHash(aiChannel->MNodeName), out _)) continue;
+
+                var posCount = (int)aiChannel->MNumPositionKeys;
+                var rotCount = (int)aiChannel->MNumRotationKeys;
+
+                totalAllocSize += (posCount * sizeof(float)) +
+                                  (rotCount * sizeof(float)) +
+                                  (posCount * Unsafe.SizeOf<Vector3>()) +
+                                  (rotCount * Unsafe.SizeOf<Quaternion>());
+            }
+        }
+
+        return totalAllocSize;
+    }
+
+    private static void WriteChannels(NodeAnim* aiChannel, NativeBoneTrack track)
+    {
+        var posKeys = aiChannel->MPositionKeys;
+        var rotKeys = aiChannel->MRotationKeys;
+
+        for (var k = 0; k < track.PosCount; k++)
+            track.PositionTimes[k] = (float)posKeys[k].MTime;
+        for (var k = 0; k < track.RotCount; k++)
+            track.RotationTimes[k] = (float)rotKeys[k].MTime;
+
+        for (var k = 0; k < track.PosCount; k++)
+            track.Positions[k] = posKeys[k].MValue;
+        for (var k = 0; k < track.RotCount; k++)
+            track.Rotations[k] = rotKeys[k].MValue.AsQuaternion;
     }
 }

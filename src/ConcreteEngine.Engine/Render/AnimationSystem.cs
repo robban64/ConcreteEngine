@@ -48,8 +48,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
             if (count == 0) continue;
 
             var time = animation.Interpolate();
-            var skinningContext = animation.GetSkinningContext();
-            WriteSkinned(time, skinningContext);
+            WriteSkinned(time, animation.GetSkinningContext());
             ++slot;
         }
     }
@@ -57,9 +56,10 @@ internal sealed unsafe class AnimationSystem : IDisposable
     private void WriteSkinned(float time, SkinningContext ctx)
     {
         var globals = _globals.Ptr;
-        for (var i = 0; i < ctx.Length; i++)
+        var length = ctx.Tracks.Length;
+        for (var i = 0; i < length; i++)
         {
-            ref readonly var track = ref ctx.Tracks[i];
+            var track = ctx.Tracks[i];
             if (track.IsEmpty)
             {
                 globals[i] = ctx.GetBindPose(i);
@@ -75,16 +75,17 @@ internal sealed unsafe class AnimationSystem : IDisposable
             MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out globals[i]);
         }
 
-        var writer = _skinningBuffer.WriteSlot(ctx.Length);
+        var writer = _skinningBuffer.WriteSlot(length);
 
         MatrixMath.MultiplyAffine(ref writer[0], in ctx.GetInverseBindPose(0), in globals[0]);
-        for (var i = 1; i < ctx.Length; i++)
+        for (var i = 1; i < length; i++)
         {
             var p = ctx.GetParentIndices(i);
             MatrixMath.MultiplyAffine(ref globals[i], in globals[p]);
             MatrixMath.MultiplyAffine(ref writer[i], in ctx.GetInverseBindPose(i), in globals[i]);
         }
     }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector3 GetPosition(int posIndex, float posFactor, NativeView<Vector3> positions)
@@ -127,7 +128,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
         int lo = 0, hi = keys.Length - 1;
         while (lo <= hi)
         {
-            int mid = lo + ((hi - lo) >> 1);
+            int mid = lo + ((hi - lo) >>> 1);
             int cmp = keys[mid].CompareTo(time);
             if (cmp == 0) return mid;
             if (cmp < 0) lo = mid + 1;

@@ -76,7 +76,7 @@ public sealed class ModelRig : IDisposable
         if ((uint)clip >= (uint)ClipCount || _clipsView.IsNull || _clipsView[clip].IsNull)
             Throwers.InvalidOperation(nameof(_clipsBuffer));
 
-        return new SkinningContext(_parentIndices, _bindPose, _inverseBindPose, ref _clipsView[clip]);
+        return new SkinningContext(_parentIndices, _bindPose, _inverseBindPose,  ref _clipsView[clip]);
     }
 
     public void Dispose()

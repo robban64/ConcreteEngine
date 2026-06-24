@@ -107,28 +107,6 @@ public sealed class DrawCommandBuffer : IDisposable
         return ref _transforms[index];
     }
 
-    private bool Prepare()
-    {
-        var length = Count;
-
-        if (length <= 1)
-        {
-            Array.Clear(_passRanges);
-            return false;
-        }
-
-        if ((uint)length > (uint)_metas.Length || (uint)length > (uint)_indices.Length)
-            Throwers.InvalidOperation();
-
-        Array.Clear(_passRanges);
-
-        _indices.AsSpan(0, length).Sort();
-
-        return true;
-    }
-
-    private void Prepare(int length) { }
-
     internal unsafe void ReadyDrawCommands()
     {
         var length = Count;

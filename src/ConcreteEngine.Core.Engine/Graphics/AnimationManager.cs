@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
@@ -79,6 +80,7 @@ public sealed class AnimationInstance : IComparable<AnimationInstance>
         Rig = rig;
         Id = animationId;
     }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal SkinningContext GetSkinningContext() => Rig.GetSkinningContext(ActiveClip);

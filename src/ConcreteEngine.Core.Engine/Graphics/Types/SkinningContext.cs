@@ -6,8 +6,6 @@ namespace ConcreteEngine.Core.Engine.Graphics;
 
 internal readonly ref struct SkinningContext
 {
-    public readonly int Length;
-
     public readonly ref readonly NativeClip Tracks;
     private readonly ref byte _parentIndices;
     private readonly ref Matrix4x4 _bindPose;
@@ -17,9 +15,8 @@ internal readonly ref struct SkinningContext
         ReadOnlySpan<byte> parentIndices,
         ReadOnlySpan<Matrix4x4> bindPose,
         ReadOnlySpan<Matrix4x4> inverseBindPose,
-        ref NativeClip tracks)
+        ref readonly NativeClip tracks)
     {
-        Length = parentIndices.Length;
         _parentIndices = ref MemoryMarshal.GetReference(parentIndices);
         _bindPose = ref MemoryMarshal.GetReference(bindPose);
         _inverseBindPose = ref MemoryMarshal.GetReference(inverseBindPose);

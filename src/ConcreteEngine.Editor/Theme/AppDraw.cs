@@ -41,7 +41,7 @@ internal static unsafe class AppDraw
         ImGui.SameLine();
         ImGui.TextUnformatted(text, text + text.Length);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void DrawTextProperty(ReadOnlySpan<byte> name, ReadOnlySpan<byte> text)
     {

@@ -31,7 +31,7 @@ public sealed class RenderRegistry
         UboRegistry.FinishRegistration();
         FboRegistry.FinishRegistration();
         ShaderRegistry.FinishRegistration();
-        
+
         GfxResourceApi.BindMetaChanged(GraphicsKind.FrameBuffer, FboRegistry.OnFboChange);
         GfxResourceApi.BindMetaChanged(GraphicsKind.UniformBuffer, UboRegistry.OnUboChanged);
     }

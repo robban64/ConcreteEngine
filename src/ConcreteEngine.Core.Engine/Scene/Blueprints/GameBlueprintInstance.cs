@@ -1,15 +1,10 @@
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
-
 public abstract class GameBlueprintInstance(SceneObject owner)
 {
-
     protected readonly SceneObject Owner = owner;
 
     public bool IsDirty { get; private set; } = true;
@@ -19,7 +14,7 @@ public abstract class GameBlueprintInstance(SceneObject owner)
     public abstract GameBlueprint GetBlueprint();
     public string DisplayName => GetBlueprint().DisplayName;
     public int EntityCount => GameEntityIds.Count;
-    
+
     public ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(GameEntityIds);
 
     internal void MarkDirty(SceneDirtyFlags flag)

@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
@@ -13,23 +12,23 @@ public sealed class AssetTypeStore(AssetKind kind)
     private readonly Dictionary<string, AssetId> _byName = [];
 
     public readonly AssetKind Kind = kind;
-    
+
     public int Count => _asset.Count;
     public int DirtyCount => _dirtyIds.Count;
 
     public AssetsMetaInfo ToSnapshot() => new(Count, 0, Kind);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<int> GetDirtySpan() => CollectionsMarshal.AsSpan(_dirtyIds);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<AssetId> AsSpan() => CollectionsMarshal.AsSpan(_asset);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool HasName(string name) => _byName.ContainsKey(name);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetByName(string name,  out AssetId assetId) => _byName.TryGetValue(name, out assetId);
+    public bool TryGetByName(string name, out AssetId assetId) => _byName.TryGetValue(name, out assetId);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetId GetByName(string name)
@@ -69,7 +68,7 @@ public sealed class AssetTypeStore(AssetKind kind)
         }
 
         var lastId = _dirtyIds[^1];
-        if(lastId == id) return;
+        if (lastId == id) return;
 
         if (id > lastId)
         {
@@ -78,7 +77,7 @@ public sealed class AssetTypeStore(AssetKind kind)
         }
 
         var existingIndex = SearchMethod.BinarySearch(CollectionsMarshal.AsSpan(_dirtyIds), id);
-        if(existingIndex >= 0) return;
+        if (existingIndex >= 0) return;
         _dirtyIds.Add(id);
         _dirtyIds.Sort();
     }

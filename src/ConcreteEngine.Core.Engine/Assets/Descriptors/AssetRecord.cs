@@ -1,7 +1,6 @@
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets.Descriptors;
 
@@ -48,7 +47,7 @@ internal sealed class TextureRecord : AssetRecord
 {
     // TODO
     public float LodBias { get; init; }
-    public bool InMemory { get; init; } 
+    public bool InMemory { get; init; }
 
     public TexturePreset Preset { get; init; } = TexturePreset.LinearClamp;
     public TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
@@ -64,7 +63,6 @@ internal sealed class TextureRecord : AssetRecord
     public override int FileCount => TextureFiles.Length;
 
     public override string GetFile(int fileIndex) => TextureFiles[fileIndex];
-
 }
 
 internal sealed class ModelRecord : AssetRecord

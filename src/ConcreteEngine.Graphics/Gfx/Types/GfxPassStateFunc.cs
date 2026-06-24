@@ -6,7 +6,6 @@ public record struct GfxDrawFunctions(
     DepthMode Depth = DepthMode.Unset,
     PolygonOffsetLevel PolygonOffset = PolygonOffsetLevel.Unset)
 {
-
     public readonly GfxDrawFunctions Patch(GfxDrawFunctions patch)
     {
         return new GfxDrawFunctions(
@@ -16,6 +15,7 @@ public record struct GfxDrawFunctions(
             PolygonOffset == PolygonOffsetLevel.Unset ? patch.PolygonOffset : PolygonOffset
         );
     }
+
     public static GfxDrawFunctions MakeDefault() =>
         new(BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None);
 

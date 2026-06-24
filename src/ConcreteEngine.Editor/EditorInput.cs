@@ -27,13 +27,13 @@ internal static class EditorInput
     public static bool IsBlocking => State.IsBlockingMouse || State.IsBlockingKeyboard;
 
     public static bool IsGizmoBlocked => DragState != DragState.None || Layer.IsKeyDown(Key.ControlLeft);
-    
+
     public static void ToggleBlockLayers()
     {
         if (IsBlocking) EngineInput.SetActiveLayer(InputLayerKind.Ui);
         else EngineInput.ActiveAllLayers();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool UpdateInputState()
     {

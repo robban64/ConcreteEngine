@@ -1,11 +1,3 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.GameComponent;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
-using ConcreteEngine.Core.Engine.Graphics;
-
 namespace ConcreteEngine.Core.Engine.Scene;
 
 /*

@@ -43,7 +43,7 @@ public sealed class TextureArray(int length) : CompositeTexture(length)
 
         for (int i = 0; i < Textures.Length; i++)
         {
-            if (Textures[i] is not {} texture) 
+            if (Textures[i] is not { } texture)
                 throw new InvalidOperationException($"Texture {i} is null");
             if (texture.GfxId == default)
                 throw new InvalidOperationException($"Texture {i} has empty TextureId");

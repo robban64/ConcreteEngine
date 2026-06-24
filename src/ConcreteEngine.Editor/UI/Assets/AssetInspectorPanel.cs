@@ -58,9 +58,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
     private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
 
 
-    public override void OnCreate()
-    {
-    }
+    public override void OnCreate() { }
 
     public override void OnEnter(NativeAllocator allocator)
     {

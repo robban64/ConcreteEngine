@@ -1,18 +1,16 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
-public sealed class SceneStore 
+public sealed class SceneStore
 {
     public const int DefaultCapacity = 512;
-    
+
     private static int _unnamedCounter;
     private static int _nameTick = 1;
 
@@ -21,30 +19,29 @@ public sealed class SceneStore
     private SceneObject?[] _sceneObjects = new SceneObject?[DefaultCapacity];
 
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
-    
+
     private readonly Dictionary<Guid, IBlueprint> _blueprints = new(128);
 
     private readonly Stack<int> _free = [];
 
-    internal SceneStore()
-    {
-    }
+    internal SceneStore() { }
 
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
     public int Capacity => _sceneObjects.Length;
-    
+
     private SceneObjectId AllocateSlot()
     {
         var freeIndex = SlotHelper.NextSlot(_free, Count);
         if (freeIndex >= 0) return new SceneObjectId(freeIndex + 1, 1);
 
         if (SlotHelper.EnsureCapacity(ref _sceneObjects, Count, 1, out var oldSize))
-            Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetFileRegistry), oldSize, _sceneObjects.Length));
+            Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetFileRegistry), oldSize,
+                _sceneObjects.Length));
 
         return new SceneObjectId(++Count, 1);
     }
-    
+
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(SceneObjectId id)
@@ -77,13 +74,13 @@ public sealed class SceneStore
             sceneObject = null;
             return false;
         }
-        
-        if (_sceneObjects[index] is {} file && file.Id == id)
+
+        if (_sceneObjects[index] is { } file && file.Id == id)
         {
             sceneObject = file;
             return true;
         }
-        
+
         sceneObject = null;
         return false;
     }
@@ -101,7 +98,7 @@ public sealed class SceneStore
         sceneObject = null;
         return _byName.TryGetValue(name, out var id) && TryGet(id, out sceneObject);
     }
-    
+
     internal void RegisterBlueprint(IBlueprint blueprint) => _blueprints.TryAdd(blueprint.GId, blueprint);
 
     //
@@ -115,11 +112,12 @@ public sealed class SceneStore
         _byName.Remove(newName);
         _byName.Add(newName, sceneObject.Id);
     }
+
     //
     internal SceneObject Create(string name, Guid? gid, bool enabled, params ReadOnlySpan<IBlueprint> blueprints)
     {
         var id = AllocateSlot();
-        
+
         if (string.IsNullOrEmpty(name))
             name = $"Unnamed({_unnamedCounter++})";
 
@@ -132,15 +130,15 @@ public sealed class SceneStore
         {
             if (bp is RenderBlueprint renderBp)
                 BlueprintFactory.BuildRenderBlueprint(sceneObject, renderBp);
-            else if (bp is GameBlueprint gameBp){}
-            
+            else if (bp is GameBlueprint gameBp) { }
+
             _blueprints.TryAdd(bp.GId, bp);
         }
-        
+
 
         return sceneObject;
     }
-    
+
     private string MakeName(string baseName)
     {
         var ticks = 0;
@@ -148,12 +146,12 @@ public sealed class SceneStore
         while (_byName.ContainsKey(name))
         {
             name = $"{baseName}-{_nameTick++}";
-            if(ticks++ > 100) Throwers.InvalidOperation($"Too many retries for {name}");
+            if (ticks++ > 100) Throwers.InvalidOperation($"Too many retries for {name}");
         }
 
         return name;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ActiveObjectEnumerator<SceneObject> GetEnumerator() => new(_sceneObjects.AsSpan(0, Count));
 }

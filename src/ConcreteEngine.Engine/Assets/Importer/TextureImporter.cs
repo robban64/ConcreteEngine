@@ -17,7 +17,7 @@ internal static unsafe class TextureImporter
     {
         using var stream = new UnmanagedMemoryStream(data, length);
         var ctx = new StbImage.stbi__context(stream);
-        
+
         int x, y, comp;
         var imageData = StbImage.stbi__load_and_postprocess_8bit(ctx, &x, &y, &comp, (int)GetColorComponent(format));
 
@@ -36,7 +36,8 @@ internal static unsafe class TextureImporter
         int x, y, comp;
         using var stream = File.OpenRead(filePath);
         var ctx = new StbImage.stbi__context(stream);
-        var imageData = StbImage.stbi__load_and_postprocess_8bit(ctx, &x, &y, &comp, (int)GetColorComponent(record.PixelFormat));
+        var imageData =
+            StbImage.stbi__load_and_postprocess_8bit(ctx, &x, &y, &comp, (int)GetColorComponent(record.PixelFormat));
 
         if (imageData == null)
             throw new InvalidOperationException(StbImage.stbi__g_failure_reason);

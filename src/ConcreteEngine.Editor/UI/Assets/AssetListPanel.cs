@@ -1,10 +1,8 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
@@ -144,6 +142,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             ImGui.EndTable();
             DragDrop();
         }
+
         ImGui.PopStyleVar();
     }
 
@@ -161,7 +160,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             {
                 var (icon, color) = GetIconAndColor((FileBinding)i, currentKind);
                 ImGui.PushStyleColor(ImGuiCol.Text, color);
-                start = DrawList(start, end, icon,selectedFileId,currentKind, (FileBinding)i);
+                start = DrawList(start, end, icon, selectedFileId, currentKind, (FileBinding)i);
                 ImGui.PopStyleColor();
             }
         }

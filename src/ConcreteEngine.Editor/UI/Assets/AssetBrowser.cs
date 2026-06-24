@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 
@@ -172,7 +171,7 @@ internal sealed class AssetBrowser
         if (file.Storage != AssetStorage.FileSystem) return;
 
         ReadOnlySpan<char> path = Path.GetDirectoryName(file.RelativePath.AsSpan());
-        
+
         var node = RootNode;
         while (true)
         {
@@ -181,11 +180,11 @@ internal sealed class AssetBrowser
             var index = path.IndexOf('/');
             var folder = index > 0 ? path.Slice(0, index) : path;
 
-            
+
             var foundChild = node.FindChild(folder);
             if (foundChild is null)
             {
-                if(index < 0 && folder.SequenceEqual(node.FolderName))
+                if (index < 0 && folder.SequenceEqual(node.FolderName))
                 {
                     node.FileIds.Add(file.Id);
                     return;

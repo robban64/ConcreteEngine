@@ -24,7 +24,7 @@ public sealed class ModelRig : IDisposable
 
     private NativeArray<byte> _clipsBuffer;
     private NativeView<NativeClip> _clipsView;
-    
+
 
     internal ModelRig(
         Dictionary<string, int> boneMapping,
@@ -39,7 +39,7 @@ public sealed class ModelRig : IDisposable
         ArgumentOutOfRangeException.ThrowIfZero(clips.Length);
 
         if (clipsBuffer.IsNull) Throwers.NullPointer(nameof(clipsBuffer));
-        
+
         if (boneMapping.Count != parentIndices.Length && parentIndices.Length != bindPose.Length ||
             parentIndices.Length != inverseBindPose.Length)
         {
@@ -48,7 +48,7 @@ public sealed class ModelRig : IDisposable
 
         foreach (var clip in clips)
         {
-            if(clip == null!) Throwers.InvalidArgument(nameof(clips));
+            if (clip == null!) Throwers.InvalidArgument(nameof(clips));
         }
 
         ClipCount = clips.Length;

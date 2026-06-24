@@ -1,6 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Assets.Utils;
@@ -15,8 +13,8 @@ internal sealed class AssetLoaderContext
     private readonly Queue<AssetRecord>[] _queues;
 
     public int TotalQueued { get; private set; }
-    public int TotalProcessed{ get; private set; }
-    
+    public int TotalProcessed { get; private set; }
+
     public AssetLoaderContext(bool fullCapacity)
     {
         _queues = new Queue<AssetRecord>[AssetKindUtils.AssetTypeCount];
@@ -31,9 +29,10 @@ internal sealed class AssetLoaderContext
     public int GetCount(AssetKind kind) => _queues[kind.ToIndex()].Count;
     public bool IsCompleted => TotalQueued == 0 && TotalProcessed > 0;
 
-    public Queue<AssetRecord> GetQueue(AssetKind  kind) => _queues[kind.ToIndex()];
+    public Queue<AssetRecord> GetQueue(AssetKind kind) => _queues[kind.ToIndex()];
 
-    public bool DrainQueue<TRecord>(AssetKind kind, int drainLimit, Action<TRecord> onAction)  where TRecord : AssetRecord
+    public bool DrainQueue<TRecord>(AssetKind kind, int drainLimit, Action<TRecord> onAction)
+        where TRecord : AssetRecord
     {
         int n = drainLimit;
         var queue = GetQueue(kind);
@@ -49,10 +48,9 @@ internal sealed class AssetLoaderContext
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Enqueue(AssetRecord record) 
+    public void Enqueue(AssetRecord record)
     {
         _queues[record.Kind.ToIndex()].Enqueue(record);
         TotalQueued++;
     }
-    
 }

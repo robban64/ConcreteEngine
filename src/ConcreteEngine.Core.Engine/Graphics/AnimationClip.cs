@@ -1,6 +1,5 @@
 namespace ConcreteEngine.Core.Engine.Graphics;
 
-
 public sealed class AnimationClip
 {
     public readonly string Name;

@@ -2,13 +2,12 @@ using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-
 public abstract class AssetObject : IComparable<AssetObject>
 {
     public const int MaxNameLength = 64;
 
     private readonly List<IAssetListener> _listeners = [];
-    
+
     public AssetDirtyFlag DirtyFlags { get; private set; }
     public AssetId Id { get; }
     public Guid GId { get; }
@@ -19,7 +18,7 @@ public abstract class AssetObject : IComparable<AssetObject>
         internal set
         {
             if (field == value) return;
-            if(!string.IsNullOrEmpty(field)) MarkDirty(AssetDirtyFlag.Name);
+            if (!string.IsNullOrEmpty(field)) MarkDirty(AssetDirtyFlag.Name);
             field = value.Length > MaxNameLength ? value.Substring(0, MaxNameLength) : value;
             PackedName = StringPacker.PackAscii(field, true);
         }
@@ -55,7 +54,7 @@ public abstract class AssetObject : IComparable<AssetObject>
     internal AssetDirtyFlag Commit()
     {
         var f = DirtyFlags;
-        var shouldTrigger = (f & AssetDirtyFlag.Structure) != 0 || (f & AssetDirtyFlag.Dependencies) != 0 || 
+        var shouldTrigger = (f & AssetDirtyFlag.Structure) != 0 || (f & AssetDirtyFlag.Dependencies) != 0 ||
                             (f & AssetDirtyFlag.Lifecycle) != 0;
         if (shouldTrigger)
         {
@@ -67,7 +66,8 @@ public abstract class AssetObject : IComparable<AssetObject>
         DirtyFlags = 0;
         return f;
     }
-    protected virtual void OnCommit(){}
+
+    protected virtual void OnCommit() { }
 
     public void AddRef(IAssetListener listener) => _listeners.Add(listener);
     public void RemoveRef(IAssetListener listener) => _listeners.Remove(listener);

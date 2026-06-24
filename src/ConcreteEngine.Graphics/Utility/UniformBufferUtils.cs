@@ -1,7 +1,4 @@
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Graphics.Utility;
@@ -49,7 +46,5 @@ public static class UniformBufferUtils
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsStd140Aligned(int stride)  => stride % 16 == 0;
-
-
+    public static bool IsStd140Aligned(int stride) => stride % 16 == 0;
 }

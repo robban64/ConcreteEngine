@@ -1,11 +1,9 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
-using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
-
 
 public sealed class Material : AssetObject
 {
@@ -58,7 +56,6 @@ public sealed class Material : AssetObject
     }
 
 
-
     public void SetSourceSlot(int slot, AssetId assetId, TextureId textureId = default)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
@@ -70,7 +67,7 @@ public sealed class Material : AssetObject
 
     public void SetTextureSlot(int slot, Texture? texture) =>
         SetSourceSlot(slot, texture?.Id ?? default, texture?.GfxId ?? default);
-    
+
     public void SetSources(ReadOnlySpan<TextureSource> sources)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(sources.Length, _textureSources.Length, nameof(sources));
@@ -82,6 +79,4 @@ public sealed class Material : AssetObject
             SetSourceSlot(i, source.AssetTexture, source.OverrideTexture);
         }
     }
-
-
 }

@@ -23,11 +23,11 @@ internal sealed class TextureInspectorUi(StateManager state)
 
         AppDraw.DrawTextProperty("Dimension:"u8,
             sw.Append(texture.Size.Width).Append('x').Append(texture.Size.Height).End());
-        
+
         AppDraw.DrawTextProperty("InMemory:"u8, texture.HasPixelData ? "Yes"u8 : "No"u8);
 
         ImGui.SeparatorText("GPU Metadata"u8);
-        
+
         AppDraw.DrawTextProperty("Kind:"u8, sw.Write(editTexture.GfxMeta.Kind.ToText()));
         AppDraw.DrawSameLineProperty();
         AppDraw.DrawTextProperty("Format:"u8, sw.Write(editTexture.GfxMeta.PixelFormat.ToText()));

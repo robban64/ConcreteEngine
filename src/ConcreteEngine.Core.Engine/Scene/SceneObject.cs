@@ -1,11 +1,9 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Engine.ECS;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -23,7 +21,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         private set
         {
             if (field == value) return;
-            if(!string.IsNullOrEmpty(field)) MarkDirty(SceneDirtyFlags.Name);
+            if (!string.IsNullOrEmpty(field)) MarkDirty(SceneDirtyFlags.Name);
             field = value;
             PackedName = StringPacker.PackAscii(value.AsSpan(), true);
         }
@@ -148,7 +146,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     {
         foreach (var it in GetInstances()) it.ToggleVisibility(Visible);
     }
-    
+
     private void CommitTransform()
     {
         Transform.GetTransformMatrix(out var rootMatrix);
@@ -158,6 +156,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
             instance.ApplyTransform(in rootMatrix);
             BoundingBox.Merge(in worldBounds, in instance.GetWorldBounds(), out worldBounds);
         }
+
         Transform.SetBounds(worldBounds);
     }
 

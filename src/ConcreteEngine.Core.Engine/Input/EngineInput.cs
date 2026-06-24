@@ -3,7 +3,7 @@ using Silk.NET.Input;
 
 namespace ConcreteEngine.Core.Engine.Input;
 
-public static  partial class EngineInput
+public static partial class EngineInput
 {
     private static readonly List<InputLayer> Layers =
     [
@@ -38,12 +38,12 @@ public static  partial class EngineInput
 
     internal static void Attach(IInputContext input)
     {
-        if(_keyboardSource  is not null || _mouseSource is not null)
+        if (_keyboardSource is not null || _mouseSource is not null)
             throw new InvalidOperationException("EngineInput already attached");
-        
+
         _keyboardSource = input.Keyboards[0];
         _mouseSource = input.Mice[0];
-        
+
         Keyboard.Attach(_keyboardSource);
         Mouse.Attach(_mouseSource);
     }

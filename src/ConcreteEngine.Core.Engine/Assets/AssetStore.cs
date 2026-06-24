@@ -3,10 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Assets.Utils;
-using ConcreteEngine.Renderer.Buffer;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
@@ -79,8 +76,8 @@ public sealed partial class AssetStore
     public T GetByName<T>(string name) where T : AssetObject
     {
         if (TryGetByName<T>(name, out var value)) return value;
-         Throwers.NotFoundBy(nameof(T),name);
-         return null;
+        Throwers.NotFoundBy(nameof(T), name);
+        return null;
     }
 
     public T GetByGuid<T>(Guid gid) where T : AssetObject
@@ -129,7 +126,7 @@ public sealed partial class AssetStore
         var index = id.Index();
         return (uint)index < (uint)_bindings.Length && _bindings[index] != null;
     }
-    
+
     internal void SetAssetBinding(AssetId assetId, AssetFileId fileId, int fileIndex)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Id);
@@ -146,15 +143,15 @@ public sealed partial class AssetStore
     public AssetFileId GetAssetBinding(AssetId id, int fileIndex)
     {
         var bindings = _bindings[id.Index()];
-        if(bindings is null || (uint)fileIndex >= (uint)bindings.Length) Throwers.InvalidArgument(nameof(id));
+        if (bindings is null || (uint)fileIndex >= (uint)bindings.Length) Throwers.InvalidArgument(nameof(id));
         var fileId = bindings[fileIndex];
         if (!fileId.IsValid()) Throwers.InvalidArgument(nameof(fileIndex));
         return fileId;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<AssetFileId> GetAllAssetBindings(AssetId id)
-        => _bindings[id.Index()] ?? throw new ArgumentException($"Bindings not found for {id}");
+    public ReadOnlySpan<AssetFileId> GetAllAssetBindings(AssetId id) =>
+        _bindings[id.Index()] ?? throw new ArgumentException($"Bindings not found for {id}");
 
     public bool TryGetFileBindings(AssetId id, out ReadOnlySpan<AssetFileId> bindings)
     {
@@ -168,7 +165,7 @@ public sealed partial class AssetStore
         bindings = fileBinding;
         return true;
     }
-    
+
     //
 
     public void AddAsset<TAsset>(TAsset asset) where TAsset : AssetObject
@@ -198,6 +195,7 @@ public sealed partial class AssetStore
         _bindings[assetId.Index()] = new AssetFileId[fileCount + 1];
         return assetId;
     }
+
     private AssetId AllocateSlot(Guid gid)
     {
         var freeIndex = SlotHelper.NextSlot(_free, Count);
@@ -213,7 +211,7 @@ public sealed partial class AssetStore
         _byGid.Add(gid, assetId);
         return assetId;
     }
-    
+
     //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -222,6 +220,4 @@ public sealed partial class AssetStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetEnumerator<T> GetAssetEnumerator<T>() where T : AssetObject =>
         new(TypeStore<T>.Store.AsSpan(), _assets.AsSpan());
-
-
 }

@@ -7,24 +7,22 @@ using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
-
 public abstract class RenderBlueprintInstance(SceneObject owner)
 {
-    
     public bool IsDirty { get; private set; } = true;
-    
+
     protected readonly SceneObject Owner = owner;
     protected readonly List<RenderEntityId> RenderEntityIds = [];
-    
+
     protected BoundingBox WorldBounds;
-    
+
     public abstract RenderBlueprint GetBlueprint();
     public string DisplayName => GetBlueprint().DisplayName;
     public int EntityCount => RenderEntityIds.Count;
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(RenderEntityIds);
-    
+
     public ref readonly BoundingBox GetWorldBounds() => ref WorldBounds;
-    
+
     internal void MarkDirty(SceneDirtyFlags flag)
     {
         IsDirty = true;
@@ -39,13 +37,10 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
 
     internal abstract void OnCreate();
     protected virtual void OnCommit() { }
-    
+
     internal abstract void ApplyTransform(in Matrix4x4 rootMatrix);
 
-    internal void AddEntity()
-    {
-        
-    }
+    internal void AddEntity() { }
 
     internal virtual void ApplyMaterial(MaterialState material)
     {

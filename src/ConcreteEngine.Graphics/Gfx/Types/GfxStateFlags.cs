@@ -10,7 +10,7 @@ public enum GfxDrawFlags : byte
     Blend = 1 << 3,
     PolygonOffset = 1 << 4,
     Ac2 = 1 << 5,
-    
+
     All = DepthTest | DepthWrite | Cull | Blend | PolygonOffset | Ac2
 }
 

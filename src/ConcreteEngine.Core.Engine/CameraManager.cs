@@ -1,7 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics;
 
@@ -16,7 +15,6 @@ public sealed class CameraManager
     internal readonly CameraFrustum Frustum;
     internal readonly CameraTransformSnapshot FrameTransforms;
     internal readonly CameraTransformSnapshot LightTransforms;
-    
 
 
     private CameraManager()
@@ -42,9 +40,7 @@ public sealed class CameraManager
         var lightDir = visuals.Illumination.DirectionalLight.Value.Direction;
 
         UpdateLightView(shadow.ShadowMapSize, shadowProj.Value.Distance, shadowProj.Value.ZPad, lightDir);
-        
     }
-
 
 
     internal void CommitFrame(float alpha)
@@ -73,13 +69,14 @@ public sealed class CameraManager
         Span<Vector3> corners = stackalloc Vector3[8];
         CameraUtils.FillFrustumCorners(corners, Camera, shadowDist);
         var center = CameraUtils.GetFrustumCenter(corners);
-        
+
         var farthestDistSqr = 0f;
         foreach (ref readonly var c in corners)
         {
             var d = Vector3.DistanceSquared(center, c);
             if (d > farthestDistSqr) farthestDistSqr = d;
         }
+
         var diameter = MathF.Sqrt(farthestDistSqr) * 2.0f;
 
         var dir = Vector3.Normalize(lightDirection);
@@ -114,7 +111,6 @@ public sealed class CameraManager
 
         LightTransforms.ProjectionMatrix = Matrix4x4.CreateOrthographic(diameter, diameter, nearLs, farLs);
     }
-    
 }
 
 file static class CameraUtils
@@ -155,5 +151,4 @@ file static class CameraUtils
         corners[6] = fc - up * fy - right * fx; // FB-L
         corners[7] = fc - up * fy + right * fx; // FB-R
     }
-    
 }

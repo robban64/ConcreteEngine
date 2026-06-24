@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Graphics;
 
@@ -61,9 +60,9 @@ public sealed class AssetSystem
         AssetSystemSetup.Start();
 
         var ctx = _loader.ActivateFullLoader();
-        
+
         _scanner.RunFullScan(ctx);
-        
+
         AssetStore.EnsureStoreCapacity(
             ctx.GetCount(AssetKind.Shader), ctx.GetCount(AssetKind.Model),
             ctx.GetCount(AssetKind.Texture), ctx.GetCount(AssetKind.Material)

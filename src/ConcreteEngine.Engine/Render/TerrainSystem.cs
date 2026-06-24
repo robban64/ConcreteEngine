@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
@@ -22,7 +21,7 @@ internal sealed class TerrainSystem
         _gfx = gfx;
         MainTerrain = new Terrain();
         Terrain.Main = MainTerrain;
-        
+
         TerrainMesh = new TerrainMesh(gfx);
     }
 
@@ -32,7 +31,7 @@ internal sealed class TerrainSystem
         MainTerrain.IsDirty = false;
         Allocate();
     }
-    
+
     public void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, CameraFrustum camera)
     {
         var material = MainTerrain.MaterialId;

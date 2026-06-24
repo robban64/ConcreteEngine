@@ -65,14 +65,12 @@ public sealed class RenderUboRegistry
         Register<EditorEffectsUniform>();
     }
 
-    internal void FinishRegistration()
-    {
-    }
+    internal void FinishRegistration() { }
 
     internal void Register<TUbo>() where TUbo : unmanaged, IUniform
     {
         var newSlot = TypeRegistry<TUbo>.RegisterSlot();
-        if(_uboRegistry[newSlot] != null!) Throwers.InvalidOperation(nameof(_uboRegistry));
+        if (_uboRegistry[newSlot] != null!) Throwers.InvalidOperation(nameof(_uboRegistry));
 
         var uboId = TypeRegistry<TUbo>.UboId = _gfxBuffers.CreateUniformBuffer<TUbo>(newSlot);
         var meta = GfxResourceApi.GetMeta(uboId);

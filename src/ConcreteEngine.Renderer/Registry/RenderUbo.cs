@@ -8,7 +8,7 @@ namespace ConcreteEngine.Renderer.Registry;
 
 public sealed class RenderUbo(UniformBufferId id, UboSlot slot, in UniformBufferMeta meta)
 {
-    public readonly UniformBufferId Id  = id;
+    public readonly UniformBufferId Id = id;
     public readonly UboSlot Slot = slot;
     public readonly int Stride = meta.Stride;
     public int Capacity { get; private set; } = meta.Capacity;
@@ -29,7 +29,7 @@ public sealed class RenderUbo(UniformBufferId id, UboSlot slot, in UniformBuffer
     public void SetCapacity(int capacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, Stride);
-        if(_drawCursor > 0 || _uploadCursor > 0) Throwers.InvalidOperation("Cursor not zero");
+        if (_drawCursor > 0 || _uploadCursor > 0) Throwers.InvalidOperation("Cursor not zero");
         Capacity = capacity;
     }
 

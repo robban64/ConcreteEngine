@@ -24,13 +24,13 @@ public sealed class RenderSetupBuilder
 
     private void EnsureNotDone()
     {
-        if(IsDone) Throwers.InvalidOperation(nameof(IsDone));
+        if (IsDone) Throwers.InvalidOperation(nameof(IsDone));
     }
 
     internal RenderBuilderContext Build()
     {
         EnsureNotDone();
-        if(Ctx.FboSetup == null! | Ctx.ShaderIds == null! || Ctx.Version == RenderPipelineVersion.None)
+        if (Ctx.FboSetup == null! | Ctx.ShaderIds == null! || Ctx.Version == RenderPipelineVersion.None)
             Throwers.InvalidOperation(nameof(Ctx));
 
         Ctx.Done = true;

@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Engine.Scene;

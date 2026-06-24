@@ -1,10 +1,8 @@
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer;
 
 namespace ConcreteEngine.Engine.Render;
@@ -35,8 +33,8 @@ public sealed class EngineRenderSystem : IDisposable
         _terrainSystem = new TerrainSystem(graphics.Gfx);
         _particleSystem = new ParticleSystem(graphics.Gfx);
         _animationSystem = new AnimationSystem(AnimationManager.Instance, Program.UploadBuffers.Skinning);
-        
-        _renderDispatcher = new RenderDispatcher(_cameraManager,_terrainSystem, Program.UploadBuffers);
+
+        _renderDispatcher = new RenderDispatcher(_cameraManager, _terrainSystem, Program.UploadBuffers);
         _materialProcessor = new MaterialProcessor(Program);
     }
 
@@ -78,7 +76,7 @@ public sealed class EngineRenderSystem : IDisposable
     internal void Render(float dt)
     {
         Program.PrepareFrame();
-        
+
         // frame update
         _cameraManager.CommitFrame(EngineTime.GameAlpha);
 

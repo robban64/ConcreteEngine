@@ -1,11 +1,4 @@
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.GameComponent;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Renderer.Buffer;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -35,11 +28,12 @@ internal static class BlueprintFactory
         instance.OnCreate();
         return instance;
     }
+
     private static ParticleInstance BuildParticle(SceneObject sceneObject, ParticleBlueprint bp)
     {
         ArgumentNullException.ThrowIfNull(bp);
         ArgumentNullException.ThrowIfNull(bp.Emitter);
-        
+
         var instance = new ParticleInstance(sceneObject, bp);
         bp.AddInstance(instance);
         instance.OnCreate();
@@ -53,5 +47,4 @@ internal static class BlueprintFactory
         }
 */
     }
-    
 }

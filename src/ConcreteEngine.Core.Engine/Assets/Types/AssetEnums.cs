@@ -1,6 +1,5 @@
 namespace ConcreteEngine.Core.Engine.Assets;
 
-
 [Flags]
 public enum AssetDirtyFlag : byte
 {

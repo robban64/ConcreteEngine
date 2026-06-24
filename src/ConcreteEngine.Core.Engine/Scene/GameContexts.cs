@@ -21,7 +21,5 @@ public sealed class GameSceneContext
 
 public sealed class GameModuleContext
 {
-    internal GameModuleContext(GameSceneContext scene)
-    {
-    }
+    internal GameModuleContext(GameSceneContext scene) { }
 }

@@ -4,7 +4,6 @@ using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-
 public sealed class GpuTextureState(Texture texture, TextureProperties props)
 {
     //
@@ -63,5 +62,4 @@ public sealed class GpuTextureState(Texture texture, TextureProperties props)
             texture.MarkDirty(AssetDirtyFlag.State);
         }
     } = props.Anisotropy;
-
 }

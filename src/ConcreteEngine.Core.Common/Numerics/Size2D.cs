@@ -29,7 +29,7 @@ public readonly record struct Size2D(int Width, int Height) : IEquatable<int>, I
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Size2D(Size3D v) => new(v.Width, v.Height);
-    
+
     public Size2D ScaleUniform(float factor) => new((int)(Width * factor), (int)(Height * factor));
     public Size2D Scale(float fx, float fy) => new((int)(Width * fx), (int)(Height * fy));
     public Size2D Scale(Vector2 v) => new((int)(Width * v.X), (int)(Height * v.Y));
@@ -57,7 +57,7 @@ public readonly record struct Size2D(int Width, int Height) : IEquatable<int>, I
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsNegativeOrZero() => Width <= 0 && Height <= 0;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator >(Size2D a, Size2D b) => a.Width > b.Width && a.Height > b.Height;
 
@@ -72,10 +72,10 @@ public readonly record struct Size2D(int Width, int Height) : IEquatable<int>, I
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator ==(Size2D a, int b) => a.Equals(b);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator !=(Size2D a, int b) =>! a.Equals(b);
-    
+    public static bool operator !=(Size2D a, int b) => !a.Equals(b);
+
     public bool Equals(int other) => Width == other && Height == other;
 
     public int CompareTo(Size2D other)
@@ -89,7 +89,7 @@ public readonly record struct Size2D(int Width, int Height) : IEquatable<int>, I
         var c = Width.CompareTo(other);
         return c != 0 ? c : Height.CompareTo(other);
     }
-    
+
     public override string ToString()
     {
         return $"{Width}x{Height}";

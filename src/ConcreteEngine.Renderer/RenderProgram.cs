@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer.Buffer;
@@ -39,10 +38,10 @@ public sealed class RenderProgram : IDisposable
     }
 
     public int PassCount => _passPipeline.PassCount;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public TextureId GetOutputTexture() => RenderContext.Instance.OutputTexture;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UniformUploadContext GetUploadContext() => _drawPipeline.UniformUploader.GetUploadContext();
 
@@ -57,7 +56,7 @@ public sealed class RenderProgram : IDisposable
         _passPipeline.Prepare();
         _drawPipeline.Prepare();
     }
-    
+
     public void ResizeScreenFrameBuffers(Size2D outputSize)
     {
         RenderContext.Instance.OutputSize = outputSize;

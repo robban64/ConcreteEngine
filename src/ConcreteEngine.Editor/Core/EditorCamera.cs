@@ -19,9 +19,7 @@ internal sealed class EditorCamera
     private readonly InputLayer _input = EditorInput.Layer;
     public readonly Camera Camera = CameraManager.Instance.Camera;
 
-    private EditorCamera()
-    {
-    }
+    private EditorCamera() { }
 
     public void Update(float dt)
     {

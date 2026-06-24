@@ -13,18 +13,18 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, TextureRecord>
 {
     private readonly Dictionary<Guid, TextureData> _embeddedTextures = new(8);
-    
+
     public int StoredEmbeddedCount => _embeddedTextures.Count;
-    
+
     protected override void OnActivate()
     {
-        if(_embeddedTextures.Count > 0)
+        if (_embeddedTextures.Count > 0)
             throw new InvalidOperationException("Embedded textures remains in the loader");
     }
 
     protected override void OnDeActivate()
     {
-        if(_embeddedTextures.Count > 0)
+        if (_embeddedTextures.Count > 0)
             throw new InvalidOperationException("Embedded textures remains in the loader");
     }
 
@@ -34,7 +34,7 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
         var textureData = TextureImporter.ImportUnmanagedTexture(rawData, length, format, out size);
         _embeddedTextures.Add(guid, new TextureData(guid, in textureData));
     }
-    
+
     protected override Texture Load(TextureRecord record, ImportContext ctx)
     {
         if (record.TextureKind == TextureKind.CubeMap)
@@ -45,29 +45,26 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
         var textureData = NativeArray<byte>.MakeNull();
         try
         {
-            textureData = TextureImporter.LoadTexture(record,  filePath, out var size);
+            textureData = TextureImporter.LoadTexture(record, filePath, out var size);
             var props = TextureImporter.CreateTextureProps(record);
-            
+
             var textureId = gfx.CreateTexture2D(size, in props, textureData.AsSpan());
             var texture = CreateTexture(ctx.Id, textureId, size, record);
-            
-            if (record.InMemory) texture.SetPixelData( new TextureData(texture.GId, in textureData));
-            
+
+            if (record.InMemory) texture.SetPixelData(new TextureData(texture.GId, in textureData));
+
             return texture;
         }
         finally
         {
-            if(!record.InMemory) textureData.Dispose();
+            if (!record.InMemory) textureData.Dispose();
         }
-
-
     }
 
     //?
     protected override Texture LoadInMemory(TextureRecord record, ImportContext ctx)
     {
         throw new NotImplementedException();
-        
     }
 
 
@@ -87,6 +84,7 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
                 textureId = gfx.CreateCubeMap(faceSize, in props);
                 size = faceSize;
             }
+
             gfx.UploadCubeMapFace(textureId, data.AsSpan(), size, i);
         }
 
@@ -97,10 +95,10 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
     public Texture LoadEmbedded(AssetId assetId, EmbeddedSceneTexture embedded)
     {
         ArgumentNullException.ThrowIfNull(embedded.Name);
-       
-        if(!_embeddedTextures.TryGetValue(embedded.GId, out var entry))
+
+        if (!_embeddedTextures.TryGetValue(embedded.GId, out var entry))
             throw new InvalidOperationException($"Embedded texture '{embedded.Name}' not found");
-        
+
         var anisotropy = embedded.SlotKind == TextureUsage.Albedo ? AnisotropyLevel.Default : AnisotropyLevel.Off;
         var props = new CreateTextureProps(0, TextureKind.Texture2D, embedded.PixelFormat, embedded.Preset,
             TextureImporter.GetAnisotropy(anisotropy));
@@ -121,10 +119,10 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
                 pixelFormat: embedded.PixelFormat
             )
         ) { Usage = embedded.SlotKind };
-        
+
         _embeddedTextures.Remove(embedded.GId);
         entry.Dispose();
-        
+
         return texture;
     }
 
@@ -144,6 +142,6 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
                 anisotropy: record.Anisotropy,
                 pixelFormat: record.PixelFormat
             )
-        ){Usage = usage};
+        ) { Usage = usage };
     }
 }

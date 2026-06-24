@@ -1,9 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
@@ -21,14 +19,15 @@ public sealed partial class AssetStore
     public static AssetTypeStore GetTypeStore<T>() where T : AssetObject => TypeStore<T>.Store;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static AssetTypeStore GetTypeStore(AssetKind kind) => kind switch
-    {
-        AssetKind.Shader => TypeStore<Shader>.Store,
-        AssetKind.Model => TypeStore<Model>.Store,
-        AssetKind.Texture => TypeStore<Texture>.Store,
-        AssetKind.Material => TypeStore<Material>.Store,
-        _ => Throwers.Unreachable<AssetTypeStore>(nameof(kind))
-    };
+    public static AssetTypeStore GetTypeStore(AssetKind kind) =>
+        kind switch
+        {
+            AssetKind.Shader => TypeStore<Shader>.Store,
+            AssetKind.Model => TypeStore<Model>.Store,
+            AssetKind.Texture => TypeStore<Texture>.Store,
+            AssetKind.Material => TypeStore<Material>.Store,
+            _ => Throwers.Unreachable<AssetTypeStore>(nameof(kind))
+        };
 
     internal static void EnsureStoreCapacity(int shader, int model, int texture, int material)
     {

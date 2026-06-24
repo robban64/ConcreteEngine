@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
@@ -43,7 +42,7 @@ internal sealed class AssetLoader
 
     public AssetLoaderContext GetLoaderContext()
     {
-        if(_loaderContext is null) Throwers.InvalidOperation("Loader context is null");
+        if (_loaderContext is null) Throwers.InvalidOperation("Loader context is null");
         return _loaderContext;
     }
 

@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
@@ -19,7 +18,7 @@ public sealed class AssetFileRegistry
 
     private readonly Dictionary<string, AssetFileId> _fileByPath = new(DefaultCap);
     private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultBindingCap);
-    
+
     private readonly Dictionary<string, List<AssetFileId>> _byDirectory = new(32);
 
     private readonly Stack<int> _free = [];

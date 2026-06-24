@@ -45,15 +45,15 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
         _vsBlock = null;
         _fsBlock = null;
         _blocks.Clear();
-        
+
         _allocator?.Dispose();
         _allocator = null;
     }
 
     public void ImportAllShaders(Queue<AssetRecord> queue)
     {
-        if(_allocator is not {} allocator) throw new InvalidOperationException("Allocator is null");
-        if (_shaderImporter is not {} importer) throw new InvalidOperationException("ShaderImporter is null");
+        if (_allocator is not { } allocator) throw new InvalidOperationException("Allocator is null");
+        if (_shaderImporter is not { } importer) throw new InvalidOperationException("ShaderImporter is null");
 
         foreach (var record in queue)
         {
@@ -64,6 +64,7 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
                 var block = ImportShaderFile(allocator, importer, vsFile);
                 _blocks.Add(vsFile, (IntPtr)block);
             }
+
             if (!_blocks.ContainsKey(fsFile))
             {
                 var block = ImportShaderFile(allocator, importer, fsFile);
@@ -92,7 +93,7 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
 
         var vsPtr = (MemoryBlockPtr)_blocks[record.VertexShader];
         var fsPtr = (MemoryBlockPtr)_blocks[record.FragmentShader];
-        
+
         if (vsPtr.IsNull || vsPtr.Length <= 0) throw new InvalidOperationException("Vertex Shader pointer is null");
         if (fsPtr.IsNull || fsPtr.Length <= 0) throw new InvalidOperationException("Fragment Shader pointer is null");
 
@@ -107,7 +108,7 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
     [MethodImpl(MethodImplOptions.NoInlining)]
     public override void Reload(Shader asset, AssetFile[] files)
     {
-        if(!IsActive) Throwers.InvalidOperation(nameof(IsActive));
+        if (!IsActive) Throwers.InvalidOperation(nameof(IsActive));
         if (_allocator == null) Throwers.InvalidOperation("Allocator is null");
         if (_shaderImporter == null) Throwers.InvalidOperation("ShaderImporter is null");
         if (_vsBlock.IsNull || _fsBlock.IsNull) Throwers.InvalidOperation(nameof(_vsBlock));

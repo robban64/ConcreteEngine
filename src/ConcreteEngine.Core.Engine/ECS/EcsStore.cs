@@ -25,7 +25,7 @@ public abstract class EcsStore : IDisposable
         public readonly List<Action<EcsStore>> OnResizeCallbacks = [];
         public readonly List<IEntityListener> Listeners = [];
     }
-    
+
     public int Count { get; protected set; }
 
     protected readonly EcsStoreMeta StoreMeta = new();

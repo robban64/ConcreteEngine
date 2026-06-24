@@ -25,7 +25,7 @@ public static class UtfText
 
         return true;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SliceNullTerminate(Span<byte> byteSpan, out Span<byte> dest)
     {
@@ -41,6 +41,7 @@ public static class UtfText
         {
             if (++i >= capacity) return -1;
         }
+
         return i;
     }
 

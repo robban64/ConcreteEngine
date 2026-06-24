@@ -22,7 +22,7 @@ internal sealed class SceneSystem
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
         _sceneManager = new SceneManager();
-        
+
         _modules = new ModuleManager();
     }
 

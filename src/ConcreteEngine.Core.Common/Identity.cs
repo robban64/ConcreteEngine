@@ -18,7 +18,7 @@ public readonly record struct Id16<T>(ushort Value) : IComparable<ushort>, IComp
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator ushort(Id16<T> slot) => slot.Value;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Id16<T>(ushort i) => new(i);
 

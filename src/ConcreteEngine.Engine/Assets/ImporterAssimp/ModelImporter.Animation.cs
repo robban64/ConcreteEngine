@@ -23,23 +23,23 @@ internal sealed unsafe partial class ModelImporter
         return false;
     }
 
-    
+
     private static void ProcessAnimations(AssimpAnimation** mAnimations, ModelImportContext context)
     {
         var ctx = context.AnimationContext;
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(ctx.BoneCount, nameof(ctx.BoneCount));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(ctx.AnimationCount, nameof(ctx.AnimationCount));
-        if(!ctx.ClipBuffer.IsNull) Throwers.InvalidArgument(nameof(ctx.ClipBuffer));
+        if (!ctx.ClipBuffer.IsNull) Throwers.InvalidArgument(nameof(ctx.ClipBuffer));
 
         int animationCount = ctx.AnimationCount, boneCount = ctx.BoneCount;
         int totalAllocSize = GetAllocSize(mAnimations, context);
 
         NativeArray<byte> clipBuffer = NativeArray.Allocate<byte>(totalAllocSize);
-        
+
         int cursor = 0;
         NativeAllocator allocator = new NativeAllocator(clipBuffer, ref cursor);
         NativeView<NativeClip> clips = allocator.AllocSlice<NativeClip>(animationCount);
-        
+
         for (int i = 0; i < animationCount; i++)
         {
             var aiAnim = mAnimations[i];
@@ -70,7 +70,7 @@ internal sealed unsafe partial class ModelImporter
                 WriteChannels(aiChannel, track);
                 tracks[boneIndex] = track;
             }
-            
+
             var name = aiAnim->MName.AsString;
             var duration = (float)aiAnim->MDuration;
             var ticksPerSecond = (float)(aiAnim->MTicksPerSecond != 0 ? aiAnim->MTicksPerSecond : 25.0f);
@@ -79,8 +79,8 @@ internal sealed unsafe partial class ModelImporter
 
         ctx.ClipBuffer = clipBuffer;
     }
-    
-      private static int GetAllocSize(AssimpAnimation** mAnimations, ModelImportContext context)
+
+    private static int GetAllocSize(AssimpAnimation** mAnimations, ModelImportContext context)
     {
         var ctx = context.AnimationContext;
         int animationCount = ctx.AnimationCount, boneCount = ctx.BoneCount;
@@ -89,7 +89,7 @@ internal sealed unsafe partial class ModelImporter
         for (int i = 0; i < animationCount; i++)
         {
             var aiAnim = mAnimations[i];
-        
+
             totalAllocSize += boneCount * Unsafe.SizeOf<NativeBoneTrack>();
 
             var channelLength = (int)aiAnim->MNumChannels;
@@ -97,20 +97,20 @@ internal sealed unsafe partial class ModelImporter
             {
                 var aiChannel = aiAnim->MChannels[c];
                 if (!context.TryGetBoneIndex(AssimpUtils.GetNameHash(aiChannel->MNodeName), out _)) continue;
-            
+
                 var posCount = (int)aiChannel->MNumPositionKeys;
                 var rotCount = (int)aiChannel->MNumRotationKeys;
-            
+
                 totalAllocSize += (posCount * sizeof(float)) +
-                                   (rotCount * sizeof(float)) +
-                                   (posCount * Unsafe.SizeOf<Vector3>()) +
-                                   (rotCount * Unsafe.SizeOf<Quaternion>());
+                                  (rotCount * sizeof(float)) +
+                                  (posCount * Unsafe.SizeOf<Vector3>()) +
+                                  (rotCount * Unsafe.SizeOf<Quaternion>());
             }
         }
 
         return totalAllocSize;
     }
-    
+
     private static void WriteChannels(NodeAnim* aiChannel, NativeBoneTrack track)
     {
         var posKeys = aiChannel->MPositionKeys;
@@ -126,5 +126,4 @@ internal sealed unsafe partial class ModelImporter
         for (var k = 0; k < track.RotCount; k++)
             track.Rotations[k] = rotKeys[k].MValue.AsQuaternion;
     }
-
 }

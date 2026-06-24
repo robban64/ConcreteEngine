@@ -10,7 +10,7 @@ internal sealed class EngineTickHub
     private const int MaxTicksPerFrame = 6;
 
     private readonly GameEngine _engine;
-    
+
     private FrameTickTimer _gameTicker;
     private FrameTickTimer _simulationTicker;
     private FrameTickTimer _diagnosticTicker;
@@ -20,7 +20,7 @@ internal sealed class EngineTickHub
     internal EngineTickHub(GameEngine engine)
     {
         ArgumentNullException.ThrowIfNull(engine);
-        
+
         var sim = EngineSettings.Current.Simulation;
         _gameTicker = new FrameTickTimer(1.0f / sim.GameSimRate);
         _simulationTicker = new FrameTickTimer(1.0f / sim.EnvironmentSimRate);

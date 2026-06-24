@@ -20,7 +20,7 @@ public abstract class AssetRef
         ArgumentNullException.ThrowIfNull(listener);
         AssetObj = assetObj;
         _listener = listener;
-        
+
         assetObj.AddRef(_listener);
     }
 
@@ -34,7 +34,8 @@ public abstract class AssetRef
         _listener.OnAssetRemoved(Asset);
         Asset.RemoveRef(_listener);
         AssetObj = null!;
-    }}
+    }
+}
 
 public sealed class AssetRef<TAsset>(TAsset assetObject, IAssetListener listener) : AssetRef(assetObject, listener)
     where TAsset : AssetObject
@@ -43,10 +44,9 @@ public sealed class AssetRef<TAsset>(TAsset assetObject, IAssetListener listener
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
-        {   
+        {
             if (AssetObj is null) Throwers.InvalidOperation("Asset is not bound");
             return (TAsset)AssetObj;
         }
     }
-    
 }

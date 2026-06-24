@@ -1,11 +1,8 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
@@ -44,7 +41,7 @@ internal sealed class AnimationManager
         animation.AddEntity(entity);
         Ecs.GetRenderStore<SkinningComponent>().Add(entity, new SkinningComponent(animation.Id));
     }
-    
+
     private bool TryGetFirstByRig(ModelRig rig, out AnimationInstance animation)
     {
         foreach (var a in _animations)
@@ -59,10 +56,9 @@ internal sealed class AnimationManager
         animation = null!;
         return false;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ActiveObjectEnumerator<AnimationInstance> GetEnumerator() => new(_animations.AsSpan());
-
 }
 
 public sealed class AnimationInstance : IComparable<AnimationInstance>
@@ -71,9 +67,9 @@ public sealed class AnimationInstance : IComparable<AnimationInstance>
     public short ActiveClip { get; private set; } = -1;
 
     public readonly ModelRig Rig;
-    
+
     private readonly List<RenderEntityId> _renderEntities = [];
-    
+
     private AnimationTime _animationTime;
 
     internal AnimationInstance(ModelRig rig, Id16<AnimationInstance> animationId)
@@ -101,6 +97,7 @@ public sealed class AnimationInstance : IComparable<AnimationInstance>
         if (_renderEntities.Contains(entity)) Throwers.InvalidArgument(nameof(entity), "Already added");
         _renderEntities.Add(entity);
     }
+
     public void RemoveEntity(RenderEntityId entity) => _renderEntities.Remove(entity);
 
     public void SetClip(short clipIndex)
@@ -109,7 +106,7 @@ public sealed class AnimationInstance : IComparable<AnimationInstance>
         ActiveClip = clipIndex;
 
         var clip = Rig.GetClip(clipIndex);
-        _animationTime.SetClip(clip.Duration,clip.TicksPerSecond);
+        _animationTime.SetClip(clip.Duration, clip.TicksPerSecond);
     }
 
     public int CompareTo(AnimationInstance? other)

@@ -58,12 +58,10 @@ public struct Vector3I(int x, int y, int z) : IEquatable<Vector3I>, IComparable<
     // 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector3I Min(Vector3I a, Vector3I b) =>
-        new(int.Min(a.X, b.X), int.Min(a.Y, b.Y), int.Min(a.Z, b.Z));
+    public static Vector3I Min(Vector3I a, Vector3I b) => new(int.Min(a.X, b.X), int.Min(a.Y, b.Y), int.Min(a.Z, b.Z));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector3I Max(Vector3I a, Vector3I b) =>
-        new(int.Max(a.X, b.X), int.Max(a.Y, b.Y), int.Max(a.Z, b.Z));
+    public static Vector3I Max(Vector3I a, Vector3I b) => new(int.Max(a.X, b.X), int.Max(a.Y, b.Y), int.Max(a.Z, b.Z));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3I Clamp(Vector3I v, Vector3I min, Vector3I max) => Max(min, Min(v, max));

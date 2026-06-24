@@ -1,10 +1,8 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 
@@ -23,7 +21,8 @@ public sealed class ModelBlueprint : RenderBlueprint
             Materials[i] = new AssetRef<Material>(_model.Asset.GetMaterial(i), this);
         }
     }
-    public ModelBlueprint(Model model, params ReadOnlySpan<Material?> materials) 
+
+    public ModelBlueprint(Model model, params ReadOnlySpan<Material?> materials)
         : base(int.Max(model.Info.MaterialCount, materials.Length))
     {
         _model = new AssetRef<Model>(model, this);
@@ -33,9 +32,6 @@ public sealed class ModelBlueprint : RenderBlueprint
             Materials[i] = new AssetRef<Material>(material, this);
         }
     }
-    
-
-
 }
 
 public sealed class ModelInstance : RenderBlueprintInstance
@@ -64,11 +60,11 @@ public sealed class ModelInstance : RenderBlueprintInstance
             var material = Blueprint.GetMaterial(i);
 
             var source = new SourceComponent(
-                mesh.MeshId, 
-                material.MaterialId, 
-                mesh.Info.MeshIndex, 
+                mesh.MeshId,
+                material.MaterialId,
+                mesh.Info.MeshIndex,
                 EntitySourceKind.Model,
-                material.State.DrawQueue, 
+                material.State.DrawQueue,
                 material.State.Passes);
 
             var entity = Ecs.RenderCore.AddEntity(source);
@@ -106,6 +102,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
             BoundingBox.GetWorldBounds(in localBounds, in finalMatrix, out worldBounds);
             BoundingBox.Merge(in globalBounds, in worldBounds, out globalBounds);
         }
+
         WorldBounds = globalBounds;
     }
 }

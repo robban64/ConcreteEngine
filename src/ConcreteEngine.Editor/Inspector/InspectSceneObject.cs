@@ -33,7 +33,7 @@ internal sealed class InspectModelInstance
 {
     public readonly ModelInstance Instance;
 
-   // public ReadOnlySpan<Material> GetMaterials() => CollectionsMarshal.AsSpan(Instance.Materials);
+    // public ReadOnlySpan<Material> GetMaterials() => CollectionsMarshal.AsSpan(Instance.Materials);
 
     public InspectModelInstance(ModelInstance instance)
     {

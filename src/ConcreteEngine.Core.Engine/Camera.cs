@@ -8,7 +8,6 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine;
 
-
 public sealed class Camera
 {
     private const float MinNearPlane = 0.1f;
@@ -40,7 +39,7 @@ public sealed class Camera
 
     public Camera(Size2D viewport)
     {
-        if(viewport < 128) Throwers.InvalidArgument(nameof(viewport));
+        if (viewport < 128) Throwers.InvalidArgument(nameof(viewport));
         Transform = new CameraTransform();
         AspectRatio = viewport.AspectRatio;
         Ensure();

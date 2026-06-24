@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Passes;
 using static ConcreteEngine.Renderer.RenderLimits;
@@ -68,7 +67,7 @@ public sealed class DrawCommandBuffer : IDisposable
     private NativeArray<DrawObjectUniform> _transforms;
 
     private NativeArray<int> _drawTickets;
-    
+
     private readonly Range32[] _passRanges;
 
 
@@ -128,18 +127,14 @@ public sealed class DrawCommandBuffer : IDisposable
         return true;
     }
 
-    private void Prepare(int length)
-    {
-
-
-    }
+    private void Prepare(int length) { }
 
     internal unsafe void ReadyDrawCommands()
     {
         var length = Count;
-        
+
         if (length <= 1) return;
-        
+
         if ((uint)length > (uint)_metas.Length)
             Throwers.InvalidOperation();
 

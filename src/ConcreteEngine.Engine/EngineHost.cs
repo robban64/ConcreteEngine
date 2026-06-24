@@ -60,12 +60,11 @@ public sealed class EngineHost
     }
 
 
-
     private void Load(GameEngineBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
         if (_setup == null) throw new InvalidOperationException("Builder not initialized");
-        
+
         var display = EngineSettings.Current.Display;
         _setup!.Builder = builder;
         _setup.Options.Size = new Vector2D<int>(display.WindowSize.Width, display.WindowSize.Height);
@@ -78,7 +77,7 @@ public sealed class EngineHost
         _window = Window.Create(_setup.Options);
         _window.Initialize();
 
-        
+
         if (_window.GLContext != null)
         {
             _window.GLContext.MakeCurrent();
@@ -86,14 +85,14 @@ public sealed class EngineHost
             var glfw = Glfw.GetApi();
             glfw.SwapInterval(0);
         }
-        
+
         var graphics = Backend switch
         {
             GraphicsBackend.OpenGl => new GfxRuntimeBundle<GL>(new GraphicsRuntime(),
                 new GlStartupConfig(_window.CreateOpenGL())),
             _ => throw new GraphicsException("Invalid GraphicsBackend. Only OpenGL supported")
         };
-        
+
         _window.VSync = false;
 
         EngineWindow.Attach(_window);

@@ -81,9 +81,9 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
         public void Enqueue(DeleteResourceCommand cmd)
         {
-            if(_isDisposing) 
+            if (_isDisposing)
                 Throwers.InvalidOperation("Disposer is active");
-            if(!_disposeSet.Add(cmd.GetHashCode())) 
+            if (!_disposeSet.Add(cmd.GetHashCode()))
                 Throwers.InvalidArgument(nameof(cmd), "GfxResource already enqueued");
 
             _disposeQueue.Enqueue(cmd);

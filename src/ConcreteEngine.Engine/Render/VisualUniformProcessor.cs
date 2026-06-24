@@ -37,7 +37,7 @@ public static unsafe class VisualUniformProcessor
 
         if (visuals.PostEffect.WasDirty)
             UploadPost(in ctx);
-        
+
         visuals.Commit();
     }
 

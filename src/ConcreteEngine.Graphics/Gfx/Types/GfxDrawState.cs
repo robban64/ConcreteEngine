@@ -4,7 +4,6 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public readonly record struct GfxDrawState(GfxDrawFlags Enabled, GfxDrawFlags Defined)
 {
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsEmpty() => Enabled == 0 && Defined == 0;
 
@@ -13,7 +12,7 @@ public readonly record struct GfxDrawState(GfxDrawFlags Enabled, GfxDrawFlags De
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsEnabled(GfxDrawFlags flag) => (Enabled & flag) != 0;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxDrawState WithEnabled(GfxDrawFlags flag) => new(Enabled | flag, Defined | flag);
 

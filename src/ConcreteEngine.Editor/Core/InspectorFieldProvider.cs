@@ -33,6 +33,7 @@ internal sealed class InspectorFieldProvider
     private InspectorFieldProvider() { }
 
     public readonly InspectSceneFields SceneFields = new();
+
     //public readonly InspectModelInstanceFields ModelInstanceFields = new();
     public readonly InspectParticleFields ParticleInstanceFields = new();
 

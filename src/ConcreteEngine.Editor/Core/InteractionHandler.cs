@@ -1,7 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Data;
@@ -52,7 +51,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
     {
         var mousePos = EngineInput.Mouse.ViewportPos;
         var dragState = EditorInput.DragState;
-        
+
         switch (dragState)
         {
             case DragState.None:

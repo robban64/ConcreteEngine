@@ -16,19 +16,19 @@ internal sealed class TextureData : IDisposable
         AssetGId = assetGId;
         _data = data;
     }
-    
+
     public ReadOnlySpan<byte> GetPixelData()
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(TextureData));
         if (_data.IsNull) throw new InvalidOperationException("TextureData is not valid");
-        
+
         return _data.AsSpan();
     }
 
     public void Dispose()
     {
         IsDisposed = true;
-        
+
         _data.Dispose();
         _data = default;
     }

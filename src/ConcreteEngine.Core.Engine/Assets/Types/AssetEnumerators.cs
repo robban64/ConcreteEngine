@@ -13,7 +13,7 @@ public ref struct AssetEnumerator(ReadOnlySpan<AssetId> assetIds, ReadOnlySpan<A
 
     public readonly AssetObject Current => _assets[_assetIds[_i].Index()]!;
 
-    public readonly AssetEnumerator GetEnumerator() => new (_assetIds, _assets);
+    public readonly AssetEnumerator GetEnumerator() => new(_assetIds, _assets);
 }
 
 public ref struct AssetEnumerator<T>(ReadOnlySpan<AssetId> assetIds, ReadOnlySpan<AssetObject?> assets)
@@ -41,5 +41,3 @@ public ref struct AssetBindingEnumerator(ReadOnlySpan<AssetFileId> fileIds, Asse
 
     public readonly AssetBindingEnumerator GetEnumerator() => new(_fileIds, fileRegistry);
 }
-
-

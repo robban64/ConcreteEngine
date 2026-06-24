@@ -29,7 +29,7 @@ public static class EngineWindow
 
     internal static void Attach(IWindow platformWindow)
     {
-        if(_platformWindow != null)
+        if (_platformWindow != null)
             throw new InvalidOperationException("Only one EngineWindow can exist at a time.");
 
         ArgumentNullException.ThrowIfNull(platformWindow);

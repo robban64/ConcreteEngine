@@ -1,7 +1,5 @@
 // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
 
-using ConcreteEngine.Core.Engine.Scene;
-
 namespace ConcreteEngine.Core.Engine.ECS.Integration;
 
 public sealed class EntitySceneLink

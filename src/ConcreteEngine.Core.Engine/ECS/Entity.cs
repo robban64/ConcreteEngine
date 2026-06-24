@@ -18,7 +18,6 @@ public struct RenderEntity
         if (isVisible) Visibility &= ~flag;
         else Visibility |= flag;
         return Visibility;
-
     }
 }
 

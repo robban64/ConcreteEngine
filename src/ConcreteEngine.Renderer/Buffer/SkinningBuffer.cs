@@ -15,7 +15,7 @@ public sealed class SkinningBuffer : IDisposable
 
     public int Count { get; private set; }
     private int _boneCount;
-    
+
     private NativeArray<Matrix4x4> _matrices;
     private Range32[] _slotRanges;
 
@@ -25,23 +25,23 @@ public sealed class SkinningBuffer : IDisposable
         _slotRanges = new Range32[DefaultCapacity];
         Count = 0;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal Range32 GetSlotRange(int slot) => _slotRanges[slot];
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<Matrix4x4> WriteSlot(int bones)
     {
         var count = Count;
         var range = new Range32(_boneCount, bones);
-        if(range.End > _matrices.Length) EnsureBoneCapacity(range.End);
-        if(count >= _slotRanges.Length) EnsureSlotCapacity(count);
+        if (range.End > _matrices.Length) EnsureBoneCapacity(range.End);
+        if (count >= _slotRanges.Length) EnsureSlotCapacity(count);
         _boneCount += bones;
         ++Count;
         _slotRanges[count] = range;
         return _matrices.Slice(range);
     }
-    
+
     internal NativeView<Matrix4x4> DrainBuffer()
     {
         if (_boneCount == 0) return NativeView<Matrix4x4>.MakeNull();
@@ -54,7 +54,7 @@ public sealed class SkinningBuffer : IDisposable
         Count = 0;
         _boneCount = 0;
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void EnsureBoneCapacity(int length)
     {
@@ -63,7 +63,7 @@ public sealed class SkinningBuffer : IDisposable
         _matrices.Resize(newSize, false);
         Console.WriteLine("BoneBuffer buffer resize");
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void EnsureSlotCapacity(int length)
     {

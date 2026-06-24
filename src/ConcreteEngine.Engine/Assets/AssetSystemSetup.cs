@@ -40,5 +40,4 @@ internal static class AssetSystemSetup
         GC.Collect();
         GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
     }
-
 }

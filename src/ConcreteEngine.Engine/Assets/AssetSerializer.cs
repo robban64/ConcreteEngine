@@ -13,7 +13,7 @@ internal static class AssetSerializer
     {
         var text = File.ReadAllBytes(path);
         var record = JsonSerializer.Deserialize<AssetRecord>(text, _jsonOptions);
-        if(record is null) Throwers.InvalidArgument(nameof(path), path);
+        if (record is null) Throwers.InvalidArgument(nameof(path), path);
         return record;
     }
 

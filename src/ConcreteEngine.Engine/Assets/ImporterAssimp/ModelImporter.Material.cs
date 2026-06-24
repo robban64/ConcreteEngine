@@ -23,7 +23,7 @@ internal static unsafe class MaterialModelImporter
     {
         var embeddedContext = ctx.EmbeddedContext;
         if (embeddedContext.MaterialCount == 0 && embeddedContext.TextureCount == 0) return;
-        
+
         int textureCount = embeddedContext.TextureCount, materialCount = embeddedContext.MaterialCount;
         // register textures
         for (var i = 0; i < textureCount; i++)
@@ -124,17 +124,17 @@ internal static unsafe class MaterialModelImporter
                     break;
                 case Assimp.MaterialColorSpecularBase:
                     var specularColor = (Color4)MatUtils.ParseVectorProp(prop);
-                    if(matParams.SpecularColor.HasValue) 
+                    if (matParams.SpecularColor.HasValue)
                         matParams.SpecularColor = specularColor with { A = matParams.SpecularColor.Value.A };
                     else
                         matParams.SpecularColor = specularColor;
                     break;
                 case Assimp.MaterialTwosidedBase:
-                    if(MatUtils.ParseIntProp(prop) == 1) matParams.DisableFlags |= GfxDrawFlags.Cull;
+                    if (MatUtils.ParseIntProp(prop) == 1) matParams.DisableFlags |= GfxDrawFlags.Cull;
                     break;
                 case Assimp.MaterialBlendFuncBase:
                     var blend = (Silk.NET.Assimp.BlendMode)MatUtils.ParseIntProp(prop);
-                    if(blend == 0) break;
+                    if (blend == 0) break;
                     matParams.DrawFunctions = matParams.DrawFunctions.Patch(new GfxDrawFunctions(BlendMode.Additive));
                     matParams.EnableFlags |= GfxDrawFlags.Blend;
                     break;
@@ -144,10 +144,8 @@ internal static unsafe class MaterialModelImporter
                 case "$mat.gltf.pbrMetallicRoughness.roughnessFactor":
                     matParams.Roughness = MatUtils.ParseFloatProp(prop);
                     break;
-
             }
         }
-
     }
 
     private static void AttachTextureToMaterial(
@@ -176,14 +174,15 @@ internal static unsafe class MaterialModelImporter
             kind = TextureUsage.Albedo;
             format = TexturePixelFormat.SrgbAlpha;
         }
-        
+
         texture.SlotKind = kind;
         texture.PixelFormat = format;
         material.Textures.Add(texture.GId);
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static int LoadTextureData(EmbeddedImportContext context, AssimpTexture* aiTex, EmbeddedSceneTexture texture)
+    private static int LoadTextureData(EmbeddedImportContext context, AssimpTexture* aiTex,
+        EmbeddedSceneTexture texture)
     {
         int width = (int)aiTex->MWidth, height = (int)aiTex->MHeight;
         int sizeInBytes;
@@ -200,7 +199,8 @@ internal static unsafe class MaterialModelImporter
         {
             sizeInBytes = width * height * 4;
         }
-        if(sizeInBytes < 4) Throwers.InvalidOperation(nameof(sizeInBytes));
+
+        if (sizeInBytes < 4) Throwers.InvalidOperation(nameof(sizeInBytes));
 
         var ptr = (byte*)aiTex->PcData;
         //texture.PixelDataBlock =
@@ -208,12 +208,10 @@ internal static unsafe class MaterialModelImporter
         return sizeInBytes;
         //return TextureImporter.ImportUnmanagedTexture(ptr, sizeInBytes, width, height, format, out size);
     }
-
 }
 
 file static unsafe class MatUtils
 {
-    
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static bool ToSystemEnums(TextureType type, out TextureUsage kind, out TexturePixelFormat format)
     {
@@ -234,7 +232,7 @@ file static unsafe class MatUtils
             case TextureType.GltfMetallicRoughness:
                 kind = TextureUsage.Roughness;
                 format = TexturePixelFormat.Rgba;
-                return  true;
+                return true;
             default:
                 kind = 0;
                 format = 0;
@@ -249,7 +247,7 @@ file static unsafe class MatUtils
 
         return MemoryMarshal.Read<float>(new ReadOnlySpan<byte>(prop->MData, (int)prop->MDataLength));
     }
-    
+
     public static int ParseIntProp(MaterialProperty* prop)
     {
         var length = (int)prop->MDataLength;

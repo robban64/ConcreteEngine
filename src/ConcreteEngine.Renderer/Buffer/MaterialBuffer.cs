@@ -52,7 +52,7 @@ public sealed class MaterialBuffer : IDisposable
     }
 
     public ref MaterialUniform Submit(
-        Id16<MaterialSlot> id,     
+        Id16<MaterialSlot> id,
         ShaderId shaderId,
         GfxDrawState drawState,
         GfxDrawFunctions drawFunctions,
@@ -66,7 +66,7 @@ public sealed class MaterialBuffer : IDisposable
         Count = int.Max(Count, index);
         return ref _buffer[index];
     }
-    
+
 
     internal NativeView<MaterialUniform> DrainBuffer()
     {

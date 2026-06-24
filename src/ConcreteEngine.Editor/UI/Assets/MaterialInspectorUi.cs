@@ -17,7 +17,6 @@ namespace ConcreteEngine.Editor.UI.Assets;
 
 internal sealed unsafe class MaterialInspectorUi(StateManager state)
 {
-
     public readonly InspectMaterialFields InspectFields = InspectorFieldProvider.Instance.MaterialFields;
 
     public void Draw(InspectMaterial material)

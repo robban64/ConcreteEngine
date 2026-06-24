@@ -1,6 +1,5 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
@@ -16,13 +15,13 @@ public sealed class ParticleBlueprint : RenderBlueprint
 
     public ParticleBlueprint(ParticleEmitter emitter, Material? material) : base(1)
     {
-        if(material == null) material = AssetStore.Core.FallbackMaterial;
+        if (material == null) material = AssetStore.Core.FallbackMaterial;
         Materials[0] = new AssetRef<Material>(material, this);
         Emitter = emitter;
         DisplayName = emitter.Name;
     }
-
 }
+
 public sealed class ParticleInstance : RenderBlueprintInstance
 {
     public readonly ParticleBlueprint Blueprint;
@@ -52,7 +51,7 @@ public sealed class ParticleInstance : RenderBlueprintInstance
     {
         if (RenderEntityIds.Count == 0) return;
         var entity = RenderEntityIds[0];
-        
+
         ref var source = ref Ecs.Render.Core.GetSource(entity);
         source.Queue = DrawCommandQueue.Particles;
         source.Passes = PassMask.Main;
@@ -63,14 +62,13 @@ public sealed class ParticleInstance : RenderBlueprintInstance
     {
         if (RenderEntityIds.Count == 0) return;
         var entity = RenderEntityIds[0];
-        
+
         Ecs.Render.Core.GetModelMatrix(entity) = rootMatrix;
         BoundingBox.GetWorldBounds(in Emitter.LocalBounds(), in rootMatrix, out WorldBounds);
         Ecs.Render.Core.GetWorldBounds(entity) = WorldBounds;
-
     }
 
-    public void OnAssetChanged(AssetObject asset) {}
+    public void OnAssetChanged(AssetObject asset) { }
 
     public void OnAssetRemoved(AssetObject asset) { }
 }

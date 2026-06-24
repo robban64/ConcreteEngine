@@ -9,10 +9,10 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 internal interface IAssetTypeLoader
 {
     bool IsActive { get; }
-    
+
     void Activate(bool isSetup);
     void DeActivate();
-    
+
     static abstract AssetKind Kind { get; }
 }
 

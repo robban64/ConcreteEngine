@@ -58,7 +58,7 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
         );
         BlendCombo.Bind(
             () => (int)target.State.DrawFunctions.Blend,
-            value => target.State.DrawFunctions = target.State.DrawFunctions with {Blend = (BlendMode)value.X}
+            value => target.State.DrawFunctions = target.State.DrawFunctions with { Blend = (BlendMode)value.X }
         );
         CullCombo.Bind(
             () => (int)target.State.DrawFunctions.Cull,

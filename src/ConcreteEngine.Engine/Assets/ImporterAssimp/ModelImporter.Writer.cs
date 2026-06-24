@@ -59,7 +59,7 @@ internal sealed unsafe partial class ModelImporter
             bounds.FromPoint(v.Position);
         }
 
-        meshEntry.SetBounds(in bounds) ;
+        meshEntry.SetBounds(in bounds);
     }
 
     private static void WriteSkinningData(AssimpMesh* aMesh, ModelImportContext ctx,

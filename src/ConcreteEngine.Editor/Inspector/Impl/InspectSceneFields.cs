@@ -42,6 +42,7 @@ internal sealed class InspectSceneFields : InspectorFields<InspectSceneObject>
         );
     }
 }
+
 /*
 internal sealed class InspectModelInstanceFields : InspectorFields<ModelInstance>
 {

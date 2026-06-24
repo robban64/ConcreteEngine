@@ -38,14 +38,13 @@ public static partial class Ecs
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public readonly QueryEnumerator GetEnumerator() => new(store);
         }
-        
+
         public readonly ref struct QueryItem(int idx, GameEntityId entity, ref T1 component)
         {
             public readonly int Index = idx;
             public readonly GameEntityId Entity = entity;
             public readonly ref T1 Component = ref component;
         }
-
     }
 
 
@@ -83,7 +82,7 @@ public static partial class Ecs
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public readonly LeftQueryEnumerator GetEnumerator() => new(store1, store2);
         }
-        
+
         public readonly ref struct QueryItem(int idx, GameEntityId entity, ref T1 component1, ref T2 component2)
         {
             public readonly int Index = idx;
@@ -91,6 +90,5 @@ public static partial class Ecs
             public readonly ref T1 Component1 = ref component1;
             public readonly ref T2 Component2 = ref component2;
         }
-
     }
 }

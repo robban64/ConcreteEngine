@@ -27,5 +27,4 @@ internal sealed class EngineCommandContext(AssetSystem assetSystem)
             default: throw new ArgumentOutOfRangeException();
         }
     }
-
 }

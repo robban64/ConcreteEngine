@@ -7,7 +7,7 @@ using static ConcreteEngine.Core.Engine.Configuration.EnginePath;
 
 namespace ConcreteEngine.Engine.Assets.Importer;
 
-internal sealed unsafe class ShaderImporter 
+internal sealed unsafe class ShaderImporter
 {
     public const int ShaderBlockSize = 8192;
     public const int MinBlockSize = 4096;
@@ -155,7 +155,7 @@ internal sealed unsafe class ShaderImporter
             }
         }
 
-        if (cursor <= 0 || activeName == null)return;
+        if (cursor <= 0 || activeName == null) return;
 
         var lastLine = line.Slice(0, cursor);
         if (lastLine.StartsWith((byte)'}') && lastLine.EndsWith((byte)';'))

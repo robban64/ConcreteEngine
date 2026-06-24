@@ -33,7 +33,6 @@ public static partial class Ecs
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get => ref core.GetWorldBounds(Entity);
             }
-
         }
 
         public ref struct VisibleCoreEnumerator(RenderEntityCore core)

@@ -34,7 +34,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
     protected override void OnDeActivate()
     {
         EmbeddedAssets.Clear();
-        
+
         _allocator?.Dispose();
         _allocator = null;
 
@@ -45,10 +45,10 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
 
     protected override Model Load(ModelRecord record, ImportContext ctx)
     {
-        if(_allocator is not {} allocator) throw new InvalidOperationException("Allocator is null");
-        if (_importer is not {} importer) throw new InvalidOperationException("ModelImport is null");
+        if (_allocator is not { } allocator) throw new InvalidOperationException("Allocator is null");
+        if (_importer is not { } importer) throw new InvalidOperationException("ModelImport is null");
         if (EmbeddedAssets.Count > 0) throw new InvalidOperationException("EmbeddedAssets is not empty");
-        
+
         allocator.Clear();
 
         var filePath = ctx.GetFile(1).RelativePath;
@@ -67,7 +67,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
         // store
         var modelInfo = modelContext.Compile(EmbeddedAssets, out var meshes, out var rig);
         var bounds = modelContext.MeshContext.ModelBounds;
-        
+
 
         var model = new Model(
             name: record.Name,
@@ -78,7 +78,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
             meshes: meshes,
             rig: rig
         );
-        
+
         importer.Cleanup();
         return model;
     }
@@ -86,7 +86,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
 
     private void AllocMeshBlocks(MeshImportContext context)
     {
-        if(_allocator is not {} allocator) throw new InvalidOperationException("Allocator is null");
+        if (_allocator is not { } allocator) throw new InvalidOperationException("Allocator is null");
         var meshLength = context.MeshCount;
         if (meshLength == 0) throw new InvalidOperationException("Model import resulted in zero meshes");
 

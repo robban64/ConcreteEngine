@@ -40,9 +40,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
     private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
 
 
-    public override void OnCreate()
-    {
-    }
+    public override void OnCreate() { }
 
 
     public override void OnEnter(NativeAllocator allocator)

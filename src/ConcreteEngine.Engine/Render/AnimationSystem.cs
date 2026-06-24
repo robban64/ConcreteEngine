@@ -44,6 +44,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
                 Ecs.RenderCore.GetSource(entity).AnimationSlot = slot;
                 ++count;
             }
+
             if (count == 0) continue;
 
             var time = animation.Interpolate();
@@ -84,7 +85,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
             MatrixMath.MultiplyAffine(ref writer[i], in ctx.GetInverseBindPose(i), in globals[i]);
         }
     }
-   
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector3 GetPosition(int posIndex, float posFactor, NativeView<Vector3> positions)
     {

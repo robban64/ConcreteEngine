@@ -22,7 +22,8 @@ internal sealed class RenderDispatcher
     private readonly EffectBuffer _effectBuffer;
     private readonly TerrainSystem _terrainSystem;
 
-    internal RenderDispatcher(CameraManager cameraManager,TerrainSystem terrainSystem, RenderUploadBuffers uploadBuffers)
+    internal RenderDispatcher(CameraManager cameraManager, TerrainSystem terrainSystem,
+        RenderUploadBuffers uploadBuffers)
     {
         ArgumentNullException.ThrowIfNull(cameraManager);
         ArgumentNullException.ThrowIfNull(uploadBuffers);
@@ -34,7 +35,6 @@ internal sealed class RenderDispatcher
         _effectBuffer = uploadBuffers.Effects;
         _commandBuffer = uploadBuffers.Commands;
         _terrainSystem = terrainSystem;
-
     }
 
     public void Execute()
@@ -43,7 +43,7 @@ internal sealed class RenderDispatcher
         UploadOthers();
 
         if (VisibleEntities == 0) return;
-        
+
         TagUploadSelectionEffect();
         CollectEntities();
         UploadDrawCommands();
@@ -66,10 +66,9 @@ internal sealed class RenderDispatcher
         }
 
         VisibleEntities = visibleCount;
-
     }
 
-    private void UploadOthers( )
+    private void UploadOthers()
     {
         _terrainSystem.SubmitDrawTerrain(_commandBuffer, _frustum);
 
@@ -78,11 +77,12 @@ internal sealed class RenderDispatcher
         _commandBuffer.SubmitIdentity(cmd, meta);
     }
 
-    private  void CollectEntities()
+    private void CollectEntities()
     {
         var index = 0;
         var cmd = _commandBuffer.GetCommandMetaSpan();
-        foreach (var query in Ecs.RenderCore.VisibleQuery(Ecs.RenderCore.GetSourceView(), Ecs.RenderCore.GetModelView()))
+        foreach (var query in
+                 Ecs.RenderCore.VisibleQuery(Ecs.RenderCore.GetSourceView(), Ecs.RenderCore.GetModelView()))
         {
             var depth = _camera.MakeDepthKey(query.Data.Item2.Translation);
             query.Data.Item1.WriteCommand(ref cmd.At1(index));
@@ -93,7 +93,8 @@ internal sealed class RenderDispatcher
 
     private void UploadDrawCommands()
     {
-        foreach (var entity in Ecs.RenderCore.VisibleQuery(Ecs.RenderCore.GetModelView(), Ecs.RenderCore.GetNormalsView()))
+        foreach (var entity in Ecs.RenderCore.VisibleQuery(Ecs.RenderCore.GetModelView(),
+                     Ecs.RenderCore.GetNormalsView()))
         {
             ref var bufferData = ref _commandBuffer.SubmitDraw();
             bufferData.Model = entity.Data.Item1;
@@ -147,5 +148,4 @@ internal sealed class RenderDispatcher
             index++;
         }
     }
-
 }

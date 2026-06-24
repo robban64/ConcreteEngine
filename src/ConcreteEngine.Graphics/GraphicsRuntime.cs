@@ -32,13 +32,11 @@ public sealed class GraphicsRuntime : IDisposable
 
     public GfxContext Gfx { get; private set; } = null!;
 
-    public GraphicsRuntime()
-    {
-    }
+    public GraphicsRuntime() { }
 
     public GpuDeviceCapabilities Initialize<T>(IGfxStartupConfig<T> config, out OpenGlVersion version) where T : class
     {
-        if(_isInitialized) Throwers.InvalidOperation("GFX has already been initialized.");
+        if (_isInitialized) Throwers.InvalidOperation("GFX has already been initialized.");
 
 
         if (config is not GlStartupConfig glConfig)

@@ -17,6 +17,7 @@ public static class SpanExtensions
         {
             if (value.Equals(s, comparison)) return true;
         }
+
         return false;
     }
 
@@ -63,6 +64,4 @@ public static class SpanExtensions
             return span;
         }
     }
-
-
 }

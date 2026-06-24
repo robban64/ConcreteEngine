@@ -16,7 +16,7 @@ public sealed class Mesh(string name, MeshInfo info)
 
     public ref readonly Matrix4x4 Transform => ref _transform;
     public ref readonly BoundingBox Bounds => ref _bounds;
-    
+
     internal void SetMeshId(MeshId meshId)
     {
         if (MeshId.IsValid() || !meshId.IsValid()) Throwers.InvalidOperation(nameof(MeshId));

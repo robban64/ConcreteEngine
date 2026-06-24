@@ -21,7 +21,7 @@ internal static unsafe class ImGuiSystem
     private static bool _hasCachedDrawData;
 
     public static TextureId OutputTexture;
-    
+
     public static ImGuiViewportPtr MainViewportPtr;
 
     public static ImGuiIOPtr Io;
@@ -29,7 +29,7 @@ internal static unsafe class ImGuiSystem
 
     private static ImGuiIO* IoPtr => Io.Handle;
 
-    public static void Setup( float scale)
+    public static void Setup(float scale)
     {
         if (Initialized) throw new InvalidOperationException("ImGuiSystem already initialized");
 

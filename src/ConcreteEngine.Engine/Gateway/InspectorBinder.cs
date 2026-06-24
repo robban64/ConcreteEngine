@@ -29,7 +29,7 @@ internal static class InspectorBinder
         InspectorRegistry.RegisterType(typeof(AnimationClip));
         InspectorRegistry.RegisterType(typeof(MeshInfo));
         InspectorRegistry.RegisterType(typeof(ModelInfo));
-        
+
     }
 }
 */

@@ -4,13 +4,12 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.ECS.GameComponent;
 
-
 public struct AnimationComponent(Id16<ModelRig> rigId, short clip = 0)
     : IGameComponent<AnimationComponent>
 {
     public Id16<ModelRig> RigId = rigId;
     public short Clip = clip;
-    
+
     public float Duration;
     public float TicksPerSecond;
 
@@ -25,7 +24,7 @@ public struct AnimationComponent(Id16<ModelRig> rigId, short clip = 0)
         Time += deltaTime * TicksPerSecond;
         if (Time > Duration) Time = 0;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Interpolate(float alpha)
     {
@@ -34,5 +33,4 @@ public struct AnimationComponent(Id16<ModelRig> rigId, short clip = 0)
         else
             InterpolatedTime = float.Lerp(PrevTime, Time, alpha);
     }
-
 }

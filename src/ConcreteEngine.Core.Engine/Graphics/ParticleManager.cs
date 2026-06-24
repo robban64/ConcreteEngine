@@ -1,11 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
@@ -50,8 +47,8 @@ internal sealed class ParticleManager : IDisposable
     public bool TryGet(string name, [NotNullWhen(true)] out ParticleEmitter? emitter)
     {
         if (_byName.TryGetValue(name, out var id) && _emitters.TryGet(id.Index(), out emitter)) return true;
-       emitter = null;
-       return false;
+        emitter = null;
+        return false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

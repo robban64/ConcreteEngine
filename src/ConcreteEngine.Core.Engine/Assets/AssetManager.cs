@@ -2,10 +2,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Assets.Utils;
-using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Renderer.Buffer;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
@@ -63,7 +59,7 @@ public sealed class AssetManager
     internal AssetId RegisterInMemoryAsset(Guid gid, AssetKind kind, string name)
     {
         var assetId = Store.Register(gid, 0);
-        var file = Files.RegisterRoot(assetId, name, new FileScanInfo( string.Empty, name));
+        var file = Files.RegisterRoot(assetId, name, new FileScanInfo(string.Empty, name));
         Store.SetAssetBinding(assetId, file.Id, 0);
         return assetId;
     }
@@ -85,9 +81,9 @@ public sealed class AssetManager
     {
         if (!Store.HasBinding(assetId)) Throwers.NotFoundBy(nameof(AssetId), assetId);
         if (kind == AssetKind.Shader) return;
-        
+
         if (!Files.TryGetFileByPath(relativePath, out var file))
-            Throwers.InvalidArgument(nameof(relativePath),$"Invalid file path {relativePath}");
+            Throwers.InvalidArgument(nameof(relativePath), $"Invalid file path {relativePath}");
 
         file.Binding = FileBinding.DependentFile;
         Store.SetAssetBinding(assetId, file.Id, fileIndex);
@@ -126,8 +122,7 @@ public sealed class AssetManager
 
         AssetStore.Core.CreateMaterials(this);
     }
-    
-    public static AssetBindingEnumerator GetAssetBindingsEnumerator(AssetId assetId) 
-        => new(Assets.GetAllAssetBindings(assetId), FileRegistry);
 
+    public static AssetBindingEnumerator GetAssetBindingsEnumerator(AssetId assetId) =>
+        new(Assets.GetAllAssetBindings(assetId), FileRegistry);
 }

@@ -8,9 +8,7 @@ public abstract class GameScene
 
     protected Camera Camera => CameraManager.Instance.Camera;
 
-    protected GameScene()
-    {
-    }
+    protected GameScene() { }
 
     internal void AttachContext(GameSceneContext context)
     {

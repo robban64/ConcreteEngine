@@ -43,10 +43,9 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     {
         _context.Reset();
         _sceneMeta = default;
-        if(_scene != null)
+        if (_scene != null)
             _assimp.FreeScene(_scene);
         _scene = null;
-
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -63,9 +62,9 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     public ModelImportContext StartImport(string name, string filePath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        
+
         var scene = LoadScene(filePath);
-        
+
         if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
             Throwers.InvalidOperation(_assimp.GetErrorStringS());
 
@@ -140,6 +139,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         TraverseTranspose(_assimp, scene->MRootNode, _context);
 
         return;
+
         static void TraverseTranspose(Assimp assimp, AssimpNode* currentNode, ModelImportContext ctx)
         {
             var length = currentNode->MNumChildren;
@@ -181,7 +181,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             {
                 var node = (AssimpNode*)nodePtr;
                 if (node->MParent != null)
-                    RegisterBoneRecursive(node->MParent->MName,ctx);
+                    RegisterBoneRecursive(node->MParent->MName, ctx);
             }
 
             var hashIndex = ctx.Hashes.IndexOf(hash);
@@ -201,10 +201,10 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void RegisterMeshes(AssimpScene* scene, MeshImportContext ctx)
     {
-        if(ctx.MeshCount == 0) Throwers.InvalidArgument(nameof(ctx.MeshCount));
-        if(ctx.TotalVertexCount > 0 || ctx.TotalFaceCount > 0) 
+        if (ctx.MeshCount == 0) Throwers.InvalidArgument(nameof(ctx.MeshCount));
+        if (ctx.TotalVertexCount > 0 || ctx.TotalFaceCount > 0)
             Throwers.InvalidArgument("Mesh context is not empty.");
-        
+
         var numMeshes = ctx.MeshCount;
         for (var i = 0; i < numMeshes; i++)
         {
@@ -220,7 +220,6 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             var info = new MeshInfo(vertCount, faceCount, meshIndex, materialIndex, (ushort)aiMesh->MNumBones);
             ctx.Meshes[meshIndex] = new Core.Engine.Graphics.Mesh(aiMesh->MName.AsString, info);
         }
-
     }
 
     //

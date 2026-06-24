@@ -153,6 +153,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
 
         Console.WriteLine("AssetList Synced Rename");
     }
+
     private void UpdateFolderAndEntries()
     {
         var currentNode = assetBrowser.CurrentNode;
@@ -191,11 +192,12 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
             var written = dataPtr.SliceFrom(offset).Writer().Append(file.LogicalName).End();
             displayItems[index] = new FileDisplayItem(fileId, 0, (offset, written.Length), file.Binding);
         }
+
         displayItems.AsSpan(folderCount, fileCount).Sort();
 
         SetSearch(default);
     }
-    
+
     public void SetSearch(ReadOnlySpan<byte> searchString)
     {
         var fileCount = assetBrowser.FileCount;

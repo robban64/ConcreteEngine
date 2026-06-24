@@ -24,7 +24,7 @@ internal sealed class ParticleSystem : IDisposable
 
     internal ParticleSystem(GfxContext gfx)
     {
-        if(_allocated) Throwers.InvalidOperation("ParticleSystem already active");
+        if (_allocated) Throwers.InvalidOperation("ParticleSystem already active");
         _allocated = true;
         _particleMesh = new ParticleMesh(gfx);
         _particleManager = ParticleManager.Instance;
@@ -34,7 +34,7 @@ internal sealed class ParticleSystem : IDisposable
     {
         if (_particleManager.HasPendingEmitters)
             CommitPending();
-        
+
         _particleManager.CommitEmitters();
     }
 
@@ -48,7 +48,7 @@ internal sealed class ParticleSystem : IDisposable
             var meshId = _particleMesh.GetHandle(slot).MeshId;
             emitter.Attach(slot, meshId);
         }
-        
+
         _particleManager.ClearPendingEmitters();
     }
 
@@ -61,40 +61,40 @@ internal sealed class ParticleSystem : IDisposable
 
     internal void Simulate(float simDt)
     {
-        if(_particleManager.EmitterCount == 0) return;
-        
+        if (_particleManager.EmitterCount == 0) return;
+
         _processedEmitters.Clear();
         foreach (var it in Ecs.GetRenderStore<ParticleComponent>().VisibilityQuery())
         {
             if (_processedEmitters.Contains(it.Component.EmitterId)) continue;
             var emitter = _particleManager.Get(it.Component.EmitterId);
             emitter.Simulate(simDt);
-            
+
             _processedEmitters.Add(it.Component.EmitterId);
         }
     }
 
-    
+
     internal unsafe void Execute()
     {
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
         foreach (var emitterId in CollectionsMarshal.AsSpan(_processedEmitters))
         {
             var emitter = _particleManager.Get(emitterId);
-            
+
             var cpuView = emitter.GetParticleView();
             var gpuView = _particleMesh.GetBufferView(emitter.ParticleCount);
-            
+
             ref readonly var param = ref emitter.GetParticleParams();
             ColorRgba startColor = param.StartColor.ToRgba(), endColor = param.EndColor.ToRgba();
-            
+
             ProcessEmitter(gpuView.Length, gpuView, cpuView, param.SizeStartEnd, startColor, endColor, timeOffset);
 
             _particleMesh.UploadGpuData(emitter.Slot, emitter.ParticleCount);
         }
     }
 
-    
+
     [SkipLocalsInit]
     private static unsafe void ProcessEmitter(
         int length,

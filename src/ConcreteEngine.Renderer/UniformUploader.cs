@@ -2,7 +2,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
@@ -59,6 +58,7 @@ internal sealed unsafe class UniformUploader
             var capacity = _drawUbo.GetCapacityFor(drawCount);
             _gfxBuffers.SetUniformBufferCapacity(_drawUbo.Id, capacity);
         }
+
         if (materialCount * _materialUbo.Stride > _materialUbo.Capacity)
         {
             var capacity = _materialUbo.GetCapacityFor(materialCount);
@@ -66,7 +66,8 @@ internal sealed unsafe class UniformUploader
         }
     }
 
-    internal ReadOnlySpan<TextureBinding> ResolveMaterial(Id16<MaterialSlot> materialId, out RenderMaterialMeta materialMeta)
+    internal ReadOnlySpan<TextureBinding> ResolveMaterial(Id16<MaterialSlot> materialId,
+        out RenderMaterialMeta materialMeta)
     {
         if (PrevMaterial != materialId)
         {

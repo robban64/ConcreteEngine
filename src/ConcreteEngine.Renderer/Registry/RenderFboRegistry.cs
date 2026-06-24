@@ -57,11 +57,11 @@ public sealed class RenderFboRegistry
 
     internal void Register<TTag>(FboVariant variant, RegisterFboEntry entry, Size2D outputSize) where TTag : class
     {
-        if(outputSize < RenderLimits.MinOutputSize) Throwers.InvalidArgument(nameof(outputSize));
-        if(outputSize > RenderLimits.MaxOutputSize) Throwers.InvalidArgument(nameof(outputSize));
+        if (outputSize < RenderLimits.MinOutputSize) Throwers.InvalidArgument(nameof(outputSize));
+        if (outputSize > RenderLimits.MaxOutputSize) Throwers.InvalidArgument(nameof(outputSize));
 
-        if(_fboCount > RenderLimits.FboSlots) Throwers.InvalidOperation(nameof(_fboCount));
-        if(_fboRegistry[_fboCount] != null!) Throwers.InvalidOperation(nameof(RenderFboRegistry));
+        if (_fboCount > RenderLimits.FboSlots) Throwers.InvalidOperation(nameof(_fboCount));
+        if (_fboRegistry[_fboCount] != null!) Throwers.InvalidOperation(nameof(RenderFboRegistry));
 
         var gfxDescriptor = entry.Build(outputSize);
         var fboId = _gfxFbo.CreateFrameBuffer(gfxDescriptor);
@@ -132,7 +132,7 @@ public sealed class RenderFboRegistry
         var key = PassTags<TTag>.FboKey(variant);
         var fbo = GetByKey(key);
 
-        if (fbo == null) Throwers.NotFoundBy(nameof(variant),variant.Value);
+        if (fbo == null) Throwers.NotFoundBy(nameof(variant), variant.Value);
         ArgumentOutOfRangeException.ThrowIfEqual(outputSize, fbo.Size);
         ArgumentOutOfRangeException.ThrowIfEqual(fbo.IsFixedSize, false);
 
@@ -172,13 +172,13 @@ public sealed class RenderFboRegistry
 
     private static void ValidateOutputSize(Size2D outputSize, bool isShadowMap)
     {
-        if(outputSize < RenderLimits.MinOutputSize) Throwers.InvalidArgument(nameof(outputSize));
+        if (outputSize < RenderLimits.MinOutputSize) Throwers.InvalidArgument(nameof(outputSize));
         if (isShadowMap)
         {
-            if(outputSize > RenderLimits.MaxShadowMapSize) Throwers.InvalidArgument(nameof(outputSize));
-            if(outputSize < RenderLimits.MinShadowMapSize) Throwers.InvalidArgument(nameof(outputSize));
+            if (outputSize > RenderLimits.MaxShadowMapSize) Throwers.InvalidArgument(nameof(outputSize));
+            if (outputSize < RenderLimits.MinShadowMapSize) Throwers.InvalidArgument(nameof(outputSize));
         }
-        else if( outputSize > RenderLimits.MaxOutputSize)
+        else if (outputSize > RenderLimits.MaxOutputSize)
         {
             Throwers.InvalidArgument(nameof(outputSize));
         }

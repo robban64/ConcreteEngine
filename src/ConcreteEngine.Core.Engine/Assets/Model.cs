@@ -1,10 +1,8 @@
-using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Assets;
-
 
 public sealed class Model : AssetObject
 {
@@ -46,7 +44,7 @@ public sealed class Model : AssetObject
         _textures = modelInfo.TextureCount > 0 ? new Texture[modelInfo.TextureCount] : [];
         _materials = modelInfo.MaterialCount > 0 ? new Material[modelInfo.MaterialCount] : [];
     }
-    
+
 
     public ReadOnlySpan<Mesh> GetMeshes() => _meshes;
     public ReadOnlySpan<Texture> GetTextures() => _textures;
@@ -63,13 +61,13 @@ public sealed class Model : AssetObject
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_textures.Length, nameof(index));
         return _textures[index];
     }
-    
+
     public Mesh GetMesh(int index)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_meshes.Length, nameof(index));
         return _meshes[index];
     }
-    
+
     internal void SetTexture(int index, Texture texture)
     {
         if ((uint)index >= (uint)_textures.Length) throw new ArgumentOutOfRangeException(nameof(index));

@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -11,7 +10,7 @@ public static class SearchMethod
     {
         return BinarySearch(CollectionsMarshal.AsSpan(list), value);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int BinarySearchManaged<TClass, TValue>(this List<TClass?> list, TValue value,
         out TClass result) where TClass : class, IComparable<TValue>

@@ -26,7 +26,7 @@ public ref struct ActiveObjectEnumerator<T>(ReadOnlySpan<T?> span) where T : cla
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ActiveObjectEnumerator<T> GetEnumerator() => new (_span);
+    public readonly ActiveObjectEnumerator<T> GetEnumerator() => new(_span);
 }
 
 public ref struct RefEnumerator<T> where T : unmanaged
@@ -49,10 +49,9 @@ public ref struct RefEnumerator<T> where T : unmanaged
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref Unsafe.Add(ref _start, _i);
     }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly RefEnumerator<T> GetEnumerator() => new (ref _start, _length);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly RefEnumerator<T> GetEnumerator() => new(ref _start, _length);
 }
 
 public ref struct ZipRefEnumerator<T1, T2> where T1 : unmanaged where T2 : unmanaged
@@ -78,8 +77,7 @@ public ref struct ZipRefEnumerator<T1, T2> where T1 : unmanaged where T2 : unman
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new(ref Unsafe.Add(ref _start1, _i), ref Unsafe.Add(ref _start2, _i));
     }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ZipRefEnumerator<T1,T2> GetEnumerator() => new (ref _start1, ref _start2, _length);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ZipRefEnumerator<T1, T2> GetEnumerator() => new(ref _start1, ref _start2, _length);
 }

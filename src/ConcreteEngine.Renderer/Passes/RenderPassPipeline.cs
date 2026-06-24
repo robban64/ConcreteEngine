@@ -34,7 +34,7 @@ internal sealed class RenderPassPipeline
     {
         var existingKey = PassTags<TTag>.PassKey(variant);
 
-        if(existingKey.Pass == passId) Throwers.InvalidArgument(nameof(passId));
+        if (existingKey.Pass == passId) Throwers.InvalidArgument(nameof(passId));
 
         var newKey = existingKey with { Pass = passId };
 

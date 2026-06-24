@@ -47,16 +47,16 @@ public sealed class Terrain
     public Texture? Heightmap { get; private set; }
     public Texture? Splatmap { get; private set; }
 
-    internal Terrain()
-    {
-    }
+    internal Terrain() { }
 
     public bool HasHeightmap => _chunks.Length > 0 && Heightmap is { HasPixelData: true };
 
     public ReadOnlySpan<TerrainChunk> GetChunks() => _chunks;
 
     public Id16<MaterialSlot> MaterialId => GroundMaterial?.MaterialId ?? AssetStore.Core.FallbackMaterial.MaterialId;
-    public Id16<MaterialSlot> FoliageMaterialId => FoliageMaterial?.MaterialId ?? AssetStore.Core.FallbackMaterial.MaterialId;
+
+    public Id16<MaterialSlot> FoliageMaterialId =>
+        FoliageMaterial?.MaterialId ?? AssetStore.Core.FallbackMaterial.MaterialId;
 
     public void SetTexture(int slot, Texture texture)
     {

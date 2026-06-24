@@ -21,7 +21,7 @@ public sealed class AssetFile(
     string relativePath) : IComparable<AssetFile>
 {
     public Guid GId { get; } = gId;
-    
+
     [JsonIgnore]
     public AssetFileId Id { get; } = id;
 
@@ -31,7 +31,7 @@ public sealed class AssetFile(
     public long SizeBytes { get; internal set; } = sizeBytes;
     public string LogicalName { get; internal set; } = logicalName;
     public string RelativePath { get; internal set; } = relativePath;
-    
+
     public bool IsRoot() => Binding == FileBinding.RootFile;
 
     public int CompareTo(AssetFile? other)

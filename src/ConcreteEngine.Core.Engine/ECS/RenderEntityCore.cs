@@ -26,7 +26,7 @@ public sealed class RenderEntityCore : EcsStore
         _worldBounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
         _modelMatrices = NativeArray.AlignedAllocate<Matrix4x4>(initialCapacity);
         _normalMatrices = NativeArray.Allocate<Matrix3X4>(initialCapacity);
-        
+
         StoreMeta.Listeners.EnsureCapacity(128);
     }
 
@@ -64,7 +64,7 @@ public sealed class RenderEntityCore : EcsStore
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref Matrix4x4 GetModelMatrix(RenderEntityId e) => ref _modelMatrices[e.Index()];
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref Matrix3X4 GetNormalMatrix(RenderEntityId e) => ref _normalMatrices[e.Index()];
 
@@ -134,7 +134,8 @@ public sealed class RenderEntityCore : EcsStore
     protected override void Resize(int newSize)
     {
         var curLen = _entities.Length;
-        if (_sources.Length != curLen || _worldBounds.Length != curLen || _modelMatrices.Length != curLen || _normalMatrices.Length != curLen)
+        if (_sources.Length != curLen || _worldBounds.Length != curLen || _modelMatrices.Length != curLen ||
+            _normalMatrices.Length != curLen)
         {
             Throwers.InvalidOperation("Length mismatch");
         }
@@ -157,19 +158,19 @@ public sealed class RenderEntityCore : EcsStore
         _modelMatrices.Dispose();
         _normalMatrices.Dispose();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public  VisibleCoreEnumerator VisibilityQuery() => new(this);
-    
+    public VisibleCoreEnumerator VisibilityQuery() => new(this);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public VisibleCoreEnumerator<T1> VisibleQuery<T1>(NativeView<T1> view1) 
-        where T1 : unmanaged 
+    public VisibleCoreEnumerator<T1> VisibleQuery<T1>(NativeView<T1> view1)
+        where T1 : unmanaged
     {
         return new VisibleCoreEnumerator<T1>(GetCoreEntityView(), view1);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public VisibleCoreEnumerator<T1, T2> VisibleQuery<T1, T2>(NativeView<T1> view1, NativeView<T2> view2) 
+    public VisibleCoreEnumerator<T1, T2> VisibleQuery<T1, T2>(NativeView<T1> view1, NativeView<T2> view2)
         where T1 : unmanaged where T2 : unmanaged
     {
         return new VisibleCoreEnumerator<T1, T2>(GetCoreEntityView(), view1, view2);

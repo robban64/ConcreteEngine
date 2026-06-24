@@ -17,7 +17,7 @@ public struct FrameTickTimer(float tickRate)
     public void Accumulate(float dt) => Accumulator += dt;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool DequeueTick(out  float dt)
+    public bool DequeueTick(out float dt)
     {
         if (Accumulator < TickDt)
         {

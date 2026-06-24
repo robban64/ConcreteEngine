@@ -34,7 +34,7 @@ public sealed class EditorPortal : IDisposable
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void Start()
     {
-        if(Initialized) Throwers.InvalidOperation(nameof(Initialized));
+        if (Initialized) Throwers.InvalidOperation(nameof(Initialized));
 
         TextBuffers.AllocateBuffers();
         ConsoleGateway.Service.Setup();

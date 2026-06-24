@@ -23,15 +23,16 @@ public static class FileUtils
     private static readonly byte[] FbxHeader = [0x4B, 0x61, 0x79, 0x64];
     private static readonly byte[] GltfHeader = [0x67, 0x6C, 0x54, 0x46];
 
-    public static string GetValidExtensions(AssetKind kind) => kind switch
-    {
-        AssetKind.Shader => ValidShaderExtension,
-        AssetKind.Model => ValidModelExtension,
-        AssetKind.Texture => ValidTextureExtension,
-        AssetKind.Material => ValidMaterialExtension,
-        _ => Throwers.Unreachable<string>(nameof(kind))
-    };
-    
+    public static string GetValidExtensions(AssetKind kind) =>
+        kind switch
+        {
+            AssetKind.Shader => ValidShaderExtension,
+            AssetKind.Model => ValidModelExtension,
+            AssetKind.Texture => ValidTextureExtension,
+            AssetKind.Material => ValidMaterialExtension,
+            _ => Throwers.Unreachable<string>(nameof(kind))
+        };
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TestFileExtension(ReadOnlySpan<char> fileName, out AssetKind kind)
     {

@@ -1,9 +1,7 @@
-using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -18,17 +16,17 @@ public abstract class GameBlueprint : IBlueprint
     public bool IsDirty { get; internal set; }
 
     public string DisplayName { get; set; } = string.Empty;
-    public Guid GId { get; }= Guid.NewGuid();
+    public Guid GId { get; } = Guid.NewGuid();
 
     private readonly List<GameBlueprintInstance> _instances = [];
     public ReadOnlySpan<GameBlueprintInstance> GetInstanceSpan() => CollectionsMarshal.AsSpan(_instances);
-    
-    public void AddInstance(GameBlueprintInstance instance) 
+
+    public void AddInstance(GameBlueprintInstance instance)
     {
-        if(_instances.Contains(instance)) return;
+        if (_instances.Contains(instance)) return;
         _instances.Add(instance);
     }
-    
+
     public void RemoveInstance(GameBlueprintInstance instance)
     {
         _instances.Remove(instance);
@@ -48,10 +46,10 @@ public abstract class RenderBlueprint : IBlueprint, IAssetListener
     public bool IsDirty { get; internal set; }
 
     public string DisplayName { get; set; } = string.Empty;
-    public Guid GId { get; }= Guid.NewGuid();
-    
+    public Guid GId { get; } = Guid.NewGuid();
+
     public Transform LocalTransform = Transform.Identity;
-    
+
     protected readonly AssetRef<Material>?[] Materials;
 
     private readonly List<RenderBlueprintInstance> _instances = [];
@@ -65,12 +63,12 @@ public abstract class RenderBlueprint : IBlueprint, IAssetListener
     public int MaterialCount => Materials.Length;
     public ReadOnlySpan<RenderBlueprintInstance> GetInstanceSpan() => CollectionsMarshal.AsSpan(_instances);
 
-    public void AddInstance(RenderBlueprintInstance instance) 
+    public void AddInstance(RenderBlueprintInstance instance)
     {
-        if(_instances.Contains(instance)) return;
+        if (_instances.Contains(instance)) return;
         _instances.Add(instance);
     }
-    
+
     public void RemoveInstance(RenderBlueprintInstance instance)
     {
         _instances.Remove(instance);
@@ -83,8 +81,8 @@ public abstract class RenderBlueprint : IBlueprint, IAssetListener
             instance.MarkDirty(SceneDirtyFlags.Blueprint);
         }
     }
-    
-    
+
+
     public Material GetMaterial(int index)
     {
         if ((uint)index >= (uint)Materials.Length) Throwers.InvalidArgument(nameof(index));
@@ -103,7 +101,7 @@ public abstract class RenderBlueprint : IBlueprint, IAssetListener
         Materials[index] = new AssetRef<Material>(material, this);
     }
 
-    
+
     public void OnAssetChanged(AssetObject asset)
     {
         if (asset is not Material material || (material.DirtyFlags & AssetDirtyFlag.Structure) == 0) return;

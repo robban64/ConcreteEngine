@@ -2,7 +2,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.Unicode;
 using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Core.Common.Text;
@@ -84,6 +83,7 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
             Buffer[0] = 0;
             return new NativeView<byte>(Buffer, 0);
         }
+
         if ((uint)Cursor + (uint)value.Length >= (uint)Capacity)
             Throwers.BufferOverflow(nameof(NativeSpanWriter), Cursor + value.Length, Capacity);
 
@@ -101,6 +101,7 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
             Buffer[0] = 0;
             return new NativeView<byte>(Buffer, 0);
         }
+
         if ((uint)Cursor + (uint)value.Length >= (uint)Capacity)
             Throwers.BufferOverflow(nameof(NativeSpanWriter), Cursor + value.Length, Capacity);
 
@@ -122,7 +123,7 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
         Buffer[written] = 0;
         return new NativeView<byte>(Buffer, written);
     }
-    
+
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter Append(byte* value)
@@ -136,7 +137,7 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
         _cursor += src.Length;
         return ref this;
     }
-    
+
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter Append(NativeView<byte> value)
     {

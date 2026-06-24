@@ -29,7 +29,7 @@ public sealed class RenderFboSizePolicy
         switch (mode)
         {
             case FboResizeMode.Fixed:
-                if(fixedSize < RenderLimits.MinOutputSize || fixedSize > RenderLimits.MaxOutputSize)
+                if (fixedSize < RenderLimits.MinOutputSize || fixedSize > RenderLimits.MaxOutputSize)
                     Throwers.InvalidArgument(nameof(fixedSize));
                 break;
             case FboResizeMode.Calculated:

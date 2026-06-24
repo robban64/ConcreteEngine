@@ -11,13 +11,14 @@ internal readonly unsafe struct NativeClip
 {
     public readonly int Length;
     public readonly NativeBoneTrack* BoneTracks;
-    
+
     internal NativeClip(NativeView<NativeBoneTrack> boneTracks)
     {
-        if(boneTracks.IsNull) Throwers.NullPointer(nameof(boneTracks));
+        if (boneTracks.IsNull) Throwers.NullPointer(nameof(boneTracks));
         BoneTracks = boneTracks;
         Length = boneTracks.Length;
     }
+
     public bool IsNull => BoneTracks == null;
     public NativeView<NativeBoneTrack> View => new(BoneTracks, Length);
 
@@ -26,8 +27,6 @@ internal readonly unsafe struct NativeClip
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref BoneTracks[index];
     }
-
-
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -42,17 +41,17 @@ internal readonly unsafe struct NativeBoneTrack
     {
         ArgumentOutOfRangeException.ThrowIfNegative(posCount);
         ArgumentOutOfRangeException.ThrowIfNegative(rotCount);
-        
-        if(data == null && (posCount > 0 || rotCount > 0))
+
+        if (data == null && (posCount > 0 || rotCount > 0))
             Throwers.InvalidArgument(nameof(data));
-        
+
         _data = data;
         PosCount = posCount;
         RotCount = rotCount;
     }
-    
+
     public bool IsNull => _data == null;
-    
+
     public bool IsEmpty
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -82,5 +81,4 @@ internal readonly unsafe struct NativeBoneTrack
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new((Quaternion*)(_data + (PosCount + RotCount + (PosCount * 3))), RotCount);
     }
-
 }

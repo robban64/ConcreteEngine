@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
@@ -62,7 +61,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly ParticleParams GetParticleParams() => ref _particlesParams;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly EmitterParams GetEmitterParams() => ref _params;
 

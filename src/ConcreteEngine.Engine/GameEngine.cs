@@ -81,7 +81,6 @@ public sealed class GameEngine : IDisposable
         OnSystemTick(0);
         Console.WriteLine($"Fragmentation: {GC.GetGCMemoryInfo().FragmentedBytes}");
         Console.WriteLine($"Total Alloc: {GC.GetTotalAllocatedBytes() / 1024.0 / 1024.0:F2}");
-
     }
 
     internal void Render(float dt)
@@ -121,7 +120,7 @@ public sealed class GameEngine : IDisposable
         _gateway.UpdateGameTick(dt);
         _renderSystem.AfterUpdate();
     }
-    
+
     internal void OnSimulateTick(float dt) => _renderSystem.OnSimulate(dt);
 
     internal void OnSystemTick(float dt)
@@ -134,7 +133,6 @@ public sealed class GameEngine : IDisposable
 
         if (_commandQueues.QueuesCount > 0)
             _commandQueues.DrainDispatch();
-
     }
 
     internal void OnDiagnosticTick(float dt) => _gateway.UpdateDiagnostics(dt);

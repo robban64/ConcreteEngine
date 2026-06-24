@@ -4,7 +4,7 @@ using Silk.NET.Input;
 
 namespace ConcreteEngine.Core.Engine.Input;
 
-public static  partial class EngineInput
+public static partial class EngineInput
 {
     public static class Keyboard
     {
@@ -16,7 +16,7 @@ public static  partial class EngineInput
 
         public static bool HasEmptyKeyChars => KeyChars.Count == 0;
         public static bool HasEmptyKeyInput => ActiveKeys.Count == 0;
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool HasKey(Key key, out InputButtonState state) => KeyState.TryGetValue((int)key, out state);
 
@@ -26,7 +26,7 @@ public static  partial class EngineInput
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlySpan<char> GetKeyChars() => CollectionsMarshal.AsSpan(KeyChars);
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void ClearKeys() => KeyChars.Clear();
 
@@ -47,9 +47,8 @@ public static  partial class EngineInput
 
                 ActiveKeys.Add(key);
             }
-
         }
-        
+
         // Keyboard callbacks
         private static void OnKeyDown(IKeyboard keyboard, Key key, int scancode)
         {
@@ -79,6 +78,5 @@ public static  partial class EngineInput
             keyboard.KeyUp -= OnKeyUp;
             keyboard.KeyChar -= OnKeyChar;
         }
-
     }
 }

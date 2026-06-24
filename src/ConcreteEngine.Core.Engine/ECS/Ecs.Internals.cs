@@ -1,7 +1,3 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Engine.ECS.GameComponent;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
-
 namespace ConcreteEngine.Core.Engine.ECS;
 
 public static partial class Ecs
@@ -56,5 +52,4 @@ public static partial class Ecs
         }
         */
     }
-
 }

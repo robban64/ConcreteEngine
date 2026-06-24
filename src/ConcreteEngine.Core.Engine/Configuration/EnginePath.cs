@@ -21,7 +21,7 @@ public static class EnginePath
     // Assets
     public const string AssetBasePath = Root + "/" + AssetRoot;
     public const string AssetCoreBasePath = Root + "/" + AssetCoreRoot;
-    
+
     public static readonly string ShaderPath = Path.Join(AssetBasePath, ShaderFolder);
     public static readonly string TexturePath = Path.Join(AssetBasePath, TextureFolder);
     public static readonly string ModelPath = Path.Join(AssetBasePath, MeshFolder);

@@ -52,15 +52,14 @@ internal sealed class MaterialProcessor(RenderProgram renderProgram)
         uniform.Color = state.Color;
         uniform.SpecularColor = state.SpecularColor;
         uniform.UvTransform = state.UvTransform;
-        
+
         uniform.Shininess = state.Shininess;
         uniform.Roughness = state.Roughness;
         uniform.Metallic = state.Metallic;
         uniform.AlphaCutoff = state.IsTransparent ? (state.HasAlphaMask ? 0.5f : 0.1f) : 0f;
 
-        uniform.AlphaMaskToggle =  state.HasAlphaMask ? 1 : 0;
-        uniform.ShadowToggle =  state.ReceiveShadows ? 1 : 0;
-
+        uniform.AlphaMaskToggle = state.HasAlphaMask ? 1 : 0;
+        uniform.ShadowToggle = state.ReceiveShadows ? 1 : 0;
     }
 
     private void FillSamplers(Material material)

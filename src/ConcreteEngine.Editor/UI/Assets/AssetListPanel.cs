@@ -25,24 +25,16 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private const float ListItemHeight = 24f;
     private static float ListItemPad => GuiTheme.CellPadding.X * 2f;
 
-    private static AssetStore Assets => AssetManager.Assets;
-    private static AssetFileRegistry FileRegistry => AssetManager.FileRegistry;
-
-    // Temp solution
-    public static AssetId RenamedAsset;
-
     private static readonly Vector2 ListItemSelectSize = new(0, ListItemHeight);
 
-   // private readonly AssetListState _state;
     private readonly AssetBrowser _assetBrowser;
 
     private readonly TextInput _searchInput;
     private readonly ComboInput _assetCombo;
 
-    private RangeU16 _breadcrumbStrHandle;
-
     private AssetFileId _selectedFile;
 
+    private RangeU16 _breadcrumbStrHandle;
     private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
 
   //  private int TotalDrawCount => _state.FilteredCount;
@@ -50,7 +42,6 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     public AssetListPanel(StateManager state) : base(StateEnums.AssetList, state)
     {
         _assetBrowser = new AssetBrowser();
-        //_state = new AssetListState(_assetBrowser, AssetKind.Texture);
         _searchInput = new TextInput("search", 8)
             .WithFilter(TextInputFilter.None, allowEmpty: true)
             .WithTransformer(trimmed: true, lowercase: true);
@@ -60,6 +51,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         _assetCombo.StartAt = 1;
         _assetCombo.Layout = FieldLayout.None;
     }
+
 
     public override void OnCreate()
     {
@@ -74,18 +66,16 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private void UpdateTitleText()
     {
         var sw = BreadcrumbStr.Writer();
-        sw.Write("asdasd");
-        /*
-        sw.Append('[').Append(_state.FilteredCount).Append(']').PadRight(2).Append('/');
-        
         var dirSpan = _assetBrowser.CurrentNode.Path.AsSpan();
+        
+        //sw.Append('[').Append(_state.FilteredCount).Append(']').PadRight(2).Append('/');
+        sw.Append('[').Append(0).Append(']').PadRight(2).Append('/');
         foreach (var range in dirSpan.Split('/'))
             sw.Append(dirSpan[range]).Append('/');
-
+        
         // remove last '/'
         sw.SetCursor(sw.Cursor - 1);
         sw.Append((char)0);
-        */
     }
 
 
@@ -110,7 +100,6 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     {
         //_assetCombo.Value = _state.PendingKind != 0 ? (int)_state.PendingKind : (int)_assetBrowser.CurrentKind;
         UpdateTitleText();
-        RenamedAsset = default;
     }
 
     public override void OnDraw()
@@ -146,28 +135,56 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
         if (ImGui.BeginTable("asset-list"u8, 1, GuiTheme.ListTableFlags))
         {
-            var sw = TextBuffers.GetWriter();
             ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
            // DrawList();
-           foreach (var it in _assetBrowser.CurrentNode.Children)
-           {
-               ImGui.TableNextRow();
-               ImGui.TableNextColumn();
-               if (ImGui.Selectable(sw.Write(it.GetFolderName()), false, 0, ListItemSelectSize))
-                   _assetBrowser.GoToChild(it.GetFolderName());
-
-           }
-           foreach (var it in _assetBrowser.CurrentNode.GetFileIds())
-           {
-               AppDraw.TextColumn(sw.Write(AssetManager.FileRegistry.Get(it).LogicalName));
-           }
-
+           avg.BeginSample();
+           DrawList();
+           if (avg.EndSample() >= 40) avg.ResetAndPrint(); 
             ImGui.EndTable();
            // DragDrop();
         }
 
         ImGui.PopStyleVar();
     }
+
+    private void DrawList()
+    {
+        var sw = TextBuffers.GetWriter();
+        int folderId = 0;
+        foreach (var it in _assetBrowser.CurrentNode.GetChildren())
+        {
+            ImGui.PushID(--folderId);
+            ImGui.TableNextRow();
+            ImGui.TableNextColumn();
+            if (ImGui.Selectable(sw.Write(it.GetFolderName()), false, 0, ListItemSelectSize))
+                _assetBrowser.GoToChild(it.GetFolderName());
+            ImGui.PopID();
+        }
+        
+        foreach (ref readonly var item in _assetBrowser.GetFileIds())
+        {
+            ImGui.PushID(item.FileId);
+            ImGui.TableNextRow();
+            ImGui.TableNextColumn();
+            if (ImGui.Selectable(sw.Write(item.Name), false, 0, ListItemSelectSize))
+                OnListItemClick(item.FileId);
+            ImGui.PopID();
+
+        }
+
+    }
+    
+    
+    private void OnListItemClick(AssetFileId fileId)
+    {
+        if (!fileId.IsValid()) return;
+
+        if (!AssetManager.FileRegistry.TryGetByRootFileId(fileId, out var assetId)) return;
+
+        State.EnqueueEvent(new SelectionEvent(assetId));
+        _selectedFile = fileId;
+    }
+
 /*
     private void DrawList()
     {

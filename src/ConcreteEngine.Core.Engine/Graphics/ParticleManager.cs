@@ -15,6 +15,8 @@ internal sealed class ParticleManager : IDisposable
 
     private readonly SlotArray<ParticleEmitter> _emitters = new(8);
     private readonly List<Id16<ParticleEmitter>> _pendingEmitters = new(4);
+    private readonly List<Id16<ParticleEmitter>> _dirtyEmitters = new(4);
+
     private readonly Dictionary<string, Id16<ParticleEmitter>> _byName = new(4);
 
     private ParticleManager() { }
@@ -26,8 +28,8 @@ internal sealed class ParticleManager : IDisposable
     public ParticleEmitter CreateEmitter(
         string name,
         int particleCount,
-        in EmitterSpatialParams spatialParams,
-        in EmitterVisualParams visualParams
+        in EmitterParams @params,
+        in ParticleParams visualParams
     )
     {
         if (_byName.ContainsKey(name)) Throwers.InvalidArgument(nameof(name));
@@ -37,7 +39,7 @@ internal sealed class ParticleManager : IDisposable
         if (_emitters.Count > 0 && _emitters.GetOrNull(emitterId.Index()) != null)
             throw new InvalidOperationException($"Duplicated emitter id {emitterId}");
 
-        var emitter = new ParticleEmitter(name, emitterId, particleCount, in spatialParams, in visualParams);
+        var emitter = new ParticleEmitter(name, emitterId, particleCount, in @params, in visualParams);
         _pendingEmitters.Add(emitterId);
         _emitters.Set(emitter, emitterId.Index());
         _byName.Add(emitter.Name, emitterId);

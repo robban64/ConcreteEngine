@@ -56,8 +56,6 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     [JsonIgnore]
     public SceneDirtyFlags Dirty { get; private set; }
 
-    //[JsonIgnore] public bool Attached { get; private set; }
-
     public SceneTransform Transform { get; }
 
     private readonly List<RenderBlueprintInstance> _instances = [];

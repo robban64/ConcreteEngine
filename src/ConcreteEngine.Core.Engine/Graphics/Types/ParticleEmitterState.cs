@@ -14,13 +14,13 @@ public struct ParticleCpuInstance
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct EmitterVisualParams
+public struct ParticleParams
 {
     public Color4 StartColor;
     public Color4 EndColor;
     public Vector2 SizeStartEnd;
 
-    public static EmitterVisualParams MakeDefault() =>
+    public static ParticleParams MakeDefault() =>
         new()
         {
             StartColor = new Color4(1.0f, 0.9f, 0.7f, 0.6f),
@@ -30,7 +30,7 @@ public struct EmitterVisualParams
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct EmitterSpatialParams
+public struct EmitterParams
 {
     // Physics
     public Vector3 Gravity;
@@ -42,7 +42,7 @@ public struct EmitterSpatialParams
     public Vector2 SpeedMinMax;
     public Vector2 LifeMinMax;
 
-    public static EmitterSpatialParams MakeDefault() =>
+    public static EmitterParams MakeDefault() =>
         new()
         {
             Spread = 3.14f,

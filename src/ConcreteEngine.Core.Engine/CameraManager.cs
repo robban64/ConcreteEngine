@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics;
 
@@ -41,7 +42,9 @@ public sealed class CameraManager
         var lightDir = visuals.Illumination.DirectionalLight.Value.Direction;
 
         UpdateLightView(shadow.ShadowMapSize, shadowProj.Value.Distance, shadowProj.Value.ZPad, lightDir);
+        
     }
+
 
 
     internal void CommitFrame(float alpha)
@@ -112,18 +115,6 @@ public sealed class CameraManager
         LightTransforms.ProjectionMatrix = Matrix4x4.CreateOrthographic(diameter, diameter, nearLs, farLs);
     }
     
-    
-    public static void CreateLightView(
-        CameraTransformSnapshot transforms,
-        int shadowSize,
-        float shadowDistance,
-        float shadowZPad,
-        Vector3 lightDirection,
-        Span<Vector3> corners
-    )
-    {
-        
-    }
 }
 
 file static class CameraUtils

@@ -55,10 +55,9 @@ internal sealed class DrawCommandBufferRanges : IDisposable
 public sealed class DrawCommandBuffer : IDisposable
 {
     private const int DefaultCommandBuffCapacity = 512;
+    private const int DefaultTicketCapacity = 1024 * 4;
 
     private static bool _allocated = false;
-
-    private static DrawObjectUniform TransformIdentity;
 
     public int Count { get; private set; }
 
@@ -68,7 +67,10 @@ public sealed class DrawCommandBuffer : IDisposable
 
     private NativeArray<DrawObjectUniform> _transforms;
 
-    private readonly DrawCommandBufferRanges _rangeBuffer = new();
+    private NativeArray<int> _drawTickets;
+    
+    private readonly Range32[] _passRanges;
+
 
     internal DrawCommandBuffer()
     {
@@ -77,16 +79,14 @@ public sealed class DrawCommandBuffer : IDisposable
         _metas = NativeArray.Allocate<DrawCommandMeta>(DefaultCommandBuffCapacity);
         _indices = NativeArray.Allocate<DrawCommandRef>(DefaultCommandBuffCapacity);
         _transforms = NativeArray.AlignedAllocate<DrawObjectUniform>(DefaultCommandBuffCapacity, alignment: 16);
-
+        _drawTickets = NativeArray.Allocate<int>(DefaultTicketCapacity);
+        _passRanges = new Range32[PassSlots];
         Count = 0;
-
-        MatrixMath.CreateModelMatrix(Transform.Identity, out TransformIdentity.Model);
-        MatrixMath.CreateNormalMatrix(ref TransformIdentity.Normal, in TransformIdentity.Model);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public UnsafeZippedSpan<DrawCommand, DrawCommandMeta> GetCommandMetaSpan() 
-        => new(ref _commands[Count],ref _metas[Count], _commands.Length - Count);
+    public UnsafeZippedSpan<DrawCommand, DrawCommandMeta> GetCommandMetaSpan() =>
+        new(ref _commands[Count], ref _metas[Count], _commands.Length - Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int SubmitIdentity(DrawCommand cmd, DrawCommandMeta meta)
@@ -95,7 +95,8 @@ public sealed class DrawCommandBuffer : IDisposable
         _commands[idx] = cmd;
         _metas[idx] = meta;
         _indices[idx] = new DrawCommandRef(meta, idx);
-        _transforms[idx] = TransformIdentity;
+        _transforms[idx].Model = Matrix4x4.Identity;
+        _transforms[idx].Normal = Matrix3X4.Identity;
         return idx;
     }
 
@@ -109,37 +110,67 @@ public sealed class DrawCommandBuffer : IDisposable
 
     private bool Prepare()
     {
-        var len = Count;
+        var length = Count;
 
-        if (len <= 1)
+        if (length <= 1)
         {
-            Array.Clear(_rangeBuffer.PassRanges);
+            Array.Clear(_passRanges);
             return false;
         }
 
-        if ((uint)len > (uint)_metas.Length || (uint)len > (uint)_indices.Length)
+        if ((uint)length > (uint)_metas.Length || (uint)length > (uint)_indices.Length)
             Throwers.InvalidOperation();
 
-        _rangeBuffer.CountHeads.Clear();
-        Array.Clear(_rangeBuffer.PassRanges);
+        Array.Clear(_passRanges);
 
-        _indices.AsSpan(0, len).Sort();
+        _indices.AsSpan(0, length).Sort();
 
         return true;
     }
 
+    private void Prepare(int length)
+    {
+
+
+    }
+
     internal unsafe void ReadyDrawCommands()
     {
-        if (!Prepare()) return;
-
         var length = Count;
-        var heads = _rangeBuffer.CountHeads.Ptr;
+        
+        if (length <= 1) return;
+        
+        if ((uint)length > (uint)_metas.Length)
+            Throwers.InvalidOperation();
+
+        Array.Clear(_passRanges);
+
+        _indices.AsSpan(0, length).Sort();
+
+        var heads = stackalloc int[PassSlots * 2];
 
         // Count pass tickets
+        CountTickets(heads, length);
+
+        // Count pass ranges
+        var total = CountPasses(heads);
+
+        // Create draw tickets
+        EnsureTicketsCapacity(total);
+
+        // fill tickets in sorted order
+        FillTickets(heads + PassSlots, length);
+    }
+
+    private unsafe void CountTickets(int* heads, int length)
+    {
+        var indices = _indices;
+        var metas = _metas;
+
         for (var i = 0; i < length; i++)
         {
-            var idx = _indices[i].Index;
-            var mask = (uint)_metas[idx].Passes;
+            var idx = indices[i].Index;
+            var mask = (uint)metas[idx].Passes;
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);
@@ -147,25 +178,41 @@ public sealed class DrawCommandBuffer : IDisposable
                 mask &= mask - 1;
             }
         }
+    }
 
-        // Count pass ranges
-        var total = _rangeBuffer.FillPassRanges();
+    private unsafe int CountPasses(int* heads)
+    {
+        var passRanges = _passRanges;
 
-        // Create draw tickets
-        _rangeBuffer.EnsureTicketsCapacity(total);
+        var total = 0;
+        for (var p = 0; p < PassSlots; p++)
+        {
+            var c = heads[p];
+            var range = passRanges[p] = new Range32(total, c);
+            heads[PassSlots + p] += range.Offset;
+            total += c;
+        }
 
-        heads += PassSlots;
 
+        return total;
+    }
+
+    private unsafe void FillTickets(int* heads, int length)
+    {
         // fill tickets in sorted order
+        var drawTickets = _drawTickets;
+        var indices = _indices;
+        var metas = _metas;
+
         for (var i = 0; i < length; i++)
         {
-            var idx = _indices[i].Index;
-            var mask = (uint)_metas[idx].Passes;
+            var idx = indices[i].Index;
+            var mask = (uint)metas[idx].Passes;
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);
                 var w = heads[p]++;
-                _rangeBuffer.DrawTickets[w] = idx;
+                drawTickets[w] = idx;
                 mask &= mask - 1;
             }
         }
@@ -182,8 +229,8 @@ public sealed class DrawCommandBuffer : IDisposable
 
     internal unsafe void DispatchDrawPass(DrawCommandProcessor cmd, PassId passId)
     {
-        var pass = _rangeBuffer.PassRanges[passId];
-        var tickets = _rangeBuffer.DrawTickets + pass.Offset;
+        var pass = _passRanges[passId];
+        var tickets = _drawTickets + pass.Offset;
         for (var i = 0; i < pass.Length; i++)
         {
             var ticket = tickets[i];
@@ -193,8 +240,8 @@ public sealed class DrawCommandBuffer : IDisposable
 
     internal unsafe void DispatchResolveDrawPass(DrawCommandProcessor cmd, PassId passId)
     {
-        var pass = _rangeBuffer.PassRanges[passId];
-        var tickets = _rangeBuffer.DrawTickets + pass.Offset;
+        var pass = _passRanges[passId];
+        var tickets = _drawTickets + pass.Offset;
         for (var i = 0; i < pass.Length; i++)
         {
             var ticket = tickets[i];
@@ -205,6 +252,14 @@ public sealed class DrawCommandBuffer : IDisposable
 
 
     internal void Reset() => Count = 0;
+
+    private void EnsureTicketsCapacity(int total)
+    {
+        if (_drawTickets.Length >= total) return;
+        var newSize = CapacityUtils.CapacityGrowthToFit(_drawTickets.Length, total);
+        _drawTickets.Resize(newSize, false);
+        Console.WriteLine("DrawTickets buffer resize");
+    }
 
     public void EnsureCapacity(int size)
     {
@@ -228,9 +283,10 @@ public sealed class DrawCommandBuffer : IDisposable
         _commands.Dispose();
         _metas.Dispose();
         _indices.Dispose();
-
         _transforms.Dispose();
-        _rangeBuffer.Dispose();
+
+        _drawTickets.Dispose();
+
         _allocated = false;
     }
 }

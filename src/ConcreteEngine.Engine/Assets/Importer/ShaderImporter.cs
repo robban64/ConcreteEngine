@@ -7,7 +7,7 @@ using static ConcreteEngine.Core.Engine.Configuration.EnginePath;
 
 namespace ConcreteEngine.Engine.Assets.Importer;
 
-internal sealed unsafe class ShaderImporter
+internal sealed unsafe class ShaderImporter 
 {
     public const int ShaderBlockSize = 8192;
     public const int MinBlockSize = 4096;
@@ -40,14 +40,13 @@ internal sealed unsafe class ShaderImporter
         if (!File.Exists(path)) throw new FileNotFoundException("Shader Path not found.", path);
 
         using var fs = File.OpenRead(path);
-        using var bs = new BufferedStream(fs, 8192);
         length = fs.Length;
 
         var sw = new NativeSpanWriter(buffer);
         Span<byte> line = stackalloc byte[1024];
 
         var cursor = 0;
-        while (ReadLine(bs, line, ref cursor))
+        while (ReadLine(fs, line, ref cursor))
         {
             ParseShader(line.Slice(0, cursor), ref sw);
             cursor = 0;
@@ -121,12 +120,10 @@ internal sealed unsafe class ShaderImporter
     )
     {
         using var fs = File.OpenRead(Path.Join(ShaderDefPath, filename));
-        using var bs = new BufferedStream(fs, 8192);
-
         string? activeName = null;
 
         var cursor = 0;
-        while (ReadLine(bs, line, ref cursor))
+        while (ReadLine(fs, line, ref cursor))
         {
             var span = line.Slice(0, cursor).TrimWhitespace();
             cursor = 0;
@@ -175,10 +172,10 @@ internal sealed unsafe class ShaderImporter
         importer._uboDict.Add(name, new UboDictEntry(importer._uboSlot++, data));
 
 
-    private static bool ReadLine(BufferedStream bs, Span<byte> line, scoped ref int cursor)
+    private static bool ReadLine(FileStream fs, Span<byte> line, scoped ref int cursor)
     {
         int b;
-        while ((b = bs.ReadByte()) != -1)
+        while ((b = fs.ReadByte()) != -1)
         {
             if (b == '\n')
             {

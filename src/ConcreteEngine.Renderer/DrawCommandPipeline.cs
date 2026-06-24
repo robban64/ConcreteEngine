@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Graphics.Utility;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
@@ -27,13 +28,17 @@ internal sealed class DrawCommandPipeline(RenderUploadBuffers buffers)
     internal void PrepareDrawBuffers()
     {
         // Sort command buffer and prepare passes
+        avg.BeginSample();
         buffers.Commands.ReadyDrawCommands();
+        if (avg.EndSample() >= 144) avg.ResetAndPrint();
 
         var drawCap = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(buffers.Commands.Count + 32);
         var matCap = UniformBufferUtils.GetCapacityForEntities<MaterialUniform>(buffers.Materials.Count + 4);
 
         UniformUploader.EnsureUboSizes(buffers.Commands.Count + 32, buffers.Materials.Count + 4);
     }
+
+    private AvgFrameTimer avg;
 
     internal void UploadUniforms()
     {

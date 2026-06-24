@@ -85,7 +85,7 @@ internal sealed class ParticleSystem : IDisposable
             var cpuView = emitter.GetParticleView();
             var gpuView = _particleMesh.GetBufferView(emitter.ParticleCount);
             
-            ref readonly var param = ref emitter.GetVisualParams();
+            ref readonly var param = ref emitter.GetParticleParams();
             ColorRgba startColor = param.StartColor.ToRgba(), endColor = param.EndColor.ToRgba();
             
             ProcessEmitter(gpuView.Length, gpuView, cpuView, param.SizeStartEnd, startColor, endColor, timeOffset);

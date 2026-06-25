@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
@@ -32,6 +33,7 @@ internal sealed unsafe class TextInput : UiField
 
     public ImGuiInputTextFlags InputFlags;
     public TextInputFilter InputFilter;
+
     private char[] _whiteListFilter = [];
 
     private TextInputHistory? _history;
@@ -48,6 +50,10 @@ internal sealed unsafe class TextInput : UiField
 
         Layout = FieldLayout.None;
     }
+
+    public ReadOnlySpan<byte> GetTextSpan() => _textBuffer != null
+        ? MemoryMarshal.CreateReadOnlySpanFromNullTerminated(_textBuffer)
+        : ReadOnlySpan<byte>.Empty;
 
     public override ref byte GetRawValue()
     {

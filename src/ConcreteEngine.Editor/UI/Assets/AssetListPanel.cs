@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Text;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
@@ -37,19 +38,16 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private RangeU16 _breadcrumbStrHandle;
     private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
 
-    //  private int TotalDrawCount => _state.FilteredCount;
-
     public AssetListPanel(StateManager state) : base(StateEnums.AssetList, state)
     {
-        _assetBrowser = new AssetBrowser();
+        _assetBrowser = new AssetBrowser(OnDirectoryChange);
+
         _searchInput = new TextInput("search", 8)
             .WithFilter(TextInputFilter.None, allowEmpty: true)
             .WithTransformer(trimmed: true, lowercase: true)
             .WithCallbackU16((searchString) => _assetBrowser.SetSearch(searchString));
 
         _assetCombo = ComboInput.MakeFromEnumCache<AssetKind>("asset-combo");
-        _assetCombo.StartAt = 1;
-        _assetCombo.Layout = FieldLayout.None;
     }
 
 
@@ -63,25 +61,6 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     }
 
     private AvgFrameTimer avg;
-
-    private void UpdateTitleText()
-    {
-        var sw = BreadcrumbStr.Writer();
-        var path = _assetBrowser.CurrentNode.GetRelativePath();
-        if (path.Length == 0)
-        {
-            sw.Write('/');
-            return;
-        }
-
-        sw.Append('[').Append(_assetBrowser.FilteredCount).Append(']').PadRight(2);
-        foreach (var range in path.Split('/'))
-            sw.Append(path[range]).Append('/');
-
-        // remove last '/'
-        sw.SetCursor(sw.Cursor - 1);
-        sw.Append((char)0);
-    }
 
 
     public override void OnEnter(NativeAllocator allocator)
@@ -106,6 +85,40 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private void Refresh()
     {
         UpdateTitleText();
+    }
+
+
+    private void OnDirectoryChange(AssetBrowser browser)
+    {
+        var searchText = _searchInput.GetTextSpan();
+        if (searchText.Length == 0)
+        {
+            browser.SetSearch(ReadOnlySpan<char>.Empty);
+            return;
+        }
+
+        Span<char> searchTextU16 = stackalloc char[Encoding.UTF8.GetCharCount(searchText)];
+        Encoding.UTF8.GetChars(searchText, searchTextU16);
+        browser.SetSearch(searchTextU16);
+    }
+
+    private void UpdateTitleText()
+    {
+        var sw = BreadcrumbStr.Writer();
+        var path = _assetBrowser.CurrentNode.GetRelativePath();
+        if (path.Length == 0)
+        {
+            sw.Write('/');
+            return;
+        }
+
+        sw.Append('[').Append(_assetBrowser.FilteredCount).Append(']').PadRight(2);
+        foreach (var range in path.Split('/'))
+            sw.Append(path[range]).Append('/');
+
+        // remove last '/'
+        sw.SetCursor(sw.Cursor - 1);
+        sw.Append((char)0);
     }
 
     public override void OnDraw()
@@ -138,13 +151,13 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         // List
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
-        ImGui.BeginGroup();
+        ImGui.BeginChild("AssetList"u8);
         avg.BeginSample();
         DrawFolders();
         DrawFiles();
         if (avg.EndSample() >= 40) avg.ResetAndPrint();
         // DragDrop();
-        ImGui.EndGroup();
+        ImGui.EndChild();
 
         ImGui.PopStyleVar();
     }
@@ -157,7 +170,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         foreach (var it in _assetBrowser.CurrentNode.GetChildren())
         {
             var text = sw.AppendIcon((byte*)&icon).PadRight(2)
-                .Append(it.GetFolderName()).AppendImGuiId(folderId--)
+                .Append(it.PreviewName.GetReadSpan()).AppendImGuiId(folderId--)
                 .End();
             if (ImGui.Selectable(text, false, 0, ListItemSelectSize))
                 _assetBrowser.GoToChild(it.GetFolderName());
@@ -166,24 +179,40 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private void DrawFiles()
     {
+        if(_assetBrowser.FilteredCount == 0) return;
+        
         var sw = TextBuffers.GetWriter();
-        var icon = GetIntIcon(Icons.File);
+
+        var selectedFileId = _selectedFile;
+        uint icon = 0, color = 0;
         foreach (var file in _assetBrowser.GetFilteredFileEnumerator())
         {
+            var style = GetIconAndColor(file.Binding, AssetKind.Texture);
+            if (style.icon != icon)
+            {
+                if (color > 0) ImGui.PopStyleColor();
+                ImGui.PushStyleColor(ImGuiCol.Text, style.color);
+                color = style.color;
+                icon = style.icon;
+            }
+
             var text = sw.AppendIcon((byte*)&icon).PadRight(2)
                 .Append(file.LogicalName).AppendImGuiId(file.Id)
                 .End();
 
-            if (ImGui.Selectable(text, false, 0, ListItemSelectSize))
+            var isSelected = selectedFileId == file.Id;
+            if (ImGui.Selectable(text, isSelected, 0, ListItemSelectSize))
                 OnListItemClick(file.Id);
         }
+
+        ImGui.PopStyleColor();
     }
 
     private void OnListItemClick(AssetFileId fileId)
     {
         if (!fileId.IsValid()) return;
 
-        if (!AssetManager.FileRegistry.TryGetByRootFileId(fileId, out var assetId)) return;
+        if (!AssetManager.FileRegistry.TryGetByRootId(fileId, out var assetId)) return;
 
         State.EnqueueEvent(new SelectionEvent(assetId));
         _selectedFile = fileId;

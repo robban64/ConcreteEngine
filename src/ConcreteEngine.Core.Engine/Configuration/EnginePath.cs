@@ -12,24 +12,16 @@ public static class EnginePath
     public const string DiagnosticRoot = "diagnostics";
 
     public const string ShaderFolder = "shaders";
-    public const string TextureFolder = "textures";
-    public const string MeshFolder = "meshes";
-    public const string MaterialFolder = "materials";
 
     public const string EditorContentRoot = "editor";
 
     // Assets
+    public const int AssetBasePathOffset = 17;
     public const string AssetBasePath = Root + "/" + AssetRoot;
     public const string AssetCoreBasePath = Root + "/" + AssetCoreRoot;
-
-    public static readonly string ShaderPath = Path.Join(AssetBasePath, ShaderFolder);
-    public static readonly string TexturePath = Path.Join(AssetBasePath, TextureFolder);
-    public static readonly string ModelPath = Path.Join(AssetBasePath, MeshFolder);
-    public static readonly string MaterialPath = Path.Join(AssetBasePath, MaterialFolder);
-
+    
     public static readonly string ShaderCorePath = Path.Join(AssetCoreBasePath, ShaderFolder);
     public static readonly string ShaderDefPath = Path.Join(AssetCoreBasePath, "shader-definitions");
-
 
     // Config
     public static readonly string ConfigPath = Path.Join(Root, ConfigRoot);

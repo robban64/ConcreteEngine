@@ -78,14 +78,14 @@ public sealed class AssetFileRegistry
         return TryGetFile(fileId, out entry);
     }
 
-    public bool TryGetByRootFileId(AssetFileId fileId, out AssetId assetId) =>
+    public bool TryGetByRootId(AssetFileId fileId, out AssetId assetId) =>
         _rootBindings.TryGetValue(fileId, out assetId);
     
-    public bool TryGetDirectoryFileIds(string path, out ReadOnlySpan<AssetFileId> fileIds)
+    public bool TryGetDirectoryIds(string path, out ReadOnlySpan<AssetFileId> fileIds)
     {
         if (!_byDirectory.TryGetValue(path, out var fileIdList))
         {
-            fileIds = default;
+            fileIds = ReadOnlySpan<AssetFileId>.Empty;
             return false;
         }
 

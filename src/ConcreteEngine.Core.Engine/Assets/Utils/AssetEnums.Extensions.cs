@@ -20,18 +20,5 @@ public static class AssetEnumsExtensions
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
             };
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string ToRootFolder()
-        {
-            return kind switch
-            {
-                AssetKind.Shader => EnginePath.ShaderFolder,
-                AssetKind.Model => EnginePath.MeshFolder,
-                AssetKind.Texture => EnginePath.TextureFolder,
-                AssetKind.Material => EnginePath.MaterialFolder,
-                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
-            };
-        }
     }
 }

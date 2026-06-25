@@ -37,7 +37,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private RangeU16 _breadcrumbStrHandle;
     private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
 
-  //  private int TotalDrawCount => _state.FilteredCount;
+    //  private int TotalDrawCount => _state.FilteredCount;
 
     public AssetListPanel(StateManager state) : base(StateEnums.AssetList, state)
     {
@@ -63,6 +63,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     }
 
     private AvgFrameTimer avg;
+
     private void UpdateTitleText()
     {
         var sw = BreadcrumbStr.Writer();
@@ -72,11 +73,11 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             sw.Write('/');
             return;
         }
-        
+
         sw.Append('[').Append(_assetBrowser.FilteredCount).Append(']').PadRight(2);
         foreach (var range in path.Split('/'))
             sw.Append(path[range]).Append('/');
-        
+
         // remove last '/'
         sw.SetCursor(sw.Cursor - 1);
         sw.Append((char)0);
@@ -110,13 +111,13 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     public override void OnDraw()
     {
         //if (_state.Sync(RenamedAsset))
-            //Refresh();
+        //Refresh();
 
         // Row 1
         var isRootPath = _assetBrowser.IsRootPath;
         if (isRootPath) ImGui.BeginDisabled(true);
 
-        if (ImGui.ArrowButton("##PrevFolder"u8, ImGuiDir.Left)) 
+        if (ImGui.ArrowButton("##PrevFolder"u8, ImGuiDir.Left))
             _assetBrowser.GoToParent();
 
         if (isRootPath) ImGui.EndDisabled();
@@ -133,50 +134,51 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         ImGui.SetNextItemWidth(width * 0.38f);
         if (_assetCombo.Draw()) ;
-            //_state.EnqueueNewAssetKind((AssetKind)_assetCombo.Value.X);
+        //_state.EnqueueNewAssetKind((AssetKind)_assetCombo.Value.X);
 
         // List
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
-        if (ImGui.BeginTable("asset-list"u8, 1, GuiTheme.ListTableFlags))
-        {
-            ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
-           avg.BeginSample();
-           DrawList();
-           if (avg.EndSample() >= 40) avg.ResetAndPrint(); 
-            ImGui.EndTable();
-           // DragDrop();
-        }
+        ImGui.BeginGroup();
+        avg.BeginSample();
+        DrawFolders();
+        DrawFiles();
+        if (avg.EndSample() >= 40) avg.ResetAndPrint();
+        // DragDrop();
+        ImGui.EndGroup();
 
         ImGui.PopStyleVar();
     }
 
-    private void DrawList()
+    private void DrawFolders()
     {
         var sw = TextBuffers.GetWriter();
         int folderId = 0;
-        
+        var icon = GetIntIcon(Icons.Folder);
         foreach (var it in _assetBrowser.CurrentNode.GetChildren())
         {
-            ImGui.PushID(--folderId);
-            ImGui.TableNextRow();
-            ImGui.TableNextColumn();
-            var text = sw.AppendIcon(GetIcon(Icons.Folder)).PadRight(2).Append(it.GetFolderName()).End();
+            var text = sw.AppendIcon((byte*)&icon).PadRight(2)
+                .Append(it.GetFolderName()).AppendImGuiId(folderId--)
+                .End();
             if (ImGui.Selectable(text, false, 0, ListItemSelectSize))
                 _assetBrowser.GoToChild(it.GetFolderName());
-            ImGui.PopID();
-        }
-
-        foreach ( var file in _assetBrowser.GetFilteredFileEnumerator())
-        {
-            ImGui.PushID(file.Id);
-            ImGui.TableNextRow();
-            ImGui.TableNextColumn();
-            if (ImGui.Selectable(sw.Write(file.LogicalName), false, 0, ListItemSelectSize))
-                OnListItemClick(file.Id);
-            ImGui.PopID();
         }
     }
-    
+
+    private void DrawFiles()
+    {
+        var sw = TextBuffers.GetWriter();
+        var icon = GetIntIcon(Icons.File);
+        foreach (var file in _assetBrowser.GetFilteredFileEnumerator())
+        {
+            var text = sw.AppendIcon((byte*)&icon).PadRight(2)
+                .Append(file.LogicalName).AppendImGuiId(file.Id)
+                .End();
+
+            if (ImGui.Selectable(text, false, 0, ListItemSelectSize))
+                OnListItemClick(file.Id);
+        }
+    }
+
     private void OnListItemClick(AssetFileId fileId)
     {
         if (!fileId.IsValid()) return;

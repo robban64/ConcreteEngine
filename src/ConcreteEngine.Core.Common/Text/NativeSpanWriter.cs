@@ -35,6 +35,7 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<byte> EndSpan() => End().AsSpan();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<byte> End()
     {
         var cursor = _cursor;

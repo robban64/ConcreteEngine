@@ -18,9 +18,11 @@ internal sealed class AssetBrowser
     
     public int FileCount { get; private set; }
     public int FilteredCount { get; private set; }
-    
-    private AssetFileId[] _currentFileIds = new AssetFileId[64];
-    private AssetFileId[] _filteredIds = new AssetFileId[64];
+
+    public FileBinding FileFilter = FileBinding.Unknown;
+    public AssetStorage StorageFilter = AssetStorage.None;
+
+    private AssetFileId[] _filteredFileIds = new AssetFileId[64];
 
     public AssetBrowser()
     {
@@ -29,13 +31,13 @@ internal sealed class AssetBrowser
     }
 
     public int FolderCount => CurrentNode.FolderCount;
-    public bool IsRootPath => RootNode == CurrentNode;
+    public bool IsRootPath => CurrentNode == RootNode || CurrentNode == RootNode.GetChild(0);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<AssetFileId> GetFileIds() => _currentFileIds.AsSpan(0, FileCount);
+    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //public ReadOnlySpan<AssetFileId> GetFileIds() => _currentFileIds.AsSpan(0, FileCount);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<AssetFileId> GetFilteredFileIds() => _filteredIds.AsSpan(0, FileCount);
+    public ReadOnlySpan<AssetFileId> GetFilteredFileIds() => _filteredFileIds.AsSpan(0, FileCount);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SparseObjectEnumerator<AssetFileId,AssetFile> GetFilteredFileEnumerator() 
@@ -71,56 +73,47 @@ internal sealed class AssetBrowser
         foreach (var it in AssetManager.FileRegistry.GetDirectories())
             AddDirectory(RootNode, it);
 
-        SetNode(RootNode.GetChildren()[0].GetChildren()[0]);
+        SetNode(RootNode.GetChild(0).GetChild(0));
     }
     public void SetSearch(ReadOnlySpan<char> searchString)
     {
-        int fileCount = FileCount, folderCount = FolderCount;
+        Array.Clear(_filteredFileIds);
 
-        var filteredIds = _filteredIds.AsSpan();
+        if(!AssetManager.FileRegistry.TryGetDirectoryFileIds(CurrentNode.Path, out var ids))
+            Throwers.InvalidOperation(CurrentNode.Path);
         
-        if (searchString.IsEmpty)
-        {
-            _currentFileIds.CopyTo(filteredIds);
-            FilteredCount = fileCount;
-            return;
-        }
-        
-        filteredIds.Clear();
+        var fileFilter = FileFilter;
+        var storageFilter = StorageFilter;
+
         var count = 0;
-        for (var i = 0; i < fileCount; i++)
+        foreach (var file in AssetManager.FileRegistry.MakeSparseEnumerator(ids))
         {
-            var id = _currentFileIds[i];
-            var name = AssetManager.FileRegistry.Get(id).LogicalName.AsSpan();
-            if (!name.StartsWith(searchString)) continue;
-            filteredIds[count++] = id;
+            if (searchString.Length > 0 && !file.LogicalName.StartsWith(searchString)) continue;
+            if (storageFilter > 0 && storageFilter != file.Storage) continue;
+            if (fileFilter > 0 && fileFilter != file.Binding) continue;
+
+            _filteredFileIds[count++] = file.Id;
         }
 
         FilteredCount = count;
+        FileCount = ids.Length;
     }
     
     private void SetNode(AssetDirectoryNode node)
     {
         CurrentNode = node;
         FileCount = 0;
-        Array.Clear(_currentFileIds);
+        Array.Clear(_filteredFileIds);
 
         if (!AssetManager.FileRegistry.TryGetDirectoryFileIds(node.Path, out var ids)) return;
 
-        if (_currentFileIds.Length < ids.Length)
+        if (_filteredFileIds.Length < ids.Length)
         {
-            var newCapacity = CapacityUtils.CapacityGrowthToFit(_currentFileIds.Length, ids.Length);
-            Array.Resize(ref _currentFileIds, newCapacity);
-            Array.Resize(ref _filteredIds, newCapacity);
+            var newCapacity = CapacityUtils.CapacityGrowthToFit(_filteredFileIds.Length, ids.Length);
+            Array.Resize(ref _filteredFileIds, newCapacity);
         }
 
-        for (var i = 0; i < ids.Length; i++)
-        {
-            _currentFileIds[i] = ids[i];
-            _filteredIds[i] = ids[i];
-        }
-
-        FileCount = ids.Length;
+        SetSearch(ReadOnlySpan<char>.Empty);
     }
     
     private static void AddDirectory(AssetDirectoryNode rootNode, string path)
@@ -162,13 +155,31 @@ internal sealed class AssetBrowser
         }
     }
     
-    internal sealed class AssetDirectoryNode(string path, AssetDirectoryNode? parent)
+    internal sealed class AssetDirectoryNode
     {
-        private readonly int _nameOffset = path.LastIndexOf('/') + 1;
+        private readonly int _nameOffset;
 
-        public readonly string Path = path;
-        public readonly AssetDirectoryNode? Parent = parent;
+        public readonly string Path;
+        public readonly byte[] FolderU8;
+        public readonly AssetDirectoryNode? Parent;
         private readonly List<AssetDirectoryNode> _children = [];
+
+        public AssetDirectoryNode(string path, AssetDirectoryNode? parent)
+        {
+            _nameOffset = path.LastIndexOf('/') + 1;
+            Path = path;
+            Parent = parent;
+
+            if (path.Length <= _nameOffset)
+            {
+                FolderU8 = Encoding.UTF8.GetBytes(path);
+                return;
+            }
+
+            var folderSpan = path.AsSpan(_nameOffset);
+            FolderU8 = new byte[Encoding.UTF8.GetByteCount(folderSpan)];
+            Encoding.UTF8.GetBytes(folderSpan, FolderU8);
+        }
 
         internal int TotalFolderNameLengthUtf8 { get; private set; }
 
@@ -184,11 +195,19 @@ internal sealed class AssetBrowser
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadOnlySpan<char> GetFolderName() => Path.AsSpan(_nameOffset);
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnlySpan<char> GetRelativePath() => Path.AsSpan(EnginePath.AssetBasePath.Length);
 
-        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ReadOnlySpan<char> GetRelativePath()
+        {
+            var span = Path.AsSpan();
+            if(span.StartsWith("AppContent/"))
+                return Path.AsSpan(EnginePath.AssetBasePath.Length);
+            return span;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public AssetDirectoryNode GetChild(int i) => _children[i];
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadOnlySpan<AssetDirectoryNode> GetChildren() => CollectionsMarshal.AsSpan(_children);
 

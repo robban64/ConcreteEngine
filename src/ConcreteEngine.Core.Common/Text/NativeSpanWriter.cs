@@ -23,24 +23,26 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetCursor(int cursor)
     {
-        if (cursor >= Capacity) Throwers.BufferOverflow(nameof(NativeSpanWriter), cursor, Capacity);
+        if ((uint)cursor >= (uint)Capacity) 
+            Throwers.BufferOverflow(nameof(NativeSpanWriter), cursor, Capacity);
         _cursor = cursor;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Span<byte> AsSpan(int start = 0) => new(Buffer + start, Capacity - start);
+    public readonly Span<byte> AsSpan(int start = 0) =>
+        MemoryMarshal.CreateSpan(ref *(Buffer + start), Capacity - start);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<byte> EndSpan() => End().AsSpan();
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<byte> End()
     {
-        Buffer[_cursor] = 0;
-        var view = new NativeView<byte>(Buffer, 0, _cursor);
+        var cursor = _cursor;
         _cursor = 0;
-        return view;
+        Buffer[cursor] = 0;
+        return new NativeView<byte>(Buffer, 0, cursor);
     }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeView<byte> Write(char value)
@@ -78,7 +80,7 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeView<byte> Write(scoped ReadOnlySpan<byte> value)
     {
-        if (value.IsEmpty)
+        if (value.Length == 0)
         {
             Buffer[0] = 0;
             return new NativeView<byte>(Buffer, 0);
@@ -96,7 +98,7 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeView<byte> Write(scoped ReadOnlySpan<char> value)
     {
-        if (value.IsEmpty)
+        if (value.Length == 0)
         {
             Buffer[0] = 0;
             return new NativeView<byte>(Buffer, 0);
@@ -154,7 +156,7 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter Append(scoped ReadOnlySpan<byte> value)
     {
-        if (value.IsEmpty) return ref this;
+        if (value.Length == 0) return ref this;
         if ((uint)Cursor + (uint)value.Length >= (uint)Capacity)
             Throwers.BufferOverflow(nameof(NativeSpanWriter), Cursor + value.Length, Capacity);
 
@@ -166,7 +168,7 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter Append(scoped ReadOnlySpan<char> value)
     {
-        if (value.IsEmpty) return ref this;
+        if (value.Length == 0) return ref this;
         if ((uint)Cursor + (uint)value.Length >= (uint)Capacity)
             Throwers.BufferOverflow(nameof(NativeSpanWriter), Cursor + value.Length, Capacity);
 
@@ -221,12 +223,12 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref NativeSpanWriter PadRight(uint amount, byte value = 0x20)
+    public ref NativeSpanWriter PadRight(int amount, byte value = 0x20)
     {
-        var safeAmount = uint.Min(amount, (uint)(Capacity - _cursor));
-
-        NativeMemory.Fill(Buffer + _cursor, safeAmount, value);
-        _cursor += (int)safeAmount;
+        amount = int.Clamp(amount,0, Capacity - _cursor);
+        NativeMemory.Fill(Buffer + _cursor, (nuint)amount, value);
+        _cursor += amount;
         return ref this;
     }
+    
 }

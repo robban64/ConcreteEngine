@@ -215,7 +215,8 @@ public sealed partial class AssetStore
     //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetEnumerator GetAssetEnumerator(AssetKind kind) => new(GetTypeStore(kind).AsSpan(), _assets.AsSpan());
+    public SparseObjectEnumerator<AssetId, AssetObject> GetAssetEnumerator(AssetKind kind) => 
+        new(GetTypeStore(kind).AsSpan(), _assets.AsSpan());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetEnumerator<T> GetAssetEnumerator<T>() where T : AssetObject =>

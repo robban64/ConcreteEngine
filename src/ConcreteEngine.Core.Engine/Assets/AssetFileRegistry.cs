@@ -33,6 +33,7 @@ public sealed class AssetFileRegistry
 
     public int RootFileCount => _rootBindings.Count;
 
+    internal ReadOnlySpan<AssetFile?> GetFileSpan() => _files.AsSpan(0, Count);
     public Dictionary<string, List<AssetFileId>>.KeyCollection GetDirectories() => _byDirectory.Keys;
     //
     public bool HasFilePath(string relativePath) => _fileByPath.ContainsKey(relativePath);
@@ -119,12 +120,16 @@ public sealed class AssetFileRegistry
     private AssetFile AddFile(FileBinding binding, string name, in FileScanInfo scanInfo)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
-        ArgumentException.ThrowIfNullOrEmpty(scanInfo.RelativePath);
         ArgumentOutOfRangeException.ThrowIfEqual(scanInfo.IsValid, false);
         ArgumentOutOfRangeException.ThrowIfZero((int)binding, nameof(binding));
 
-        if (_fileByPath.ContainsKey(scanInfo.RelativePath))
-            Throwers.InvalidArgument(nameof(scanInfo), $"AssetFile {scanInfo.RelativePath} already registered");
+        var isInMemory = scanInfo.Storage == AssetStorage.InMemory;
+        if (!isInMemory)
+        {
+            ArgumentException.ThrowIfNullOrEmpty(scanInfo.RelativePath);
+            if (_fileByPath.ContainsKey(scanInfo.RelativePath))
+                Throwers.InvalidArgument(nameof(scanInfo), $"AssetFile {scanInfo.RelativePath} already registered");
+        }
 
         var fileId = AllocateSlot();
         var fileSpec = new AssetFile(
@@ -138,17 +143,21 @@ public sealed class AssetFileRegistry
             lastWriteTime: scanInfo.LastWriteTime
         );
 
-        if (scanInfo.Storage == AssetStorage.FileSystem && scanInfo.RelativePath.StartsWith(EnginePath.AssetBasePath))
+        if (!isInMemory)
         {
-            var dirSpan = Path.GetDirectoryName(scanInfo.RelativePath.AsSpan());
-            if (!_byDirectory.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(dirSpan, out var fileIds))
-                _byDirectory.Add(dirSpan.ToString(), fileIds = new List<AssetFileId>(9));
+            if (!scanInfo.RelativePath.StartsWith(EnginePath.AssetBasePath)) 
+                Throwers.InvalidArgument(nameof(scanInfo.RelativePath));
+            
+            var path = Path.GetDirectoryName(scanInfo.RelativePath.AsSpan());
+            if (!_byDirectory.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(path, out var fileIds))
+                _byDirectory.Add(path.ToString(), fileIds = new List<AssetFileId>(4));
             
             fileIds.Add(fileId);
+            
+            _fileByPath.Add(scanInfo.RelativePath, fileId);
         }
 
         _files[fileId.Index()] = fileSpec;
-        _fileByPath.Add(scanInfo.RelativePath, fileId);
         return fileSpec;
     }
 
@@ -165,4 +174,8 @@ public sealed class AssetFileRegistry
 
     //
     public ActiveObjectEnumerator<AssetFile> GetEnumerator() => new(_files.AsSpan(0, Count));
+    
+    public SparseObjectEnumerator<AssetFileId,AssetFile> MakeSparseEnumerator(ReadOnlySpan<AssetFileId> fileIds) =>
+        new(fileIds, _files.AsSpan(0, Count));
+
 }

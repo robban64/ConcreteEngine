@@ -19,14 +19,17 @@ public ref struct SpanWriter(Span<char> buffer)
     public void Clear() => _cursor = 0;
     public void Advance(int count) => _cursor += count;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<char> WrittenSpan() => _buffer.Slice(0, _cursor + 1);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<char> LeftSpan() => _buffer.Slice(_cursor);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining), UnscopedRef]
     public ref SpanWriter Append(scoped ReadOnlySpan<char> value)
     {
-        if (value.IsEmpty) return ref this;
+        if (value.Length == 0) return ref this;
 
         var dst = _buffer.Slice(_cursor);
         if (value.Length > dst.Length) ThrowBufferTooSmall();
@@ -39,10 +42,9 @@ public ref struct SpanWriter(Span<char> buffer)
     [MethodImpl(MethodImplOptions.AggressiveInlining), UnscopedRef]
     public ref SpanWriter Append(scoped ReadOnlySpan<byte> value)
     {
-        if (value.IsEmpty) return ref this;
+        if (value.Length == 0) return ref this;
 
-        var dst = _buffer.Slice(_cursor);
-        if (!Encoding.UTF8.TryGetChars(value, dst, out int written))
+        if (!Encoding.UTF8.TryGetChars(value, LeftSpan(), out int written))
             ThrowBufferTooSmall();
 
         _cursor += written;
@@ -52,8 +54,7 @@ public ref struct SpanWriter(Span<char> buffer)
     [MethodImpl(MethodImplOptions.AggressiveInlining), UnscopedRef]
     public ref SpanWriter Append<T>(T value, ReadOnlySpan<char> format = default) where T : ISpanFormattable
     {
-        var dst = _buffer.Slice(_cursor);
-        if (!value.TryFormat(dst, out var written, format, null))
+        if (!value.TryFormat(LeftSpan(), out var written, format, null))
             ThrowBufferTooSmall();
 
         _cursor += written;
@@ -64,7 +65,7 @@ public ref struct SpanWriter(Span<char> buffer)
     public ref SpanWriter PadRight(int amount)
     {
         if (amount <= 0) return ref this;
-        var dst = _buffer.Slice(_cursor);
+        var dst = LeftSpan();
         var len = _cursor + amount;
         if ((uint)len > (uint)dst.Length) ThrowBufferFull();
 

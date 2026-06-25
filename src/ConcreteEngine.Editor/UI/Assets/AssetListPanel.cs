@@ -44,8 +44,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         _assetBrowser = new AssetBrowser();
         _searchInput = new TextInput("search", 8)
             .WithFilter(TextInputFilter.None, allowEmpty: true)
-            .WithTransformer(trimmed: true, lowercase: true);
-           // .WithCallbackU8((searchString) => _state.SetSearch(searchString));
+            .WithTransformer(trimmed: true, lowercase: true)
+            .WithCallbackU16((searchString) => _assetBrowser.SetSearch(searchString));
 
         _assetCombo = ComboInput.MakeFromEnumCache<AssetKind>("asset-combo");
         _assetCombo.StartAt = 1;
@@ -66,12 +66,16 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private void UpdateTitleText()
     {
         var sw = BreadcrumbStr.Writer();
-        var dirSpan = _assetBrowser.CurrentNode.Path.AsSpan();
+        var path = _assetBrowser.CurrentNode.GetRelativePath();
+        if (path.Length == 0)
+        {
+            sw.Write('/');
+            return;
+        }
         
-        //sw.Append('[').Append(_state.FilteredCount).Append(']').PadRight(2).Append('/');
-        sw.Append('[').Append(0).Append(']').PadRight(2).Append('/');
-        foreach (var range in dirSpan.Split('/'))
-            sw.Append(dirSpan[range]).Append('/');
+        sw.Append('[').Append(_assetBrowser.FilteredCount).Append(']').PadRight(2);
+        foreach (var range in path.Split('/'))
+            sw.Append(path[range]).Append('/');
         
         // remove last '/'
         sw.SetCursor(sw.Cursor - 1);
@@ -96,9 +100,10 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         BreadcrumbStr.Clear();
     }
 
+    public override void OnUpdateDiagnostic() => Refresh();
+
     private void Refresh()
     {
-        //_assetCombo.Value = _state.PendingKind != 0 ? (int)_state.PendingKind : (int)_assetBrowser.CurrentKind;
         UpdateTitleText();
     }
 
@@ -113,7 +118,6 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         if (ImGui.ArrowButton("##PrevFolder"u8, ImGuiDir.Left)) 
             _assetBrowser.GoToParent();
-           // _state.EnqueueDirectory(AssetListState.GoBackString);
 
         if (isRootPath) ImGui.EndDisabled();
 
@@ -136,7 +140,6 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         if (ImGui.BeginTable("asset-list"u8, 1, GuiTheme.ListTableFlags))
         {
             ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
-           // DrawList();
            avg.BeginSample();
            DrawList();
            if (avg.EndSample() >= 40) avg.ResetAndPrint(); 
@@ -151,29 +154,28 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     {
         var sw = TextBuffers.GetWriter();
         int folderId = 0;
+        
         foreach (var it in _assetBrowser.CurrentNode.GetChildren())
         {
             ImGui.PushID(--folderId);
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
-            if (ImGui.Selectable(sw.Write(it.GetFolderName()), false, 0, ListItemSelectSize))
+            var text = sw.AppendIcon(GetIcon(Icons.Folder)).PadRight(2).Append(it.GetFolderName()).End();
+            if (ImGui.Selectable(text, false, 0, ListItemSelectSize))
                 _assetBrowser.GoToChild(it.GetFolderName());
             ImGui.PopID();
         }
-        
-        foreach (ref readonly var item in _assetBrowser.GetFileIds())
+
+        foreach ( var file in _assetBrowser.GetFilteredFileEnumerator())
         {
-            ImGui.PushID(item.FileId);
+            ImGui.PushID(file.Id);
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
-            if (ImGui.Selectable(sw.Write(item.Name), false, 0, ListItemSelectSize))
-                OnListItemClick(item.FileId);
+            if (ImGui.Selectable(sw.Write(file.LogicalName), false, 0, ListItemSelectSize))
+                OnListItemClick(file.Id);
             ImGui.PopID();
-
         }
-
     }
-    
     
     private void OnListItemClick(AssetFileId fileId)
     {
@@ -184,6 +186,20 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         State.EnqueueEvent(new SelectionEvent(assetId));
         _selectedFile = fileId;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static (uint icon, uint color) GetIconAndColor(FileBinding binding, AssetKind kind)
+    {
+        return binding switch
+        {
+            FileBinding.Unknown => (GetIntIcon(Icons.Folder), TextPrimary),
+            FileBinding.RootFile => (GetIntIcon(kind.ToIcon()), TextLightBlue),
+            FileBinding.DependentFile => (GetIntIcon(kind.ToFileIcon()), TextSecondary),
+            FileBinding.UnboundFile => (GetIntIcon(Icons.File), TextMuted),
+            _ => Throwers.Unreachable<(uint, uint)>(nameof(binding))
+        };
+    }
+}
 
 /*
     private void DrawList()
@@ -283,19 +299,6 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         }
     }
 */
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static (uint icon, uint color) GetIconAndColor(FileBinding binding, AssetKind kind)
-    {
-        return binding switch
-        {
-            FileBinding.Unknown => (GetIntIcon(Icons.Folder), TextPrimary),
-            FileBinding.RootFile => (GetIntIcon(kind.ToIcon()), TextLightBlue),
-            FileBinding.DependentFile => (GetIntIcon(kind.ToFileIcon()), TextSecondary),
-            FileBinding.UnboundFile => (GetIntIcon(Icons.File), TextMuted),
-            _ => Throwers.Unreachable<(uint, uint)>(nameof(binding))
-        };
-    }
-}
 /*
 private string DrawTextureRow(AssetId id, float cellTop, UnsafeSpanWriter sw)
 {

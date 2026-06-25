@@ -15,7 +15,7 @@ using static AssimpUtils;
 internal sealed class ModelImportContext(TextureLoader textureLoader)
 {
     public string? ModelName;
-    public string? Filename;
+    public string? FilePath;
 
     public bool IsAnimated;
 
@@ -46,10 +46,10 @@ internal sealed class ModelImportContext(TextureLoader textureLoader)
 
     public void StartContext(string modelName, string filename)
     {
-        if (HashIndex > 0 || BoneIndexByName.Count > 0 || Filename != null || ModelName != null)
+        if (HashIndex > 0 || BoneIndexByName.Count > 0 || FilePath != null || ModelName != null)
             Throwers.InvalidOperation("Context already initialized");
         ModelName = modelName;
-        Filename = filename;
+        FilePath = filename;
     }
 
     public void Begin(AssimpSceneMeta meta, bool isAnimated)
@@ -63,7 +63,7 @@ internal sealed class ModelImportContext(TextureLoader textureLoader)
     public void Reset()
     {
         ModelName = null;
-        Filename = null;
+        FilePath = null;
         HashIndex = 0;
         IsAnimated = false;
 

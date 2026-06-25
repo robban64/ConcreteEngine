@@ -47,11 +47,10 @@ internal static unsafe class MaterialModelImporter
                 id: AssetFileId.Empty,
                 binding: FileBinding.RootFile,
                 storage: AssetStorage.Embedded,
-                relativePath: assetName,
+                relativePath: ctx.FilePath!,
                 logicalName: material.EmbeddedName,
                 lastWriteTime: DateTime.MinValue,
                 sizeBytes: 0
-                //Source: ctx.Filename
             );
 
             embeddedContext.Materials.Add(material);
@@ -73,7 +72,7 @@ internal static unsafe class MaterialModelImporter
                 id: AssetFileId.Empty,
                 binding: FileBinding.RootFile,
                 storage: AssetStorage.Embedded,
-                relativePath: texture.Name,
+                relativePath: ctx.FilePath!,
                 logicalName: texture.EmbeddedName,
                 sizeBytes: textureSize,
                 lastWriteTime: DateTime.MinValue

@@ -16,12 +16,12 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     private NativeArray<ParticleCpuInstance> _particles;
 
-    public readonly Id16<ParticleEmitter> Id;
     public readonly string Name;
 
-    public int Slot { get; private set; } = -1;
+    public readonly Id16<ParticleEmitter> Id;
     public MeshId BoundMesh { get; private set; }
 
+    public int Slot { get; private set; } = -1;
     public int ParticleCount { get; private set; }
     public int PendingParticleCount { get; private set; }
 
@@ -71,7 +71,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     internal void Attach(int slot, MeshId meshId)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);
-        ArgumentOutOfRangeException.ThrowIfZero(meshId.Value);
+        ArgumentOutOfRangeException.ThrowIfZero(meshId.Id);
         if (Slot >= 0) throw new ArgumentOutOfRangeException(nameof(slot));
         Slot = slot;
         BoundMesh = meshId;

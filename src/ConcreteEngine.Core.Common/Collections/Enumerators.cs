@@ -29,6 +29,38 @@ public ref struct ActiveObjectEnumerator<T>(ReadOnlySpan<T?> span) where T : cla
     public readonly ActiveObjectEnumerator<T> GetEnumerator() => new(_span);
 }
 
+public ref struct SparseObjectEnumerator<TId, TObj>(ReadOnlySpan<TId> idSpan, ReadOnlySpan<TObj?> objectSpan) 
+    where TId : unmanaged, ITypedId<TId> where TObj : class
+{
+    private int _i = -1;
+    private int _currentIndex;
+    private readonly ReadOnlySpan<TId> _idSpan = idSpan;
+    private readonly ReadOnlySpan<TObj?> _objectSpan = objectSpan;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool MoveNext()
+    {
+        while (++_i < _idSpan.Length)
+        {
+            _currentIndex = _idSpan[_i].Index();
+            if((uint)_currentIndex < (uint)_objectSpan.Length && _objectSpan[_currentIndex] != null) 
+                return true;
+        }
+
+        return false;
+    }
+
+    public readonly TObj Current
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _objectSpan[_currentIndex]!;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly SparseObjectEnumerator<TId, TObj> GetEnumerator() => new(_idSpan, _objectSpan);
+}
+
+
 public ref struct RefEnumerator<T> where T : unmanaged
 {
     private readonly ref T _start;

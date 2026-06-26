@@ -22,9 +22,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 {
     private const float ListItemHeight = 24f;
     private static float ListItemPad => GuiTheme.CellPadding.X * 2f;
-
-    private static readonly Vector2 ListItemSelectSize = new(0, ListItemHeight);
-
+    
     private readonly AssetBrowser _assetBrowser;
 
     private readonly TextInput _searchInput;
@@ -157,7 +155,9 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             ImGui.SetNextItemWidth(100);
             if (_assetCombo.Draw()) ;
 
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
             DrawFiles();
+            ImGui.PopStyleVar();
         ImGui.EndChild();
 
         if (_avg.EndSample() > 160) _avg.ResetAndPrint("Draw-AssetList");
@@ -174,88 +174,225 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             var text = sw.AppendIcon((byte*)&icon).PadRight(2)
                 .Append(it.PreviewName.GetReadSpan()).AppendImGuiId(folderId--)
                 .End();
-            if (ImGui.Selectable(text, false, 0, ListItemSelectSize))
+            if (ImGui.Selectable(text, false, 0, new Vector2(0, ListItemHeight)))
                 _assetBrowser.GoToChild(it.GetFolderName());
         }
     }
-    
-    const float padding = 16.0f;
-    private const float thumbnailWidth = 80.0f;
-    private const float cellSize = thumbnailWidth + padding;
-    private const float iconSize = GuiTheme.IconSizeLarge;
+    private const float GridPadding = 16.0f;
+    private const float GridThumbnailSize = 80.0f;
+    private const float GridCellSize = GridThumbnailSize + GridPadding;
+    private const float GridIconSize = GuiTheme.IconSizeLarge;
+    private static readonly Vector2 ItemSize = new (GridThumbnailSize, GridThumbnailSize);
+    private static readonly Vector2 IconBasePos = new ((GridThumbnailSize - GridIconSize) * 0.5f, (GridThumbnailSize * 0.4f) - (GridIconSize * 0.5f));
 
     private void DrawFiles()
     {
-        if(_assetBrowser.FilteredCount == 0) return;
+        var count = _assetBrowser.FilteredCount;
+        if(count == 0) return;
 
-        int columnCount = (int)(ImGui.GetContentRegionAvail().X / cellSize);
+        int columnCount = (int)(ImGui.GetContentRegionAvail().X / GridCellSize);
         columnCount = int.Max(columnCount, 1);
-        var rowCount =float.Ceiling(_assetBrowser.FilteredCount / (float)columnCount);
+        var rowCount =float.Ceiling(count / (float)columnCount);
         
         var sw = TextBuffers.GetWriter();
+        var drawList = ImGui.GetWindowDrawList();
 
         var selectedFileId = _selectedFile;
-        uint icon = 0, color = 0;
         var index = 0;
-        var drawList = ImGui.GetWindowDrawList();
-        Vector2 iconPos = new Vector2(
-            (thumbnailWidth - iconSize) * 0.5f,
-            (thumbnailWidth * 0.4f) - (iconSize * 0.5f)
-        );
 
-        foreach (var file in _assetBrowser.GetFilteredFileEnumerator())
+        foreach (ref readonly var file in _assetBrowser.GetFileItems(0, count))
         {
-            var style = GetIconAndColor(file.Binding, AssetKind.Texture);
-            if (style.icon != icon)
-            {
-                if (color > 0) ImGui.PopStyleColor();
-                ImGui.PushStyleColor(ImGuiCol.Text, style.color);
-                color = style.color;
-                icon = style.icon;
-            }
-
+            AssetsExtensions.GetIconAndColor(file.Binding, AssetKind.Texture, out var icon, out var color);
             var isSelected = selectedFileId == file.Id;
-            if (ImGui.Selectable(sw.AppendImGuiId(file.Id).End(), isSelected, 0, new Vector2(thumbnailWidth)))
+            
+            var min = ImGui.GetCursorScreenPos();
+            //var max = min + ItemSize;
+
+            if (ImGui.Selectable(sw.AppendImGuiId(file.Id).End(), isSelected, 0, ItemSize))
                 OnListItemClick(file.Id);
 
             GuiTheme.PushFontIconLarge();
 
-            Vector2 min = ImGui.GetItemRectMin();
-            Vector2 max = ImGui.GetItemRectMax();
+            drawList.PushClipRect(min,min + ItemSize,true);
 
-            drawList.PushClipRect(min,max,true);
-
-            drawList.AddText(iconPos + min, color, (byte*)&icon);
+            drawList.AddText(IconBasePos + min, color, (byte*)&icon);
             ImGui.PopFont();
             
-            var text = sw.Write(file.LogicalName);
+            var text = sw.Write(file.Name);
 
             Vector2 labelSize = ImGui.CalcTextSize(text);
             Vector2 labelPos = new Vector2(
-                min.X + (thumbnailWidth - float.Min(labelSize.X, thumbnailWidth)) * 0.5f,
-                min.Y + (thumbnailWidth * 0.8f) - (labelSize.Y * 0.5f)
+                min.X + (GridThumbnailSize - float.Min(labelSize.X, GridThumbnailSize)) * 0.5f,
+                min.Y + (GridThumbnailSize * 0.8f) - (labelSize.Y * 0.5f)
             );
 
             drawList.AddText(labelPos, TextPrimary, text);
             drawList.PopClipRect();
             
-            int nextItemXIndex = (index + 1) % columnCount;
-            if (nextItemXIndex != 0 && (index + 1) < _assetBrowser.FilteredCount)
+            int nextGridIndex = (index + 1) % columnCount;
+            if (nextGridIndex != 0 && index + 1 < count)
             {
-                ImGui.SameLine(0.0f, padding);
+                ImGui.SameLine(0.0f, GridPadding);
             }
             else
             {
-                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + padding);
+                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + GridPadding);
                 ImGui.Dummy(default);
             }
 
             ++index;
         }
 
-        ImGui.PopStyleColor();
     }
+    /*
+    private const float GridPadding = 16.0f;
+    private const float GridThumbnailSize = 80.0f;
+    private const float GridCellSize = GridThumbnailSize + GridPadding;
+    private const float GridIconSize = GuiTheme.IconSizeLarge;
+    private static readonly Vector2 ItemSize = new (GridThumbnailSize, GridThumbnailSize);
+    private static readonly Vector2 IconBasePos = new ((GridThumbnailSize - GridIconSize) * 0.5f, (GridThumbnailSize * 0.4f) - (GridIconSize * 0.5f));
 
+    private void DrawFiles()
+    {
+        var count = _assetBrowser.FilteredCount;
+        if(count == 0) return;
+
+        var columnCount = (int)(ImGui.GetContentRegionAvail().X / GridCellSize);
+        columnCount = int.Max(columnCount, 1);
+        var rowCount = (int)float.Ceiling(count / (float)columnCount);
+
+        var clipper = new ImGuiListClipper();
+        clipper.Begin(rowCount, GridThumbnailSize); // GridThumbnailSize or GridCellSize(GridThumbnailSize+GridPadding)
+        while (clipper.Step())
+        {
+            var span = _assetBrowser.GetFileItems(clipper.DisplayStart, clipper.DisplayEnd - clipper.DisplayStart);
+            DrawFilesInner(count, columnCount, span);
+        }
+
+        clipper.End();
+
+
+        var span = _assetBrowser.GetFileItems(0, count);
+        DrawFilesInner(count, columnCount, span);
+
+    }
+    */
+/*
+    private void DrawFilesInner(int count, int columnCount, ReadOnlySpan<FileItem> span)
+    {
+        var sw = TextBuffers.GetWriter();
+        var drawList = ImGui.GetWindowDrawList();
+        var selectedFileId = _selectedFile;
+        //var span = _assetBrowser.GetFileItems(start, length);
+        for (var index = 0; index < span.Length; index++)
+        {
+            ref readonly var it = ref span[index];
+            var isSelected = selectedFileId.Id == it.Id;
+            var icon = it.Icon;
+
+            var min = ImGui.GetCursorScreenPos();
+            //Vector2 max = min + itemSize;
+
+            if(ImGui.InvisibleButton(sw.AppendImGuiId(it.Id).End(), ItemSize))
+                OnListItemClick(it.Id);
+            bool isHovered = ImGui.IsItemHovered();
+            if (isSelected)
+            {
+                drawList.AddRectFilled(min, min + ItemSize, Palette32.PrimaryColor, 4.0f); // 4.0f rounding
+            }
+            else if (isHovered)
+            {
+                drawList.AddRectFilled(min, min + ItemSize, Palette32.HoverColor, 4.0f);
+            }
+            drawList.PushClipRect(min, min + new Vector2(GridThumbnailSize, GridThumbnailSize), true);
+            GuiTheme.PushFontIconLarge();
+            drawList.AddText(IconBasePos + min, it.Color, (byte*)&icon);
+            ImGui.PopFont();
+
+            var text = sw.Write(it.Name);
+            var labelSize = ImGui.CalcTextSize(text);
+            if (labelSize.X > GridThumbnailSize - 4.0f)
+            {
+                Console.WriteLine("asd");
+            }
+            var labelPos = new Vector2(
+                min.X + (GridThumbnailSize - float.Min(labelSize.X, GridThumbnailSize)) * 0.5f,
+                min.Y + (GridThumbnailSize * 0.8f) - (labelSize.Y * 0.5f)
+            );
+
+            drawList.AddText(labelPos, TextPrimary, text);
+            drawList.PopClipRect();
+
+            var nextItemIndex = (index + 1) % columnCount;
+            if (nextItemIndex != 0 && index + 1 < count)
+            {
+                ImGui.SameLine(0.0f, GridPadding);
+            }
+            else
+            {
+                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + GridPadding);
+
+            }
+
+            ++index;
+        }
+
+    }
+    private void DrawFilesInner2(int count, int columnCount, ReadOnlySpan<FileItem> span)
+    {
+        var sw = TextBuffers.GetWriter();
+        var drawList = ImGui.GetWindowDrawList();
+        var selectedFileId = _selectedFile;
+        //var span = _assetBrowser.GetFileItems(start, length);
+        for (var index = 0; index < span.Length; index++)
+        {
+            ref readonly var it = ref span[index];
+            var isSelected = selectedFileId.Id == it.Id;
+            var icon = it.Icon;
+
+            var min = ImGui.GetCursorScreenPos();
+            //Vector2 max = min + itemSize;
+
+            if (ImGui.Selectable(sw.AppendImGuiId(it.Id).End(), isSelected, 0, ItemSize))
+                OnListItemClick(it.Id);
+
+            drawList.PushClipRect(min, min + ItemSize, true);
+            
+            GuiTheme.PushFontIconLarge();
+            drawList.AddText(IconBasePos + min, it.Color, (byte*)&icon);
+            ImGui.PopFont();
+
+            var text = sw.Write(it.Name);
+            var labelSize = ImGui.CalcTextSize(text);
+            if (labelSize.X > GridThumbnailSize - 4.0f)
+            {
+                Console.WriteLine("asd");
+            }
+            var labelPos = new Vector2(
+                min.X + (GridThumbnailSize - float.Min(labelSize.X, GridThumbnailSize)) * 0.5f,
+                min.Y + (GridThumbnailSize * 0.8f) - (labelSize.Y * 0.5f)
+            );
+
+            drawList.AddText(labelPos, TextPrimary, text);
+            drawList.PopClipRect();
+
+            var nextItemIndex = (index + 1) % columnCount;
+            if (nextItemIndex != 0 && index + 1 < count)
+            {
+                ImGui.SameLine(0.0f, GridPadding);
+            }
+            else
+            {
+                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + GridPadding);
+                ImGui.Dummy(default);
+
+            }
+
+            ++index;
+        }
+
+    }
+*/
     private void OnListItemClick(AssetFileId fileId)
     {
         if (!fileId.IsValid()) return;
@@ -266,18 +403,6 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         _selectedFile = fileId;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static (uint icon, uint color) GetIconAndColor(FileBinding binding, AssetKind kind)
-    {
-        return binding switch
-        {
-            FileBinding.Unknown => (GetIntIcon(Icons.Folder), TextPrimary),
-            FileBinding.RootFile => (GetIntIcon(kind.ToIcon()), TextLightBlue),
-            FileBinding.DependentFile => (GetIntIcon(kind.ToFileIcon()), TextSecondary),
-            FileBinding.UnboundFile => (GetIntIcon(Icons.File), TextMuted),
-            _ => Throwers.Unreachable<(uint, uint)>(nameof(binding))
-        };
-    }
 }
 /*var text = sw.AppendIcon((byte*)&icon).PadRight(2)
     .Append(file.LogicalName).AppendImGuiId(file.Id)

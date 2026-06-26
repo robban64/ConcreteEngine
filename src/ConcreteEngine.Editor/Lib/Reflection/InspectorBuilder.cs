@@ -106,7 +106,7 @@ public static class InspectorBuilder
 
                 if (entry.TypeKind == InspectorTypeKind.PrimitiveStruct)
                 {
-                    var idValue = new String16Utf8(GetPrimitiveStruct(entry, itemTarget, in sw).AsSpan());
+                    var idValue = new String16Utf8(GetPrimitiveStruct(entry, itemTarget, in sw).GetReadSpan());
                     section.Properties.Add(new UiTextProperty(new String16Utf8(entry.Name), idValue));
                     continue;
                 }

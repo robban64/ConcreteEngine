@@ -42,5 +42,6 @@ internal static class TextBuffers
         StyleBuffer.Dispose();
         PersistentArena.Dispose();
         LogBuffer.Dispose();
+        _scratchBuffer.Dispose();
     }
 }

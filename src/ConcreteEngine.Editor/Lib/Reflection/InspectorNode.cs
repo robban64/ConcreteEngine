@@ -128,8 +128,8 @@ public sealed class InspectorHeaderUi
             ImGui.SameLine();
         }
 
-        ImGui.TextUnformatted(sw.Append(" [").Append(Id.AsSpan()).Append("[")
-            .Append(Gen.AsSpan()).Append("]").End());
+        ImGui.TextUnformatted(sw.Append(" [").Append(Id.GetReadSpan()).Append("[")
+            .Append(Gen.GetReadSpan()).Append("]").End());
 
         ImGui.SameLine();
         ImGui.PushFont(null, 15);

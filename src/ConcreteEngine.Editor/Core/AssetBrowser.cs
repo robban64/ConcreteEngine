@@ -4,13 +4,44 @@ using System.Text;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Editor.Theme;
+using ConcreteEngine.Editor.Utils;
 using static ConcreteEngine.Core.Engine.Assets.AssetManager;
 
 namespace ConcreteEngine.Editor.Core;
+
+internal readonly struct FileItem : IComparable<FileItem>
+{
+    public readonly string Name;
+    public readonly AssetFileId Id;
+    public readonly uint Icon;
+    public readonly uint Color;
+    public readonly FileBinding Binding;
+    public readonly AssetStorage Storage;
+    public readonly AssetKind AssetKind;
+
+    public FileItem(string name, AssetFileId id, FileBinding binding, AssetStorage storage, AssetKind assetKind)
+    {
+        Name = name;
+        Id = id;
+        Binding = binding;
+        Storage = storage;
+        AssetKind = assetKind;
+        AssetsExtensions.GetIconAndColor(binding, assetKind, out Icon, out Color);
+    }
+
+    public int CompareTo(FileItem other)
+    {
+        var c = ((int)Binding).CompareTo((int)other.Binding);
+        return c != 0 ? c : Name.CompareTo(other.Name, StringComparison.Ordinal);
+    }
+
+}
 
 internal sealed class AssetBrowser
 {
@@ -24,6 +55,7 @@ internal sealed class AssetBrowser
     public AssetStorage StorageFilter = AssetStorage.None;
 
     private AssetFileId[] _filteredFileIds = new AssetFileId[64];
+    private FileItem[] _items = new FileItem[64];
 
     private readonly Action<AssetBrowser> _onDirectoryChange;
 
@@ -39,9 +71,12 @@ internal sealed class AssetBrowser
 
     //[MethodImpl(MethodImplOptions.AggressiveInlining)]
     //public ReadOnlySpan<AssetFileId> GetFileIds() => _currentFileIds.AsSpan(0, FileCount);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<FileItem> GetFileItems(int start, int length)
+        => _items.AsSpan(start, int.Min(length, FilteredCount - start));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<AssetFileId> GetFilteredFileIds() => _filteredFileIds.AsSpan(0, FileCount);
+    public ReadOnlySpan<AssetFileId> GetFilteredFileIds() => _filteredFileIds.AsSpan(0, FilteredCount);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SparseObjectEnumerator<AssetFileId, AssetFile> GetFilteredFileEnumerator()
@@ -83,6 +118,7 @@ internal sealed class AssetBrowser
     public void SetSearch(ReadOnlySpan<char> searchString)
     {
         Array.Clear(_filteredFileIds);
+        Array.Clear(_items);
 
         if (!FileRegistry.TryGetDirectoryIds(CurrentNode.Path, out var ids))
         {
@@ -100,8 +136,14 @@ internal sealed class AssetBrowser
             if (storageFilter > 0 && storageFilter != file.Storage) continue;
             if (fileFilter > 0 && fileFilter != file.Binding) continue;
 
-            _filteredFileIds[count++] = file.Id;
+            var kind = AssetKind.Unknown;
+            if (FileRegistry.TryGetByRootId(file.Id, out var assetId))
+                kind = Assets.Get<AssetObject>(assetId).Kind;
+            
+            _filteredFileIds[count] = file.Id;
+            _items[count++] = new FileItem(file.LogicalName, file.Id, file.Binding, file.Storage, kind);
         }
+        _items.AsSpan(0, count).Sort();
 
         _filteredFileIds.AsSpan(0, count)
             .Sort(static (a, b) => ((int)FileRegistry.Get(a).Binding).CompareTo((int)FileRegistry.Get(b).Binding));

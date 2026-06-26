@@ -9,6 +9,46 @@ namespace ConcreteEngine.Editor.Utils;
 
 internal static class AssetsExtensions
 {
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void GetIconAndColor(FileBinding binding, AssetKind kind, out uint icon, out uint color)
+    {
+        switch (binding)
+        {
+            case FileBinding.Unknown:
+                icon = StyleMap.GetIntIcon(Icons.Folder);
+                color = Palette32.TextPrimary;
+                break;
+            case FileBinding.RootFile:
+                icon = StyleMap.GetIntIcon(kind.ToIcon());
+                color = Palette32.TextLightBlue;
+                break;
+            case FileBinding.DependentFile:
+                //icon = StyleMap.GetIntIcon(kind.ToFileIcon());
+                icon = StyleMap.GetIntIcon(Icons.FileImage);
+                color = Palette32.TextSecondary;
+                break;
+            case FileBinding.UnboundFile:
+                icon = StyleMap.GetIntIcon(Icons.File);
+                color = Palette32.TextMuted;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(binding), binding, null);
+        }
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static (uint icon, uint color) GetIconAndColor(FileBinding binding, AssetKind kind)
+    {
+        return binding switch
+        {
+            FileBinding.Unknown => (StyleMap.GetIntIcon(Icons.Folder), Palette32.TextPrimary),
+            FileBinding.RootFile => (StyleMap.GetIntIcon(kind.ToIcon()), Palette32.TextLightBlue),
+            FileBinding.DependentFile => (StyleMap.GetIntIcon(kind.ToFileIcon()), Palette32.TextSecondary),
+            FileBinding.UnboundFile => (StyleMap.GetIntIcon(Icons.File), Palette32.TextMuted),
+            _ => throw new ArgumentOutOfRangeException(nameof(binding), binding, null)
+        };
+    }
+
     extension(AssetKind kind)
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

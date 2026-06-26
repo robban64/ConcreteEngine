@@ -70,6 +70,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
     public override void OnUpdateDiagnostic()
     {
         var metrics = MetricSystem.Instance;
+        //ImGui.GetIO().Framerate
         _memory.SliceData(_titleStrHandle)
             .Writer()
             .Append("Console"u8).PadRight(4)

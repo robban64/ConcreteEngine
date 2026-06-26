@@ -51,16 +51,21 @@ public unsafe struct String32Utf8
 public unsafe struct String16Utf8
 {
     public const int Capacity = 16;
+    public const int TextLength = 14;
     private fixed byte _value[Capacity];
 
     public String16Utf8(ReadOnlySpan<byte> span)
     {
-        Utils.CopyByteSpan(span, AsSpan());
+        span.Truncate(TextLength).CopyTo(AsTextSpan());
+        _value[0] = (byte)span.Length;
+        _value[Capacity - 1] = 0;
     }
 
     public String16Utf8(ReadOnlySpan<char> span)
     {
-        UtfText.WriteCharToByteSpan(span, AsSpan());
+        int written = Encoding.UTF8.GetBytes(span.Truncate(Capacity - 1), AsTextSpan());
+        _value[0] = (byte)written;
+        _value[Capacity - 1] = 0;
     }
 
     public static implicit operator String16Utf8(ReadOnlySpan<char> value) => new(value);
@@ -69,24 +74,33 @@ public unsafe struct String16Utf8
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref byte GetRef(int i = 0) => ref _value[i];
 
-    public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _value[0], Capacity);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ReadOnlySpan<byte> GetReadSpan() => MemoryMarshal.CreateSpan(ref Unsafe.AsRef(in _value[1]), _value[0]);
+    public Span<byte> AsTextSpan() => MemoryMarshal.CreateSpan(ref _value[1], TextLength);
 }
 
 public unsafe struct String8Utf8
 {
     public const int Capacity = 8;
+    public const int TextLength = 7;
 
     private fixed byte _value[Capacity];
 
+
     public String8Utf8(ReadOnlySpan<byte> span)
     {
-        Utils.CopyByteSpan(span, AsSpan());
+        span.Truncate(TextLength).CopyTo(AsTextSpan());
+        _value[0] = (byte)span.Length;
+        _value[Capacity - 1] = 0;
     }
 
     public String8Utf8(ReadOnlySpan<char> span)
     {
-        UtfText.WriteCharToByteSpan(span, AsSpan());
+        int written = Encoding.UTF8.GetBytes(span.Truncate(Capacity - 1), AsTextSpan());
+        _value[0] = (byte)written;
+        _value[Capacity - 1] = 0;
     }
+
 
     public static implicit operator String8Utf8(ReadOnlySpan<char> value) => new(value);
     public static implicit operator String8Utf8(ReadOnlySpan<byte> value) => new(value);
@@ -96,5 +110,7 @@ public unsafe struct String8Utf8
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref byte GetRef(int i = 0) => ref _value[i];
 
-    public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _value[0], Capacity);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ReadOnlySpan<byte> GetReadSpan() => MemoryMarshal.CreateSpan(ref Unsafe.AsRef(in _value[1]), _value[0]);
+    public Span<byte> AsTextSpan() => MemoryMarshal.CreateSpan(ref _value[1], TextLength);
 }

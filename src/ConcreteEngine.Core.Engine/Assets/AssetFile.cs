@@ -4,10 +4,7 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 public enum FileBinding : byte
 {
-    Unknown,
-    RootFile,
-    DependentFile,
-    UnboundFile
+    Unknown, RootFile, DependentFile, UnboundFile
 }
 
 public sealed class AssetFile(

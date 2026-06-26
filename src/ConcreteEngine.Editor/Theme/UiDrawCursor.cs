@@ -66,9 +66,7 @@ public unsafe ref struct UiDrawCursor
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly void Sync()
     {
-        // var localY = Start.Y + LineHeight - ImGui.GetCursorScreenPos().Y + ImGui.GetScrollY();
-        float localY = Cursor.Y - Start.Y;
-        ImGui.SetCursorPosY(localY);
+        ImGui.SetCursorPosY(Cursor.Y - Start.Y);
         ImGui.Dummy(default);
     }
     

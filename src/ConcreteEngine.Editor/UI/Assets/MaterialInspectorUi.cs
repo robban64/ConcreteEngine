@@ -13,7 +13,7 @@ using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI.Assets;
+namespace ConcreteEngine.Editor.UI;
 
 internal sealed unsafe class MaterialInspectorUi(StateManager state)
 {

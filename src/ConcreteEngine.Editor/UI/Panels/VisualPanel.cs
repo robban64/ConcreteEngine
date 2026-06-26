@@ -10,7 +10,7 @@ internal sealed class VisualPanel(StateManager state) : EditorPanel(StateEnums.V
 {
     private readonly InspectPostFxFields _inspectFields = InspectorFieldProvider.Instance.PostFxFields;
 
-    public override void OnEnter(NativeAllocator allocator) => _inspectFields.Refresh();
+    public override void OnEnter() => _inspectFields.Refresh();
 
     public override void OnDraw()
     {

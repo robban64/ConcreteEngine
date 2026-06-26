@@ -29,10 +29,11 @@ internal static class WindowRoot
 
     public static ReadOnlySpan<byte> LeftWindowId => "##Left"u8;
     public static ReadOnlySpan<byte> RightWindowId => "##Right"u8;
-    public static ReadOnlySpan<byte> BottomWindowId => "##Bottom"u8;
     public static ReadOnlySpan<byte> ViewportWindowId => "##Viewport"u8;
     public static ReadOnlySpan<byte> ToolbarWindowId => "##Toolbar"u8;
 
+    public static ReadOnlySpan<byte> AssetWindowId => "##BottomAsset"u8;
+    public static ReadOnlySpan<byte> ConsoleWindowId => "##BottomConsole"u8;
 
     public static unsafe bool BeginDockSpace()
     {
@@ -95,16 +96,23 @@ internal static class WindowRoot
         ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Right, rightRatio, dockRightId, dockMainId);
         ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Down, bottomRatio, dockBottomId, dockMainId);
 
+        uint dockBottomLeftId = 0, dockBottomRightId = 0;
+        ImGuiP.DockBuilderSplitNode(*dockBottomId, ImGuiDir.Left, 0.7f, &dockBottomLeftId, &dockBottomRightId);
+        
         //(ImGuiDockNodeFlags)4096;
         const ImGuiDockNodeFlags noTabBarBit = (ImGuiDockNodeFlags)ImGuiDockNodeFlagsPrivate.NoTabBar;
         ImGuiP.DockBuilderGetNode(*dockLeftId).LocalFlags |= noTabBarBit;
         ImGuiP.DockBuilderGetNode(*dockRightId).LocalFlags |= noTabBarBit;
-        ImGuiP.DockBuilderGetNode(*dockBottomId).LocalFlags |= noTabBarBit;
         ImGuiP.DockBuilderGetNode(*dockMainId).LocalFlags |= noTabBarBit;
+
+        ImGuiP.DockBuilderGetNode(dockBottomLeftId).LocalFlags |= ImGuiDockNodeFlags.AutoHideTabBar;
+        ImGuiP.DockBuilderGetNode(dockBottomRightId).LocalFlags |= ImGuiDockNodeFlags.AutoHideTabBar;
+
 
         ImGuiP.DockBuilderDockWindow(LeftWindowId, *dockLeftId);
         ImGuiP.DockBuilderDockWindow(RightWindowId, *dockRightId);
-        ImGuiP.DockBuilderDockWindow(BottomWindowId, *dockBottomId);
+        ImGuiP.DockBuilderDockWindow(AssetWindowId, dockBottomLeftId);
+        ImGuiP.DockBuilderDockWindow(ConsoleWindowId, dockBottomRightId);
         ImGuiP.DockBuilderDockWindow(ViewportWindowId, *dockMainId);
         ImGuiP.DockBuilderFinish(DockSpaceId);
 

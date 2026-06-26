@@ -162,7 +162,6 @@ internal sealed class AssetBrowser
     internal sealed class AssetDirectoryNode
     {
         private readonly int _nameOffset;
-
         public readonly bool IsFileSystem;
 
         public readonly string Path;
@@ -170,6 +169,7 @@ internal sealed class AssetBrowser
         private readonly List<AssetDirectoryNode> _children = [];
 
         public readonly String32Utf8 PreviewName;
+        
         public AssetDirectoryNode(string path, AssetDirectoryNode? parent)
         {
             Path = path;
@@ -194,12 +194,7 @@ internal sealed class AssetBrowser
         public ReadOnlySpan<char> GetFolderName() => Path.AsSpan(_nameOffset);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnlySpan<char> GetRelativePath()
-        {
-            const int offset = EnginePath.AssetBasePathOffset;
-            var start = IsFileSystem && Path.Length > offset ? offset : 0;
-            return Path.AsSpan(start);
-        }
+        public ReadOnlySpan<char> GetRelativePath() => Path.AsSpan(EnginePath.AssetBasePathOffset);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public AssetDirectoryNode GetChild(int i) => _children[i];

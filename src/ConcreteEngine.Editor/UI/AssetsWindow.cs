@@ -5,13 +5,10 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
@@ -19,9 +16,9 @@ using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Theme.Palette32;
 using static ConcreteEngine.Editor.Theme.StyleMap;
 
-namespace ConcreteEngine.Editor.UI.Assets;
+namespace ConcreteEngine.Editor.UI;
 
-internal sealed unsafe class AssetListPanel : EditorPanel
+internal sealed unsafe class AssetsWindow : EditorWindow
 {
     private const float ListItemHeight = 24f;
     private static float ListItemPad => GuiTheme.CellPadding.X * 2f;
@@ -36,11 +33,12 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private AssetFileId _selectedFile;
 
     private RangeU16 _breadcrumbStrHandle;
-    private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
+
+    private MemoryBlockPtr _memory;
 
     private static AvgFrameTimer _avg;
 
-    public AssetListPanel(StateManager state) : base(StateEnums.AssetList, state)
+    public AssetsWindow(StateManager state) : base( state)
     {
         _assetBrowser = new AssetBrowser(OnDirectoryChange);
 
@@ -52,9 +50,17 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         _assetCombo = ComboInput.MakeFromEnumCache<AssetKind>("asset-combo");
     }
 
+    public override ReadOnlySpan<byte> Id => WindowRoot.AssetWindowId;
 
     public override void OnCreate()
     {
+        var allocator = TextBuffers.PersistentArena.MakeBuilder();
+        var inputHandle = allocator.AllocSlice(8).AsRange16();
+        _breadcrumbStrHandle = allocator.AllocSlice(64).AsRange16();
+        _memory = TextBuffers.PersistentArena.CommitBuilder(allocator);
+        
+        _searchInput.SetTextBuffer(_memory.SliceData(inputHandle));
+
         //_state.Memory = TextBuffers.PersistentArena.Alloc(AssetListState.NameListCapacity);
         _avg.BeginSample();
         _assetBrowser.BuildFullDirectory();
@@ -63,23 +69,16 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     }
 
 
-
-    public override void OnEnter(NativeAllocator allocator)
+/*
+    public override void OnEnter()
     {
         _selectedFile = State.Context.Selection.HasAsset
             ? AssetManager.Instance.GetAssetRootFile(State.Context.Selection.SelectedAssetId).Id
             : default;
 
-        _searchInput.SetTextBuffer(allocator.AllocSlice(8));
-        _breadcrumbStrHandle = allocator.AllocSlice(64).AsRange16();
         Refresh();
     }
-
-    public override void OnLeave()
-    {
-        _searchInput.UnsetTextBuffer();
-        BreadcrumbStr.Clear();
-    }
+*/
 
     public override void OnUpdateDiagnostic() => Refresh();
 
@@ -105,7 +104,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private void UpdateTitleText()
     {
-        var sw = BreadcrumbStr.Writer();
+        var sw = _memory.SliceData(_breadcrumbStrHandle).Writer();
         var path = _assetBrowser.CurrentNode.GetRelativePath();
         if (path.Length == 0)
         {
@@ -122,7 +121,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         sw.Append((char)0);
     }
 
-    public override void OnDraw()
+
+    protected override void OnDraw()
     {
         //if (_state.Sync(RenamedAsset))
         //Refresh();
@@ -137,7 +137,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         if (isRootPath) ImGui.EndDisabled();
 
         ImGui.SameLine();
-        ImGui.SeparatorText(BreadcrumbStr);
+        ImGui.SeparatorText(_memory.SliceData(_breadcrumbStrHandle));
 
         // Row 2
         var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;

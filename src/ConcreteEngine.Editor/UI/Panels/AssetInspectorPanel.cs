@@ -1,5 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
@@ -12,7 +11,7 @@ using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI.Assets;
+namespace ConcreteEngine.Editor.UI;
 
 internal sealed unsafe class AssetInspectorPanel : EditorPanel
 {
@@ -55,19 +54,20 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
             });
     }
 
-    private NativeView<byte> TitleStr => DataPtr.Slice(_titleStrHandle);
-    private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
+    private NativeView<byte> TitleStr => Memory.SliceData(_titleStrHandle);
+    private NativeView<byte> InputStr => Memory.SliceData(_inputStrHandle);
 
 
-    public override void OnCreate() { }
-
-    public override void OnEnter(NativeAllocator allocator)
+    public override void OnCreate(NativeAllocator allocator)
     {
         _inputStrHandle = allocator.AllocSlice(64).AsRange16();
         _titleStrHandle = allocator.AllocSlice(24).AsRange16();
-        _searchInput.SetTextBuffer(InputStr);
     }
 
+    public override void OnAttach()
+    {
+        _searchInput.SetTextBuffer(InputStr);
+    }
 
     public override void OnLeave()
     {

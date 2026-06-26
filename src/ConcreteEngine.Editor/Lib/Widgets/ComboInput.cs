@@ -1,5 +1,8 @@
 using System.Runtime.CompilerServices;
+using System.Text;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Lib.Field;
 using Hexa.NET.ImGui;
@@ -8,14 +11,16 @@ namespace ConcreteEngine.Editor.Lib.Widgets;
 
 internal sealed unsafe class ComboInput : UiField
 {
-    private int _index = -1;
+    public Int1 Value;
 
+    private int _index = -1;
     private int _lastValue = int.MinValue;
 
-    private readonly string[] _names;
-    private readonly int[] _values;
+    private readonly byte[] _displayText = new byte[32];
 
-    public Int1 Value;
+    private readonly int[] _values;
+    private readonly string[] _names;
+
 
     public ushort StartAt
     {
@@ -28,13 +33,12 @@ internal sealed unsafe class ComboInput : UiField
         get;
         set
         {
-            if (Placeholder.Length == 0) field = "None";
-            else if (value.Length >= LabelAllocCapacity) field = value[..LabelAllocCapacity];
+            if (value.Length == 0) field = "None";
+            else if (value.Length >= 32) field = value.Truncate(31).ToString();
             else field = value;
         }
     } = "None";
 
-    public override ref byte GetRawValue() => ref Unsafe.As<Int1, byte>(ref Value);
 
     public ComboInput(string label, ReadOnlySpan<int> values, ReadOnlySpan<string> names)
         : base(label, FieldWidgetKind.Combo)
@@ -48,6 +52,8 @@ internal sealed unsafe class ComboInput : UiField
         Layout = FieldLayout.None;
     }
 
+    public override ref byte GetRawValue() => ref Unsafe.As<Int1, byte>(ref Value);
+
     public void SetItemName(int index, string newName) => _names[index] = newName;
 
     [SkipLocalsInit]
@@ -55,20 +61,24 @@ internal sealed unsafe class ComboInput : UiField
     {
         var value = (int)Value;
         if (_lastValue != value)
-        {
-            _index = _values.AsSpan().IndexOf(value);
-            _lastValue = value;
-        }
+            OnChanged(value);
 
         var buffer = stackalloc byte[LabelAllocCapacity * 2];
         var label = ApplyLabelLayout(buffer);
         var sw = new NativeSpanWriter(buffer + LabelAllocCapacity, LabelAllocCapacity);
 
-        var preview = (uint)_index < (uint)_names.Length && _index >= StartAt
-            ? sw.Write(_names[_index])
-            : sw.Write(Placeholder);
+        return ImGui.BeginCombo(label, sw.Write(_displayText)) && DrawInner(sw);
+    }
 
-        return ImGui.BeginCombo(label, preview) && DrawInner(sw);
+    private void OnChanged(int value)
+    {
+        _index = _values.AsSpan().IndexOf(value);
+        _lastValue = value;
+        
+        var name = (uint)_index < (uint)_names.Length && _index >= StartAt ? _names[_index] : Placeholder;
+
+        int written = Encoding.UTF8.GetBytes(name.Truncate(31), _displayText);
+        _displayText[int.Min(written, 31)] = 0;
     }
 
     private bool DrawInner(NativeSpanWriter sw)

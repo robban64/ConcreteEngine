@@ -12,7 +12,7 @@ internal sealed class LightingPanel : EditorPanel
 {
     private readonly InspectLightningFields _inspectFields = InspectorFieldProvider.Instance.LightningFields;
 
-    public override void OnEnter(NativeAllocator allocator) => _inspectFields.Refresh();
+    public override void OnEnter() => _inspectFields.Refresh();
 
     public LightingPanel(StateManager state) : base(StateEnums.Lighting, state)
     {

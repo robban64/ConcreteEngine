@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Core;
@@ -32,6 +33,8 @@ internal readonly record struct SelectionContext(
     SceneObjectId SelectedSceneId,
     FixedInspectorId FixedInspector)
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool HasSelection() => SelectedAssetId.IsValid() || SelectedSceneId.IsValid() || FixedInspector > 0;
     public bool HasSceneObject => SelectedSceneId.IsValid();
     public bool HasAsset => SelectedAssetId.IsValid();
 

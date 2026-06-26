@@ -36,22 +36,22 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
     private RangeU16 _titleStrHandle;
     private RangeU16 _inputStrHandle;
 
-    private NativeView<byte> TitleStr => DataPtr.Slice(_titleStrHandle);
-    private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
+    private NativeView<byte> TitleStr => Memory.SliceData(_titleStrHandle);
+    private NativeView<byte> InputStr => Memory.SliceData(_inputStrHandle);
 
 
-    public override void OnCreate() { }
-
-
-    public override void OnEnter(NativeAllocator allocator)
+    public override void OnCreate(NativeAllocator allocator)
     {
         _inputStrHandle = allocator.AllocSlice(64).AsRange16();
         _titleStrHandle = allocator.AllocSlice(24).AsRange16();
-
+    }
+    
+    public override void OnAttach()
+    {
         if (Selection.SelectedSceneObject is null) return;
         _inspectFields.Refresh();
     }
-
+    
     public override void OnLeave()
     {
         _previousId = SceneObjectId.Empty;

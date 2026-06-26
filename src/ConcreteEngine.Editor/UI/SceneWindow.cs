@@ -15,7 +15,7 @@ using static ConcreteEngine.Editor.EditorConsts;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed unsafe class SceneListPanel : EditorPanel
+internal sealed unsafe class SceneWindow : EditorWindow
 {
     private const ImGuiTableFlags TableFlags =
         ImGuiTableFlags.ScrollY |
@@ -40,11 +40,13 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private RangeU16 _titleStrHandle;
     private RangeU16 _inputStrHandle;
 
-    private NativeView<byte> TitleStr => DataPtr.Slice(_titleStrHandle);
-    private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
+    private MemoryBlockPtr _memory;
+
+    private NativeView<byte> TitleStr => _memory.SliceData(_titleStrHandle);
+    private NativeView<byte> InputStr => _memory.SliceData(_inputStrHandle);
     private SceneObjectId SelectedId => State.Context.Selection.SelectedSceneId;
 
-    public SceneListPanel(StateManager state) : base(StateEnums.SceneList, state)
+    public SceneWindow(StateManager state) : base( state)
     {
         _kindCombo = ComboInput.MakeFromEnumCache<SceneObjectKind>("scene-combo");
         _kindCombo.Layout = FieldLayout.None;
@@ -55,6 +57,8 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             .WithTransformer(trimmed: true, lowercase: true)
             .WithCallbackU8(Search);
     }
+
+    public override ReadOnlySpan<byte> Id => WindowRoot.LeftWindowId;
 
     private void OnCategoryChange(SceneObjectKind kind)
     {
@@ -68,21 +72,20 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         TitleStr.Writer().Append("SceneObjects ["u8).Append(_sceneCount).Append(']').End();
     }
 
-    public override void OnEnter(NativeAllocator allocator)
+    public override void OnCreate()
     {
+
+        var allocator = TextBuffers.PersistentArena.MakeBuilder();
         _inputStrHandle = allocator.AllocSlice(8).AsRange16();
         _titleStrHandle = allocator.AllocSlice(24).AsRange16();
-        _searchInput.SetTextBuffer(InputStr);
+        _memory = TextBuffers.PersistentArena.CommitBuilder(allocator);
 
+        _searchInput.SetTextBuffer(InputStr);
         if (_sceneCount == 0) Search(Span<byte>.Empty);
     }
 
-    public override void OnLeave()
-    {
-        _searchInput.UnsetTextBuffer();
-    }
 
-    public override void OnDraw()
+    protected override void OnDraw()
     {
         ImGui.SeparatorText(TitleStr);
 
@@ -119,6 +122,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.PopStyleColor();
         ImGui.PopStyleVar(2);
     }
+
 
     private void DrawList(int start, int length)
     {

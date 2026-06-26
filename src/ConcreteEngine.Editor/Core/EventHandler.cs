@@ -2,7 +2,6 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.UI.Assets;
 
 namespace ConcreteEngine.Editor.Core;
 

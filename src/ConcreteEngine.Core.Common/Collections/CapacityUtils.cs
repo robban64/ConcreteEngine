@@ -4,7 +4,6 @@ public static class CapacityUtils
 {
     public const int PageSize = 4_096;
 
-
     public static int CapacityGrowthToFit(int current, int required)
     {
         var newSize = current;

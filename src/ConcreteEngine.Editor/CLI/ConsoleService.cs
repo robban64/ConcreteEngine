@@ -26,7 +26,7 @@ internal sealed class ConsoleService
 
     private const int DrainPerTick = 6;
     private const int DrainPerTickHigh = 12;
-
+    
     private int _head;
     private int _count;
 
@@ -111,7 +111,7 @@ internal sealed class ConsoleService
         _head = (_head + 1) % StoredLogCap;
         _count = Math.Min(_count + 1, StoredLogCap);
 
-        ConsolePanel.ScrollToBottom();
+        ConsoleWindow.ScrollToBottom();
     }
 
     [SkipLocalsInit]

@@ -18,30 +18,27 @@ internal sealed class CameraPanel(StateManager state) : EditorPanel(StateEnums.C
 
     private static readonly InspectCameraFields InspectFields = InspectorFieldProvider.Instance.CameraFields;
 
-    private Camera MainCamera => CameraManager.Instance.Camera;
-
     private void UpdateText()
     {
         var viewport = EngineWindow.Viewport.Size;
 
-        DataPtr.Slice(_viewportStrHandle).Writer()
+        Memory.SliceData(_viewportStrHandle).Writer()
             .Append("Width: "u8).Append(viewport.Width)
             .Append(" - Height: "u8).Append(viewport.Height).End();
 
-        DataPtr.Slice(_aspectStrHandle).Writer()
+        Memory.SliceData(_aspectStrHandle).Writer()
             .Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End();
     }
 
-    public override void OnEnter(NativeAllocator allocator)
+    public override void OnCreate(NativeAllocator allocator)
     {
         _viewportStrHandle = allocator.AllocSlice(32).AsRange16();
         _aspectStrHandle = allocator.AllocSlice(24).AsRange16();
 
         _currentViewport = EngineWindow.Viewport;
-
-        UpdateText();
-        InspectFields.Refresh();
     }
+
+    public override void OnAttach() => UpdateText();
 
     public override void OnUpdateDiagnostic()
     {
@@ -52,8 +49,8 @@ internal sealed class CameraPanel(StateManager state) : EditorPanel(StateEnums.C
     public override void OnDraw()
     {
         ImGui.SeparatorText("Viewport"u8);
-        AppDraw.Text(DataPtr.Slice(_viewportStrHandle));
-        AppDraw.Text(DataPtr.Slice(_aspectStrHandle));
+        AppDraw.Text(Memory.SliceData(_viewportStrHandle));
+        AppDraw.Text(Memory.SliceData(_aspectStrHandle));
 
         ImGui.Spacing();
 

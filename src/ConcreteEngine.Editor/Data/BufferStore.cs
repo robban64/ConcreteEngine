@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.CLI;
@@ -14,9 +15,6 @@ internal static class TextBuffers
     private static NativeArray<byte> _scratchBuffer;
 
     public static ArenaAllocator PersistentArena = null!;
-    public static MemoryBlockPtr WindowMemory1;
-    public static MemoryBlockPtr WindowMemory2;
-    public static MemoryBlockPtr WindowMemory3;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NativeSpanWriter GetWriter() => new(_scratchBuffer);
@@ -28,17 +26,15 @@ internal static class TextBuffers
         if (PersistentArena != null)
             throw new InvalidOperationException("Already allocated text buffers");
 
-        _scratchBuffer = NativeArray.Allocate<byte>(256);
+        _scratchBuffer = NativeArray.Allocate<byte>(512);
 
         StyleBuffer = NativeArray.Allocate<byte>(StyleMap.AllocSize);
         StyleMap.Allocate(StyleBuffer);
 
         LogBuffer = NativeArray.Allocate<byte>(ConsoleService.LogStride * ConsoleService.StoredLogCap);
 
-        PersistentArena = new ArenaAllocator(1024 * 16);
-        WindowMemory1 = PersistentArena.Alloc(512);
-        WindowMemory2 = PersistentArena.Alloc(512);
-        WindowMemory3 = PersistentArena.Alloc(512);
+        PersistentArena = new ArenaAllocator(CapacityUtils.PageSize * 2);
+
     }
 
     public static void Dispose()

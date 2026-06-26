@@ -1,21 +1,36 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI.Core;
+namespace ConcreteEngine.Editor.UI;
 
-internal sealed class MenuGroup(string name, MenuItem[] items)
+internal sealed class MenuGroup(RangeU16 nameHandle, MenuItem[] items)
 {
-    public readonly string Name = name;
+    //public readonly string Name = name;
+    public readonly RangeU16 NameHandle = nameHandle;
     public readonly MenuItem[] Items = items;
     public bool Enabled = true;
     public bool Visible = true;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void Draw(StateManager stateManager, NativeSpanWriter sw)
+    public unsafe void Draw(StateManager stateManager, MemoryBlockPtr data)
     {
-        if (!Visible || !ImGui.BeginMenu(sw.Write(Name), Enabled)) return;
+        if (!Visible) return;
+        if (ImGui.BeginMenu(data.SliceData(NameHandle), Enabled))
+        {
+            DrawChildren(stateManager);
+            ImGui.EndMenu();
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private unsafe void DrawChildren(StateManager stateManager)
+    {
+        var sw = TextBuffers.GetWriter();
         foreach (var it in Items)
         {
             if (!it.Visible) continue;
@@ -25,7 +40,6 @@ internal sealed class MenuGroup(string name, MenuItem[] items)
                 it.OnClick(stateManager);
         }
 
-        ImGui.EndMenu();
     }
 }
 

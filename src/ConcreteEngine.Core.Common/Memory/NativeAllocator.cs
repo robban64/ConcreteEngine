@@ -33,7 +33,7 @@ public readonly ref struct NativeAllocator(NativeView<byte> data, ref int cursor
         var length = Encoding.UTF8.GetByteCount(str);
         if (nullTerminated) length += 1;
         var data = AllocSlice(length);
-        int written = Encoding.UTF8.GetBytes(str, Data.AsSpan());
+        int written = Encoding.UTF8.GetBytes(str, data.AsSpan());
         if (nullTerminated) data[written] = 0;
         return data;
     }

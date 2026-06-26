@@ -7,16 +7,13 @@ internal enum ModeId : byte
 
 internal enum WindowId : byte
 {
-    Left, Right, Bottom
+    Left, Right, BottomLeft, Bottom
 }
 
 internal enum StateEnums : byte
 {
     None,
-    Console,
-    AssetList,
     AssetInspector,
-    SceneList,
     SceneInspector,
     Camera,
     Lighting,

@@ -33,7 +33,7 @@ internal sealed class EditorService
 
         RegisterEvents();
 
-        _windowManager.Init(ConsoleGateway.Service);
+        _windowManager.Init(TextBuffers.PersistentArena);
         _router.ForceResolve(_stateManager);
 
         ConsoleGateway.LogPlain($"PersistentArena: {TextBuffers.PersistentArena.Remaining} bytes left");
@@ -52,9 +52,11 @@ internal sealed class EditorService
 
     public void Draw()
     {
-        _avg.BeginSample();
         GuiTheme.PushFontText();
+       // _avg.BeginSample();
         _windowManager.Draw();
+        //if (_avg.EndSample() >= 160) _avg.ResetAndPrint("Editor.Draw");
+
         ImGui.PopFont();
 
         if (EditorInput.UpdateInputState())
@@ -63,7 +65,6 @@ internal sealed class EditorService
         _interactionHandler.Update();
 
         _eventDispatcher.DrainQueue(_stateManager);
-        if (_avg.EndSample() >= 160) _avg.ResetAndPrint("Editor.Draw");
     }
 
     public void OnDiagnosticTick()

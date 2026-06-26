@@ -16,7 +16,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed unsafe class ConsolePanel : EditorPanel
+internal sealed unsafe class ConsoleWindow : EditorWindow
 {
     private const ImGuiWindowFlags InnerFlags =
         ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
@@ -33,33 +33,32 @@ internal sealed unsafe class ConsolePanel : EditorPanel
 
     //    
     private readonly TextInput _textInput;
-    private readonly ConsoleService _consoleService;
 
     private RangeU16 _titleStrHandle;
 
-    private NativeView<byte> TitleStr => DataPtr.Slice(_titleStrHandle);
+    private MemoryBlockPtr _memory;
 
-    public ConsolePanel(StateManager state, ConsoleService consoleService) : base(StateEnums.Console, state)
+
+    public override ReadOnlySpan<byte> Id => WindowRoot.ConsoleWindowId;
+
+    public ConsoleWindow(StateManager state) : base(state)
     {
-        _consoleService = consoleService;
         _textInput = new TextInput("cli", 64, ImGuiInputTextFlags.EnterReturnsTrue) { Hint = "$" }
             .WithHistory()
             .WithClearOnResult()
             .WithTransformer(true, true)
-            .WithCallbackU16((text) => _consoleService.ExecCommand(text));
+            .WithCallbackU16(static (text) => ConsoleGateway.Service.ExecCommand(text));
     }
 
-    public override void OnEnter(NativeAllocator allocator)
+
+    public override void OnCreate()
     {
+        var allocator = TextBuffers.PersistentArena.MakeBuilder();
         _titleStrHandle = allocator.AllocSlice(64).AsRange16();
         _textInput.SetTextBuffer(allocator.AllocSlice(64));
+        _memory = TextBuffers.PersistentArena.CommitBuilder(allocator);
+        _memory.SliceData(_titleStrHandle).Writer().Append("Console"u8).Append((char)0);
 
-        DataPtr.Slice(_titleStrHandle).Writer().Append("Console"u8).Append((char)0);
-    }
-
-    public override void OnLeave()
-    {
-        _textInput.UnsetTextBuffer();
     }
 
     public static void ScrollToBottom()
@@ -71,7 +70,7 @@ internal sealed unsafe class ConsolePanel : EditorPanel
     public override void OnUpdateDiagnostic()
     {
         var metrics = MetricSystem.Instance;
-        DataPtr.Slice(_titleStrHandle)
+        _memory.SliceData(_titleStrHandle)
             .Writer()
             .Append("Console"u8).PadRight(4)
             .Append('[').Append(metrics.Metric.AvgMs, "F4").Append("ms"u8).Append(']')
@@ -81,24 +80,24 @@ internal sealed unsafe class ConsolePanel : EditorPanel
     }
 
 
-    public override void OnDraw()
+    protected override void OnDraw()
     {
         // header
         ImGui.PushStyleColor(ImGuiCol.Text, Palette32.TextSecondary);
-        ImGui.SeparatorText(TitleStr);
+        ImGui.SeparatorText(_memory.SliceData(_titleStrHandle));
         ImGui.PopStyleColor();
 
         // log
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ItemSpacing);
         var innerWindow = ImGui.BeginChild("logs"u8, new Vector2(0, -InputHeight), ImGuiChildFlags.None, InnerFlags);
-        if (innerWindow && _consoleService.LogCount > 0)
+        if (innerWindow && ConsoleGateway.Service.LogCount > 0)
         {
             var clipper = new ImGuiListClipper();
-            clipper.Begin(_consoleService.LogCount, RowHeight);
+            clipper.Begin(ConsoleGateway.Service.LogCount, RowHeight);
             while (clipper.Step())
             {
                 int start = clipper.DisplayStart, length = clipper.DisplayEnd - clipper.DisplayStart;
-                DrawVisibleLogs(_consoleService, start, length);
+                DrawVisibleLogs(ConsoleGateway.Service, start, length);
             }
 
             if (_scrollTopBottomStepper.Tick())

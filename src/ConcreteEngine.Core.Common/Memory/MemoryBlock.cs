@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
@@ -22,6 +23,12 @@ public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<Memo
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => Ptr->Data;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<byte> SliceData(RangeU16 range) => Ptr->Data.Slice(range);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<byte> SliceData(Range32 range) => Ptr->Data.Slice(range);
 
     public void ResetCursor() => Ptr->ResetCursor();
 

@@ -7,7 +7,7 @@ using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI.Assets;
+namespace ConcreteEngine.Editor.UI;
 
 internal sealed class TextureInspectorUi(StateManager state)
 {

@@ -4,7 +4,7 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI.Core;
+namespace ConcreteEngine.Editor.UI;
 
 internal enum ToolbarGroupAlignment : byte { Left, Center, Right }
 

@@ -1,8 +1,8 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Editor.UI.Core;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
@@ -17,9 +17,11 @@ internal static class TopMenuWindow
     public const int ToolbarGroupCount = 3;
     public const int MenuCount = 3;
 
-    private static bool _hasInitialized;
+    private static MemoryBlockPtr _memory;
 
+    private static bool _hasInitialized;
     private static readonly float OffsetX = GuiTheme.WindowPadding.X;
+    
     private static readonly ToolbarGroup[] Toolbar = new ToolbarGroup[ToolbarGroupCount];
     private static readonly MenuGroup[] MenuBar = new MenuGroup[MenuCount];
 
@@ -31,14 +33,31 @@ internal static class TopMenuWindow
             it.UpdateVisibleCount();
     }
 
-    public static void RegisterMenuToolbar()
+    public static void RegisterMenuToolbar(ArenaAllocator allocator)
     {
         if (_hasInitialized) throw new InvalidOperationException("Already registered");
         _hasInitialized = true;
 
-        MenuBar[0] = FileMenu;
-        MenuBar[1] = EditMenu;
-        MenuBar[2] = DebugMenu;
+        var allocBuilder = allocator.MakeBuilder();
+
+        MenuBar[0] = new MenuGroup(allocBuilder.AllocStringSlice("File").AsRange16(), [
+            new MenuItem("Test1", null, static (state) => { })
+        ]);
+        MenuBar[1] = new MenuGroup(allocBuilder.AllocStringSlice("Edit").AsRange16(), [
+            new MenuItem("Test2", null, static (state) => { })
+        ]);
+        MenuBar[2] = new MenuGroup(allocBuilder.AllocStringSlice("Debug").AsRange16(), [
+            new MenuItem("Metrics", null,
+                static (state) => state.ToggleDebugWindow(WindowManager.DebugMetricsWindow)),
+            new MenuItem("ImGui Demo", null,
+                static (state) => state.ToggleDebugWindow(WindowManager.DebugImDemoWindow)),
+            new MenuItem("ImGui Profiler", null,
+                static (state) => state.ToggleDebugWindow(WindowManager.DebugImMetricsWindow)),
+            new MenuItem("ImGui Style", null,
+                static (state) => state.ToggleDebugWindow(WindowManager.DebugImStyleWindow))
+        ]);
+
+        _memory = allocator.CommitBuilder(allocBuilder);
 
         Toolbar[0] = new ToolbarGroup(ToolbarGroupAlignment.Left, [Asset, Scene]);
         Toolbar[1] = new ToolbarGroup(ToolbarGroupAlignment.Center, [Translate, Scale, Rotate, DebugBounds]);
@@ -54,9 +73,8 @@ internal static class TopMenuWindow
             return;
         }
 
-        var sw = TextBuffers.GetWriter();
         foreach (var it in MenuBar)
-            it.Draw(stateManager, sw);
+            it.Draw(stateManager, _memory);
 
         ImGui.EndMainMenuBar();
         ImGui.PopStyleVar();
@@ -103,24 +121,7 @@ internal static class TopMenuWindow
         ImGui.PopFont();
     }
 
-    private static readonly MenuGroup FileMenu = new("File", [
-        new MenuItem("Test1", null, static (state) => { })
-    ]);
 
-    private static readonly MenuGroup EditMenu = new("Edit", [
-        new MenuItem("Test2", null, static (state) => { })
-    ]);
-
-    private static readonly MenuGroup DebugMenu = new("Debug", [
-        new MenuItem("Metrics", null,
-            static (state) => state.ToggleDebugWindow(WindowManager.DebugMetricsWindow)),
-        new MenuItem("ImGui Demo", null,
-            static (state) => state.ToggleDebugWindow(WindowManager.DebugImDemoWindow)),
-        new MenuItem("ImGui Profiler", null,
-            static (state) => state.ToggleDebugWindow(WindowManager.DebugImMetricsWindow)),
-        new MenuItem("ImGui Style", null,
-            static (state) => state.ToggleDebugWindow(WindowManager.DebugImStyleWindow))
-    ]);
 
     private static readonly ToolbarItem Asset = new(Icons.Database, ContextChangeMask.Mode,
         state => state.EnqueueEvent(new ModeEvent(ModeId.Asset)),

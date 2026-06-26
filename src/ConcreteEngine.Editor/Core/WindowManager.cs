@@ -1,10 +1,11 @@
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Visuals;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.UI.Assets;
 using Hexa.NET.ImGui;
 
 // ReSharper disable UnusedParameter.Local
@@ -12,9 +13,9 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class WindowManager(StateManager stateManager)
+internal sealed class WindowManager
 {
-    private const int WindowCount = 3;
+    private const int WindowCount = 4;
     public const int DebugWindowCount = 4;
 
     public const int DebugMetricsWindow = 0;
@@ -23,12 +24,29 @@ internal sealed class WindowManager(StateManager stateManager)
     public const int DebugImStyleWindow = 3;
 
     //
-    private readonly Dictionary<Type, EditorPanel> _panelDict = new(16);
-    private readonly EditorWindow[] _windows = new EditorWindow[WindowCount];
+    private readonly StateManager _stateManager;
+
+    private readonly SceneWindow _sceneWindow;
+    private readonly InspectionWindow _inspectionWindow;
+    private readonly AssetsWindow _assetWindow;
+    private readonly ConsoleWindow _consoleWindow;
+
+    private readonly EditorWindow[] _windows;
     private readonly Action[] _debugWindows = new Action[DebugWindowCount];
 
-    public EditorPanel GetPanel(Type type) => _panelDict[type];
-    public T GetPanel<T>() where T : EditorPanel => (T)_panelDict[typeof(T)];
+    public WindowManager(StateManager stateManager)
+    {
+        _stateManager = stateManager;
+        var sceneWindow = _sceneWindow = new SceneWindow(stateManager);
+        var inspectionWindow = _inspectionWindow = new InspectionWindow(stateManager);
+        var assetWindow = _assetWindow = new AssetsWindow(stateManager);
+        var consoleWindow = _consoleWindow = new ConsoleWindow(stateManager);
+        _windows = [sceneWindow, inspectionWindow, assetWindow, consoleWindow];
+
+        consoleWindow.NoBorder = true;
+        consoleWindow.Flags |= ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
+    }
+
     public EditorWindow GetWindow(WindowId windowId) => _windows[(int)windowId];
 
     public void OnDiagnosticTick()
@@ -37,106 +55,40 @@ internal sealed class WindowManager(StateManager stateManager)
             window.OnUpdateDiagnostic();
     }
 
-    public void Navigate(WindowId windowId, Type panelType)
-    {
-        GetWindow(windowId).EnqueuePanel(GetPanel(panelType));
-    }
-
-
     public void Draw()
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
         if (WindowRoot.BeginDockSpace())
             EngineWindow.SetViewport(new ViewportRect(WindowRoot.ViewportPosition, WindowRoot.ViewportSize));
 
-        ViewportWindow.Draw(stateManager);
+        ViewportWindow.Draw(_stateManager);
         ImGui.PopStyleVar();
 
-        TopMenuWindow.DrawMenu(stateManager);
-        TopMenuWindow.DrawToolbar(stateManager);
+        TopMenuWindow.DrawMenu(_stateManager);
+        TopMenuWindow.DrawToolbar(_stateManager);
 
-      //  DrawDockWindows();
+        _avg.BeginSample();
         foreach (var window in _windows)
-            window.OnDraw();
+            window.Draw();
+        if (_avg.EndSample() >= 40) _avg.ResetAndPrint("_windowManager.Draw");
 
-        if ((uint)stateManager.ActiveDebugWindow < (uint)_debugWindows.Length)
-            _debugWindows[stateManager.ActiveDebugWindow]();
+        if ((uint)_stateManager.ActiveDebugWindow < (uint)_debugWindows.Length)
+            _debugWindows[_stateManager.ActiveDebugWindow]();
     }
 
-    private void DrawDockWindows()
+    private AvgFrameTimer _avg;
+
+    public void Init(ArenaAllocator allocator)
     {
-        if (ImGui.Begin(WindowRoot.LeftWindowId))
-        {
-            _windows[(int)WindowId.Left].OnDraw();
-        }
-        ImGui.End();
-        if (ImGui.Begin(WindowRoot.RightWindowId))
-        {
-            _windows[(int)WindowId.Right].OnDraw();
-        }
-        ImGui.End();
-        if (ImGui.Begin(WindowRoot.BottomWindowId))
-        {
-            _windows[(int)WindowId.Bottom].OnDraw();
-        }
-        ImGui.End();
-
-    }
-
-    public void Init(ConsoleService consoleService)
-    {
-        RegisterWindows();
-        RegisterPanels(consoleService);
-        TopMenuWindow.RegisterMenuToolbar();
-
+        TopMenuWindow.RegisterMenuToolbar(allocator);
         RegisterDebugWindows();
 
-        foreach (var it in _panelDict.Values)
+        foreach (var it in _windows)
             it.OnCreate();
-
-        Navigate(WindowId.Left, typeof(AssetListPanel));
-        Navigate(WindowId.Right, typeof(CameraPanel));
-        Navigate(WindowId.Bottom, typeof(ConsolePanel));
 
         TopMenuWindow.SyncToolbar();
     }
 
-
-    private void RegisterWindows()
-    {
-        var leftWindow = _windows[(int)WindowId.Left] = new EditorWindow("##Left");
-        var rightWindow = _windows[(int)WindowId.Right] = new EditorWindow("##Right");
-        var bottomWindow = _windows[(int)WindowId.Bottom] = new EditorWindow("##Bottom");
-
-        leftWindow.Memory = TextBuffers.WindowMemory1;
-        rightWindow.Memory = TextBuffers.WindowMemory2;
-        bottomWindow.Memory = TextBuffers.WindowMemory3;
-
-        bottomWindow.NoBorder = true;
-        bottomWindow.Flags |= ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
-    }
-
-
-    private void RegisterPanels(ConsoleService consoleService)
-    {
-        RegisterPanel(new AssetListPanel(stateManager));
-        RegisterPanel(new AssetInspectorPanel(stateManager));
-
-        RegisterPanel(new SceneListPanel(stateManager));
-        RegisterPanel(new SceneInspectorPanel(stateManager));
-
-        RegisterPanel(new CameraPanel(stateManager));
-        RegisterPanel(new LightingPanel(stateManager));
-        RegisterPanel(new VisualPanel(stateManager));
-
-        RegisterPanel(new ConsolePanel(stateManager, consoleService));
-    }
-
-    private void RegisterPanel<T>(T panel) where T : EditorPanel
-    {
-        ArgumentNullException.ThrowIfNull(panel);
-        _panelDict.Add(typeof(T), panel);
-    }
 
     private void RegisterDebugWindows()
     {

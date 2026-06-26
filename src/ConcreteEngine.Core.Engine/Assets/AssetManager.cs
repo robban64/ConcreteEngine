@@ -61,7 +61,7 @@ public sealed class AssetManager
     internal AssetId RegisterInMemoryAsset(Guid gid, AssetKind kind, string name)
     {
         var assetId = Store.Register(gid, 0);
-        var file = Files.RegisterRoot(assetId, name, new FileScanInfo(name, string.Empty, storage: AssetStorage.InMemory));
+        var file = Files.RegisterRoot(assetId, name,gid, new FileScanInfo(name, string.Empty, storage: AssetStorage.InMemory));
         Store.SetAssetBinding(assetId, file.Id, 0);
         return assetId;
     }
@@ -74,7 +74,7 @@ public sealed class AssetManager
             Throwers.InvalidArgument($"Asset name {record.Name} already registered");
 
         var assetId = Store.Register(record.Id, record.FileCount);
-        var file = Files.RegisterRoot(assetId, record.Name, in fileInfo);
+        var file = Files.RegisterRoot(assetId, record.Name, record.Id, in fileInfo);
         Store.SetAssetBinding(assetId, file.Id, 0); // root
         return assetId;
     }
@@ -87,18 +87,19 @@ public sealed class AssetManager
         if (!Files.TryGetFileByPath(relativePath, out var file))
             Throwers.InvalidArgument(nameof(relativePath), $"Invalid file path {relativePath}");
 
-        file.Binding = FileBinding.DependentFile;
+        file.IsUnbound = false;
         Store.SetAssetBinding(assetId, file.Id, fileIndex);
     }
 
     internal AssetId RegisterEmbedded(AssetId sourceId, IEmbeddedAsset embedded)
     {
-        ArgumentNullException.ThrowIfNull(embedded.FileSpec);
+        ArgumentNullException.ThrowIfNull(embedded.Name);
+
         if (!Store.HasBinding(sourceId))
             Throwers.InvalidArgument($"Missing original asset for {embedded.Name}");
 
         var assetId = RegisterInMemoryAsset(embedded.GId, embedded.Kind, embedded.Name);
-        RegisterExistingBindings(assetId, [embedded.FileSpec]);
+        //RegisterExistingBindings(assetId, [AssetFile.MakeRoot()]);
         return assetId;
     }
 

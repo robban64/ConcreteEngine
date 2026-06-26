@@ -10,7 +10,6 @@ internal interface IEmbeddedAsset
     AssetKind Kind { get; }
     string Name { get; }
     string EmbeddedName { get; }
-    AssetFile? FileSpec { get; }
 }
 
 internal sealed class EmbeddedSceneMaterial(string name, int materialIndex, bool isAnimated) : IEmbeddedAsset
@@ -19,7 +18,6 @@ internal sealed class EmbeddedSceneMaterial(string name, int materialIndex, bool
     public AssetKind Kind => AssetKind.Material;
     public string Name { get; } = name;
     public string EmbeddedName { get; set; } = null!;
-    public AssetFile? FileSpec { get; set; }
 
     public readonly int MaterialIndex = materialIndex;
     public readonly bool IsAnimated = isAnimated;
@@ -27,6 +25,8 @@ internal sealed class EmbeddedSceneMaterial(string name, int materialIndex, bool
     public readonly MaterialStateRecord State = new();
 
     public readonly List<Guid> Textures = new(4);
+    
+
 }
 
 internal sealed class EmbeddedSceneTexture(string name, string embeddedName, int textureIndex) : IEmbeddedAsset
@@ -38,13 +38,12 @@ internal sealed class EmbeddedSceneTexture(string name, string embeddedName, int
 
     public readonly int TextureIndex = textureIndex;
 
-    public AssetFile? FileSpec { get; set; }
-
     public Size2D Dimensions;
 
     public TextureUsage SlotKind = TextureUsage.Albedo;
     public TexturePreset Preset = TexturePreset.LinearMipmapRepeat;
     public TexturePixelFormat PixelFormat = TexturePixelFormat.Unknown;
+
 
     //public bool Discard;
 }

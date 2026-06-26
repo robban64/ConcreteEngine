@@ -40,7 +40,7 @@ internal sealed class AssetScanner(AssetManager assetManager)
         var fileRegistry = assetManager.Files;
         foreach (var scanInfo in MakeFileEnumerable())
         {
-            fileRegistry.RegisterFile(FileBinding.UnboundFile, scanInfo.Name, in scanInfo);
+            fileRegistry.RegisterFile(true, in scanInfo);
         }
     }
 

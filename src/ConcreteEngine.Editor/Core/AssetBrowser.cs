@@ -51,9 +51,6 @@ internal sealed class AssetBrowser
     public int FileCount { get; private set; }
     public int FilteredCount { get; private set; }
 
-    public FileBinding FileFilter = FileBinding.Unknown;
-    public AssetStorage StorageFilter = AssetStorage.None;
-
     private AssetFileId[] _filteredFileIds = new AssetFileId[64];
     private FileItem[] _items = new FileItem[64];
 
@@ -126,27 +123,24 @@ internal sealed class AssetBrowser
             return;
         }
 
-        var fileFilter = FileFilter;
-        var storageFilter = StorageFilter;
-
         var count = 0;
         foreach (var file in FileRegistry.MakeSparseEnumerator(ids))
         {
             if (searchString.Length > 0 && !file.LogicalName.StartsWith(searchString)) continue;
-            if (storageFilter > 0 && storageFilter != file.Storage) continue;
-            if (fileFilter > 0 && fileFilter != file.Binding) continue;
 
             var kind = AssetKind.Unknown;
-            if (FileRegistry.TryGetByRootId(file.Id, out var assetId))
-                kind = Assets.Get<AssetObject>(assetId).Kind;
+            if (file.AssetRootId.IsValid())
+                kind = Assets.Get<AssetObject>(file.AssetRootId).Kind;
             
+            var binding = kind != AssetKind.Unknown ? FileBinding.RootFile : (file.IsUnbound ? FileBinding.UnboundFile : FileBinding.DependentFile);
+
             _filteredFileIds[count] = file.Id;
-            _items[count++] = new FileItem(file.LogicalName, file.Id, file.Binding, file.Storage, kind);
+            _items[count++] = new FileItem(file.LogicalName, file.Id, binding, file.Storage, kind);
         }
         _items.AsSpan(0, count).Sort();
 
         _filteredFileIds.AsSpan(0, count)
-            .Sort(static (a, b) => ((int)FileRegistry.Get(a).Binding).CompareTo((int)FileRegistry.Get(b).Binding));
+            .Sort(static (a, b) => ((int)FileRegistry.Get(a).GetBinding()).CompareTo((int)FileRegistry.Get(b).GetBinding()));
 
         FilteredCount = count;
     }

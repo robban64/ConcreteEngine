@@ -12,15 +12,12 @@ namespace ConcreteEngine.Core.Engine.Assets;
 public sealed class AssetFileRegistry
 {
     private const int DefaultCap = 512;
-    private const int DefaultBindingCap = 256;
 
     public int Count { get; private set; }
 
     private AssetFile?[] _files = new AssetFile?[DefaultCap];
 
     private readonly Dictionary<string, AssetFileId> _fileByPath = new(DefaultCap);
-    private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultBindingCap);
-
     private readonly Dictionary<string, List<AssetFileId>> _byDirectory = new(32);
 
     private readonly Stack<int> _free = [];
@@ -31,13 +28,12 @@ public sealed class AssetFileRegistry
     public int ActiveCount => Count - _free.Count;
     public int Capacity => _files.Length;
 
-    public int RootFileCount => _rootBindings.Count;
-
     internal ReadOnlySpan<AssetFile?> GetFileSpan() => _files.AsSpan(0, Count);
+
     public Dictionary<string, List<AssetFileId>>.KeyCollection GetDirectories() => _byDirectory.Keys;
+
     //
     public bool HasFilePath(string relativePath) => _fileByPath.ContainsKey(relativePath);
-    public bool IsRootFile(AssetFileId fileId) => _rootBindings.ContainsKey(fileId);
 
     public bool HasFile(AssetFileId fileId)
     {
@@ -78,9 +74,6 @@ public sealed class AssetFileRegistry
         return TryGetFile(fileId, out entry);
     }
 
-    public bool TryGetByRootId(AssetFileId fileId, out AssetId assetId) =>
-        _rootBindings.TryGetValue(fileId, out assetId);
-    
     public bool TryGetDirectoryIds(string path, out ReadOnlySpan<AssetFileId> fileIds)
     {
         if (!_byDirectory.TryGetValue(path, out var fileIdList))
@@ -103,62 +96,49 @@ public sealed class AssetFileRegistry
         _files[id.Index()] = file;
     }
 
-    internal AssetFile RegisterRoot(AssetId assetRootId, string name, in FileScanInfo fileInfo)
+    internal AssetFile RegisterRoot(AssetId assetRootId, string assetName, Guid assetGuid,
+        in FileScanInfo scanInfo)
     {
         if (!assetRootId.IsValid()) Throwers.InvalidArgument(nameof(assetRootId));
-        var fileSpec = AddFile(FileBinding.RootFile, name, in fileInfo);
-        _rootBindings.Add(fileSpec.Id, assetRootId);
-        return fileSpec;
-    }
-
-    internal AssetFile RegisterFile(FileBinding binding, string name, in FileScanInfo scanInfo)
-    {
-        ArgumentOutOfRangeException.ThrowIfEqual((int)binding, (int)FileBinding.RootFile, nameof(binding));
-        return AddFile(binding, name, in scanInfo);
-    }
-
-    private AssetFile AddFile(FileBinding binding, string name, in FileScanInfo scanInfo)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(name);
-        ArgumentOutOfRangeException.ThrowIfEqual(scanInfo.IsValid, false);
-        ArgumentOutOfRangeException.ThrowIfZero((int)binding, nameof(binding));
-
-        var isInMemory = scanInfo.Storage == AssetStorage.InMemory;
-        if (!isInMemory)
-        {
-            ArgumentException.ThrowIfNullOrEmpty(scanInfo.RelativePath);
-            if (_fileByPath.ContainsKey(scanInfo.RelativePath))
-                Throwers.InvalidArgument(nameof(scanInfo), $"AssetFile {scanInfo.RelativePath} already registered");
-        }
-
         var fileId = AllocateSlot();
-        var fileSpec = new AssetFile(
-            gId: Guid.NewGuid(),
-            id: fileId,
-            binding: binding,
-            storage: scanInfo.Storage,
-            logicalName: name,
-            relativePath: scanInfo.RelativePath,
-            sizeBytes: scanInfo.SizeBytes,
-            lastWriteTime: scanInfo.LastWriteTime
-        );
+        var file = AssetFile.MakeRoot(fileId, assetRootId, assetName, assetGuid, in scanInfo);
+        AddFile(file);
+        return file;
+    }
 
-        if (!isInMemory)
+    internal AssetFile RegisterFile(bool isUnbound, in FileScanInfo scanInfo)
+    {
+        var fileId = AllocateSlot();
+        var file = AssetFile.MakeFile(fileId, isUnbound, in scanInfo);
+        AddFile(file);
+        return file;
+    }
+
+
+    private void AddFile(AssetFile file)
+    {
+        ArgumentNullException.ThrowIfNull(file);
+
+        if (file.Storage == AssetStorage.InMemory)
         {
-            if (!scanInfo.RelativePath.StartsWith(EnginePath.AssetBasePath)) 
-                Throwers.InvalidArgument(nameof(scanInfo.RelativePath));
-            
-            var path = Path.GetDirectoryName(scanInfo.RelativePath.AsSpan());
-            if (!_byDirectory.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(path, out var fileIds))
-                _byDirectory.Add(path.ToString(), fileIds = new List<AssetFileId>(4));
-            
-            fileIds.Add(fileId);
-            
-            _fileByPath.Add(scanInfo.RelativePath, fileId);
+            _files[file.Id.Index()] = file;
+            return;
         }
 
-        _files[fileId.Index()] = fileSpec;
-        return fileSpec;
+        if (!file.RelativePath.StartsWith(EnginePath.AssetBasePath))
+            Throwers.InvalidArgument(nameof(file.RelativePath));
+
+        if (_fileByPath.ContainsKey(file.RelativePath))
+            Throwers.InvalidArgument(nameof(file), $"AssetFile {file.RelativePath} already registered");
+
+        var path = Path.GetDirectoryName(file.RelativePath.AsSpan());
+        if (!_byDirectory.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(path, out var fileIds))
+            _byDirectory.Add(path.ToString(), fileIds = new List<AssetFileId>(4));
+
+        fileIds.Add(file.Id);
+
+        _fileByPath.Add(file.RelativePath, file.Id);
+        _files[file.Id.Index()] = file;
     }
 
     private AssetFileId AllocateSlot()
@@ -174,8 +154,7 @@ public sealed class AssetFileRegistry
 
     //
     public ActiveObjectEnumerator<AssetFile> GetEnumerator() => new(_files.AsSpan(0, Count));
-    
-    public SparseObjectEnumerator<AssetFileId,AssetFile> MakeSparseEnumerator(ReadOnlySpan<AssetFileId> fileIds) =>
-        new(fileIds, _files.AsSpan(0, Count));
 
+    public SparseObjectEnumerator<AssetFileId, AssetFile> MakeSparseEnumerator(ReadOnlySpan<AssetFileId> fileIds) =>
+        new(fileIds, _files.AsSpan(0, Count));
 }

@@ -13,14 +13,11 @@ internal sealed unsafe class EditorWindow
         ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
 
     public readonly string Name;
-    public readonly WindowId Id;
 
     public ImGuiWindowFlags Flags = DefaultFlags;
 
-    public uint? BgColor;
     public bool NoBorder;
 
-    public bool IsDirty { get; private set; }
     public bool Visible { get; private set; }
     public EditorPanel? PendingPanel { get; private set; }
     public EditorPanel? ActivePanel { get; private set; }
@@ -28,15 +25,10 @@ internal sealed unsafe class EditorWindow
     public MemoryBlockPtr Memory;
     private RangeU16 _labelHandle;
 
-    //private readonly Stack<EditorPanel> _backStack = new();
-    //public Action<StateManager>? CustomDrawer;
-
-    public EditorWindow(string name, WindowId id)
+    public EditorWindow(string name)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
-
         Name = name;
-        Id = id;
     }
 
     public void OnDraw()
@@ -46,8 +38,6 @@ internal sealed unsafe class EditorWindow
 
         if (NoBorder)
             ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-        if (BgColor is { } bgColor)
-            ImGui.PushStyleColor(ImGuiCol.WindowBg, bgColor);
 
         Visible = ImGui.Begin(Memory.Data.Slice(_labelHandle), Flags);
         if (Visible && ActivePanel is { } activePanel)
@@ -60,7 +50,6 @@ internal sealed unsafe class EditorWindow
 
 
         if (NoBorder) ImGui.PopStyleVar();
-        if (BgColor.HasValue) ImGui.PopStyleColor();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

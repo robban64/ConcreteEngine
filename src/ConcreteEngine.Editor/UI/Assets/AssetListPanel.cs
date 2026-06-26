@@ -38,6 +38,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private RangeU16 _breadcrumbStrHandle;
     private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
 
+    private static AvgFrameTimer _avg;
+
     public AssetListPanel(StateManager state) : base(StateEnums.AssetList, state)
     {
         _assetBrowser = new AssetBrowser(OnDirectoryChange);
@@ -54,13 +56,12 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     public override void OnCreate()
     {
         //_state.Memory = TextBuffers.PersistentArena.Alloc(AssetListState.NameListCapacity);
-        avg.BeginSample();
+        _avg.BeginSample();
         _assetBrowser.BuildFullDirectory();
-        avg.EndSample();
-        avg.ResetAndPrint("Build full directory");
+        _avg.EndSample();
+        _avg.ResetAndPrint("Build full directory");
     }
 
-    private AvgFrameTimer avg;
 
 
     public override void OnEnter(NativeAllocator allocator)
@@ -152,10 +153,10 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         // List
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
         ImGui.BeginChild("AssetList"u8);
-        avg.BeginSample();
+        _avg.BeginSample();
         DrawFolders();
         DrawFiles();
-        if (avg.EndSample() >= 40) avg.ResetAndPrint();
+        if (_avg.EndSample() > 160) _avg.ResetAndPrint("Draw-AssetList");
         // DragDrop();
         ImGui.EndChild();
 

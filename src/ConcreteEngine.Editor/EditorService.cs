@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -47,8 +48,11 @@ internal sealed class EditorService
         _eventDispatcher.Register<ModeEvent>(EventHandler.OnModeEvent);
     }
 
+    private static AvgFrameTimer _avg;
+
     public void Draw()
     {
+        _avg.BeginSample();
         GuiTheme.PushFontText();
         _windowManager.Draw();
         ImGui.PopFont();
@@ -59,6 +63,7 @@ internal sealed class EditorService
         _interactionHandler.Update();
 
         _eventDispatcher.DrainQueue(_stateManager);
+        if (_avg.EndSample() >= 160) _avg.ResetAndPrint("Editor.Draw");
     }
 
     public void OnDiagnosticTick()

@@ -126,40 +126,41 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     {
         //if (_state.Sync(RenamedAsset))
         //Refresh();
-
-        // Row 1
         var isRootPath = _assetBrowser.IsRootPath;
-        if (isRootPath) ImGui.BeginDisabled(true);
-
-        if (ImGui.ArrowButton("##PrevFolder"u8, ImGuiDir.Left))
-            _assetBrowser.GoToParent();
-
-        if (isRootPath) ImGui.EndDisabled();
-
-        ImGui.SameLine();
-        ImGui.SeparatorText(_memory.SliceData(_breadcrumbStrHandle));
-
-        // Row 2
-        var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
-        ImGui.SetNextItemWidth(width * 0.62f);
-        _searchInput.Draw();
-
-        ImGui.SameLine();
-
-        ImGui.SetNextItemWidth(width * 0.38f);
-        if (_assetCombo.Draw()) ;
-        //_state.EnqueueNewAssetKind((AssetKind)_assetCombo.Value.X);
 
         // List
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
-        ImGui.BeginChild("AssetList"u8);
         _avg.BeginSample();
-        DrawFolders();
-        DrawFiles();
-        if (_avg.EndSample() > 160) _avg.ResetAndPrint("Draw-AssetList");
-        // DragDrop();
+
+        ImGui.BeginChild("AssetFolder"u8,new Vector2(200, 0), ImGuiChildFlags.Borders);
+            if (isRootPath) ImGui.BeginDisabled(true);
+
+            if (ImGui.ArrowButton("##PrevFolder"u8, ImGuiDir.Left))
+                _assetBrowser.GoToParent();
+
+            if (isRootPath) ImGui.EndDisabled();
+
+            ImGui.SameLine();
+            ImGui.SeparatorText(_memory.SliceData(_breadcrumbStrHandle));
+
+            DrawFolders();
+        ImGui.EndChild();
+        
+        ImGui.SameLine();
+        
+        ImGui.BeginChild("AssetFiles"u8, Vector2.Zero, ImGuiChildFlags.Borders);
+            ImGui.SetNextItemWidth(100);
+            _searchInput.Draw();
+
+            ImGui.SameLine();
+
+            ImGui.SetNextItemWidth(100);
+            if (_assetCombo.Draw()) ;
+
+            DrawFiles();
         ImGui.EndChild();
 
+        if (_avg.EndSample() > 160) _avg.ResetAndPrint("Draw-AssetList");
         ImGui.PopStyleVar();
     }
 
@@ -177,15 +178,31 @@ internal sealed unsafe class AssetsWindow : EditorWindow
                 _assetBrowser.GoToChild(it.GetFolderName());
         }
     }
+    
+    const float padding = 16.0f;
+    private const float thumbnailWidth = 80.0f;
+    private const float cellSize = thumbnailWidth + padding;
+    private const float iconSize = GuiTheme.IconSizeLarge;
 
     private void DrawFiles()
     {
         if(_assetBrowser.FilteredCount == 0) return;
+
+        int columnCount = (int)(ImGui.GetContentRegionAvail().X / cellSize);
+        columnCount = int.Max(columnCount, 1);
+        var rowCount =float.Ceiling(_assetBrowser.FilteredCount / (float)columnCount);
         
         var sw = TextBuffers.GetWriter();
 
         var selectedFileId = _selectedFile;
         uint icon = 0, color = 0;
+        var index = 0;
+        var drawList = ImGui.GetWindowDrawList();
+        Vector2 iconPos = new Vector2(
+            (thumbnailWidth - iconSize) * 0.5f,
+            (thumbnailWidth * 0.4f) - (iconSize * 0.5f)
+        );
+
         foreach (var file in _assetBrowser.GetFilteredFileEnumerator())
         {
             var style = GetIconAndColor(file.Binding, AssetKind.Texture);
@@ -197,13 +214,43 @@ internal sealed unsafe class AssetsWindow : EditorWindow
                 icon = style.icon;
             }
 
-            var text = sw.AppendIcon((byte*)&icon).PadRight(2)
-                .Append(file.LogicalName).AppendImGuiId(file.Id)
-                .End();
-
             var isSelected = selectedFileId == file.Id;
-            if (ImGui.Selectable(text, isSelected, 0, ListItemSelectSize))
+            if (ImGui.Selectable(sw.AppendImGuiId(file.Id).End(), isSelected, 0, new Vector2(thumbnailWidth)))
                 OnListItemClick(file.Id);
+
+            GuiTheme.PushFontIconLarge();
+
+            Vector2 min = ImGui.GetItemRectMin();
+            Vector2 max = ImGui.GetItemRectMax();
+
+            drawList.PushClipRect(min,max,true);
+
+            drawList.AddText(iconPos + min, color, (byte*)&icon);
+            ImGui.PopFont();
+            
+            var text = sw.Write(file.LogicalName);
+
+            Vector2 labelSize = ImGui.CalcTextSize(text);
+            Vector2 labelPos = new Vector2(
+                min.X + (thumbnailWidth - float.Min(labelSize.X, thumbnailWidth)) * 0.5f,
+                min.Y + (thumbnailWidth * 0.8f) - (labelSize.Y * 0.5f)
+            );
+
+            drawList.AddText(labelPos, TextPrimary, text);
+            drawList.PopClipRect();
+            
+            int nextItemXIndex = (index + 1) % columnCount;
+            if (nextItemXIndex != 0 && (index + 1) < _assetBrowser.FilteredCount)
+            {
+                ImGui.SameLine(0.0f, padding);
+            }
+            else
+            {
+                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + padding);
+                ImGui.Dummy(default);
+            }
+
+            ++index;
         }
 
         ImGui.PopStyleColor();
@@ -232,7 +279,10 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         };
     }
 }
-
+/*var text = sw.AppendIcon((byte*)&icon).PadRight(2)
+    .Append(file.LogicalName).AppendImGuiId(file.Id)
+    .End();
+    */
 /*
     private void DrawList()
     {

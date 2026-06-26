@@ -10,7 +10,7 @@ internal sealed class InspectionWindow : EditorWindow
 {
     public override ReadOnlySpan<byte> Id => WindowRoot.RightWindowId;
 
-    public StateEnums ActiveState { get; private set; }
+    public InspectorId ActiveState { get; private set; }
 
     private readonly CameraPanel _cameraPanel;
     private readonly VisualPanel _visualPanel;
@@ -59,12 +59,12 @@ internal sealed class InspectionWindow : EditorWindow
     {
         switch (ActiveState)
         {
-            case StateEnums.None: return;
-            case StateEnums.AssetInspector: _assetInspectorPanel.OnDraw(); break;
-            case StateEnums.SceneInspector: _sceneInspectorPanel.OnDraw(); break;
-            case StateEnums.Camera: _cameraPanel.OnDraw(); break;
-            case StateEnums.Lighting: _lightingPanel.OnDraw(); break;
-            case StateEnums.Visual: _visualPanel.OnDraw(); break;
+            case InspectorId.None: return;
+            case InspectorId.Asset: _assetInspectorPanel.OnDraw(); break;
+            case InspectorId.SceneObject: _sceneInspectorPanel.OnDraw(); break;
+            case InspectorId.Camera: _cameraPanel.OnDraw(); break;
+            case InspectorId.Lighting: _lightingPanel.OnDraw(); break;
+            case InspectorId.Visual: _visualPanel.OnDraw(); break;
             default: Throwers.Unreachable(nameof(ActiveState)); break;
         }
     }
@@ -75,23 +75,23 @@ internal sealed class InspectionWindow : EditorWindow
 
         if (prevSelection == nextSelection) return;
 
-        ActiveState = StateEnums.None;
+        ActiveState = InspectorId.None;
         if (prevSelection.SelectedSceneId != nextSelection.SelectedSceneId)
-            ActiveState = StateEnums.SceneInspector;
+            ActiveState = InspectorId.SceneObject;
         else if (prevSelection.SelectedAssetId != nextSelection.SelectedAssetId)
-            ActiveState = StateEnums.AssetInspector;
+            ActiveState = InspectorId.Asset;
         else if (prevSelection.FixedInspector != nextSelection.FixedInspector)
         {
             ActiveState = nextSelection.FixedInspector switch
             {
-                FixedInspectorId.None => StateEnums.None,
-                FixedInspectorId.Camera => StateEnums.Camera,
-                FixedInspectorId.Lighting => StateEnums.Lighting,
-                FixedInspectorId.Visual => StateEnums.Visual,
+                FixedInspectorId.None => InspectorId.None,
+                FixedInspectorId.Camera => InspectorId.Camera,
+                FixedInspectorId.Lighting => InspectorId.Lighting,
+                FixedInspectorId.Visual => InspectorId.Visual,
                 _ => throw new ArgumentOutOfRangeException(),
             };
         }
 
-        Enabled = ActiveState != StateEnums.None;
+        Enabled = ActiveState != InspectorId.None;
     }
 }

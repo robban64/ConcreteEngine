@@ -14,7 +14,7 @@ internal sealed class LightingPanel : EditorPanel
 
     public override void OnEnter() => _inspectFields.Refresh();
 
-    public LightingPanel(StateManager state) : base(StateEnums.Lighting, state)
+    public LightingPanel(StateManager state) : base(InspectorId.Lighting, state)
     {
         _inspectFields.ShadowSizeCombo.Layout = FieldLayout.None;
     }

@@ -10,11 +10,11 @@ internal enum WindowId : byte
     Left, Right, BottomLeft, Bottom
 }
 
-internal enum StateEnums : byte
+internal enum InspectorId : byte
 {
     None,
-    AssetInspector,
-    SceneInspector,
+    Asset,
+    SceneObject,
     Camera,
     Lighting,
     Visual

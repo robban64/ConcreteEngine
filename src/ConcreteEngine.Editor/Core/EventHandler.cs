@@ -7,11 +7,6 @@ namespace ConcreteEngine.Editor.Core;
 
 internal static class EventHandler
 {
-    public static void OnModeEvent(ModeEvent evt, StateManager ctx)
-    {
-        ctx.EmitChange(ctx.Context with { Mode = new ModeContext { Id = evt.Mode } });
-    }
-
     public static void OnToolEvent(ToolEvent evt, StateManager ctx)
     {
         if (evt.ShowDebugBounds is null && evt.GizmoEnabled is null)

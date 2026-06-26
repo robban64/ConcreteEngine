@@ -67,16 +67,13 @@ internal sealed class WindowManager
         TopMenuWindow.DrawMenu(_stateManager);
         TopMenuWindow.DrawToolbar(_stateManager);
 
-        _avg.BeginSample();
         foreach (var window in _windows)
             window.Draw();
-        if (_avg.EndSample() >= 40) _avg.ResetAndPrint("_windowManager.Draw");
 
         if ((uint)_stateManager.ActiveDebugWindow < (uint)_debugWindows.Length)
             _debugWindows[_stateManager.ActiveDebugWindow]();
     }
 
-    private AvgFrameTimer _avg;
 
     public void Init(ArenaAllocator allocator)
     {

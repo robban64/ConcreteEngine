@@ -27,7 +27,6 @@ internal sealed class PanelRouter
     private static void ResolveToolbar(EditorContext prev, EditorContext next, bool force = false)
     {
         var mask = force ? ContextChangeMask.All : ContextChangeMask.None;
-        if (prev.Mode != next.Mode) mask |= ContextChangeMask.Mode;
         if (prev.Tool != next.Tool) mask |= ContextChangeMask.Tool;
         if (prev.Selection != next.Selection) mask |= ContextChangeMask.Selection;
 

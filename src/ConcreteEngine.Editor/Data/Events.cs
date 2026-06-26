@@ -32,7 +32,6 @@ internal sealed record ToolEvent : EditorEvent
     public static ToolEvent MakeBounds(bool enabled) => new() { ShowDebugBounds = enabled, };
 }
 
-internal sealed record ModeEvent(ModeId Mode) : EditorEvent;
 
 internal sealed record AssetEvent(AssetId Asset, AssetKind Kind, string? Rename = null, bool Reload = false)
     : EditorEvent;

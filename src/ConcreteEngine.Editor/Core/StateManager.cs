@@ -11,7 +11,7 @@ internal sealed class StateManager(EventDispatcher eventDispatcher)
 {
     public event Action<EditorContext, EditorContext>? ContextChanged;
 
-    public EditorContext Context = new() { Mode = new ModeContext { Id = ModeId.Asset } };
+    public EditorContext Context = new();
     public int ActiveDebugWindow { get; private set; } = -1;
 
     public void ToggleDebugWindow(int id)

@@ -33,20 +33,20 @@ internal static class TopMenuWindow
             it.UpdateVisibleCount();
     }
 
-    public static void RegisterMenuToolbar(ArenaAllocator allocator)
+    public static void RegisterMenuToolbar(ArenaAllocator arena)
     {
         if (_hasInitialized) throw new InvalidOperationException("Already registered");
         _hasInitialized = true;
 
-        var allocBuilder = allocator.MakeBuilder();
+        var allocator = arena.MakeBuilder();
 
-        MenuBar[0] = new MenuGroup(allocBuilder.AllocStringSlice("File").AsRange16(), [
+        MenuBar[0] = new MenuGroup(allocator.AllocStringSlice("File").AsRange16(), [
             new MenuItem("Test1", null, static (state) => { })
         ]);
-        MenuBar[1] = new MenuGroup(allocBuilder.AllocStringSlice("Edit").AsRange16(), [
+        MenuBar[1] = new MenuGroup(allocator.AllocStringSlice("Edit").AsRange16(), [
             new MenuItem("Test2", null, static (state) => { })
         ]);
-        MenuBar[2] = new MenuGroup(allocBuilder.AllocStringSlice("Debug").AsRange16(), [
+        MenuBar[2] = new MenuGroup(allocator.AllocStringSlice("Debug").AsRange16(), [
             new MenuItem("Metrics", null,
                 static (state) => state.ToggleDebugWindow(WindowManager.DebugMetricsWindow)),
             new MenuItem("ImGui Demo", null,
@@ -57,9 +57,9 @@ internal static class TopMenuWindow
                 static (state) => state.ToggleDebugWindow(WindowManager.DebugImStyleWindow))
         ]);
 
-        _memory = allocator.CommitBuilder(allocBuilder);
+        _memory = arena.CommitBuilder(allocator);
 
-        Toolbar[0] = new ToolbarGroup(ToolbarGroupAlignment.Left, [Asset, Scene]);
+        Toolbar[0] = new ToolbarGroup(ToolbarGroupAlignment.Left, []);
         Toolbar[1] = new ToolbarGroup(ToolbarGroupAlignment.Center, [Translate, Scale, Rotate, DebugBounds]);
         Toolbar[2] = new ToolbarGroup(ToolbarGroupAlignment.Right, [Selected, Camera, Lighting, Visual]);
     }
@@ -120,16 +120,6 @@ internal static class TopMenuWindow
 
         ImGui.PopFont();
     }
-
-
-
-    private static readonly ToolbarItem Asset = new(Icons.Database, ContextChangeMask.Mode,
-        state => state.EnqueueEvent(new ModeEvent(ModeId.Asset)),
-        (prev, next, it) => it.Set(next.Mode == ModeId.Asset));
-
-    private static readonly ToolbarItem Scene = new(Icons.LayoutGrid, ContextChangeMask.Mode,
-        state => state.EnqueueEvent(new ModeEvent(ModeId.Scene)),
-        (prev, next, it) => it.Set(next.Mode == ModeId.Scene));
 
     private static readonly ToolbarItem Translate = new(Icons.Move3d, ContextChangeMask.Tool,
         state => state.EnqueueEvent(ToolEvent.MakeGizmo(TransformGizmoOp.Translate)),

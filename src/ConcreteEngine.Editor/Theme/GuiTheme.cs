@@ -30,7 +30,7 @@ internal static class GuiTheme
 
     public const float FontSizeDefault = 14.0f;
     public const float IconSizeMedium = 18.0f;
-    public const float IconSizeLarge = 20.0f;
+    public const float IconSizeLarge = 24.0f;
     public const float FormItemWidth = 220;
     public const float FormItemInlineWidth = 160;
 
@@ -53,6 +53,8 @@ internal static class GuiTheme
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontIcon() => ImGui.PushFont(IconFont, IconSizeMedium);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void PushFontIconLarge() => ImGui.PushFont(IconFont, IconSizeLarge);
 
     public static void SetImGuizmoTheme()
     {

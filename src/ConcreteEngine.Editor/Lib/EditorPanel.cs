@@ -4,9 +4,9 @@ using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Lib;
 
-internal abstract class EditorPanel(StateEnums id, StateManager state)
+internal abstract class EditorPanel(InspectorId id, StateManager state)
 {
-    public readonly StateEnums Id = id;
+    public readonly InspectorId Id = id;
     protected readonly StateManager State = state;
 
     public MemoryBlockPtr Memory;

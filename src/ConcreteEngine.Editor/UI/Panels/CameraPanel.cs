@@ -10,7 +10,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed class CameraPanel(StateManager state) : EditorPanel(StateEnums.Camera, state)
+internal sealed class CameraPanel(StateManager state) : EditorPanel(InspectorId.Camera, state)
 {
     private Size2D _currentViewport;
     private RangeU16 _viewportStrHandle;

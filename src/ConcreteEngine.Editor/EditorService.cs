@@ -45,7 +45,6 @@ internal sealed class EditorService
         _eventDispatcher.Register<AssetEvent>(EventHandler.OnAssetUpdateEvent);
         _eventDispatcher.Register<SelectionEvent>(EventHandler.OnSelectionEvent);
         _eventDispatcher.Register<ToolEvent>(EventHandler.OnToolEvent);
-        _eventDispatcher.Register<ModeEvent>(EventHandler.OnModeEvent);
     }
 
     private static AvgFrameTimer _avg;
@@ -53,9 +52,9 @@ internal sealed class EditorService
     public void Draw()
     {
         GuiTheme.PushFontText();
-       // _avg.BeginSample();
+       _avg.BeginSample();
         _windowManager.Draw();
-        //if (_avg.EndSample() >= 160) _avg.ResetAndPrint("Editor.Draw");
+        if (_avg.EndSample() >= 160) _avg.ResetAndPrint("Editor.Draw");
 
         ImGui.PopFont();
 

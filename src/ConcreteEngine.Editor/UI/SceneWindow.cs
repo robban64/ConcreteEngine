@@ -1,7 +1,9 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -28,7 +30,6 @@ internal sealed unsafe class SceneWindow : EditorWindow
     private const float ListItemPad = 4f;
 
     private static readonly Vector2 VisBtnSize = new(ListItemHeight + ListItemPad, ListItemHeight + ListItemPad);
-    private static readonly Vector2 TableSelectSize = new(0, ListItemHeight);
 
     private readonly ComboInput _kindCombo;
     private readonly TextInput _searchInput;
@@ -118,38 +119,40 @@ internal sealed unsafe class SceneWindow : EditorWindow
         }
 
         clipper.End();
+
         ImGui.EndTable();
         ImGui.PopStyleColor();
         ImGui.PopStyleVar(2);
-    }
+        
 
+    }
 
     private void DrawList(int start, int length)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(start);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)length, (uint)_sceneIds.Length);
-
-        var store = SceneManager.SceneStore;
+        if((uint)start + (uint)length > (uint)_sceneIds.Length) Throwers.InvalidArgument(nameof(length));
+        
+        var idSpan = new ReadOnlySpan<SceneObjectId>(_sceneIds, start, length);
+        
+        var selectedId = SelectedId;
         var sw = TextBuffers.GetWriter();
         uint eyeIcon = StyleMap.GetIntIcon(Icons.Eye), eyeClosedIcon = StyleMap.GetIntIcon(Icons.EyeClosed);
-        var selectedId = SelectedId;
-        foreach (var id in _sceneIds.AsSpan(start, length))
-        {
-            var it = store.Get(id);
-            var isSelected = id == selectedId;
 
-            ImGui.PushID((int)id);
+        foreach (var file in SceneManager.SceneStore.MakeSparseEnumerator(idSpan))
+        {
+            ImGui.PushID(file.Id);
             ImGui.TableNextRow();
 
             ImGui.TableNextColumn();
-            var nameStr = sw.Append(' ').AppendIcon(StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name)
+            var nameStr = sw.PadRight(1).AppendIcon(StyleMap.GetIcon(file.Kind.ToIcon()))
+                .PadRight(4).Append(file.Name)
                 .End();
-            if (ImGui.Selectable(nameStr, isSelected, 0, TableSelectSize))
-                State.EnqueueEvent(new SelectionEvent(it.Id));
+            
+            if (ImGui.Selectable(nameStr, file.Id == selectedId, 0,  new Vector2(0, ListItemHeight)))
+                State.EnqueueEvent(new SelectionEvent(file.Id));
 
             ImGui.TableNextColumn();
-            var visibleIcon = it.Visible ? (byte*)&eyeIcon : (byte*)&eyeClosedIcon;
-            if (ImGui.Button(visibleIcon, VisBtnSize)) it.Visible = !it.Visible;
+            if (ImGui.Button(file.Visible ? (byte*)&eyeIcon : (byte*)&eyeClosedIcon, VisBtnSize))
+                file.Visible = !file.Visible;
 
             ImGui.PopID();
         }

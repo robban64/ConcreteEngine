@@ -7,7 +7,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal static class TopMenuWindow
+internal sealed class TopMenuWindow
 {
     private const ImGuiWindowFlags TopbarFlags =
         ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
@@ -17,36 +17,39 @@ internal static class TopMenuWindow
     public const int ToolbarGroupCount = 3;
     public const int MenuCount = 3;
 
-    private static MemoryBlockPtr _memory;
+    public static readonly TopMenuWindow Instance = new();
 
-    private static bool _hasInitialized;
     private static readonly float OffsetX = GuiTheme.WindowPadding.X;
+
+    private bool _hasInitialized;
     
-    private static readonly ToolbarGroup[] Toolbar = new ToolbarGroup[ToolbarGroupCount];
-    private static readonly MenuGroup[] MenuBar = new MenuGroup[MenuCount];
+    private MemoryBlockPtr _memory;
 
-    public static ReadOnlySpan<ToolbarItem> GetToolbarGroup(ToolbarGroupAlignment i) => Toolbar[(int)i].Items;
+    private readonly MenuGroup[] _menuBar = new MenuGroup[MenuCount];
+    private readonly ToolbarGroup[] _toolbar = new ToolbarGroup[ToolbarGroupCount];
+    
+    public ReadOnlySpan<ToolbarItem> GetToolbarGroup(ToolbarGroupAlignment i) => _toolbar[(int)i].Items;
 
-    public static void SyncToolbar()
+    public void SyncToolbar()
     {
-        foreach (var it in Toolbar)
+        foreach (var it in _toolbar)
             it.UpdateVisibleCount();
     }
 
-    public static void RegisterMenuToolbar(ArenaAllocator arena)
+    public void RegisterMenuToolbar(ArenaAllocator arena)
     {
         if (_hasInitialized) throw new InvalidOperationException("Already registered");
         _hasInitialized = true;
 
         var allocator = arena.MakeBuilder();
 
-        MenuBar[0] = new MenuGroup(allocator.AllocStringSlice("File").AsRange16(), [
+        _menuBar[0] = new MenuGroup(allocator.AllocStringSlice("File").AsRange16(), [
             new MenuItem("Test1", null, static (state) => { })
         ]);
-        MenuBar[1] = new MenuGroup(allocator.AllocStringSlice("Edit").AsRange16(), [
+        _menuBar[1] = new MenuGroup(allocator.AllocStringSlice("Edit").AsRange16(), [
             new MenuItem("Test2", null, static (state) => { })
         ]);
-        MenuBar[2] = new MenuGroup(allocator.AllocStringSlice("Debug").AsRange16(), [
+        _menuBar[2] = new MenuGroup(allocator.AllocStringSlice("Debug").AsRange16(), [
             new MenuItem("Metrics", null,
                 static (state) => state.ToggleDebugWindow(WindowManager.DebugMetricsWindow)),
             new MenuItem("ImGui Demo", null,
@@ -59,12 +62,12 @@ internal static class TopMenuWindow
 
         _memory = arena.CommitBuilder(allocator);
 
-        Toolbar[0] = new ToolbarGroup(ToolbarGroupAlignment.Left, []);
-        Toolbar[1] = new ToolbarGroup(ToolbarGroupAlignment.Center, [Translate, Scale, Rotate, DebugBounds]);
-        Toolbar[2] = new ToolbarGroup(ToolbarGroupAlignment.Right, [Selected, Camera, Lighting, Visual]);
+        _toolbar[0] = new ToolbarGroup(ToolbarGroupAlignment.Left, []);
+        _toolbar[1] = new ToolbarGroup(ToolbarGroupAlignment.Center, [Translate, Scale, Rotate, DebugBounds]);
+        _toolbar[2] = new ToolbarGroup(ToolbarGroupAlignment.Right, [Selected, Camera, Lighting, Visual]);
     }
 
-    public static void DrawMenu(StateManager stateManager)
+    public  void DrawMenu(StateManager stateManager)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, GuiTheme.MenuFramePadding);
         if (!ImGui.BeginMainMenuBar())
@@ -73,7 +76,7 @@ internal static class TopMenuWindow
             return;
         }
 
-        foreach (var it in MenuBar)
+        foreach (var it in _menuBar)
             it.Draw(stateManager, _memory);
 
         ImGui.EndMainMenuBar();
@@ -81,7 +84,7 @@ internal static class TopMenuWindow
     }
 
 
-    public static void DrawToolbar(StateManager stateManager)
+    public  void DrawToolbar(StateManager stateManager)
     {
         var vp = ImGuiSystem.MainViewportPtr;
         var width = vp.WorkSize.X;
@@ -99,7 +102,7 @@ internal static class TopMenuWindow
         ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Palette32.HoverColor);
         ImGui.PushStyleColor(ImGuiCol.HeaderActive, Palette32.SelectedColor);
 
-        ToolbarGroup left = Toolbar[0], center = Toolbar[1], right = Toolbar[2];
+        ToolbarGroup left = _toolbar[0], center = _toolbar[1], right = _toolbar[2];
 
         var centerX = float.Max(width * 0.5f - center.TotalWidth * 0.5f, left.TotalWidth);
         var rightX = float.Max(width - right.TotalWidth, centerX + center.TotalWidth) - right.VisibleCount * 6f;

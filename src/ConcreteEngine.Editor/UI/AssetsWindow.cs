@@ -35,8 +35,6 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 
     private MemoryBlockPtr _memory;
 
-    private static AvgFrameTimer _avg;
-
     public AssetsWindow(StateManager state) : base(state)
     {
         _assetBrowser = new AssetBrowser(OnDirectoryChange);
@@ -67,10 +65,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         _searchInput.SetTextBuffer(_memory.SliceData(inputHandle));
 
         //_state.Memory = TextBuffers.PersistentArena.Alloc(AssetListState.NameListCapacity);
-        _avg.BeginSample();
         _assetBrowser.BuildFullDirectory();
-        _avg.EndSample();
-        _avg.ResetAndPrint("Build full directory");
     }
 
     public override void OnUpdateDiagnostic() => Refresh();
@@ -126,28 +121,22 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         //if (_state.Sync(RenamedAsset))
         //Refresh();
         Sync();
-        var isRootPath = _assetBrowser.IsRootPath;
-
+        
         // List
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
 
-        ImGui.BeginChild("AssetFolder"u8, new Vector2(200, 0), ImGuiChildFlags.Borders);
-        if (isRootPath) ImGui.BeginDisabled(true);
-
-        if (ImGui.ArrowButton("##PrevFolder"u8, ImGuiDir.Left))
-            _assetBrowser.GoToParent();
-
-        if (isRootPath) ImGui.EndDisabled();
+        ImGui.BeginChild("folders"u8, new Vector2(200, 0), ImGuiChildFlags.Borders);
+        DrawGoBackFolderButton();
 
         ImGui.SameLine();
-        ImGui.SeparatorText(_memory.SliceData(_breadcrumbStrHandle));
+        AppDraw.Text(_memory.SliceData(_breadcrumbStrHandle));
 
         DrawFolders();
         ImGui.EndChild();
 
         ImGui.SameLine();
 
-        ImGui.BeginChild("AssetFiles"u8, Vector2.Zero, ImGuiChildFlags.Borders);
+        ImGui.BeginChild("files"u8, Vector2.Zero, ImGuiChildFlags.Borders);
         ImGui.SetNextItemWidth(100);
         _searchInput.Draw();
 
@@ -157,9 +146,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         if (_assetCombo.Draw()) ;
 
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
-        _avg.BeginSample();
         DrawFiles();
-        if (_avg.EndSample() > 40) _avg.ResetAndPrint("Draw-AssetList");
 
         ImGui.PopStyleVar();
         ImGui.EndChild();
@@ -167,19 +154,18 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         ImGui.PopStyleVar();
     }
 
-    private void DrawFolders()
+    private void DrawGoBackFolderButton()
     {
-        var sw = TextBuffers.GetWriter();
-        int folderId = 0;
-        var icon = GetIntIcon(Icons.Folder);
-        foreach (var it in _assetBrowser.CurrentNode.GetChildren())
-        {
-            var text = sw.AppendIcon((byte*)&icon).PadRight(2)
-                .Append(it.PreviewName.GetReadSpan()).AppendImGuiId(folderId--)
-                .End();
-            if (ImGui.Selectable(text, false, 0, new Vector2(0, ListItemHeight)))
-                _assetBrowser.GoToChild(it.GetFolderName());
-        }
+        var isRootPath = _assetBrowser.IsRootPath;
+        //ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(2,2));
+        if (isRootPath) ImGui.BeginDisabled(true);
+        //if (ImGui.ArrowButton("##PrevFolder"u8, ImGuiDir.Left))
+        if(ImGui.Button(GetIcon(Icons.ChevronLeft)))
+            _assetBrowser.GoToParent();
+
+        if (isRootPath) ImGui.EndDisabled();
+        //ImGui.PopStyleVar();
+
     }
 
     private const float GridPadding = 16.0f;
@@ -190,6 +176,25 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     private static readonly Vector2 ItemSize = new(GridInnerSize);
     private static readonly Vector2 IconBasePos = new((GridInnerSize - GridIconSize) * 0.5f,
         (GridInnerSize * 0.4f) - (GridIconSize * 0.5f));
+
+    private void DrawFolders()
+    {
+        var sw = TextBuffers.GetWriter();
+        int folderId = 0;
+        var icon = GetIntIcon(Icons.Folder);
+        foreach (var it in _assetBrowser.CurrentNode.GetChildren())
+        {
+            var previewName = it.PreviewName;
+            
+            var text = sw
+                .AppendIcon((byte*)&icon).PadRight(2)
+                .Append((byte*)&previewName).AppendImGuiId(folderId--)
+                .End();
+            
+            if (ImGui.Selectable(text, false, 0, new Vector2(0, ListItemHeight)))
+                _assetBrowser.GoToChild(it.GetFolderName());
+        }
+    }
 
     private void DrawFiles()
     {

@@ -87,7 +87,7 @@ public sealed class AssetManager
         if (!Files.TryGetFileByPath(relativePath, out var file))
             Throwers.InvalidArgument(nameof(relativePath), $"Invalid file path {relativePath}");
 
-        file.IsUnbound = false;
+        file.MakeDependent();
         Store.SetAssetBinding(assetId, file.Id, fileIndex);
     }
 

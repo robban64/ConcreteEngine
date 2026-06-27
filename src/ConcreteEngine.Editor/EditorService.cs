@@ -52,9 +52,9 @@ internal sealed class EditorService
     public void Draw()
     {
         GuiTheme.PushFontText();
-       //_avg.BeginSample();
+       _avg.BeginSample();
         _windowManager.Draw();
-        //if (_avg.EndSample() >= 160) _avg.ResetAndPrint("Editor.Draw");
+        if (_avg.EndSample() >= 80) _avg.ResetAndPrint("Editor.Draw");
 
         ImGui.PopFont();
 

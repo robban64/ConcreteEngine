@@ -1,16 +1,9 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Editor.Utils;
 using static ConcreteEngine.Core.Engine.Assets.AssetManager;
 
 namespace ConcreteEngine.Editor.Core;
@@ -56,10 +49,7 @@ internal sealed class AssetBrowser
     public bool IsRootPath => CurrentNode == RootNode || CurrentNode == RootNode.GetChild(0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<FileItem> GetFileItems(int start, int length)
-    {
-        return new ReadOnlySpan<FileItem>(_items, start, length);
-    }
+    public ReadOnlySpan<FileItem> GetFileItems(int start, int length) => new(_items, start, length);
 
     public void GoToChild(ReadOnlySpan<char> folderName)
     {
@@ -113,9 +103,7 @@ internal sealed class AssetBrowser
             if (file.AssetRootId.IsValid())
                 kind = Assets.Get<AssetObject>(file.AssetRootId).Kind;
             
-            var binding = kind != AssetKind.Unknown ? FileBinding.RootFile : (file.IsUnbound ? FileBinding.UnboundFile : FileBinding.DependentFile);
-
-            _items[count++] = new FileItem(file.LogicalName, file.Id, binding, file.Storage, kind);
+            _items[count++] = new FileItem(file.LogicalName, file.Id, file.Binding, file.Storage, kind);
         }
         _items.AsSpan(0, count).Sort();
         FilteredCount = count;

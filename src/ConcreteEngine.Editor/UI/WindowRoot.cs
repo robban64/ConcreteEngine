@@ -1,5 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Visuals;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 using ImGui = Hexa.NET.ImGui.ImGui;
@@ -35,7 +37,7 @@ internal static class WindowRoot
     public static ReadOnlySpan<byte> AssetWindowId => "##BottomAsset"u8;
     public static ReadOnlySpan<byte> ConsoleWindowId => "##BottomConsole"u8;
 
-    public static unsafe bool BeginDockSpace()
+    public static unsafe void BeginDockSpace()
     {
         var vp = ImGuiSystem.MainViewportPtr;
 
@@ -62,10 +64,9 @@ internal static class WindowRoot
         {
             ViewportSize = node.Size;
             ViewportPosition = node.Pos;
-            return true;
+            EngineWindow.SetViewport(new ViewportRect(node.Pos, node.Size));
         }
 
-        return false;
     }
 
 

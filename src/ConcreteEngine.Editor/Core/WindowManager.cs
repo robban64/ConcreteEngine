@@ -1,8 +1,7 @@
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Visuals;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.UI;
@@ -15,7 +14,6 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class WindowManager
 {
-    private const int WindowCount = 4;
     public const int DebugWindowCount = 4;
 
     public const int DebugMetricsWindow = 0;
@@ -26,17 +24,19 @@ internal sealed class WindowManager
     //
     private readonly StateManager _stateManager;
 
+    private readonly EditorWindow[] _windows;
+    private readonly Action[] _debugWindows;
+
     public readonly SceneWindow SceneWindow;
     public readonly InspectionWindow InspectionWindow;
     public readonly AssetsWindow AssetWindow;
     public readonly ConsoleWindow ConsoleWindow;
 
-    private readonly EditorWindow[] _windows;
-    private readonly Action[] _debugWindows = new Action[DebugWindowCount];
-
     public WindowManager(StateManager stateManager)
     {
         _stateManager = stateManager;
+        _debugWindows = new Action[DebugWindowCount];
+
         var sceneWindow = SceneWindow = new SceneWindow(stateManager);
         var inspectionWindow = InspectionWindow = new InspectionWindow(stateManager);
         var assetWindow = AssetWindow = new AssetsWindow(stateManager);
@@ -49,6 +49,17 @@ internal sealed class WindowManager
 
     public EditorWindow GetWindow(WindowId windowId) => _windows[(int)windowId];
 
+    public T GetWindow<T>() where T : EditorWindow
+    {
+        foreach (var it in _windows)
+        {
+            if (it is T window) return window;
+        }
+
+        Throwers.InvalidArgument(nameof(T));
+        return null;
+    }
+
     public void OnDiagnosticTick()
     {
         foreach (var window in _windows)
@@ -58,14 +69,12 @@ internal sealed class WindowManager
     public void Draw()
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-        if (WindowRoot.BeginDockSpace())
-            EngineWindow.SetViewport(new ViewportRect(WindowRoot.ViewportPosition, WindowRoot.ViewportSize));
-
+        WindowRoot.BeginDockSpace();
         ViewportWindow.Draw(_stateManager);
         ImGui.PopStyleVar();
 
-        TopMenuWindow.DrawMenu(_stateManager);
-        TopMenuWindow.DrawToolbar(_stateManager);
+        TopMenuWindow.Instance.DrawMenu(_stateManager);
+        TopMenuWindow.Instance.DrawToolbar(_stateManager);
 
         foreach (var window in _windows)
             window.Draw();
@@ -77,13 +86,13 @@ internal sealed class WindowManager
 
     public void Init(ArenaAllocator allocator)
     {
-        TopMenuWindow.RegisterMenuToolbar(allocator);
+        TopMenuWindow.Instance.RegisterMenuToolbar(allocator);
         RegisterDebugWindows();
 
         foreach (var it in _windows)
             it.OnCreate();
 
-        TopMenuWindow.SyncToolbar();
+        TopMenuWindow.Instance.SyncToolbar();
     }
 
 

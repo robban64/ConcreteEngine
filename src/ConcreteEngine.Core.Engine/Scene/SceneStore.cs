@@ -153,5 +153,10 @@ public sealed class SceneStore
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ActiveObjectEnumerator<SceneObject> GetEnumerator() => new(_sceneObjects.AsSpan(0, Count));
+    public ActiveObjectEnumerator<SceneObject> GetEnumerator() =>
+        new(new ReadOnlySpan<SceneObject?>(_sceneObjects, 0, Count));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public SparseObjectEnumerator<SceneObjectId, SceneObject> MakeSparseEnumerator(ReadOnlySpan<SceneObjectId> ids) =>
+        new(ids, new ReadOnlySpan<SceneObject?>(_sceneObjects, 0, Count));
 }

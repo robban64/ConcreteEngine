@@ -1,4 +1,3 @@
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
 
 namespace ConcreteEngine.Editor.Core;
@@ -31,13 +30,13 @@ internal sealed class PanelRouter
 
         for (var i = 0; i < TopMenuWindow.ToolbarGroupCount; i++)
         {
-            foreach (var item in TopMenuWindow.GetToolbarGroup((ToolbarGroupAlignment)i))
+            foreach (var item in TopMenuWindow.Instance.GetToolbarGroup((ToolbarGroupAlignment)i))
             {
                 if ((item.ChangeMask & mask) != 0)
                     item.OnStateChange(prev, next, item);
             }
         }
 
-        TopMenuWindow.SyncToolbar();
+        TopMenuWindow.Instance.SyncToolbar();
     }
 }

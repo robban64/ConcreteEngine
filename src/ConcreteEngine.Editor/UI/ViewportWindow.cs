@@ -31,11 +31,11 @@ internal static unsafe class ViewportWindow
         IsFocused = ImGui.IsWindowFocused();
 
         state.GetOrSetTextureHandle(ImGuiSystem.OutputTexture, ref _viewportTexHandle);
-        ImGui.Image(_viewportTexHandle, WindowRoot.ViewportSize, new Vector2(0, 1), new Vector2(1, 0));
+        ImGui.Image(_viewportTexHandle, WindowRoot.ViewportSize, Vector2.UnitY, Vector2.UnitX);
 
         if (SelectionManager.Instance.SelectedSceneObject is { } inspector)
         {
-            DrawGizmos(state, inspector);
+            DrawGizmos(state.Context.Tool, inspector);
         }
 
         ImGui.End();
@@ -44,10 +44,8 @@ internal static unsafe class ViewportWindow
 
 
     [SkipLocalsInit]
-    private static void DrawGizmos(StateManager state, InspectSceneObject inspector)
+    private static void DrawGizmos(ToolContext tool, InspectSceneObject inspector)
     {
-        var tool = state.Context.Tool;
-
         var enabled = !EditorInput.IsGizmoBlocked;
 
         var size = WindowRoot.ViewportSize;

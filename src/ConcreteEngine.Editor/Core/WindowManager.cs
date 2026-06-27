@@ -26,10 +26,10 @@ internal sealed class WindowManager
     //
     private readonly StateManager _stateManager;
 
-    private readonly SceneWindow _sceneWindow;
-    private readonly InspectionWindow _inspectionWindow;
-    private readonly AssetsWindow _assetWindow;
-    private readonly ConsoleWindow _consoleWindow;
+    public readonly SceneWindow SceneWindow;
+    public readonly InspectionWindow InspectionWindow;
+    public readonly AssetsWindow AssetWindow;
+    public readonly ConsoleWindow ConsoleWindow;
 
     private readonly EditorWindow[] _windows;
     private readonly Action[] _debugWindows = new Action[DebugWindowCount];
@@ -37,10 +37,10 @@ internal sealed class WindowManager
     public WindowManager(StateManager stateManager)
     {
         _stateManager = stateManager;
-        var sceneWindow = _sceneWindow = new SceneWindow(stateManager);
-        var inspectionWindow = _inspectionWindow = new InspectionWindow(stateManager);
-        var assetWindow = _assetWindow = new AssetsWindow(stateManager);
-        var consoleWindow = _consoleWindow = new ConsoleWindow(stateManager);
+        var sceneWindow = SceneWindow = new SceneWindow(stateManager);
+        var inspectionWindow = InspectionWindow = new InspectionWindow(stateManager);
+        var assetWindow = AssetWindow = new AssetsWindow(stateManager);
+        var consoleWindow = ConsoleWindow = new ConsoleWindow(stateManager);
         _windows = [sceneWindow, inspectionWindow, assetWindow, consoleWindow];
 
         consoleWindow.NoBorder = true;

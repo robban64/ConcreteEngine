@@ -15,32 +15,22 @@ using static ConcreteEngine.Core.Engine.Assets.AssetManager;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal readonly struct FileItem : IComparable<FileItem>
+[StructLayout(LayoutKind.Sequential)]
+internal readonly struct FileItem(string name,AssetFileId id,FileBinding binding,AssetStorage storage,
+    AssetKind assetKind) : IComparable<FileItem>
 {
-    public readonly string Name;
-    public readonly AssetFileId Id;
-    public readonly uint Icon;
-    public readonly uint Color;
-    public readonly FileBinding Binding;
-    public readonly AssetStorage Storage;
-    public readonly AssetKind AssetKind;
-
-    public FileItem(string name, AssetFileId id, FileBinding binding, AssetStorage storage, AssetKind assetKind)
-    {
-        Name = name;
-        Id = id;
-        Binding = binding;
-        Storage = storage;
-        AssetKind = assetKind;
-        AssetsExtensions.GetIconAndColor(binding, assetKind, out Icon, out Color);
-    }
+    public readonly AssetFileId Id = id;
+    public readonly FileBinding Binding = binding;
+    public readonly AssetStorage Storage = storage;
+    public readonly AssetKind AssetKind = assetKind;
+    
+    public readonly String16Utf8 DisplayName = name;
 
     public int CompareTo(FileItem other)
     {
         var c = ((int)Binding).CompareTo((int)other.Binding);
-        return c != 0 ? c : Name.CompareTo(other.Name, StringComparison.Ordinal);
+        return c != 0 ? c : DisplayName.GetTextSpan().SequenceCompareTo(other.DisplayName.GetTextSpan());
     }
-
 }
 
 internal sealed class AssetBrowser
@@ -51,7 +41,6 @@ internal sealed class AssetBrowser
     public int FileCount { get; private set; }
     public int FilteredCount { get; private set; }
 
-    private AssetFileId[] _filteredFileIds = new AssetFileId[64];
     private FileItem[] _items = new FileItem[64];
 
     private readonly Action<AssetBrowser> _onDirectoryChange;
@@ -66,18 +55,11 @@ internal sealed class AssetBrowser
     public int FolderCount => CurrentNode.FolderCount;
     public bool IsRootPath => CurrentNode == RootNode || CurrentNode == RootNode.GetChild(0);
 
-    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-    //public ReadOnlySpan<AssetFileId> GetFileIds() => _currentFileIds.AsSpan(0, FileCount);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<FileItem> GetFileItems(int start, int length)
-        => _items.AsSpan(start, int.Min(length, FilteredCount - start));
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<AssetFileId> GetFilteredFileIds() => _filteredFileIds.AsSpan(0, FilteredCount);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SparseObjectEnumerator<AssetFileId, AssetFile> GetFilteredFileEnumerator()
-        => FileRegistry.MakeSparseEnumerator(GetFilteredFileIds());
+    {
+        return new ReadOnlySpan<FileItem>(_items, start, length);
+    }
 
     public void GoToChild(ReadOnlySpan<char> folderName)
     {
@@ -114,7 +96,6 @@ internal sealed class AssetBrowser
 
     public void SetSearch(ReadOnlySpan<char> searchString)
     {
-        Array.Clear(_filteredFileIds);
         Array.Clear(_items);
 
         if (!FileRegistry.TryGetDirectoryIds(CurrentNode.Path, out var ids))
@@ -134,14 +115,9 @@ internal sealed class AssetBrowser
             
             var binding = kind != AssetKind.Unknown ? FileBinding.RootFile : (file.IsUnbound ? FileBinding.UnboundFile : FileBinding.DependentFile);
 
-            _filteredFileIds[count] = file.Id;
             _items[count++] = new FileItem(file.LogicalName, file.Id, binding, file.Storage, kind);
         }
         _items.AsSpan(0, count).Sort();
-
-        _filteredFileIds.AsSpan(0, count)
-            .Sort(static (a, b) => ((int)FileRegistry.Get(a).GetBinding()).CompareTo((int)FileRegistry.Get(b).GetBinding()));
-
         FilteredCount = count;
     }
 
@@ -149,10 +125,10 @@ internal sealed class AssetBrowser
     {
         CurrentNode = node;
 
-        if (FileRegistry.TryGetDirectoryIds(node.Path, out var ids) && _filteredFileIds.Length < ids.Length)
+        if (FileRegistry.TryGetDirectoryIds(node.Path, out var ids) && _items.Length < ids.Length)
         {
-            var newCapacity = CapacityUtils.CapacityGrowthToFit(_filteredFileIds.Length, ids.Length);
-            Array.Resize(ref _filteredFileIds, newCapacity);
+            var newCapacity = CapacityUtils.CapacityGrowthToFit(_items.Length, ids.Length);
+            Array.Resize(ref _items, newCapacity);
         }
 
         FileCount = ids.Length;

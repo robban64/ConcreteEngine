@@ -44,9 +44,6 @@ internal static class EventHandler
             return;
         }
 
-        if (evt.Asset == null && evt.SceneObject == null)
-            throw new ArgumentException("Either Asset or SceneObject must be set");
-
         if (evt.Asset is { } asset)
         {
             if (selection.SelectedAssetId == asset) return;
@@ -67,6 +64,10 @@ internal static class EventHandler
                     IsWorldGizmo = true
                 }
             });
+        }
+        else
+        {
+            throw new ArgumentException("Either Asset or SceneObject must be set");
         }
     }
 

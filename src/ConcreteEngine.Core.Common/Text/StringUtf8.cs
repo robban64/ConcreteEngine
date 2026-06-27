@@ -5,17 +5,6 @@ using ConcreteEngine.Core.Common.Collections;
 
 namespace ConcreteEngine.Core.Common.Text;
 
-file static class Utils
-{
-    public static void CopyByteSpan(ReadOnlySpan<byte> span, Span<byte> dst)
-    {
-        if (span.IsEmpty) return;
-        var len = int.Min(span.Length, dst.Length);
-        span.Slice(0, len).CopyTo(dst);
-        dst[len] = 0;
-    }
-}
-
 public unsafe struct String32Utf8
 {
     public const int Capacity = 32;
@@ -31,7 +20,7 @@ public unsafe struct String32Utf8
 
     public String32Utf8(ReadOnlySpan<char> span)
     {
-        int written = Encoding.UTF8.GetBytes(span.Truncate(Capacity - 1), AsTextSpan());
+        int written = Encoding.UTF8.GetBytes(span.Truncate(TextLength), AsTextSpan());
         _value[0] = (byte)written;
         _value[Capacity - 1] = 0;
     }
@@ -53,20 +42,24 @@ public unsafe struct String16Utf8
     public const int Capacity = 16;
     public const int TextLength = 14;
     private fixed byte _value[Capacity];
+    
 
     public String16Utf8(ReadOnlySpan<byte> span)
     {
-        span.Truncate(TextLength).CopyTo(AsTextSpan());
-        _value[0] = (byte)span.Length;
-        _value[Capacity - 1] = 0;
+        var src = span.Truncate(TextLength);
+        src.CopyTo(AsSpan());
+        _value[src.Length] = 0;
+        _value[TextLength + 1] = (byte)span.Length;
     }
 
     public String16Utf8(ReadOnlySpan<char> span)
     {
-        int written = Encoding.UTF8.GetBytes(span.Truncate(Capacity - 1), AsTextSpan());
-        _value[0] = (byte)written;
-        _value[Capacity - 1] = 0;
+        int written = Encoding.UTF8.GetBytes(span.Truncate(TextLength), AsSpan());
+        _value[written] = 0;
+        _value[TextLength + 1] = (byte)written;
     }
+
+    public readonly int Count => _value[TextLength + 1];
 
     public static implicit operator String16Utf8(ReadOnlySpan<char> value) => new(value);
     public static implicit operator String16Utf8(ReadOnlySpan<byte> value) => new(value);
@@ -75,8 +68,10 @@ public unsafe struct String16Utf8
     public ref byte GetRef(int i = 0) => ref _value[i];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ReadOnlySpan<byte> GetReadSpan() => MemoryMarshal.CreateSpan(ref Unsafe.AsRef(in _value[1]), _value[0]);
-    public Span<byte> AsTextSpan() => MemoryMarshal.CreateSpan(ref _value[1], TextLength);
+    public readonly ReadOnlySpan<byte> GetTextSpan() => MemoryMarshal.CreateSpan(ref Unsafe.AsRef(in _value[0]), Count);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _value[0], TextLength);
 }
 
 public unsafe struct String8Utf8
@@ -89,16 +84,15 @@ public unsafe struct String8Utf8
 
     public String8Utf8(ReadOnlySpan<byte> span)
     {
-        span.Truncate(TextLength).CopyTo(AsTextSpan());
-        _value[0] = (byte)span.Length;
-        _value[Capacity - 1] = 0;
+        var src = span.Truncate(TextLength);
+        src.CopyTo(AsSpan());
+        _value[src.Length] = 0;
     }
 
     public String8Utf8(ReadOnlySpan<char> span)
     {
-        int written = Encoding.UTF8.GetBytes(span.Truncate(Capacity - 1), AsTextSpan());
-        _value[0] = (byte)written;
-        _value[Capacity - 1] = 0;
+        int written = Encoding.UTF8.GetBytes(span.Truncate(TextLength), AsSpan());
+        _value[written] = 0;
     }
 
 
@@ -111,6 +105,5 @@ public unsafe struct String8Utf8
     public ref byte GetRef(int i = 0) => ref _value[i];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ReadOnlySpan<byte> GetReadSpan() => MemoryMarshal.CreateSpan(ref Unsafe.AsRef(in _value[1]), _value[0]);
-    public Span<byte> AsTextSpan() => MemoryMarshal.CreateSpan(ref _value[1], TextLength);
+    public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _value[0], TextLength);
 }

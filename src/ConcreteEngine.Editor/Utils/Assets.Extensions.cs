@@ -24,7 +24,6 @@ internal static class AssetsExtensions
                 color = Palette32.TextLightBlue;
                 break;
             case FileBinding.DependentFile:
-                //icon = StyleMap.GetIntIcon(kind.ToFileIcon());
                 icon = StyleMap.GetIntIcon(Icons.FileImage);
                 color = Palette32.TextSecondary;
                 break;

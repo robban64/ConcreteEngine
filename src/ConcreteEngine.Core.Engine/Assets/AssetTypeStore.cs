@@ -59,28 +59,8 @@ public sealed class AssetTypeStore(AssetKind kind)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Id, nameof(asset.Id));
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)asset.Kind, (int)Kind, nameof(asset));
-
-        var id = asset.Id.Id;
-        if (_dirtyIds.Count == 0)
-        {
-            _dirtyIds.Add(id);
-            return;
-        }
-
-        var lastId = _dirtyIds[^1];
-        if (lastId == id) return;
-
-        if (id > lastId)
-        {
-            _dirtyIds.Add(id);
-            return;
-        }
-
-        var existingIndex = SearchMethod.BinarySearch(CollectionsMarshal.AsSpan(_dirtyIds), id);
-        if (existingIndex >= 0) return;
-        _dirtyIds.Add(id);
-        _dirtyIds.Sort();
-    }
+        _dirtyIds.TryAddUniqueSorted(asset.Id.Id);
+            }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void ClearDirty() => _dirtyIds.Clear();

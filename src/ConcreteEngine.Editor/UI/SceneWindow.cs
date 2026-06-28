@@ -26,10 +26,9 @@ internal sealed unsafe class SceneWindow : EditorWindow
         ImGuiTableFlags.SizingFixedFit;
 
 
-    private const float ListItemHeight = 20f;
     private const float ListItemPad = 4f;
-
-    private static readonly Vector2 VisBtnSize = new(ListItemHeight + ListItemPad, ListItemHeight + ListItemPad);
+    private const float ListItemHeight = 20f;
+    private const float ListItemPaddedHeight = ListItemHeight + ListItemPad;
 
     private readonly ComboInput _kindCombo;
     private readonly TextInput _searchInput;
@@ -47,7 +46,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
     private NativeView<byte> InputStr => _memory.SliceData(_inputStrHandle);
     private SceneObjectId SelectedId => State.Context.Selection.SelectedSceneId;
 
-    public SceneWindow(StateManager state) : base( state)
+    public SceneWindow(StateManager state) : base(state)
     {
         _kindCombo = ComboInput.MakeFromEnumCache<SceneObjectKind>("scene-combo");
         _kindCombo.Layout = FieldLayout.None;
@@ -73,9 +72,8 @@ internal sealed unsafe class SceneWindow : EditorWindow
         TitleStr.Writer().Append("SceneObjects ["u8).Append(_sceneCount).Append(']').End();
     }
 
-    public override void OnCreate()
+    protected override void OnCreate()
     {
-
         var allocator = TextBuffers.PersistentArena.MakeBuilder();
         _inputStrHandle = allocator.AllocSlice(8).AsRange16();
         _titleStrHandle = allocator.AllocSlice(24).AsRange16();
@@ -123,16 +121,14 @@ internal sealed unsafe class SceneWindow : EditorWindow
         ImGui.EndTable();
         ImGui.PopStyleColor();
         ImGui.PopStyleVar(2);
-        
-
     }
 
     private void DrawList(int start, int length)
     {
-        if((uint)start + (uint)length > (uint)_sceneIds.Length) Throwers.InvalidArgument(nameof(length));
-        
+        if ((uint)start + (uint)length > (uint)_sceneIds.Length) Throwers.InvalidArgument(nameof(length));
+
         var idSpan = new ReadOnlySpan<SceneObjectId>(_sceneIds, start, length);
-        
+
         var selectedId = SelectedId;
         var sw = TextBuffers.GetWriter();
         uint eyeIcon = StyleMap.GetIntIcon(Icons.Eye), eyeClosedIcon = StyleMap.GetIntIcon(Icons.EyeClosed);
@@ -146,12 +142,12 @@ internal sealed unsafe class SceneWindow : EditorWindow
             var nameStr = sw.PadRight(1).AppendIcon(StyleMap.GetIcon(file.Kind.ToIcon()))
                 .PadRight(4).Append(file.Name)
                 .End();
-            
-            if (ImGui.Selectable(nameStr, file.Id == selectedId, 0,  new Vector2(0, ListItemHeight)))
+
+            if (ImGui.Selectable(nameStr, file.Id == selectedId, 0, new Vector2(0, ListItemHeight)))
                 State.EnqueueEvent(new SelectionEvent(file.Id));
 
             ImGui.TableNextColumn();
-            if (ImGui.Button(file.Visible ? (byte*)&eyeIcon : (byte*)&eyeClosedIcon, VisBtnSize))
+            if (ImGui.Button(file.Visible ? (byte*)&eyeIcon : (byte*)&eyeClosedIcon, new Vector2(ListItemPaddedHeight)))
                 file.Visible = !file.Visible;
 
             ImGui.PopID();

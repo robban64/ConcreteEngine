@@ -1,9 +1,12 @@
+using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Visuals;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 
@@ -45,6 +48,10 @@ internal sealed class WindowManager
 
         consoleWindow.NoBorder = true;
         consoleWindow.Flags |= ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
+        consoleWindow.WindowPadding = GuiTheme.WindowPadding with { Y = 1f };
+
+        assetWindow.NoBorder = true;
+        assetWindow.WindowPadding = GuiTheme.WindowPadding with { Y = 1f };
     }
 
     public EditorWindow GetWindow(WindowId windowId) => _windows[(int)windowId];
@@ -63,7 +70,9 @@ internal sealed class WindowManager
     public void OnDiagnosticTick()
     {
         foreach (var window in _windows)
-            window.OnUpdateDiagnostic();
+        {
+            if (window.Enabled) window.OnUpdateDiagnostic();
+        }
     }
 
     public void Draw()
@@ -73,24 +82,21 @@ internal sealed class WindowManager
         ViewportWindow.Draw(_stateManager);
         ImGui.PopStyleVar();
 
-        TopMenuWindow.Instance.DrawMenu(_stateManager);
-        TopMenuWindow.Instance.DrawToolbar(_stateManager);
+        TopMenuWindow.Instance.Draw(_stateManager);
 
-        foreach (var window in _windows)
-            window.Draw();
+        foreach (var window in _windows) window.Draw();
 
         if ((uint)_stateManager.ActiveDebugWindow < (uint)_debugWindows.Length)
             _debugWindows[_stateManager.ActiveDebugWindow]();
     }
 
 
-    public void Init(ArenaAllocator allocator)
+    public void Setup(ArenaAllocator allocator)
     {
         TopMenuWindow.Instance.RegisterMenuToolbar(allocator);
         RegisterDebugWindows();
 
-        foreach (var it in _windows)
-            it.OnCreate();
+        foreach (var it in _windows) it.Create();
 
         TopMenuWindow.Instance.SyncToolbar();
     }

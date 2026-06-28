@@ -78,7 +78,7 @@ internal static class MetricsUi
         ImGui.SeparatorText("Frame Info"u8);
         MetricText(sw, "Frame:", frameMeta.FrameId);
 
-        AppDraw.TextU8("FPS:"u8);
+        ImGui.TextUnformatted("FPS:"u8);
         ImGui.SameLine();
         AppDraw.Text(sw.Append(frameMeta.Fps, "F2").Append(" (").Append(frameMeta.Alpha, "F2")
             .Append("ms)").End());

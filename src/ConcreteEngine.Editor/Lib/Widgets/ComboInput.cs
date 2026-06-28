@@ -72,7 +72,7 @@ internal sealed unsafe class ComboInput : UiField
 
     private void OnChanged(int value)
     {
-        _index = _values.AsSpan().IndexOf(value);
+        _index = _values.IndexOf(value);
         _lastValue = value;
         
         var name = (uint)_index < (uint)_names.Length && _index >= StartAt ? _names[_index] : Placeholder;

@@ -30,7 +30,7 @@ internal sealed class InspectionWindow : EditorWindow
         _panels = [assetInspectorPanel, sceneInspectorPanel, cameraPanel, lightingPanel, visualPanel];
     }
 
-    public override void OnCreate()
+    protected override void OnCreate()
     {
         State.ContextChanged += OnStateOnContextChanged;
 
@@ -92,6 +92,6 @@ internal sealed class InspectionWindow : EditorWindow
             };
         }
 
-        Enabled = ActiveState != InspectorId.None;
+        //Enabled = ActiveState != InspectorId.None;
     }
 }

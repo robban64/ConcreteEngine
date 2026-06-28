@@ -6,13 +6,13 @@ using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Core.Common.Text;
 
-public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
+public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity, int cursor = 0)
 {
     public NativeSpanWriter(NativeView<byte> buffer) : this(buffer, buffer.Length) { }
 
     public readonly byte* Buffer = buffer;
     public readonly int Capacity = capacity;
-    private int _cursor;
+    private int _cursor = cursor;
 
     public readonly int Cursor => _cursor;
     public readonly int BytesLeft => Capacity - _cursor;

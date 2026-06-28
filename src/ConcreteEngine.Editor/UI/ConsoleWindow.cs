@@ -21,9 +21,9 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
     private const ImGuiWindowFlags InnerFlags =
         ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
 
+    //
     private static readonly uint ConsoleFrameBg = new Color4(0.14f, 0.14f, 0.14f).ToPackedRgba();
 
-    //
     private static readonly Vector2 InputFramePad = new(8f, 6f);
     private static readonly Vector2 ItemSpacing = new(12f, 6f);
 
@@ -38,7 +38,6 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
 
     private MemoryBlockPtr _memory;
 
-
     public override ReadOnlySpan<byte> Id => WindowRoot.ConsoleWindowId;
 
     public ConsoleWindow(StateManager state) : base(state)
@@ -51,7 +50,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
     }
 
 
-    public override void OnCreate()
+    protected override void OnCreate()
     {
         var allocator = TextBuffers.PersistentArena.MakeBuilder();
         _titleStrHandle = allocator.AllocSlice(64).AsRange16();

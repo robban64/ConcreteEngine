@@ -35,18 +35,19 @@ public sealed unsafe class ArenaAllocator : IDisposable
     public MemoryBlockPtr GetHead() => Head;
 
 
-    public MemoryBlockPtr AllocBlock(int blockSize, bool zeroed = false)
+    public MemoryBlockPtr AllocBlock(int length, bool zeroed = false)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(blockSize, MemoryBlock.BlockSize);
+        ArgumentOutOfRangeException.ThrowIfLessThan(length, MemoryBlock.BlockSize);
 
         if (_hasBoundBuilder)
-            throw new InvalidOperationException("Cannot allocate while having bound alloc builder");
+            Throwers.InvalidOperation("Cannot allocate while having bound alloc builder");
 
-        if (_buffer.IsNull)
-            throw new InvalidOperationException("Buffer is null");
+        if (_buffer.IsNull) Throwers.NullPointer(nameof(_buffer));
+
+        var blockSize = length + MemoryBlock.BlockSize;
 
         if (Cursor + blockSize > Capacity)
-            throw new InsufficientMemoryException();
+            Throwers.BufferOverflow(nameof(ArenaAllocator), Cursor + blockSize, Capacity);
 
         var memory = _buffer.Slice(Cursor, blockSize);
         Cursor += blockSize;
@@ -54,7 +55,7 @@ public sealed unsafe class ArenaAllocator : IDisposable
         if (zeroed) memory.Clear();
 
         var block = (MemoryBlock*)memory.Ptr;
-        block->Init(blockSize - MemoryBlock.BlockSize);
+        block->Init(length);
 
         if (Head == null)
             Head = block;
@@ -64,18 +65,12 @@ public sealed unsafe class ArenaAllocator : IDisposable
         return Tail = block;
     }
 
-    public MemoryBlockPtr Alloc(int size, bool zeroed = false)
-    {
-        return AllocBlock(size + MemoryBlock.BlockSize, zeroed);
-    }
-
-
     public NativeAllocator MakeBuilder()
     {
         if (_hasBoundBuilder)
-            throw new InvalidOperationException("Cannot create new alloc builder while having bound alloc builder");
+            Throwers.InvalidOperation("Cannot create new alloc builder while having bound alloc builder");
 
-        if (Remaining <= 16) throw new InsufficientMemoryException();
+        if (Remaining <= 16) Throwers.BufferOverflow(nameof(ArenaAllocator));
         _hasBoundBuilder = true;
 
         var memory = _buffer.Slice(Cursor);
@@ -95,7 +90,7 @@ public sealed unsafe class ArenaAllocator : IDisposable
     public MemoryBlockPtr CommitBuilder(NativeAllocator builder)
     {
         if (builder.IsNull)
-            throw new ArgumentException($"{nameof(builder.Data)} cannot be null", nameof(builder));
+            Throwers.InvalidArgument("builder.Data cannot be null", nameof(builder));
 
         var basePtr = builder.Data.Ptr - MemoryBlock.BlockSize;
         ArgumentOutOfRangeException.ThrowIfNotEqual((nuint)basePtr, (nuint)Tail);
@@ -103,7 +98,7 @@ public sealed unsafe class ArenaAllocator : IDisposable
 
         int length = Tail->Cursor, totalLength = length + MemoryBlock.BlockSize;
         if (Cursor + totalLength > Capacity)
-            throw new InsufficientMemoryException();
+            Throwers.BufferOverflow(nameof(ArenaAllocator),Cursor + totalLength, Capacity);
 
         Cursor += totalLength;
         Tail->SetLength(length);
@@ -114,8 +109,8 @@ public sealed unsafe class ArenaAllocator : IDisposable
 
     public void SetCursor(int cursor)
     {
-        if ((uint)Cursor > (uint)Capacity)
-            throw new ArgumentOutOfRangeException(nameof(cursor));
+        if ((uint)Cursor >= (uint)Capacity)
+            Throwers.BufferOverflow(nameof(ArenaAllocator),Cursor, Capacity);
 
         Cursor = cursor;
     }

@@ -31,7 +31,7 @@ internal static unsafe class ViewportWindow
         IsFocused = ImGui.IsWindowFocused();
 
         state.GetOrSetTextureHandle(ImGuiSystem.OutputTexture, ref _viewportTexHandle);
-        ImGui.Image(_viewportTexHandle, WindowRoot.ViewportSize, Vector2.UnitY, Vector2.UnitX);
+        ImGui.Image(_viewportTexHandle, EngineWindow.Viewport.Size, Vector2.UnitY, Vector2.UnitX);
 
         if (SelectionManager.Instance.SelectedSceneObject is { } inspector)
         {
@@ -48,13 +48,13 @@ internal static unsafe class ViewportWindow
     {
         var enabled = !EditorInput.IsGizmoBlocked;
 
-        var size = WindowRoot.ViewportSize;
-        var pos = WindowRoot.ViewportPosition;
+        var size = EngineWindow.Viewport.Size;
+        var pos = EngineWindow.Viewport.Position;
 
         ImGuizmo.BeginFrame();
         ImGuizmo.SetOrthographic(false);
         ImGuizmo.SetDrawlist();
-        ImGuizmo.SetRect(pos.X, pos.Y, size.X, size.Y);
+        ImGuizmo.SetRect(pos.X, pos.Y, size.Width, size.Height);
         ImGuizmo.Enable(enabled);
 
         Matrix4x4* matrices = stackalloc Matrix4x4[3];

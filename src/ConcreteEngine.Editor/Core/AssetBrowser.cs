@@ -9,14 +9,18 @@ using static ConcreteEngine.Core.Engine.Assets.AssetManager;
 namespace ConcreteEngine.Editor.Core;
 
 [StructLayout(LayoutKind.Sequential)]
-internal readonly struct FileItem(string name,AssetFileId id,FileBinding binding,AssetStorage storage,
+internal readonly struct FileItem(
+    string name,
+    AssetFileId id,
+    FileBinding binding,
+    AssetStorage storage,
     AssetKind assetKind) : IComparable<FileItem>
 {
     public readonly AssetFileId Id = id;
     public readonly FileBinding Binding = binding;
     public readonly AssetStorage Storage = storage;
     public readonly AssetKind AssetKind = assetKind;
-    
+
     public readonly String16Utf8 DisplayName = name;
 
     public int CompareTo(FileItem other)
@@ -97,14 +101,16 @@ internal sealed class AssetBrowser
         var count = 0;
         foreach (var file in FileRegistry.MakeSparseEnumerator(ids))
         {
+            if (file.Binding == FileBinding.DependentFile) continue;
             if (searchString.Length > 0 && !file.LogicalName.StartsWith(searchString)) continue;
 
             var kind = AssetKind.Unknown;
             if (file.AssetRootId.IsValid())
                 kind = Assets.Get<AssetObject>(file.AssetRootId).Kind;
-            
+
             _items[count++] = new FileItem(file.LogicalName, file.Id, file.Binding, file.Storage, kind);
         }
+
         _items.AsSpan(0, count).Sort();
         FilteredCount = count;
     }
@@ -119,7 +125,7 @@ internal sealed class AssetBrowser
             Array.Resize(ref _items, newCapacity);
         }
 
-        FileCount = ids.Length;
+        FilteredCount = FileCount = ids.Length;
         _onDirectoryChange(this);
     }
 
@@ -157,7 +163,7 @@ internal sealed class AssetBrowser
             currentPath = currentPath.Slice(index + 1);
         }
     }
-    
+
 
     internal sealed class AssetDirectoryNode
     {
@@ -169,12 +175,12 @@ internal sealed class AssetBrowser
         private readonly List<AssetDirectoryNode> _children = [];
 
         public readonly String32Utf8 PreviewName;
-        
+
         public AssetDirectoryNode(string path, AssetDirectoryNode? parent)
         {
             Path = path;
             Parent = parent;
-            
+
             IsFileSystem = path.StartsWith(EnginePath.AssetBasePath);
             var nameOffset = _nameOffset = path.LastIndexOf('/') + 1;
             PreviewName = new String32Utf8(path.AsSpan(nameOffset));
@@ -194,7 +200,8 @@ internal sealed class AssetBrowser
         public ReadOnlySpan<char> GetFolderName() => Path.AsSpan(_nameOffset);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnlySpan<char> GetRelativePath() => Path.AsSpan(EnginePath.AssetBasePathOffset);
+        public ReadOnlySpan<char> GetRelativePath() =>
+            IsFileSystem ? Path.AsSpan(EnginePath.AssetBasePathOffset) : Path.AsSpan();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public AssetDirectoryNode GetChild(int i) => _children[i];

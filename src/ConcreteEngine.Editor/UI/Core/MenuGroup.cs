@@ -8,10 +8,10 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed class MenuGroup(RangeU16 nameHandle, MenuItem[] items)
+internal sealed class MenuGroup(NativeView<byte> name, MenuItem[] items)
 {
     //public readonly string Name = name;
-    public readonly RangeU16 NameHandle = nameHandle;
+    public readonly NativeView<byte> Name = name;
     public readonly MenuItem[] Items = items;
     public bool Enabled = true;
     public bool Visible = true;
@@ -20,7 +20,7 @@ internal sealed class MenuGroup(RangeU16 nameHandle, MenuItem[] items)
     public unsafe void Draw(StateManager stateManager, MemoryBlockPtr data)
     {
         if (!Visible) return;
-        if (ImGui.BeginMenu(data.SliceData(NameHandle), Enabled))
+        if (ImGui.BeginMenu(Name, Enabled))
         {
             DrawChildren(stateManager);
             ImGui.EndMenu();

@@ -41,6 +41,7 @@ public sealed class EditorPortal : IDisposable
 
         InspectorFieldProvider.Create();
         _service = new EditorService();
+        _service.Setup();
         Initialized = true;
     }
 
@@ -56,6 +57,8 @@ public sealed class EditorPortal : IDisposable
 
     public void Render(float deltaTime, TextureId outputTexture)
     {
+        if(!Initialized) return;
+        
         if (EditorTime.Advance(deltaTime))
             Update(outputTexture);
 

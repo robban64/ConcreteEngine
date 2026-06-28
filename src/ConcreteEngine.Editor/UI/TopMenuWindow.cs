@@ -19,22 +19,14 @@ internal sealed class TopMenuWindow
 
     public static readonly TopMenuWindow Instance = new();
 
-    private static readonly float OffsetX = GuiTheme.WindowPadding.X;
-
     private bool _hasInitialized;
-    
+
     private MemoryBlockPtr _memory;
 
     private readonly MenuGroup[] _menuBar = new MenuGroup[MenuCount];
     private readonly ToolbarGroup[] _toolbar = new ToolbarGroup[ToolbarGroupCount];
-    
-    public ReadOnlySpan<ToolbarItem> GetToolbarGroup(ToolbarGroupAlignment i) => _toolbar[(int)i].Items;
 
-    public void SyncToolbar()
-    {
-        foreach (var it in _toolbar)
-            it.UpdateVisibleCount();
-    }
+    public ReadOnlySpan<ToolbarItem> GetToolbarGroup(ToolbarGroupAlignment i) => _toolbar[(int)i].Items;
 
     public void RegisterMenuToolbar(ArenaAllocator arena)
     {
@@ -43,13 +35,13 @@ internal sealed class TopMenuWindow
 
         var allocator = arena.MakeBuilder();
 
-        _menuBar[0] = new MenuGroup(allocator.AllocStringSlice("File").AsRange16(), [
+        _menuBar[0] = new MenuGroup(allocator.AllocStringSlice("File"), [
             new MenuItem("Test1", null, static (state) => { })
         ]);
-        _menuBar[1] = new MenuGroup(allocator.AllocStringSlice("Edit").AsRange16(), [
+        _menuBar[1] = new MenuGroup(allocator.AllocStringSlice("Edit"), [
             new MenuItem("Test2", null, static (state) => { })
         ]);
-        _menuBar[2] = new MenuGroup(allocator.AllocStringSlice("Debug").AsRange16(), [
+        _menuBar[2] = new MenuGroup(allocator.AllocStringSlice("Debug"), [
             new MenuItem("Metrics", null,
                 static (state) => state.ToggleDebugWindow(WindowManager.DebugMetricsWindow)),
             new MenuItem("ImGui Demo", null,
@@ -66,8 +58,20 @@ internal sealed class TopMenuWindow
         _toolbar[1] = new ToolbarGroup(ToolbarGroupAlignment.Center, [Translate, Scale, Rotate, DebugBounds]);
         _toolbar[2] = new ToolbarGroup(ToolbarGroupAlignment.Right, [Selected, Camera, Lighting, Visual]);
     }
+    
+    
+    public void SyncToolbar()
+    {
+        foreach (var it in _toolbar) it.UpdateVisibleCount();
+    }
 
-    public  void DrawMenu(StateManager stateManager)
+    public void Draw(StateManager stateManager)
+    {
+        DrawMenu(stateManager);
+        DrawToolbar(stateManager);
+    }
+    
+    public void DrawMenu(StateManager stateManager)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, GuiTheme.MenuFramePadding);
         if (!ImGui.BeginMainMenuBar())
@@ -84,7 +88,7 @@ internal sealed class TopMenuWindow
     }
 
 
-    public  void DrawToolbar(StateManager stateManager)
+    public void DrawToolbar(StateManager stateManager)
     {
         var vp = ImGuiSystem.MainViewportPtr;
         var width = vp.WorkSize.X;
@@ -109,11 +113,12 @@ internal sealed class TopMenuWindow
 
         if (ImGui.Begin(WindowRoot.ToolbarWindowId, TopbarFlags))
         {
-            ImGui.SetCursorPos(new Vector2(OffsetX, 0));
+            var offsetX = GuiTheme.WindowPadding.X;
+            ImGui.SetCursorPos(new Vector2(offsetX, 0));
             left.Draw(stateManager);
-            ImGui.SetCursorPos(new Vector2(centerX + OffsetX, 0));
+            ImGui.SetCursorPos(new Vector2(centerX + offsetX, 0));
             center.Draw(stateManager);
-            ImGui.SetCursorPos(new Vector2(rightX - OffsetX, 0));
+            ImGui.SetCursorPos(new Vector2(rightX - offsetX, 0));
             right.Draw(stateManager);
         }
 

@@ -17,10 +17,10 @@ public readonly unsafe struct NativeView<T>(T* ptr, int offset, int length)
 
     public int End => Offset + Length;
     public bool IsNull => Ptr == null;
+    
     public int SizeInBytes => Length * Unsafe.SizeOf<T>();
+    public int OffsetInBytes => Length * Unsafe.SizeOf<T>();
 
-    public static bool operator ==(NativeView<T> left, NativeView<T> right) => left.Equals(right);
-    public static bool operator !=(NativeView<T> left, NativeView<T> right) => !(left == right);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator NativeView<T>(NativeArray<T> array) => new(array.Ptr, array.Length);
@@ -72,16 +72,19 @@ public readonly unsafe struct NativeView<T>(T* ptr, int offset, int length)
         return new Span<T>(Ptr + offset, length);
     }
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear() => NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<U> Reinterpret<U>() where U : unmanaged
     {
         Debug.Assert(SizeInBytes % Unsafe.SizeOf<U>() == 0);
-        return new NativeView<U>((U*)Ptr, Offset, SizeInBytes / Unsafe.SizeOf<U>());
+        return new NativeView<U>((U*)Ptr, OffsetInBytes / Unsafe.SizeOf<U>(), SizeInBytes / Unsafe.SizeOf<U>());
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator ==(NativeView<T> left, NativeView<T> right) => left.Equals(right);
+    public static bool operator !=(NativeView<T> left, NativeView<T> right) => !(left == right);
+
     public bool Equals(NativeView<T> other) => Ptr == other.Ptr && Offset == other.Offset && Length == other.Length;
 
     public override bool Equals(object? obj) => obj is NativeView<T> v && Equals(v);

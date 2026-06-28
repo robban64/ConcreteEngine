@@ -74,9 +74,11 @@ public sealed class GameEngine : IDisposable
         _graphics.Gfx.Commands.Clear(ColorRgba.Black, ClearBufferFlag.ColorAndDepth);
         if (!isDone) return;
 
-        Console.WriteLine("Engine Setup Complete. Swapping to Game Loop.");
-        Logger.LogString(LogScope.Engine, "Engine Setup Complete. Swapping to Game Loop.");
+        Logger.LogString(LogScope.Engine, "Engine Setup: Complete. Swapping to Game Loop.");
+
+        Console.WriteLine("Engine Setup: Complete. Swapping to Game Loop.");
         runner.Teardown();
+        Console.WriteLine("Engine Setup: Tear down complete");
 
         OnSystemTick(0);
         Console.WriteLine($"Fragmentation: {GC.GetGCMemoryInfo().FragmentedBytes}");
@@ -126,7 +128,9 @@ public sealed class GameEngine : IDisposable
     internal void OnSystemTick(float dt)
     {
         var windowResized = _systemStepper.Tick() && EngineWindow.Commit();
+        if(dt == 0)Console.WriteLine("_renderSystem.OnSystemTick");
         _renderSystem.OnSystemTick(windowResized);
+        if(dt == 0)Console.WriteLine("_assetSystem.PendingAssetCount");
 
         if (_assetSystem.PendingAssetCount > 0)
             _assetSystem.ProcessPendingQueue();

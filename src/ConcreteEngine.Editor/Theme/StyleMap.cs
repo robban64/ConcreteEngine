@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
@@ -24,14 +25,16 @@ public enum Icons : ushort
 
 internal static unsafe class StyleMap
 {
-    public const int IconCount = 36 + 1;
+    // TODO make this more proper
+    public const int IconCount = 41;
 
     public static int AllocSize
     {
         get
         {
             int colorCount = EnumCache<SceneObjectKind>.Count + EnumCache<AssetKind>.Count + EnumCache<LogLevel>.Count;
-            return IconCount * 4 + colorCount * sizeof(uint);
+            var size = IconCount * 4 + colorCount * sizeof(uint);
+            return IntMath.AlignUp(size, 64);
         }
     }
 
@@ -61,8 +64,7 @@ internal static unsafe class StyleMap
     {
         if (!_iconsPtr.IsNull) throw new InvalidOperationException("Already allocated");
 
-        int iconCount = EnumCache<Icons>.Count;
-        _iconsPtr = buffer.Slice(0, iconCount * 4);
+        _iconsPtr = buffer.Slice(0, IconCount * 4);
         _colorPtr = buffer.Slice(_iconsPtr.Length).Reinterpret<uint>();
 
         InitIcons();

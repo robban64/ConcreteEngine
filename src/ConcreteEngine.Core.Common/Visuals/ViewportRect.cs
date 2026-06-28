@@ -13,4 +13,5 @@ public record struct ViewportRect(Vector2I Position, Size2D Size)
 
     public static implicit operator Size2D(in ViewportRect v) => v.Size;
     public static implicit operator Vector2I(in ViewportRect v) => v.Position;
+    
 }

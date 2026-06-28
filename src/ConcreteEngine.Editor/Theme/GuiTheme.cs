@@ -36,14 +36,14 @@ internal static class GuiTheme
 
     public const float IndentSpacing = 20.0f;
 
-    public static readonly Vector2 WindowPadding = new(12f, 6f);
+    public static readonly Vector2 WindowPadding = new(6f, 6f); //new(12f, 6f);
 
     public static readonly Vector2 FramePadding = new(5f, 3f);
     public static readonly Vector2 MenuFramePadding = new(5f, 8f);
 
-    public static readonly Vector2 CellPadding = new(6f, 6f);
-    public static readonly Vector2 ItemSpacing = new(6f, 6f);
-    public static readonly Vector2 ItemInnerSpacing = new(6f, 6f);
+    public static Vector2 CellPadding => new(6f, 6f);
+    public static Vector2 ItemSpacing => new(6f, 6f);
+    public static Vector2 ItemInnerSpacing => new(6f, 6f);
 
     public static ImFontPtr TextFont;
     public static ImFontPtr IconFont;
@@ -53,6 +53,7 @@ internal static class GuiTheme
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontIcon() => ImGui.PushFont(IconFont, IconSizeMedium);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontIconLarge() => ImGui.PushFont(IconFont, IconSizeLarge);
 
@@ -117,8 +118,11 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.FrameBgActive] = FrameBgActive;
 
         colors[(int)ImGuiCol.WindowBg] = BgColor;
-        colors[(int)ImGuiCol.ChildBg] = new Color4(0.00f, 0.00f, 0.00f, 0.00f);
+        colors[(int)ImGuiCol.ChildBg] = default;
         colors[(int)ImGuiCol.PopupBg] = SurfaceDark;
+
+        colors[(int)ImGuiCol.TitleBg] = new Color4(0.13f, 0.13f, 0.14f);
+        colors[(int)ImGuiCol.TitleBgActive] = new Color4(0.2f, 0.2f, 0.21f);
 
         colors[(int)ImGuiCol.MenuBarBg] = new Color4(0.10f, 0.10f, 0.11f);
 

@@ -11,13 +11,6 @@ internal static unsafe class AppDraw
     public static void Text(NativeView<byte> text) => ImGui.TextUnformatted(text, text + text.Length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void TextU8(ReadOnlySpan<byte> text)
-    {
-        ref var beginRef = ref MemoryMarshal.GetReference(text);
-        ImGui.TextUnformatted(ref beginRef, ref Unsafe.Add(ref beginRef, text.Length));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void TextColumn(NativeView<byte> text)
     {
         ImGui.TableNextColumn();

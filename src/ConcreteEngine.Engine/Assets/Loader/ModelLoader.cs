@@ -94,9 +94,9 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
         {
             var info = context.Meshes[i].Info;
 
-            context.MeshMemory[i] = allocator.Alloc(info.VertexCount * Unsafe.SizeOf<Vertex3D>());
-            allocator.Alloc(info.TrisCount * Unsafe.SizeOf<uint>() * 3);
-            if (info.BoneCount > 0) allocator.Alloc(info.VertexCount * Unsafe.SizeOf<SkinningData>());
+            context.MeshMemory[i] = allocator.AllocBlock(info.VertexCount * Unsafe.SizeOf<Vertex3D>());
+            allocator.AllocBlock(info.TrisCount * Unsafe.SizeOf<uint>() * 3);
+            if (info.BoneCount > 0) allocator.AllocBlock(info.VertexCount * Unsafe.SizeOf<SkinningData>());
         }
     }
 

@@ -31,12 +31,17 @@ internal sealed class EditorService
         _windowManager = new WindowManager(_stateManager);
         _router = new PanelRouter(_stateManager, _windowManager);
 
+    }
+
+    public void Setup()
+    {
         RegisterEvents();
 
-        _windowManager.Init(TextBuffers.PersistentArena);
+        _windowManager.Setup(TextBuffers.PersistentArena);
         _router.ForceResolve(_stateManager);
 
         ConsoleGateway.LogPlain($"PersistentArena: {TextBuffers.PersistentArena.Remaining} bytes left");
+
     }
 
     private void RegisterEvents()

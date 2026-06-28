@@ -21,7 +21,8 @@ public readonly ref struct NativeAllocator(NativeView<byte> data, ref int cursor
         if (Alignment > 0) length = IntMath.AlignUp(length, Alignment);
 
         if ((uint)Cursor + (uint)length > (uint)Length)
-            throw new InsufficientMemoryException(length.ToString());
+            Throwers.BufferOverflow(nameof(Data), Cursor + length, Length);
+
 
         var start = Cursor;
         Cursor += length;

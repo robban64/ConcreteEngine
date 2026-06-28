@@ -10,7 +10,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed class CameraPanel(StateManager state) : EditorPanel(InspectorId.Camera, state)
+internal sealed unsafe class CameraPanel(StateManager state) : EditorPanel(InspectorId.Camera, state)
 {
     private Size2D _currentViewport;
     private RangeU16 _viewportStrHandle;
@@ -22,11 +22,11 @@ internal sealed class CameraPanel(StateManager state) : EditorPanel(InspectorId.
     {
         var viewport = EngineWindow.Viewport.Size;
 
-        Memory.SliceData(_viewportStrHandle).Writer()
+        Memory.Data.Slice(_viewportStrHandle).Writer()
             .Append("Width: "u8).Append(viewport.Width)
             .Append(" - Height: "u8).Append(viewport.Height).End();
 
-        Memory.SliceData(_aspectStrHandle).Writer()
+        Memory.Data.Slice(_aspectStrHandle).Writer()
             .Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End();
     }
 
@@ -49,8 +49,8 @@ internal sealed class CameraPanel(StateManager state) : EditorPanel(InspectorId.
     public override void OnDraw()
     {
         ImGui.SeparatorText("Viewport"u8);
-        AppDraw.Text(Memory.SliceData(_viewportStrHandle));
-        AppDraw.Text(Memory.SliceData(_aspectStrHandle));
+        ImGui.TextUnformatted(Memory.Data.Slice(_viewportStrHandle));
+        ImGui.TextUnformatted(Memory.Data.Slice(_aspectStrHandle));
 
         ImGui.Spacing();
 

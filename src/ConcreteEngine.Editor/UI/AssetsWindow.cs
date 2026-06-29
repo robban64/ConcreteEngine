@@ -20,8 +20,20 @@ namespace ConcreteEngine.Editor.UI;
 
 internal sealed unsafe class AssetsWindow : EditorWindow
 {
-    private const float ListItemHeight = 24f;
-    private static float ListItemPad => GuiTheme.CellPadding.X * 2f;
+    private const float FolderWindowWidth = 150f;
+    
+    private const float FolderItemHeight = 20f;
+    
+    private const float GridPadding = 8.0f;
+    private const float GridInnerSize = 72.0f;
+    private const float GridCellSize = GridInnerSize + GridPadding;
+    private const float GridIconSize = GuiTheme.IconSizeLarge;
+
+    private static readonly Vector2 ItemSize = new(GridInnerSize);
+
+    private static readonly Vector2 IconBasePos = new((GridInnerSize - GridIconSize) * 0.5f,
+        (GridInnerSize * 0.4f) - (GridIconSize * 0.5f));
+
 
     private readonly AssetBrowser _assetBrowser;
 
@@ -115,76 +127,108 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     {
         Sync();
 
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(2,2));
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(5, 2));
-/*
-        if (ImGui.BeginChild("folders"u8, new Vector2(0, 32)))
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(3,3));
+        
+        ImGui.PushStyleColor(ImGuiCol.ChildBg, Palette.MenuBg);
+        if (ImGui.BeginChild("asset-toolbar"u8, new Vector2(0, 22),  ImGuiChildFlags.None))
         {
-            ImGui.SetNextItemWidth(100);
-            _searchInput.Draw();
-            
-            ImGui.SameLine();
-
-            ImGui.SetNextItemWidth(80);
-            if (_assetCombo.Draw()) ;
+            DrawToolbar();
         }
         ImGui.EndChild();
-        */
-        ImGui.BeginMenuBar();
+        ImGui.PopStyleColor();
         
-        ImGui.EndMenuBar();
-
-        if (ImGui.BeginChild("folders"u8, new Vector2(200, 0), ImGuiChildFlags.Borders))
+        if (ImGui.BeginChild("folders"u8, new Vector2(FolderWindowWidth, 0), ImGuiChildFlags.None))
         {
             ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
+            
             DrawFolders();
+            
             ImGui.PopStyleVar();
         }
         ImGui.EndChild();
 
         ImGui.SameLine();
 
-        if (ImGui.BeginChild("files"u8, Vector2.Zero, ImGuiChildFlags.Borders))
+        if (ImGui.BeginChild("files"u8, Vector2.Zero, ImGuiChildFlags.None))
         {
-            var isRootPath = _assetBrowser.IsRootPath;
-            if (isRootPath) ImGui.BeginDisabled(true);
-        
-            if (ImGui.Button(GetIcon(Icons.ChevronLeft))) 
-                _assetBrowser.GoToParent();
-
-            if (isRootPath) ImGui.EndDisabled(); 
-        
-            ImGui.SameLine();
-            ImGui.AlignTextToFramePadding();
-            ImGui.TextUnformatted(_memory.Data.Slice(_breadcrumbStrHandle));
-
-            ImGui.Separator();
-            
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
+            ImGui.PushFont(GuiTheme.TextFont, GuiTheme.FontSizeSmall);
+
             DrawFiles();
+            
+            ImGui.PopFont();
             ImGui.PopStyleVar();
         }
         ImGui.EndChild();
-        ImGui.PopStyleVar(2);
-
+        
+        ImGui.PopStyleVar();
     }
-    
 
-    private const float GridPadding = 16.0f;
-    private const float GridInnerSize = 80.0f;
-    private const float GridCellSize = GridInnerSize + GridPadding;
-    private const float GridIconSize = GuiTheme.IconSizeLarge;
+    private void DrawToolbar()
+    {
+        if (ImGui.Button(GetIcon(Icons.Cog))) ImGui.OpenPopup("settings"u8);
+        ImGui.SameLine();
+        if (ImGui.Button(GetIcon(Icons.Plus))) ImGui.OpenPopup("menu"u8);
+        ImGui.SameLine(0.0f, 12.0f);
+            
+        if (AppDraw.DrawButton(GetIcon(Icons.ChevronLeft), !_assetBrowser.IsRootPath)) 
+            _assetBrowser.GoToParent();
 
-    private static readonly Vector2 ItemSize = new(GridInnerSize);
+        
+        //
+        ImGui.SameLine();
+        //
+        ImGui.AlignTextToFramePadding();
+        ImGui.TextDisabled(_memory.Data.Slice(_breadcrumbStrHandle));
+            
+        const float rightWidth = 150.0f + 128f;
+        
+        float rightAlignX = ImGui.GetContentRegionAvail().X - WindowPadding.X - rightWidth;
+        ImGui.SameLine(rightAlignX);
+            
+        ImGui.SetNextItemWidth(150.0f);
+        ImGui.PushStyleColor(ImGuiCol.FrameBg, SurfaceDark);
+        _searchInput.Draw();
+        ImGui.PopStyleColor();
 
-    private static readonly Vector2 IconBasePos = new((GridInnerSize - GridIconSize) * 0.5f,
-        (GridInnerSize * 0.4f) - (GridIconSize * 0.5f));
+        //
+        
+        ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
+        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Palette.FrameBgHovered);
+        ImGui.PushStyleColor(ImGuiCol.ButtonActive, Palette.FrameBgActive);
+
+        ImGui.SameLine();
+        if (AppDraw.DrawButton(GetIcon(Icons.File))) ;
+        
+        ImGui.SameLine(0,8f);
+        if (AppDraw.DrawButton(GetIcon(AssetKind.Shader.ToIcon()))) ;
+        
+        ImGui.SameLine();
+        if (AppDraw.DrawButton(GetIcon(AssetKind.Model.ToIcon()))) ;
+        
+        ImGui.SameLine();
+        if (AppDraw.DrawButton(GetIcon(AssetKind.Texture.ToIcon()))) ;
+        
+        ImGui.SameLine();
+        if (AppDraw.DrawButton(GetIcon(AssetKind.Material.ToIcon()))) ;
+
+        ImGui.PopStyleColor(3);
+    }
 
     private void DrawFolders()
     {
-        var sw = TextBuffers.GetWriter();
+        var size = new Vector2(0, FolderItemHeight);
         var icon = GetIntIcon(Icons.Folder);
+
+        var sw = TextBuffers.GetWriter();
         var nodes = _assetBrowser.CurrentNode.GetChildren();
+
+        if (nodes.Length == 0)
+        {
+            ImGui.Selectable("No folders found."u8, false, ImGuiSelectableFlags.Disabled, size);
+            return;
+        }
+        
         for (var i = 0; i < nodes.Length; i++)
         {
             var node = nodes[i];
@@ -195,7 +239,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
                 .Append((byte*)&previewName).AppendImGuiId(i)
                 .End();
 
-            if (ImGui.Selectable(text, false, 0, new Vector2(0, ListItemHeight)))
+            if (ImGui.Selectable(text, false, 0, size))
                 _assetBrowser.GoToChild(node.GetFolderName());
         }
     }

@@ -20,6 +20,11 @@ public static class Palette32
     public const uint SurfaceLight = 0XFF383333;
     public const uint SurfaceDark = 0XFF262424;
 
+    public const uint FrameBg = 0XFF4A4033;
+    public const uint FrameBgHovered = 0XFF5C4F40;
+    public const uint FrameBgActive = 0XFF695947;
+
+
     public const uint OrangeBase = 0XFF3399FF;
     public const uint RedBase = 0XFF4F54F0;
 
@@ -42,10 +47,12 @@ public static class Palette
     public static Color4 ActiveColor => new(0.18f, 0.64f, 0.95f);
     public static Color4 HoverColor => new(0.3f, 0.68f, 0.88f);
 
-    public static Color4 BgColor => new(0.08f, 0.08f, 0.09f);
-
     public static Color4 SurfaceLight => new(0.20f, 0.20f, 0.22f);
     public static Color4 SurfaceDark => new(0.14f, 0.14f, 0.15f);
+    public static Color4 TitleBg => new Color4(0.13f, 0.13f, 0.14f);
+    public static Color4 BgColor => new(0.08f, 0.08f, 0.09f);
+
+    public static Color4 MenuBg => new Color4(0.10f, 0.10f, 0.11f);
 
     public static Color4 FrameBg => new(0.20f, 0.25f, 0.29f);
     public static Color4 FrameBgHovered => new(0.25f, 0.31f, 0.36f);

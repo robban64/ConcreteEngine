@@ -51,7 +51,7 @@ internal sealed class WindowManager
         consoleWindow.WindowPadding = GuiTheme.WindowPadding with { Y = 1f };
 
         assetWindow.NoBorder = true;
-        assetWindow.WindowPadding = GuiTheme.WindowPadding with { Y = 1f };
+        //assetWindow.WindowPadding = GuiTheme.WindowPadding with { Y = 0f };
     }
 
     public EditorWindow GetWindow(WindowId windowId) => _windows[(int)windowId];

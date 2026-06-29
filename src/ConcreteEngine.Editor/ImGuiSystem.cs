@@ -140,8 +140,8 @@ internal static unsafe class ImGuiSystem
 
         config->MergeMode = 0;
         config->GlyphOffset.Y = 0;
-        config->GlyphMinAdvanceX = GuiTheme.IconSizeMedium * scale;
-        GuiTheme.IconFont = fonts->AddFontFromFileTTF(pathUtf8, GuiTheme.IconSizeMedium * scale, config);
+        config->GlyphMinAdvanceX = GuiTheme.IconSizeDefault * scale;
+        GuiTheme.IconFont = fonts->AddFontFromFileTTF(pathUtf8, GuiTheme.IconSizeDefault * scale, config);
 
         fonts->CompactCache();
     }

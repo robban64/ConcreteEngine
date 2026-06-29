@@ -51,4 +51,13 @@ internal static unsafe class AppDraw
         ImGui.TextUnformatted((byte*)&separator);
         ImGui.SameLine();
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool DrawButton(byte* text, bool enabled = true)
+    {
+        if (!enabled) ImGui.BeginDisabled(true);
+        bool clicked = ImGui.Button(text);
+        if (!enabled) ImGui.EndDisabled();
+        return enabled && clicked;
+    }
 }

@@ -17,7 +17,7 @@ internal sealed class MenuGroup(NativeView<byte> name, MenuItem[] items)
     public bool Visible = true;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void Draw(StateManager stateManager, MemoryBlockPtr data)
+    public unsafe void Draw(StateManager stateManager)
     {
         if (!Visible) return;
         if (ImGui.BeginMenu(Name, Enabled))

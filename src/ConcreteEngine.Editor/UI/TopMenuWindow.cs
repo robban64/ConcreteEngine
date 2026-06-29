@@ -81,7 +81,7 @@ internal sealed class TopMenuWindow
         }
 
         foreach (var it in _menuBar)
-            it.Draw(stateManager, _memory);
+            it.Draw(stateManager);
 
         ImGui.EndMainMenuBar();
         ImGui.PopStyleVar();

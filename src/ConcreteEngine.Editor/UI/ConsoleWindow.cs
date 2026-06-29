@@ -22,8 +22,6 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
 
     //
-    private static readonly uint ConsoleFrameBg = new Color4(0.14f, 0.14f, 0.14f).ToPackedRgba();
-
     private static readonly Vector2 InputFramePad = new(8f, 6f);
     private static readonly Vector2 ItemSpacing = new(12f, 6f);
 
@@ -111,7 +109,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         ImGui.PopStyleVar(1);
 
         // input
-        ImGui.PushStyleColor(ImGuiCol.FrameBg, ConsoleFrameBg);
+        ImGui.PushStyleColor(ImGuiCol.FrameBg, Palette32.SurfaceDark);
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, InputFramePad);
         ImGui.SetNextItemWidth(-1f);
 

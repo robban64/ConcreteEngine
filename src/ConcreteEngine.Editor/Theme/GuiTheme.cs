@@ -28,8 +28,9 @@ internal static class GuiTheme
     public const float MenuBarHeight = 30f;
     public const float TopOffset = TopbarHeight + MenuBarHeight;
 
+    public const float FontSizeSmall = 13.0f;
     public const float FontSizeDefault = 14.0f;
-    public const float IconSizeMedium = 18.0f;
+    public const float IconSizeDefault = 18.0f;
     public const float IconSizeLarge = 24.0f;
     public const float FormItemWidth = 220;
     public const float FormItemInlineWidth = 160;
@@ -52,7 +53,7 @@ internal static class GuiTheme
     public static void PushFontText() => ImGui.PushFont(TextFont, FontSizeDefault);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontIcon() => ImGui.PushFont(IconFont, IconSizeMedium);
+    public static void PushFontIcon() => ImGui.PushFont(IconFont, IconSizeDefault);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontIconLarge() => ImGui.PushFont(IconFont, IconSizeLarge);
@@ -121,10 +122,10 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.ChildBg] = default;
         colors[(int)ImGuiCol.PopupBg] = SurfaceDark;
 
-        colors[(int)ImGuiCol.TitleBg] = new Color4(0.13f, 0.13f, 0.14f);
+        colors[(int)ImGuiCol.TitleBg] = TitleBg;
         colors[(int)ImGuiCol.TitleBgActive] = new Color4(0.2f, 0.2f, 0.21f);
 
-        colors[(int)ImGuiCol.MenuBarBg] = new Color4(0.10f, 0.10f, 0.11f);
+        colors[(int)ImGuiCol.MenuBarBg] = MenuBg;
 
         colors[(int)ImGuiCol.ScrollbarBg] = default;
         colors[(int)ImGuiCol.ScrollbarGrab] = new Color4(0.25f, 0.25f, 0.25f, 0.80f);

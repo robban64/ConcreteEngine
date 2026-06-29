@@ -1,18 +1,37 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor;
 
 public static class EditorTime
 {
-    public static float DeltaTime;
-    public static float Fps => DeltaTime / (DeltaTime * DeltaTime + FloatMath.SingularEpsilon);
+    private const float RateIdle = 1f / 40f; //40Hz
+    private const float RateActive = 1f / 60f; //60Hz
+    private const float ActivityCooldown = 2.0f;
 
-    private static RefreshRateTicker _rateTicker = RefreshRateTicker.Make();
+    //public static float DeltaTime;
+    //public static float Fps => DeltaTime / (DeltaTime * DeltaTime + FloatMath.SingularEpsilon);
+
+    private static float _activityTimer;
+    private static FrameAccumulator _accumulator = new(RateIdle);
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Advance(float renderDelta) => _rateTicker.Accumulate(renderDelta, out DeltaTime);
+    public static bool Advance(float frameDelta, out float editorDelta)
+    {
+        if (_activityTimer > 0f) _activityTimer -= frameDelta;
+        if (_activityTimer <= 0f) _accumulator.TickDt = RateIdle;
 
-    public static void WakeUp() => _rateTicker.WakeUp();
+        _accumulator.Accumulate(frameDelta);
+        return _accumulator.DequeueTick(out editorDelta);
+
+    }
+
+    public static void WakeUp()
+    {
+        _activityTimer = ActivityCooldown;
+        _accumulator.TickDt = RateActive;
+    }
 }

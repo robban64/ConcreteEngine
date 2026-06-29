@@ -59,15 +59,15 @@ public sealed class EditorPortal : IDisposable
     {
         if(!Initialized) return;
         
-        if (EditorTime.Advance(deltaTime))
-            Update(outputTexture);
+        if (EditorTime.Advance(deltaTime, out var editorDelta))
+            Update(editorDelta, outputTexture);
 
         ImGuiSystem.RenderDrawData();
     }
 
-    private void Update(TextureId outputTexture)
+    private void Update(float editorDelta, TextureId outputTexture)
     {
-        ImGuiSystem.NewFrame(EditorTime.DeltaTime, outputTexture);
+        ImGuiSystem.NewFrame(editorDelta, outputTexture);
 
         if (_isDiagnosticTick)
         {

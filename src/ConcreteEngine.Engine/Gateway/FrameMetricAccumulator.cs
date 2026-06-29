@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Diagnostics.Metrics;
 
 namespace ConcreteEngine.Engine.Gateway;
 
-public sealed class FrameAccumulator(int windowSize)
+public sealed class FrameMetricAccumulator(int windowSize)
 {
     private long _startTick;
 

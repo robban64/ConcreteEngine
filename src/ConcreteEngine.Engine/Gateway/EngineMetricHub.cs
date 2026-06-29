@@ -16,7 +16,7 @@ internal sealed class EngineMetricHub
 {
     private MetricSystem? _metricSystem;
 
-    private readonly FrameAccumulator _frameAccumulator = new((int)(EngineSettings.Current.Display.FrameRate / 4f));
+    private readonly FrameMetricAccumulator _frameMetricAccumulator = new((int)(EngineSettings.Current.Display.FrameRate / 4f));
 
     private int _frameCount;
 
@@ -30,14 +30,14 @@ internal sealed class EngineMetricHub
     public void StartCapture()
     {
         if (_metricSystem == null) return;
-        _frameAccumulator.BeginFrame();
+        _frameMetricAccumulator.BeginFrame();
     }
 
     [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EndCapture()
     {
         _frameCount++;
-        if (_metricSystem == null || !_frameAccumulator.EndFrame(out var frameReport)) return;
+        if (_metricSystem == null || !_frameMetricAccumulator.EndFrame(out var frameReport)) return;
 
         var gcSample = new GcSample(GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
         var runtimeReport = new RuntimeReport(

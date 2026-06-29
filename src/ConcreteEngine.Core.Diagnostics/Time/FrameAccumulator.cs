@@ -2,10 +2,10 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Diagnostics.Time;
 
-public struct FrameTickTimer(float tickRate)
+public struct FrameAccumulator(float tickRate)
 {
     public float Accumulator = 0f;
-    public readonly float TickDt = tickRate;
+    public float TickDt = tickRate;
 
     public readonly float Alpha
     {

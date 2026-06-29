@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Editor.Utils;
 using static ConcreteEngine.Core.Engine.Assets.AssetManager;
 
 namespace ConcreteEngine.Editor.Core;
@@ -32,28 +33,40 @@ internal readonly struct FileItem(
 
 internal sealed class AssetBrowser
 {
-    public readonly AssetDirectoryNode RootNode;
-    public AssetDirectoryNode CurrentNode { get; private set; }
+    private const int Capacity = 64;
 
     public int FileCount { get; private set; }
     public int FilteredCount { get; private set; }
 
-    private FileItem[] _items = new FileItem[64];
+    public readonly AssetDirectoryNode RootNode;
+    public AssetDirectoryNode CurrentNode { get; private set; }
+
+    private readonly AssetFileId[] _filteredFileIds;
+    private readonly CircularListBuffer<FileItem> _fileListBuffer;
 
     private readonly Action<AssetBrowser> _onDirectoryChange;
+
 
     public AssetBrowser(Action<AssetBrowser> onDirectoryChange)
     {
         _onDirectoryChange = onDirectoryChange;
+        _filteredFileIds = new AssetFileId[Capacity];
+        _fileListBuffer = new CircularListBuffer<FileItem>(Capacity, OnInvalidateDrawBuffer);
+
         RootNode = new AssetDirectoryNode("", null);
         CurrentNode = RootNode;
     }
 
+
+    public string CurrentPath => CurrentNode.Path;
     public int FolderCount => CurrentNode.FolderCount;
     public bool IsRootPath => CurrentNode == RootNode || CurrentNode == RootNode.GetChild(0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<FileItem> GetFileItems(int start, int length) => new(_items, start, length);
+    public CircularListBuffer<FileItem>.Enumerator GetDrawEnumerator(int start, int length) =>
+        _fileListBuffer.GetView(start, length);
+
+    //
 
     public void GoToChild(ReadOnlySpan<char> folderName)
     {
@@ -72,7 +85,7 @@ internal sealed class AssetBrowser
     public void SetDirectory(string directory)
     {
         ArgumentException.ThrowIfNullOrEmpty(directory);
-        if (CurrentNode.Path == directory) return;
+        if (CurrentPath == directory) return;
 
         var node = RootNode.FindNodeByPath(directory);
         if (node is null) return;
@@ -88,45 +101,52 @@ internal sealed class AssetBrowser
         SetNode(RootNode.GetChild(0).GetChild(0));
     }
 
-    public void SetSearch(ReadOnlySpan<char> searchString)
-    {
-        Array.Clear(_items);
-
-        if (!FileRegistry.TryGetDirectoryIds(CurrentNode.Path, out var ids))
-        {
-            FilteredCount = 0;
-            return;
-        }
-
-        var count = 0;
-        foreach (var file in FileRegistry.MakeSparseEnumerator(ids))
-        {
-            if (file.Binding == FileBinding.DependentFile) continue;
-            if (searchString.Length > 0 && !file.LogicalName.StartsWith(searchString)) continue;
-
-            var kind = AssetKind.Unknown;
-            if (file.AssetRootId.IsValid())
-                kind = Assets.Get<AssetObject>(file.AssetRootId).Kind;
-
-            _items[count++] = new FileItem(file.LogicalName, file.Id, file.Binding, file.Storage, kind);
-        }
-
-        _items.AsSpan(0, count).Sort();
-        FilteredCount = count;
-    }
-
     private void SetNode(AssetDirectoryNode node)
     {
         CurrentNode = node;
+        FilteredCount = FileCount = FileRegistry.GetDirectoryIds(CurrentPath).Length;
+        _onDirectoryChange(this);
+    }
 
-        if (FileRegistry.TryGetDirectoryIds(node.Path, out var ids) && _items.Length < ids.Length)
+    //
+    public void Commit(ReadOnlySpan<char> searchText, FileBinding bindingFilter, AssetKind assetFilter)
+    {
+        Array.Clear(_filteredFileIds);
+
+        var count = 0;
+        var ids = FileRegistry.GetDirectoryIds(CurrentNode.Path);
+        foreach (var file in FileRegistry.MakeSparseEnumerator(ids))
         {
-            var newCapacity = CapacityUtils.CapacityGrowthToFit(_items.Length, ids.Length);
-            Array.Resize(ref _items, newCapacity);
+            if (assetFilter != AssetKind.Unknown)
+            {
+                if (!file.AssetRootId.IsValid() || assetFilter != Assets.Get<AssetObject>(file.AssetRootId).Kind)
+                    continue;
+            }
+
+            if (bindingFilter != FileBinding.Unknown && file.Binding != bindingFilter) continue;
+
+            if (searchText.Length > 0 && !file.LogicalName.StartsWith(searchText, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            _filteredFileIds[count++] = file.Id;
         }
 
-        FilteredCount = FileCount = ids.Length;
-        _onDirectoryChange(this);
+        FilteredCount = count;
+
+        _fileListBuffer.Invalidate(0, _fileListBuffer.Capacity);
+    }
+
+    private void OnInvalidateDrawBuffer(int start, Span<FileItem> span)
+    {
+        var count = 0;
+        var fileIds = new ReadOnlySpan<AssetFileId>(_filteredFileIds, start, span.Length);
+        foreach (var file in FileRegistry.MakeSparseEnumerator(fileIds))
+        {
+            var kind = AssetKind.Unknown;
+            if (file.AssetRootId.IsValid()) kind = Assets.Get<AssetObject>(file.AssetRootId).Kind;
+
+            span[count++] = new FileItem(file.LogicalName, file.Id, file.Binding, file.Storage, kind);
+        }
     }
 
     private static void AddDirectory(AssetDirectoryNode rootNode, string path)

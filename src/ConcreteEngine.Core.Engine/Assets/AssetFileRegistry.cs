@@ -74,6 +74,11 @@ public sealed class AssetFileRegistry
         return TryGetFile(fileId, out entry);
     }
 
+    public ReadOnlySpan<AssetFileId> GetDirectoryIds(string path)
+    {
+        return _byDirectory.TryGetValue(path, out var fileIdList) ? CollectionsMarshal.AsSpan(fileIdList) : default;
+    }
+
     public bool TryGetDirectoryIds(string path, out ReadOnlySpan<AssetFileId> fileIds)
     {
         if (!_byDirectory.TryGetValue(path, out var fileIdList))
@@ -81,7 +86,7 @@ public sealed class AssetFileRegistry
             fileIds = ReadOnlySpan<AssetFileId>.Empty;
             return false;
         }
-
+        
         fileIds = CollectionsMarshal.AsSpan(fileIdList);
         return true;
     }

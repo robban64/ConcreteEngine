@@ -56,8 +56,17 @@ internal static unsafe class AppDraw
     public static bool DrawButton(byte* text, bool enabled = true)
     {
         if (!enabled) ImGui.BeginDisabled(true);
-        bool clicked = ImGui.Button(text);
+        var clicked = ImGui.Button(text);
         if (!enabled) ImGui.EndDisabled();
         return enabled && clicked;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool DrawToggleButton(byte* text, bool value, bool enabled = true)
+    {
+        if(value) ImGui.PushStyleColor(ImGuiCol.Button, Palette.FrameBgActive);
+        var result = DrawButton(text, enabled);
+        if(value) ImGui.PopStyleColor();
+        return result;
     }
 }

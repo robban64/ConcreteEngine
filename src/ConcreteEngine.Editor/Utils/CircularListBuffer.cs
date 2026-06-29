@@ -1,16 +1,16 @@
 namespace ConcreteEngine.Editor.Utils;
 
-public sealed class CircularBuffer<T>
+public sealed class CircularListBuffer<T>
 {
     private readonly T[] _buffer;
     private readonly short[] _logicalMapping;
     private readonly int _capacity;
 
     private readonly Action<int, Span<T>> _callback;
-
+    
     public int Capacity => _capacity;
 
-    public CircularBuffer(int capacity, Action<int, Span<T>> callback)
+    public CircularListBuffer(int capacity, Action<int, Span<T>> callback)
     {
         _capacity = capacity;
         _callback = callback;
@@ -42,7 +42,7 @@ public sealed class CircularBuffer<T>
         }
     }
 
-    public ViewEnumerator GetView(int logicalStart, int length)
+    public Enumerator GetView(int logicalStart, int length)
     {
         int pendingStart = -1, pendingLength = 0;
 
@@ -66,10 +66,10 @@ public sealed class CircularBuffer<T>
         if (pendingLength > 0)
             Invalidate(pendingStart, pendingLength);
 
-        return new ViewEnumerator(_buffer, logicalStart, length);
+        return new Enumerator(_buffer, logicalStart, length);
     }
     
-    public ref struct ViewEnumerator
+    public ref struct Enumerator
     {
         private readonly T[] _buffer;
         private readonly int _length;
@@ -77,7 +77,7 @@ public sealed class CircularBuffer<T>
         private int _currentIndex;
         private int _physicalIndex;
 
-        public ViewEnumerator(T[] buffer, int logicalStart, int length)
+        internal Enumerator(T[] buffer, int logicalStart, int length)
         {
             _buffer = buffer;
             _capacity = buffer.Length;
@@ -100,7 +100,7 @@ public sealed class CircularBuffer<T>
 
         public readonly ref T Current => ref _buffer[_physicalIndex];
     
-        public readonly ViewEnumerator GetEnumerator() => this;
+        public readonly Enumerator GetEnumerator() => this;
 
     }
 }

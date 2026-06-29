@@ -35,18 +35,6 @@ internal static class AssetsExtensions
                 throw new ArgumentOutOfRangeException(nameof(binding), binding, null);
         }
     }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static (uint icon, uint color) GetIconAndColor(FileBinding binding, AssetKind kind)
-    {
-        return binding switch
-        {
-            FileBinding.Unknown => (StyleMap.GetIntIcon(Icons.Folder), Palette32.TextPrimary),
-            FileBinding.RootFile => (StyleMap.GetIntIcon(kind.ToIcon()), Palette32.TextLightBlue),
-            FileBinding.DependentFile => (StyleMap.GetIntIcon(kind.ToFileIcon()), Palette32.TextSecondary),
-            FileBinding.UnboundFile => (StyleMap.GetIntIcon(Icons.File), Palette32.TextMuted),
-            _ => throw new ArgumentOutOfRangeException(nameof(binding), binding, null)
-        };
-    }
 
     extension(AssetKind kind)
     {

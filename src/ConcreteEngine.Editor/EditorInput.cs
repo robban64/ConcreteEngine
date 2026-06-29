@@ -34,25 +34,27 @@ internal static class EditorInput
         else EngineInput.ActiveAllLayers();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool UpdateInputState()
+    public static bool UpdateInputState(bool hasGizmo)
     {
-        var io = ImGuiSystem.Io;
+        var isDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
+        var isUsingGizmo = hasGizmo && ImGuizmo.IsUsing();
+        var isIsHoveringGizmo = hasGizmo && ImGuizmo.IsOver();
+        var isHovering = !ViewportWindow.IsHovering && ImGuiSystem.Io.WantCaptureMouse && !isUsingGizmo;
+
         ref var state = ref State;
-        state.IsDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
+        state.IsDragging = isDragging;
         state.IsLeftClick = Layer.IsMouseDown(MouseButton.Left);
         state.IsRightClick = Layer.IsMouseDown(MouseButton.Right);
 
-        state.IsUsingGizmo = ImGuizmo.IsUsing();
-        state.IsHoveringGizmo = ImGuizmo.IsOver();
+        state.IsUsingGizmo = isUsingGizmo;
+        state.IsHoveringGizmo = isIsHoveringGizmo;
+        state.IsHoveringUi = isHovering;
 
-        //state.IsHoveringUi = ImGui.IsWindowHovered(HoveringFlags) && !state.IsUsingGizmo;
-        state.IsHoveringUi = !ViewportWindow.IsHovering && io.WantCaptureMouse && !state.IsUsingGizmo;
+        state.IsHoveringUi = isHovering;
+        state.IsBlockingKeyboard = state.IsBlockingMouse = ImGuiSystem.Io.WantTextInput || isUsingGizmo ||
+                                                           (isHovering && !isIsHoveringGizmo);
 
-        state.IsBlockingKeyboard = state.IsBlockingMouse = io.WantTextInput || state.IsUsingGizmo ||
-                                                           (state.IsHoveringUi && !state.IsHoveringGizmo);
-
-        return state.IsDragging || state.IsUsingGizmo || state.IsHoveringGizmo;
+        return isDragging || isUsingGizmo || isIsHoveringGizmo;
     }
 
     private static void CheckHotkeys()

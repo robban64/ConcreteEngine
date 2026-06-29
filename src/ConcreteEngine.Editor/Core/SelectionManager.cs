@@ -12,6 +12,7 @@ internal sealed class SelectionManager
     public InspectSceneObject? SelectedSceneObject { get; private set; }
     public InspectAsset? SelectedAsset { get; private set; }
 
+    public bool HasSceneObject => SelectedSceneObject is not null;
     public bool IsEmpty => SelectedAsset is null && SelectedSceneObject is null;
     public bool IsMixed => SelectedAsset is not null && SelectedSceneObject is not null;
 

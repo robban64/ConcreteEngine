@@ -1,9 +1,5 @@
-using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Visuals;
-using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Theme;

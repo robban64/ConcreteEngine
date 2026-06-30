@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
@@ -34,7 +35,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
 
     private NativeString _title;
     private NativeString _searchString;
-
+    
     private SceneObjectId SelectedId => State.Context.Selection.SelectedSceneId;
 
     public override ReadOnlySpan<byte> Id => WindowRoot.LeftWindowId;
@@ -80,7 +81,6 @@ internal sealed unsafe class SceneWindow : EditorWindow
         _title.NewWrite.Append("SceneObjects [").Append(_browser.FilteredCount).Append(']').End();
     }
 
-
     protected override void OnDraw()
     {
         ImGui.SeparatorText(_title);
@@ -120,24 +120,20 @@ internal sealed unsafe class SceneWindow : EditorWindow
 
     private void DrawList(int start, int length)
     {
-        if ((uint)start + (uint)length > (uint)_browser.FilteredCount) Throwers.InvalidArgument(nameof(length));
-
-        var sw = TextBuffers.GetWriter();
         uint eyeIcon = StyleMap.GetIntIcon(Icons.Eye), eyeClosedIcon = StyleMap.GetIntIcon(Icons.EyeClosed);
-
         var size = new Vector2(ImGui.GetContentRegionAvail().X - ListItemPaddedHeight - 4f, ListItemHeight);
 
         var selectedId = SelectedId;
+        var sceneIds = _browser.GetSceneIds(start, length);
+        
+        var cursor = 0;
         foreach (var it in _browser.GetDrawEnumerator(start, length))
         {
-            ImGui.PushID(it.Id);
+            var id = sceneIds[cursor++];
+            ImGui.PushID(id);
 
-            var nameStr = sw.PadRight(1).AppendIcon(StyleMap.GetIcon(it.Kind.ToIcon()))
-                .PadRight(4).Append((byte*)&it.DisplayName)
-                .End();
-
-            if (ImGui.Selectable(nameStr, it.Id == selectedId, 0, size))
-                State.EnqueueEvent(new SelectionEvent(it.Id));
+            if (ImGui.Selectable(it.DisplayName, id == selectedId, 0, size))
+                State.EnqueueEvent(new SelectionEvent(id));
 
             ImGui.SameLine();
             if (ImGui.Button(it.Visible ? (byte*)&eyeIcon : (byte*)&eyeClosedIcon, new Vector2(ListItemHeight)))

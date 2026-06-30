@@ -71,13 +71,13 @@ public sealed class CircularListBuffer<T>
     
     public ref struct Enumerator
     {
-        private readonly T[] _buffer;
+        private readonly Span<T> _buffer;
         private readonly int _length;
         private readonly int _capacity;
         private int _currentIndex;
         private int _physicalIndex;
 
-        internal Enumerator(T[] buffer, int logicalStart, int length)
+        internal Enumerator(Span<T> buffer, int logicalStart, int length)
         {
             _buffer = buffer;
             _capacity = buffer.Length;

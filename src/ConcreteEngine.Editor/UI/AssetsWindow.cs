@@ -22,9 +22,9 @@ namespace ConcreteEngine.Editor.UI;
 internal sealed unsafe class AssetsWindow : EditorWindow
 {
     private const float FolderWindowWidth = 150f;
-    
+
     private const float FolderItemHeight = 20f;
-    
+
     private const float GridPadding = 8.0f;
     private const float GridInnerSize = 72.0f;
     private const float GridCellSize = GridInnerSize + GridPadding;
@@ -32,7 +32,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 
     private static readonly Vector2 ItemSize = new(GridInnerSize);
 
-    private static readonly Vector2 IconBasePos = 
+    private static readonly Vector2 IconBasePos =
         new((GridInnerSize - GridIconSize) * 0.5f, (GridInnerSize * 0.4f) - (GridIconSize * 0.5f));
 
 
@@ -59,16 +59,8 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         _searchInput = new TextInput("search", 8)
             .WithFilter(TextInputFilter.None, allowEmpty: true)
             .WithTransformer(trimmed: true, lowercase: true)
-            .WithCallbackU16((searchString) => _assetBrowser.Commit(searchString,_bindingsFilter,_assetFilter));
-
+            .WithCallbackU16((searchString) => _assetBrowser.Commit(searchString, _bindingsFilter, _assetFilter));
     }
-
-    public void SelectAsset(AssetId id)
-    {
-        _selectedFile = id.IsValid() ? AssetManager.Instance.GetAssetRootFile(id).Id : AssetFileId.Empty;
-        _selectedAssetId = id;
-    }
-
 
     protected override void OnCreate()
     {
@@ -80,24 +72,18 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         _assetBrowser.BuildFullDirectory();
     }
 
-    private void Sync()
+    private void SelectAsset(AssetId id)
     {
-        if (State.Context.Selection.SelectedAssetId != _selectedAssetId)
-            SelectAsset(State.Context.Selection.SelectedAssetId);
+        _selectedFile = id.IsValid() ? AssetManager.Instance.GetAssetRootFile(id).Id : AssetFileId.Empty;
+        _selectedAssetId = id;
     }
-    
-    
+
     private void OnListItemClick(AssetFileId fileId)
     {
-        if (!fileId.IsValid() || !AssetManager.FileRegistry.TryGetFile(fileId, out var file) ||
-            !file.AssetRootId.IsValid())
-        {
-            return;
-        }
-
+        if (!fileId.IsValid()) return;
+        if (!AssetManager.FileRegistry.TryGetFile(fileId, out var file) || !file.AssetRootId.IsValid()) return;
         State.EnqueueEvent(new SelectionEvent(file.AssetRootId));
     }
-
 
     //TODO
     private void OnDirectoryChange(AssetBrowser browser)
@@ -113,7 +99,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 
         Span<char> searchTextU16 = stackalloc char[Encoding.UTF8.GetCharCount(searchText)];
         Encoding.UTF8.GetChars(searchText, searchTextU16);
-        browser.Commit(searchTextU16,_bindingsFilter, _assetFilter);
+        browser.Commit(searchTextU16, _bindingsFilter, _assetFilter);
     }
 
     private void UpdateTitleText()
@@ -140,29 +126,35 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         _assetFilter = _assetFilter == assetFilter ? AssetKind.Unknown : assetFilter;
         OnDirectoryChange(_assetBrowser);
     }
-    
+
+    public override void OnUpdateDiagnostic()
+    {
+        if (State.Context.Selection.SelectedAssetId != _selectedAssetId)
+            SelectAsset(State.Context.Selection.SelectedAssetId);
+    }
+
     protected override void OnDraw()
     {
-        Sync();
-
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(3f));
-        
+
         ImGui.PushStyleColor(ImGuiCol.ChildBg, Palette.MenuBg);
-        if (ImGui.BeginChild("asset-toolbar"u8, new Vector2(0, 22),  ImGuiChildFlags.None))
+        if (ImGui.BeginChild("asset-toolbar"u8, new Vector2(0, 22), ImGuiChildFlags.None))
         {
             DrawToolbar();
         }
+
         ImGui.EndChild();
         ImGui.PopStyleColor();
-        
+
         if (ImGui.BeginChild("folders"u8, new Vector2(FolderWindowWidth, 0), ImGuiChildFlags.None))
         {
             ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
-            
+
             DrawFolders();
-            
+
             ImGui.PopStyleVar();
         }
+
         ImGui.EndChild();
 
         ImGui.SameLine();
@@ -171,14 +163,15 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
             ImGui.PushFont(GuiTheme.TextFont, GuiTheme.FontSizeSmall);
-            
+
             DrawFiles();
-            
+
             ImGui.PopFont();
             ImGui.PopStyleVar();
         }
+
         ImGui.EndChild();
-        
+
         ImGui.PopStyleVar();
     }
 
@@ -189,24 +182,24 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, Palette.FrameBgActive);
 
         if (AppDraw.DrawButton(GetIcon(Icons.Cog))) ImGui.OpenPopup("settings"u8);
-        
+
         ImGui.SameLine();
         if (AppDraw.DrawButton(GetIcon(Icons.Plus))) ImGui.OpenPopup("menu"u8);
-        
+
         ImGui.SameLine(0.0f, 12.0f);
-        if (AppDraw.DrawButton(GetIcon(Icons.ChevronLeft), !_assetBrowser.IsRootPath)) 
+        if (AppDraw.DrawButton(GetIcon(Icons.ChevronLeft), !_assetBrowser.IsRootPath))
             _assetBrowser.GoToParent();
-        
+
         //
         ImGui.SameLine();
         //
-        
+
         ImGui.AlignTextToFramePadding();
         ImGui.TextDisabled(_breadcrumbs);
-            
+
         const float rightWidth = 150.0f + 128f;
         ImGui.SameLine(ImGui.GetContentRegionAvail().X - WindowPadding.X - rightWidth);
-            
+
         ImGui.SetNextItemWidth(150.0f);
         ImGui.PushStyleColor(ImGuiCol.FrameBg, SurfaceDark);
         _searchInput.Draw();
@@ -215,26 +208,28 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         //
         var bindingFilter = _bindingsFilter;
         var assetFilter = _assetFilter;
-        
+
         ImGui.SameLine();
-        if (AppDraw.DrawToggleButton(GetIcon(Icons.File), bindingFilter ==  FileBinding.RootFile)) 
+        if (AppDraw.DrawToggleButton(GetIcon(Icons.File), bindingFilter == FileBinding.RootFile))
             UpdateFilter(FileBinding.RootFile, assetFilter);
+
+        ImGui.SameLine(0, 8f);
         
-        ImGui.SameLine(0,8f);
-        if (AppDraw.DrawToggleButton(GetIcon(AssetIcons.ShaderIcon), assetFilter == AssetKind.Shader)) 
+        if (AppDraw.DrawToggleButton(GetIcon(AssetIcons.ShaderIcon), assetFilter == AssetKind.Shader))
             UpdateFilter(bindingFilter, AssetKind.Shader);
-        
+
         ImGui.SameLine();
         if (AppDraw.DrawToggleButton(GetIcon(AssetIcons.ModelIcon), assetFilter == AssetKind.Model))
             UpdateFilter(bindingFilter, AssetKind.Model);
-        
+
         ImGui.SameLine();
-        if (AppDraw.DrawToggleButton(GetIcon(AssetIcons.TextureIcon), assetFilter == AssetKind.Texture)) 
+        if (AppDraw.DrawToggleButton(GetIcon(AssetIcons.TextureIcon), assetFilter == AssetKind.Texture))
             UpdateFilter(bindingFilter, AssetKind.Texture);
-        
+
         ImGui.SameLine();
-        if (AppDraw.DrawToggleButton(GetIcon(AssetIcons.MaterialIcon), assetFilter == AssetKind.Material)) 
+        if (AppDraw.DrawToggleButton(GetIcon(AssetIcons.MaterialIcon), assetFilter == AssetKind.Material))
             UpdateFilter(bindingFilter, AssetKind.Material);
+
 
         ImGui.PopStyleColor(3);
     }
@@ -252,7 +247,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             ImGui.Selectable("No folders found."u8, false, ImGuiSelectableFlags.Disabled, size);
             return;
         }
-        
+
         for (var i = 0; i < nodes.Length; i++)
         {
             var node = nodes[i];
@@ -271,7 +266,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     private void DrawFiles()
     {
         if (_assetBrowser.FilteredCount == 0 || _assetBrowser.FileCount == 0) return;
-        
+
         var count = _assetBrowser.FilteredCount;
 
         int columnCount = (int)(ImGui.GetContentRegionAvail().X / GridCellSize);
@@ -295,15 +290,18 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     {
         var sw = TextBuffers.GetWriter();
         var drawList = ImGui.GetWindowDrawList();
+        var fileIds = _assetBrowser.GetFileIds(start, length);
+
         var gridIndex = 0;
         foreach (var file in _assetBrowser.GetDrawEnumerator(start, length))
         {
+            var fileId = fileIds[gridIndex];
             AssetsExtensions.GetIconAndColor(file.Binding, AssetKind.Texture, out var icon, out var color);
 
             var startPos = ImGui.GetCursorScreenPos(); // top left
 
-            if (ImGui.Selectable(sw.AppendImGuiId(file.Id).End(), selectedFileId == file.Id, 0, ItemSize))
-                OnListItemClick(file.Id);
+            if (ImGui.Selectable(sw.AppendImGuiId(fileId).End(), selectedFileId == fileId, 0, ItemSize))
+                OnListItemClick(fileId);
 
             drawList.PushClipRect(startPos, startPos + ItemSize, true);
 
@@ -337,7 +335,6 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             gridIndex++;
         }
     }
-
 }
 
 /*

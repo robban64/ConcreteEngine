@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Common.Text;
@@ -26,19 +27,16 @@ internal unsafe struct NativeString
         *ptr = new NativeStringData(view.Length, 0);
         return new NativeString(ptr);
     }
-
+    
+    //
+    
     public NativeStringData* Ptr;
 
     public NativeString(NativeStringData* ptr) => Ptr = ptr;
 
+    public readonly bool IsNull => Ptr == null;
     public readonly int Length => Ptr->Length;
     public readonly int Capacity => Ptr->Capacity;
-
-    public readonly byte* EndPtr
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (byte*)Ptr + HeaderSize + Length;
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator byte*(NativeString str) => (byte*)str.Ptr + HeaderSize;
@@ -46,6 +44,12 @@ internal unsafe struct NativeString
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator NativeView<byte>(NativeString str) => str.TextView;
 
+    public readonly byte* EndPtr
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (byte*)Ptr + HeaderSize + Length;
+    }
+    
     public readonly NativeView<byte> TextView
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -58,13 +62,14 @@ internal unsafe struct NativeString
         get => new((byte*)Ptr + HeaderSize, Capacity);
     }
     
-    public NativeSpanWriter NewWrite
+    //TODO Rename
+    public readonly NativeSpanWriter NewWrite
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             SetLength(0);
-            return Writer;
+            return new NativeSpanWriter(DataView, Capacity);
         }
     }
 
@@ -85,9 +90,8 @@ internal unsafe struct NativeString
         DataView[length] = 0;
     }
 
-    public readonly void Set(string str) => Ptr->Length = Writer.Write(str).Length;
-    public readonly void Set(ReadOnlySpan<char> str)  => Ptr->Length = Writer.Write(str).Length;
-    public readonly void Set(ReadOnlySpan<byte> str) => Ptr->Length = Writer.Write(str).Length;
+    public readonly void Set(ReadOnlySpan<char> str)  => Ptr->Length = Writer.Write(str.Truncate(Capacity)).Length;
+    public readonly void Set(ReadOnlySpan<byte> str) => Ptr->Length = Writer.Write(str.Truncate(Capacity)).Length;
 
     public readonly void Clear() => Ptr->Length = 0;
 }

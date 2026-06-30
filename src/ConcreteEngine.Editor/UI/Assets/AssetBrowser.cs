@@ -19,8 +19,8 @@ internal sealed class AssetBrowser
     public readonly AssetDirectoryNode RootNode;
     public AssetDirectoryNode CurrentNode { get; private set; }
 
-    private AssetFileId[] _filteredFileIds;
-    private readonly CircularListBuffer<FileItem> _fileListBuffer;
+    private AssetFileId[] _fileIds;
+    private readonly CircularListBuffer<FileItem> _buffer;
 
     private readonly Action<AssetBrowser> _onDirectoryChange;
 
@@ -28,8 +28,8 @@ internal sealed class AssetBrowser
     public AssetBrowser(Action<AssetBrowser> onDirectoryChange)
     {
         _onDirectoryChange = onDirectoryChange;
-        _filteredFileIds = new AssetFileId[64];
-        _fileListBuffer = new CircularListBuffer<FileItem>(Capacity, OnInvalidateDrawBuffer);
+        _fileIds = new AssetFileId[64];
+        _buffer = new CircularListBuffer<FileItem>(Capacity, OnInvalidateDrawBuffer);
 
         RootNode = new AssetDirectoryNode("", null);
         CurrentNode = RootNode;
@@ -41,8 +41,11 @@ internal sealed class AssetBrowser
     public bool IsRootPath => CurrentNode == RootNode || CurrentNode == RootNode.GetChild(0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<AssetFileId> GetFileIds(int start, int length) => new(_fileIds, start, length);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public CircularListBuffer<FileItem>.Enumerator GetDrawEnumerator(int start, int length) =>
-        _fileListBuffer.GetView(start, length);
+        _buffer.GetView(start, length);
 
     //
 
@@ -90,10 +93,10 @@ internal sealed class AssetBrowser
     public void Commit(ReadOnlySpan<char> searchText, FileBinding bindingFilter, AssetKind assetFilter)
     {
         var ids = FileRegistry.GetDirectoryIds(CurrentNode.Path);
-        if(_filteredFileIds.Length < ids.Length)
-            _filteredFileIds = new AssetFileId[CapacityUtils.CapacityGrowthToFit(_filteredFileIds.Length, ids.Length)];
+        if(_fileIds.Length < ids.Length)
+            _fileIds = new AssetFileId[CapacityUtils.CapacityGrowthToFit(_fileIds.Length, ids.Length)];
         else 
-            Array.Clear(_filteredFileIds);
+            Array.Clear(_fileIds);
 
         
         var count = 0;
@@ -110,25 +113,25 @@ internal sealed class AssetBrowser
             if (searchText.Length > 0 && !file.LogicalName.StartsWith(searchText, StringComparison.OrdinalIgnoreCase))
                 continue;
 
-            _filteredFileIds[count++] = file.Id;
+            _fileIds[count++] = file.Id;
         }
 
         FilteredCount = count;
 
-        _fileListBuffer.Invalidate(0, _fileListBuffer.Capacity);
+        _buffer.Invalidate(0, _buffer.Capacity);
     }
     
 
     private void OnInvalidateDrawBuffer(int start, Span<FileItem> span)
     {
         var count = 0;
-        var fileIds = new ReadOnlySpan<AssetFileId>(_filteredFileIds, start, span.Length);
+        var fileIds = new ReadOnlySpan<AssetFileId>(_fileIds, start, span.Length);
         foreach (var file in FileRegistry.MakeSparseEnumerator(fileIds))
         {
             var kind = AssetKind.Unknown;
             if (file.AssetRootId.IsValid()) kind = Assets.Get<AssetObject>(file.AssetRootId).Kind;
 
-            span[count++] = new FileItem(file.LogicalName, file.Id, file.Binding, file.Storage, kind);
+            span[count++] = new FileItem(file.LogicalName, file.Binding, file.Storage, kind);
         }
     }
 
@@ -170,23 +173,16 @@ internal sealed class AssetBrowser
     [StructLayout(LayoutKind.Sequential)]
     internal readonly struct FileItem(
         string name,
-        AssetFileId id,
         FileBinding binding,
         AssetStorage storage,
-        AssetKind assetKind) : IComparable<FileItem>
+        AssetKind assetKind)
     {
-        public readonly AssetFileId Id = id;
         public readonly FileBinding Binding = binding;
         public readonly AssetStorage Storage = storage;
         public readonly AssetKind AssetKind = assetKind;
 
         public readonly String16Utf8 DisplayName = name;
 
-        public int CompareTo(FileItem other)
-        {
-            var c = ((int)Binding).CompareTo((int)other.Binding);
-            return c != 0 ? c : DisplayName.GetTextSpan().SequenceCompareTo(other.DisplayName.GetTextSpan());
-        }
     }
 
     internal sealed class AssetDirectoryNode

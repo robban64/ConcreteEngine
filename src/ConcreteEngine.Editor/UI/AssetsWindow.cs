@@ -32,8 +32,8 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 
     private static readonly Vector2 ItemSize = new(GridInnerSize);
 
-    private static readonly Vector2 IconBasePos = new((GridInnerSize - GridIconSize) * 0.5f,
-        (GridInnerSize * 0.4f) - (GridIconSize * 0.5f));
+    private static readonly Vector2 IconBasePos = 
+        new((GridInnerSize - GridIconSize) * 0.5f, (GridInnerSize * 0.4f) - (GridIconSize * 0.5f));
 
 
     private readonly AssetBrowser _assetBrowser;
@@ -144,14 +144,11 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         OnDirectoryChange(_assetBrowser);
     }
     
-    private static AvgFrameTimer _avg;
-
-
     protected override void OnDraw()
     {
         Sync();
 
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(3,3));
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(3f));
         
         ImGui.PushStyleColor(ImGuiCol.ChildBg, Palette.MenuBg);
         if (ImGui.BeginChild("asset-toolbar"u8, new Vector2(0, 22),  ImGuiChildFlags.None))
@@ -177,9 +174,8 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
             ImGui.PushFont(GuiTheme.TextFont, GuiTheme.FontSizeSmall);
-            _avg.BeginSample();
+            
             DrawFiles();
-            if (_avg.EndSample() >= 80) _avg.ResetAndPrint("Draw.Files");
             
             ImGui.PopFont();
             ImGui.PopStyleVar();
@@ -220,7 +216,6 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         ImGui.PopStyleColor();
 
         //
-
         var bindingFilter = _bindingsFilter;
         var assetFilter = _assetFilter;
         

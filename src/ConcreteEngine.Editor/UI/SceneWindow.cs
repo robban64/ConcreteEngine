@@ -19,16 +19,9 @@ namespace ConcreteEngine.Editor.UI;
 
 internal sealed unsafe class SceneWindow : EditorWindow
 {
-    private const ImGuiTableFlags TableFlags =
-        ImGuiTableFlags.ScrollY |
-        ImGuiTableFlags.NoPadOuterX |
-        //ImGuiTableFlags.NoPadInnerX | 
-        ImGuiTableFlags.SizingFixedFit;
-
-
-    private const float ListItemPad = 4f;
-    private const float ListItemHeight = 20f;
-    private const float ListItemPaddedHeight = ListItemHeight + ListItemPad;
+    private const float ListFramePad = 4f;
+    private const float ListItemHeight = 24f;
+    private const float ListItemPaddedHeight = ListItemHeight + ListFramePad;
 
     private readonly ComboInput _kindCombo;
     private readonly TextInput _searchInput;
@@ -100,60 +93,56 @@ internal sealed unsafe class SceneWindow : EditorWindow
             OnCategoryChange((SceneObjectKind)_kindCombo.Value.X);
 
         ImGui.Separator();
-
-        // list table
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(4f));
+        
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(ListFramePad));
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
         ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
-        if (!ImGui.BeginTable("scene-list"u8, 2, TableFlags)) return;
-
-        ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
-        ImGui.TableSetupColumn("Visible"u8, ImGuiTableColumnFlags.WidthFixed, 28);
-        var clipper = new ImGuiListClipper();
-        clipper.Begin(_sceneCount, ListItemHeight + ListItemPad);
-        while (clipper.Step())
+        if (ImGui.BeginChild("scene-list"u8))
         {
-            DrawList(clipper.DisplayStart, clipper.DisplayEnd - clipper.DisplayStart);
+            var clipper = new ImGuiListClipper();
+            clipper.Begin(_sceneCount, ListItemHeight);
+            while (clipper.Step())
+            {
+                DrawList(clipper.DisplayStart, clipper.DisplayEnd - clipper.DisplayStart);
+            }
+
+            clipper.End();
         }
-
-        clipper.End();
-
-        ImGui.EndTable();
+        ImGui.EndChild();
         ImGui.PopStyleColor();
         ImGui.PopStyleVar(2);
+
     }
 
     private void DrawList(int start, int length)
     {
         if ((uint)start + (uint)length > (uint)_sceneIds.Length) Throwers.InvalidArgument(nameof(length));
-
-        var idSpan = new ReadOnlySpan<SceneObjectId>(_sceneIds, start, length);
-
-        var selectedId = SelectedId;
+        
         var sw = TextBuffers.GetWriter();
         uint eyeIcon = StyleMap.GetIntIcon(Icons.Eye), eyeClosedIcon = StyleMap.GetIntIcon(Icons.EyeClosed);
+        
+        var size = new Vector2(ImGui.GetContentRegionAvail().X - ListItemPaddedHeight - 4f, ListItemHeight);
 
-        foreach (var file in SceneManager.SceneStore.MakeSparseEnumerator(idSpan))
+        var selectedId = SelectedId;
+        var idSpan = new ReadOnlySpan<SceneObjectId>(_sceneIds, start, length);
+        foreach (var it in SceneManager.SceneStore.MakeSparseEnumerator(idSpan))
         {
-            ImGui.PushID(file.Id);
-            ImGui.TableNextRow();
-
-            ImGui.TableNextColumn();
-            var nameStr = sw.PadRight(1).AppendIcon(StyleMap.GetIcon(file.Kind.ToIcon()))
-                .PadRight(4).Append(file.Name)
+            ImGui.PushID(it.Id);
+            
+            var nameStr = sw.PadRight(1).AppendIcon(StyleMap.GetIcon(it.Kind.ToIcon()))
+                .PadRight(4).Append(it.Name)
                 .End();
 
-            if (ImGui.Selectable(nameStr, file.Id == selectedId, 0, new Vector2(0, ListItemHeight)))
-                State.EnqueueEvent(new SelectionEvent(file.Id));
+            if (ImGui.Selectable(nameStr, it.Id == selectedId, 0, size))
+                State.EnqueueEvent(new SelectionEvent(it.Id));
 
-            ImGui.TableNextColumn();
-            if (ImGui.Button(file.Visible ? (byte*)&eyeIcon : (byte*)&eyeClosedIcon, new Vector2(ListItemPaddedHeight)))
-                file.Visible = !file.Visible;
+            ImGui.SameLine();
+            if (ImGui.Button(it.Visible ? (byte*)&eyeIcon : (byte*)&eyeClosedIcon, new Vector2(ListItemHeight)))
+                it.Visible = !it.Visible;
 
             ImGui.PopID();
         }
     }
-
 
     private void Search(Span<byte> byteSpan)
     {
@@ -172,11 +161,12 @@ internal sealed unsafe class SceneWindow : EditorWindow
         }
 
         var count = 0;
+        var selectedKind = _selectedKind;
         foreach (var it in SceneManager.SceneStore)
         {
             if (count >= AssetCapacity) break;
 
-            if (_selectedKind > SceneObjectKind.Empty && _selectedKind != it.Kind)
+            if (selectedKind > SceneObjectKind.Empty && selectedKind != it.Kind)
                 continue;
 
             if (searchKey <= 0 || searchId == it.Id.Id || (it.PackedName & searchMask) == searchKey)

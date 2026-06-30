@@ -56,13 +56,13 @@ internal sealed class EditorService
 
     public void Draw()
     {
-        //_avg.BeginSample();
+        _avg.BeginSample();
         
         GuiTheme.PushFontText();
         _windowManager.Draw();
         ImGui.PopFont();
         
-       // if (_avg.EndSample() >= 80) _avg.ResetAndPrint("Editor.Draw");
+        if (_avg.EndSample() >= 80) _avg.ResetAndPrint("Editor.Draw");
 
         if (EditorInput.UpdateInputState(_selectionManager.HasSceneObject))
             EditorTime.WakeUp();

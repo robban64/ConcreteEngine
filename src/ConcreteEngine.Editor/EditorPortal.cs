@@ -36,6 +36,7 @@ public sealed class EditorPortal : IDisposable
     {
         if (Initialized) Throwers.InvalidOperation(nameof(Initialized));
 
+        StringArena.Create();
         TextBuffers.AllocateBuffers();
         ConsoleGateway.Service.Setup();
 

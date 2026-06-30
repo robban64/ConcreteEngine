@@ -32,9 +32,9 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
     //    
     private readonly TextInput _textInput;
 
-    private RangeU16 _titleStrHandle;
+    private NativeString _title;
+    private NativeString _inputString;
 
-    private MemoryBlockPtr _memory;
 
     public override ReadOnlySpan<byte> Id => WindowRoot.ConsoleWindowId;
 
@@ -50,12 +50,9 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
 
     protected override void OnCreate()
     {
-        var allocator = TextBuffers.PersistentArena.MakeBuilder();
-        _titleStrHandle = allocator.AllocSlice(64).AsRange16();
-        _textInput.SetTextBuffer(allocator.AllocSlice(64));
-        _memory = TextBuffers.PersistentArena.CommitBuilder(allocator);
-        _memory.SliceData(_titleStrHandle).Writer().Append("Console"u8).Append((char)0);
-
+        _title = StringArena.AllocateString(64);
+        _inputString = StringArena.AllocateString(64);
+        _textInput.SetTextBuffer(_inputString);
     }
 
     public static void ScrollToBottom()
@@ -68,9 +65,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
     {
         var metrics = MetricSystem.Instance;
         //ImGui.GetIO().Framerate
-        _memory.SliceData(_titleStrHandle)
-            .Writer()
-            .Append("Console"u8).PadRight(4)
+        _title.NewWrite.Append("Console"u8).PadRight(4)
             .Append('[').Append(metrics.Metric.AvgMs, "F4").Append("ms"u8).Append(']')
             .PadRight(4)
             .Append('[').Append(metrics.Metric.AllocMbPerSec, "F4").Append("MB/s"u8).Append(']')
@@ -82,7 +77,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
     {
         // header
         ImGui.PushStyleColor(ImGuiCol.Text, Palette32.TextSecondary);
-        ImGui.SeparatorText(_memory.SliceData(_titleStrHandle));
+        ImGui.SeparatorText(_title);
         ImGui.PopStyleColor();
 
         // log

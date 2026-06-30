@@ -1,10 +1,65 @@
+using System.Runtime.CompilerServices;
+using System.Text;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine;
 
 namespace ConcreteEngine.Editor.Utils;
+
+internal sealed class StringArena
+{
+    public static StringArena Instance { get; private set; } = null!;
+    
+    public static void Create()
+    {
+        if(Instance != null!) Throwers.InvalidOperation("StringArena already created");
+        Instance = new StringArena();
+    }
+    
+    public static NativeString AllocateString(int value) => Instance.Alloc(value);
+    public static NativeString AllocateString(ReadOnlySpan<char> value) => Instance.AllocString(value);
+
+    public static int Remaining => Instance._arena.Remaining;
+    
+    //
+    private readonly ArenaAllocator _arena;
+
+    private StringArena()
+    {
+        const int blockCount = 4;
+        _arena = new ArenaAllocator(CapacityUtils.PageSize * blockCount);
+        _arena.AllocBlock(CapacityUtils.PageSize);
+    }
+
+    public NativeString Alloc(int capacity)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
+        capacity = IntMath.AlignUp(capacity, 4);
+
+        var sizeInBytes = Unsafe.SizeOf<NativeString.NativeStringData>() + capacity;
+        if (!_arena.CanAlloc(sizeInBytes))
+        {
+            _arena.AllocBlock(CapacityUtils.PageSize);
+            Logger.LogString(LogScope.Editor, $"StringArena - Allocated new block");
+        }
+        
+        var memory = _arena.Tail.GetAllocator().AllocSlice(sizeInBytes);
+        return NativeString.From(memory);
+    }
+
+    public NativeString AllocString(ReadOnlySpan<char> value)
+    {
+        var str = Alloc(Encoding.UTF8.GetByteCount(value) + 1);
+        str.Set(value);
+        return str;
+    }
+
+}
 /*
 internal struct StringHandle(byte blockId, byte slot)
 {

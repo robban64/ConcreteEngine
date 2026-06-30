@@ -46,9 +46,9 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     private AssetKind _assetFilter;
     private FileBinding _bindingsFilter;
 
-    private RangeU16 _breadcrumbStrHandle;
+    private NativeString _breadcrumbs;
+    private NativeString _searchString;
 
-    private MemoryBlockPtr _memory;
 
     public override ReadOnlySpan<byte> Id => WindowRoot.AssetWindowId;
 
@@ -72,13 +72,10 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 
     protected override void OnCreate()
     {
-        var allocator = TextBuffers.PersistentArena.MakeBuilder();
-        var inputHandle = allocator.AllocSlice(8).AsRange16();
-        _breadcrumbStrHandle = allocator.AllocSlice(64).AsRange16();
-        
-        _memory = TextBuffers.PersistentArena.CommitBuilder(allocator);
+        _breadcrumbs = StringArena.AllocateString(64);
+        _searchString = StringArena.AllocateString(8);
 
-        _searchInput.SetTextBuffer(_memory.SliceData(inputHandle));
+        _searchInput.SetTextBuffer(_searchString);
 
         _assetBrowser.BuildFullDirectory();
     }
@@ -122,7 +119,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     private void UpdateTitleText()
     {
         var path = _assetBrowser.CurrentNode.GetRelativePath();
-        var sw = _memory.Data.Slice(_breadcrumbStrHandle).Writer();
+        var sw = _breadcrumbs.NewWrite;
         if (path.Length == 0)
         {
             sw.Write('/');
@@ -205,7 +202,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         //
         
         ImGui.AlignTextToFramePadding();
-        ImGui.TextDisabled(_memory.Data.Slice(_breadcrumbStrHandle));
+        ImGui.TextDisabled(_breadcrumbs);
             
         const float rightWidth = 150.0f + 128f;
         ImGui.SameLine(ImGui.GetContentRegionAvail().X - WindowPadding.X - rightWidth);

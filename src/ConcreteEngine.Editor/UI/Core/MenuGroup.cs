@@ -4,14 +4,15 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed class MenuGroup(NativeView<byte> name, MenuItem[] items)
+internal sealed class MenuGroup(NativeString name, MenuItem[] items)
 {
     //public readonly string Name = name;
-    public readonly NativeView<byte> Name = name;
+    public readonly NativeString Name = name;
     public readonly MenuItem[] Items = items;
     public bool Enabled = true;
     public bool Visible = true;

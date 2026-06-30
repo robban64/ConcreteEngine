@@ -6,6 +6,7 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Inspector.Impl;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Theme;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
@@ -13,8 +14,8 @@ namespace ConcreteEngine.Editor.UI;
 internal sealed unsafe class CameraPanel(StateManager state) : EditorPanel(InspectorId.Camera, state)
 {
     private Size2D _currentViewport;
-    private RangeU16 _viewportStrHandle;
-    private RangeU16 _aspectStrHandle;
+    private NativeString _viewportStr;
+    private NativeString _aspectStr;
 
     private static readonly InspectCameraFields InspectFields = InspectorFieldProvider.Instance.CameraFields;
 
@@ -22,18 +23,20 @@ internal sealed unsafe class CameraPanel(StateManager state) : EditorPanel(Inspe
     {
         var viewport = EngineWindow.Viewport.Size;
 
-        Memory.Data.Slice(_viewportStrHandle).Writer()
+        var view = _viewportStr.NewWrite
             .Append("Width: "u8).Append(viewport.Width)
             .Append(" - Height: "u8).Append(viewport.Height).End();
 
-        Memory.Data.Slice(_aspectStrHandle).Writer()
-            .Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End();
+        _viewportStr.SetLength(view.Length);
+
+        view = _aspectStr.NewWrite.Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End();
+        _aspectStr.SetLength(view.Length);
     }
 
-    public override void OnCreate(NativeAllocator allocator)
+    public override void OnCreate()
     {
-        _viewportStrHandle = allocator.AllocSlice(32).AsRange16();
-        _aspectStrHandle = allocator.AllocSlice(24).AsRange16();
+        _viewportStr = StringArena.AllocateString(32);
+        _aspectStr = StringArena.AllocateString(24);
 
         _currentViewport = EngineWindow.Viewport;
     }
@@ -49,8 +52,8 @@ internal sealed unsafe class CameraPanel(StateManager state) : EditorPanel(Inspe
     public override void OnDraw()
     {
         ImGui.SeparatorText("Viewport"u8);
-        ImGui.TextUnformatted(Memory.Data.Slice(_viewportStrHandle));
-        ImGui.TextUnformatted(Memory.Data.Slice(_aspectStrHandle));
+        AppDraw.Text(_viewportStr);
+        AppDraw.Text(_aspectStr);
 
         ImGui.Spacing();
 

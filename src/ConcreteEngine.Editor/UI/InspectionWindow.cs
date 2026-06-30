@@ -35,15 +35,12 @@ internal sealed class InspectionWindow : EditorWindow
         State.ContextChanged += OnStateOnContextChanged;
 
         var arena = TextBuffers.PersistentArena;
-        var allocator = arena.MakeBuilder();
 
         foreach (var panel in _panels)
-            panel.OnCreate(allocator);
+            panel.OnCreate();
 
-        var memory = arena.CommitBuilder(allocator);
         foreach (var panel in _panels)
         {
-            panel.Memory = memory;
             panel.OnAttach();
         }
     }

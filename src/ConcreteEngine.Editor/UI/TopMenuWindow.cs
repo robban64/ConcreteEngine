@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
@@ -28,20 +29,18 @@ internal sealed class TopMenuWindow
 
     public ReadOnlySpan<ToolbarItem> GetToolbarGroup(ToolbarGroupAlignment i) => _toolbar[(int)i].Items;
 
-    public void RegisterMenuToolbar(ArenaAllocator arena)
+    public void RegisterMenuToolbar()
     {
         if (_hasInitialized) throw new InvalidOperationException("Already registered");
         _hasInitialized = true;
 
-        var allocator = arena.MakeBuilder();
-
-        _menuBar[0] = new MenuGroup(allocator.AllocStringSlice("File"), [
+        _menuBar[0] = new MenuGroup(StringArena.AllocateString("File"), [
             new MenuItem("Test1", null, static (state) => { })
         ]);
-        _menuBar[1] = new MenuGroup(allocator.AllocStringSlice("Edit"), [
+        _menuBar[1] = new MenuGroup(StringArena.AllocateString("Edit"), [
             new MenuItem("Test2", null, static (state) => { })
         ]);
-        _menuBar[2] = new MenuGroup(allocator.AllocStringSlice("Debug"), [
+        _menuBar[2] = new MenuGroup(StringArena.AllocateString("Debug"), [
             new MenuItem("Metrics", null,
                 static (state) => state.ToggleDebugWindow(WindowManager.DebugMetricsWindow)),
             new MenuItem("ImGui Demo", null,
@@ -52,7 +51,6 @@ internal sealed class TopMenuWindow
                 static (state) => state.ToggleDebugWindow(WindowManager.DebugImStyleWindow))
         ]);
 
-        _memory = arena.CommitBuilder(allocator);
 
         _toolbar[0] = new ToolbarGroup(ToolbarGroupAlignment.Left, []);
         _toolbar[1] = new ToolbarGroup(ToolbarGroupAlignment.Center, [Translate, Scale, Rotate, DebugBounds]);

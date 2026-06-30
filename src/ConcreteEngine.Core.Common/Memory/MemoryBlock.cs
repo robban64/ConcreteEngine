@@ -1,40 +1,43 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
-public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<MemoryBlockPtr>
+public readonly unsafe struct MemoryBlockPtr : IEquatable<MemoryBlockPtr>
 {
-    public static int BlockSize => MemoryBlock.BlockSize;
+    public const int BlockSize = 16;
+    
+    public readonly MemoryBlock* Ptr;
+
+    private MemoryBlockPtr(MemoryBlock* block) => Ptr = block;
+
+    public MemoryBlockPtr(NativeView<byte> memory)
+    {
+        Ptr = (MemoryBlock*)memory.Ptr;
+        Ptr->Init(memory.Length);
+    }
 
     public bool IsNull => Ptr == null;
-
-    public readonly MemoryBlock* Ptr = ptr;
-
     public int Cursor => Ptr->Cursor;
     public int Length => Ptr->Length;
     public int Remaining => Ptr->Remaining;
+
+    public void SetLength(int length) => Ptr->Length = length;
 
     public MemoryBlockPtr Next => new(Ptr->Next);
 
     public NativeView<byte> Data
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Ptr->Data;
+        get => new((byte*)Ptr + BlockSize, Length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<byte> SliceData(RangeU16 range) => Ptr->Data.Slice(range);
+    public NativeView<byte> Slice(RangeU16 range) => Data.Slice(range);
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<byte> SliceData(Range32 range) => Ptr->Data.Slice(range);
-
-    public void ResetCursor() => Ptr->ResetCursor();
-
-    [UnscopedRef]
-    public NativeAllocator GetAllocator(int alignment = 0) => Ptr->GetAllocator(alignment);
-
+    public NativeAllocator GetAllocator(int alignment = 0) => new(Data, ref Ptr->Cursor, alignment);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator MemoryBlockPtr(MemoryBlock* ptr) => new(ptr);
@@ -51,41 +54,22 @@ public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<Memo
     public bool Equals(MemoryBlockPtr other) => Ptr == other.Ptr;
     public override bool Equals(object? obj) => obj is MemoryBlockPtr other && Equals(other);
     public override int GetHashCode() => ((IntPtr)Ptr).GetHashCode();
-}
-
-public unsafe struct MemoryBlock
-{
-    public static readonly int BlockSize = Unsafe.SizeOf<MemoryBlock>();
-
-    public MemoryBlock* Next;
-    private int _length;
-    private int _cursor;
-
-    public NativeView<byte> Data
+    
+    
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MemoryBlock
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new((byte*)Unsafe.AsPointer(ref this) + BlockSize, 0, _length);
-    }
+        public MemoryBlock* Next;
+        public int Length;
+        public int Cursor;
 
-    public NativeAllocator GetAllocator(int alignment = 0)
-    {
-        var self = (MemoryBlock*)Unsafe.AsPointer(ref this);
-        return new NativeAllocator(Data, ref self->_cursor, alignment);
-    }
+        public readonly int Remaining => Length - Cursor;
 
-    public readonly int Cursor => _cursor;
-    public readonly int Length => _length;
-    public readonly int Remaining => _length - _cursor;
-
-    public void ResetCursor() => _cursor = 0;
-
-    internal void SetCursor(int cursor) => _cursor = cursor;
-    internal void SetLength(int length) => _length = length;
-
-    internal void Init(int length)
-    {
-        Next = null;
-        _length = length;
-        _cursor = 0;
+        internal void Init(int length)
+        {
+            Next = null;
+            Length = length;
+            Cursor = 0;
+        }
     }
 }

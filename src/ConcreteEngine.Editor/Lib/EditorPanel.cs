@@ -9,12 +9,10 @@ internal abstract class EditorPanel(InspectorId id, StateManager state)
     public readonly InspectorId Id = id;
     protected readonly StateManager State = state;
 
-    public MemoryBlockPtr Memory;
-
     public abstract void OnDraw();
     public virtual void OnUpdateDiagnostic() { }
 
-    public virtual void OnCreate(NativeAllocator allocator) { }
+    public virtual void OnCreate() { }
     public virtual void OnAttach() { }
 
     public virtual void OnEnter() { }

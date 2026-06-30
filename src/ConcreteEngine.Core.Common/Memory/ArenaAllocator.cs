@@ -11,8 +11,8 @@ public sealed unsafe class ArenaAllocator : IDisposable
 
     private NativeArray<byte> _buffer;
 
-    public MemoryBlock* Tail;
-    public MemoryBlock* Head;
+    public MemoryBlockPtr Tail { get; private set; }
+    public MemoryBlockPtr Head  { get; private set; }
 
     public ArenaAllocator(int capacity, int alignment = 0, bool zeroed = true)
     {
@@ -31,20 +31,16 @@ public sealed unsafe class ArenaAllocator : IDisposable
 
     public int Remaining => Capacity - Cursor;
 
-    public MemoryBlockPtr GetTail() => Tail;
-    public MemoryBlockPtr GetHead() => Head;
-
-
     public MemoryBlockPtr AllocBlock(int length, bool zeroed = false)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(length, MemoryBlock.BlockSize);
+        ArgumentOutOfRangeException.ThrowIfLessThan(length, MemoryBlockPtr.BlockSize);
 
         if (_hasBoundBuilder)
             Throwers.InvalidOperation("Cannot allocate while having bound alloc builder");
 
         if (_buffer.IsNull) Throwers.NullPointer(nameof(_buffer));
 
-        var blockSize = length + MemoryBlock.BlockSize;
+        var blockSize = length + MemoryBlockPtr.BlockSize;
 
         if (Cursor + blockSize > Capacity)
             Throwers.BufferOverflow(nameof(ArenaAllocator), Cursor + blockSize, Capacity);
@@ -53,14 +49,12 @@ public sealed unsafe class ArenaAllocator : IDisposable
         Cursor += blockSize;
 
         if (zeroed) memory.Clear();
-
-        var block = (MemoryBlock*)memory.Ptr;
-        block->Init(length);
-
+        var block = new MemoryBlockPtr(new NativeView<byte>(memory.Ptr, length));
+        
         if (Head == null)
             Head = block;
         else
-            Tail->Next = block;
+            Tail.Ptr->Next = block.Ptr;
 
         return Tail = block;
     }
@@ -73,18 +67,16 @@ public sealed unsafe class ArenaAllocator : IDisposable
         if (Remaining <= 16) Throwers.BufferOverflow(nameof(ArenaAllocator));
         _hasBoundBuilder = true;
 
-        var memory = _buffer.Slice(Cursor);
-        var block = (MemoryBlock*)memory.Ptr;
-        block->Init(memory.Length);
+        var block = new MemoryBlockPtr(_buffer.Slice(Cursor));
 
         if (Head == null)
             Head = block;
         else
-            Tail->Next = block;
+            Tail.Ptr->Next = block.Ptr;
 
         Tail = block;
 
-        return block->GetAllocator();
+        return block.GetAllocator();
     }
 
     public MemoryBlockPtr CommitBuilder(NativeAllocator builder)
@@ -92,20 +84,22 @@ public sealed unsafe class ArenaAllocator : IDisposable
         if (builder.IsNull)
             Throwers.InvalidArgument("builder.Data cannot be null", nameof(builder));
 
-        var basePtr = builder.Data.Ptr - MemoryBlock.BlockSize;
-        ArgumentOutOfRangeException.ThrowIfNotEqual((nuint)basePtr, (nuint)Tail);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(builder.Cursor, Tail->Cursor);
+        var basePtr = builder.Data.Ptr - MemoryBlockPtr.BlockSize;
+        ArgumentOutOfRangeException.ThrowIfNotEqual((nint)basePtr, (nint)Tail);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(builder.Cursor, Tail.Cursor);
 
-        int length = Tail->Cursor, totalLength = length + MemoryBlock.BlockSize;
+        int length = Tail.Cursor, totalLength = length + MemoryBlockPtr.BlockSize;
         if (Cursor + totalLength > Capacity)
             Throwers.BufferOverflow(nameof(ArenaAllocator),Cursor + totalLength, Capacity);
 
         Cursor += totalLength;
-        Tail->SetLength(length);
+        Tail.SetLength(length);
         _hasBoundBuilder = false;
-        return new MemoryBlockPtr(Tail);
+        return Tail;
     }
 
+
+    public bool CanAlloc(int capacity) => capacity + MemoryBlockPtr.BlockSize < Head.Remaining;
 
     public void SetCursor(int cursor)
     {

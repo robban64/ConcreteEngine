@@ -9,6 +9,7 @@ using ConcreteEngine.Editor.Inspector;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Theme;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
@@ -30,8 +31,9 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
 
     private readonly TextInput _searchInput;
 
-    private RangeU16 _titleStrHandle;
-    private RangeU16 _inputStrHandle;
+    private NativeString _title;
+    private NativeString _nameInputStr;
+    
     private Popup _popup = new(new Vector2(12f, 10f));
 
     public AssetInspectorPanel(StateManager state) : base(InspectorId.Asset, state)
@@ -54,19 +56,16 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
             });
     }
 
-    private NativeView<byte> TitleStr => Memory.SliceData(_titleStrHandle);
-    private NativeView<byte> InputStr => Memory.SliceData(_inputStrHandle);
-
-
-    public override void OnCreate(NativeAllocator allocator)
+    public override void OnCreate()
     {
-        _inputStrHandle = allocator.AllocSlice(64).AsRange16();
-        _titleStrHandle = allocator.AllocSlice(24).AsRange16();
+        _title = StringArena.AllocateString(24);
+        _nameInputStr = StringArena.AllocateString(64);
+        _searchInput.SetTextBuffer(_nameInputStr);
     }
 
     public override void OnAttach()
     {
-        _searchInput.SetTextBuffer(InputStr);
+        _searchInput.SetTextBuffer(_nameInputStr);
     }
 
     public override void OnLeave()
@@ -80,13 +79,12 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         RestoreName(inspector);
         _previousId = inspector.Id;
 
-        TitleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id.Id).Append(']').End();
+        _title.NewWrite.Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id.Id).Append(']').End();
     }
 
     private void RestoreName(InspectAsset inspector)
     {
-        InputStr.Clear();
-        InputStr.Writer().Write(inspector.Name);
+        _nameInputStr.Set(inspector.Name);
     }
 
     public override void OnDraw()
@@ -129,7 +127,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         ImGui.SameLine();
 
         ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetAssetColor(inspectAsset.Kind));
-        ImGui.SeparatorText(TitleStr);
+        ImGui.SeparatorText(_title);
 
         ImGui.PopStyleColor();
         ImGui.EndGroup();

@@ -87,9 +87,9 @@ internal sealed class WindowManager
     }
 
 
-    public void Setup(ArenaAllocator allocator)
+    public void Setup()
     {
-        TopMenuWindow.Instance.RegisterMenuToolbar(allocator);
+        TopMenuWindow.Instance.RegisterMenuToolbar();
         RegisterDebugWindows();
 
         foreach (var it in _windows) it.Create();

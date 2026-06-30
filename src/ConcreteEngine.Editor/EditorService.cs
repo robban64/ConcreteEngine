@@ -3,6 +3,7 @@ using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using EventHandler = ConcreteEngine.Editor.Core.EventHandler;
 
@@ -37,10 +38,11 @@ internal sealed class EditorService
     {
         RegisterEvents();
 
-        _windowManager.Setup(TextBuffers.PersistentArena);
+        _windowManager.Setup();
         _router.ForceResolve(_stateManager);
 
         ConsoleGateway.LogPlain($"PersistentArena: {TextBuffers.PersistentArena.Remaining} bytes left");
+        ConsoleGateway.LogPlain($"StringArena: {StringArena.Remaining} bytes left");
 
     }
 

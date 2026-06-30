@@ -73,8 +73,6 @@ internal sealed class SceneBrowser
             var cap = CapacityUtils.CapacityGrowthToFit(_sceneIds.Length, req);
             _sceneIds = new  SceneObjectId[cap];
         }
-           
-            
     }
 
     [StructLayout(LayoutKind.Sequential)]

@@ -33,17 +33,13 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         InspectorFieldProvider.Instance.ParticleInstanceFields;
 
 
-    private RangeU16 _titleStrHandle;
-    private RangeU16 _inputStrHandle;
+    private NativeString _title;
+    private NativeString _nameInputStr;
 
-    private NativeView<byte> TitleStr => Memory.SliceData(_titleStrHandle);
-    private NativeView<byte> InputStr => Memory.SliceData(_inputStrHandle);
-
-
-    public override void OnCreate(NativeAllocator allocator)
+    public override void OnCreate()
     {
-        _inputStrHandle = allocator.AllocSlice(64).AsRange16();
-        _titleStrHandle = allocator.AllocSlice(24).AsRange16();
+        _nameInputStr = StringArena.AllocateString(64);
+        _title = StringArena.AllocateString(24);
     }
     
     public override void OnAttach()
@@ -66,7 +62,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
 
         //
         ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetSceneColor(inspector.Kind));
-        ImGui.SeparatorText(TitleStr);
+        ImGui.SeparatorText(_title);
         ImGui.PopStyleColor();
 
         //
@@ -75,7 +71,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
             RestoreName(inspector.SceneObject);
 
         ImGui.SameLine();
-        if (ImGui.InputText("##name"u8, InputStr, 64, GuiTheme.InputNameFlags, InputCallback))
+        if (ImGui.InputText("##name"u8, _nameInputStr, 64, GuiTheme.InputNameFlags, InputCallback))
             HandleRename(inspector);
 
         ImGui.EndGroup();
@@ -160,20 +156,17 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
     {
         RestoreName(inspector.SceneObject);
         _previousId = inspector.Id;
-
-        TitleStr.Clear();
-        TitleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append((int)inspector.Id).Append(']').End();
+        _title.NewWrite.Append(inspector.Kind.ToText()).Append(" - ["u8).Append((int)inspector.Id).Append(']').End();
     }
 
     private void RestoreName(SceneObject sceneObject)
     {
-        InputStr.Clear();
-        InputStr.Writer().Write(sceneObject.Name);
+        _nameInputStr.Set(sceneObject.Name);
     }
 
     private void HandleRename(InspectSceneObject inspect)
     {
-        UtfText.SliceNullTerminate(InputStr.AsSpan(), out var byteSpan);
+        UtfText.SliceNullTerminate(_nameInputStr.DataView.AsSpan(), out var byteSpan);
         if (byteSpan.IsEmpty) return;
         if (!UtfText.IsAscii(byteSpan)) return;
 

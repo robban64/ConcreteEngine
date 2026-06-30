@@ -32,14 +32,12 @@ internal sealed unsafe class SceneWindow : EditorWindow
 
     private SceneObjectKind _selectedKind;
 
-    private RangeU16 _titleStrHandle;
-    private RangeU16 _inputStrHandle;
+    private NativeString _title;
+    private NativeString _searchString;
 
-    private MemoryBlockPtr _memory;
-
-    private NativeView<byte> TitleStr => _memory.SliceData(_titleStrHandle);
-    private NativeView<byte> InputStr => _memory.SliceData(_inputStrHandle);
     private SceneObjectId SelectedId => State.Context.Selection.SelectedSceneId;
+
+    public override ReadOnlySpan<byte> Id => WindowRoot.LeftWindowId;
 
     public SceneWindow(StateManager state) : base(state)
     {
@@ -53,9 +51,17 @@ internal sealed unsafe class SceneWindow : EditorWindow
             .WithTransformer(trimmed: true, lowercase: true)
             .WithCallbackU8(Search);
     }
+    
+    
+    protected override void OnCreate()
+    {
+        _title = StringArena.AllocateString(24);
+        _searchString = StringArena.AllocateString(8);
 
-    public override ReadOnlySpan<byte> Id => WindowRoot.LeftWindowId;
-
+        _searchInput.SetTextBuffer(_searchString);
+        if (_browser.FilteredCount == 0) Search(Span<byte>.Empty);
+    }
+    
     private void OnCategoryChange(SceneObjectKind kind)
     {
         if (_selectedKind == kind) return;
@@ -71,24 +77,13 @@ internal sealed unsafe class SceneWindow : EditorWindow
 
     private void SyncState()
     {
-        TitleStr.Writer().Append("SceneObjects ["u8).Append(_browser.FilteredCount).Append(']').End();
-    }
-
-    protected override void OnCreate()
-    {
-        var allocator = TextBuffers.PersistentArena.MakeBuilder();
-        _inputStrHandle = allocator.AllocSlice(8).AsRange16();
-        _titleStrHandle = allocator.AllocSlice(24).AsRange16();
-        _memory = TextBuffers.PersistentArena.CommitBuilder(allocator);
-
-        _searchInput.SetTextBuffer(InputStr);
-        if (_browser.FilteredCount == 0) Search(Span<byte>.Empty);
+        _title.NewWrite.Append("SceneObjects [").Append(_browser.FilteredCount).Append(']').End();
     }
 
 
     protected override void OnDraw()
     {
-        ImGui.SeparatorText(TitleStr);
+        ImGui.SeparatorText(_title);
 
         // search
         var width = ImGui.GetContentRegionAvail().X;

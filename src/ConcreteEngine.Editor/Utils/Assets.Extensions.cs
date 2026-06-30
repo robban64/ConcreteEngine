@@ -9,7 +9,32 @@ namespace ConcreteEngine.Editor.Utils;
 
 internal static class AssetsExtensions
 {
-    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Icons GetIcon(FileBinding binding, AssetKind kind)
+    {
+        return binding switch
+        {
+            FileBinding.Unknown => Icons.FileHeadphone,
+            FileBinding.RootFile => kind.ToIcon(),
+            FileBinding.DependentFile => Icons.FileImage,
+            FileBinding.UnboundFile => Icons.File,
+            _ => throw new ArgumentOutOfRangeException(nameof(binding), binding, null)
+        };
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint GetColor(FileBinding binding)
+    {
+        return binding switch
+        {
+            FileBinding.Unknown => Palette32.TextDisabled,
+            FileBinding.RootFile => Palette32.TextLightBlue,
+            FileBinding.DependentFile => Palette32.TextSecondary,
+            FileBinding.UnboundFile => Palette32.TextMuted,
+            _ => Throwers.Unreachable<uint>(nameof(binding))
+        };
+    }
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void GetIconAndColor(FileBinding binding, AssetKind kind, out uint icon, out uint color)
     {

@@ -89,9 +89,18 @@ internal unsafe struct NativeString
         Ptr->Length = length;
         DataView[length] = 0;
     }
+    
+    public readonly void Set(ReadOnlySpan<byte> str) => Ptr->Length = NewWrite.Write(str.Truncate(Capacity)).Length;
+    public readonly void Set(ReadOnlySpan<char> str)  => Ptr->Length = NewWrite.Write(str.Truncate(Capacity)).Length;
+    public readonly void Append(ReadOnlySpan<byte> str) => Ptr->Length = Writer.Append(str).End().Length;
+    public readonly void Append(ReadOnlySpan<char> str) => Ptr->Length = Writer.Append(str).End().Length;
 
-    public readonly void Set(ReadOnlySpan<char> str)  => Ptr->Length = Writer.Write(str.Truncate(Capacity)).Length;
-    public readonly void Set(ReadOnlySpan<byte> str) => Ptr->Length = Writer.Write(str.Truncate(Capacity)).Length;
+    public readonly void Append<T>(T value, ReadOnlySpan<char> format = default)
+        where T : IUtf8SpanFormattable
+    {
+        Ptr->Length = Writer.Append(value, format).End().Length;
+    }
+
 
     public readonly void Clear() => Ptr->Length = 0;
 }

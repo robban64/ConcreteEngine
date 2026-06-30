@@ -105,14 +105,13 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     private void UpdateTitleText()
     {
         var path = _assetBrowser.CurrentNode.GetRelativePath();
-        var sw = _breadcrumbs.NewWrite;
         if (path.Length == 0)
         {
-            sw.Write('/');
+            _breadcrumbs.Set("/");
             return;
         }
 
-        //sw.Append('[').Append().Append(']').PadRight(2);
+        var sw = _breadcrumbs.NewWrite; //sw.Append('[').Append().Append(']').PadRight(2);
         foreach (var range in path.Split('/'))
             sw.Append(path[range]).Append('/');
 
@@ -237,17 +236,16 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     private void DrawFolders()
     {
         var size = new Vector2(0, FolderItemHeight);
-        var icon = GetIntIcon(Icons.Folder);
 
-        var sw = TextBuffers.GetWriter();
         var nodes = _assetBrowser.CurrentNode.GetChildren();
-
         if (nodes.Length == 0)
         {
             ImGui.Selectable("No folders found."u8, false, ImGuiSelectableFlags.Disabled, size);
             return;
         }
 
+        var sw = TextBuffers.GetWriter();
+        var icon = GetIntIcon(Icons.Folder);
         for (var i = 0; i < nodes.Length; i++)
         {
             var node = nodes[i];
@@ -296,7 +294,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         foreach (var file in _assetBrowser.GetDrawEnumerator(start, length))
         {
             var fileId = fileIds[gridIndex];
-            AssetsExtensions.GetIconAndColor(file.Binding, AssetKind.Texture, out var icon, out var color);
+            var color = AssetsExtensions.GetColor(file.Binding);
 
             var startPos = ImGui.GetCursorScreenPos(); // top left
 
@@ -306,7 +304,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             drawList.PushClipRect(startPos, startPos + ItemSize, true);
 
             GuiTheme.PushFontIconLarge();
-            drawList.AddText(IconBasePos + startPos, color, (byte*)&icon);
+            drawList.AddText(IconBasePos + startPos, color, GetIcon(file.Icon));
             ImGui.PopFont();
 
             var textBegin = (byte*)&file.DisplayName;

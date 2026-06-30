@@ -4,6 +4,8 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Editor.Inspector;
+using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using static ConcreteEngine.Core.Engine.Assets.AssetManager;
 
@@ -115,6 +117,13 @@ internal sealed class AssetBrowser
 
             _fileIds[count++] = file.Id;
         }
+        
+        _fileIds.AsSpan(0, count).Sort(static (id1, id2) =>
+        {
+            AssetFile file1 = FileRegistry.Get(id1), file2 = FileRegistry.Get(id2);
+            var c = ((int)file1.Binding).CompareTo((int)file2.Binding);
+            return c != 0 ? c : id1.CompareTo(id2);
+        });
 
         FilteredCount = count;
 
@@ -131,7 +140,8 @@ internal sealed class AssetBrowser
             var kind = AssetKind.Unknown;
             if (file.AssetRootId.IsValid()) kind = Assets.Get<AssetObject>(file.AssetRootId).Kind;
 
-            span[count++] = new FileItem(file.LogicalName, file.Binding, file.Storage, kind);
+            var icon = AssetsExtensions.GetIcon(file.Binding, kind);
+            span[count++] = new FileItem(file.LogicalName, file.Binding, file.Storage, icon);
         }
     }
 
@@ -171,15 +181,11 @@ internal sealed class AssetBrowser
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal readonly struct FileItem(
-        string name,
-        FileBinding binding,
-        AssetStorage storage,
-        AssetKind assetKind)
+    internal readonly struct FileItem( string name, FileBinding binding, AssetStorage storage, Icons icon)
     {
+        public readonly Icons Icon = icon;
         public readonly FileBinding Binding = binding;
         public readonly AssetStorage Storage = storage;
-        public readonly AssetKind AssetKind = assetKind;
 
         public readonly String16Utf8 DisplayName = name;
 

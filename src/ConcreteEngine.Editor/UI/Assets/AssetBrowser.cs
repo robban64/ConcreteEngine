@@ -7,29 +7,7 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Editor.Utils;
 using static ConcreteEngine.Core.Engine.Assets.AssetManager;
 
-namespace ConcreteEngine.Editor.Core;
-
-[StructLayout(LayoutKind.Sequential)]
-internal readonly struct FileItem(
-    string name,
-    AssetFileId id,
-    FileBinding binding,
-    AssetStorage storage,
-    AssetKind assetKind) : IComparable<FileItem>
-{
-    public readonly AssetFileId Id = id;
-    public readonly FileBinding Binding = binding;
-    public readonly AssetStorage Storage = storage;
-    public readonly AssetKind AssetKind = assetKind;
-
-    public readonly String16Utf8 DisplayName = name;
-
-    public int CompareTo(FileItem other)
-    {
-        var c = ((int)Binding).CompareTo((int)other.Binding);
-        return c != 0 ? c : DisplayName.GetTextSpan().SequenceCompareTo(other.DisplayName.GetTextSpan());
-    }
-}
+namespace ConcreteEngine.Editor.UI;
 
 internal sealed class AssetBrowser
 {
@@ -41,7 +19,7 @@ internal sealed class AssetBrowser
     public readonly AssetDirectoryNode RootNode;
     public AssetDirectoryNode CurrentNode { get; private set; }
 
-    private readonly AssetFileId[] _filteredFileIds;
+    private AssetFileId[] _filteredFileIds;
     private readonly CircularListBuffer<FileItem> _fileListBuffer;
 
     private readonly Action<AssetBrowser> _onDirectoryChange;
@@ -50,7 +28,7 @@ internal sealed class AssetBrowser
     public AssetBrowser(Action<AssetBrowser> onDirectoryChange)
     {
         _onDirectoryChange = onDirectoryChange;
-        _filteredFileIds = new AssetFileId[Capacity];
+        _filteredFileIds = new AssetFileId[64];
         _fileListBuffer = new CircularListBuffer<FileItem>(Capacity, OnInvalidateDrawBuffer);
 
         RootNode = new AssetDirectoryNode("", null);
@@ -111,10 +89,14 @@ internal sealed class AssetBrowser
     //
     public void Commit(ReadOnlySpan<char> searchText, FileBinding bindingFilter, AssetKind assetFilter)
     {
-        Array.Clear(_filteredFileIds);
-
-        var count = 0;
         var ids = FileRegistry.GetDirectoryIds(CurrentNode.Path);
+        if(_filteredFileIds.Length < ids.Length)
+            _filteredFileIds = new AssetFileId[CapacityUtils.CapacityGrowthToFit(_filteredFileIds.Length, ids.Length)];
+        else 
+            Array.Clear(_filteredFileIds);
+
+        
+        var count = 0;
         foreach (var file in FileRegistry.MakeSparseEnumerator(ids))
         {
             if (assetFilter != AssetKind.Unknown)
@@ -135,6 +117,7 @@ internal sealed class AssetBrowser
 
         _fileListBuffer.Invalidate(0, _fileListBuffer.Capacity);
     }
+    
 
     private void OnInvalidateDrawBuffer(int start, Span<FileItem> span)
     {
@@ -184,6 +167,27 @@ internal sealed class AssetBrowser
         }
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    internal readonly struct FileItem(
+        string name,
+        AssetFileId id,
+        FileBinding binding,
+        AssetStorage storage,
+        AssetKind assetKind) : IComparable<FileItem>
+    {
+        public readonly AssetFileId Id = id;
+        public readonly FileBinding Binding = binding;
+        public readonly AssetStorage Storage = storage;
+        public readonly AssetKind AssetKind = assetKind;
+
+        public readonly String16Utf8 DisplayName = name;
+
+        public int CompareTo(FileItem other)
+        {
+            var c = ((int)Binding).CompareTo((int)other.Binding);
+            return c != 0 ? c : DisplayName.GetTextSpan().SequenceCompareTo(other.DisplayName.GetTextSpan());
+        }
+    }
 
     internal sealed class AssetDirectoryNode
     {

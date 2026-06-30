@@ -1,9 +1,12 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -23,12 +26,11 @@ internal sealed unsafe class SceneWindow : EditorWindow
     private const float ListItemHeight = 24f;
     private const float ListItemPaddedHeight = ListItemHeight + ListFramePad;
 
+    private readonly SceneBrowser _browser;
     private readonly ComboInput _kindCombo;
     private readonly TextInput _searchInput;
 
-    private readonly SceneObjectId[] _sceneIds = new SceneObjectId[SceneCapacity];
     private SceneObjectKind _selectedKind;
-    private int _sceneCount;
 
     private RangeU16 _titleStrHandle;
     private RangeU16 _inputStrHandle;
@@ -41,6 +43,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
 
     public SceneWindow(StateManager state) : base(state)
     {
+        _browser = new SceneBrowser();
         _kindCombo = ComboInput.MakeFromEnumCache<SceneObjectKind>("scene-combo");
         _kindCombo.Layout = FieldLayout.None;
         _kindCombo.SetItemName(0, "All");
@@ -60,9 +63,15 @@ internal sealed unsafe class SceneWindow : EditorWindow
         Search(Span<byte>.Empty);
     }
 
+    private void Search(Span<byte> text)
+    {
+        _browser.Search(text, SceneObjectKind.Empty);
+        SyncState();
+    }
+
     private void SyncState()
     {
-        TitleStr.Writer().Append("SceneObjects ["u8).Append(_sceneCount).Append(']').End();
+        TitleStr.Writer().Append("SceneObjects ["u8).Append(_browser.FilteredCount).Append(']').End();
     }
 
     protected override void OnCreate()
@@ -73,7 +82,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
         _memory = TextBuffers.PersistentArena.CommitBuilder(allocator);
 
         _searchInput.SetTextBuffer(InputStr);
-        if (_sceneCount == 0) Search(Span<byte>.Empty);
+        if (_browser.FilteredCount == 0) Search(Span<byte>.Empty);
     }
 
 
@@ -93,14 +102,14 @@ internal sealed unsafe class SceneWindow : EditorWindow
             OnCategoryChange((SceneObjectKind)_kindCombo.Value.X);
 
         ImGui.Separator();
-        
+
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(ListFramePad));
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
         ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
         if (ImGui.BeginChild("scene-list"u8))
         {
             var clipper = new ImGuiListClipper();
-            clipper.Begin(_sceneCount, ListItemHeight);
+            clipper.Begin(_browser.FilteredCount, ListItemHeight);
             while (clipper.Step())
             {
                 DrawList(clipper.DisplayStart, clipper.DisplayEnd - clipper.DisplayStart);
@@ -108,29 +117,28 @@ internal sealed unsafe class SceneWindow : EditorWindow
 
             clipper.End();
         }
+
         ImGui.EndChild();
         ImGui.PopStyleColor();
         ImGui.PopStyleVar(2);
-
     }
 
     private void DrawList(int start, int length)
     {
-        if ((uint)start + (uint)length > (uint)_sceneIds.Length) Throwers.InvalidArgument(nameof(length));
-        
+        if ((uint)start + (uint)length > (uint)_browser.FilteredCount) Throwers.InvalidArgument(nameof(length));
+
         var sw = TextBuffers.GetWriter();
         uint eyeIcon = StyleMap.GetIntIcon(Icons.Eye), eyeClosedIcon = StyleMap.GetIntIcon(Icons.EyeClosed);
-        
+
         var size = new Vector2(ImGui.GetContentRegionAvail().X - ListItemPaddedHeight - 4f, ListItemHeight);
 
         var selectedId = SelectedId;
-        var idSpan = new ReadOnlySpan<SceneObjectId>(_sceneIds, start, length);
-        foreach (var it in SceneManager.SceneStore.MakeSparseEnumerator(idSpan))
+        foreach (var it in _browser.GetDrawEnumerator(start, length))
         {
             ImGui.PushID(it.Id);
-            
+
             var nameStr = sw.PadRight(1).AppendIcon(StyleMap.GetIcon(it.Kind.ToIcon()))
-                .PadRight(4).Append(it.Name)
+                .PadRight(4).Append((byte*)&it.DisplayName)
                 .End();
 
             if (ImGui.Selectable(nameStr, it.Id == selectedId, 0, size))
@@ -138,43 +146,10 @@ internal sealed unsafe class SceneWindow : EditorWindow
 
             ImGui.SameLine();
             if (ImGui.Button(it.Visible ? (byte*)&eyeIcon : (byte*)&eyeClosedIcon, new Vector2(ListItemHeight)))
-                it.Visible = !it.Visible;
-
+            {
+                //it.Visible = !it.Visible;
+            }
             ImGui.PopID();
         }
-    }
-
-    private void Search(Span<byte> byteSpan)
-    {
-        if (_sceneCount > 0)
-            _sceneIds.AsSpan(0, _sceneCount).Clear();
-
-        ulong searchKey = 0, searchMask = 0;
-        var searchId = 0;
-
-        if (byteSpan.Length > 0)
-        {
-            searchKey = StringPacker.PackAscii(byteSpan, true);
-            searchMask = StringPacker.GetMaskUtf8(byteSpan.Length);
-
-            if (!int.TryParse(byteSpan, out searchId)) searchId = 0;
-        }
-
-        var count = 0;
-        var selectedKind = _selectedKind;
-        foreach (var it in SceneManager.SceneStore)
-        {
-            if (count >= AssetCapacity) break;
-
-            if (selectedKind > SceneObjectKind.Empty && selectedKind != it.Kind)
-                continue;
-
-            if (searchKey <= 0 || searchId == it.Id.Id || (it.PackedName & searchMask) == searchKey)
-                _sceneIds[count++] = it.Id;
-        }
-
-        _sceneCount = count;
-
-        SyncState();
     }
 }

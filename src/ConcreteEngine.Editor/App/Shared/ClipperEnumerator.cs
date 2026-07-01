@@ -6,9 +6,9 @@ namespace ConcreteEngine.Editor.App.Shared;
 
 internal ref struct ClipperEnumerator
 {
-    private ImGuiListClipperPtr _clipper;
+    private ref ImGuiListClipper _clipper;
 
-    private ClipperEnumerator(ImGuiListClipperPtr clipper) => _clipper = clipper;
+    private ClipperEnumerator(ref ImGuiListClipper clipper) => _clipper = ref clipper;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => _clipper.Step();
@@ -26,5 +26,5 @@ internal ref struct ClipperEnumerator
     public void Dispose() => _clipper.End();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ClipperEnumerator New(ImGuiListClipperPtr clipper) => new(clipper);
+    public static ClipperEnumerator New(ref ImGuiListClipper clipper) => new(ref clipper);
 }

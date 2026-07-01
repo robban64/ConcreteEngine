@@ -1,7 +1,9 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.App.Shared;
+using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Lib;
@@ -93,24 +95,14 @@ internal sealed unsafe class SceneWindow : EditorWindow
         ImGui.PushStyleColor(ImGuiCol.Button, 0);
         if (ImGui.BeginChild("scene-list"u8))
         {
-            DrawListClipper();
+            var itemWidth = ImGui.GetContentRegionAvail().X - ListItemHeight;
+            foreach (var range in AppDraw.Clipper(_browser.FilteredCount, ListItemHeight))
+                DrawList(range, itemWidth);
         }
 
         ImGui.EndChild();
         ImGui.PopStyleColor();
         ImGui.PopStyleVar(2);
-    }
-
-    private void DrawListClipper()
-    {
-        var itemWidth = ImGui.GetContentRegionAvail().X - ListItemPaddedHeight - 4f;
-        
-        ImGuiListClipper clipper = default;
-        clipper.Begin(_browser.FilteredCount, ListItemHeight);
-        foreach (var range in ClipperEnumerator.New(&clipper))
-        {
-            DrawList(range, itemWidth);
-        }
     }
 
     private void DrawList(Range32 range, float itemWidth)

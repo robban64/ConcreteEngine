@@ -84,9 +84,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         var innerWindow = ImGui.BeginChild("logs"u8, new Vector2(0, -InputHeight), ImGuiChildFlags.None, InnerFlags);
         if (innerWindow && ConsoleGateway.Service.LogCount > 0)
         {
-            ImGuiListClipper clipper = default;
-            clipper.Begin(ConsoleGateway.Service.LogCount, RowHeight);
-            foreach (var range in ClipperEnumerator.New(&clipper))
+            foreach (var range in AppDraw.Clipper(ConsoleGateway.Service.LogCount, RowHeight))
                 DrawVisibleLogs(ConsoleGateway.Service, range.Offset, range.Length);
 
             if (_scrollTopBottomStepper.Tick())

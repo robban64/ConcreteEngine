@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Editor.App.Shared;
 using ConcreteEngine.Editor.Core.Data;
 using Hexa.NET.ImGui;
 
@@ -71,5 +72,14 @@ internal static unsafe class AppDraw
         var result = DrawButton(text, enabled);
         if(value) ImGui.PopStyleColor();
         return result;
+    }
+
+    private static ImGuiListClipper _clipper;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ClipperEnumerator Clipper(int count, float itemHeight)
+    {
+        _clipper.Begin(count, itemHeight);
+        return ClipperEnumerator.New(ref _clipper);
     }
 }

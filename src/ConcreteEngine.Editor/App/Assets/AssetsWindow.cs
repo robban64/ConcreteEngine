@@ -209,7 +209,6 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             UpdateFilter(FileBinding.RootFile, assetFilter);
 
         ImGui.SameLine(0, 8f);
-        
         if (AppDraw.DrawToggleButton(GetIcon(AssetIcons.ShaderIcon), assetFilter == AssetKind.Shader))
             UpdateFilter(bindingFilter, AssetKind.Shader);
 
@@ -267,9 +266,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         columnCount = int.Max(columnCount, 1);
         var rowCount = (int)float.Ceiling(count / (float)columnCount);
 
-        ImGuiListClipper clipper = default;
-        clipper.Begin(rowCount, GridCellSize);
-        foreach (var range in ClipperEnumerator.New(&clipper))
+        foreach (var range in AppDraw.Clipper(rowCount, GridCellSize))
         {
             var start = range.Offset * columnCount;
             var length = range.Length * columnCount;

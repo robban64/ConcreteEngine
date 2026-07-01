@@ -26,7 +26,7 @@ internal static unsafe class AppDraw
     {
         ImGui.TableNextColumn();
         var top = ImGui.GetCursorPosY();
-        GuiLayout.NextAlignTextVertical(top, fontSize);
+        AppLayout.NextAlignTextVertical(top, fontSize);
         ImGui.TextUnformatted(text, text + text.Length);
         return top;
     }

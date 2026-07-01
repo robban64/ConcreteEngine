@@ -10,22 +10,20 @@ namespace ConcreteEngine.Editor.App.Assets;
 
 internal static class AssetsExtensions
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Icons GetIcon(FileBinding binding, AssetKind kind)
+    extension(FileBinding binding)
     {
-        return binding switch
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Icons GetIcon(AssetKind kind) => binding switch
         {
             FileBinding.Unknown => Icons.FileHeadphone,
             FileBinding.RootFile => kind.ToIcon(),
             FileBinding.DependentFile => Icons.FileImage,
             FileBinding.UnboundFile => Icons.File,
-            _ => throw new ArgumentOutOfRangeException(nameof(binding), binding, null)
+            _ => Throwers.Unreachable<Icons>(nameof(binding))
         };
-    }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint GetColor(FileBinding binding)
-    {
-        return binding switch
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public uint GetColor() => binding switch
         {
             FileBinding.Unknown => Palette32.TextDisabled,
             FileBinding.RootFile => Palette32.TextLightBlue,
@@ -36,92 +34,65 @@ internal static class AssetsExtensions
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void GetIconAndColor(FileBinding binding, AssetKind kind, out uint icon, out uint color)
-    {
-        switch (binding)
-        {
-            case FileBinding.Unknown:
-                icon = StyleMap.GetIntIcon(Icons.Folder);
-                color = Palette32.TextPrimary;
-                break;
-            case FileBinding.RootFile:
-                icon = StyleMap.GetIntIcon(kind.ToIcon());
-                color = Palette32.TextLightBlue;
-                break;
-            case FileBinding.DependentFile:
-                icon = StyleMap.GetIntIcon(Icons.FileImage);
-                color = Palette32.TextSecondary;
-                break;
-            case FileBinding.UnboundFile:
-                icon = StyleMap.GetIntIcon(Icons.File);
-                color = Palette32.TextMuted;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(binding), binding, null);
-        }
-    }
-
     extension(AssetKind kind)
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Icons ToIcon()
+        public uint ToColor() => kind switch
         {
-            return kind switch
-            {
-                AssetKind.Shader => AssetIcons.ShaderIcon,
-                AssetKind.Model => AssetIcons.ModelIcon,
-                AssetKind.Texture => AssetIcons.TextureIcon,
-                AssetKind.Material => AssetIcons.MaterialIcon,
-                _ => Throwers.Unreachable<Icons>(nameof(kind))
-            };
-        }
+            AssetKind.Unknown => Palette32.TextMuted,
+            AssetKind.Shader => Palette32.Shader,
+            AssetKind.Model => Palette32.Model,
+            AssetKind.Texture => Palette32.Texture,
+            AssetKind.Material => Palette32.Material,
+            _ => Throwers.Unreachable<uint>(nameof(kind))
+        };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Icons ToFileIcon()
+        public Icons ToIcon() => kind switch
         {
-            return kind switch
-            {
-                AssetKind.Shader => AssetIcons.ShaderFileIcon,
-                AssetKind.Model => AssetIcons.ModelFileIcon,
-                AssetKind.Texture => AssetIcons.TextureFileIcon,
-                AssetKind.Material => AssetIcons.MaterialIcon,
-                _ => Throwers.Unreachable<Icons>(nameof(kind))
-            };
-        }
+            AssetKind.Shader => AssetIcons.ShaderIcon,
+            AssetKind.Model => AssetIcons.ModelIcon,
+            AssetKind.Texture => AssetIcons.TextureIcon,
+            AssetKind.Material => AssetIcons.MaterialIcon,
+            _ => Throwers.Unreachable<Icons>(nameof(kind))
+        };
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Icons ToFileIcon() => kind switch
+        {
+            AssetKind.Shader => AssetIcons.ShaderFileIcon,
+            AssetKind.Model => AssetIcons.ModelFileIcon,
+            AssetKind.Texture => AssetIcons.TextureFileIcon,
+            AssetKind.Material => AssetIcons.MaterialIcon,
+            _ => Throwers.Unreachable<Icons>(nameof(kind))
+        };
     }
 
     extension(TexturePixelFormat format)
     {
-        public string ToText()
+        public string ToText() => format switch
         {
-            return format switch
-            {
-                TexturePixelFormat.Unknown => "Unknown",
-                TexturePixelFormat.Rgb => "Rgb",
-                TexturePixelFormat.Rgba => "Rgba",
-                TexturePixelFormat.SrgbAlpha => "Srgb",
-                TexturePixelFormat.Depth => "Depth",
-                TexturePixelFormat.Red => "Red",
-                _ => Throwers.Unreachable<string>(nameof(format))
-            };
-        }
+            TexturePixelFormat.Unknown => "Unknown",
+            TexturePixelFormat.Rgb => "Rgb",
+            TexturePixelFormat.Rgba => "Rgba",
+            TexturePixelFormat.SrgbAlpha => "Srgb",
+            TexturePixelFormat.Depth => "Depth",
+            TexturePixelFormat.Red => "Red",
+            _ => Throwers.Unreachable<string>(nameof(format))
+        };
     }
 
     extension(TextureKind kind)
     {
-        public string ToText()
+        public string ToText() => kind switch
         {
-            return kind switch
-            {
-                TextureKind.Unknown => "Unknown",
-                TextureKind.Texture2D => "Texture2D",
-                TextureKind.Texture3D => "Texture3D",
-                TextureKind.CubeMap => "CubeMap",
-                TextureKind.Texture2DArray => "CubeMap",
-                TextureKind.Multisample2D => "Multisample",
-                _ => Throwers.Unreachable<string>(nameof(kind))
-            };
-        }
+            TextureKind.Unknown => "Unknown",
+            TextureKind.Texture2D => "Texture2D",
+            TextureKind.Texture3D => "Texture3D",
+            TextureKind.CubeMap => "CubeMap",
+            TextureKind.Texture2DArray => "CubeMap",
+            TextureKind.Multisample2D => "Multisample",
+            _ => Throwers.Unreachable<string>(nameof(kind))
+        };
     }
 }

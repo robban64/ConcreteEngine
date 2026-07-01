@@ -124,7 +124,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
 
         ImGui.SameLine();
 
-        ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetAssetColor(inspectAsset.Kind));
+        ImGui.PushStyleColor(ImGuiCol.Text, inspectAsset.Kind.ToColor());
         ImGui.SeparatorText(_title);
 
         ImGui.PopStyleColor();

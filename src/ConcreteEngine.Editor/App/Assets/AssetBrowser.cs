@@ -139,7 +139,7 @@ internal sealed class AssetBrowser
             var kind = AssetKind.Unknown;
             if (file.AssetRootId.IsValid()) kind = AssetManager.Assets.Get<AssetObject>(file.AssetRootId).Kind;
 
-            var icon = AssetsExtensions.GetIcon(file.Binding, kind);
+            var icon = file.Binding.GetIcon(kind);
             span[count++] = new FileItem(file.LogicalName, file.Binding, file.Storage, icon);
         }
     }

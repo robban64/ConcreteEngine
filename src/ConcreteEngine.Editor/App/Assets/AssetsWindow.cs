@@ -281,10 +281,9 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         var fileIds = _assetBrowser.GetFileIds(start, length);
 
         var gridIndex = 0;
-        foreach (var file in _assetBrowser.GetDrawEnumerator(start, length))
+        foreach (var it in _assetBrowser.GetDrawEnumerator(start, length))
         {
             var fileId = fileIds[gridIndex];
-            var color = AssetsExtensions.GetColor(file.Binding);
 
             var startPos = ImGui.GetCursorScreenPos(); // top left
 
@@ -294,11 +293,11 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             drawList.PushClipRect(startPos, startPos + ItemSize, true);
 
             GuiTheme.PushFontIconLarge();
-            drawList.AddText(IconBasePos + startPos, color, GetIcon(file.Icon));
+            drawList.AddText(IconBasePos + startPos, it.Binding.GetColor(), GetIcon(it.Icon));
             ImGui.PopFont();
 
-            var textBegin = (byte*)&file.DisplayName;
-            var textEnd = textBegin + file.DisplayName.Count;
+            var textBegin = (byte*)&it.DisplayName;
+            var textEnd = textBegin + it.DisplayName.Count;
 
             var labelSize = ImGui.CalcTextSize(textBegin, textEnd);
             var labelPos = new Vector2(

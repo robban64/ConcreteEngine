@@ -59,7 +59,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
             OnNewInspector(inspector);
 
         //
-        ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetSceneColor(inspector.Kind));
+        ImGui.PushStyleColor(ImGuiCol.Text, inspector.Kind.ToColor());
         ImGui.SeparatorText(_title);
         ImGui.PopStyleColor();
 

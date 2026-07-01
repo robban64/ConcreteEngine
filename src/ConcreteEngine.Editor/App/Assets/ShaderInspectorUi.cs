@@ -11,7 +11,7 @@ internal sealed class ShaderInspectorUi(StateManager state)
     public void Draw(InspectShader editShader)
     {
         ImGui.Spacing();
-        var width = GuiLayout.GetRowWidthForItems(2);
+        var width = AppLayout.GetRowWidthForItems(2);
         if (ImGui.Button("Open"u8, new Vector2(width, 0))) ;
 
         ImGui.SameLine();

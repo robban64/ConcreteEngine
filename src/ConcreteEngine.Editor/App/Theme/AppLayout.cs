@@ -4,7 +4,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Theme;
 
-internal static class GuiLayout
+internal static class AppLayout
 {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

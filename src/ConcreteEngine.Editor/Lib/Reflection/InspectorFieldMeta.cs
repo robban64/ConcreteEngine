@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Editor.Lib.Reflection;
-
+/*
 public enum InspectorTypeKind : byte
 {
     Unknown,
@@ -115,4 +115,4 @@ public sealed class InspectorFieldMeta(
         c = TypePriority.CompareTo(other.TypePriority);
         return c != 0 ? c : MemberIndex.CompareTo(other.MemberIndex);
     }
-}
+}*/

@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Command;
-using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Logging;
 using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor;

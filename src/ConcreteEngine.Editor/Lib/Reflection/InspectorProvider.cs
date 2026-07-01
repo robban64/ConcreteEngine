@@ -1,5 +1,5 @@
 namespace ConcreteEngine.Editor.Lib.Reflection;
-
+/*
 public static class InspectorProvider
 {
     private sealed class Entry(Type targetType, object provider, Func<object, object, object> selector)
@@ -29,4 +29,4 @@ public static class InspectorProvider
 
         return entry.Get(target);
     }
-}
+}*/

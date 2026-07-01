@@ -1,0 +1,117 @@
+using System.Numerics;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Visuals;
+using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Editor.App.Theme;
+using Hexa.NET.ImGui;
+using ImGui = Hexa.NET.ImGui.ImGui;
+
+namespace ConcreteEngine.Editor.App;
+
+internal static class WindowRoot
+{
+    private const ImGuiWindowFlags DockWindowFlags =
+        ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse |
+        ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus |
+        ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoBackground;
+
+    private const ImGuiDockNodeFlags DockNodeFlags =
+        ImGuiDockNodeFlags.NoUndocking | ImGuiDockNodeFlags.NoDockingSplit |
+        ImGuiDockNodeFlags.PassthruCentralNode;
+
+    
+    public static ReadOnlySpan<byte> LeftWindowId => "##Left"u8;
+    public static ReadOnlySpan<byte> RightWindowId => "##Right"u8;
+    public static ReadOnlySpan<byte> ViewportWindowId => "##Viewport"u8;
+    public static ReadOnlySpan<byte> ToolbarWindowId => "##Toolbar"u8;
+
+    public static ReadOnlySpan<byte> AssetWindowId => "##BottomAsset"u8;
+    public static ReadOnlySpan<byte> ConsoleWindowId => "##BottomConsole"u8;
+
+    
+    public static bool HasDockSpace { get; private set; }
+    public static uint DockSpaceId { get; private set; }
+    public static uint ViewportId { get; private set; }
+
+    public static Vector2 WorkSize;
+    public static Vector2 WorkPosition;
+
+    public static unsafe void BeginDockSpace()
+    {
+        var vp = ImGuiSystem.MainViewportPtr;
+
+        WorkSize = vp.WorkSize with { Y = vp.WorkSize.Y - GuiTheme.TopbarHeight };
+        WorkPosition = vp.WorkPos with { Y = vp.WorkPos.Y + GuiTheme.TopbarHeight };
+
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+
+        ImGui.SetNextWindowSize(WorkSize);
+        ImGui.SetNextWindowPos(WorkPosition);
+
+        ImGui.Begin("##Root"u8, null, DockWindowFlags);
+        ImGui.PopStyleVar();
+        if (!HasDockSpace)
+        {
+            SetupDock();
+        }
+
+        ImGui.DockSpace(DockSpaceId, Vector2.Zero, ImGuiDockNodeFlags.None);
+        ImGui.End();
+
+        var node = ImGuiP.DockBuilderGetNode(ViewportId);
+        if ((Vector2)EngineWindow.Viewport.Size != node.Size || EngineWindow.Viewport.Position != node.Pos)
+            EngineWindow.SetViewport(new ViewportRect(node.Pos, node.Size));
+
+    }
+
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static unsafe void SetupDock()
+    {
+        HasDockSpace = true;
+
+        float leftWidth = float.Clamp(WorkSize.X * 0.15f, 260f, 320f);
+        float rightWidth = float.Clamp(WorkSize.X * 0.15f, 260f, 320f);
+        float bottomHeight = float.Clamp(WorkSize.Y * 0.20f, 220f, 300f);
+
+        float leftRatio = leftWidth / WorkSize.X;
+        float rightRatio = rightWidth / (WorkSize.X - leftWidth);
+        float bottomRatio = bottomHeight / WorkSize.Y;
+
+        DockSpaceId = ImGui.GetID("MainDockSpace"u8);
+
+        ImGuiP.DockBuilderRemoveNode(DockSpaceId);
+        ImGuiP.DockBuilderAddNode(DockSpaceId, DockNodeFlags);
+        ImGuiP.DockBuilderSetNodeSize(DockSpaceId, WorkSize);
+
+        uint* nodes = stackalloc uint[4];
+        nodes[0] = DockSpaceId;
+        uint* dockMainId = nodes, dockLeftId = nodes + 1, dockRightId = nodes + 2, dockBottomId = nodes + 3;
+
+        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Left, leftRatio, dockLeftId, dockMainId);
+        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Right, rightRatio, dockRightId, dockMainId);
+        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Down, bottomRatio, dockBottomId, dockMainId);
+
+        uint dockBottomLeftId = 0, dockBottomRightId = 0;
+        ImGuiP.DockBuilderSplitNode(*dockBottomId, ImGuiDir.Left, 0.7f, &dockBottomLeftId, &dockBottomRightId);
+        
+        //(ImGuiDockNodeFlags)4096;
+        const ImGuiDockNodeFlags noTabBarBit = (ImGuiDockNodeFlags)ImGuiDockNodeFlagsPrivate.NoTabBar;
+        ImGuiP.DockBuilderGetNode(*dockLeftId).LocalFlags |= noTabBarBit;
+        ImGuiP.DockBuilderGetNode(*dockRightId).LocalFlags |= noTabBarBit;
+        ImGuiP.DockBuilderGetNode(*dockMainId).LocalFlags |= noTabBarBit;
+
+        ImGuiP.DockBuilderGetNode(dockBottomLeftId).LocalFlags |= ImGuiDockNodeFlags.AutoHideTabBar;
+        ImGuiP.DockBuilderGetNode(dockBottomRightId).LocalFlags |= ImGuiDockNodeFlags.AutoHideTabBar;
+
+
+        ImGuiP.DockBuilderDockWindow(LeftWindowId, *dockLeftId);
+        ImGuiP.DockBuilderDockWindow(RightWindowId, *dockRightId);
+        ImGuiP.DockBuilderDockWindow(AssetWindowId, dockBottomLeftId);
+        ImGuiP.DockBuilderDockWindow(ConsoleWindowId, dockBottomRightId);
+        ImGuiP.DockBuilderDockWindow(ViewportWindowId, *dockMainId);
+        ImGuiP.DockBuilderFinish(DockSpaceId);
+
+        ViewportId = *dockMainId;
+    }
+}

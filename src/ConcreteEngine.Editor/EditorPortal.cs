@@ -1,11 +1,12 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Input;
-using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Core.Inspector;
+using ConcreteEngine.Editor.Logging;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;

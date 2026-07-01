@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Editor.Lib.Reflection;
-
+/*
 public static class InspectorBuilder
 {
     public static unsafe InspectorEditorObject Build(Type type, object target)
@@ -200,6 +200,7 @@ public static class InspectorBuilder
         }
     }
 }
+*/
 /*
     private static void BuildRecursive(in BuilderContext ctx, InspectorItem item, InspectorFieldMeta meta, object? target, int depth)
     {

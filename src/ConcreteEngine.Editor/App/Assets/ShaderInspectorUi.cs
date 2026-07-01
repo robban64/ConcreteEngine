@@ -1,0 +1,25 @@
+using System.Numerics;
+using ConcreteEngine.Editor.App.Theme;
+using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Core.Inspector;
+using Hexa.NET.ImGui;
+
+namespace ConcreteEngine.Editor.App.Assets;
+
+internal sealed class ShaderInspectorUi(StateManager state)
+{
+    public void Draw(InspectShader editShader)
+    {
+        ImGui.Spacing();
+        var width = GuiLayout.GetRowWidthForItems(2);
+        if (ImGui.Button("Open"u8, new Vector2(width, 0))) ;
+
+        ImGui.SameLine();
+
+        if (ImGui.Button("Reload"u8, new Vector2(width, 0)))
+            state.EnqueueEvent(new AssetEvent(editShader.Id, editShader.Kind, Reload: true));
+
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("Recompiles source files."u8);
+    }
+}

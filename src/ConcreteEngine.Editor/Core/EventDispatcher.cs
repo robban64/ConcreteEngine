@@ -1,5 +1,3 @@
-using ConcreteEngine.Editor.Data;
-
 namespace ConcreteEngine.Editor.Core;
 
 internal sealed class EventDispatcher

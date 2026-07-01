@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Editor.Lib.Reflection;
-
+/*
 public static class InspectorRegistry
 {
     private static readonly Dictionary<Type, InspectorTypeMeta> TypeCache = new(16);
@@ -172,6 +172,7 @@ public static class InspectorRegistry
         return InspectorTypeKind.Unknown;
     }
 }
+*/
 /*
 
     private static InspectorFieldMeta[] BuildTypeMetadata(Type type)

@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Core;
 using Hexa.NET.ImGuizmo;
 
 namespace ConcreteEngine.Editor.Utils;

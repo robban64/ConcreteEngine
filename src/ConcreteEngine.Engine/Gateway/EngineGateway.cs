@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor;
-using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Logging;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;

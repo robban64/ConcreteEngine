@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Logging;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Graphics.Resources;
 using Hexa.NET.ImGui;

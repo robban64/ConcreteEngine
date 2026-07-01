@@ -1,8 +1,12 @@
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.App;
+using ConcreteEngine.Editor.App.Assets;
+using ConcreteEngine.Editor.App.CLI;
+using ConcreteEngine.Editor.App.Inspectors;
+using ConcreteEngine.Editor.App.Scene;
+using ConcreteEngine.Editor.App.Theme;
+using ConcreteEngine.Editor.App.UI;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 
 // ReSharper disable UnusedParameter.Local

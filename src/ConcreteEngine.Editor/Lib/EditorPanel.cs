@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 

@@ -1,13 +1,6 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -17,7 +10,6 @@ using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
-using static ConcreteEngine.Editor.EditorConsts;
 
 namespace ConcreteEngine.Editor.UI;
 
@@ -103,14 +95,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
         ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
         if (ImGui.BeginChild("scene-list"u8))
         {
-            var clipper = new ImGuiListClipper();
-            clipper.Begin(_browser.FilteredCount, ListItemHeight);
-            while (clipper.Step())
-            {
-                DrawList(clipper.DisplayStart, clipper.DisplayEnd - clipper.DisplayStart);
-            }
-
-            clipper.End();
+            DrawListClipper();
         }
 
         ImGui.EndChild();
@@ -118,21 +103,31 @@ internal sealed unsafe class SceneWindow : EditorWindow
         ImGui.PopStyleVar(2);
     }
 
-    private void DrawList(int start, int length)
+    private void DrawListClipper()
     {
-        uint eyeIcon = StyleMap.GetIntIcon(Icons.Eye), eyeClosedIcon = StyleMap.GetIntIcon(Icons.EyeClosed);
-        var size = new Vector2(ImGui.GetContentRegionAvail().X - ListItemPaddedHeight - 4f, ListItemHeight);
-
-        var selectedId = SelectedId;
-        var sceneIds = _browser.GetSceneIds(start, length);
+        var itemWidth = ImGui.GetContentRegionAvail().X - ListItemPaddedHeight - 4f;
         
+        ImGuiListClipper clipper = default;
+        clipper.Begin(_browser.FilteredCount, ListItemHeight);
+        foreach (var range in ClipperEnumerator.New(&clipper))
+        {
+            DrawList(range, itemWidth);
+        }
+    }
+
+    private void DrawList(Range32 range, float itemWidth)
+    {
+        var selectedId = SelectedId;
+        uint eyeIcon = StyleMap.GetIntIcon(Icons.Eye), eyeClosedIcon = StyleMap.GetIntIcon(Icons.EyeClosed);
+
         var cursor = 0;
-        foreach (var it in _browser.GetDrawEnumerator(start, length))
+        var sceneIds = _browser.GetSceneIds(range.Offset, range.Length);
+        foreach (var it in _browser.GetDrawEnumerator(range.Offset, range.Length))
         {
             var id = sceneIds[cursor++];
             ImGui.PushID(id);
 
-            if (ImGui.Selectable(it.DisplayName, id == selectedId, 0, size))
+            if (ImGui.Selectable(it.DisplayName, id == selectedId, 0, new Vector2(itemWidth, ListItemHeight)))
                 State.EnqueueEvent(new SelectionEvent(id));
 
             ImGui.SameLine();

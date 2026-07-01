@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Editor.Inspector;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using static ConcreteEngine.Core.Engine.Assets.AssetManager;

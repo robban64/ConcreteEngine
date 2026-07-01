@@ -1,6 +1,4 @@
 using System.Text;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
@@ -166,7 +164,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
 
     private void HandleRename(InspectSceneObject inspect)
     {
-        UtfText.SliceNullTerminate(_nameInputStr.DataView.AsSpan(), out var byteSpan);
+        UtfText.SliceNullTerminate(_nameInputStr.Data.AsSpan(), out var byteSpan);
         if (byteSpan.IsEmpty) return;
         if (!UtfText.IsAscii(byteSpan)) return;
 

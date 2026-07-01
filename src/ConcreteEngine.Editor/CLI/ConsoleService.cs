@@ -62,9 +62,11 @@ internal sealed class ConsoleService
     {
         if (EnqueuedLogCount == 0) return;
 
-        int drainLimit = EnqueuedLogCount < 100 ? DrainPerTick : DrainPerTickHigh;
         var buffer = stackalloc byte[256];
         var writer = new NativeSpanWriter(buffer, 256);
+        
+        int drainLimit = EnqueuedLogCount < 100 ? DrainPerTick : DrainPerTickHigh;
+
         while (drainLimit-- > 0)
         {
             bool hasString = _stringLogQueue.TryPeek(out var nextStringLog);
@@ -109,7 +111,7 @@ internal sealed class ConsoleService
         log.Handle = new RangeU16(offset, cursor);
 
         _head = (_head + 1) % StoredLogCap;
-        _count = Math.Min(_count + 1, StoredLogCap);
+        _count = int.Min(_count + 1, StoredLogCap);
 
         ConsoleWindow.ScrollToBottom();
     }

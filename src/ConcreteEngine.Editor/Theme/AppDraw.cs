@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -9,7 +8,7 @@ namespace ConcreteEngine.Editor.Theme;
 internal static unsafe class AppDraw
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Text(NativeString text) => ImGui.TextUnformatted(text, text.EndPtr);
+    public static void Text(NativeString text) => ImGui.TextUnformatted(text, text.TextEnd);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Text(NativeView<byte> text) => ImGui.TextUnformatted(text, text + text.Length);

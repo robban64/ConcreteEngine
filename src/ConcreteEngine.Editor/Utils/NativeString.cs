@@ -1,20 +1,19 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Editor.Utils;
 
-internal unsafe struct NativeString
+internal readonly unsafe struct NativeString
 {
     public const int HeaderSize = 2 * sizeof(int);
 
+    //
     [StructLayout(LayoutKind.Sequential)]
-    internal struct NativeStringData(int capacity, int length = 0)
+    internal struct NativeStringHeader(int capacity, int length = 0)
     {
         public readonly int Capacity = capacity;
         public int Length = length;
@@ -23,84 +22,84 @@ internal unsafe struct NativeString
 
     internal static NativeString From(NativeView<byte> view)
     {
-        var ptr = (NativeStringData*)view.Ptr;
-        *ptr = new NativeStringData(view.Length, 0);
+        var ptr = (NativeStringHeader*)view.Ptr;
+        *ptr = new NativeStringHeader(view.Length, 0);
         return new NativeString(ptr);
     }
-    
     //
     
-    public NativeStringData* Ptr;
+    private readonly NativeStringHeader* _ptr;
 
-    public NativeString(NativeStringData* ptr) => Ptr = ptr;
+    public NativeString(NativeStringHeader* ptr) => _ptr = ptr;
 
-    public readonly bool IsNull => Ptr == null;
-    public readonly int Length => Ptr->Length;
-    public readonly int Capacity => Ptr->Capacity;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator byte*(NativeString str) => (byte*)str.Ptr + HeaderSize;
+    public bool IsNull => _ptr == null;
+    public int Length => _ptr->Length;
+    public int Capacity => _ptr->Capacity;
+    public int Remaining => _ptr->Capacity - _ptr->Length;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator NativeView<byte>(NativeString str) => str.TextView;
+    public static implicit operator byte*(NativeString str) => (byte*)str._ptr + HeaderSize;
 
-    public readonly byte* EndPtr
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator NativeView<byte>(NativeString str) => str.Text;
+    
+    public NativeView<byte> Data
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (byte*)Ptr + HeaderSize + Length;
+        get => new((byte*)_ptr + HeaderSize, Capacity);
     }
-    
-    public readonly NativeView<byte> TextView
+
+    public NativeView<byte> Text
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new((byte*)Ptr + HeaderSize, Length);
+        get => new((byte*)_ptr + HeaderSize, Length);
     }
     
-    public readonly NativeView<byte> DataView
+    public byte* TextEnd
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new((byte*)Ptr + HeaderSize, Capacity);
+        get => (byte*)_ptr + HeaderSize + Length;
     }
     
-    //TODO Rename
-    public readonly NativeSpanWriter NewWrite
+    //TODO
+    public NativeSpanWriter NewWrite
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             SetLength(0);
-            return new NativeSpanWriter(DataView, Capacity);
+            return new NativeSpanWriter(Data, Capacity);
         }
     }
 
-    private readonly NativeSpanWriter Writer
+    private NativeSpanWriter Writer
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             if((uint)Length >= (uint)Capacity) Throwers.BufferOverflow(nameof(Capacity), Length, Capacity);
-            return new NativeSpanWriter(DataView, Capacity, Length);
+            return new NativeSpanWriter(Data, Capacity, Length);
         }
     }
 
-    public readonly void SetLength(int length)
+    public void SetLength(int length)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)length, (uint)Capacity, nameof(length));
-        Ptr->Length = length;
-        DataView[length] = 0;
+        _ptr->Length = length;
+        Data[length] = 0;
     }
     
-    public readonly void Set(ReadOnlySpan<byte> str) => Ptr->Length = NewWrite.Write(str.Truncate(Capacity)).Length;
-    public readonly void Set(ReadOnlySpan<char> str)  => Ptr->Length = NewWrite.Write(str.Truncate(Capacity)).Length;
-    public readonly void Append(ReadOnlySpan<byte> str) => Ptr->Length = Writer.Append(str).End().Length;
-    public readonly void Append(ReadOnlySpan<char> str) => Ptr->Length = Writer.Append(str).End().Length;
-
-    public readonly void Append<T>(T value, ReadOnlySpan<char> format = default)
+    public void Set(ReadOnlySpan<byte> str) => _ptr->Length = NewWrite.Write(str.Truncate(Capacity)).Length;
+    public void Set(ReadOnlySpan<char> str)  => _ptr->Length = NewWrite.Write(str.Truncate(Capacity)).Length;
+    
+    public void Append(ReadOnlySpan<byte> str) => _ptr->Length = Writer.Append(str).End().Length;
+    public void Append(ReadOnlySpan<char> str) => _ptr->Length = Writer.Append(str).End().Length;
+    public void Append<T>(T value, ReadOnlySpan<char> format = default)
         where T : IUtf8SpanFormattable
     {
-        Ptr->Length = Writer.Append(value, format).End().Length;
+        _ptr->Length = Writer.Append(value, format).End().Length;
     }
 
 
-    public readonly void Clear() => Ptr->Length = 0;
+    public void Clear() => _ptr->Length = 0;
 }

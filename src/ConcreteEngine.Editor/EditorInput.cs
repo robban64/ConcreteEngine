@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;

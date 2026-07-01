@@ -1,7 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor;
 

@@ -1,12 +1,10 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Metrics;
@@ -85,13 +83,10 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         var innerWindow = ImGui.BeginChild("logs"u8, new Vector2(0, -InputHeight), ImGuiChildFlags.None, InnerFlags);
         if (innerWindow && ConsoleGateway.Service.LogCount > 0)
         {
-            var clipper = new ImGuiListClipper();
+            ImGuiListClipper clipper = default;
             clipper.Begin(ConsoleGateway.Service.LogCount, RowHeight);
-            while (clipper.Step())
-            {
-                int start = clipper.DisplayStart, length = clipper.DisplayEnd - clipper.DisplayStart;
-                DrawVisibleLogs(ConsoleGateway.Service, start, length);
-            }
+            foreach (var range in ClipperEnumerator.New(&clipper))
+                DrawVisibleLogs(ConsoleGateway.Service, range.Offset, range.Length);
 
             if (_scrollTopBottomStepper.Tick())
             {

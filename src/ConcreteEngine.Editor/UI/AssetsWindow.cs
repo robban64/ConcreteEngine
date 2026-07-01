@@ -1,10 +1,5 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Text;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -273,15 +268,12 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 
         ImGuiListClipper clipper = default;
         clipper.Begin(rowCount, GridCellSize);
-        while (clipper.Step())
+        foreach (var range in ClipperEnumerator.New(&clipper))
         {
-            var start = clipper.DisplayStart * columnCount;
-            var length = (clipper.DisplayEnd * columnCount) - start;
-            length = int.Min(length, count);
+            var start = range.Offset * columnCount;
+            var length = range.Length * columnCount;
             DrawFilesInner(start, length, columnCount, _selectedFile);
         }
-
-        clipper.End();
     }
 
     private void DrawFilesInner(int start, int length, int columnCount, AssetFileId selectedFileId)

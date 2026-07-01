@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Lib.Field;
 using Hexa.NET.ImGui;

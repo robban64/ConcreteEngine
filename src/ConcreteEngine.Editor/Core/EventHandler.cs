@@ -72,10 +72,14 @@ internal static class EventHandler
 
     public static void OnSceneObjectEvent(SceneObjectEvent evt, StateManager ctx)
     {
-        if (evt.Rename is { } name)
+        var sceneObject = SceneManager.SceneStore.Get(evt.SceneObject);
+        if (evt.Visible is { } visible)
         {
-            var asset = SceneManager.SceneStore.Get(evt.SceneObject);
-            asset.SetName(name);
+            sceneObject.Visible = visible;
+        }
+        else if (evt.Rename is { } name)
+        {
+            sceneObject.SetName(name);
         }
     }
 
@@ -85,7 +89,6 @@ internal static class EventHandler
         {
             var asset = AssetManager.Assets.Get<AssetObject>(evt.Asset);
             if (asset.SetName(name)) ;
-            // AssetListPanel.RenamedAsset = asset.Id;
         }
         else if (evt.Reload)
         {

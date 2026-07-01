@@ -45,7 +45,6 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     private NativeString _breadcrumbs;
     private NativeString _searchString;
 
-
     public override ReadOnlySpan<byte> Id => WindowRoot.AssetWindowId;
 
     public AssetsWindow(StateManager state) : base(state)
@@ -107,7 +106,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             return;
         }
 
-        var sw = _breadcrumbs.NewWrite; //sw.Append('[').Append().Append(']').PadRight(2);
+        var sw = _breadcrumbs.OverWriter; //sw.Append('[').Append().Append(']').PadRight(2);
         foreach (var range in path.Split('/'))
             sw.Append(path[range]).Append('/');
 
@@ -137,7 +136,6 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         {
             DrawToolbar();
         }
-
         ImGui.EndChild();
         ImGui.PopStyleColor();
 
@@ -149,11 +147,9 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 
             ImGui.PopStyleVar();
         }
-
         ImGui.EndChild();
 
         ImGui.SameLine();
-
         if (ImGui.BeginChild("files"u8, Vector2.Zero, ImGuiChildFlags.None))
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
@@ -240,16 +236,12 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         }
 
         var sw = TextBuffers.GetWriter();
-        var icon = GetIntIcon(Icons.Folder);
+        var icon = GetIconData(Icons.Folder);
         for (var i = 0; i < nodes.Length; i++)
         {
             var node = nodes[i];
             var previewName = node.PreviewName;
-
-            var text = sw
-                .AppendIcon((byte*)&icon).PadRight(2)
-                .Append((byte*)&previewName).AppendImGuiId(i)
-                .End();
+            var text = sw.AppendIcon((byte*)&icon).PadRight(2).Append((byte*)&previewName).AppendImGuiId(i).End();
 
             if (ImGui.Selectable(text, false, 0, size))
                 _assetBrowser.GoToChild(node.GetFolderName());

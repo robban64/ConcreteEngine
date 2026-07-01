@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.App.Shared;
 using ConcreteEngine.Editor.App.Theme;
@@ -27,7 +28,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
 
     private NativeString _title;
     private NativeString _searchString;
-    
+
     private SceneObjectId SelectedId => State.Context.Selection.SelectedSceneId;
 
     public override ReadOnlySpan<byte> Id => WindowRoot.LeftWindowId;
@@ -44,8 +45,8 @@ internal sealed unsafe class SceneWindow : EditorWindow
             .WithTransformer(trimmed: true, lowercase: true)
             .WithCallbackU8(Search);
     }
-    
-    
+
+
     protected override void OnCreate()
     {
         _title = StringArena.AllocateString(24);
@@ -54,7 +55,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
         _searchInput.SetTextBuffer(_searchString);
         if (_browser.FilteredCount == 0) Search(Span<byte>.Empty);
     }
-    
+
     private void OnCategoryChange(SceneObjectKind kind)
     {
         if (_selectedKind == kind) return;
@@ -70,7 +71,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
 
     private void SyncState()
     {
-        _title.NewWrite.Append("SceneObjects [").Append(_browser.FilteredCount).Append(']').End();
+        _title.OverWriter.Append("SceneObjects [").Append(_browser.FilteredCount).Append(']').End();
     }
 
     protected override void OnDraw()
@@ -107,24 +108,24 @@ internal sealed unsafe class SceneWindow : EditorWindow
 
     private void DrawList(Range32 range, float itemWidth)
     {
-        var selectedId = SelectedId;
-        uint eyeIcon = StyleMap.GetIntIcon(Icons.Eye), eyeClosedIcon = StyleMap.GetIntIcon(Icons.EyeClosed);
+        uint eyeIcon = StyleMap.GetIconData(Icons.Eye), eyeClosedIcon = StyleMap.GetIconData(Icons.EyeClosed);
 
         var cursor = 0;
+        var selectedId = SelectedId;
         var sceneIds = _browser.GetSceneIds(range.Offset, range.Length);
-        foreach (var it in _browser.GetDrawEnumerator(range.Offset, range.Length))
+        foreach (var name in _browser.GetDrawEnumerator(range.Offset, range.Length))
         {
             var id = sceneIds[cursor++];
+            var visible = SceneManager.SceneStore.Get(id).Visible;
             ImGui.PushID(id);
 
-            if (ImGui.Selectable(it.DisplayName, id == selectedId, 0, new Vector2(itemWidth, ListItemHeight)))
+            if (ImGui.Selectable(name, id == selectedId, 0, new Vector2(itemWidth, ListItemHeight)))
                 State.EnqueueEvent(new SelectionEvent(id));
 
             ImGui.SameLine();
-            if (ImGui.Button(it.Visible ? (byte*)&eyeIcon : (byte*)&eyeClosedIcon, new Vector2(ListItemHeight)))
-            {
-                //it.Visible = !it.Visible;
-            }
+            if (ImGui.Button(visible ? (byte*)&eyeIcon : (byte*)&eyeClosedIcon, new Vector2(ListItemHeight)))
+                State.EnqueueEvent(new SceneObjectEvent(id, Visible: !visible));
+
             ImGui.PopID();
         }
     }

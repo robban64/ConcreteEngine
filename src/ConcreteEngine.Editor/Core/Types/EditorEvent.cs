@@ -9,7 +9,7 @@ internal sealed record SelectionEvent : EditorEvent
     public bool Clear;
     public readonly AssetId? Asset;
     public readonly SceneObjectId? SceneObject;
-    public readonly FixedInspectorId FixedInspector = FixedInspectorId.None;
+    public readonly FixedInspectorId FixedInspector;
 
     private SelectionEvent() { }
     public SelectionEvent(AssetId asset) => Asset = asset;
@@ -36,5 +36,5 @@ internal sealed record ToolEvent : EditorEvent
 internal sealed record AssetEvent(AssetId Asset, AssetKind Kind, string? Rename = null, bool Reload = false)
     : EditorEvent;
 
-internal sealed record SceneObjectEvent(SceneObjectId SceneObject, string? Rename = null)
+internal sealed record SceneObjectEvent(SceneObjectId SceneObject, string? Rename = null, bool? Visible = null)
     : EditorEvent;

@@ -105,7 +105,8 @@ internal sealed class AssetBrowser
         {
             if (assetFilter != AssetKind.Unknown)
             {
-                if (!file.AssetRootId.IsValid() || assetFilter != AssetManager.Assets.Get<AssetObject>(file.AssetRootId).Kind)
+                var rootId = file.AssetRootId;
+                if (!rootId.IsValid() || assetFilter != AssetManager.Assets.Get<AssetObject>(rootId).Kind)
                     continue;
             }
 
@@ -193,6 +194,7 @@ internal sealed class AssetBrowser
     internal sealed class AssetDirectoryNode
     {
         private readonly int _nameOffset;
+        
         public readonly bool IsFileSystem;
 
         public readonly string Path;

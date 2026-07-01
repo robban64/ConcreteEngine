@@ -10,17 +10,13 @@ namespace ConcreteEngine.Editor;
 public static class CliName
 {
     public const string Asset = "asset";
-    public const string Graphics = "graphics";
 }
 
 public static class CommandDispatcher
 {
-    private const int DefaultCap = 16;
+    private static readonly Dictionary<string, ConsoleCommandEntry> ConsoleCmd = new(4);
+    private static readonly Dictionary<Type, Delegate> EditorCmd = new(4);
 
-    private static readonly Dictionary<string, ConsoleCommandEntry> ConsoleCmd = new(DefaultCap);
-    private static readonly Dictionary<Type, Delegate> EditorCmd = new(DefaultCap);
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void RegisterNoOpConsoleCmd(string command, string description, ConsoleCommandDel del)
     {
         var entry = new ConsoleCommandEntry
@@ -31,7 +27,6 @@ public static class CommandDispatcher
             throw new InvalidOperationException($"Console Command {command} is already registered");
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void RegisterConsoleCmd<TCommand>(
         string command,
         string description,
@@ -57,7 +52,6 @@ public static class CommandDispatcher
             throw new InvalidOperationException($"Console Command {command} is already registered");
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void RegisterCommand<TCommand>(EditorCommandDel<TCommand> dispatch)
         where TCommand : EngineCommandRecord
     {

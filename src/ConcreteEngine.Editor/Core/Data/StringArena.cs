@@ -9,7 +9,7 @@ using ConcreteEngine.Core.Engine;
 
 namespace ConcreteEngine.Editor.Core.Data;
 
-internal sealed class StringArena
+internal sealed class StringArena : IDisposable
 {
     public static StringArena Instance { get; private set; } = null!;
     
@@ -61,4 +61,5 @@ internal sealed class StringArena
         return NativeString.From(memory);
     }
 
+    public void Dispose() => _arena.Dispose();
 }

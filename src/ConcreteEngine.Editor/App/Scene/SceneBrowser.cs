@@ -13,12 +13,12 @@ internal sealed unsafe class SceneBrowser
 {
     private int _count;
     private SceneObjectId[] _sceneIds;
-    private readonly CircularListBuffer<SceneItem> _buffer;
+    private readonly CircularListBuffer<NativeString> _buffer;
 
     public SceneBrowser()
     {
         _sceneIds = new SceneObjectId[512];
-        _buffer = new CircularListBuffer<SceneItem>(64, OnInvalidateList);
+        _buffer = new CircularListBuffer<NativeString>(64, OnInvalidateList);
     }
 
     public int FilteredCount => _count;
@@ -27,7 +27,7 @@ internal sealed unsafe class SceneBrowser
     public ReadOnlySpan<SceneObjectId> GetSceneIds(int start, int length) => new(_sceneIds, start, length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public CircularListBuffer<SceneItem>.Enumerator GetDrawEnumerator(int start, int length) =>
+    public CircularListBuffer<NativeString>.Enumerator GetDrawEnumerator(int start, int length) =>
         _buffer.GetView(start, length);
 
     public void Search(Span<byte> searchStr, SceneObjectKind selectedKind)
@@ -58,18 +58,16 @@ internal sealed unsafe class SceneBrowser
     }
 
     
-    private void OnInvalidateList(int start, Span<SceneItem> span)
+    private void OnInvalidateList(int start, Span<NativeString> span)
     {
         var cursor = 0;
         foreach (var sceneObj in SceneManager.SceneStore.MakeSparseEnumerator(GetSceneIds(start, span.Length)))
         {
-            ref var it = ref span[cursor++];
-            it.Kind = sceneObj.Kind;
-            it.Visible = sceneObj.Visible;
-
-            if (it.DisplayName.IsNull) it.DisplayName = StringArena.AllocateString(32);
-            it.DisplayName.NewWrite.PadRight(1)
-                .AppendIcon(StyleMap.GetIcon(it.Kind.ToIcon()))
+            ref var name = ref span[cursor++];
+            if(name.IsNull) name = StringArena.AllocateString(32);
+            
+            name.OverWriter.PadRight(1)
+                .AppendIcon(StyleMap.GetIcon(sceneObj.Kind.ToIcon()))
                 .PadRight(4)
                 .Append(sceneObj.Name.Truncate(20))
                 .End();
@@ -87,11 +85,4 @@ internal sealed unsafe class SceneBrowser
         }
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct SceneItem
-    {
-        public NativeString DisplayName;
-        public SceneObjectKind Kind;
-        public bool Visible;
-    }
 }

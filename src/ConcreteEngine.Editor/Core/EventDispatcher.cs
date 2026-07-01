@@ -2,9 +2,10 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class EventDispatcher
 {
-    private readonly Dictionary<Type, EventEntry> _eventHandler = new(8);
     private readonly Queue<EditorEvent> _queue = new(8);
+    private readonly Dictionary<Type, Dispatcher> _eventHandler = new(8);
 
+    
     public void DrainQueue(StateManager ctx)
     {
         if (_queue.Count == 0) return;
@@ -14,8 +15,8 @@ internal sealed class EventDispatcher
 
     public void Register<TEvent>(Action<TEvent, StateManager> dispatch) where TEvent : EditorEvent
     {
-        if (!_eventHandler.TryAdd(typeof(TEvent), new EventEntry<TEvent>(dispatch)))
-            throw new InvalidOperationException($"Duplicate event handler: {typeof(TEvent).Name}");
+        if (!_eventHandler.TryAdd(typeof(TEvent), new Dispatcher<TEvent>(dispatch)))
+            throw new ArgumentException($"Duplicate event handler: {typeof(TEvent).Name}");
     }
 
     public void Enqueue(EditorEvent evt)
@@ -26,12 +27,12 @@ internal sealed class EventDispatcher
         _queue.Enqueue(evt);
     }
 
-    private abstract class EventEntry
+    private abstract class Dispatcher
     {
         public abstract void Invoke(EditorEvent evt, StateManager ctx);
     }
 
-    private sealed class EventEntry<TEvent>(Action<TEvent, StateManager> dispatch) : EventEntry
+    private sealed class Dispatcher<TEvent>(Action<TEvent, StateManager> dispatch) : Dispatcher
         where TEvent : EditorEvent
     {
         public override void Invoke(EditorEvent evt, StateManager ctx)

@@ -33,19 +33,11 @@ public readonly unsafe struct MemoryBlockPtr : IEquatable<MemoryBlockPtr>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new((byte*)Ptr + BlockSize, Length);
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<byte> Slice(RangeU16 range) => Data.Slice(range);
     
     public NativeAllocator GetAllocator(int alignment = 0) => new(Data, ref Ptr->Cursor, alignment);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator MemoryBlockPtr(MemoryBlock* ptr) => new(ptr);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator MemoryBlockPtr(IntPtr ptr) => new((MemoryBlock*)ptr);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator IntPtr(MemoryBlockPtr ptr) => (IntPtr)ptr.Ptr;
 
     public static bool operator ==(MemoryBlockPtr left, MemoryBlockPtr right) => left.Equals(right);

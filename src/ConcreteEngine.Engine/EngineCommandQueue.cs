@@ -38,7 +38,6 @@ internal sealed class EngineCommandQueue
     public EngineCommandQueue(EngineCommandContext context)
     {
         _context = context;
-        RegisterHandler<FboCommandRecord>(CommandScope.Render, static (cmd, ctx) => ctx.ApplyRender(cmd));
         RegisterHandler<AssetCommandRecord>(CommandScope.Asset, static (cmd, ctx) => ctx.ApplyAsset(cmd));
     }
 

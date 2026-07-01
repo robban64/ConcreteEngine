@@ -18,13 +18,4 @@ internal sealed class EngineCommandContext(AssetSystem assetSystem)
         }
     }
 
-    public void ApplyRender(FboCommandRecord cmd)
-    {
-        switch (cmd.Action)
-        {
-            case CommandFboAction.ShadowSize: VisualManager.Instance.Shadow.ShadowMapSize = cmd.Size.Width; break;
-            case CommandFboAction.None: break;
-            default: throw new ArgumentOutOfRangeException();
-        }
-    }
 }

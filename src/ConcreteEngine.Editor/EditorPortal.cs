@@ -37,8 +37,10 @@ public sealed class EditorPortal : IDisposable
     {
         if (Initialized) Throwers.InvalidOperation(nameof(Initialized));
 
+        StyleMap.Create();
         StringArena.Create();
         TextBuffers.AllocateBuffers();
+
         ConsoleGateway.Service.Setup();
 
         InspectorFieldProvider.Create();
@@ -94,6 +96,8 @@ public sealed class EditorPortal : IDisposable
 
     public void Dispose()
     {
+        StringArena.Instance.Dispose();
+        StyleMap.Dispose();
         TextBuffers.Dispose();
 
         ImGuiImplOpenGL3.Shutdown();

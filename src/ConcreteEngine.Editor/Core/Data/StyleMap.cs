@@ -30,16 +30,7 @@ internal static unsafe class StyleMap
     // TODO make this more proper
     public const int IconCount = 42;
 
-    public static int AllocSize
-    {
-        get
-        {
-            int colorCount = EnumCache<LogLevel>.Count;
-            var size = IconCount * 4 + colorCount * sizeof(uint);
-            return IntMath.AlignUp(size, 64);
-        }
-    }
-
+    private static NativeArray<byte> _buffer;
     private static NativeView<byte> _iconsPtr = NativeView<byte>.MakeNull();
     private static NativeView<uint> _colorPtr = NativeView<uint>.MakeNull();
 
@@ -47,18 +38,22 @@ internal static unsafe class StyleMap
     public static byte* GetIcon(Icons icon) => _iconsPtr + ((int)icon * 4);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint GetIntIcon(Icons icon) => ((uint*)_iconsPtr.Ptr)[(int)icon];
+    public static uint GetIconData(Icons icon) => ((uint*)_iconsPtr.Ptr)[(int)icon];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint GetLogLevelColor(LogLevel level) => _colorPtr[(byte)level];
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void Allocate(NativeArray<byte> buffer)
+    public static void Create()
     {
         if (!_iconsPtr.IsNull) throw new InvalidOperationException("Already allocated");
 
-        _iconsPtr = buffer.Slice(0, IconCount * 4);
-        _colorPtr = buffer.Slice(_iconsPtr.Length).Reinterpret<uint>();
+        int colorCount = EnumCache<LogLevel>.Count;
+        var size = IconCount * 4 + colorCount * sizeof(uint);
+        var capacity =  IntMath.AlignUp(size, 64);
+
+        _buffer = NativeArray.Allocate<byte>(capacity);
+        _iconsPtr = _buffer.Slice(0, IconCount * 4);
+        _colorPtr = _buffer.Slice(_iconsPtr.Length).Reinterpret<uint>();
 
         InitIcons();
         InitColors();
@@ -101,4 +96,6 @@ internal static unsafe class StyleMap
         _colorPtr[(int)LogLevel.Error] = Palette.RedBase.ToPackedRgba();
         _colorPtr[(int)LogLevel.Critical] = Palette.RedLight.ToPackedRgba();
     }
+
+    public static void Dispose() => _buffer.Dispose();
 }

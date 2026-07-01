@@ -54,7 +54,7 @@ internal sealed unsafe class ToolbarItem(
     public readonly Action<StateManager> OnClick = onClick;
     public readonly Action<EditorContext, EditorContext, ToolbarItem> OnStateChange = onStateChange;
 
-    public readonly uint Icon = StyleMap.GetIntIcon(icon);
+    public readonly uint Icon = StyleMap.GetIconData(icon);
     public readonly ContextChangeMask ChangeMask = changeMask;
     public bool Active;
     public bool Visible = true;

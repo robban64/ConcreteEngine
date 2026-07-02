@@ -22,10 +22,8 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
 
     //
     private static readonly Vector2 InputFramePad = new(8f, 6f);
-    private static readonly Vector2 ItemSpacing = new(12f, 6f);
-
-    private static readonly float InputHeight = GuiTheme.FontSizeDefault + InputFramePad.Y * 2 + ItemSpacing.Y;
-    private static readonly float RowHeight = GuiTheme.FontSizeDefault + ItemSpacing.Y;
+    private static readonly float InputHeight = GuiTheme.FontSizeDefault + InputFramePad.Y * 2 + GuiTheme.ItemSpacing.Y;
+    private static readonly float RowHeight = GuiTheme.FontSizeDefault + GuiTheme.ItemSpacing.Y;
     private static FrameStepper _scrollTopBottomStepper = new(8);
 
     //    
@@ -80,7 +78,6 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         ImGui.PopStyleColor();
 
         // log
-        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ItemSpacing);
         var innerWindow = ImGui.BeginChild("logs"u8, new Vector2(0, -InputHeight), ImGuiChildFlags.None, InnerFlags);
         if (innerWindow && ConsoleGateway.Service.LogCount > 0)
         {
@@ -95,7 +92,6 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         }
 
         ImGui.EndChild();
-        ImGui.PopStyleVar(1);
 
         // input
         ImGui.PushStyleColor(ImGuiCol.FrameBg, Palette32.SurfaceDark);
@@ -110,7 +106,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
 
     private static void DrawVisibleLogs(ConsoleService service, int start, int length)
     {
-        var cursor = UiDrawCursor.Make(ItemSpacing);
+        var cursor = UiDrawCursor.Make();
         var logs = service.GetLogs(start, length);
         for (var i = 0; i < logs.Length; i++)
         {
@@ -130,7 +126,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DrawLog(NativeView<byte> text, LogScope scope, LogLevel level, scoped ref UiDrawCursor cursor)
     {
-        cursor.Text(text.Slice(0, LogEntry.TimestampOffset), Palette32.TextSecondary);
+        cursor.Text(text.Slice(0, LogEntry.TimestampOffset));
         cursor.SameLine();
         cursor.Text(level.ToLogText(), StyleMap.GetLogLevelColor(level));
         cursor.SameLine();
@@ -144,7 +140,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DrawPlain(NativeView<byte> text, LogScope scope, scoped ref UiDrawCursor cursor)
     {
-        cursor.Text(text.Slice(0, LogEntry.TimestampOffset), Palette32.TextSecondary);
+        cursor.Text(text.Slice(0, LogEntry.TimestampOffset));
         if (scope == LogScope.Command)
         {
             cursor.SameLine();

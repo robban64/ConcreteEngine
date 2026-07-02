@@ -15,10 +15,10 @@ internal static class LogExtensions
                 LogLevel.None => "[None]"u8,
                 LogLevel.Trace => "[Trace]"u8,
                 LogLevel.Debug => "[Debug]"u8,
-                LogLevel.Info => "[Info]"u8,
-                LogLevel.Warn => "[Warn]"u8,
+                LogLevel.Info => "[Info] "u8,
+                LogLevel.Warn => "[Warn] "u8,
                 LogLevel.Error => "[Error]"u8,
-                LogLevel.Critical => "[Critical]"u8,
+                LogLevel.Critical => "[Critc]"u8,
                 _ => "[Unknown]"u8
             };
         }
@@ -34,10 +34,10 @@ internal static class LogExtensions
                 LogScope.Command => "[Command]"u8,
                 LogScope.Engine => "[Engine]"u8,
                 LogScope.Assets => "[Asset]"u8,
-                LogScope.Ecs => "[World]"u8,
+                LogScope.Ecs => "[ECS]"u8,
                 LogScope.Renderer => "[Render]"u8,
-                LogScope.Gfx => "[Graphic]"u8,
-                LogScope.Backend => "[Backend]"u8,
+                LogScope.Gfx => "[GFX]"u8,
+                LogScope.Backend => "[Driv]"u8,
                 LogScope.Editor => "[Editor]"u8,
                 _ => "[Unknown]"u8
             };

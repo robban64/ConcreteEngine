@@ -13,12 +13,4 @@ internal static class EngineCommandRouter
         CommandCommandQueues?.Enqueue(command);
         return CommandResponse.Ok();
     }
-
-    public static CommandResponse RenderEndpoint(FboCommandRecord command)
-    {
-        ArgumentNullException.ThrowIfNull(command);
-        if (command.Size.IsNegativeOrZero()) throw new ArgumentOutOfRangeException(nameof(command.Size));
-        CommandCommandQueues?.Enqueue(command);
-        return CommandResponse.Ok();
-    }
 }

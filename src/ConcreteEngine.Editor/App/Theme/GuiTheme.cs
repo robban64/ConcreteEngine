@@ -13,12 +13,6 @@ internal static class GuiTheme
         ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
         ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingFixedFit;
 
-    public const ImGuiTableFlags ListTableFlags =
-        ImGuiTableFlags.ScrollY |
-        ImGuiTableFlags.NoPadOuterX |
-        ImGuiTableFlags.NoPadInnerX |
-        ImGuiTableFlags.SizingFixedFit;
-
     public const ImGuiInputTextFlags InputNameFlags =
         ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CharsNoBlank |
         ImGuiInputTextFlags.CallbackCharFilter;
@@ -37,7 +31,7 @@ internal static class GuiTheme
 
     public const float IndentSpacing = 20.0f;
 
-    public static readonly Vector2 WindowPadding = new(6f, 6f); //new(12f, 6f);
+    public static readonly Vector2 WindowPadding = new(12f, 6f);
 
     public static readonly Vector2 FramePadding = new(5f, 3f);
     public static readonly Vector2 MenuFramePadding = new(5f, 8f);
@@ -46,17 +40,6 @@ internal static class GuiTheme
     public static Vector2 ItemSpacing => new(6f, 6f);
     public static Vector2 ItemInnerSpacing => new(6f, 6f);
 
-    public static ImFontPtr TextFont;
-    public static ImFontPtr IconFont;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontText() => ImGui.PushFont(TextFont, FontSizeDefault);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontIcon() => ImGui.PushFont(IconFont, IconSizeDefault);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontIconLarge() => ImGui.PushFont(IconFont, IconSizeLarge);
 
     public static void SetImGuizmoTheme()
     {

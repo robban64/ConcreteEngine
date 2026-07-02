@@ -23,12 +23,12 @@ internal sealed unsafe class CameraPanel(StateManager state) : EditorPanel(Inspe
         var viewport = EngineWindow.Viewport.Size;
 
         var view = _viewportStr.OverWriter
-            .Append("Width: "u8).Append(viewport.Width)
-            .Append(" - Height: "u8).Append(viewport.Height).End();
+            .Append("Width: ").Append(viewport.Width)
+            .Append(" - Height: ").Append(viewport.Height).End();
 
         _viewportStr.SetLength(view.Length);
 
-        view = _aspectStr.OverWriter.Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End();
+        view = _aspectStr.OverWriter.Append("Aspect Ratio: ").Append(viewport.AspectRatio, "F2").End();
         _aspectStr.SetLength(view.Length);
     }
 

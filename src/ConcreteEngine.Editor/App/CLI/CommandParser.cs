@@ -1,9 +1,8 @@
 using System.Globalization;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 
-namespace ConcreteEngine.Editor.Logging;
+namespace ConcreteEngine.Editor.App.CLI;
 
 public static class CommandParser
 {

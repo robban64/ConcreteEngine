@@ -20,10 +20,9 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 {
     private const float FolderWindowWidth = 150f;
 
-    private const float FolderItemHeight = 20f;
+    private const float FolderItemHeight = 16f;
 
-    private const float GridPadding = 8.0f;
-    private const float GridInnerSize = 72.0f;
+    private const float GridInnerSize = 72.0f, GridPadding = 8.0f;
     private const float GridCellSize = GridInnerSize + GridPadding;
     private const float GridIconSize = GuiTheme.IconSizeLarge;
 
@@ -133,14 +132,16 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(3f));
 
         ImGui.PushStyleColor(ImGuiCol.ChildBg, Palette.MenuBg);
-        if (ImGui.BeginChild("asset-toolbar"u8, new Vector2(0, 22), ImGuiChildFlags.None))
+        if (ImGui.BeginChild("asset-toolbar"u8, new Vector2(0f, 22f), ImGuiChildFlags.None))
         {
             DrawToolbar();
         }
+
         ImGui.EndChild();
         ImGui.PopStyleColor();
 
-        if (ImGui.BeginChild("folders"u8, new Vector2(FolderWindowWidth, 0), ImGuiChildFlags.None))
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(6f, 6f));
+        if (ImGui.BeginChild("folders"u8, new Vector2(FolderWindowWidth, 0), ImGuiChildFlags.AlwaysUseWindowPadding))
         {
             ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
 
@@ -149,12 +150,17 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             ImGui.PopStyleVar();
         }
         ImGui.EndChild();
+        ImGui.PopStyleVar();
+        
+        ImGui.SameLine();
+        ImGuiP.SeparatorEx(ImGuiSeparatorFlags.Vertical);
 
         ImGui.SameLine();
         if (ImGui.BeginChild("files"u8, Vector2.Zero, ImGuiChildFlags.None))
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
-            ImGui.PushFont(GuiTheme.TextFont, GuiTheme.FontSizeSmall);
+            AppLayout.PushFontTextSmall();
+
             DrawFiles();
 
             ImGui.PopFont();
@@ -189,7 +195,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         ImGui.TextDisabled(_breadcrumbs);
 
         const float rightWidth = 150.0f + 128f;
-        ImGui.SameLine(ImGui.GetContentRegionAvail().X - WindowPadding.X - rightWidth);
+        ImGui.SameLine(ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X - rightWidth);
 
         ImGui.SetNextItemWidth(150.0f);
         ImGui.PushStyleColor(ImGuiCol.FrameBg, SurfaceDark);
@@ -242,9 +248,11 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             var node = nodes[i];
             var previewName = node.PreviewName;
             var text = sw.AppendIcon((byte*)&icon).PadRight(2).Append((byte*)&previewName).AppendImGuiId(i).End();
-
+            
             if (ImGui.Selectable(text, false, 0, size))
                 _assetBrowser.GoToChild(node.GetFolderName());
+            
+            ImGui.Spacing();
         }
     }
 
@@ -284,7 +292,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 
             drawList.PushClipRect(startPos, startPos + ItemSize, true);
 
-            GuiTheme.PushFontIconLarge();
+            AppLayout.PushFontIconLarge();
             drawList.AddText(IconBasePos + startPos, it.Binding.GetColor(), GetIcon(it.Icon));
             ImGui.PopFont();
 

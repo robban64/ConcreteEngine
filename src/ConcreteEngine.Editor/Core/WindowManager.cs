@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.App;
 using ConcreteEngine.Editor.App.Assets;
 using ConcreteEngine.Editor.App.CLI;
@@ -39,18 +40,34 @@ internal sealed class WindowManager
         _stateManager = stateManager;
         _debugWindows = new Action[DebugWindowCount];
 
-        var sceneWindow = SceneWindow = new SceneWindow(stateManager);
-        var inspectionWindow = InspectionWindow = new InspectionWindow(stateManager);
-        var assetWindow = AssetWindow = new AssetsWindow(stateManager);
-        var consoleWindow = ConsoleWindow = new ConsoleWindow(stateManager);
-        _windows = [sceneWindow, inspectionWindow, assetWindow, consoleWindow];
+        SceneWindow = new SceneWindow(stateManager);
+        InspectionWindow = new InspectionWindow(stateManager);
+        AssetWindow = new AssetsWindow(stateManager);
+        ConsoleWindow = new ConsoleWindow(stateManager);
+        _windows = [SceneWindow, InspectionWindow, AssetWindow, ConsoleWindow];
 
-        consoleWindow.NoBorder = true;
-        consoleWindow.Flags |= ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
-        consoleWindow.WindowPadding = GuiTheme.WindowPadding with { Y = 1f };
+        AssetWindow.NoBorder = true;
+        ConsoleWindow.NoBorder = true;
+        ConsoleWindow.Flags |= ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
+    }
+    
+    public void Setup()
+    {
+        TopMenuWindow.Instance.RegisterMenuToolbar();
+        RegisterDebugWindows();
 
-        assetWindow.NoBorder = true;
-        //assetWindow.WindowPadding = GuiTheme.WindowPadding with { Y = 0f };
+        foreach (var it in _windows) it.Create();
+
+        TopMenuWindow.Instance.SyncToolbar();
+        
+        return;
+        void RegisterDebugWindows()
+        {
+            _debugWindows[DebugMetricsWindow] = MetricsUi.Draw;
+            _debugWindows[DebugImDemoWindow] = ImGui.ShowDemoWindow;
+            _debugWindows[DebugImMetricsWindow] = ImGui.ShowMetricsWindow;
+            _debugWindows[DebugImStyleWindow] = ImGui.ShowStyleEditor;
+        }
     }
 
     public EditorWindow GetWindow(WindowId windowId) => _windows[(int)windowId];
@@ -61,7 +78,6 @@ internal sealed class WindowManager
         {
             if (it is T window) return window;
         }
-
         Throwers.InvalidArgument(nameof(T));
         return null;
     }
@@ -77,35 +93,22 @@ internal sealed class WindowManager
     public void Draw()
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
+        
         WindowRoot.BeginDockSpace();
         ViewportWindow.Draw(_stateManager);
+        
         ImGui.PopStyleVar();
 
         TopMenuWindow.Instance.Draw(_stateManager);
 
-        foreach (var window in _windows) window.Draw();
+        SceneWindow.Draw();
+        AssetWindow.Draw();
+        InspectionWindow.Draw();
+        ConsoleWindow.Draw();
 
         if ((uint)_stateManager.ActiveDebugWindow < (uint)_debugWindows.Length)
             _debugWindows[_stateManager.ActiveDebugWindow]();
     }
 
 
-    public void Setup()
-    {
-        TopMenuWindow.Instance.RegisterMenuToolbar();
-        RegisterDebugWindows();
-
-        foreach (var it in _windows) it.Create();
-
-        TopMenuWindow.Instance.SyncToolbar();
-    }
-
-
-    private void RegisterDebugWindows()
-    {
-        _debugWindows[DebugMetricsWindow] = MetricsUi.Draw;
-        _debugWindows[DebugImDemoWindow] = ImGui.ShowDemoWindow;
-        _debugWindows[DebugImMetricsWindow] = ImGui.ShowMetricsWindow;
-        _debugWindows[DebugImStyleWindow] = ImGui.ShowStyleEditor;
-    }
 }

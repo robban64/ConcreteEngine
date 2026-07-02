@@ -5,6 +5,7 @@ using ConcreteEngine.Editor.Lib;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
 
+//TODO
 internal sealed class InspectionWindow : EditorWindow
 {
     public override ReadOnlySpan<byte> Id => WindowRoot.RightWindowId;
@@ -46,6 +47,7 @@ internal sealed class InspectionWindow : EditorWindow
 
     public override void OnUpdateDiagnostic()
     {
+        Console.WriteLine(ActiveState);
         var index = (int)ActiveState - 1;
         if ((uint)index >= (uint)_panels.Length) return;
         _panels[index].OnUpdateDiagnostic();
@@ -53,29 +55,19 @@ internal sealed class InspectionWindow : EditorWindow
 
     protected override void OnDraw()
     {
-        switch (ActiveState)
-        {
-            case InspectorId.None: return;
-            case InspectorId.Asset: _assetInspectorPanel.OnDraw(); break;
-            case InspectorId.SceneObject: _sceneInspectorPanel.OnDraw(); break;
-            case InspectorId.Camera: _cameraPanel.OnDraw(); break;
-            case InspectorId.Lighting: _lightingPanel.OnDraw(); break;
-            case InspectorId.Visual: _visualPanel.OnDraw(); break;
-            default: Throwers.Unreachable(nameof(ActiveState)); break;
-        }
+        var activeState = (int)ActiveState - 1;
+        if (activeState < 0) activeState = 2;
+        _panels[activeState].OnDraw();
     }
 
     private void OnStateOnContextChanged(EditorContext prev, EditorContext next)
     {
         SelectionContext prevSelection = prev.Selection, nextSelection = next.Selection;
 
-        if (prevSelection == nextSelection) return;
-
         ActiveState = InspectorId.None;
-        if (prevSelection.SelectedSceneId != nextSelection.SelectedSceneId)
-            ActiveState = InspectorId.SceneObject;
-        else if (prevSelection.SelectedAssetId != nextSelection.SelectedAssetId)
-            ActiveState = InspectorId.Asset;
+        
+        if(nextSelection.HasNewAsset(prevSelection)) ActiveState = InspectorId.Asset;
+        else if(nextSelection.HasNewScene(prevSelection)) ActiveState = InspectorId.SceneObject;
         else if (prevSelection.FixedInspector != nextSelection.FixedInspector)
         {
             ActiveState = nextSelection.FixedInspector switch
@@ -86,6 +78,14 @@ internal sealed class InspectionWindow : EditorWindow
                 FixedInspectorId.Visual => InspectorId.Visual,
                 _ => throw new ArgumentOutOfRangeException(),
             };
+        }
+
+        if (ActiveState != InspectorId.None) return;
+
+        if (nextSelection.SelectedAssetId == default && ActiveState == InspectorId.Asset ||
+            nextSelection.SelectedSceneId == default && ActiveState == InspectorId.SceneObject)
+        {
+            ActiveState = InspectorId.Camera;
         }
 
         //Enabled = ActiveState != InspectorId.None;

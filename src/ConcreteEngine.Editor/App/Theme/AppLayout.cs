@@ -1,15 +1,31 @@
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using Hexa.NET.ImGui;
+using static ConcreteEngine.Editor.App.Theme.GuiTheme;
 
 namespace ConcreteEngine.Editor.App.Theme;
 
 internal static class AppLayout
 {
+    public static ImFontPtr TextFont;
+    public static ImFontPtr IconFont;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void PushFontText() => ImGui.PushFont(TextFont, FontSizeDefault);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void PushFontTextSmall() => ImGui.PushFont(TextFont, FontSizeSmall);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float GetFrameHeightWithSpacing(float fontSize = GuiTheme.FontSizeDefault) =>
-        fontSize + GuiTheme.FramePadding.Y * 2 + GuiTheme.ItemSpacing.Y;
+    public static void PushFontIcon() => ImGui.PushFont(IconFont, IconSizeDefault);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void PushFontIconLarge() => ImGui.PushFont(IconFont, IconSizeLarge);
+
+    //
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float GetFrameHeightWithSpacing(float fontSize = FontSizeDefault) =>
+        fontSize + FramePadding.Y * 2 + ItemSpacing.Y;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -26,7 +42,7 @@ internal static class AppLayout
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float NextAlignTextVerticalTop(float top, float rowHeight, float fontSize = GuiTheme.FontSizeDefault)
+    public static float NextAlignTextVerticalTop(float top, float rowHeight, float fontSize = FontSizeDefault)
     {
         if (rowHeight == 0) return 0;
         var yOffset = (rowHeight - fontSize) * 0.5f;

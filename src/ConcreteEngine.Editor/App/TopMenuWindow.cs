@@ -22,8 +22,6 @@ internal sealed class TopMenuWindow
 
     private bool _hasInitialized;
 
-    private MemoryBlockPtr _memory;
-
     private readonly MenuGroup[] _menuBar = new MenuGroup[MenuCount];
     private readonly ToolbarGroup[] _toolbar = new ToolbarGroup[ToolbarGroupCount];
 
@@ -91,27 +89,17 @@ internal sealed class TopMenuWindow
         var vp = ImGuiSystem.MainViewportPtr;
         var width = vp.WorkSize.X;
 
+        PushToolbarStyles();
         ImGui.SetNextWindowPos(vp.WorkPos);
         ImGui.SetNextWindowSize(new Vector2(width, GuiTheme.TopbarHeight));
-
-        GuiTheme.PushFontIcon();
-
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
-        ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
-
-        ImGui.PushStyleColor(ImGuiCol.Text, Palette32.White);
-        ImGui.PushStyleColor(ImGuiCol.Header, Palette32.PrimaryColor);
-        ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Palette32.HoverColor);
-        ImGui.PushStyleColor(ImGuiCol.HeaderActive, Palette32.SelectedColor);
-
-        ToolbarGroup left = _toolbar[0], center = _toolbar[1], right = _toolbar[2];
-
-        var centerX = float.Max(width * 0.5f - center.TotalWidth * 0.5f, left.TotalWidth);
-        var rightX = float.Max(width - right.TotalWidth, centerX + center.TotalWidth) - right.VisibleCount * 6f;
-
         if (ImGui.Begin(WindowRoot.ToolbarWindowId, TopbarFlags))
         {
+            ToolbarGroup left = _toolbar[0], center = _toolbar[1], right = _toolbar[2];
+            
             var offsetX = GuiTheme.WindowPadding.X;
+            var centerX = float.Max(width * 0.5f - center.TotalWidth * 0.5f, left.TotalWidth);
+            var rightX = float.Max(width - right.TotalWidth, centerX + center.TotalWidth) - right.VisibleCount * 6f;
+
             ImGui.SetCursorPos(new Vector2(offsetX, 0));
             left.Draw(stateManager);
             ImGui.SetCursorPos(new Vector2(centerX + offsetX, 0));
@@ -121,9 +109,26 @@ internal sealed class TopMenuWindow
         }
 
         ImGui.End();
+        PopToolbarStyles();
+    }
+
+    private static void PushToolbarStyles()
+    {
+        AppLayout.PushFontIcon();
+
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+        ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
+
+        ImGui.PushStyleColor(ImGuiCol.Text, Palette32.White);
+        ImGui.PushStyleColor(ImGuiCol.Header, Palette32.PrimaryColor);
+        ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Palette32.HoverColor);
+        ImGui.PushStyleColor(ImGuiCol.HeaderActive, Palette32.SelectedColor);
+    }
+
+    private static void PopToolbarStyles()
+    {
         ImGui.PopStyleColor(4);
         ImGui.PopStyleVar(2);
-
         ImGui.PopFont();
     }
 
@@ -161,13 +166,13 @@ internal sealed class TopMenuWindow
 
     private static readonly ToolbarItem Camera = new(Icons.Video, ContextChangeMask.Selection,
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Camera)),
-        (prev, next, it) => it.Set(next.Selection.HasNew(prev.Selection, FixedInspectorId.Camera)));
+        (prev, next, it) => it.Set(next.Selection.HasNewFixed(prev.Selection, FixedInspectorId.Camera)));
 
     private static readonly ToolbarItem Lighting = new(Icons.Sun, ContextChangeMask.Selection,
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Lighting)),
-        (prev, next, it) => it.Set(next.Selection.HasNew(prev.Selection, FixedInspectorId.Lighting)));
+        (prev, next, it) => it.Set(next.Selection.HasNewFixed(prev.Selection, FixedInspectorId.Lighting)));
 
     private static readonly ToolbarItem Visual = new(Icons.Sparkles, ContextChangeMask.Selection,
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Visual)),
-        (prev, next, it) => it.Set(next.Selection.HasNew(prev.Selection, FixedInspectorId.Visual)));
+        (prev, next, it) => it.Set(next.Selection.HasNewFixed(prev.Selection, FixedInspectorId.Visual)));
 }

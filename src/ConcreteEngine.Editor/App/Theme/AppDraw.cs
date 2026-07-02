@@ -75,12 +75,11 @@ internal static unsafe class AppDraw
         return result;
     }
 
-    
-    //out ImGuiListClipper clipper -> stack local at call site
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     // ReSharper disable once OutParameterValueIsAlwaysDiscarded.Global
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ClipperEnumerator Clipper(int count, float itemHeight, [UnscopedRef] out ImGuiListClipper clipper)
     {
+        //out ImGuiListClipper clipper -> allow stack local at call site
         clipper = default;
         clipper.Begin(count, itemHeight);
         return ClipperEnumerator.New(ref clipper);

@@ -30,18 +30,17 @@ internal readonly record struct SelectionContext(
     SceneObjectId SelectedSceneId,
     FixedInspectorId FixedInspector)
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool HasSelection() => SelectedAssetId.IsValid() || SelectedSceneId.IsValid() || FixedInspector > 0;
-    public bool HasSceneObject => SelectedSceneId.IsValid();
     public bool HasAsset => SelectedAssetId.IsValid();
+    public bool HasSceneObject => SelectedSceneId.IsValid();
 
+    public bool IsMixed => SelectedSceneId.IsValid() || SelectedAssetId.IsValid();
     public bool IsEmpty => !SelectedSceneId.IsValid() && !SelectedAssetId.IsValid();
-    public bool IsMixed => SelectedSceneId.IsValid() && SelectedAssetId.IsValid();
+
+    public bool HasSelection() => IsMixed || FixedInspector > 0;
 
     public bool HasNewAsset(SelectionContext prev) => HasAsset && prev.SelectedAssetId != SelectedAssetId;
-
     public bool HasNewScene(SelectionContext prev) => HasSceneObject && prev.SelectedSceneId != SelectedSceneId;
 
-    public bool HasNew(SelectionContext prev, FixedInspectorId id) =>
+    public bool HasNewFixed(SelectionContext prev, FixedInspectorId id) =>
         prev.FixedInspector != FixedInspector && id == FixedInspector;
 }

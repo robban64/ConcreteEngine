@@ -136,12 +136,12 @@ internal static unsafe class ImGuiSystem
         config->GlyphOffset.Y = 1f;
 
         pathUtf8 = PathUtils.JoinPath(buffer, "./", EnginePath.EditorContentPath, IconFilename);
-        GuiTheme.TextFont = fonts->AddFontFromFileTTF(pathUtf8, fontSize, config, glyphs.GetRanges());
+        AppLayout.TextFont = fonts->AddFontFromFileTTF(pathUtf8, fontSize, config, glyphs.GetRanges());
 
         config->MergeMode = 0;
         config->GlyphOffset.Y = 0;
         config->GlyphMinAdvanceX = GuiTheme.IconSizeDefault * scale;
-        GuiTheme.IconFont = fonts->AddFontFromFileTTF(pathUtf8, GuiTheme.IconSizeDefault * scale, config);
+        AppLayout.IconFont = fonts->AddFontFromFileTTF(pathUtf8, GuiTheme.IconSizeDefault * scale, config);
 
         fonts->CompactCache();
     }

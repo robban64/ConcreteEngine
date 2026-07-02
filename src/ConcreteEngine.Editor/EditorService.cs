@@ -61,19 +61,13 @@ internal sealed class EditorService
         _eventDispatcher.Register<SelectionEvent>(EventHandler.OnSelectionEvent);
         _eventDispatcher.Register<ToolEvent>(EventHandler.OnToolEvent);
     }
-
-    private static AvgFrameTimer _avg;
-
+    
     public void Draw()
     {
-        //_avg.BeginSample();
-        
-        GuiTheme.PushFontText();
+        AppLayout.PushFontText();
         _windowManager.Draw();
         ImGui.PopFont();
         
-       // if (_avg.EndSample() >= 80) _avg.ResetAndPrint("Editor.Draw");
-
         if (EditorInput.UpdateInputState(_selectionManager.HasSceneObject))
             EditorTime.WakeUp();
 

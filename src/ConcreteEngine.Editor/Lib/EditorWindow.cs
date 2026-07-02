@@ -14,7 +14,6 @@ internal abstract class EditorWindow(StateManager state)
     public ImGuiWindowFlags Flags = DefaultFlags;
     public bool Enabled { get; private set; }
     public bool NoBorder;
-    public Vector2 WindowPadding = GuiTheme.WindowPadding;
 
     protected readonly StateManager State = state;
 
@@ -34,21 +33,15 @@ internal abstract class EditorWindow(StateManager state)
     {
         if(!Enabled) return;
 
-        int pushedStyles = 1;
-        if (NoBorder)
-        {
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-            pushedStyles++;
-        }
+        if (NoBorder) ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
         
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, WindowPadding);
         if (ImGui.Begin(Id, Flags))
         {
             OnDraw();
         }
         ImGui.End();
         
-        ImGui.PopStyleVar(pushedStyles);
+        if(NoBorder) ImGui.PopStyleVar();
 
     }
 }

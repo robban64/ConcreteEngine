@@ -88,12 +88,12 @@ internal static class WindowRoot
         nodes[0] = DockSpaceId;
         uint* dockMainId = nodes, dockLeftId = nodes + 1, dockRightId = nodes + 2, dockBottomId = nodes + 3;
 
+        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Down, bottomRatio, dockBottomId, dockMainId);
         ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Left, leftRatio, dockLeftId, dockMainId);
         ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Right, rightRatio, dockRightId, dockMainId);
-        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Down, bottomRatio, dockBottomId, dockMainId);
 
         uint dockBottomLeftId = 0, dockBottomRightId = 0;
-        ImGuiP.DockBuilderSplitNode(*dockBottomId, ImGuiDir.Left, 0.7f, &dockBottomLeftId, &dockBottomRightId);
+        ImGuiP.DockBuilderSplitNode(*dockBottomId, ImGuiDir.Left, 0.6f, &dockBottomLeftId, &dockBottomRightId);
         
         //(ImGuiDockNodeFlags)4096;
         const ImGuiDockNodeFlags noTabBarBit = (ImGuiDockNodeFlags)ImGuiDockNodeFlagsPrivate.NoTabBar;

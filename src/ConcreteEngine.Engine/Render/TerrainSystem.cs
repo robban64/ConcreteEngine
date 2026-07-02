@@ -58,13 +58,13 @@ internal sealed class TerrainSystem
         if (!TerrainMesh.TerrainIboId.IsValid() && MainTerrain.Heightmap?.TryGetPixelSpan(out var heightData) == true)
         {
             TerrainMesh.Allocate(MainTerrain.GetChunks(), heightData, MainTerrain.Dimension, MainTerrain.MaxHeight);
-            Logger.LogString(LogScope.Engine, "Terrain: allocated terrain");
+            Logger.Message("Terrain: allocated terrain");
         }
 
         if (!TerrainMesh.HasFoliage && MainTerrain.Splatmap?.TryGetPixelSpan(out var splatMapData) == true)
         {
             TerrainMesh.AllocateFoliage(MainTerrain, splatMapData);
-            Logger.LogString(LogScope.Engine, "Terrain: allocated foliage");
+            Logger.Message("Terrain: allocated foliage");
         }
 
         if (MainTerrain.GroundMaterial is { } material)
@@ -73,7 +73,7 @@ internal sealed class TerrainSystem
             {
                 var textureId = MainTerrain.GroundAlbedoTextures.Compile(_gfx.Textures);
                 material.SetSourceSlot(0, AssetId.Empty, textureId);
-                Logger.LogString(LogScope.Engine, "Ground albedo texture changed");
+                Logger.Message("Ground albedo texture changed");
             }
         }
 
@@ -81,7 +81,7 @@ internal sealed class TerrainSystem
         {
             var textureId = MainTerrain.FoliageTextures.Compile(_gfx.Textures);
             foliageMaterial.SetSourceSlot(0, AssetId.Empty, textureId);
-            Logger.LogString(LogScope.Engine, "Foliage texture changed");
+            Logger.Message("Foliage texture changed");
         }
     }
 }

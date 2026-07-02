@@ -23,7 +23,7 @@ internal sealed class CommandQueueEntry<TCommand>(CommandScope scope, Action<TCo
     }
 }
 
-internal sealed class EngineCommandQueue
+internal sealed class CommandBus : ICommandSink
 {
     private const int QueueLimit = 16;
 
@@ -35,9 +35,15 @@ internal sealed class EngineCommandQueue
 
     public int QueuesCount => _commands.Count;
 
-    public EngineCommandQueue(EngineCommandContext context)
+    public CommandBus(EngineCommandContext context)
     {
         _context = context;
+        Commands.Create(this);
+        Setup();
+    }
+
+    private void Setup()
+    {
         RegisterHandler<AssetCommandRecord>(CommandScope.Asset, static (cmd, ctx) => ctx.ApplyAsset(cmd));
     }
 
@@ -51,7 +57,7 @@ internal sealed class EngineCommandQueue
     {
         if (!_commandSet.Add(record.Id))
         {
-            Logger.LogString(LogScope.Engine, $"Duplicated command: {record}", LogLevel.Warn);
+            Logger.Log(LogScope.Engine, $"Duplicated command: {record}", LogLevel.Warn);
             return;
         }
 
@@ -64,7 +70,7 @@ internal sealed class EngineCommandQueue
     {
         while (_commands.TryDequeue(out var command))
         {
-            Logger.LogString(LogScope.Engine, command.ToString());
+            Logger.Log(LogScope.Engine, command.ToString());
             var handler = _commandHandlers[(int)command.Scope];
             _commandSet.Remove(command.Id);
             handler.Dispatch(command, _context);

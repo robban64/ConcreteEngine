@@ -106,7 +106,7 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
 
-        Logger.LogString(LogScope.Ecs, $"{GetType().Name}: resized {newSize}", LogLevel.Warn);
+        Logger.Log(LogScope.Ecs, $"{GetType().Name}: resized {newSize}", LogLevel.Warn);
     }
 
     public override void Dispose() { }

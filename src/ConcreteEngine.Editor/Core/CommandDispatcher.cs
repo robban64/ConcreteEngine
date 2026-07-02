@@ -6,7 +6,7 @@ using ConcreteEngine.Editor.Logging;
 using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor;
-
+/*
 public static class CliName
 {
     public const string Asset = "asset";
@@ -119,4 +119,4 @@ public static class CommandDispatcher
             }
         };
     }
-}
+}*/

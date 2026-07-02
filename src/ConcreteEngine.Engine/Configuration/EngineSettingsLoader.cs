@@ -16,7 +16,7 @@ internal static class EngineSettingsLoader
         var path = EnginePath.GraphicSettingsFilePath;
         if (!File.Exists(path))
         {
-            Logger.LogString(LogScope.Engine, "Loading Default Engine Settings...");
+            Logger.Log(LogScope.Engine, "Loading Default Engine Settings...");
             EngineSettings.LoadSettings(new EngineSettingsRecord());
 
             var tempRecord = EngineSettings.Current.GetSettingsRecord();
@@ -24,13 +24,13 @@ internal static class EngineSettingsLoader
                       throw new InvalidDataException("Invalid Engine Settings.");
             File.WriteAllText(path, str);
 
-            Logger.LogString(LogScope.Engine, "Created config/graphic settings.json");
-            Logger.LogString(LogScope.Engine, tempRecord.Display.ToString(), LogLevel.Info);
-            Logger.LogString(LogScope.Engine, tempRecord.Simulation.ToString(), LogLevel.Info);
-            Logger.LogString(LogScope.Engine, tempRecord.GraphicsQuality.ToString(), LogLevel.Info);
+            Logger.Log(LogScope.Engine, "Created config/graphic settings.json");
+            Logger.Log(LogScope.Engine, tempRecord.Display.ToString(), LogLevel.Info);
+            Logger.Log(LogScope.Engine, tempRecord.Simulation.ToString(), LogLevel.Info);
+            Logger.Log(LogScope.Engine, tempRecord.GraphicsQuality.ToString(), LogLevel.Info);
         }
 
-        Logger.LogString(LogScope.Engine, "Loading Engine Settings...");
+        Logger.Log(LogScope.Engine, "Loading Engine Settings...");
 
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
             64 * 1024, FileOptions.SequentialScan);

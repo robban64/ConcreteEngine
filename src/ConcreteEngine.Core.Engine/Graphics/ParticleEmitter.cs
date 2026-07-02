@@ -108,7 +108,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         if (newCapacity > _particles.Length)
         {
             _particles.Resize(newCapacity, true);
-            Logger.LogString(LogScope.Engine, "ParticleEmitter: resized", LogLevel.Warn);
+            Logger.Log(LogScope.Engine, "ParticleEmitter: resized", LogLevel.Warn);
         }
 
         if (PendingParticleCount > ParticleCount)

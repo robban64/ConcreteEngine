@@ -27,7 +27,7 @@ internal static class TextBuffers
             throw new InvalidOperationException("Already allocated text buffers");
 
         _scratchBuffer = NativeArray.Allocate<byte>(512);
-        LogBuffer = NativeArray.Allocate<byte>(ConsoleService.LogStride * ConsoleService.StoredLogCap);
+        LogBuffer = NativeArray.Allocate<byte>(LogConsts.LogStride * LogConsts.StoredLogCap);
         PersistentArena = new ArenaAllocator(CapacityUtils.PageSize * 2);
 
     }

@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 
 namespace ConcreteEngine.Editor.Logging;
 
-internal static class StructLogParser
+internal static class ValueLogParser
 {
     public static ReadOnlySpan<byte> GetLogMessage(NativeSpanWriter sw, in LogEvent log)
     {

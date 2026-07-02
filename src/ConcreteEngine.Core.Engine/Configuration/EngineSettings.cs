@@ -53,7 +53,7 @@ public sealed class EngineSettings
         OpenGlVersion = version;
         GpuCapabilities = caps;
 
-        Logger.LogString(LogScope.Gfx, OpenGlVersion.ToString(), LogLevel.Info);
+        Logger.Log(LogScope.Gfx, OpenGlVersion.ToString(), LogLevel.Info);
     }
 
     internal EngineSettingsRecord GetSettingsRecord()

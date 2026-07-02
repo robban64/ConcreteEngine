@@ -1,10 +1,8 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Engine.Command;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor;
-using ConcreteEngine.Editor.Logging;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer;
-using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
 namespace ConcreteEngine.Engine.Gateway;
 
@@ -23,9 +21,9 @@ internal sealed class EngineGateway : IDisposable
         Metrics = new EngineMetricHub();
     }
 
-    public void SetupEditor(EngineCommandQueue commandQueue, GfxContext gfxContext)
+    public void SetupEditor(CommandBus commandBus, GfxContext gfxContext)
     {
-        ArgumentNullException.ThrowIfNull(commandQueue);
+        ArgumentNullException.ThrowIfNull(commandBus);
         ArgumentNullException.ThrowIfNull(gfxContext);
 
         if (Enabled) throw new InvalidOperationException(nameof(Enabled));
@@ -36,10 +34,8 @@ internal sealed class EngineGateway : IDisposable
         _editor = new EditorPortal();
         Metrics.ConnectEditor(_editor.GetMetricSystem());
 
-        EditorSetup.RegisterCommands();
-        EngineCommandRouter.CommandCommandQueues = commandQueue;
-
         _editor.Start();
+        Logger.BindLogger(_editor.GetLogBindings());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -76,19 +72,4 @@ internal sealed class EngineGateway : IDisposable
         _editor.Dispose();
     }
 
-    private static class EditorSetup
-    {
-        public static void RegisterCommands()
-        {
-            // Editor commands
-            EditorCmd.RegisterCommand<AssetCommandRecord>(EngineCommandRouter.AssetEndpoint);
-
-            // Console commands
-            EditorCmd.RegisterConsoleCmd(CliName.Asset, string.Empty,
-                static (action, arg1, arg2) => CommandParser.ParseAssetRequest(action, arg1, arg2));
-
-            // Misc
-            EditorCmd.RegisterNoOpConsoleCmd("inspect-structs", string.Empty, DebugCommandRouter.OnStructSizesCmd);
-        }
-    }
 }

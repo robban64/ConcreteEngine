@@ -62,7 +62,7 @@ internal sealed class SelectionManager
         if (id == SelectedAsset?.Id) return;
         if (!id.IsValid())
         {
-            ConsoleGateway.LogPlain($"(SelectAsset) - Invalid AssetId: {id}");
+            LogService.PushMessage($"(SelectAsset) - Invalid AssetId: {id}");
             return;
         }
 
@@ -92,7 +92,7 @@ internal sealed class SelectionManager
         if (id == SelectedSceneObject?.Id) return;
         if (!id.IsValid())
         {
-            ConsoleGateway.LogPlain($"(SelectSceneObject) - Invalid SceneObjectId: {id}");
+            LogService.PushMessage($"(SelectSceneObject) - Invalid SceneObjectId: {id}");
             return;
         }
 

@@ -28,7 +28,7 @@ public sealed class GameEngine : IDisposable
     private readonly SceneSystem _sceneSystem;
     private readonly EngineRenderSystem _renderSystem;
 
-    private readonly EngineCommandQueue _commandQueues;
+    private readonly CommandBus _commandBuses;
 
     private readonly EngineGateway _gateway;
 
@@ -47,7 +47,7 @@ public sealed class GameEngine : IDisposable
         _renderSystem = new EngineRenderSystem(gfxBundle.Graphics);
         _sceneSystem = new SceneSystem(sceneFactories);
 
-        _commandQueues = new EngineCommandQueue(new EngineCommandContext(_assetSystem));
+        _commandBuses = new CommandBus(new EngineCommandContext(_assetSystem));
 
         _gateway = new EngineGateway(_renderSystem.Program);
 
@@ -61,7 +61,7 @@ public sealed class GameEngine : IDisposable
             Assets = _assetSystem,
             Renderer = _renderSystem,
             SceneSystem = _sceneSystem,
-            CommandQueue = _commandQueues
+            CommandBus = _commandBuses
         });
     }
 
@@ -74,11 +74,9 @@ public sealed class GameEngine : IDisposable
         _graphics.Gfx.Commands.Clear(ColorRgba.Black, ClearBufferFlag.ColorAndDepth);
         if (!isDone) return;
 
-        Logger.LogString(LogScope.Engine, "Engine Setup: Complete. Swapping to Game Loop.");
+        Logger.Log(LogScope.Engine, "Engine Setup: Complete. Swapping to Game Loop.");
 
-        Console.WriteLine("Engine Setup: Complete. Swapping to Game Loop.");
         runner.Teardown();
-        Console.WriteLine("Engine Setup: Tear down complete");
 
         OnSystemTick(0);
         Console.WriteLine($"Fragmentation: {GC.GetGCMemoryInfo().FragmentedBytes}");
@@ -128,15 +126,13 @@ public sealed class GameEngine : IDisposable
     internal void OnSystemTick(float dt)
     {
         var windowResized = _systemStepper.Tick() && EngineWindow.Commit();
-        if(dt == 0)Console.WriteLine("_renderSystem.OnSystemTick");
         _renderSystem.OnSystemTick(windowResized);
-        if(dt == 0)Console.WriteLine("_assetSystem.PendingAssetCount");
 
         if (_assetSystem.PendingAssetCount > 0)
             _assetSystem.ProcessPendingQueue();
 
-        if (_commandQueues.QueuesCount > 0)
-            _commandQueues.DrainDispatch();
+        if (_commandBuses.QueuesCount > 0)
+            _commandBuses.DrainDispatch();
     }
 
     internal void OnDiagnosticTick(float dt) => _gateway.UpdateDiagnostics(dt);

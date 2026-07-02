@@ -63,7 +63,7 @@ public static class EngineWindow
         _viewport = _nextViewport;
         WindowSize = _nextWindowSize;
         OutputSize = _nextOutputSize;
-        Logger.LogString(LogScope.Engine, $"ScreenResized: {WindowSize}");
+        Logger.Log(LogScope.Engine, $"ScreenResized: {WindowSize}");
 
         return true;
     }

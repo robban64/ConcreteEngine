@@ -54,7 +54,7 @@ internal sealed class StringArena : IDisposable
             if(_blockCount++ > MaxBlocks) Throwers.InvalidOperation("Too many blocks");
 
             _arena.AllocBlock(CapacityUtils.PageSize);
-            Logger.LogString(LogScope.Editor, $"StringArena - Allocated new block");
+            Logger.Log(LogScope.Editor, $"StringArena - Allocated new block");
         }
         
         var memory = _arena.Tail.GetAllocator().AllocSlice(sizeInBytes);

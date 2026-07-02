@@ -30,7 +30,7 @@ internal sealed class StateManager(EventDispatcher eventDispatcher)
     {
         if (Context == context)
         {
-            ConsoleGateway.LogPlain("Identical context emitted");
+            LogService.PushMessage("Identical context emitted");
             return;
         }
 

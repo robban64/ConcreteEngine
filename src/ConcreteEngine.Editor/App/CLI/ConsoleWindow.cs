@@ -24,7 +24,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
     private static readonly Vector2 InputFramePad = new(8f, 6f);
     private static readonly float InputHeight = GuiTheme.FontSizeDefault + InputFramePad.Y * 2 + GuiTheme.ItemSpacing.Y;
     private static readonly float RowHeight = GuiTheme.FontSizeDefault + GuiTheme.ItemSpacing.Y;
-    private static FrameStepper _scrollTopBottomStepper = new(8);
+    private FrameStepper _scrollTopBottomStepper = new(8);
 
     //    
     private readonly TextInput _textInput;
@@ -41,7 +41,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
             .WithHistory()
             .WithClearOnResult()
             .WithTransformer(true, true)
-            .WithCallbackU16(static (text) => ConsoleGateway.Service.ExecCommand(text));
+            .WithCallbackU16(static (text) => ConsoleSystem.ExecuteCommand(text));
     }
 
 
@@ -52,14 +52,11 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         _textInput.SetTextBuffer(_inputString);
     }
 
-    public static void ScrollToBottom()
-    {
-        if (_scrollTopBottomStepper.IntervalTicks > 0) return;
-        _scrollTopBottomStepper.SetIntervalTicks(4);
-    }
-
     public override void OnUpdateDiagnostic()
     {
+        if(LogService.Instance.NewLogs > 0)
+            _scrollTopBottomStepper.SetIntervalTicks(4);
+
         var metrics = MetricSystem.Instance;
         //ImGui.GetIO().Framerate
         _title.OverWriter.Append("Console"u8).PadRight(4)
@@ -79,10 +76,10 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
 
         // log
         var innerWindow = ImGui.BeginChild("logs"u8, new Vector2(0, -InputHeight), ImGuiChildFlags.None, InnerFlags);
-        if (innerWindow && ConsoleGateway.Service.LogCount > 0)
+        if (innerWindow && LogService.Instance.LogCount > 0)
         {
-            foreach (var range in AppDraw.Clipper(ConsoleGateway.Service.LogCount, RowHeight))
-                DrawVisibleLogs(ConsoleGateway.Service, range.Offset, range.Length);
+            foreach (var range in AppDraw.Clipper(LogService.Instance.LogCount, RowHeight))
+                DrawVisibleLogs(LogService.Instance, range.Offset, range.Length);
 
             if (_scrollTopBottomStepper.Tick())
             {
@@ -104,7 +101,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         ImGui.PopStyleColor(1);
     }
 
-    private static void DrawVisibleLogs(ConsoleService service, int start, int length)
+    private static void DrawVisibleLogs(LogService service, int start, int length)
     {
         var cursor = UiDrawCursor.Make();
         var logs = service.GetLogs(start, length);
@@ -117,7 +114,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
             if (it.Scope > LogScope.Command)
                 DrawLog(text, it.Scope, it.Level, ref cursor);
             else
-                DrawPlain(text, it.Scope, ref cursor);
+                cursor.Text(text.SliceFrom(LogEntry.TimestampOffset));
         }
 
         cursor.Sync();
@@ -137,17 +134,4 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         cursor.Text(text.SliceFrom(LogEntry.TimestampOffset), color);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void DrawPlain(NativeView<byte> text, LogScope scope, scoped ref UiDrawCursor cursor)
-    {
-        cursor.Text(text.Slice(0, LogEntry.TimestampOffset));
-        if (scope == LogScope.Command)
-        {
-            cursor.SameLine();
-            cursor.Text(">>"u8, Palette32.OrangeBase);
-        }
-
-        cursor.SameLine();
-        cursor.Text(text.SliceFrom(LogEntry.TimestampOffset));
-    }
 }

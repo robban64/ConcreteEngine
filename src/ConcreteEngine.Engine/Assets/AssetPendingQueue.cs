@@ -21,7 +21,7 @@ internal sealed class AssetPendingQueue
     {
         if (!_enqueuedIds.Add(request.AssetId.Id))
         {
-            Logger.LogString(LogScope.Assets, $"Asset already in pending queue: {request.AssetId.Id}");
+            Logger.Log(LogScope.Assets, $"Asset already in pending queue: {request.AssetId.Id}");
             return false;
         }
 
@@ -45,7 +45,7 @@ internal sealed class AssetPendingQueue
     [MethodImpl(MethodImplOptions.NoInlining)]
     private bool OnDrain(AssetLoader loader, AssetStore store, AssetRecreateRequest request)
     {
-        Logger.LogString(LogScope.Assets, $"Recreating: {request}");
+        Logger.Log(LogScope.Assets, $"Recreating: {request}");
 
         try
         {
@@ -72,8 +72,8 @@ internal sealed class AssetPendingQueue
         {
             var msg = $"{ex.GetType().Name}: Error while processing request {request}";
             var level = ErrorUtils.IsUserOrDataError(ex) ? LogLevel.Warn : LogLevel.Critical;
-            Logger.LogString(LogScope.Assets, msg, level);
-            Logger.LogString(LogScope.Assets, ex.Message, level);
+            Logger.Log(LogScope.Assets, msg, level);
+            Logger.Log(LogScope.Assets, ex.Message, level);
 
             if (ErrorUtils.IsUserOrDataError(ex) || ex is InvalidOperationException { InnerException: null } ||
                 ex is GraphicsException)

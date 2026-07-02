@@ -10,7 +10,7 @@ public sealed class MetricSystem
     private const int SamplesPerWindowSlow = 8;
     private const int SamplesPerWindowFast = 4;
 
-    internal static readonly MetricSystem Instance = new();
+    public static readonly MetricSystem Instance = new();
 
     internal StoreMetrics? Stores { get; private set; }
 

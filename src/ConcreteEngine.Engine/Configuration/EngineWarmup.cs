@@ -38,9 +38,4 @@ internal static class EngineWarmup
         RuntimeHelpers.RunClassConstructor(typeof(EnumCache<TexturePixelFormat>).TypeHandle);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void YeetGenerics()
-    {
-        //Ecs.Internals.Warmup();
-    }
 }

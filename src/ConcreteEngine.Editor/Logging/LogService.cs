@@ -6,26 +6,15 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.App.CLI;
 using ConcreteEngine.Editor.Core.Data;
+using static ConcreteEngine.Editor.Logging.LogConsts;
 
 namespace ConcreteEngine.Editor.Logging;
 
-internal struct LogEntry(RangeU16 handle)
+internal sealed class LogService
 {
-    public const byte TimestampOffset = 13;
-    public RangeU16 Handle = handle;
-    public LogScope Scope;
-    public LogLevel Level;
-}
+    public static readonly LogService Instance = new();
 
-internal sealed class ConsoleService
-{
-    public const int LogStride = 128;
-    public const int StoredLogCap = 128;
-
-    private const int DefaultQueueCap = 64;
-
-    private const int DrainPerTick = 6;
-    private const int DrainPerTickHigh = 12;
+    public int NewLogs { get; private set; }
     
     private int _head;
     private int _count;
@@ -34,11 +23,11 @@ internal sealed class ConsoleService
 
     private readonly LogEntry[] _logs = new LogEntry[StoredLogCap];
 
-    private readonly Queue<LogEvent> _structLogQueue = new(DefaultQueueCap);
+    private readonly Queue<LogEvent> _valueLogQueue = new(DefaultQueueCap);
     private readonly Queue<StringLogEvent> _stringLogQueue = new(DefaultQueueCap);
 
     public int LogCount => _count;
-    public int EnqueuedLogCount => _stringLogQueue.Count + _structLogQueue.Count;
+    public int EnqueuedLogCount => _stringLogQueue.Count + _valueLogQueue.Count;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<byte> GetLogText(RangeU16 handle) => _logText.Slice(handle);
@@ -54,8 +43,9 @@ internal sealed class ConsoleService
             _logs[i] = new LogEntry(new RangeU16(i * LogStride, LogStride));
     }
 
+    public void ResetNewLogCount() => NewLogs = 0;
     public void Enqueue(StringLogEvent evt) => _stringLogQueue.Enqueue(evt);
-    public void Enqueue(in LogEvent evt) => _structLogQueue.Enqueue(evt);
+    public void Enqueue(in LogEvent evt) => _valueLogQueue.Enqueue(evt);
 
     [SkipLocalsInit]
     public unsafe void OnTick()
@@ -66,16 +56,15 @@ internal sealed class ConsoleService
         var writer = new NativeSpanWriter(buffer, 256);
         
         int drainLimit = EnqueuedLogCount < 100 ? DrainPerTick : DrainPerTickHigh;
-
         while (drainLimit-- > 0)
         {
             bool hasString = _stringLogQueue.TryPeek(out var nextStringLog);
-            bool hasStruct = _structLogQueue.TryPeek(out var nextStructLog);
+            bool hasValue = _valueLogQueue.TryPeek(out var nextStructLog);
 
-            if (!hasString && !hasStruct) break;
+            if (!hasString && !hasValue) break;
 
             bool pickString;
-            if (hasString && hasStruct)
+            if (hasString && hasValue)
                 pickString = nextStringLog!.Timestamp <= nextStructLog.Timestamp;
             else
                 pickString = hasString;
@@ -84,17 +73,18 @@ internal sealed class ConsoleService
             {
                 PushLog(writer.Append(strLog.Message).EndSpan(), strLog.Timestamp, strLog.Level, strLog.Scope);
             }
-            else if (_structLogQueue.TryDequeue(out var sLog))
+            else if (_valueLogQueue.TryDequeue(out var sLog))
             {
-                var message = StructLogParser.GetLogMessage(writer, in sLog);
+                var message = ValueLogParser.GetLogMessage(writer, in sLog);
                 PushLog(message, sLog.Timestamp, sLog.Level, sLog.Scope);
             }
 
             writer.Clear();
         }
-    }
 
-    private void PushLog(ReadOnlySpan<byte> message, DateTime timestamp, LogLevel level = LogLevel.None,
+    }
+    
+    public void PushLog(ReadOnlySpan<byte> message, DateTime timestamp, LogLevel level = LogLevel.None,
         LogScope scope = LogScope.Unknown)
     {
         var offset = _head > 0 ? _logs[_head - 1].Handle.End + 1 : 0;
@@ -113,57 +103,10 @@ internal sealed class ConsoleService
         _head = (_head + 1) % StoredLogCap;
         _count = int.Min(_count + 1, StoredLogCap);
 
-        ConsoleWindow.ScrollToBottom();
+        NewLogs++;
     }
-
-    [SkipLocalsInit]
-    private unsafe void PushPlain(string message)
-    {
-        var buffer = stackalloc byte[128];
-        var writer = new NativeSpanWriter(buffer, 128);
-        PushLog(writer.Append(message).EndSpan(), default);
-    }
-
-    internal bool ExecCommand(Span<char> line)
-    {
-        if (line.IsEmpty || line.IsWhiteSpace()) return false;
-        line = line.Trim();
-
-        PushPlain($">> {line}");
-
-        var parts = line.Split(' ');
-        var cmd = parts.MoveNext() ? line[parts.Current].ToString() : string.Empty;
-        var action = parts.MoveNext() ? line[parts.Current].ToString() : string.Empty;
-        var arg1 = parts.MoveNext() ? line[parts.Current].ToString() : string.Empty;
-        var arg2 = parts.MoveNext() ? line[parts.Current].ToString() : string.Empty;
-
-        if (cmd is "clear")
-        {
-            ClearLog();
-            PushPlain("[console cleared]");
-            return true;
-        }
-
-        if (cmd is "help" or "info")
-        {
-            CommandDispatcher.PrintCommandEntries();
-            return true;
-        }
-
-        try
-        {
-            CommandDispatcher.InvokeCommand(ConsoleGateway.MakeContext(), cmd, action, arg1, arg2);
-        }
-        catch (Exception ex) when (ex is ArgumentException or KeyNotFoundException)
-        {
-            PushPlain($"Error when invoking {cmd} with error: {ex.Message}");
-            return false;
-        }
-
-        return true;
-    }
-
-    private void ClearLog()
+    
+    public void ClearLog()
     {
         if (_count == 0) return;
 
@@ -176,5 +119,18 @@ internal sealed class ConsoleService
 
         _head = 0;
         _count = 0;
+        NewLogs = 0;
     }
+
+    public static void Log(StringLogEvent log) => Instance.Enqueue(log);
+    public static void LogValue(in LogEvent log) => Instance.Enqueue(in log);
+    
+    [SkipLocalsInit]
+    public static unsafe void PushMessage(ReadOnlySpan<char> message)
+    {
+        var buffer = stackalloc byte[128];
+        var writer = new NativeSpanWriter(buffer, 128);
+        Instance.PushLog(writer.Append(message).EndSpan(), default);
+    }
+
 }

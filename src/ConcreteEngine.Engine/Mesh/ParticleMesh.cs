@@ -146,7 +146,7 @@ internal sealed class ParticleMesh : IDisposable
         if (capacity <= _particleData.Length) return;
         var newCap = CapacityUtils.CapacityGrowthToFit(_particleData.Length, capacity);
         _particleData.Resize(newCap, true);
-        Logger.LogString(LogScope.Engine, $"{nameof(_particleData)} resize");
+        Logger.Log(LogScope.Engine, $"{nameof(_particleData)} resize");
     }
 
     private void EnsureHandleCapacity(int delta)
@@ -159,6 +159,6 @@ internal sealed class ParticleMesh : IDisposable
         if (newCap >= MaxMeshHandleCap)
             throw new InvalidOperationException("Maximum particle handle capacity exceeded");
         Array.Resize(ref _handles, newCap);
-        Logger.LogString(LogScope.Engine, $"{nameof(_handles)} resize");
+        Logger.Log(LogScope.Engine, $"{nameof(_handles)} resize");
     }
 }

@@ -41,12 +41,6 @@ public unsafe ref struct UiDrawCursor
         MaxRight = start.X;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Text(byte* text, uint color = Palette32.TextPrimary)
-    {
-        DrawList->AddText(Cursor, color, text);
-        Advance(ImGui.CalcTextSize(text));
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Text(NativeView<byte> text, uint color = Palette32.TextPrimary)

@@ -92,7 +92,7 @@ internal static class EventHandler
         }
         else if (evt.Reload)
         {
-            CommandDispatcher.DispatchCommand(new AssetCommandRecord(CommandAssetAction.Reload, evt.Asset, evt.Kind));
+            Commands.Enqueue(new AssetCommandRecord(CommandAssetAction.Reload, evt.Asset, evt.Kind));
         }
     }
 }

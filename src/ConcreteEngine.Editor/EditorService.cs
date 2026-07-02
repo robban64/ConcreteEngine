@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Editor.App.CLI;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
@@ -19,11 +20,12 @@ internal sealed class EditorService
 
     private readonly PanelRouter _router;
     private readonly SelectionManager _selectionManager;
+    private readonly ConsoleSystem _cli;
 
     public EditorService()
     {
         _eventDispatcher = new EventDispatcher();
-
+        _cli = new ConsoleSystem();
         _stateManager = new StateManager(_eventDispatcher);
 
         _selectionManager = new SelectionManager(_stateManager);
@@ -37,13 +39,19 @@ internal sealed class EditorService
     public void Setup()
     {
         RegisterEvents();
-
+        RegisterCli();
+        
         _windowManager.Setup();
         _router.ForceResolve(_stateManager);
 
-        ConsoleGateway.LogPlain($"PersistentArena: {TextBuffers.PersistentArena.Remaining} bytes left");
-        ConsoleGateway.LogPlain($"StringArena: {StringArena.Remaining} bytes left");
+        LogService.PushMessage($"PersistentArena: {TextBuffers.PersistentArena.Remaining} bytes left");
+        LogService.PushMessage($"StringArena: {StringArena.Remaining} bytes left");
 
+    }
+    
+    private void RegisterCli()
+    {
+        _cli.RegisterCommand<UtilityCommandHandler>();
     }
 
     private void RegisterEvents()

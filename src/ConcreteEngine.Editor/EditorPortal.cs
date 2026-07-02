@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
@@ -41,12 +43,18 @@ public sealed class EditorPortal : IDisposable
         StringArena.Create();
         TextBuffers.AllocateBuffers();
 
-        ConsoleGateway.Service.Setup();
+        LogService.Instance.Setup();
 
         InspectorFieldProvider.Create();
         _service = new EditorService();
         _service.Setup();
         Initialized = true;
+    }
+
+    public unsafe LogBinding GetLogBindings()
+    {
+        if (!Initialized) Throwers.InvalidOperation(nameof(Initialized));
+        return new LogBinding(LogService.Log, LogService.PushMessage, &LogService.LogValue);
     }
 
     public void OnDiagnosticTick() => _isDiagnosticTick = true;
@@ -61,8 +69,8 @@ public sealed class EditorPortal : IDisposable
 
     public void Render(float deltaTime, TextureId outputTexture)
     {
-        if(!Initialized) return;
-        
+        if (!Initialized) return;
+
         if (EditorTime.Advance(deltaTime, out var editorDelta))
             Update(editorDelta, outputTexture);
 
@@ -77,13 +85,14 @@ public sealed class EditorPortal : IDisposable
         {
             _isDiagnosticTick = false;
             _wasDiagnosticTick = true;
-            ConsoleGateway.Service.OnTick();
+            LogService.Instance.OnTick();
         }
 
         if (_wasDiagnosticTick)
         {
             _wasDiagnosticTick = false;
             _service.OnDiagnosticTick();
+            LogService.Instance.ResetNewLogCount();
         }
 
         _service.Draw();
@@ -122,8 +131,6 @@ public sealed class EditorPortal : IDisposable
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void RunStaticCtor()
     {
-        RuntimeHelpers.RunClassConstructor(typeof(ConsoleGateway).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(CommandDispatcher).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EditorInput).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GuiTheme).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(Palette).TypeHandle);

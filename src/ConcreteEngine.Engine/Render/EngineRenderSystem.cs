@@ -57,13 +57,13 @@ public sealed class EngineRenderSystem : IDisposable
 
         if (screenResize)
         {
-            Logger.LogString(LogScope.Engine, "Recreating screen framebuffers");
+            Logger.Log(LogScope.Engine, "Recreating screen framebuffers");
             Program.ResizeScreenFrameBuffers(EngineWindow.Viewport.Size);
         }
 
         if (_visualManager.CommitShadowSize())
         {
-            Logger.LogString(LogScope.Engine, "Recreating shadow framebuffers");
+            Logger.Log(LogScope.Engine, "Recreating shadow framebuffers");
             Program.ResizeShadowFrameBuffers(_visualManager.Shadow.ShadowMapSize);
         }
     }

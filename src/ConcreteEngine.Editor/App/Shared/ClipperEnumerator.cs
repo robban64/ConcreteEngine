@@ -4,9 +4,9 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Shared;
 
-internal ref struct ClipperEnumerator
+internal readonly ref struct ClipperEnumerator
 {
-    private ref ImGuiListClipper _clipper;
+    private readonly ref ImGuiListClipper _clipper;
 
     private ClipperEnumerator(ref ImGuiListClipper clipper) => _clipper = ref clipper;
 

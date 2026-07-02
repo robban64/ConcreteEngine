@@ -1,9 +1,11 @@
+using System.Text;
 using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Core.Common.Collections;
 
 public static class SpanExtensions
 {
+
     public static ReadOnlySpan<char> Truncate(this string str, int length) =>
         str.AsSpan(0, int.Min(length, str.Length));
 

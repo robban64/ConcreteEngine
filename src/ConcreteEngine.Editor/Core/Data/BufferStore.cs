@@ -8,9 +8,6 @@ namespace ConcreteEngine.Editor.Core.Data;
 
 internal static class TextBuffers
 {
-    //todo move
-    public static NativeArray<byte> LogBuffer;
-
     private static NativeArray<byte> _scratchBuffer;
 
     // todo remove
@@ -21,13 +18,12 @@ internal static class TextBuffers
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void AllocateBuffers()
+    public static void Create()
     {
         if (PersistentArena != null)
             throw new InvalidOperationException("Already allocated text buffers");
 
         _scratchBuffer = NativeArray.Allocate<byte>(512);
-        LogBuffer = NativeArray.Allocate<byte>(LogConsts.LogStride * LogConsts.StoredLogCap);
         PersistentArena = new ArenaAllocator(CapacityUtils.PageSize * 2);
 
     }
@@ -35,7 +31,6 @@ internal static class TextBuffers
     public static void Dispose()
     {
         PersistentArena.Dispose();
-        LogBuffer.Dispose();
         _scratchBuffer.Dispose();
     }
 }

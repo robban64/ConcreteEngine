@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Editor.App.Shared;
@@ -74,12 +75,14 @@ internal static unsafe class AppDraw
         return result;
     }
 
-    private static ImGuiListClipper _clipper;
     
+    //out ImGuiListClipper clipper -> stack local at call site
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ClipperEnumerator Clipper(int count, float itemHeight)
+    // ReSharper disable once OutParameterValueIsAlwaysDiscarded.Global
+    public static ClipperEnumerator Clipper(int count, float itemHeight, [UnscopedRef] out ImGuiListClipper clipper)
     {
-        _clipper.Begin(count, itemHeight);
-        return ClipperEnumerator.New(ref _clipper);
+        clipper = default;
+        clipper.Begin(count, itemHeight);
+        return ClipperEnumerator.New(ref clipper);
     }
 }

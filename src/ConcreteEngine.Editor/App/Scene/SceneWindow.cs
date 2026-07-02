@@ -97,7 +97,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
         if (ImGui.BeginChild("scene-list"u8))
         {
             var itemWidth = ImGui.GetContentRegionAvail().X - ListItemHeight;
-            foreach (var range in AppDraw.Clipper(_browser.FilteredCount, ListItemHeight))
+            foreach (var range in AppDraw.Clipper(_browser.FilteredCount, ListItemHeight, out _))
                 DrawList(range, itemWidth);
         }
 

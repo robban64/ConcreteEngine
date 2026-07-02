@@ -78,7 +78,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         var innerWindow = ImGui.BeginChild("logs"u8, new Vector2(0, -InputHeight), ImGuiChildFlags.None, InnerFlags);
         if (innerWindow && LogService.Instance.LogCount > 0)
         {
-            foreach (var range in AppDraw.Clipper(LogService.Instance.LogCount, RowHeight))
+            foreach (var range in AppDraw.Clipper(LogService.Instance.LogCount, RowHeight,out _))
                 DrawVisibleLogs(LogService.Instance, range.Offset, range.Length);
 
             if (_scrollTopBottomStepper.Tick())

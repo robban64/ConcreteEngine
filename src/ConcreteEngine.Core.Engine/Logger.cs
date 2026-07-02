@@ -8,6 +8,7 @@ namespace ConcreteEngine.Core.Engine;
 public sealed class Logger
 {
     private static readonly Logger Instance = new();
+    
     private bool _isBound;
     
     private List<StringLogEvent>? _tempLogs = new();

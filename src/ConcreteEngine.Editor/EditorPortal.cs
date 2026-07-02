@@ -41,9 +41,9 @@ public sealed class EditorPortal : IDisposable
 
         StyleMap.Create();
         StringArena.Create();
-        TextBuffers.AllocateBuffers();
+        TextBuffers.Create();
 
-        LogService.Instance.Setup();
+        LogService.Instance.Create();
 
         InspectorFieldProvider.Create();
         _service = new EditorService();
@@ -105,9 +105,10 @@ public sealed class EditorPortal : IDisposable
 
     public void Dispose()
     {
-        StringArena.Instance.Dispose();
         StyleMap.Dispose();
         TextBuffers.Dispose();
+        StringArena.Instance.Dispose();
+        LogService.Instance.Dispose();
 
         ImGuiImplOpenGL3.Shutdown();
         ImGuiImplOpenGL3.SetCurrentContext(null);
@@ -115,18 +116,7 @@ public sealed class EditorPortal : IDisposable
         ImGuiImplGLFW.SetCurrentContext(null);
         ImGui.DestroyContext();
     }
-/*
-    public static ViewportRect PredictInitialViewport(Size2D outputSize)
-    {
-        float width = outputSize.Width * (1.0f - 0.20f - 0.20f);
-        float height = outputSize.Height * (1.0f - 0.25f) - GuiTheme.TopOffset;
 
-        float posX = outputSize.Width * 0.20f;
-        float posY = GuiTheme.TopOffset;
-
-        return new ViewportRect(new Vector2I(width, height), new Size2D(posX, posY));
-    }
-*/
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void RunStaticCtor()

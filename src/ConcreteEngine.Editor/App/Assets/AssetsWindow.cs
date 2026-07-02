@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Text;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.App.Shared;
 using ConcreteEngine.Editor.App.Theme;
@@ -154,7 +155,6 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
             ImGui.PushFont(GuiTheme.TextFont, GuiTheme.FontSizeSmall);
-
             DrawFiles();
 
             ImGui.PopFont();
@@ -258,7 +258,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         columnCount = int.Max(columnCount, 1);
         var rowCount = (int)float.Ceiling(count / (float)columnCount);
 
-        foreach (var range in AppDraw.Clipper(rowCount, GridCellSize))
+        foreach (var range in AppDraw.Clipper(rowCount, GridCellSize, out _))
         {
             var start = range.Offset * columnCount;
             var length = range.Length * columnCount;

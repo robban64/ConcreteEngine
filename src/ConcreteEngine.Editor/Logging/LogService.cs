@@ -10,7 +10,7 @@ using static ConcreteEngine.Editor.Logging.LogConsts;
 
 namespace ConcreteEngine.Editor.Logging;
 
-internal sealed class LogService
+internal sealed class LogService : IDisposable
 {
     public static readonly LogService Instance = new();
 
@@ -19,26 +19,30 @@ internal sealed class LogService
     private int _head;
     private int _count;
 
-    private NativeView<byte> _logText = NativeView<byte>.MakeNull();
+    private NativeArray<byte> _buffer;
+    private NativeView<byte> LogText => _buffer;
 
     private readonly LogEntry[] _logs = new LogEntry[StoredLogCap];
 
     private readonly Queue<LogEvent> _valueLogQueue = new(DefaultQueueCap);
     private readonly Queue<StringLogEvent> _stringLogQueue = new(DefaultQueueCap);
 
+    //
     public int LogCount => _count;
     public int EnqueuedLogCount => _stringLogQueue.Count + _valueLogQueue.Count;
 
+    //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<byte> GetLogText(RangeU16 handle) => _logText.Slice(handle);
+    public NativeView<byte> GetLogText(RangeU16 handle) => LogText.Slice(handle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<LogEntry> GetLogs(int start, int length) => new(_logs, start, length);
 
-    public void Setup()
+    //
+    public void Create()
     {
-        _logText = TextBuffers.LogBuffer;
-        _logText.Clear();
+        _buffer = NativeArray.Allocate<byte>(LogStride * StoredLogCap);
+        _buffer.Clear();
         for (int i = 0; i < StoredLogCap; i++)
             _logs[i] = new LogEntry(new RangeU16(i * LogStride, LogStride));
     }
@@ -89,7 +93,7 @@ internal sealed class LogService
     {
         var offset = _head > 0 ? _logs[_head - 1].Handle.End + 1 : 0;
 
-        var sw = _logText.SliceFrom(offset).Writer();
+        var sw = LogText.SliceFrom(offset).Writer();
         sw.Append('[').Append(timestamp, "HH:mm:ss:ff").Append(']');
         sw.SetCursor(LogEntry.TimestampOffset);
         sw.Append(message.Truncate(LogStride - LogEntry.TimestampOffset));
@@ -128,9 +132,10 @@ internal sealed class LogService
     [SkipLocalsInit]
     public static unsafe void PushMessage(ReadOnlySpan<char> message)
     {
-        var buffer = stackalloc byte[128];
-        var writer = new NativeSpanWriter(buffer, 128);
-        Instance.PushLog(writer.Append(message).EndSpan(), default);
+        var buffer = stackalloc byte[256];
+        var writer = new NativeSpanWriter(buffer, 256);
+        Instance.PushLog(writer.Append(message).EndSpan().Truncate(256), default);
     }
 
+    public void Dispose() => _buffer.Dispose();
 }

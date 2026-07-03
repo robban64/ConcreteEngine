@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Inspection;
 using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Graphics.Gfx;
 

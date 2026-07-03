@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.Lib;
+namespace ConcreteEngine.Editor.Lib.Inspection;
 
 public enum FieldGetDelay : ushort
 {
@@ -16,7 +16,6 @@ public enum FieldKind : byte
     Drag,
     Combo,
     Composite,
-    InputText
 }
 
 public enum FieldLabelPlacement : byte

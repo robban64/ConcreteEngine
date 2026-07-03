@@ -1,10 +1,9 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Widgets;
 
-namespace ConcreteEngine.Editor.Lib;
+namespace ConcreteEngine.Editor.Lib.Inspection;
 
 internal static class Inspector
 {
@@ -13,7 +12,7 @@ internal static class Inspector
     {
         foreach (var it in fields)
         {
-            if (it.Name == name) Throwers.InvalidArgument($"Name {name} is already registered", nameof(name));
+            if (it.FieldName == name) Throwers.InvalidArgument($"Name {name} is already registered", nameof(name));
         }
     }
 }
@@ -25,17 +24,17 @@ internal static class Inspector<T> where T : class
 
     public static event Action<T>? OnBind;
     public static event Action<T>? OnUnbind;
-    
+
     public static void Register<TValue>(
-        string name,
-        UiField el,
-        Func<TValue> getter, 
+        string fieldName,
+        UiField uiElement,
+        Func<TValue> getter,
         Action<TValue> setter,
         FieldGetDelay delay = FieldGetDelay.Low)
         where TValue : unmanaged, IFieldValue
     {
-        Inspector.ValidateName(name, Fields);
-        Fields.Add(new BoundField<TValue>(name, el, getter, setter){Delay =  delay});
+        Inspector.ValidateName(fieldName, Fields);
+        Fields.Add(new BoundField<TValue>(fieldName, uiElement, getter, setter) { Delay = delay });
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

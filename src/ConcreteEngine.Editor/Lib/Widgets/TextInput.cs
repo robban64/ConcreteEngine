@@ -8,6 +8,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Inspection;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
@@ -42,7 +43,7 @@ internal sealed unsafe class TextInput : UiField
     private readonly ImGuiInputTextCallback _inputCallback;
 
     public TextInput(string label, ushort bufferSize, ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.CharsNoBlank)
-        : base(label, FieldKind.InputText)
+        : base(label, FieldKind.Input)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(bufferSize, 4);
         BufferSize = bufferSize;

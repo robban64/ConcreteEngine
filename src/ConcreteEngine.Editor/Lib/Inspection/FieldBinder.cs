@@ -1,21 +1,20 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Widgets;
 
-namespace ConcreteEngine.Editor.Lib;
+namespace ConcreteEngine.Editor.Lib.Inspection;
 
 internal abstract class BoundField
 {
-    public readonly string Name;
+    public readonly string FieldName;
     public readonly UiField Widget;
 
-    public BoundField(string name, UiField widget)
+    protected BoundField(string fieldName, UiField widget)
     {
-        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentException.ThrowIfNullOrEmpty(fieldName);
         ArgumentNullException.ThrowIfNull(widget);
 
-        Name = name;
+        FieldName = fieldName;
         Widget = widget;
     }
 
@@ -23,8 +22,8 @@ internal abstract class BoundField
     public abstract void Refresh();
 }
 
-internal sealed class BoundField<T>(string name, UiField widget, Func<T> getter, Action<T> setter)
-    : BoundField(name, widget) where T : unmanaged, IFieldValue
+internal sealed class BoundField<T>(string fieldName, UiField widget, Func<T> getter, Action<T> setter)
+    : BoundField(fieldName, widget) where T : unmanaged, IFieldValue
 {
     private FrameStepper _fetchStepper;
 

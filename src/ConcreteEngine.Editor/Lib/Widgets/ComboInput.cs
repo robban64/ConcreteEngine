@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Inspection;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
@@ -20,7 +21,6 @@ internal sealed unsafe class ComboInput : UiField
 
     private readonly int[] _values;
     private readonly string[] _names;
-
 
     public ushort StartAt
     {

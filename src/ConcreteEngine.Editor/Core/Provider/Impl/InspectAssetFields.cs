@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Inspection;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
 

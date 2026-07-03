@@ -2,6 +2,7 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Inspection;
 
 namespace ConcreteEngine.Editor.Core.Provider.Impl;
 

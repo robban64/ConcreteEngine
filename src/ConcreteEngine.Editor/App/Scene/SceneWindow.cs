@@ -9,6 +9,7 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Inspection;
 using ConcreteEngine.Editor.Lib.Widgets;
 using Hexa.NET.ImGui;
 

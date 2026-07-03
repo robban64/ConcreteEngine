@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Inspection;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core.Provider;

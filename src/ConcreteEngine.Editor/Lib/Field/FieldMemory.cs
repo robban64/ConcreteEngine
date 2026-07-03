@@ -3,6 +3,7 @@ using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Editor.Lib.Inspection;
 
 namespace ConcreteEngine.Editor.Lib.Field;
 

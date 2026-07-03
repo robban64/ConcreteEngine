@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib;
+namespace ConcreteEngine.Editor.Lib.Inspection;
 
 internal static unsafe class InputFieldDrawer
 {

@@ -3,6 +3,7 @@ using ConcreteEngine.Editor.Core.Provider;
 using ConcreteEngine.Editor.Core.Provider.Impl;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Inspection;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Inspectors;

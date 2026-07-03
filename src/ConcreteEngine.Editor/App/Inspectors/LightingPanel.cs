@@ -1,6 +1,6 @@
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Inspector;
-using ConcreteEngine.Editor.Core.Inspector.Impl;
+using ConcreteEngine.Editor.Core.Provider;
+using ConcreteEngine.Editor.Core.Provider.Impl;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
 using Hexa.NET.ImGui;
@@ -15,7 +15,7 @@ internal sealed class LightingPanel : EditorPanel
 
     public LightingPanel(StateManager state) : base(InspectorId.Lighting, state)
     {
-        _inspectFields.ShadowSizeCombo.Layout = FieldLayout.None;
+        _inspectFields.ShadowSizeCombo.LabelPlacement = FieldLabelPlacement.None;
     }
 
     public override void OnDraw()

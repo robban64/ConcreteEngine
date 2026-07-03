@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.Lib.Field;
+namespace ConcreteEngine.Editor.Lib;
 
 public enum FieldGetDelay : ushort
 {
@@ -9,7 +9,7 @@ public enum FieldGetDelay : ushort
     VeryHigh = 1440
 }
 
-public enum FieldWidgetKind : byte
+public enum FieldKind : byte
 {
     Input,
     Slider,
@@ -19,7 +19,7 @@ public enum FieldWidgetKind : byte
     InputText
 }
 
-public enum FieldLayout : byte
+public enum FieldLabelPlacement : byte
 {
     None,
     Top,

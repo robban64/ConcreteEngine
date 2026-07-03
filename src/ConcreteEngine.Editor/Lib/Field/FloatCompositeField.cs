@@ -13,7 +13,7 @@ internal unsafe struct FloatCompositeEntry
     public float Speed, Min, Max;
 
     public FloatCompositeEntry(
-        FieldWidgetKind widgetKind,
+        FieldKind kind,
         float speed,
         float min,
         float max)
@@ -21,12 +21,12 @@ internal unsafe struct FloatCompositeEntry
         Speed = speed;
         Min = min;
         Max = max;
-        DrawFunc = widgetKind switch
+        DrawFunc = kind switch
         {
-            FieldWidgetKind.Input => &InputFieldDrawer.DrawInputFloat,
-            FieldWidgetKind.Slider => &InputFieldDrawer.DrawSliderFloat,
-            FieldWidgetKind.Drag => &InputFieldDrawer.DrawDragFloat,
-            _ => throw new ArgumentOutOfRangeException(nameof(widgetKind), widgetKind, null)
+            FieldKind.Input => &InputFieldDrawer.DrawInputFloat,
+            FieldKind.Slider => &InputFieldDrawer.DrawSliderFloat,
+            FieldKind.Drag => &InputFieldDrawer.DrawDragFloat,
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }
 }
@@ -53,7 +53,7 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField where T : un
     public FloatCompositeField(string name, Func<T> getter, Action<T> setter) : base(name)
     {
         Binding = new PropertyFieldBinding<T>();
-        Layout = FieldLayout.Inline;
+        LabelPlacement = FieldLabelPlacement.Inline;
 
         Bind(getter, setter);
     }
@@ -110,21 +110,21 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField where T : un
     [MethodImpl(MethodImplOptions.NoInlining)]
     public FloatCompositeField<T> WithInput(string label, float min, float max, string format = "%.2f")
     {
-        AddField(label, format, new FloatCompositeEntry(FieldWidgetKind.Input, 0, min, max));
+        AddField(label, format, new FloatCompositeEntry(FieldKind.Input, 0, min, max));
         return this;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public FloatCompositeField<T> WithSlider(string label, float min, float max, string format = "%.2f")
     {
-        AddField(label, format, new FloatCompositeEntry(FieldWidgetKind.Slider, 0, min, max));
+        AddField(label, format, new FloatCompositeEntry(FieldKind.Slider, 0, min, max));
         return this;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public FloatCompositeField<T> WithDrag(string label, float speed, float min, float max, string format = "%.2f")
     {
-        AddField(label, format, new FloatCompositeEntry(FieldWidgetKind.Drag, speed, min, max));
+        AddField(label, format, new FloatCompositeEntry(FieldKind.Drag, speed, min, max));
         return this;
     }
 }

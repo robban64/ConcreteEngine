@@ -3,6 +3,7 @@ using System.Text;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Lib.Field;
 using Hexa.NET.ImGui;
 
@@ -40,7 +41,7 @@ internal sealed unsafe class ComboInput : UiField
 
 
     public ComboInput(string label, ReadOnlySpan<int> values, ReadOnlySpan<string> names)
-        : base(label, FieldWidgetKind.Combo)
+        : base(label, FieldKind.Combo)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(values.Length, 1);
         ArgumentOutOfRangeException.ThrowIfNotEqual(values.Length, names.Length);
@@ -48,24 +49,22 @@ internal sealed unsafe class ComboInput : UiField
         _values = new int[values.Length];
         values.CopyTo(_values.AsSpan());
         _names = names.ToArray();
-        Layout = FieldLayout.None;
+        LabelPlacement = FieldLabelPlacement.None;
     }
 
     public override ref byte GetRawValue() => ref Unsafe.As<Int1, byte>(ref Value);
 
     public void SetItemName(int index, string newName) => _names[index] = newName;
 
-    [SkipLocalsInit]
     public override bool Draw()
     {
         var value = (int)Value;
         if (_lastValue != value)
             OnChanged(value);
 
-        var buffer = stackalloc byte[LabelAllocCapacity * 2];
-        var label = ApplyLabelLayout(buffer);
-        var sw = new NativeSpanWriter(buffer + LabelAllocCapacity, LabelAllocCapacity);
-
+        var sw = TextBuffers.GetWriter();
+        var label = ApplyLabelLayout(sw);
+        sw.SetCursor(label.Length+1);
         return ImGui.BeginCombo(label, sw.Write(_displayText)) && DrawInner(sw);
     }
 

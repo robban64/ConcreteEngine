@@ -3,10 +3,11 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Core.Inspector;
+namespace ConcreteEngine.Editor.Core.Provider;
 
 internal sealed class FieldSegment
 {
@@ -39,7 +40,7 @@ internal abstract unsafe class InspectorFields<T>
 
     private MemoryBlockPtr _memory;
 
-    protected virtual FieldLayout DefaultLayout { get; } = FieldLayout.None;
+    protected virtual FieldLabelPlacement DefaultLabelPlacement { get; } = FieldLabelPlacement.None;
     protected virtual FieldGetDelay DefaultDelay { get; } = FieldGetDelay.None;
 
 
@@ -122,7 +123,7 @@ internal abstract unsafe class InspectorFields<T>
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    protected TField Register<TField>(TField field, FieldGetDelay? delay = null, FieldLayout? layout = null)
+    protected TField Register<TField>(TField field, FieldGetDelay? delay = null, FieldLabelPlacement? layout = null)
         where TField : PropertyField
     {
         ArgumentNullException.ThrowIfNull(field);
@@ -130,8 +131,8 @@ internal abstract unsafe class InspectorFields<T>
         if (delay.HasValue) field.Delay = delay.Value;
         else if (DefaultDelay != FieldGetDelay.None) field.Delay = DefaultDelay;
 
-        if (layout.HasValue) field.Layout = layout.Value;
-        else if (DefaultLayout != FieldLayout.None) field.Layout = DefaultLayout;
+        if (layout.HasValue) field.LabelPlacement = layout.Value;
+        else if (DefaultLabelPlacement != FieldLabelPlacement.None) field.LabelPlacement = DefaultLabelPlacement;
 
         _fields.Add(field);
         return field;

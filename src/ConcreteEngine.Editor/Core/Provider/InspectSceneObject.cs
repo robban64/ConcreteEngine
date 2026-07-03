@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 
-namespace ConcreteEngine.Editor.Core.Inspector;
+namespace ConcreteEngine.Editor.Core.Provider;
 
 public sealed class InspectSceneObject
 {

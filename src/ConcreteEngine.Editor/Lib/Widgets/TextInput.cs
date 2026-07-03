@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Lib.Field;
 using Hexa.NET.ImGui;
 
@@ -41,19 +42,20 @@ internal sealed unsafe class TextInput : UiField
     private readonly ImGuiInputTextCallback _inputCallback;
 
     public TextInput(string label, ushort bufferSize, ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.CharsNoBlank)
-        : base(label, FieldWidgetKind.InputText)
+        : base(label, FieldKind.InputText)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(bufferSize, 4);
         BufferSize = bufferSize;
         InputFlags = inputFlags;
         _inputCallback = OnInputCallback;
 
-        Layout = FieldLayout.None;
+        LabelPlacement = FieldLabelPlacement.None;
     }
 
-    public ReadOnlySpan<byte> GetTextSpan() => _textBuffer != null
-        ? MemoryMarshal.CreateReadOnlySpanFromNullTerminated(_textBuffer)
-        : ReadOnlySpan<byte>.Empty;
+    public ReadOnlySpan<byte> GetTextSpan() =>
+        _textBuffer != null
+            ? MemoryMarshal.CreateReadOnlySpanFromNullTerminated(_textBuffer)
+            : ReadOnlySpan<byte>.Empty;
 
     public override ref byte GetRawValue()
     {
@@ -70,16 +72,13 @@ internal sealed unsafe class TextInput : UiField
         buffer.Clear();
     }
 
-    [SkipLocalsInit]
     public override bool Draw()
     {
-        var buffer = stackalloc byte[LabelAllocCapacity];
-        var label = ApplyLabelLayout(buffer);
-
         var hint = Hint;
-        var size = new Vector2(Width, 0);
-        var triggered =
-            ImGui.InputTextEx(label, (byte*)&hint, _textBuffer, BufferSize, size, InputFlags, _inputCallback);
+        var label = ApplyLabelLayout(TextBuffers.GetWriter());
+
+        var triggered = ImGui.InputTextEx(label, (byte*)&hint, _textBuffer, BufferSize,
+            new Vector2(Width, 0), InputFlags, _inputCallback);
 
         return triggered && OnTriggered(_textBuffer);
     }
@@ -193,7 +192,6 @@ internal sealed unsafe class TextInput : UiField
         _transformer.CallbackU16 = callback;
         return this;
     }
-
 
     private sealed class TextInputHistory
     {

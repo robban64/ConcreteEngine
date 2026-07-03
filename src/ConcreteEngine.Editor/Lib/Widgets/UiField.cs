@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
@@ -12,28 +13,19 @@ internal abstract class UiField
     protected const int LabelAllocCapacity = 40;
     private static int _currentId = 1;
 
-    private readonly byte[] _strId;
-
     public readonly int DrawId;
     public readonly string Label;
 
     public float Width;
-    public FieldWidgetKind Widget { get; private set; }
+    public FieldKind Widget { get; private set; }
     public FieldTrigger Trigger = FieldTrigger.OnChange;
-    public FieldLayout Layout = FieldLayout.Top;
+    public FieldLabelPlacement LabelPlacement = FieldLabelPlacement.Top;
 
-    protected UiField(string label, FieldWidgetKind widget)
+    protected UiField(string label, FieldKind widget)
     {
         Label = label;
         Widget = widget;
         DrawId = _currentId++;
-
-        unsafe
-        {
-            var buffer = stackalloc byte[32];
-            var written = new NativeSpanWriter(buffer, 32).Append("##ui").Append(DrawId).End();
-            _strId = written.AsSpan().ToArray();
-        }
     }
 
     public abstract ref byte GetRawValue();
@@ -44,21 +36,40 @@ internal abstract class UiField
     {
         var sw = new NativeSpanWriter(ptr, LabelAllocCapacity);
 
-        switch (Layout)
+        switch (LabelPlacement)
         {
-            case FieldLayout.Top:
+            case FieldLabelPlacement.Top:
                 sw.Append(Label);
                 AppDraw.Text(sw.End());
                 ImGui.Separator();
                 ImGui.PushItemWidth(GuiTheme.FormItemWidth);
                 break;
-            case FieldLayout.Inline:
+            case FieldLabelPlacement.Inline:
                 sw.Append(Label);
                 ImGui.PushItemWidth(GuiTheme.FormItemInlineWidth);
                 break;
         }
 
-        return sw.Append(_strId).End();
+        return sw.AppendImGuiId(DrawId).End();
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected unsafe NativeView<byte> ApplyLabelLayout(NativeSpanWriter sw)
+    {
+        switch (LabelPlacement)
+        {
+            case FieldLabelPlacement.Top:
+                sw.Append(Label);
+                AppDraw.Text(sw.End());
+                ImGui.Separator();
+                ImGui.PushItemWidth(GuiTheme.FormItemWidth);
+                break;
+            case FieldLabelPlacement.Inline:
+                sw.Append(Label);
+                ImGui.PushItemWidth(GuiTheme.FormItemInlineWidth);
+                break;
+        }
+
+        return sw.AppendImGuiId(DrawId).End();
     }
 
 

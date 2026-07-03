@@ -1,11 +1,12 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
 
-namespace ConcreteEngine.Editor.Core.Inspector.Impl;
+namespace ConcreteEngine.Editor.Core.Provider.Impl;
 
 internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
 {
@@ -18,7 +19,7 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
     public readonly ComboField DepthCombo;
     public readonly ComboField PolygonCombo;
 
-    protected override FieldLayout DefaultLayout => FieldLayout.Inline;
+    protected override FieldLabelPlacement DefaultLabelPlacement => FieldLabelPlacement.Inline;
     protected override FieldGetDelay DefaultDelay => FieldGetDelay.High;
 
 
@@ -27,8 +28,8 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
         ColorField = Register(new ColorField("Albedo", true));
         SpecularField = Register(new ColorField("Specular", true));
         ShininessField =
-            Register(new FloatField<Float1>("Shininess", FieldWidgetKind.Slider) { Min = 0, Max = 50 });
-        UvRepeatField = Register(new FloatField<Float4>("UV Repeat", FieldWidgetKind.Slider));
+            Register(new FloatField<Float1>("Shininess", FieldKind.Slider) { Min = 0, Max = 50 });
+        UvRepeatField = Register(new FloatField<Float4>("UV Repeat", FieldKind.Slider));
 
         BlendCombo = Register(ComboField.MakeFromEnumCache<BlendMode>("Blend Mode"));
         CullCombo = Register(ComboField.MakeFromEnumCache<CullMode>("Cull Mode"));
@@ -86,12 +87,12 @@ internal sealed class InspectTextureFields : InspectorFields<InspectTexture>
     public readonly ComboField Usage;
     public readonly ComboField PixelFormat;
 
-    protected override FieldLayout DefaultLayout => FieldLayout.Inline;
+    protected override FieldLabelPlacement DefaultLabelPlacement => FieldLabelPlacement.Inline;
     protected override FieldGetDelay DefaultDelay => FieldGetDelay.High;
 
     public InspectTextureFields() : base(segmentCount: 2)
     {
-        LodBias = Register(new FloatField<Float1>("Lod Level", FieldWidgetKind.Input) { Format = "%.3f" });
+        LodBias = Register(new FloatField<Float1>("Lod Level", FieldKind.Input) { Format = "%.3f" });
         Preset = Register(ComboField.MakeFromEnumCache<TexturePreset>("Preset").WithStartAt(1));
         Anisotropy = Register(ComboField.MakeFromEnumCache<AnisotropyLevel>("Anisotropy"));
         Usage = Register(ComboField.MakeFromEnumCache<TextureUsage>("Usage").WithPlaceholder("None"));

@@ -1,10 +1,11 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Core.Inspector;
-using ConcreteEngine.Editor.Core.Inspector.Impl;
+using ConcreteEngine.Editor.Core.Provider;
+using ConcreteEngine.Editor.Core.Provider.Impl;
 using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 
@@ -16,7 +17,7 @@ internal sealed unsafe class CameraPanel(StateManager state) : EditorPanel(Inspe
     private NativeString _viewportStr;
     private NativeString _aspectStr;
 
-    private static readonly InspectCameraFields InspectFields = InspectorFieldProvider.Instance.CameraFields;
+    //private static readonly InspectCameraFields InspectFields = InspectorFieldProvider.Instance.CameraFields;
 
     private void UpdateText()
     {
@@ -34,6 +35,8 @@ internal sealed unsafe class CameraPanel(StateManager state) : EditorPanel(Inspe
 
     public override void OnCreate()
     {
+        InspectorProvider.RegisterCamera();
+        
         _viewportStr = StringArena.AllocateString(32);
         _aspectStr = StringArena.AllocateString(24);
 
@@ -47,6 +50,7 @@ internal sealed unsafe class CameraPanel(StateManager state) : EditorPanel(Inspe
         if (_currentViewport != EngineWindow.Viewport.Size) UpdateText();
     }
 
+    private AvgFrameTimer avg1;
 
     public override void OnDraw()
     {
@@ -56,8 +60,10 @@ internal sealed unsafe class CameraPanel(StateManager state) : EditorPanel(Inspe
 
         ImGui.Spacing();
 
-        InspectFields.Draw();
-    }
+        Inspector<Camera>.Draw();
+
+    }        
+
 
     /*
         public void DrawSkyboxProperties(Texture texture, )

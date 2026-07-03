@@ -3,9 +3,10 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
 
-namespace ConcreteEngine.Editor.Core.Inspector.Impl;
+namespace ConcreteEngine.Editor.Core.Provider.Impl;
 
 internal sealed class InspectSceneFields : InspectorFields<InspectSceneObject>
 {
@@ -13,15 +14,15 @@ internal sealed class InspectSceneFields : InspectorFields<InspectSceneObject>
     public readonly FloatField<Float3> ScaleField;
     public readonly FloatField<Float3> RotationField;
 
-    protected override FieldLayout DefaultLayout => FieldLayout.Top;
+    protected override FieldLabelPlacement DefaultLabelPlacement => FieldLabelPlacement.Top;
     protected override FieldGetDelay DefaultDelay => FieldGetDelay.Low;
 
     public InspectSceneFields() : base(segmentCount: 1)
     {
         TranslationField =
-            Register(new FloatField<Float3>("Translation", FieldWidgetKind.Input) { Format = "%.3f" });
-        ScaleField = Register(new FloatField<Float3>("Scale", FieldWidgetKind.Input) { Format = "%.3f" });
-        RotationField = Register(new FloatField<Float3>("Rotation", FieldWidgetKind.Input) { Format = "%.3f" });
+            Register(new FloatField<Float3>("Translation", FieldKind.Input) { Format = "%.3f" });
+        ScaleField = Register(new FloatField<Float3>("Scale", FieldKind.Input) { Format = "%.3f" });
+        RotationField = Register(new FloatField<Float3>("Rotation", FieldKind.Input) { Format = "%.3f" });
 
         CreateSegment("Transform", true, 0, [TranslationField, ScaleField, RotationField]);
     }
@@ -110,39 +111,39 @@ internal sealed class InspectParticleFields : InspectorFields<ParticleInstance>
     public readonly FloatField<Float3> DirectionField;
     public readonly FloatField<Float1> SpreadField;
 
-    protected override FieldLayout DefaultLayout => FieldLayout.Top;
+    protected override FieldLabelPlacement DefaultLabelPlacement => FieldLabelPlacement.Top;
     protected override FieldGetDelay DefaultDelay => FieldGetDelay.Low;
 
 
     public InspectParticleFields() : base(segmentCount: 2)
     {
-        ParticleCountField = Register(new IntField<Int1>("Particle Count", FieldWidgetKind.Input)
-            .WithProperties(FieldGetDelay.Medium, FieldLayout.Top, FieldTrigger.AfterChangeDeactive));
+        ParticleCountField = Register(new IntField<Int1>("Particle Count", FieldKind.Input)
+            .WithProperties(FieldGetDelay.Medium, FieldLabelPlacement.Top, FieldTrigger.AfterChangeDeactive));
 
         StartColorField = Register(new ColorField("Start Color", true));
 
         EndColorField = Register(new ColorField("End Color", true));
 
         SizeStartEndField =
-            Register(new FloatField<Float2>("Size Start / End", FieldWidgetKind.Input) { Format = "%.3f" });
+            Register(new FloatField<Float2>("Size Start / End", FieldKind.Input) { Format = "%.3f" });
 
-        GravityField = Register(new FloatField<Float3>("Gravity", FieldWidgetKind.Input) { Format = "%.3f" });
+        GravityField = Register(new FloatField<Float3>("Gravity", FieldKind.Input) { Format = "%.3f" });
 
-        DragField = Register(new FloatField<Float1>("Drag", FieldWidgetKind.Input) { Format = "%.3f" });
+        DragField = Register(new FloatField<Float1>("Drag", FieldKind.Input) { Format = "%.3f" });
 
         SpeedMinMaxField =
-            Register(new FloatField<Float2>("Speed Min / Max", FieldWidgetKind.Input) { Format = "%.3f" });
+            Register(new FloatField<Float2>("Speed Min / Max", FieldKind.Input) { Format = "%.3f" });
 
         LifeMinMaxField =
-            Register(new FloatField<Float2>("Life Min / Max", FieldWidgetKind.Input) { Format = "%.3f" });
+            Register(new FloatField<Float2>("Life Min / Max", FieldKind.Input) { Format = "%.3f" });
 
-        SpreadField = Register(new FloatField<Float1>("Spread", FieldWidgetKind.Input) { Format = "%.3f" });
+        SpreadField = Register(new FloatField<Float1>("Spread", FieldKind.Input) { Format = "%.3f" });
 
         //
         TranslationField =
-            Register(new FloatField<Float3>("Local Position", FieldWidgetKind.Input) { Format = "%.3f" });
+            Register(new FloatField<Float3>("Local Position", FieldKind.Input) { Format = "%.3f" });
 
-        DirectionField = Register(new FloatField<Float3>("Direction", FieldWidgetKind.Input) { Format = "%.3f" });
+        DirectionField = Register(new FloatField<Float3>("Direction", FieldKind.Input) { Format = "%.3f" });
 
 
         CreateSegment("State", [TranslationField, DirectionField]);

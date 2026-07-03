@@ -23,43 +23,10 @@ internal abstract class BoundField
     public abstract void Refresh();
 }
 
-internal sealed class BoundField<T>(string name, UiField widget, FieldBinder<T> binder)
+internal sealed class BoundField<T>(string name, UiField widget, Func<T> getter, Action<T> setter)
     : BoundField(name, widget) where T : unmanaged, IFieldValue
 {
-    public readonly FieldBinder<T> Binder = binder;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override void Draw()
-    {
-        ref var value = ref Unsafe.As<byte, T>(ref Widget.GetRawValue());
-        Binder.Get(ref value);
-        if (Widget.Draw())
-            Binder.Set(value);
-    }
-
-    public override void Refresh()
-    {
-        ref var value = ref Unsafe.As<byte, T>(ref Widget.GetRawValue());
-        Binder.Refresh(ref value);
-    }
-}
-
-internal sealed class FieldBinder<T> where T : unmanaged, IFieldValue
-{
     private FrameStepper _fetchStepper;
-
-    private readonly Func<T> _getter;
-    private readonly Action<T> _setter;
-
-
-    public FieldBinder(Func<T> getter, Action<T> setter)
-    {
-        ArgumentNullException.ThrowIfNull(getter);
-        ArgumentNullException.ThrowIfNull(setter);
-        _getter = getter;
-        _setter = setter;
-        Delay = FieldGetDelay.Low;
-    }
 
     public FieldGetDelay Delay
     {
@@ -70,14 +37,18 @@ internal sealed class FieldBinder<T> where T : unmanaged, IFieldValue
             _fetchStepper.SetIntervalTicks((int)value, (int)value - 1);
         }
     }
-
-    public void Refresh(scoped ref T value) => value = _getter();
-
-    public void Set(T value) => _setter(value);
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Get(scoped ref T value)
+    public override void Draw()
     {
-        if (_fetchStepper.Tick()) value = _getter();
+        ref var value = ref Unsafe.As<byte, T>(ref Widget.GetRawValue());
+        if (_fetchStepper.Tick()) value = getter();
+        if (Widget.Draw()) setter(value);
+    }
+
+    public override void Refresh()
+    {
+        ref var value = ref Unsafe.As<byte, T>(ref Widget.GetRawValue());
+        value = getter();
     }
 }

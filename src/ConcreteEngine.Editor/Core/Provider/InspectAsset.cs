@@ -3,7 +3,7 @@ using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Editor.Core.Inspector;
+namespace ConcreteEngine.Editor.Core.Provider;
 
 internal abstract class InspectAsset()
 {

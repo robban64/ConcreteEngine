@@ -37,7 +37,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
     {
         _browser = new SceneBrowser();
         _kindCombo = ComboInput.MakeFromEnumCache<SceneObjectKind>("scene-combo");
-        _kindCombo.Layout = FieldLayout.None;
+        _kindCombo.LabelPlacement = FieldLabelPlacement.None;
         _kindCombo.SetItemName(0, "All");
 
         _searchInput = new TextInput("search", 8)

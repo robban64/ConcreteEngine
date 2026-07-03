@@ -11,11 +11,11 @@ internal static class PropertyFieldExtensions
     public static T WithProperties<T>(
         this T field,
         FieldGetDelay delay = FieldGetDelay.Low,
-        FieldLayout? layout = null,
+        FieldLabelPlacement? layout = null,
         FieldTrigger? trigger = null) where T : PropertyField
     {
         field.Delay = delay;
-        if (layout.HasValue) field.Layout = layout.Value;
+        if (layout.HasValue) field.LabelPlacement = layout.Value;
         if (trigger.HasValue) field.Trigger = trigger.Value;
         return field;
     }
@@ -88,9 +88,9 @@ internal abstract unsafe class PropertyField
     protected readonly FieldMemory Memory;
 
     public bool Visible = true;
-    public FieldLayout Layout = FieldLayout.Top;
+    public FieldLabelPlacement LabelPlacement = FieldLabelPlacement.Top;
     public FieldTrigger Trigger;
-    public FieldWidgetKind WidgetKind { get; protected set; }
+    public FieldKind Kind { get; protected set; }
 
     public FieldGetDelay Delay
     {
@@ -135,18 +135,18 @@ internal abstract unsafe class PropertyField
         if (!Visible || Memory.IsNull) return false;
 
         ImGui.PushID(DrawId);
-        if (Layout == FieldLayout.Top)
+        if (LabelPlacement == FieldLabelPlacement.Top)
         {
             AppDraw.Text(Memory.TextLabelStr);
             ImGui.Separator();
         }
 
-        if (Layout != FieldLayout.None)
-            ImGui.PushItemWidth(Layout == FieldLayout.Inline ? GuiTheme.FormItemInlineWidth : GuiTheme.FormItemWidth);
+        if (LabelPlacement != FieldLabelPlacement.None)
+            ImGui.PushItemWidth(LabelPlacement == FieldLabelPlacement.Inline ? GuiTheme.FormItemInlineWidth : GuiTheme.FormItemWidth);
 
         var changed = OnDraw();
 
-        if (Layout != FieldLayout.None) ImGui.PopItemWidth();
+        if (LabelPlacement != FieldLabelPlacement.None) ImGui.PopItemWidth();
 
         ImGui.PopID();
 
@@ -155,7 +155,7 @@ internal abstract unsafe class PropertyField
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected byte* GetLabel() => Layout == FieldLayout.Inline ? Memory.FullLabelStr : Memory.IdLabelStr;
+    protected byte* GetLabel() => LabelPlacement == FieldLabelPlacement.Inline ? Memory.FullLabelStr : Memory.IdLabelStr;
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]

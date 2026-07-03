@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Core.Inspector;
+using ConcreteEngine.Editor.Core.Provider;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Editor.App.Assets;

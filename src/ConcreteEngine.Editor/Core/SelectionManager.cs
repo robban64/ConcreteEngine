@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Core.Inspector;
+using ConcreteEngine.Editor.Core.Provider;
 using ConcreteEngine.Editor.Logging;
 
 namespace ConcreteEngine.Editor.Core;

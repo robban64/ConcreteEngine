@@ -6,7 +6,7 @@ using ConcreteEngine.Editor.App.Shared;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Core.Inspector;
+using ConcreteEngine.Editor.Core.Provider;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Utils;

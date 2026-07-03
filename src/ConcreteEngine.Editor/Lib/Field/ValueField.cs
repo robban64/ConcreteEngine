@@ -14,17 +14,17 @@ internal sealed unsafe class FloatField<T> : PropertyField where T : unmanaged, 
 
     public String8Utf8 Format = "%.2f";
 
-    public FloatField(string name, FieldWidgetKind widgetKind, Func<T>? getter = null, Action<T>? setter = null) :
+    public FloatField(string name, FieldKind kind, Func<T>? getter = null, Action<T>? setter = null) :
         base(name)
     {
         Binding = new PropertyFieldBinding<T>();
         if (getter != null && setter != null)
             Binding.Bind(getter, setter);
 
-        if (T.Components == 1) Layout = FieldLayout.Inline;
+        if (T.Components == 1) LabelPlacement = FieldLabelPlacement.Inline;
 
-        WidgetKind = widgetKind;
-        _drawFunc = InputFieldDrawer.BindFloat(widgetKind);
+        Kind = kind;
+        _drawFunc = InputFieldDrawer.BindFloat(kind);
     }
 
 
@@ -53,17 +53,17 @@ internal sealed unsafe class IntField<T> : PropertyField where T : unmanaged, II
     public int Min, Max;
     public float Speed = 1f;
 
-    public IntField(string name, FieldWidgetKind widgetKind, Func<T>? getter = null, Action<T>? setter = null) :
+    public IntField(string name, FieldKind kind, Func<T>? getter = null, Action<T>? setter = null) :
         base(name)
     {
         Binding = new PropertyFieldBinding<T>();
         if (getter != null && setter != null)
             Binding.Bind(getter, setter);
 
-        if (T.Components == 1) Layout = FieldLayout.Inline;
+        if (T.Components == 1) LabelPlacement = FieldLabelPlacement.Inline;
 
-        WidgetKind = widgetKind;
-        _drawFunc = InputFieldDrawer.BindInt(widgetKind);
+        Kind = kind;
+        _drawFunc = InputFieldDrawer.BindInt(kind);
     }
 
     public void Bind(Func<T> getter, Action<T> setter) => Binding.Bind(getter, setter);

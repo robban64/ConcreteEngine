@@ -1,9 +1,10 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
 
-namespace ConcreteEngine.Editor.Core.Inspector.Impl;
+namespace ConcreteEngine.Editor.Core.Provider.Impl;
 
 internal sealed class InspectLightningFields : InspectorFields<VisualManager>
 {
@@ -31,7 +32,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
 
     public InspectLightningFields() : base(segmentCount: 6)
     {
-        Direction = Register(new FloatField<Float3>("Direction", FieldWidgetKind.Drag,
+        Direction = Register(new FloatField<Float3>("Direction", FieldKind.Drag,
             static () => Visuals.Illumination.DirectionalLight.Value.Direction,
             static value => Visuals.Illumination.DirectionalLight.Mutate.Direction = (Vector3)value)
         {
@@ -43,7 +44,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
             static value => Visuals.Illumination.DirectionalLight.Mutate.Diffuse = (Vector3)value
         ));
 
-        Intensity = Register(new FloatField<Float1>("Intensity", FieldWidgetKind.Drag,
+        Intensity = Register(new FloatField<Float1>("Intensity", FieldKind.Drag,
             static () => Visuals.Illumination.DirectionalLight.Value.Intensity,
             static value => Visuals.Illumination.DirectionalLight.Mutate.Intensity = (float)value
         )
@@ -52,9 +53,9 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
             Speed = 0.01f,
             Min = 0f,
             Max = 10f,
-            Layout = FieldLayout.Inline
+            LabelPlacement = FieldLabelPlacement.Inline
         });
-        Specular = Register(new FloatField<Float1>("Specular", FieldWidgetKind.Drag,
+        Specular = Register(new FloatField<Float1>("Specular", FieldKind.Drag,
             static () => Visuals.Illumination.DirectionalLight.Value.Specular,
             static value => Visuals.Illumination.DirectionalLight.Mutate.Specular = (float)value)
         {
@@ -63,7 +64,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
             Speed = 0.01f,
             Min = 0f,
             Max = 10f,
-            Layout = FieldLayout.Inline
+            LabelPlacement = FieldLabelPlacement.Inline
         });
 
         // Ambient
@@ -75,7 +76,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
             static () => Visuals.Illumination.Ambient.Value.AmbientGround,
             static value => Visuals.Illumination.Ambient.Mutate.AmbientGround = (Color4)value
         ));
-        Exposure = Register(new FloatField<Float1>("Exposure", FieldWidgetKind.Drag,
+        Exposure = Register(new FloatField<Float1>("Exposure", FieldKind.Drag,
             static () => Visuals.Illumination.Ambient.Value.Exposure,
             static value => Visuals.Illumination.Ambient.Mutate.Exposure = (float)value)
         {
@@ -84,7 +85,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
             Speed = 0.01f,
             Min = 0f,
             Max = 2f,
-            Layout = FieldLayout.Inline
+            LabelPlacement = FieldLabelPlacement.Inline
         });
 
         // Shadow
@@ -92,7 +93,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
             [1024, 2048, 4096, 8192], ["1024px", "2048px", "4096px", "8192px"],
             static () => Visuals.Shadow.ShadowMapSize,
             static value => Visuals.Shadow.ShadowMapSize = (int)value
-        ).WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None).WithPlaceholder("No Shadow"));
+        ).WithProperties(FieldGetDelay.VeryHigh, FieldLabelPlacement.None).WithPlaceholder("No Shadow"));
 
         ShadowProjectionFields = Register(new FloatCompositeField<Float4>(
                 "Shadow Projection",

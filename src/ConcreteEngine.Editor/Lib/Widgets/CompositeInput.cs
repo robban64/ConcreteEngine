@@ -1,11 +1,12 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Lib.Field;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
 
-internal sealed unsafe class FloatCompositeInput<T>(string label) : UiField(label, FieldWidgetKind.Composite)
+internal sealed unsafe class FloatCompositeInput<T>(string label) : UiField(label, FieldKind.Composite)
     where T : unmanaged, IFloatValue
 {
     public T Value;
@@ -14,11 +15,9 @@ internal sealed unsafe class FloatCompositeInput<T>(string label) : UiField(labe
 
     public override ref byte GetRawValue() => ref Unsafe.As<T, byte>(ref Value);
 
-    [SkipLocalsInit]
     public override bool Draw()
     {
-        var buffer = stackalloc byte[LabelAllocCapacity];
-        var sw = new NativeSpanWriter(buffer, LabelAllocCapacity);
+        var sw = TextBuffers.GetWriter();
 
         var value = Value;
         var valuePtr = (float*)&value;
@@ -56,33 +55,33 @@ internal sealed unsafe class FloatCompositeInput<T>(string label) : UiField(labe
 
     public FloatCompositeInput<T> WithInput(string label, float min, float max, string format = "%.2f")
     {
-        AddField(new ComponentEntry(label, FieldWidgetKind.Input, 0, min, max, format));
+        AddField(new ComponentEntry(label, FieldKind.Input, 0, min, max, format));
         return this;
     }
 
     public FloatCompositeInput<T> WithSlider(string label, float min, float max, string format = "%.2f")
     {
-        AddField(new ComponentEntry(label, FieldWidgetKind.Slider, 0, min, max, format));
+        AddField(new ComponentEntry(label, FieldKind.Slider, 0, min, max, format));
         return this;
     }
 
     public FloatCompositeInput<T> WithDrag(string label, float speed, float min, float max, string format = "%.2f")
     {
-        AddField(new ComponentEntry(label, FieldWidgetKind.Drag, speed, min, max, format));
+        AddField(new ComponentEntry(label, FieldKind.Drag, speed, min, max, format));
         return this;
     }
 
 
     private sealed class ComponentEntry(
         string name,
-        FieldWidgetKind widgetKind,
+        FieldKind kind,
         float speed,
         float min,
         float max,
         string format)
     {
         public readonly delegate*<int, byte*, float*, byte*, float, float, float, bool> DrawFunc =
-            InputFieldDrawer.BindFloat(widgetKind);
+            InputFieldDrawer.BindFloat(kind);
 
         public readonly byte[] Name = name.ToUtf8();
         public String8Utf8 Format = format;

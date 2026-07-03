@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Core.Inspector.Impl;
+using ConcreteEngine.Editor.Core.Provider.Impl;
 
-namespace ConcreteEngine.Editor.Core.Inspector;
+namespace ConcreteEngine.Editor.Core.Provider;
 
 internal sealed class InspectorFieldProvider
 {

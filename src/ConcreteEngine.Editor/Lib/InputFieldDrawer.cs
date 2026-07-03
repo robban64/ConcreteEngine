@@ -1,31 +1,31 @@
 using System.Runtime.CompilerServices;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib.Field;
+namespace ConcreteEngine.Editor.Lib;
 
 internal static unsafe class InputFieldDrawer
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static delegate*<int, byte*, float*, byte*, float, float, float, bool> BindFloat(FieldWidgetKind widgetKind)
+    public static delegate*<int, byte*, float*, byte*, float, float, float, bool> BindFloat(FieldKind kind)
     {
-        return widgetKind switch
+        return kind switch
         {
-            FieldWidgetKind.Input => &DrawInputFloat,
-            FieldWidgetKind.Slider => &DrawSliderFloat,
-            FieldWidgetKind.Drag => &DrawDragFloat,
-            _ => throw new ArgumentOutOfRangeException(nameof(widgetKind), widgetKind, null)
+            FieldKind.Input => &DrawInputFloat,
+            FieldKind.Slider => &DrawSliderFloat,
+            FieldKind.Drag => &DrawDragFloat,
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static delegate*<int, byte*, int*, float, int, int, bool> BindInt(FieldWidgetKind widgetKind)
+    public static delegate*<int, byte*, int*, float, int, int, bool> BindInt(FieldKind kind)
     {
-        return widgetKind switch
+        return kind switch
         {
-            FieldWidgetKind.Input => &DrawInputInt,
-            FieldWidgetKind.Slider => &DrawSliderInt,
-            FieldWidgetKind.Drag => &DrawDragInt,
-            _ => throw new ArgumentOutOfRangeException(nameof(widgetKind), widgetKind, null)
+            FieldKind.Input => &DrawInputInt,
+            FieldKind.Slider => &DrawSliderInt,
+            FieldKind.Drag => &DrawDragInt,
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }
 

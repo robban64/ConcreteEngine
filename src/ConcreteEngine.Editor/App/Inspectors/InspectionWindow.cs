@@ -47,7 +47,6 @@ internal sealed class InspectionWindow : EditorWindow
 
     public override void OnUpdateDiagnostic()
     {
-        Console.WriteLine(ActiveState);
         var index = (int)ActiveState - 1;
         if ((uint)index >= (uint)_panels.Length) return;
         _panels[index].OnUpdateDiagnostic();

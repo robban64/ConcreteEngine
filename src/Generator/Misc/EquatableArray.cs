@@ -50,7 +50,8 @@ internal readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IEnu
     /// </summary>
     private readonly T[]? array;
     
-    public T[] GetMainArray() => array;
+    public T[] GetMainArray() => array ?? Array.Empty<T>();
+    public int Length => array?.Length ?? 0;
 
     /// <summary>
     /// Creates a new <see cref="EquatableArray{T}"/> instance.

@@ -1,6 +1,6 @@
 namespace Generator.InspectorGen;
 
-public static class InspectorGeneratorData
+internal static class InspectorGeneratorData
 {
     public static string MakeInspectorFileName(string typeName) => $"{typeName}.InspectorBindings.g.cs";
     public const string InspectorNs = "ConcreteEngine.Editor.Lib.Inspection";

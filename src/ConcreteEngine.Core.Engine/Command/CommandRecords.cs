@@ -16,7 +16,7 @@ public abstract record EngineCommandRecord(CommandScope Scope)
         builder.Append("Id = ");
         builder.Append(Id);
         builder.Append(", Scope = ");
-        builder.Append(EnumCache<CommandScope>.Names[(int)Scope]);
+        builder.Append((int)Scope);
         return true;
     }
 }

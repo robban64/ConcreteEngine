@@ -77,7 +77,7 @@ internal sealed class AssetLoader
 
         _loaders[kind.ToIndex()].Activate(false);
 
-        Logger.Log(LogScope.Assets, $"Loader ({EnumCache<AssetKind>.Names[(int)kind]}) - Reactivated");
+        Logger.Log(LogScope.Assets, $"Loader ({AssetKindExt.Names[(int)kind]}) - Reactivated");
     }
 
     public void DeactivateLoader()

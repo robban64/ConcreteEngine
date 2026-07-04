@@ -1,3 +1,6 @@
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Attributes;
+
 namespace ConcreteEngine.Core.Diagnostics.Logging;
 
 [Flags]
@@ -8,7 +11,7 @@ public enum LogFilter : ushort
     LogScope = 1 << 1,
     LogAction = 1 << 2
 }
-
+[EnumExt(Utf8 =  true)]
 public enum LogLevel : byte
 {
     None = 0,

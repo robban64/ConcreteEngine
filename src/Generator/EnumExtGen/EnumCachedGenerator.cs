@@ -1,11 +1,12 @@
-using System.Collections.Immutable;
-using System.Text;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
+namespace Generator.EnumExtGen;
 
-namespace Generator.EnumCachedGen;
-
+/*
+var filteredItems = enums
+    .Combine(enabled)
+    .Where(static tuple => tuple.Right)
+    .Select(static (tuple, _) => tuple.Left)
+    .Collect();*/
+/*
 [Generator]
 public sealed class EnumCachedGenerator : IIncrementalGenerator
 {
@@ -27,13 +28,6 @@ public sealed class EnumCachedGenerator : IIncrementalGenerator
        var enums = context.SyntaxProvider
            .ForAttributeWithMetadataName(AttributeFullName, Predicates.IsEnumWithAttrib, Build)
            .Where(static x => x is not null).Collect();
-
-       /*
-       var filteredItems = enums
-           .Combine(enabled)
-           .Where(static tuple => tuple.Right)
-           .Select(static (tuple, _) => tuple.Left)
-           .Collect();*/
        
         context.RegisterSourceOutput(enums, static (ctx, it) =>
         {
@@ -81,3 +75,4 @@ public sealed class EnumCachedGenerator : IIncrementalGenerator
         return sb.ToString();
     }
 }
+*/

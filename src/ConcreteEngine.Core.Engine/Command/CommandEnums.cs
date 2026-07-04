@@ -1,3 +1,5 @@
+using ConcreteEngine.Core.Common;
+
 namespace ConcreteEngine.Core.Engine.Command;
 
 public enum CommandScope : byte

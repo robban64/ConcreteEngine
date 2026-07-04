@@ -47,8 +47,7 @@ internal static unsafe class StyleMap
     {
         if (!_iconsPtr.IsNull) throw new InvalidOperationException("Already allocated");
 
-        int colorCount = EnumCache<LogLevel>.Count;
-        var size = IconCount * 4 + colorCount * sizeof(uint);
+        var size = IconCount * 4 + LogLevelExt.Count * sizeof(uint);
         var capacity =  IntMath.AlignUp(size, 64);
 
         _buffer = NativeArray.Allocate<byte>(capacity);

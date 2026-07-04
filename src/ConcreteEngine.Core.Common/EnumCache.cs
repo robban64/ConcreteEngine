@@ -6,4 +6,6 @@ public static class EnumCache<T> where T : unmanaged, Enum
     public static readonly string[] Names = Enum.GetNames<T>();
 
     public static int Count => Values.Length;
+    
+
 }

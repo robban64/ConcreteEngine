@@ -23,10 +23,7 @@ internal static class EngineWarmup
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void LoadEnumCache()
     {
-        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<TimeStepKind>).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<EntitySourceKind>).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EnumCache<GraphicsKind>).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<AssetKind>).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EnumCache<SceneObjectKind>).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EnumCache<BlendMode>).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EnumCache<CullMode>).TypeHandle);

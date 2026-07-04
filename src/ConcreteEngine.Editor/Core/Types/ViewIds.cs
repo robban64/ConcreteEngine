@@ -17,7 +17,6 @@ internal enum InspectorId : byte
     Visual
 }
 
-[EnumCached, EnumExt]
 internal enum FixedInspectorId : byte
 {
     None,

@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Attributes;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
@@ -14,7 +15,7 @@ public enum AssetDirtyFlag : byte
     Lifecycle = 1 << 5,
 }
 
-[EnumCached, EnumExt]
+[EnumExt(Index = true, Utf8 = true)]
 public enum AssetKind : byte
 {
     Unknown = 0,
@@ -24,7 +25,7 @@ public enum AssetKind : byte
     Material = 4,
 }
 
-[EnumCached, EnumExt]
+[EnumExt]
 public enum AssetCategory : byte
 {
     Unknown = 0,
@@ -35,7 +36,7 @@ public enum AssetCategory : byte
     Script = 5
 }
 
-[EnumCached, EnumExt]
+[EnumExt]
 public enum AssetStorage : byte
 {
     None = 0,
@@ -44,7 +45,7 @@ public enum AssetStorage : byte
     Embedded = 3
 }
 
-[EnumCached, EnumExt]
+[EnumExt]
 public enum AssetLoadingMode : byte
 {
     Ignore = 0,

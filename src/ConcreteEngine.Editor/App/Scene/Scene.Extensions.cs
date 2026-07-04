@@ -20,15 +20,6 @@ internal static class SceneExtensions
         };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnlySpan<byte> ToText() => kind switch
-        {
-            SceneObjectKind.Empty => "Empty"u8,
-            SceneObjectKind.Model => "Model"u8,
-            SceneObjectKind.Particle => "Particle"u8,
-            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
-        };
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Icons ToIcon() => kind switch
         {
             SceneObjectKind.Empty => Icons.Minus,

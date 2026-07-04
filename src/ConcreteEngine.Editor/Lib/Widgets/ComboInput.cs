@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using ConcreteEngine.Core.Common;
@@ -41,8 +42,7 @@ internal sealed unsafe class ComboInput : UiField
     } = "None";
 
 
-    public ComboInput(string label, ReadOnlySpan<int> values, ReadOnlySpan<string> names)
-        : base(label, FieldKind.Combo)
+    public ComboInput(string label, ReadOnlySpan<int> values, ReadOnlySpan<string> names) : base(label, FieldKind.Combo)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(values.Length, 1);
         ArgumentOutOfRangeException.ThrowIfNotEqual(values.Length, names.Length);
@@ -53,10 +53,12 @@ internal sealed unsafe class ComboInput : UiField
         LabelPlacement = FieldLabelPlacement.None;
     }
 
-    public override ref byte GetRawValue() => ref Unsafe.As<Int1, byte>(ref Value);
-
     public void SetItemName(int index, string newName) => _names[index] = newName;
 
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override ref byte GetRawValue() => ref Unsafe.As<Int1, byte>(ref Value);
+    
     public override bool Draw()
     {
         var value = (int)Value;
@@ -65,7 +67,7 @@ internal sealed unsafe class ComboInput : UiField
 
         var sw = TextBuffers.GetWriter();
         var label = ApplyLabelLayout(sw);
-        sw.SetCursor(label.Length+1);
+        sw.SetCursor(label.Length + 1);
         return ImGui.BeginCombo(label, sw.Write(_displayText)) && DrawInner(sw);
     }
 
@@ -73,7 +75,7 @@ internal sealed unsafe class ComboInput : UiField
     {
         _index = _values.IndexOf(value);
         _lastValue = value;
-        
+
         var name = (uint)_index < (uint)_names.Length && _index >= StartAt ? _names[_index] : Placeholder;
 
         int written = Encoding.UTF8.GetBytes(name.Truncate(31), _displayText);
@@ -103,24 +105,20 @@ internal sealed unsafe class ComboInput : UiField
         return changed;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static ComboInput MakeFromEnumCache<T>(string label) where T : unmanaged, Enum
+    public static ComboInput Create(string label, ReadOnlySpan<byte> values, ReadOnlySpan<string> names)
     {
-        var names = EnumCache<T>.Names;
-        var values = EnumCache<T>.Values.AsSpan();
-        var enumSize = Unsafe.SizeOf<T>();
-        Span<int> intValues = stackalloc int[values.Length];
-        for (var i = 0; i < values.Length; i++)
-        {
-            intValues[i] = enumSize switch
-            {
-                1 => Unsafe.As<T, byte>(ref values[i]),
-                2 => Unsafe.As<T, short>(ref values[i]),
-                4 => Unsafe.As<T, int>(ref values[i]),
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
-
-        return new ComboInput(label, intValues, names);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(values.Length, 64);
+        Span<int> ints = stackalloc int[values.Length];
+        for(int i = 0; i < values.Length; i++) ints[i] = values[i];
+        return new ComboInput(label, ints, names);
     }
+    
+    public static ComboInput Create(string label, ReadOnlySpan<ushort> values, ReadOnlySpan<string> names)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(values.Length, 64);
+        Span<int> ints = stackalloc int[values.Length];
+        for(int i = 0; i < values.Length; i++) ints[i] = values[i];
+        return new ComboInput(label, ints, names);
+    }
+
 }

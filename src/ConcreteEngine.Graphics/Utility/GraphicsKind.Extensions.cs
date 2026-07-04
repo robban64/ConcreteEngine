@@ -4,22 +4,6 @@ public static class GraphicsKindExtensions
 {
     extension(GraphicsKind kind)
     {
-        public string ToResourceName()
-        {
-            return kind switch
-            {
-                GraphicsKind.Texture => "Texture",
-                GraphicsKind.Shader => "Shader",
-                GraphicsKind.Mesh => "Mesh",
-                GraphicsKind.VertexBuffer => "VertexBuffer",
-                GraphicsKind.IndexBuffer => "IndexBuffer",
-                GraphicsKind.UniformBuffer => "UniformBuffer",
-                GraphicsKind.FrameBuffer => "FrameBuffer",
-                GraphicsKind.RenderBuffer => "RenderBuffer",
-                _ => "Invalid"
-            };
-        }
-
         public string ToShortText()
         {
             return kind switch

@@ -9,7 +9,7 @@ internal static class ValueLogParser
 {
     public static ReadOnlySpan<byte> GetLogMessage(NativeSpanWriter sw, in LogEvent log)
     {
-        var message = log.Scope switch
+        return log.Scope switch
         {
             LogScope.Engine => ToBaseFormat(sw, in log, id: "Id"),
             LogScope.Assets => ToBaseFormat(sw, in log, id: "AssetId"),
@@ -19,8 +19,6 @@ internal static class ValueLogParser
             LogScope.Gfx => ToBaseFormat(sw, in log, id: "GfxId", p0: "Slot", p1: "Alive"),
             _ => ToBaseFormat(sw, in log, id: "Id", p0: "P0", p1: "P1", fp: "F0", flags: "Flags")
         };
-
-        return message;
     }
 
     private static ReadOnlySpan<byte> ToBaseFormat(
@@ -33,16 +31,21 @@ internal static class ValueLogParser
         string? gen = null,
         string? flags = null)
     {
+        const byte eq = (byte)'=';
+
+        var action = log.Action.ToLogText();
+        var topic = log.Topic.ToLogText();
+        
         sw.Clear();
-        sw.Append(log.Action.ToLogText().PadRight(4)).Append('-').Append(log.Topic.ToLogText().PadRight(4))
-            .Append(' ').Append(id).Append('=').Append(log.Id)
+        sw.Append(action).PadRight(4).Append('-').Append(topic).PadRight(4)
+            .Append(' ').Append(id).Append(eq).Append(log.Id)
             .Append(" Gen=").Append(log.Gen).Append(" { ");
 
-        if (p0 is not null) sw.Append($"{p0}={log.Param0,-2}; ");
-        if (p1 is not null) sw.Append($"{p1}={log.Param1,-2}; ");
-        if (fp is not null) sw.Append($"{fp}={log.FParam0.ToString(CultureInfo.InvariantCulture),-2}; ");
-        if (gen is not null) sw.Append($"{gen}={log.Gen,2}; ");
-        if (flags is not null) sw.Append($"{flags}={log.Flags}; ");
+        if (p0 is not null) sw.Append(p0).Append(eq).Append($"{log.Param0,-2}").Append("; ");
+        if (p1 is not null) sw.Append(p1).Append(eq).Append($"{log.Param1,-2}").Append("; ");
+        if (fp is not null) sw.Append(fp).Append(eq).Append($"{log.FParam0,-2}").Append("; ");
+        if (gen is not null) sw.Append(gen).Append(eq).Append($"{log.Gen,2}").Append("; ");
+        if (flags is not null) sw.Append(flags).Append(eq).Append(log.Flags).Append("; ");
 
         sw.Append(" }");
         return sw.EndSpan();

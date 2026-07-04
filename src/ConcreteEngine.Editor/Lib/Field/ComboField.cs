@@ -115,25 +115,20 @@ internal sealed unsafe class ComboField : PropertyField
         return changed;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static ComboField MakeFromEnumCache<T>(string name, Func<Int1>? getter = null,
-        Action<Int1>? setter = null) where T : unmanaged, Enum
+    public static ComboField Create(string label, ReadOnlySpan<byte> values, ReadOnlySpan<string> names)
     {
-        var names = EnumCache<T>.Names;
-        var values = EnumCache<T>.Values.AsSpan();
-        var enumSize = Unsafe.SizeOf<T>();
-        Span<int> intValues = stackalloc int[values.Length];
-        for (var i = 0; i < values.Length; i++)
-        {
-            intValues[i] = enumSize switch
-            {
-                1 => Unsafe.As<T, byte>(ref values[i]),
-                2 => Unsafe.As<T, short>(ref values[i]),
-                4 => Unsafe.As<T, int>(ref values[i]),
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
-
-        return new ComboField(name, intValues, names, getter, setter);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(values.Length, 64);
+        Span<int> ints = stackalloc int[values.Length];
+        for(int i = 0; i < values.Length; i++) ints[i] = values[i];
+        return new ComboField(label, ints, names);
     }
+    
+    public static ComboField Create(string label, ReadOnlySpan<ushort> values, ReadOnlySpan<string> names)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(values.Length, 64);
+        Span<int> ints = stackalloc int[values.Length];
+        for(int i = 0; i < values.Length; i++) ints[i] = values[i];
+        return new ComboField(label, ints, names);
+    }
+
 }

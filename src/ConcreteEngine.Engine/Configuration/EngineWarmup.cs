@@ -15,24 +15,7 @@ internal static class EngineWarmup
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void LoadStaticCtor(GraphicsRuntime graphics)
     {
-        LoadEnumCache();
         graphics.RunStaticCtor();
         EditorPortal.RunStaticCtor();
     }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void LoadEnumCache()
-    {
-        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<GraphicsKind>).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<SceneObjectKind>).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<BlendMode>).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<CullMode>).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<DepthMode>).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<TextureUsage>).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<PolygonOffsetLevel>).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<TexturePreset>).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<TextureAnisotropy>).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<TexturePixelFormat>).TypeHandle);
-    }
-
 }

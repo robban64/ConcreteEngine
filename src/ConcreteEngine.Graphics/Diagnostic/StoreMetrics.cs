@@ -23,7 +23,7 @@ internal sealed class StoreMetrics<TMeta>(
 
 {
     public GraphicsKind Kind { get; } = kind;
-    public string Name { get; } = kind.ToResourceName();
+    public string Name { get; } = kind.ToText();
     public string ShortName { get; } = kind.ToShortText();
 
     private GfxStoreMeta _data;

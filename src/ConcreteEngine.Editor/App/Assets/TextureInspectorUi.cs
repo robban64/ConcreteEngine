@@ -5,6 +5,7 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Core.Provider;
 using ConcreteEngine.Editor.Core.Provider.Impl;
+using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Assets;

@@ -15,7 +15,7 @@ public enum AssetDirtyFlag : byte
     Lifecycle = 1 << 5,
 }
 
-[EnumExt(Index = true, Utf8 = true)]
+[EnumExt(ToIndex = true, ToUtf8 = true)]
 public enum AssetKind : byte
 {
     Unknown = 0,
@@ -25,7 +25,6 @@ public enum AssetKind : byte
     Material = 4,
 }
 
-[EnumExt]
 public enum AssetCategory : byte
 {
     Unknown = 0,
@@ -36,7 +35,6 @@ public enum AssetCategory : byte
     Script = 5
 }
 
-[EnumExt]
 public enum AssetStorage : byte
 {
     None = 0,
@@ -45,7 +43,6 @@ public enum AssetStorage : byte
     Embedded = 3
 }
 
-[EnumExt]
 public enum AssetLoadingMode : byte
 {
     Ignore = 0,

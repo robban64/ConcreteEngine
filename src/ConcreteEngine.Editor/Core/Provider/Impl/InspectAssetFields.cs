@@ -33,10 +33,11 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
             Register(new FloatField<Float1>("Shininess", FieldKind.Slider) { Min = 0, Max = 50 });
         UvRepeatField = Register(new FloatField<Float4>("UV Repeat", FieldKind.Slider));
 
-        BlendCombo = Register(ComboField.MakeFromEnumCache<BlendMode>("Blend Mode"));
-        CullCombo = Register(ComboField.MakeFromEnumCache<CullMode>("Cull Mode"));
-        DepthCombo = Register(ComboField.MakeFromEnumCache<DepthMode>("Depth Mode"));
-        PolygonCombo = Register(ComboField.MakeFromEnumCache<PolygonOffsetLevel>("Polygon Offset"));
+        BlendCombo = Register(ComboField.Create("Blend Mode", BlendModeExt.Values, BlendModeExt.Names));
+        CullCombo = Register(ComboField.Create("Cull Mode", CullModeExt.Values, CullModeExt.Names));
+        DepthCombo = Register(ComboField.Create("Depth Mode", DepthModeExt.Values, DepthModeExt.Names));
+        PolygonCombo =
+            Register(ComboField.Create("Polygon Offset", PolygonOffsetLevelExt.Values, PolygonOffsetLevelExt.Names));
 
         CreateSegment("State Properties", [ColorField, SpecularField, ShininessField, UvRepeatField]);
         CreateSegment("State Value", [BlendCombo, CullCombo, DepthCombo, PolygonCombo]);
@@ -95,11 +96,12 @@ internal sealed class InspectTextureFields : InspectorFields<InspectTexture>
     public InspectTextureFields() : base(segmentCount: 2)
     {
         LodBias = Register(new FloatField<Float1>("Lod Level", FieldKind.Input) { Format = "%.3f" });
-        Preset = Register(ComboField.MakeFromEnumCache<TexturePreset>("Preset").WithStartAt(1));
-        Anisotropy = Register(ComboField.MakeFromEnumCache<AnisotropyLevel>("Anisotropy"));
-        Usage = Register(ComboField.MakeFromEnumCache<TextureUsage>("Usage").WithPlaceholder("None"));
-        PixelFormat = Register(ComboField.MakeFromEnumCache<TexturePixelFormat>("Format").WithPlaceholder("None")
-            .WithStartAt(1));
+        Preset = Register(ComboField.Create("Preset", TexturePresetExt.Values, TexturePresetExt.Names).WithStartAt(1));
+        Anisotropy = Register(ComboField.Create("Anisotropy", AnisotropyLevelExt.Values, AnisotropyLevelExt.Names));
+        Usage = Register(ComboField.Create("Usage", TextureUsageExt.Values, TextureUsageExt.Names)
+            .WithPlaceholder("None"));
+        PixelFormat = Register(ComboField.Create("Format", TexturePixelFormatExt.Values, TexturePixelFormatExt.Names)
+            .WithPlaceholder("None").WithStartAt(1));
 
         CreateSegment("Texture State", [Usage]);
         CreateSegment("Gpu State", [LodBias, Preset, Anisotropy, PixelFormat]);

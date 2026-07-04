@@ -16,7 +16,7 @@ internal static class SceneExtensions
             SceneObjectKind.Empty => Palette32.TextSecondary,
             SceneObjectKind.Model => Palette32.Model,
             SceneObjectKind.Particle => Palette32.Material,
-            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+            _ => Throwers.Unreachable<uint>(nameof(kind))
         };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

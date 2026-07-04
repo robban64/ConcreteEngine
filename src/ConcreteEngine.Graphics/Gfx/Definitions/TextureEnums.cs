@@ -1,3 +1,5 @@
+using ConcreteEngine.Core.Common.Attributes;
+
 namespace ConcreteEngine.Graphics.Gfx;
 
 public enum TextureFilter : byte
@@ -20,6 +22,7 @@ public enum TextureCompare : byte
     GreaterOrEqual = 2
 }
 
+[EnumExt]
 public enum TexturePixelFormat : byte
 {
     Unknown = 0,
@@ -30,6 +33,7 @@ public enum TexturePixelFormat : byte
     Red = 5
 }
 
+[EnumExt]
 public enum TextureKind : byte
 {
     Unknown = 0,
@@ -40,6 +44,7 @@ public enum TextureKind : byte
     Multisample2D = 5
 }
 
+[EnumExt]
 public enum TexturePreset : byte
 {
     None = 0,
@@ -54,6 +59,7 @@ public enum TexturePreset : byte
     PremultipliedUi = 9
 }
 
+[EnumExt]
 public enum TextureAnisotropy : byte
 {
     Off = 0,

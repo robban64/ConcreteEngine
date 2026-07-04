@@ -1,5 +1,8 @@
+using ConcreteEngine.Core.Common.Attributes;
+
 namespace ConcreteEngine.Graphics;
 
+[EnumExt]
 public enum GraphicsKind : byte
 {
     Invalid = 0,

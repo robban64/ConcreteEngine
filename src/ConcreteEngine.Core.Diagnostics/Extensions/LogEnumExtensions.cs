@@ -5,7 +5,6 @@ namespace ConcreteEngine.Core.Diagnostics.Extensions;
 
 public static class LogEnumExtensions
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToLogText(this LogTopic value)
     {
         return value switch
@@ -31,7 +30,6 @@ public static class LogEnumExtensions
         };
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToLogText(this LogAction value)
     {
         return value switch

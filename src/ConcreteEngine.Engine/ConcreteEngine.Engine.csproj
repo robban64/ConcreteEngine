@@ -7,7 +7,6 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>default</LangVersion>
         <OutputType>Exe</OutputType>
-        <GeneratorId>Engine</GeneratorId>
     </PropertyGroup>
     
     <ItemGroup>

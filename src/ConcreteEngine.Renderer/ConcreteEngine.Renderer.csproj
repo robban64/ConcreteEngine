@@ -1,4 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <GeneratorId>Renderer</GeneratorId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <CompilerVisibleProperty Include="GeneratorId" />
+    </ItemGroup>
+
     <ItemGroup>
         <PackageReference Include="Silk.NET.Maths" Version="2.23.0"/>
     </ItemGroup>
@@ -6,7 +14,7 @@
     <ItemGroup>
         <ProjectReference Include="..\ConcreteEngine.Core.Common\ConcreteEngine.Core.Common.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Core.Diagnostics\ConcreteEngine.Core.Diagnostics.csproj"/>
-
         <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj"/>
+        <ProjectReference Include="..\Generator\Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true"/>
     </ItemGroup>
 </Project>

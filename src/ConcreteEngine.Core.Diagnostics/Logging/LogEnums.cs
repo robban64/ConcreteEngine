@@ -11,7 +11,8 @@ public enum LogFilter : ushort
     LogScope = 1 << 1,
     LogAction = 1 << 2
 }
-[EnumExt(Utf8 =  true)]
+
+[EnumExt(ToUtf8 =  true)]
 public enum LogLevel : byte
 {
     None = 0,
@@ -22,6 +23,21 @@ public enum LogLevel : byte
     Error = 5,
     Critical = 6
 }
+
+[EnumExt(ToUtf8 =  true)]
+public enum LogScope : byte
+{
+    Unknown = 0,
+    Command = 1,
+    Engine = 2,
+    Assets = 3,
+    Ecs = 4,
+    Renderer = 5,
+    Gfx = 6,
+    Backend = 7,
+    Editor = 8,
+}
+
 
 public enum LogTopic : byte
 {
@@ -45,18 +61,6 @@ public enum LogTopic : byte
     ArrayBuffer = 17
 }
 
-public enum LogScope : byte
-{
-    Unknown = 0,
-    Command = 1,
-    Engine = 2,
-    Assets = 3,
-    Ecs = 4,
-    Renderer = 5,
-    Gfx = 6,
-    Backend = 7,
-    Editor = 8,
-}
 
 public enum LogAction : byte
 {

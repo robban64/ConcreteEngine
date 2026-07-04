@@ -1,5 +1,8 @@
+using ConcreteEngine.Core.Common.Attributes;
+
 namespace ConcreteEngine.Core.Engine.Graphics;
 
+[EnumExt]
 public enum AnisotropyLevel : byte
 {
     Off = 0,

@@ -127,6 +127,13 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity, int cursor
         return new NativeView<byte>(Buffer, written);
     }
 
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter Append(byte value)
+    {
+        Buffer[_cursor++] = value;
+        return ref this;
+    }
+
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter Append(byte* value)

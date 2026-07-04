@@ -68,31 +68,5 @@ internal static class AssetsExtensions
         };
     }
 
-    extension(TexturePixelFormat format)
-    {
-        public string ToText() => format switch
-        {
-            TexturePixelFormat.Unknown => "Unknown",
-            TexturePixelFormat.Rgb => "Rgb",
-            TexturePixelFormat.Rgba => "Rgba",
-            TexturePixelFormat.SrgbAlpha => "Srgb",
-            TexturePixelFormat.Depth => "Depth",
-            TexturePixelFormat.Red => "Red",
-            _ => Throwers.Unreachable<string>(nameof(format))
-        };
-    }
 
-    extension(TextureKind kind)
-    {
-        public string ToText() => kind switch
-        {
-            TextureKind.Unknown => "Unknown",
-            TextureKind.Texture2D => "Texture2D",
-            TextureKind.Texture3D => "Texture3D",
-            TextureKind.CubeMap => "CubeMap",
-            TextureKind.Texture2DArray => "CubeMap",
-            TextureKind.Multisample2D => "Multisample",
-            _ => Throwers.Unreachable<string>(nameof(kind))
-        };
-    }
 }

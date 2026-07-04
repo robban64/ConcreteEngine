@@ -90,7 +90,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         ImGui.TableSetupColumn("Label"u8, ImGuiTableColumnFlags.None, 0.35f);
         ImGui.TableSetupColumn("Slot"u8, ImGuiTableColumnFlags.WidthStretch);
 
-        var usageNames = EnumCache<TextureUsage>.Names;
+        var usageNames = TextureUsageExt.Names;
         var bindings = asset.GetSourceSpan();
 
         for (var i = 0; i < bindings.Length; i++)

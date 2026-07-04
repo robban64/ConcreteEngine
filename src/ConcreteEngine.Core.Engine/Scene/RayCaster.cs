@@ -5,9 +5,8 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Engine.Scene;
 
-namespace ConcreteEngine.Core.Engine;
+namespace ConcreteEngine.Core.Engine.Scene;
 
 public sealed class RayCaster
 {

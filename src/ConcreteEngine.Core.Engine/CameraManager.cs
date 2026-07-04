@@ -128,8 +128,8 @@ file static class CameraUtils
     {
         var tan = camera.Transform.Tan;
 
-        var near = camera.NearPlane;
-        var far = MathF.Min(camera.FarPlane, near + distance);
+        var near = camera.NearFarPlane.X;
+        var far = MathF.Min(camera.NearFarPlane.Y, near + distance);
         Vector3 forward = camera.Forward, up = camera.Up, right = camera.Right;
 
         // extents at near/far

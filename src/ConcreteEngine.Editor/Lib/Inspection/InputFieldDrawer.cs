@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Engine.Editor;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Inspection;

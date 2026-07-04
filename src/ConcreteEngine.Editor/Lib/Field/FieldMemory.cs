@@ -3,6 +3,7 @@ using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.Lib.Inspection;
 
 namespace ConcreteEngine.Editor.Lib.Field;
@@ -46,7 +47,7 @@ internal sealed unsafe class FieldMemory
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T* GetValue<T>() where T : unmanaged, IFieldValue => (T*)(_memory.Data + ValueHandle.Offset);
+    public T* GetValue<T>() where T : unmanaged, INumberValue => (T*)(_memory.Data + ValueHandle.Offset);
 
     public NativeView<byte> FullLabelStr => _memory.Data.Slice(LabelHandle);
     public NativeView<byte> TextLabelStr => _memory.Data.Slice(TextLabelHandle);

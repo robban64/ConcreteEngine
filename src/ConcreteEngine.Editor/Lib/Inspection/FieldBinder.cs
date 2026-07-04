@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.Lib.Widgets;
 
 namespace ConcreteEngine.Editor.Lib.Inspection;
@@ -23,7 +24,7 @@ internal abstract class BoundField
 }
 
 internal sealed class BoundField<T>(string fieldName, UiField widget, Func<T> getter, Action<T> setter)
-    : BoundField(fieldName, widget) where T : unmanaged, IFieldValue
+    : BoundField(fieldName, widget) where T : unmanaged, INumberValue
 {
     private FrameStepper _fetchStepper;
 

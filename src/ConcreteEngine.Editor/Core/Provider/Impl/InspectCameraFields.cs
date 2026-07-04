@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Inspection;
@@ -30,12 +31,9 @@ internal sealed class InspectCameraFields : InspectorFields<EditorCamera>
         });
 
         NearFar = Register(new FloatField<Float2>("Near/Far", FieldKind.Input,
-            static () => new Float2(Camera.NearPlane, Camera.FarPlane),
-            static value =>
-            {
-                Camera.NearPlane = value.X;
-                Camera.FarPlane = value.Y;
-            }) { Format = "%.2f", Delay = FieldGetDelay.High });
+            static () => (Float2)Camera.NearFarPlane,
+            static (v) => Camera.NearFarPlane = (Vector2)v
+        ) { Format = "%.2f", Delay = FieldGetDelay.High });
 
         Fov = Register(new FloatField<Float1>("Field of view", FieldKind.Slider,
             static () => Camera.Fov,

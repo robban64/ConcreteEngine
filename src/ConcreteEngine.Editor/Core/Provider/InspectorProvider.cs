@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Inspection;
@@ -33,12 +34,8 @@ internal static class InspectorProvider
         Inspector<Camera>.Register(
             "Plane",
             new FloatInput<Float2>("Near/Far", FieldKind.Input),
-            static () => new Float2(Camera.NearPlane, Camera.FarPlane),
-            static (v) =>
-            {
-                Camera.NearPlane = v.X;
-                Camera.FarPlane = v.Y;
-            },
+            static () => (Float2)Camera.NearFarPlane,
+            static (v) => Camera.NearFarPlane = (Vector2)v,
             FieldGetDelay.High
         );
         Inspector<Camera>.Register(

@@ -3,27 +3,27 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 
-namespace ConcreteEngine.Editor.Lib.Inspection;
+namespace ConcreteEngine.Core.Engine.Editor;
 
-internal interface IFieldValue
+public interface INumberValue
 {
     static abstract int Components { get; }
 }
 
-internal interface IFloatValue : IFieldValue
+public interface IFloatValue : INumberValue
 {
     [UnscopedRef]
     ref float GetRef();
 }
 
-internal interface IIntValue : IFieldValue
+public interface IIntValue : INumberValue
 {
     [UnscopedRef]
     ref int GetRef();
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct Float1(float x) : IFloatValue
+public struct Float1(float x) : IFloatValue
 {
     public float X = x;
 
@@ -37,7 +37,7 @@ internal struct Float1(float x) : IFloatValue
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct Float2(float x, float y) : IFloatValue
+public struct Float2(float x, float y) : IFloatValue
 {
     public float X = x, Y = y;
 
@@ -65,25 +65,25 @@ public struct Float3(float x, float y, float z) : IFloatValue
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct Float4(float x, float y, float z, float w = 0f) : IFloatValue
+public struct Float4(float x, float y, float z, float w = 0f) : IFloatValue
 {
     public float X = x, Y = y, Z = z, W = w;
 
     [UnscopedRef]
     public ref float GetRef() => ref X;
 
-    public static implicit operator Float4(Vector4 v) => new(v.X, v.Y, v.Z, v.W);
-    public static implicit operator Float4(Color4 v) => new(v.R, v.G, v.B, v.A);
+    public static implicit operator Float4(in Vector4 v) => new(v.X, v.Y, v.Z, v.W);
+    public static implicit operator Float4(in Color4 v) => new(v.R, v.G, v.B, v.A);
 
-    public static explicit operator Color4(Float4 v) => new(v.X, v.Y, v.Z, v.W);
-    public static explicit operator Vector4(Float4 v) => new(v.X, v.Y, v.Z, v.W);
-    public static explicit operator Vector3(Float4 v) => new(v.X, v.Y, v.Z);
+    public static explicit operator Color4(in Float4 v) => new(v.X, v.Y, v.Z, v.W);
+    public static explicit operator Vector4(in Float4 v) => new(v.X, v.Y, v.Z, v.W);
+    public static explicit operator Vector3(in Float4 v) => new(v.X, v.Y, v.Z);
 
     public static int Components => 4;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct Int1(int x) : IIntValue
+public struct Int1(int x) : IIntValue
 {
     public int X = x;
 
@@ -97,9 +97,12 @@ internal struct Int1(int x) : IIntValue
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct Int2(int x, int y) : IIntValue
+public struct Int2(int x, int y) : IIntValue
 {
     public int X = x, Y = y;
+
+    public static implicit operator Int2(Vector2I v) => new(v.X, v.Y);
+    public static implicit operator Int2(Size2D v) => new(v.Width, v.Height);
 
     [UnscopedRef]
     public ref int GetRef() => ref X;
@@ -108,7 +111,7 @@ internal struct Int2(int x, int y) : IIntValue
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct Int3Value(int x, int y, int z) : IIntValue
+public struct Int3(int x, int y, int z) : IIntValue
 {
     public int X = x, Y = y, Z = z;
 

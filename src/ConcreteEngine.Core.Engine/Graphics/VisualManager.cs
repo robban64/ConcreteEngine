@@ -3,9 +3,8 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine.Graphics;
 
-namespace ConcreteEngine.Core.Engine;
+namespace ConcreteEngine.Core.Engine.Graphics;
 
 public sealed class VisualManager
 {

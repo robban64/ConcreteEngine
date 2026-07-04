@@ -27,10 +27,25 @@ internal sealed class SourceBuilder
         _sb.AppendLine(line);
         return this;
     }
+    public SourceBuilder AppendIndent()
+    {
+        for (var i = 0; i < _indent; i++) _sb.Append(IndentUnit);
+        return this;
+    }
 
     public SourceBuilder Append(string text)
     {
         _sb.Append(text);
+        return this;
+    }
+    public SourceBuilder Append(int v)
+    {
+        _sb.Append(v);
+        return this;
+    }
+    public SourceBuilder Append(float v)
+    {
+        _sb.Append(v);
         return this;
     }
 

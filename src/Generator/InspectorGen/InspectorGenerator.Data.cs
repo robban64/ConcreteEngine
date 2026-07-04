@@ -1,37 +1,19 @@
 namespace Generator.InspectorGen;
 
-internal sealed record InspectorItem
-{
-    public enum FieldKind : byte
-    {
-        Input, Slider, Drag, Combo, Composite,
-    }
-
-    public required string TypeName { get; set; }
-    public required string GlobalTypeName { get; set; }
-
-    public required string MemberName { get; set; }
-    public required string MemberTypeName { get; set; }
-    public bool MemberIsProperty { get; set; }
-
-    public required string Label { get; set; }
-    public string? Format { get; set; }
-
-    public float Min { get; set; }
-    public float Max { get; set; }
-    public float Speed { get; set; }
-    public FieldKind Kind { get; set; }
-}
-
 public static class InspectorGeneratorData
 {
     public static string MakeInspectorFileName(string typeName) => $"{typeName}.InspectorBindings.g.cs";
     public const string InspectorNs = "ConcreteEngine.Editor.Lib.Inspection";
 
     public const string AttributeFile = "InspectFieldAttributes.g.cs";
-    public const string AttribInspectValueNs = "ConcreteEngine.Core.Editor.InspectValueAttribute";
-    public const string AttribInspectColorNs = "ConcreteEngine.Core.Editor.InspectColorAttribute";
-    public const string AttribInspectMapNs = "ConcreteEngine.Core.Editor.InspectMapAttribute";
+    
+    public const string AttribInspect = "ConcreteEngine.Core.Engine.Editor.InspectAttribute";
+
+    public const string AttribFieldNs = "ConcreteEngine.Core.Engine.Editor.InputFieldAttribute";
+    public const string AttribSliderNs = "ConcreteEngine.Core.Engine.Editor.SliderFieldAttribute";
+    public const string AttribDragNs = "ConcreteEngine.Core.Engine.Editor.DragFieldAttribute";
+    public const string AttribColorNs = "ConcreteEngine.Core.Engine.Editor.ColorFieldAttribute";
+    public const string AttribComboNs = "ConcreteEngine.Core.Engine.Editor.ComboFieldAttribute";
 
     public const string AttributeSource =
         """

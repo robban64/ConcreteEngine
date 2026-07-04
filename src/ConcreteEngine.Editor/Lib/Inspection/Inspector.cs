@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.Lib.Widgets;
 
 namespace ConcreteEngine.Editor.Lib.Inspection;
@@ -15,6 +16,13 @@ internal static class Inspector
             if (it.FieldName == name) Throwers.InvalidArgument($"Name {name} is already registered", nameof(name));
         }
     }
+
+    public static BoundField<TValue> MakeFloatBinding<TValue>(string typeName, FloatInput<TValue> element,
+        Func<TValue> getter,
+        Action<TValue> setter) where TValue : unmanaged, IFloatValue
+    {
+        return new BoundField<TValue>(typeName, element, getter, setter);
+    }
 }
 
 internal static class Inspector<T> where T : class
@@ -25,13 +33,25 @@ internal static class Inspector<T> where T : class
     public static event Action<T>? OnBind;
     public static event Action<T>? OnUnbind;
 
+    public static void Register(string fieldName, BoundField field)
+    {
+        Inspector.ValidateName(fieldName, Fields);
+        Fields.Add(field);
+
+        Register(
+            fieldName,
+            field
+        );
+    }
+
+
     public static void Register<TValue>(
         string fieldName,
         UiField uiElement,
         Func<TValue> getter,
         Action<TValue> setter,
         FieldGetDelay delay = FieldGetDelay.Low)
-        where TValue : unmanaged, IFieldValue
+        where TValue : unmanaged, INumberValue
     {
         Inspector.ValidateName(fieldName, Fields);
         Fields.Add(new BoundField<TValue>(fieldName, uiElement, getter, setter) { Delay = delay });

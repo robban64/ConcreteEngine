@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Lib.Inspection;
 using Hexa.NET.ImGui;
@@ -29,7 +30,7 @@ internal interface IPropertyFieldBinding
     void Unbind();
 }
 
-internal sealed unsafe class PropertyFieldBinding<T> : IPropertyFieldBinding where T : unmanaged, IFieldValue
+internal sealed unsafe class PropertyFieldBinding<T> : IPropertyFieldBinding where T : unmanaged, INumberValue
 {
     private Func<T>? _getter;
     private Action<T>? _setter;

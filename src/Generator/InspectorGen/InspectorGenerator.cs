@@ -9,23 +9,15 @@ using static Generator.InspectorGen.InspectorGeneratorData;
 namespace Generator.InspectorGen;
 
 [Generator]
-public sealed class InspectorGenerator : IIncrementalGenerator
+public sealed partial class InspectorGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterPostInitializationOutput(static ctx => ctx.AddSource(AttributeFile,
-            SourceText.From(AttributeSource, Encoding.UTF8)));
-
         var memberModels = context.SyntaxProvider
-            .ForAttributeWithMetadataName(
-                AttribInspectValueNs,
-                predicate: static (node, _) => node is PropertyDeclarationSyntax or VariableDeclaratorSyntax,
-                transform: static (ctx, ct) => BuildMemberModel(ctx, ct))
-            .Where(static m => m is not null)
-            .Select(static (m, _) => m!);
+            .ForAttributeWithMetadataName(AttribInspect, IsPropOrVarMember, BuildMemberModel)
+            .Where(static m => m is not null).Select(static (m, _) => m!);
 
         var grouped = memberModels.Collect();
-
         context.RegisterSourceOutput(grouped, static (ctx, members) =>
         {
             foreach (var typeGroup in members.GroupBy(m => m.TypeName))
@@ -37,82 +29,44 @@ public sealed class InspectorGenerator : IIncrementalGenerator
         });
     }
 
-    private static InspectorItem? BuildMemberModel(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
+    private static InspectModel? BuildMemberModel(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
-        ISymbol memberSym = ctx.TargetSymbol;
-        INamedTypeSymbol? containingType = memberSym.ContainingType;
-        if (containingType is null) return null;
+        var memberSym = ctx.TargetSymbol;
+        var containingType = memberSym.ContainingType;
+        if (containingType is null || ctx.Attributes.Length < 2) return null;
 
-        // Member type
-        string memberTypeName;
-        bool isProperty;
-        switch (memberSym)
+        AttributeData? inspectAttr = null, fieldAttr = null;
+        foreach (var it in ctx.Attributes)
         {
-            case IPropertySymbol prop:
-                memberTypeName = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                isProperty = true;
-                break;
-            case IFieldSymbol field:
-                memberTypeName = field.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                isProperty = false;
-                break;
-            default:
-                return null;
+            if (it.AttributeClass is null) continue;
+            if (it.AttributeClass.Name == "InspectAttribute") inspectAttr = it;
+            else if (it.AttributeClass.Name.EndsWith("FieldAttribute", StringComparison.Ordinal)) fieldAttr = it;
         }
 
-        var attr = ctx.Attributes[0];
+        if (inspectAttr == null || fieldAttr == null) return null;
 
-        var kind = InspectorItem.FieldKind.Input;
-        if (attr.ConstructorArguments.Length > 0 && attr.ConstructorArguments[0].Value is byte rawKind)
-            kind = (InspectorItem.FieldKind)rawKind;
+        var inspectAttrCtor = inspectAttr.ConstructorArguments;
+        if (inspectAttrCtor.IsEmpty || inspectAttrCtor[0].Value is not string displayName)
+            displayName = memberSym.Name; // nameof({containingType.Name}.{memberSym.Name})
 
-        string label = null!;
-        string? format = null;
-        float min = 0, max = 0, speed = 0;
-        foreach (var kv in attr.NamedArguments)
-        {
-            switch (kv.Key)
-            {
-                case "Label" when kv.Value.Value is string l:
-                    label = SymbolDisplay.FormatLiteral(l, quote: true);
-                    break;
-                case "Format" when kv.Value.Value is string l:
-                    format = SymbolDisplay.FormatLiteral(l, quote: true);
-                    break;
-                case "Min" when kv.Value.Value is float l:
-                    min = l;
-                    break;
-                case "Max" when kv.Value.Value is float l:
-                    max = l;
-                    break;
-                case "Speed" when kv.Value.Value is float l:
-                    speed = l;
-                    break;
-            }
-        }
+        var field = MakeField(ctx.Attributes[1], containingType);
+        if (field == null) return null;
 
-        if (label == null!) label = $"nameof({containingType.Name}.{memberSym.Name})";
-
-        return new InspectorItem
+        return new InspectModel
         {
             TypeName = containingType.Name,
-            GlobalTypeName = containingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
             MemberName = memberSym.Name,
-            MemberTypeName = memberTypeName,
-            MemberIsProperty = isProperty,
-            Label = label,
-            Kind = kind,
-            Format = format,
-            Min = min,
-            Max = max,
-            Speed = speed
+            MemberTypeName = memberSym.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+            DisplayName = displayName,
+            Field = field
         };
+
     }
+    
 
-
-    private static string Emit(InspectorItem it, ImmutableArray<InspectorItem> members)
+    private static string Emit(InspectModel it, ImmutableArray<InspectModel> members)
     {
         var target = $"{it.TypeName}Target";
 
@@ -131,16 +85,15 @@ public sealed class InspectorGenerator : IIncrementalGenerator
 
         foreach (var m in members)
         {
-            var ctor = $"{m.Label}, (FieldKind){(int)m.Kind}, {m.Speed}, {m.Min}, {m.Max}";
-
-            sb.AppendLine($"global::Inspector<{it.TypeName}>.Register<{m.MemberTypeName}>(");
+            sb.AppendLine($"global::Inspector<{it.TypeName}>.Register<{m.Field.ValueType}>(");
             sb.PushIndent();
-            sb.AppendLine($"{m.Label},");
-            sb.AppendLine($"new FloatInput<{m.MemberTypeName}>({ctor}),");
-            sb.AppendLine($"static () => ({m.MemberTypeName}){target}!.{m.MemberName},");
+            sb.AppendLine($"{m.MemberName},");
+            EmitInput(m, sb);
+            sb.AppendLine($"static () => ({m.Field.ValueType}){target}!.{m.MemberName},");
             sb.AppendLine($"static v  => {target}!.{m.MemberName} = ({m.MemberTypeName})v");
             sb.PopIndent();
             sb.AppendLine(");");
+            
         }
 
         sb.CloseBrace(); // Register()
@@ -148,5 +101,43 @@ public sealed class InspectorGenerator : IIncrementalGenerator
         sb.CloseBrace(); // class
 
         return sb.ToString();
+    }
+
+    private static void EmitInput(InspectModel member, SourceBuilder sb)
+    {
+        var field = member.Field;
+
+        if (field is ColorField colorField)
+        {
+            sb.AppendLine($"new ColorInput({member.DisplayName}, {colorField.HasAlpha.ToString()}),");
+            return;
+        }
+
+        if (field is ComboField comboField)
+        {
+            sb.AppendLine($"ComboInput.MakeFromEnumCache<{member.MemberTypeName}>({member.DisplayName}),");
+            return;
+        }
+
+        if (field is not InputField input) return;
+        
+        if (field.ValueType.StartsWith("Int", StringComparison.Ordinal))
+        {
+            sb.AppendIndent();
+            sb.Append($"new IntInput<{input.ValueType}>(");
+            sb.Append(member.DisplayName).Append(", ").Append((int)input.Kind).Append(", ");
+            sb.Append(input.Speed).Append(", ").Append((int)input.Min).Append(", ").Append((int)input.Max);
+            sb.Append("),\n");
+            return;
+        }
+        
+        sb.AppendIndent();
+        sb.Append($"new FloatInput<{input.ValueType}>(");
+        sb.Append(member.DisplayName).Append(", ").Append((int)input.Kind).Append(", ");
+        sb.Append(input.Speed).Append(", ").Append(input.Min).Append(", ").Append(input.Max);
+        if(input.Format is not null) sb.Append(", ").Append(input.Format);
+        sb.Append("),\n");
+
+
     }
 }

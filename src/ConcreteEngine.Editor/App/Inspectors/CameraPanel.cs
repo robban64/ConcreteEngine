@@ -60,8 +60,10 @@ internal sealed unsafe class CameraPanel(StateManager state) : EditorPanel(Inspe
         AppDraw.Text(_aspectStr);
 
         ImGui.Spacing();
+        avg1.BeginSample();
 
         Inspector<Camera>.Draw();
+        if (avg1.EndSample() > 40) avg1.ResetAndPrint();
 
     }        
 

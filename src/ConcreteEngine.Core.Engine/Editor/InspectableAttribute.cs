@@ -1,5 +1,5 @@
 namespace ConcreteEngine.Core.Engine.Editor;
-
+/*
 public enum InspectorFieldKind : byte
 {
     None,
@@ -19,4 +19,4 @@ public class InspectableAttribute : Attribute
 public class InspectablePrimitiveAttribute : Attribute
 {
     public InspectorFieldKind FieldKind;
-}
+}*/

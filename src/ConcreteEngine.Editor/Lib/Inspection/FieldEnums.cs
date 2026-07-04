@@ -9,15 +9,6 @@ public enum FieldGetDelay : ushort
     VeryHigh = 1440
 }
 
-public enum FieldKind : byte
-{
-    Input,
-    Slider,
-    Drag,
-    Combo,
-    Composite,
-}
-
 public enum FieldLabelPlacement : byte
 {
     None,

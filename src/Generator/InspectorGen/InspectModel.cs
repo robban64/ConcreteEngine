@@ -7,7 +7,9 @@ internal enum FieldKind : byte
     Drag,
     Combo,
 }
-internal sealed record InspectModel
+
+
+internal sealed record InspectModel()
 {
     public required string TypeName { get; set; }
     public required string MemberName { get; set; }
@@ -22,7 +24,7 @@ internal interface IInspectField
 {
     string ValueType { get; }
 }
-internal sealed record InputField : IInspectField
+internal sealed record InputField() : IInspectField
 {
     public required string ValueType { get; set; } 
     public string? Format { get; set; }
@@ -32,13 +34,13 @@ internal sealed record InputField : IInspectField
     public float Speed { get; set; }
 }
 
-internal sealed record ColorField : IInspectField
+internal sealed record ColorField() : IInspectField
 {
     public string ValueType => "Float4";
     public bool HasAlpha { get; set; }
 }
 
-internal sealed record ComboField: IInspectField
+internal sealed record ComboField(): IInspectField
 {
     public string ValueType => "Int1";
     public string? Placeholder { get; set; }

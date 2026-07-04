@@ -7,14 +7,14 @@ using Microsoft.CodeAnalysis.Text;
 using static Generator.InspectorGen.InspectorGeneratorData;
 
 namespace Generator.InspectorGen;
-
+/*
 [Generator]
 public sealed partial class InspectorGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var memberModels = context.SyntaxProvider
-            .ForAttributeWithMetadataName(AttribInspect, IsPropOrVarMember, BuildMemberModel)
+            .ForAttributeWithMetadataName(AttribInspect, Predicates.IsPropertyOrField, BuildMemberModel)
             .Where(static m => m is not null).Select(static (m, _) => m!);
 
         var grouped = memberModels.Collect();
@@ -140,4 +140,4 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
 
 
     }
-}
+}*/

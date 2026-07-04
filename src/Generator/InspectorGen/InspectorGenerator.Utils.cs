@@ -6,8 +6,6 @@ namespace Generator.InspectorGen;
 
 public sealed partial class InspectorGenerator
 {
-    private static bool IsPropOrVarMember(SyntaxNode node, CancellationToken _) 
-        => node is PropertyDeclarationSyntax or VariableDeclaratorSyntax;
 
     private static readonly Dictionary<string, string> DefaultInputMap = new()
     {

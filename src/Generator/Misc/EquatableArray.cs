@@ -30,6 +30,12 @@ internal static class EquatableArray
     {
         return new(array);
     }
+    public static EquatableArray<T> ToEquatableArray<T>(this IEnumerable<T> array)
+        where T : IEquatable<T>
+    {
+        return new(array.ToImmutableArray());
+    }
+
 }
 
 /// <summary>
@@ -43,6 +49,8 @@ internal readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IEnu
     /// The underlying <typeparamref name="T"/> array.
     /// </summary>
     private readonly T[]? array;
+    
+    public T[] GetMainArray() => array;
 
     /// <summary>
     /// Creates a new <see cref="EquatableArray{T}"/> instance.

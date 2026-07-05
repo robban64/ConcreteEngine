@@ -1,3 +1,5 @@
+using ConcreteEngine.Graphics.Gfx;
+
 namespace ConcreteEngine.Graphics.Utility;
 
 public static class GraphicsKindExtensions

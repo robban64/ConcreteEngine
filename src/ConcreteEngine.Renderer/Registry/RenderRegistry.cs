@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Renderer.Registry;

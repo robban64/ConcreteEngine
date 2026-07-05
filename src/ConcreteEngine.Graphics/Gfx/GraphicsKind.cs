@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Common.Attributes;
 
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.Gfx;
 
 [EnumExt]
 public enum GraphicsKind : byte

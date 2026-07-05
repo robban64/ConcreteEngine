@@ -116,7 +116,7 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnWarmup(EngineSetupCtx ctx)
     {
-        ctx.Graphics.BeginFrame(new GfxFrameArgs(0, EngineWindow.Viewport.Size));
+        ctx.Graphics.BeginFrame(EngineWindow.Viewport.Size);
         ctx.Renderer.Program.Render();
         ctx.Graphics.EndFrame();
         ctx.EngineGateway.RenderEditor(0);

@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Graphics.Resources;

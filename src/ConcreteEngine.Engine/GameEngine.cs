@@ -106,7 +106,7 @@ public sealed class GameEngine : IDisposable
 
     private void Draw(float dt)
     {
-        _graphics.BeginFrame(new GfxFrameArgs(dt, EngineWindow.Viewport.Size));
+        _graphics.BeginFrame(EngineWindow.Viewport.Size);
         _renderSystem.Render(dt);
         _graphics.EndFrame();
 

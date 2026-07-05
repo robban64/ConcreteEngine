@@ -28,7 +28,7 @@ public sealed class AssetFileRegistry
     public int ActiveCount => Count - _free.Count;
     public int Capacity => _files.Length;
 
-    internal ReadOnlySpan<AssetFile?> GetFileSpan() => _files.AsSpan(0, Count);
+    internal ReadOnlySpan<AssetFile?> GetFileSpan() => new(_files, 0, Count);
 
     public Dictionary<string, List<AssetFileId>>.KeyCollection GetDirectories() => _byDirectory.Keys;
 
@@ -86,7 +86,7 @@ public sealed class AssetFileRegistry
             fileIds = ReadOnlySpan<AssetFileId>.Empty;
             return false;
         }
-        
+
         fileIds = CollectionsMarshal.AsSpan(fileIdList);
         return true;
     }

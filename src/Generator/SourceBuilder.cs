@@ -26,7 +26,9 @@ internal ref struct SourceBuilder
     [UnscopedRef]
     public readonly ref readonly SourceBuilder AppendLine(string line = "")
     {
-        if (line.Length > 0) return ref IndentLine(line);
+        if (line.Length > 0)
+            IndentLine(line);
+        
         _sb.AppendLine();
         return ref this;
     }
@@ -81,7 +83,7 @@ internal ref struct SourceBuilder
     }
 
     [UnscopedRef]
-    public ref SourceBuilder OpenBrace()
+    public ref readonly SourceBuilder OpenBrace()
     {
         AppendLine("{");
         _indent++;
@@ -89,7 +91,7 @@ internal ref struct SourceBuilder
     }
 
     [UnscopedRef]
-    public ref SourceBuilder CloseBrace(string suffix = "")
+    public ref readonly SourceBuilder CloseBrace(string suffix = "")
     {
         _indent--;
         AppendLine("}" + suffix);

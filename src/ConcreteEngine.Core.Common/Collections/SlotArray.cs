@@ -23,7 +23,7 @@ public sealed class SlotArray<T> where T : class
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<T?> AsSpan(int start = 0) => _entries.AsSpan(start, Count);
+    public ReadOnlySpan<T?> AsSpan(int start = 0) => new(_entries, start, Count);
 
     public ref T? this[int index]
     {

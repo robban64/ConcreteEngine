@@ -7,3 +7,10 @@ public enum FieldKind : byte
     Drag,
     Combo,
 }
+
+public enum InputFieldKind : byte
+{
+    Input,
+    Slider,
+    Drag
+}

@@ -27,7 +27,7 @@ internal sealed unsafe class FloatInput<T> : UiField where T : unmanaged, IFloat
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override ref byte GetRawValue() => ref Unsafe.As<float, byte>(ref Value.GetRef());
+    public override ref byte GetRawValue() => ref Unsafe.As<float, byte>(ref Value.Ref());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool Draw()
@@ -39,6 +39,7 @@ internal sealed unsafe class FloatInput<T> : UiField where T : unmanaged, IFloat
         if (changed) Value = value;
         return changed && ShouldTrigger();
     }
+
 }
 
 internal sealed unsafe class IntInput<T> : UiField where T : unmanaged, IIntValue
@@ -49,7 +50,7 @@ internal sealed unsafe class IntInput<T> : UiField where T : unmanaged, IIntValu
 
     private readonly delegate*<int, byte*, int*, float, int, int, bool> _drawFunc;
 
-    public override ref byte GetRawValue() => ref Unsafe.As<int, byte>(ref Value.GetRef());
+    public override ref byte GetRawValue() => ref Unsafe.As<int, byte>(ref Value.Ref());
 
     public IntInput(string label, FieldKind widget, float speed = 1f, int min = 0, int max = 0) : base(label, widget)
     {
@@ -75,7 +76,7 @@ internal sealed unsafe class ColorInput(string label, bool hasAlpha = true) : Ui
 
     public Float4 Value;
 
-    public override ref byte GetRawValue() => ref Unsafe.As<float, byte>(ref Value.GetRef());
+    public override ref byte GetRawValue() => ref Unsafe.As<float, byte>(ref Value.Ref());
 
     public override bool Draw()
     {

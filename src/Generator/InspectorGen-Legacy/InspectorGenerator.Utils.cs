@@ -1,5 +1,4 @@
-using System.Diagnostics;
-using Microsoft.CodeAnalysis;
+/*using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -19,33 +18,7 @@ public sealed partial class InspectorGenerator
         { "Vector2I", "Int2" }
     };
     
-    internal enum SupportedTypes
-    {
-        Int,
-        Float,
-        Bool,
-        DateTime,
-    }
     
-    
-    private static MemberTypeInfo ExtractMemberTypeInfo(ISymbol sym)
-    {
-        var type = sym switch
-        {
-            IFieldSymbol field => field.Type,
-            IPropertySymbol property => property.Type,
-            _ => throw new UnreachableException()
-        };
-        return new MemberTypeInfo(
-            type.IsValueType,
-            type.IsUnmanagedType,
-            type.IsReadOnly,
-            type.TypeKind,
-            type.SpecialType
-        );
-    }
-    
-    /*
     private static IInspectField? MakeField(AttributeData attr, INamedTypeSymbol type)
     {
         if (attr.ConstructorArguments.IsEmpty || attr.ConstructorArguments[0].Value is not string typeName)
@@ -94,5 +67,5 @@ public sealed partial class InspectorGenerator
             },
             _ => null
         };
-    }*/
-}
+    }
+}*/

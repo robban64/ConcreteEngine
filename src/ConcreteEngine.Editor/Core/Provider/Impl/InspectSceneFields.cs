@@ -120,7 +120,7 @@ internal sealed class InspectParticleFields : InspectorFields<ParticleInstance>
     public InspectParticleFields() : base(segmentCount: 2)
     {
         ParticleCountField = Register(new IntField<Int1>("Particle Count", FieldKind.Input)
-            .WithProperties(FieldGetDelay.Medium, FieldLabelPlacement.Top, FieldTrigger.AfterChangeDeactive));
+            .WithProperties(FieldGetDelay.Medium, FieldLabelPlacement.Top, InputTrigger.AfterChangeDeactive));
 
         StartColorField = Register(new ColorField("Start Color", true));
 

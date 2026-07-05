@@ -1,48 +1,53 @@
+using Microsoft.CodeAnalysis;
+
 namespace Generator.InspectorGen;
 
-internal enum FieldKind : byte
+public enum SpecialInspectKind : byte
 {
-    Input,
-    Slider,
-    Drag,
-    Combo,
+    Invalid,
+    RuntimeId,
+    StorageId,
+    ObjectName,
+}
+
+public enum InspectorTypeKind : byte
+{
+    Invalid,
+    RuntimeId,
+    StorageId,
+    Number,
+    Boolean,
+    String,
+    Array,
+    Map,
+    Struct,
+    Class,
 }
 
 
-internal sealed record InspectModel()
+internal sealed record TargetModel(string Name, string TypeNs, EquatableArray<MemberModel> Members)
 {
-    public required string TypeName { get; set; }
-    public required string MemberName { get; set; }
-    public required string MemberTypeName { get; set; }
-
-    public required string DisplayName { get; set; }
-    public required IInspectField Field { get; set; }
+    public string? DisplayName { get; init; }
+    
 }
 
+internal record struct MemberTypeInfo(
+    bool IsValueType,
+    bool IsUnmanaged,
+    bool IsReadOnly,
+    TypeKind TypeKind,
+    SpecialType SpecialType);
 
-internal interface IInspectField
+internal record struct MemberModel
 {
-    string ValueType { get; }
-}
-internal sealed record InputField() : IInspectField
-{
-    public required string ValueType { get; set; } 
-    public string? Format { get; set; }
-    public FieldKind Kind { get; set; }
-    public float Min { get; set; }
-    public float Max { get; set; }
-    public float Speed { get; set; }
-}
-
-internal sealed record ColorField() : IInspectField
-{
-    public string ValueType => "Float4";
-    public bool HasAlpha { get; set; }
+    public required string Name { get; init; }
+    public required string TypeName { get; init; }
+    public string? DisplayName {get; init;}
+    public MemberTypeInfo TypeInfo { get; init; }
+    //public string? DisplayName { get; init; }
+    //public required Type MemberType;
+    //public required string IsCollection;
+    //public required string FormatHint;
+    //public required string CollectionStyle;
 }
 
-internal sealed record ComboField(): IInspectField
-{
-    public string ValueType => "Int1";
-    public string? Placeholder { get; set; }
-    public int StartAt { get; set; }
-}

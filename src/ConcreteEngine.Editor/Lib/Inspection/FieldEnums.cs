@@ -16,7 +16,7 @@ public enum FieldLabelPlacement : byte
     Inline,
 }
 
-public enum FieldTrigger : byte
+public enum InputTrigger : byte
 {
     OnChange,
     AfterChange,

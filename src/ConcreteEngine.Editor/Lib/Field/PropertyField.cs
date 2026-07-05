@@ -14,7 +14,7 @@ internal static class PropertyFieldExtensions
         this T field,
         FieldGetDelay delay = FieldGetDelay.Low,
         FieldLabelPlacement? layout = null,
-        FieldTrigger? trigger = null) where T : PropertyField
+        InputTrigger? trigger = null) where T : PropertyField
     {
         field.Delay = delay;
         if (layout.HasValue) field.LabelPlacement = layout.Value;
@@ -91,7 +91,7 @@ internal abstract unsafe class PropertyField
 
     public bool Visible = true;
     public FieldLabelPlacement LabelPlacement = FieldLabelPlacement.Top;
-    public FieldTrigger Trigger;
+    public InputTrigger Trigger;
     public FieldKind Kind { get; protected set; }
 
     public FieldGetDelay Delay
@@ -165,9 +165,9 @@ internal abstract unsafe class PropertyField
     {
         return Trigger switch
         {
-            FieldTrigger.OnChange => true,
-            FieldTrigger.AfterChange => ImGui.IsItemDeactivatedAfterEdit(),
-            FieldTrigger.AfterChangeDeactive => ImGui.IsItemDeactivatedAfterEdit() && !ImGui.IsItemActive(),
+            InputTrigger.OnChange => true,
+            InputTrigger.AfterChange => ImGui.IsItemDeactivatedAfterEdit(),
+            InputTrigger.AfterChangeDeactive => ImGui.IsItemDeactivatedAfterEdit() && !ImGui.IsItemActive(),
             _ => false
         };
     }

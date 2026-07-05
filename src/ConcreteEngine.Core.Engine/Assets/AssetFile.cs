@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
+using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
@@ -9,6 +10,7 @@ public enum FileBinding : byte
     Unknown, RootFile, DependentFile, UnboundFile
 }
 
+[Inspect]
 public sealed class AssetFile : IComparable<AssetFile>
 {
     public Guid GId { get; }

@@ -20,7 +20,7 @@ internal abstract class UiField
 
     public float Width;
     public FieldKind Widget { get; private set; }
-    public FieldTrigger Trigger = FieldTrigger.OnChange;
+    public InputTrigger Trigger = InputTrigger.OnChange;
     public FieldLabelPlacement LabelPlacement = FieldLabelPlacement.Top;
 
     protected UiField(string label, FieldKind widget)
@@ -34,28 +34,7 @@ internal abstract class UiField
     public abstract bool Draw();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected unsafe NativeView<byte> ApplyLabelLayout(byte* ptr)
-    {
-        var sw = new NativeSpanWriter(ptr, LabelAllocCapacity);
-
-        switch (LabelPlacement)
-        {
-            case FieldLabelPlacement.Top:
-                sw.Append(Label);
-                AppDraw.Text(sw.End());
-                ImGui.Separator();
-                ImGui.PushItemWidth(GuiTheme.FormItemWidth);
-                break;
-            case FieldLabelPlacement.Inline:
-                sw.Append(Label);
-                ImGui.PushItemWidth(GuiTheme.FormItemInlineWidth);
-                break;
-        }
-
-        return sw.AppendImGuiId(DrawId).End();
-    }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected unsafe NativeView<byte> ApplyLabelLayout(NativeSpanWriter sw)
+    protected  NativeView<byte> ApplyLabelLayout(NativeSpanWriter sw)
     {
         switch (LabelPlacement)
         {
@@ -79,9 +58,9 @@ internal abstract class UiField
     {
         return Trigger switch
         {
-            FieldTrigger.OnChange => true,
-            FieldTrigger.AfterChange => ImGui.IsItemDeactivatedAfterEdit(),
-            FieldTrigger.AfterChangeDeactive => ImGui.IsItemDeactivatedAfterEdit() && !ImGui.IsItemActive(),
+            InputTrigger.OnChange => true,
+            InputTrigger.AfterChange => ImGui.IsItemDeactivatedAfterEdit(),
+            InputTrigger.AfterChangeDeactive => ImGui.IsItemDeactivatedAfterEdit() && !ImGui.IsItemActive(),
             _ => false
         };
     }

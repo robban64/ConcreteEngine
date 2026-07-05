@@ -5,6 +5,9 @@ namespace Generator;
 
 internal static class Predicates
 {
+    public static bool IsObjectOrStruct(SyntaxNode node, CancellationToken _) =>
+        node is ClassDeclarationSyntax or InterfaceDeclarationSyntax or StructDeclarationSyntax;
+
     public static bool IsPropertyOrField(SyntaxNode node, CancellationToken _) =>
         node is PropertyDeclarationSyntax or VariableDeclaratorSyntax;
 

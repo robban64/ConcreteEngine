@@ -22,7 +22,7 @@ internal sealed unsafe class SceneBrowser
     }
 
     public int FilteredCount => _count;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<SceneObjectId> GetSceneIds(int start, int length) => new(_sceneIds, start, length);
 
@@ -33,7 +33,7 @@ internal sealed unsafe class SceneBrowser
     public void Search(Span<byte> searchStr, SceneObjectKind selectedKind)
     {
         Ensure();
-        
+
         var searchId = 0;
         ulong searchKey = 0, searchMask = 0;
         if (searchStr.Length > 0)
@@ -57,23 +57,22 @@ internal sealed unsafe class SceneBrowser
         _count = count;
     }
 
-    
+
     private void OnInvalidateList(int start, Span<NativeString> span)
     {
         var cursor = 0;
         foreach (var sceneObj in SceneManager.SceneStore.MakeSparseEnumerator(GetSceneIds(start, span.Length)))
         {
             ref var name = ref span[cursor++];
-            if(name.IsNull) name = StringArena.AllocateString(32);
-            
-            name.OverWriter.PadRight(1)
-                .AppendIcon(StyleMap.GetIcon(sceneObj.Kind.ToIcon()))
-                .PadRight(4)
-                .Append(sceneObj.Name.Truncate(20))
-                .End();
+            if (name.IsNull) name = StringArena.AllocateString(32);
+
+            var sw = name.OverWriter;
+            sw.PadRight(1).AppendIcon(StyleMap.GetIcon(sceneObj.Kind.ToIcon())).PadRight(4);
+            sw.Append(sceneObj.Name.Truncate(20));
+            sw.End();
         }
     }
-    
+
     private void Ensure()
     {
         if (_count > 0) _sceneIds.AsSpan(0, _count).Clear();
@@ -81,8 +80,7 @@ internal sealed unsafe class SceneBrowser
         {
             var req = int.Min(SceneManager.SceneStore.Count, EditorConsts.SceneCapacity);
             var cap = CapacityUtils.CapacityGrowthToFit(_sceneIds.Length, req);
-            _sceneIds = new  SceneObjectId[cap];
+            _sceneIds = new SceneObjectId[cap];
         }
     }
-
 }

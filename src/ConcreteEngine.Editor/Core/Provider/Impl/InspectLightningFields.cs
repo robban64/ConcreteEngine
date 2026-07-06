@@ -35,7 +35,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
 
     public InspectLightningFields() : base(segmentCount: 6)
     {
-        Direction = Register(new FloatField<Float3>("Direction", FieldKind.Drag,
+        Direction = Register(new FloatField<Float3>("Direction", InputFieldKind.Drag,
             static () => Visuals.Illumination.DirectionalLight.Value.Direction,
             static value => Visuals.Illumination.DirectionalLight.Mutate.Direction = (Vector3)value)
         {
@@ -47,7 +47,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
             static value => Visuals.Illumination.DirectionalLight.Mutate.Diffuse = (Vector3)value
         ));
 
-        Intensity = Register(new FloatField<Float1>("Intensity", FieldKind.Drag,
+        Intensity = Register(new FloatField<Float1>("Intensity", InputFieldKind.Drag,
             static () => Visuals.Illumination.DirectionalLight.Value.Intensity,
             static value => Visuals.Illumination.DirectionalLight.Mutate.Intensity = (float)value
         )
@@ -58,7 +58,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
             Max = 10f,
             LabelPlacement = FieldLabelPlacement.Inline
         });
-        Specular = Register(new FloatField<Float1>("Specular", FieldKind.Drag,
+        Specular = Register(new FloatField<Float1>("Specular", InputFieldKind.Drag,
             static () => Visuals.Illumination.DirectionalLight.Value.Specular,
             static value => Visuals.Illumination.DirectionalLight.Mutate.Specular = (float)value)
         {
@@ -79,7 +79,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
             static () => Visuals.Illumination.Ambient.Value.AmbientGround,
             static value => Visuals.Illumination.Ambient.Mutate.AmbientGround = (Color4)value
         ));
-        Exposure = Register(new FloatField<Float1>("Exposure", FieldKind.Drag,
+        Exposure = Register(new FloatField<Float1>("Exposure", InputFieldKind.Drag,
             static () => Visuals.Illumination.Ambient.Value.Exposure,
             static value => Visuals.Illumination.Ambient.Mutate.Exposure = (float)value)
         {

@@ -15,7 +15,7 @@ internal unsafe struct FloatCompositeEntry
     public float Speed, Min, Max;
 
     public FloatCompositeEntry(
-        FieldKind kind,
+        InputFieldKind kind,
         float speed,
         float min,
         float max)
@@ -25,9 +25,9 @@ internal unsafe struct FloatCompositeEntry
         Max = max;
         DrawFunc = kind switch
         {
-            FieldKind.Input => &InputFieldDrawer.DrawInputFloat,
-            FieldKind.Slider => &InputFieldDrawer.DrawSliderFloat,
-            FieldKind.Drag => &InputFieldDrawer.DrawDragFloat,
+            InputFieldKind.Input => &InputFieldDrawer.DrawInputFloat,
+            InputFieldKind.Slider => &InputFieldDrawer.DrawSliderFloat,
+            InputFieldKind.Drag => &InputFieldDrawer.DrawDragFloat,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }
@@ -112,21 +112,21 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField where T : un
     [MethodImpl(MethodImplOptions.NoInlining)]
     public FloatCompositeField<T> WithInput(string label, float min, float max, string format = "%.2f")
     {
-        AddField(label, format, new FloatCompositeEntry(FieldKind.Input, 0, min, max));
+        AddField(label, format, new FloatCompositeEntry(InputFieldKind.Input, 0, min, max));
         return this;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public FloatCompositeField<T> WithSlider(string label, float min, float max, string format = "%.2f")
     {
-        AddField(label, format, new FloatCompositeEntry(FieldKind.Slider, 0, min, max));
+        AddField(label, format, new FloatCompositeEntry(InputFieldKind.Slider, 0, min, max));
         return this;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public FloatCompositeField<T> WithDrag(string label, float speed, float min, float max, string format = "%.2f")
     {
-        AddField(label, format, new FloatCompositeEntry(FieldKind.Drag, speed, min, max));
+        AddField(label, format, new FloatCompositeEntry(InputFieldKind.Drag, speed, min, max));
         return this;
     }
 }

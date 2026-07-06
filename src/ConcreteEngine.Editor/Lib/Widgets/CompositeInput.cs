@@ -8,7 +8,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
 
-internal sealed unsafe class FloatCompositeInput<T>(string label) : UiField(label, FieldKind.Input)
+internal sealed unsafe class FloatCompositeInput<T>(string label) : UiField(label, InputFieldKind.Input)
     where T : unmanaged, IFloatValue
 {
     public T Value;
@@ -57,26 +57,26 @@ internal sealed unsafe class FloatCompositeInput<T>(string label) : UiField(labe
 
     public FloatCompositeInput<T> WithInput(string label, float min, float max, string format = "%.2f")
     {
-        AddField(new ComponentEntry(label, FieldKind.Input, 0, min, max, format));
+        AddField(new ComponentEntry(label, InputFieldKind.Input, 0, min, max, format));
         return this;
     }
 
     public FloatCompositeInput<T> WithSlider(string label, float min, float max, string format = "%.2f")
     {
-        AddField(new ComponentEntry(label, FieldKind.Slider, 0, min, max, format));
+        AddField(new ComponentEntry(label, InputFieldKind.Slider, 0, min, max, format));
         return this;
     }
 
     public FloatCompositeInput<T> WithDrag(string label, float speed, float min, float max, string format = "%.2f")
     {
-        AddField(new ComponentEntry(label, FieldKind.Drag, speed, min, max, format));
+        AddField(new ComponentEntry(label, InputFieldKind.Drag, speed, min, max, format));
         return this;
     }
 
 
     private sealed class ComponentEntry(
         string name,
-        FieldKind kind,
+        InputFieldKind kind,
         float speed,
         float min,
         float max,

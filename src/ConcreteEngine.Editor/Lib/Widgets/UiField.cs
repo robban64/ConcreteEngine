@@ -12,18 +12,17 @@ namespace ConcreteEngine.Editor.Lib.Widgets;
 
 internal abstract class UiField
 {
-    protected const int LabelAllocCapacity = 40;
     private static int _currentId = 1;
 
     public readonly int DrawId;
     public readonly string Label;
 
     public float Width;
-    public FieldKind Widget { get; private set; }
+    public InputFieldKind Widget { get; private set; }
     public InputTrigger Trigger = InputTrigger.OnChange;
     public FieldLabelPlacement LabelPlacement = FieldLabelPlacement.Top;
 
-    protected UiField(string label, FieldKind widget)
+    protected UiField(string label, InputFieldKind widget)
     {
         Label = label;
         Widget = widget;

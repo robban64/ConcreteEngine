@@ -42,7 +42,7 @@ internal sealed unsafe class ComboInput : UiField
     } = "None";
 
 
-    public ComboInput(string label, ReadOnlySpan<int> values, ReadOnlySpan<string> names) : base(label, FieldKind.Combo)
+    public ComboInput(string label, ReadOnlySpan<int> values, ReadOnlySpan<string> names) : base(label, InputFieldKind.Combo)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(values.Length, 1);
         ArgumentOutOfRangeException.ThrowIfNotEqual(values.Length, names.Length);

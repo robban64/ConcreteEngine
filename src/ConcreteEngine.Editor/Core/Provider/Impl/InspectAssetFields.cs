@@ -30,8 +30,8 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
         ColorField = Register(new ColorField("Albedo", true));
         SpecularField = Register(new ColorField("Specular", true));
         ShininessField =
-            Register(new FloatField<Float1>("Shininess", FieldKind.Slider) { Min = 0, Max = 50 });
-        UvRepeatField = Register(new FloatField<Float4>("UV Repeat", FieldKind.Slider));
+            Register(new FloatField<Float1>("Shininess", InputFieldKind.Slider) { Min = 0, Max = 50 });
+        UvRepeatField = Register(new FloatField<Float4>("UV Repeat", InputFieldKind.Slider));
 
         BlendCombo = Register(ComboField.Create("Blend Mode", BlendModeExt.Values, BlendModeExt.Names));
         CullCombo = Register(ComboField.Create("Cull Mode", CullModeExt.Values, CullModeExt.Names));
@@ -95,7 +95,7 @@ internal sealed class InspectTextureFields : InspectorFields<InspectTexture>
 
     public InspectTextureFields() : base(segmentCount: 2)
     {
-        LodBias = Register(new FloatField<Float1>("Lod Level", FieldKind.Input) { Format = "%.3f" });
+        LodBias = Register(new FloatField<Float1>("Lod Level", InputFieldKind.Input) { Format = "%.3f" });
         Preset = Register(ComboField.Create("Preset", TexturePresetExt.Values, TexturePresetExt.Names).WithStartAt(1));
         Anisotropy = Register(ComboField.Create("Anisotropy", AnisotropyLevelExt.Values, AnisotropyLevelExt.Names));
         Usage = Register(ComboField.Create("Usage", TextureUsageExt.Values, TextureUsageExt.Names)

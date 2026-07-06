@@ -19,23 +19,23 @@ internal sealed class InspectCameraFields : InspectorFields<EditorCamera>
 
     public InspectCameraFields() : base(segmentCount: 2)
     {
-        Translation = Register(new FloatField<Float3>("Translation", FieldKind.Input,
+        Translation = Register(new FloatField<Float3>("Translation", InputFieldKind.Input,
             static () => Camera.Translation,
             static value => Camera.Translation = (Vector3)value) { Format = "%.3f", Delay = FieldGetDelay.Low });
 
-        Orientation = Register(new FloatField<Float2>("Orientation", FieldKind.Input,
+        Orientation = Register(new FloatField<Float2>("Orientation", InputFieldKind.Input,
             static () => (Vector2)Camera.Orientation,
             static value => Camera.Orientation = new YawPitch(value.X, value.Y))
         {
             Format = "%.3f", Delay = FieldGetDelay.Low
         });
 
-        NearFar = Register(new FloatField<Float2>("Near/Far", FieldKind.Input,
+        NearFar = Register(new FloatField<Float2>("Near/Far", InputFieldKind.Input,
             static () => (Float2)Camera.NearFarPlane,
             static (v) => Camera.NearFarPlane = (Vector2)v
         ) { Format = "%.2f", Delay = FieldGetDelay.High });
 
-        Fov = Register(new FloatField<Float1>("Field of view", FieldKind.Slider,
+        Fov = Register(new FloatField<Float1>("Field of view", InputFieldKind.Slider,
             static () => Camera.Fov,
             static value => Camera.Fov = value.X)
         {

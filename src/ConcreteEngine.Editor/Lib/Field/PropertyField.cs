@@ -92,7 +92,7 @@ internal abstract unsafe class PropertyField
     public bool Visible = true;
     public FieldLabelPlacement LabelPlacement = FieldLabelPlacement.Top;
     public InputTrigger Trigger;
-    public FieldKind Kind { get; protected set; }
+    public InputFieldKind Kind { get; protected set; }
 
     public FieldGetDelay Delay
     {

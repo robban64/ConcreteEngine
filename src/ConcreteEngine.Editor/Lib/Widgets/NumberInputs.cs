@@ -16,7 +16,7 @@ internal sealed unsafe class FloatInput<T> : UiField where T : unmanaged, IFloat
 
     private readonly delegate*<int, byte*, float*, byte*, float, float, float, bool> _drawFunc;
 
-    public FloatInput(string label, FieldKind widget, float speed = 1f, float min = 0, float max = 0,
+    public FloatInput(string label, InputFieldKind widget, float speed = 1f, float min = 0, float max = 0,
         string format = "%.2f") : base(label, widget)
     {
         _drawFunc = InputFieldDrawer.BindFloat(widget);
@@ -52,7 +52,7 @@ internal sealed unsafe class IntInput<T> : UiField where T : unmanaged, IIntValu
 
     public override ref byte GetRawValue() => ref Unsafe.As<int, byte>(ref Value.Ref());
 
-    public IntInput(string label, FieldKind widget, float speed = 1f, int min = 0, int max = 0) : base(label, widget)
+    public IntInput(string label, InputFieldKind widget, float speed = 1f, int min = 0, int max = 0) : base(label, widget)
     {
         _drawFunc = InputFieldDrawer.BindInt(widget);
         Speed = speed;
@@ -70,7 +70,7 @@ internal sealed unsafe class IntInput<T> : UiField where T : unmanaged, IIntValu
     }
 }
 
-internal sealed unsafe class ColorInput(string label, bool hasAlpha = true) : UiField(label, FieldKind.Input)
+internal sealed unsafe class ColorInput(string label, bool hasAlpha = true) : UiField(label, InputFieldKind.Input)
 {
     public bool HasAlpha = hasAlpha;
 

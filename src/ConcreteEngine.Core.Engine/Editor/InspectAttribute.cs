@@ -3,7 +3,8 @@ namespace ConcreteEngine.Core.Engine.Editor;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
 public sealed class InspectAttribute : Attribute
 {
-    public string? DisplayName { get; init; } 
+    public string ObjectName { get; init; }
+    public string DisplayName { get; init; }
 }
 
 /*

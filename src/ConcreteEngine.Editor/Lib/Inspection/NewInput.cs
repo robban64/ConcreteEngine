@@ -30,6 +30,12 @@ internal sealed unsafe class UiInputField
 
     public bool Draw()
     {
+        return _input.Draw(DrawLabel());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private byte* DrawLabel()
+    {
         var sw = TextBuffers.GetWriter();
         switch (LabelPlacement)
         {
@@ -45,10 +51,11 @@ internal sealed unsafe class UiInputField
                 break;
         }
 
-        var label = sw.AppendImGuiId(DrawId).End();
-        return _input.Draw(label);
+        return sw.AppendImGuiId(DrawId).End();
     }
 }
+
+
 
 internal abstract unsafe class UiInput(InputFieldKind kind)
 {
@@ -84,8 +91,7 @@ internal sealed unsafe class FloatInput2 : UiInput
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override ref byte GetRawValue() => ref Unsafe.As<float, byte>(ref _value.Ref());
 
-    public void SetValue<T>(T value) where T : IFloatValue { Unsafe.As<Float4, T>(ref _value) = value;}
-    public void GetValue(){}
+    public void SetValue<T>(T value) where T : IFloatValue => _value.From(value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool Draw(byte* label)
@@ -107,4 +113,6 @@ internal sealed unsafe class FloatInput2 : UiInput
             _ => false
         };
     }
-}*/
+}
+
+*/

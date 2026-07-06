@@ -44,7 +44,7 @@ internal sealed unsafe class TextInput : UiField
     private readonly ImGuiInputTextCallback _inputCallback;
 
     public TextInput(string label, ushort bufferSize, ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.CharsNoBlank)
-        : base(label, FieldKind.Input)
+        : base(label, InputFieldKind.Input)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(bufferSize, 4);
         BufferSize = bufferSize;

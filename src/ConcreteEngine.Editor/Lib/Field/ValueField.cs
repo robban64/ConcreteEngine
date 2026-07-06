@@ -16,7 +16,7 @@ internal sealed unsafe class FloatField<T> : PropertyField where T : unmanaged, 
 
     public String8Utf8 Format = "%.2f";
 
-    public FloatField(string name, FieldKind kind, Func<T>? getter = null, Action<T>? setter = null) :
+    public FloatField(string name, InputFieldKind kind, Func<T>? getter = null, Action<T>? setter = null) :
         base(name)
     {
         Binding = new PropertyFieldBinding<T>();
@@ -55,7 +55,7 @@ internal sealed unsafe class IntField<T> : PropertyField where T : unmanaged, II
     public int Min, Max;
     public float Speed = 1f;
 
-    public IntField(string name, FieldKind kind, Func<T>? getter = null, Action<T>? setter = null) :
+    public IntField(string name, InputFieldKind kind, Func<T>? getter = null, Action<T>? setter = null) :
         base(name)
     {
         Binding = new PropertyFieldBinding<T>();

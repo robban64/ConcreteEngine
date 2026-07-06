@@ -7,25 +7,25 @@ namespace ConcreteEngine.Editor.Lib.Inspection;
 internal static unsafe class InputFieldDrawer
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static delegate*<int, byte*, float*, byte*, float, float, float, bool> BindFloat(FieldKind kind)
+    public static delegate*<int, byte*, float*, byte*, float, float, float, bool> BindFloat(InputFieldKind kind)
     {
         return kind switch
         {
-            FieldKind.Input => &DrawInputFloat,
-            FieldKind.Slider => &DrawSliderFloat,
-            FieldKind.Drag => &DrawDragFloat,
+            InputFieldKind.Input => &DrawInputFloat,
+            InputFieldKind.Slider => &DrawSliderFloat,
+            InputFieldKind.Drag => &DrawDragFloat,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static delegate*<int, byte*, int*, float, int, int, bool> BindInt(FieldKind kind)
+    public static delegate*<int, byte*, int*, float, int, int, bool> BindInt(InputFieldKind kind)
     {
         return kind switch
         {
-            FieldKind.Input => &DrawInputInt,
-            FieldKind.Slider => &DrawSliderInt,
-            FieldKind.Drag => &DrawDragInt,
+            InputFieldKind.Input => &DrawInputInt,
+            InputFieldKind.Slider => &DrawSliderInt,
+            InputFieldKind.Drag => &DrawDragInt,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }

@@ -9,19 +9,12 @@ namespace ConcreteEngine.Editor.Lib.Inspection;
 internal static class Inspector
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ValidateName(string name, List<BoundField> fields)
-    {
-        foreach (var it in fields)
-        {
-            if (it.FieldName == name) Throwers.InvalidArgument($"Name {name} is already registered", nameof(name));
-        }
-    }
+    public static void ValidateName(string name, List<BoundField> fields) { }
 
-    public static BoundField<TValue> MakeFloatBinding<TValue>(string typeName, FloatInput<TValue> element,
-        Func<TValue> getter,
-        Action<TValue> setter) where TValue : unmanaged, IFloatValue
+    public static BoundField<TValue> MakeFloatBinding<TValue>(FloatInput<TValue> element, 
+        Func<TValue> getter, Action<TValue> setter) where TValue : unmanaged, IFloatValue
     {
-        return new BoundField<TValue>(typeName, element, getter, setter);
+        return new BoundField<TValue>( element, getter, setter);
     }
 }
 
@@ -37,24 +30,17 @@ internal static class Inspector<T> where T : class
     {
         Inspector.ValidateName(fieldName, Fields);
         Fields.Add(field);
-
-        Register(
-            fieldName,
-            field
-        );
     }
 
 
     public static void Register<TValue>(
-        string fieldName,
         UiField uiElement,
         Func<TValue> getter,
         Action<TValue> setter,
         FieldGetDelay delay = FieldGetDelay.Low)
         where TValue : unmanaged, INumberValue
     {
-        Inspector.ValidateName(fieldName, Fields);
-        Fields.Add(new BoundField<TValue>(fieldName, uiElement, getter, setter) { Delay = delay });
+        Fields.Add(new BoundField<TValue>(uiElement, getter, setter) { Delay = delay });
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

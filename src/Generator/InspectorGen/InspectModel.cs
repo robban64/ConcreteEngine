@@ -25,11 +25,19 @@ public enum InspectorTypeKind : byte
 }
 
 
-internal sealed record TargetModel(string Name, string TypeNs, EquatableArray<MemberModel> Members)
+internal sealed record TargetModel(string Name, string TargetNamespace, EquatableArray<TargetMemberInfo> Members)
 {
     public string? DisplayName { get; init; }
-    
 }
+
+internal sealed record TargetMemberInfo()
+{
+    public required string Name { get; init; }
+    public required string TypeName { get; init; }
+    public required string TypeNamespace { get; init; }
+    public required IInspectField Field { get; init; }
+}
+
 
 internal record struct MemberTypeInfo(
     bool IsValueType,
@@ -51,3 +59,32 @@ internal record struct MemberModel
     //public required string CollectionStyle;
 }
 
+
+internal interface IInspectField
+{
+    string ValueType { get; }
+}
+internal sealed record InputField() : IInspectField
+{
+    public required string ValueType { get; set; } 
+    public string? Format { get; set; }
+    public bool Slider { get; set; }
+    public bool Drag { get; set; }
+
+    public float Min { get; set; }
+    public float Max { get; set; }
+    public float Speed { get; set; }
+}
+
+internal sealed record ColorField() : IInspectField
+{
+    public string ValueType => "Float4";
+    public bool HasAlpha { get; set; }
+}
+
+internal sealed record ComboField(): IInspectField
+{
+    public string ValueType => "Int1";
+    public string? Placeholder { get; set; }
+    public int StartAt { get; set; }
+}

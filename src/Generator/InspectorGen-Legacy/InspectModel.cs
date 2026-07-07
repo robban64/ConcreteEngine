@@ -14,7 +14,6 @@ internal sealed record InspectModel()
     public required string TypeName { get; set; }
     public required string MemberName { get; set; }
     public required string MemberTypeName { get; set; }
-
     public required string DisplayName { get; set; }
     public required IInspectField Field { get; set; }
 }

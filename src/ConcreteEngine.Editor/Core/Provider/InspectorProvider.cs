@@ -18,28 +18,24 @@ internal static class InspectorProvider
     {
         Inspector<Camera>.Bind(EditorCamera.Instance.Camera);
         Inspector<Camera>.Register(
-            nameof(Camera.Translation),
             new FloatInput<Float3>(nameof(Camera.Translation), InputFieldKind.Input) { Format = "%.3f" },
             static () => (Float3)Camera.Translation,
             static (v) => Camera.Translation = (Vector3)v
         );
 
         Inspector<Camera>.Register(
-            nameof(Camera.Orientation),
             new FloatInput<Float2>(nameof(Camera.Orientation), InputFieldKind.Input) { Format = "%.3f" },
             static () => new Float2(Camera.Orientation.Yaw, Camera.Orientation.Pitch),
             static (v) => Camera.Orientation = new YawPitch(v.X, v.Y)
         );
 
         Inspector<Camera>.Register(
-            "Plane",
             new FloatInput<Float2>("Near/Far", InputFieldKind.Input),
             static () => (Float2)Camera.NearFarPlane,
             static (v) => Camera.NearFarPlane = (Vector2)v,
             FieldGetDelay.High
         );
         Inspector<Camera>.Register(
-            "Fov",
             new FloatInput<Float1>("Field of view", InputFieldKind.Slider) { Min = 10f, Max = 179f },
             static () => (Float1)Camera.Fov,
             static (v) => Camera.Fov = (float)v,

@@ -7,12 +7,12 @@ public sealed class InspectAttribute : Attribute
     public string DisplayName { get; init; }
 }
 
-/*
+
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-public sealed class InputNumberAttribute(Type? valueType = null) : Attribute
+public sealed class InspectInputAttribute(Type? valueType = null) : Attribute
 {
     public Type? ValueType { get; } = valueType;
-    public FieldKind Kind { get; set; } = FieldKind.Input;
+    public InputFieldKind Kind { get; set; } = InputFieldKind.Input;
     public string? Format { get; set; }
     public float Min { get; set; }
     public float Max { get; set; }
@@ -31,4 +31,3 @@ public sealed class InputComboAttribute : Attribute
     public string? Placeholder { get; set; }
     public int StartAt { get; set; }
 }
-*/

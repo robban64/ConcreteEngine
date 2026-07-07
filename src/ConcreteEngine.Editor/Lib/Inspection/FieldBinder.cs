@@ -5,26 +5,16 @@ using ConcreteEngine.Editor.Lib.Widgets;
 
 namespace ConcreteEngine.Editor.Lib.Inspection;
 
-internal abstract class BoundField
+internal abstract class BoundField(UiField widget)
 {
-    public readonly string FieldName;
-    public readonly UiField Widget;
-
-    protected BoundField(string fieldName, UiField widget)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(fieldName);
-        ArgumentNullException.ThrowIfNull(widget);
-
-        FieldName = fieldName;
-        Widget = widget;
-    }
+    public readonly UiField Widget = widget;
 
     public abstract void Draw();
     public abstract void Refresh();
 }
 
-internal sealed class BoundField<T>(string fieldName, UiField widget, Func<T> getter, Action<T> setter)
-    : BoundField(fieldName, widget) where T : unmanaged, INumberValue
+internal sealed class BoundField<T>(UiField widget, Func<T> getter, Action<T> setter) : BoundField(widget) 
+    where T : unmanaged, INumberValue
 {
     private FrameStepper _fetchStepper;
 

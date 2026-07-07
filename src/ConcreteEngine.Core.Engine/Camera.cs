@@ -9,6 +9,7 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine;
 
+[Inspect]
 public sealed class Camera
 {
     private const float MinNearPlane = 0.1f;
@@ -48,7 +49,7 @@ public sealed class Camera
     }
 
 
-    //[Inspect, InputField(Format = "%.3f")]
+    [InspectInput(typeof(Float3), Format = "%.3f")]
     public Vector3 Translation
     {
         get => _transform.Translation;
@@ -60,7 +61,7 @@ public sealed class Camera
         }
     }
 
-    //[Inspect, InputField(typeof(Float2), Format = "%.3f")]
+    [InspectInput(typeof(Float2), Format = "%.3f")]
     public YawPitch Orientation
     {
         get => _transform.Orientation;
@@ -72,19 +73,7 @@ public sealed class Camera
         }
     }
 
-    //[Inspect("Field of view"), InputField(Kind = FieldKind.Slider, Min = 10f, Max = 179f)]
-    public float Fov
-    {
-        get;
-        set
-        {
-            if (FloatMath.NearlyEqual(value, field, MetricUnits.Decimeter)) return;
-            field = float.Clamp(value, MinFov, MaxFov);
-            _dirty = true;
-        }
-    } = 70;
-
-    //[Inspect("Near & Far"), InputField(Format = "%.3f")]
+    [InspectInput(typeof(Float2), Format = "%.3f")]
     public Vector2 NearFarPlane
     {
         get;
@@ -96,6 +85,20 @@ public sealed class Camera
             _dirty = true;
         }
     } = new(0.1f, 500f);
+    
+    [InspectInput(typeof(Float1), Kind = InputFieldKind.Slider, Min = 10f, Max = 179f)]
+    public float Fov
+    {
+        get;
+        set
+        {
+            if (FloatMath.NearlyEqual(value, field, MetricUnits.Decimeter)) return;
+            field = float.Clamp(value, MinFov, MaxFov);
+            _dirty = true;
+        }
+    } = 70;
+
+
 
     //
     public ref readonly Matrix4x4 ViewMatrix => ref Transform.ViewMatrix;

@@ -7,6 +7,18 @@ namespace Generator.InspectorGen;
 
 public sealed partial class InspectorGenerator
 {
+    private static IEnumerable<INamedTypeSymbol> GetAllTypes(INamespaceSymbol ns)
+    {
+        foreach (var member in ns.GetMembers())
+        {
+            if (member is INamespaceSymbol nested)
+                foreach (var t in GetAllTypes(nested))
+                    yield return t;
+            else if (member is INamedTypeSymbol type)
+                yield return type;
+        }
+    }
+
 
     private static readonly Dictionary<string, string> DefaultInputMap = new()
     {
@@ -45,8 +57,8 @@ public sealed partial class InspectorGenerator
         );
     }
     
-    /*
-    private static IInspectField? MakeField(AttributeData attr, INamedTypeSymbol type)
+  
+    private static IInspectField? MakeField(AttributeData attr, ITypeSymbol type)
     {
         if (attr.ConstructorArguments.IsEmpty || attr.ConstructorArguments[0].Value is not string typeName)
         {
@@ -84,7 +96,7 @@ public sealed partial class InspectorGenerator
         {
             "ColorFieldAttribute" => new ColorField { HasAlpha = hasAlpha },
             "ComboFieldAttribute" => new ComboField { Placeholder = placeholder, StartAt = startAt },
-            "InputFieldAttribute" => new InputField
+            InputAttribName => new InputField
             {
                 ValueType = typeName,
                 Format = format,
@@ -94,5 +106,5 @@ public sealed partial class InspectorGenerator
             },
             _ => null
         };
-    }*/
+    }
 }

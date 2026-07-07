@@ -10,7 +10,6 @@ public enum FileBinding : byte
     Unknown, RootFile, DependentFile, UnboundFile
 }
 
-[Inspect]
 public sealed class AssetFile : IComparable<AssetFile>
 {
     public Guid GId { get; }

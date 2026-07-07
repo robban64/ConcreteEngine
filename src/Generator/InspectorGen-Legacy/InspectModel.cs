@@ -1,4 +1,4 @@
-namespace Generator.InspectorGen;
+namespace Generator.InspectorGen_Legacy;
 /*
 internal enum FieldKind : byte
 {

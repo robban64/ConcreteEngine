@@ -41,11 +41,11 @@ internal abstract class UiField
                 sw.Append(Label);
                 AppDraw.Text(sw.End());
                 ImGui.Separator();
-                ImGui.PushItemWidth(GuiTheme.FormItemWidth);
+                //ImGui.PushItemWidth(GuiTheme.FormItemWidth);
                 break;
             case FieldLabelPlacement.Inline:
                 sw.Append(Label);
-                ImGui.PushItemWidth(GuiTheme.FormItemInlineWidth);
+                //ImGui.PushItemWidth(GuiTheme.FormItemInlineWidth);
                 break;
         }
 

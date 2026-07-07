@@ -1,6 +1,6 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Numerics.Primitives;
+using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Graphics.Primitives;
 
@@ -10,5 +10,5 @@ public struct SkinningData
     public Int4 BoneIndices;
     public Vector4 BoneWeights;
 
-    public static readonly SkinningData Identity = new() { BoneIndices = Int4.NegativeOne, BoneWeights = default };
+    public static SkinningData Identity => new() { BoneIndices = new Int4(-1, -1, -1, -1), BoneWeights = default };
 }

@@ -50,7 +50,7 @@ internal readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IEnu
     /// </summary>
     private readonly T[]? array;
     
-    public T[] MainArray => array ?? Array.Empty<T>();
+    public T[] Array => array ?? System.Array.Empty<T>();
     public int Length => array?.Length ?? 0;
 
     /// <summary>

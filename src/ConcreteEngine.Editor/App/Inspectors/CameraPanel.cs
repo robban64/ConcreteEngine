@@ -18,8 +18,6 @@ internal sealed unsafe class CameraPanel(StateManager state) : EditorPanel(Inspe
     private NativeString _viewportStr;
     private NativeString _aspectStr;
 
-    //private static readonly InspectCameraFields InspectFields = InspectorFieldProvider.Instance.CameraFields;
-
     private void UpdateText()
     {
         var viewport = EngineWindow.Viewport.Size;
@@ -36,7 +34,8 @@ internal sealed unsafe class CameraPanel(StateManager state) : EditorPanel(Inspe
 
     public override void OnCreate()
     {
-        InspectorProvider.RegisterCamera();
+        Inspector<Camera>.Bind(EditorCamera.Instance.Camera);
+        InspectCameraBindings.RegisterCamera();
         
         _viewportStr = StringArena.AllocateString(32);
         _aspectStr = StringArena.AllocateString(24);

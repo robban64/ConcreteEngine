@@ -7,27 +7,30 @@ public sealed class InspectAttribute : Attribute
     public string DisplayName { get; init; }
 }
 
-
-[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-public sealed class InspectInputAttribute(Type? valueType = null) : Attribute
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+public abstract class InspectInputAttribute(string? label = null) : Attribute
 {
-    public Type? ValueType { get; } = valueType;
-    public InputFieldKind Kind { get; set; } = InputFieldKind.Input;
-    public string? Format { get; set; }
-    public float Min { get; set; }
-    public float Max { get; set; }
-    public float Speed { get; set; }
+    public Type? ValueType { get; init; }
 }
 
-[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-public sealed class InputColorAttribute(bool hasAlpha = true) : Attribute
+
+public sealed class InputNumberAttribute(string? label = null) : InspectInputAttribute(label)
 {
-    public bool HasAlpha { get; } = hasAlpha;
+    public InputFieldKind Kind { get; init; } = InputFieldKind.Input;
+    public string? Format { get; init; } = "%.2f";
+    public float Min { get; init; }
+    public float Max { get; init; }
+    public float Speed { get; init; } = 1;
 }
 
-[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-public sealed class InputComboAttribute : Attribute
+public sealed class InputColorAttribute(string? label = null) : InspectInputAttribute(label)
 {
-    public string? Placeholder { get; set; }
-    public int StartAt { get; set; }
+    public bool HasAlpha { get; init; } = true;
+}
+
+
+public sealed class InputComboAttribute(string? label = null) : InspectInputAttribute(label)
+{
+    public string? Placeholder { get; init; }
+    public int StartAt { get; init; }
 }

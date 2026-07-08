@@ -47,7 +47,13 @@ public struct Float2(float x, float y) : IFloatValue
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Float2(Vector2 v) => new(v.X, v.Y);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator Float2(YawPitch v) => new(v.Yaw, v.Pitch);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Vector2(Float2 v) => new(v.X, v.Y);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static explicit operator YawPitch(Float2 v) => new(v.X, v.Y);
 
     public static int Components => 2;
 }
@@ -62,6 +68,7 @@ public struct Float3(float x, float y, float z) : IFloatValue
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Float3(Vector3 v) => new(v.X, v.Y, v.Z);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Vector3(Float3 v) => new(v.X, v.Y, v.Z);
 
     public static int Components => 3;
@@ -76,15 +83,18 @@ public struct Float4(float x, float y, float z, float w = 0f) : IFloatValue
     public ref float Ref() => ref X;
 
     [UnscopedRef,MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void From<T>(T value) where T : IFloatValue { Unsafe.As<Float4, T>(ref this) = value;}
+    public void UnsafeFrom<T>(T value) where T : IFloatValue { Unsafe.As<Float4, T>(ref this) = value;}
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Float4(in Vector4 v) => new(v.X, v.Y, v.Z, v.W);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Float4(in Color4 v) => new(v.R, v.G, v.B, v.A);
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Color4(in Float4 v) => new(v.X, v.Y, v.Z, v.W);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Vector4(in Float4 v) => new(v.X, v.Y, v.Z, v.W);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Vector3(in Float4 v) => new(v.X, v.Y, v.Z);
 
     public static int Components => 4;
@@ -98,7 +108,7 @@ public struct Int1(int x) : IIntValue
     [UnscopedRef,MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref int Ref() => ref X;
 
-    public static implicit operator Int1(int v) => new(v);
+    public static implicit operator Int1(int v) => Unsafe.As<int, Int1>(ref v);
     public static explicit operator int(Int1 v) => v.X;
 
     public static int Components => 1;

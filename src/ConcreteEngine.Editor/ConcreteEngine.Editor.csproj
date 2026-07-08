@@ -25,8 +25,14 @@
     </ItemGroup>
     
     <ItemGroup>
-        <Content Include="Content\**\*">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
+      <Compile Remove="Content\**" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <EmbeddedResource Remove="Content\**" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <None Remove="Content\**" />
     </ItemGroup>
 </Project>

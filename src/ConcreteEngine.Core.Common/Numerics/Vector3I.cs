@@ -12,11 +12,11 @@ public struct Vector3I(int x, int y, int z) : IEquatable<Vector3I>, IComparable<
     [JsonInclude] public int Y = y;
     [JsonInclude] public int Z = z;
 
-    public static readonly Vector3I Zero = new(0, 0, 0);
-    public static readonly Vector3I One = new(1, 1, 1);
-    public static readonly Vector3I UnitX = new(1, 0, 0);
-    public static readonly Vector3I UnitY = new(0, 1, 0);
-    public static readonly Vector3I UnitZ = new(0, 0, 1);
+    public static  Vector3I Zero => new(0, 0, 0);
+    public static  Vector3I One => new(1, 1, 1);
+    public static  Vector3I UnitX => new(1, 0, 0);
+    public static  Vector3I UnitY => new(0, 1, 0);
+    public static  Vector3I UnitZ => new(0, 0, 1);
 
     // 
 

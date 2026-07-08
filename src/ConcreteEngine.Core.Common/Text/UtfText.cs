@@ -34,26 +34,6 @@ public static class UtfText
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetNullTerminateIndex(ref byte str, int capacity)
-    {
-        var i = 0;
-        while (Unsafe.Add(ref str, i) != 0)
-        {
-            if (++i >= capacity) return -1;
-        }
-
-        return i;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int WriteCharToByteSpan(ReadOnlySpan<char> span, Span<byte> dst)
-    {
-        Utf8.FromUtf16(span, dst[..^1], out _, out var bytesWritten, replaceInvalidSequences: false);
-        return bytesWritten;
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int FormatChar(ref byte value, char c)
     {
         if (c <= 0x7F)
@@ -77,11 +57,9 @@ public static class UtfText
 
     public static uint PackFormatChar(char c)
     {
-        if (c <= 0x7F)
-            return StringPacker.PackUtf8((byte)c, 0, 0);
+        if (c <= 0x7F) return StringPacker.PackUtf8((byte)c, 0, 0);
 
-        if (c <= 0x7FF)
-            return StringPacker.PackUtf8((byte)(0xC0 | (c >> 6)), (byte)(0x80 | (c & 0x3F)), 0);
+        if (c <= 0x7FF) return StringPacker.PackUtf8((byte)(0xC0 | (c >> 6)), (byte)(0x80 | (c & 0x3F)), 0);
 
         return StringPacker.PackUtf8(
             (byte)(0xE0 | (c >> 12)),

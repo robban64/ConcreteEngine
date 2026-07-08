@@ -49,7 +49,7 @@ public sealed class Camera
     }
 
 
-    [InspectInput(typeof(Float3), Format = "%.3f")]
+    [InputNumber(Format = "%.3f")]
     public Vector3 Translation
     {
         get => _transform.Translation;
@@ -61,7 +61,7 @@ public sealed class Camera
         }
     }
 
-    [InspectInput(typeof(Float2), Format = "%.3f")]
+    [InputNumber(ValueType = typeof(Float2), Format = "%.3f")]
     public YawPitch Orientation
     {
         get => _transform.Orientation;
@@ -73,7 +73,7 @@ public sealed class Camera
         }
     }
 
-    [InspectInput(typeof(Float2), Format = "%.3f")]
+    [InputNumber("Near & Far", Format = "%.3f")]
     public Vector2 NearFarPlane
     {
         get;
@@ -85,8 +85,8 @@ public sealed class Camera
             _dirty = true;
         }
     } = new(0.1f, 500f);
-    
-    [InspectInput(typeof(Float1), Kind = InputFieldKind.Slider, Min = 10f, Max = 179f)]
+
+    [InputNumber("Field of view", Kind = InputFieldKind.Slider, Min = 10f, Max = 179f)]
     public float Fov
     {
         get;
@@ -97,7 +97,6 @@ public sealed class Camera
             _dirty = true;
         }
     } = 70;
-
 
 
     //

@@ -4,8 +4,6 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Editor.App.CLI;
-using ConcreteEngine.Editor.Core.Data;
 using static ConcreteEngine.Editor.Logging.LogConsts;
 
 namespace ConcreteEngine.Editor.Logging;

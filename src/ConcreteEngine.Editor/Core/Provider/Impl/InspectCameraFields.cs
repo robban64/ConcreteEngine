@@ -2,7 +2,6 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Editor;
-using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Inspection;
 

@@ -1,5 +1,3 @@
-using System.Numerics;
-using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using Hexa.NET.ImGui;
 

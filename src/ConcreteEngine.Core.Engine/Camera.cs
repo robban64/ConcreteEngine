@@ -61,7 +61,7 @@ public sealed class Camera
         }
     }
 
-    [InputNumber(ValueType = typeof(Float2), Format = "%.3f")]
+    [InputNumber(Converter = typeof(Float2), Format = "%.3f")]
     public YawPitch Orientation
     {
         get => _transform.Orientation;

@@ -1,4 +1,3 @@
-using System.Drawing;
 using System.Runtime.CompilerServices;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.App.Theme.GuiTheme;

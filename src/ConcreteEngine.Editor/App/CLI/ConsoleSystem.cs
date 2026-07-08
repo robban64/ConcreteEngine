@@ -1,8 +1,6 @@
 using System.Diagnostics;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Logging;
 

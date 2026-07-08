@@ -4,15 +4,13 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Core.Provider;
-using ConcreteEngine.Editor.Core.Provider.Impl;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Inspection;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
 
-internal sealed unsafe class CameraPanel(StateManager state) : EditorPanel(InspectorId.Camera, state)
+internal sealed class CameraPanel(StateManager state) : EditorPanel(InspectorId.Camera, state)
 {
     private Size2D _currentViewport;
     private NativeString _viewportStr;

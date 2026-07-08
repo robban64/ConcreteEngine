@@ -2,7 +2,6 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Metrics;

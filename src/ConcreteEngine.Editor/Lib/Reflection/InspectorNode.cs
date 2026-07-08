@@ -1,11 +1,3 @@
-using System.Numerics;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Editor.App.Theme;
-using ConcreteEngine.Editor.Lib.Widgets;
-using Hexa.NET.ImGui;
-
 namespace ConcreteEngine.Editor.Lib.Reflection;
 /*
 public sealed class InspectorEditorObjectV2(string typeName, Type type)

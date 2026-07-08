@@ -1,11 +1,7 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Utils;
 using static ConcreteEngine.Editor.Utils.IconNames;

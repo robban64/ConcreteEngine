@@ -108,7 +108,7 @@ public struct Int1(int x) : IIntValue
     [UnscopedRef,MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref int Ref() => ref X;
 
-    public static implicit operator Int1(int v) => Unsafe.As<int, Int1>(ref v);
+    public static implicit operator Int1(int v) => new(v);
     public static explicit operator int(Int1 v) => v.X;
 
     public static int Components => 1;

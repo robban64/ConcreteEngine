@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Editor.Logging;
 
 namespace ConcreteEngine.Editor.Core.Data;
 

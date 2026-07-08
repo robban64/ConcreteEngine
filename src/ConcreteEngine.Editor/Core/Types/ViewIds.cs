@@ -1,5 +1,3 @@
-using ConcreteEngine.Core.Common;
-
 namespace ConcreteEngine.Editor.Core;
 
 internal enum WindowId : byte

@@ -1,4 +1,3 @@
-using System.Globalization;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Extensions;
 using ConcreteEngine.Core.Diagnostics.Logging;

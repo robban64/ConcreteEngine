@@ -1,6 +1,3 @@
-using ConcreteEngine.Core.Engine.Editor;
-using ConcreteEngine.Editor.Lib.Widgets;
-
 namespace ConcreteEngine.Editor.Lib.Inspection;
 /*
 public enum InputKind : byte

@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.Lib.Field;
-using ConcreteEngine.Editor.Lib.Widgets;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Inspection;

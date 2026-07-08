@@ -7,6 +7,7 @@ using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Inspection;
+using ConcreteEngine.Editor.Lib.Widgets;
 
 namespace ConcreteEngine.Editor.Core.Provider.Impl;
 
@@ -16,8 +17,8 @@ internal sealed class InspectSceneFields : InspectorFields<InspectSceneObject>
     public readonly FloatField<Float3> ScaleField;
     public readonly FloatField<Float3> RotationField;
 
-    protected override FieldLabelPlacement DefaultLabelPlacement => FieldLabelPlacement.Top;
-    protected override FieldGetDelay DefaultDelay => FieldGetDelay.Low;
+    protected override LabelPlacement DefaultLabelPlacement => LabelPlacement.Top;
+    protected override FieldFetchDelay DefaultDelay => FieldFetchDelay.Low;
 
     public InspectSceneFields() : base(segmentCount: 1)
     {
@@ -113,14 +114,14 @@ internal sealed class InspectParticleFields : InspectorFields<ParticleInstance>
     public readonly FloatField<Float3> DirectionField;
     public readonly FloatField<Float1> SpreadField;
 
-    protected override FieldLabelPlacement DefaultLabelPlacement => FieldLabelPlacement.Top;
-    protected override FieldGetDelay DefaultDelay => FieldGetDelay.Low;
+    protected override LabelPlacement DefaultLabelPlacement => LabelPlacement.Top;
+    protected override FieldFetchDelay DefaultDelay => FieldFetchDelay.Low;
 
 
     public InspectParticleFields() : base(segmentCount: 2)
     {
         ParticleCountField = Register(new IntField<Int1>("Particle Count", InputFieldKind.Input)
-            .WithProperties(FieldGetDelay.Medium, FieldLabelPlacement.Top, InputTrigger.AfterChangeDeactive));
+            .WithProperties(FieldFetchDelay.Medium, LabelPlacement.Top, InputTrigger.AfterChangeDeactive));
 
         StartColorField = Register(new ColorField("Start Color", true));
 

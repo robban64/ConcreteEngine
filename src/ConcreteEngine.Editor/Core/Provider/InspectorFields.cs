@@ -41,8 +41,8 @@ internal abstract unsafe class InspectorFields<T>
 
     private MemoryBlockPtr _memory;
 
-    protected virtual FieldLabelPlacement DefaultLabelPlacement { get; } = FieldLabelPlacement.None;
-    protected virtual FieldGetDelay DefaultDelay { get; } = FieldGetDelay.None;
+    protected virtual LabelPlacement DefaultLabelPlacement { get; } = LabelPlacement.None;
+    protected virtual FieldFetchDelay DefaultDelay { get; } = FieldFetchDelay.None;
 
 
     protected InspectorFields(int segmentCount)
@@ -124,16 +124,16 @@ internal abstract unsafe class InspectorFields<T>
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    protected TField Register<TField>(TField field, FieldGetDelay? delay = null, FieldLabelPlacement? layout = null)
+    protected TField Register<TField>(TField field, FieldFetchDelay? delay = null, LabelPlacement? layout = null)
         where TField : PropertyField
     {
         ArgumentNullException.ThrowIfNull(field);
 
         if (delay.HasValue) field.Delay = delay.Value;
-        else if (DefaultDelay != FieldGetDelay.None) field.Delay = DefaultDelay;
+        else if (DefaultDelay != FieldFetchDelay.None) field.Delay = DefaultDelay;
 
         if (layout.HasValue) field.LabelPlacement = layout.Value;
-        else if (DefaultLabelPlacement != FieldLabelPlacement.None) field.LabelPlacement = DefaultLabelPlacement;
+        else if (DefaultLabelPlacement != LabelPlacement.None) field.LabelPlacement = DefaultLabelPlacement;
 
         _fields.Add(field);
         return field;

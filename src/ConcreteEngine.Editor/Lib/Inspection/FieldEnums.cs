@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Editor.Lib.Inspection;
 
-public enum FieldGetDelay : ushort
+public enum FieldFetchDelay : ushort
 {
     None = 0,
     Low = 4,
@@ -9,16 +9,9 @@ public enum FieldGetDelay : ushort
     VeryHigh = 1440
 }
 
-public enum FieldLabelPlacement : byte
+public enum LabelPlacement : byte
 {
     None,
     Top,
     Inline,
-}
-
-public enum InputTrigger : byte
-{
-    OnChange,
-    AfterChange,
-    AfterChangeDeactive
 }

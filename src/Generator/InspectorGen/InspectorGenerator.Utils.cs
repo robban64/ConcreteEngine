@@ -8,10 +8,7 @@ namespace Generator.InspectorGen;
 
 public sealed partial class InspectorGenerator
 {
-    internal enum SupportedTypes : byte
-    {
-        Int, Float, Bool, DateTime,
-    }
+
 
     private static readonly Dictionary<string, string> DefaultInputMap = new()
     {
@@ -36,6 +33,7 @@ public sealed partial class InspectorGenerator
         bool hasAlpha = true;
         float min = 0, max = 0, speed = 0;
         string? format = null, placeholder = null;
+        var style = InputStyle.Input;
         foreach (var (key, value) in attr.NamedArguments)
         {
             var v = value.Value;
@@ -49,6 +47,8 @@ public sealed partial class InspectorGenerator
                 case "HasAlpha" when v is bool l: hasAlpha = l; break;
                 case "StartAt" when v is int l: startAt = l; break;
                 case "Placeholder" when v is string l: placeholder = l; break;
+                case "Style" when v is byte l: style = (InputStyle)l; break;
+
             }
         }
         
@@ -73,7 +73,8 @@ public sealed partial class InspectorGenerator
                 Format = format,
                 Min = min,
                 Max = max,
-                Speed = speed
+                Speed = speed,
+                InputStyle = style
             },
             _ => null
         };

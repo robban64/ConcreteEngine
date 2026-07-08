@@ -86,7 +86,7 @@ public sealed class Camera
         }
     } = new(0.1f, 500f);
 
-    [InputNumber("Field of view", Kind = InputFieldKind.Slider, Min = 10f, Max = 179f)]
+    [InputNumber("Field of view", Style = InputStyle.Slider, Min = 10f, Max = 179f)]
     public float Fov
     {
         get;

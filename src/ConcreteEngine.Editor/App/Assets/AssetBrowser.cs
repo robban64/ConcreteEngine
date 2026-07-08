@@ -183,9 +183,9 @@ internal sealed class AssetBrowser
     [StructLayout(LayoutKind.Sequential)]
     internal readonly struct FileItem( string name, FileBinding binding, AssetStorage storage, Icons icon)
     {
-        public readonly Icons Icon = icon;
         public readonly FileBinding Binding = binding;
         public readonly AssetStorage Storage = storage;
+        public readonly Icons Icon = icon;
 
         public readonly String16Utf8 DisplayName = name;
 

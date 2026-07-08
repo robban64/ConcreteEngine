@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.App.Scene;
 
@@ -27,5 +28,14 @@ internal static class SceneExtensions
             SceneObjectKind.Particle => Icons.Sparkles,
             _ => Throwers.Unreachable<Icons>(nameof(kind))
         };
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public uint ToIntIcon() => kind switch
+        {
+            SceneObjectKind.Empty => IconNames.Minus,
+            SceneObjectKind.Model => IconNames.Box,
+            SceneObjectKind.Particle => IconNames.Sparkles,
+            _ => Throwers.Unreachable<uint>(nameof(kind))
+        };
+
     }
 }

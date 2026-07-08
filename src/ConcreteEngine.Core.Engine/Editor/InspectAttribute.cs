@@ -16,7 +16,7 @@ public abstract class InspectInputAttribute(string? label = null) : Attribute
 
 public sealed class InputNumberAttribute(string? label = null) : InspectInputAttribute(label)
 {
-    public InputFieldKind Kind { get; init; } = InputFieldKind.Input;
+    public InputStyle Style { get; init; } = InputStyle.Input;
     public string? Format { get; init; } = "%.2f";
     public float Min { get; init; }
     public float Max { get; init; }

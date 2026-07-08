@@ -5,20 +5,20 @@ using ConcreteEngine.Editor.Lib.Widgets;
 
 namespace ConcreteEngine.Editor.Lib.Inspection;
 
-internal abstract class BoundField(UiField widget)
+internal abstract class BoundField(InputField field)
 {
-    public readonly UiField Widget = widget;
+    public readonly InputField Field = field;
 
     public abstract void Draw();
     public abstract void Refresh();
 }
 
-internal sealed class BoundField<T>(UiField widget, Func<T> getter, Action<T> setter) : BoundField(widget) 
+internal sealed class BoundField<T>(InputField field, Func<T> getter, Action<T> setter) : BoundField(field) 
     where T : unmanaged, INumberValue
 {
     private FrameStepper _fetchStepper;
 
-    public FieldGetDelay Delay
+    public FieldFetchDelay Delay
     {
         get;
         set
@@ -31,14 +31,14 @@ internal sealed class BoundField<T>(UiField widget, Func<T> getter, Action<T> se
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override void Draw()
     {
-        ref var value = ref Unsafe.As<byte, T>(ref Widget.GetRawValue());
+        ref var value = ref Unsafe.As<byte, T>(ref Field.GetRawValue());
         if (_fetchStepper.Tick()) value = getter();
-        if (Widget.Draw()) setter(value);
+        if (Field.Draw()) setter(value);
     }
 
     public override void Refresh()
     {
-        ref var value = ref Unsafe.As<byte, T>(ref Widget.GetRawValue());
+        ref var value = ref Unsafe.As<byte, T>(ref Field.GetRawValue());
         value = getter();
     }
 }

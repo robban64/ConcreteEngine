@@ -22,7 +22,7 @@ public enum TextInputFilter : byte
     AsciiLettersAndDigit,
 }
 
-internal sealed unsafe class TextInput : UiField
+internal sealed unsafe class TextInput : InputField
 {
     private byte* _textBuffer = null;
 
@@ -44,14 +44,14 @@ internal sealed unsafe class TextInput : UiField
     private readonly ImGuiInputTextCallback _inputCallback;
 
     public TextInput(string label, ushort bufferSize, ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.CharsNoBlank)
-        : base(label, InputFieldKind.Input)
+        : base(label, InputKind.Text)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(bufferSize, 4);
         BufferSize = bufferSize;
         InputFlags = inputFlags;
         _inputCallback = OnInputCallback;
 
-        LabelPlacement = FieldLabelPlacement.None;
+        LabelPlacement = LabelPlacement.None;
     }
 
     public ReadOnlySpan<byte> GetTextSpan() =>
@@ -80,7 +80,7 @@ internal sealed unsafe class TextInput : UiField
         var label = ApplyLabelLayout(TextBuffers.GetWriter());
 
         var triggered = ImGui.InputTextEx(label, (byte*)&hint, _textBuffer, BufferSize,
-            new Vector2(Width, 0), InputFlags, _inputCallback);
+            new Vector2(0, 0), InputFlags, _inputCallback);
 
         return triggered && OnTriggered(_textBuffer);
     }

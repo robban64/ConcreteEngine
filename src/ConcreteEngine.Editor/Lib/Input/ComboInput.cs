@@ -12,9 +12,9 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
 
-internal sealed unsafe class ComboInput : UiField
+internal sealed unsafe class ComboInput : InputField
 {
-    public Int1 Value;
+    public int Value;
 
     private int _index = -1;
     private int _lastValue = int.MinValue;
@@ -42,7 +42,7 @@ internal sealed unsafe class ComboInput : UiField
     } = "None";
 
 
-    public ComboInput(string label, ReadOnlySpan<int> values, ReadOnlySpan<string> names) : base(label, InputFieldKind.Combo)
+    public ComboInput(string label, ReadOnlySpan<int> values, ReadOnlySpan<string> names) : base(label, InputKind.Combo)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(values.Length, 1);
         ArgumentOutOfRangeException.ThrowIfNotEqual(values.Length, names.Length);
@@ -50,14 +50,14 @@ internal sealed unsafe class ComboInput : UiField
         _values = new int[values.Length];
         values.CopyTo(_values.AsSpan());
         _names = names.ToArray();
-        LabelPlacement = FieldLabelPlacement.None;
+        LabelPlacement = LabelPlacement.None;
     }
 
     public void SetItemName(int index, string newName) => _names[index] = newName;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override ref byte GetRawValue() => ref Unsafe.As<Int1, byte>(ref Value);
+    public override ref byte GetRawValue() => ref Unsafe.As<int, byte>(ref Value);
     
     public override bool Draw()
     {

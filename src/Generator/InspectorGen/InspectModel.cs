@@ -23,6 +23,20 @@ public enum InspectorTypeKind : byte
     Struct,
     Class,
 }
+internal enum SupportedTypes : byte
+{
+    Int, Float, Bool, DateTime,
+}
+internal enum InputKind : byte
+{
+    Int, Float, Color, Combo, Text
+}
+
+internal enum InputStyle : byte
+{
+    Input, Slider, Drag,
+}
+
 
 internal record struct MemberModel
 {
@@ -58,8 +72,7 @@ internal sealed record InputField : IInspectField
     public required string Label { get; set; }
     public required string ValueType { get; set; } 
     public string? Format { get; set; }
-    public bool Slider { get; set; }
-    public bool Drag { get; set; }
+    public InputStyle InputStyle { get; init; }
 
     public float Min { get; set; }
     public float Max { get; set; }

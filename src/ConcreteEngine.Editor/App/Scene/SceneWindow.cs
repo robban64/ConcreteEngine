@@ -11,6 +11,7 @@ using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Inspection;
 using ConcreteEngine.Editor.Lib.Widgets;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Scene;
@@ -38,7 +39,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
     {
         _browser = new SceneBrowser();
         _kindCombo = ComboInput.Create("scene-combo", SceneObjectKindExt.Values, SceneObjectKindExt.Names);
-        _kindCombo.LabelPlacement = FieldLabelPlacement.None;
+        _kindCombo.LabelPlacement = LabelPlacement.None;
         _kindCombo.SetItemName(0, "All");
 
         _searchInput = new TextInput("search", 8)
@@ -88,7 +89,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
 
         ImGui.SetNextItemWidth(width * 0.35f);
         if (_kindCombo.Draw())
-            OnCategoryChange((SceneObjectKind)_kindCombo.Value.X);
+            OnCategoryChange((SceneObjectKind)_kindCombo.Value);
 
         ImGui.Separator();
 
@@ -109,8 +110,6 @@ internal sealed unsafe class SceneWindow : EditorWindow
 
     private void DrawList(Range32 range, float itemWidth)
     {
-        uint eyeIcon = StyleMap.GetIconData(Icons.Eye), eyeClosedIcon = StyleMap.GetIconData(Icons.EyeClosed);
-
         var cursor = 0;
         var selectedId = SelectedId;
         var sceneIds = _browser.GetSceneIds(range.Offset, range.Length);
@@ -124,7 +123,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
                 State.EnqueueEvent(new SelectionEvent(id));
 
             ImGui.SameLine();
-            if (ImGui.Button(visible ? (byte*)&eyeIcon : (byte*)&eyeClosedIcon, new Vector2(ListItemHeight)))
+            if(AppDraw.DrawButton(visible ? IconNames.Eye : IconNames.EyeClosed))
                 State.EnqueueEvent(new SceneObjectEvent(id, Visible: !visible));
 
             ImGui.PopID();

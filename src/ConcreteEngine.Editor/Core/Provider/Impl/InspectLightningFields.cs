@@ -56,18 +56,18 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
             Speed = 0.01f,
             Min = 0f,
             Max = 10f,
-            LabelPlacement = FieldLabelPlacement.Inline
+            LabelPlacement = LabelPlacement.Inline
         });
         Specular = Register(new FloatField<Float1>("Specular", InputFieldKind.Drag,
             static () => Visuals.Illumination.DirectionalLight.Value.Specular,
             static value => Visuals.Illumination.DirectionalLight.Mutate.Specular = (float)value)
         {
             Format = "%.3f",
-            Delay = FieldGetDelay.High,
+            Delay = FieldFetchDelay.High,
             Speed = 0.01f,
             Min = 0f,
             Max = 10f,
-            LabelPlacement = FieldLabelPlacement.Inline
+            LabelPlacement = LabelPlacement.Inline
         });
 
         // Ambient
@@ -84,11 +84,11 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
             static value => Visuals.Illumination.Ambient.Mutate.Exposure = (float)value)
         {
             Format = "%.3f",
-            Delay = FieldGetDelay.High,
+            Delay = FieldFetchDelay.High,
             Speed = 0.01f,
             Min = 0f,
             Max = 2f,
-            LabelPlacement = FieldLabelPlacement.Inline
+            LabelPlacement = LabelPlacement.Inline
         });
 
         // Shadow
@@ -96,7 +96,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
             [1024, 2048, 4096, 8192], ["1024px", "2048px", "4096px", "8192px"],
             static () => Visuals.Shadow.ShadowMapSize,
             static value => Visuals.Shadow.ShadowMapSize = (int)value
-        ).WithProperties(FieldGetDelay.VeryHigh, FieldLabelPlacement.None).WithPlaceholder("No Shadow"));
+        ).WithProperties(FieldFetchDelay.VeryHigh, LabelPlacement.None).WithPlaceholder("No Shadow"));
 
         ShadowProjectionFields = Register(new FloatCompositeField<Float4>(
                 "Shadow Projection",
@@ -113,7 +113,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
                     it.ConstBias = value.Z;
                     it.SlopeBias = value.W;
                 })
-            .WithProperties(FieldGetDelay.VeryHigh)
+            .WithProperties(FieldFetchDelay.VeryHigh)
             .WithSlider("Distance", 10f, 500f)
             .WithSlider("Z-Padding", 0f, 100f)
             .WithDrag("Const Bias", 0.001f, 0.0001f, 0.01f, "%.4f")
@@ -132,7 +132,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
                     it.Strength = value.X;
                     it.PcfRadius = value.Y;
                 })
-            .WithProperties(FieldGetDelay.VeryHigh)
+            .WithProperties(FieldFetchDelay.VeryHigh)
             .WithSlider("Strength", 0f, 1f).WithSlider("PcfRadius", 0.5f, 4f));
 
 
@@ -140,7 +140,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
         FogColorField = Register(new ColorField("FogColor", false,
                 static () => Visuals.Environment.FogOptics.Value.Color,
                 static value => Visuals.Environment.FogOptics.Mutate.Color = (Color4)value)
-            .WithProperties(FieldGetDelay.VeryHigh));
+            .WithProperties(FieldFetchDelay.VeryHigh));
 
         FogHeightFields = Register(new FloatCompositeField<Float4>(
                 "Fog Height",
@@ -160,7 +160,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
                     h.HeightFalloff = value.Z;
                     o.HeightWeight = value.W;
                 })
-            .WithProperties(FieldGetDelay.VeryHigh)
+            .WithProperties(FieldFetchDelay.VeryHigh)
             .WithSlider("Density", 100, 1500, "%.5f").WithSlider("BaseHeight", -1000f, 1000f, "%.3f")
             .WithSlider("Falloff", 0.001f, 10000.0f, "%.3f").WithDrag("Influence", 0.001f, 0f, 1f, "%.3f"));
 
@@ -182,7 +182,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
                     h.Strength = value.Y;
                     h.MaxDistance = value.Z;
                 })
-            .WithProperties(FieldGetDelay.VeryHigh)
+            .WithProperties(FieldFetchDelay.VeryHigh)
             .WithDrag("Scattering", 0.001f, 0f, 1f, "%.5f").WithDrag("Strength", 0.001f, 0f, 1f, "%.3f")
             .WithDrag("Distance", 1, 1f, 10000f, "%.0f"));
 

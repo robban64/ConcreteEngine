@@ -23,7 +23,7 @@ internal sealed unsafe class FloatField<T> : PropertyField where T : unmanaged, 
         if (getter != null && setter != null)
             Binding.Bind(getter, setter);
 
-        if (T.Components == 1) LabelPlacement = FieldLabelPlacement.Inline;
+        if (T.Components == 1) LabelPlacement = LabelPlacement.Inline;
 
         Kind = kind;
         _drawFunc = InputFieldDrawer.BindFloat(kind);
@@ -62,7 +62,7 @@ internal sealed unsafe class IntField<T> : PropertyField where T : unmanaged, II
         if (getter != null && setter != null)
             Binding.Bind(getter, setter);
 
-        if (T.Components == 1) LabelPlacement = FieldLabelPlacement.Inline;
+        if (T.Components == 1) LabelPlacement = LabelPlacement.Inline;
 
         Kind = kind;
         _drawFunc = InputFieldDrawer.BindInt(kind);

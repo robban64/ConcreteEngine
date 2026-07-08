@@ -21,8 +21,8 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
     public readonly ComboField DepthCombo;
     public readonly ComboField PolygonCombo;
 
-    protected override FieldLabelPlacement DefaultLabelPlacement => FieldLabelPlacement.Inline;
-    protected override FieldGetDelay DefaultDelay => FieldGetDelay.High;
+    protected override LabelPlacement DefaultLabelPlacement => LabelPlacement.Inline;
+    protected override FieldFetchDelay DefaultDelay => FieldFetchDelay.High;
 
 
     public InspectMaterialFields() : base(segmentCount: 2)
@@ -90,8 +90,8 @@ internal sealed class InspectTextureFields : InspectorFields<InspectTexture>
     public readonly ComboField Usage;
     public readonly ComboField PixelFormat;
 
-    protected override FieldLabelPlacement DefaultLabelPlacement => FieldLabelPlacement.Inline;
-    protected override FieldGetDelay DefaultDelay => FieldGetDelay.High;
+    protected override LabelPlacement DefaultLabelPlacement => LabelPlacement.Inline;
+    protected override FieldFetchDelay DefaultDelay => FieldFetchDelay.High;
 
     public InspectTextureFields() : base(segmentCount: 2)
     {

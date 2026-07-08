@@ -44,7 +44,7 @@ internal sealed class ToolbarGroup(ToolbarGroupAlignment alignment, ToolbarItem[
 }
 
 internal sealed unsafe class ToolbarItem(
-    Icons icon,
+    uint icon,
     ContextChangeMask changeMask,
     Action<StateManager> onClick,
     Action<EditorContext, EditorContext, ToolbarItem> onStateChange)
@@ -54,7 +54,7 @@ internal sealed unsafe class ToolbarItem(
     public readonly Action<StateManager> OnClick = onClick;
     public readonly Action<EditorContext, EditorContext, ToolbarItem> OnStateChange = onStateChange;
 
-    public readonly uint Icon = StyleMap.GetIconData(icon);
+    public readonly uint Icon = icon;
     public readonly ContextChangeMask ChangeMask = changeMask;
     public bool Active;
     public bool Visible = true;

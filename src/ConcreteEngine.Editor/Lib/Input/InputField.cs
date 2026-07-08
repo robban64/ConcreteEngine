@@ -1,5 +1,9 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.App.Theme;
@@ -10,43 +14,48 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
 
-internal abstract class UiField
+
+public enum InputTrigger : byte
+{
+    OnChange,
+    AfterChange,
+    AfterChangeDeactive
+}
+
+
+
+internal abstract class InputField
 {
     private static int _currentId = 1;
 
+    private readonly byte[] _label;
+
     public readonly int DrawId;
-    public readonly string Label;
-
-    public float Width;
-    public InputFieldKind Widget { get; private set; }
+    public readonly InputKind Kind;
     public InputTrigger Trigger = InputTrigger.OnChange;
-    public FieldLabelPlacement LabelPlacement = FieldLabelPlacement.Top;
+    public LabelPlacement LabelPlacement = LabelPlacement.Top;
 
-    protected UiField(string label, InputFieldKind widget)
+    protected InputField(string label, InputKind kind)
     {
-        Label = label;
-        Widget = widget;
         DrawId = _currentId++;
+        Kind = kind;
+        _label = label.ToUtf8();
     }
 
     public abstract ref byte GetRawValue();
     public abstract bool Draw();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected  NativeView<byte> ApplyLabelLayout(NativeSpanWriter sw)
+    protected NativeView<byte> ApplyLabelLayout(NativeSpanWriter sw)
     {
-        switch (LabelPlacement)
+        if (LabelPlacement is LabelPlacement.Top or LabelPlacement.Inline)
         {
-            case FieldLabelPlacement.Top:
-                sw.Append(Label);
+            sw.Append(_label);
+            if (LabelPlacement is LabelPlacement.Top)
+            {
                 AppDraw.Text(sw.End());
                 ImGui.Separator();
-                //ImGui.PushItemWidth(GuiTheme.FormItemWidth);
-                break;
-            case FieldLabelPlacement.Inline:
-                sw.Append(Label);
-                //ImGui.PushItemWidth(GuiTheme.FormItemInlineWidth);
-                break;
+            }
         }
 
         return sw.AppendImGuiId(DrawId).End();

@@ -178,13 +178,13 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, FrameBgHovered);
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, FrameBgActive);
 
-        if (AppDraw.DrawButton(GetIcon(Icons.Cog))) ImGui.OpenPopup("settings"u8);
+        if (AppDraw.DrawButton(IconNames.Cog)) ImGui.OpenPopup("settings"u8);
 
         ImGui.SameLine();
-        if (AppDraw.DrawButton(GetIcon(Icons.Plus))) ImGui.OpenPopup("menu"u8);
+        if (AppDraw.DrawButton(IconNames.Plus)) ImGui.OpenPopup("menu"u8);
 
         ImGui.SameLine(0.0f, 12.0f);
-        if (AppDraw.DrawButton(GetIcon(Icons.ChevronLeft), !_assetBrowser.IsRootPath))
+        if (AppDraw.DrawButton(IconNames.ChevronLeft, !_assetBrowser.IsRootPath))
             _assetBrowser.GoToParent();
 
         //
@@ -203,31 +203,38 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         ImGui.PopStyleColor();
 
         //
+
+        ImGui.SameLine();
+        
+        DrawFilters();
+
+        ImGui.PopStyleColor(3);
+    }
+
+    private void DrawFilters()
+    {
         var bindingFilter = _bindingsFilter;
         var assetFilter = _assetFilter;
 
-        ImGui.SameLine();
-        if (AppDraw.DrawToggleButton(GetIcon(Icons.File), bindingFilter == FileBinding.RootFile))
+        if (AppDraw.DrawToggleButton(IconNames.File, bindingFilter == FileBinding.RootFile))
             UpdateFilter(FileBinding.RootFile, assetFilter);
 
         ImGui.SameLine(0, 8f);
-        if (AppDraw.DrawToggleButton(GetIcon(AssetIcons.ShaderIcon), assetFilter == AssetKind.Shader))
+        if (AppDraw.DrawToggleButton(IconNames.Code, assetFilter == AssetKind.Shader))
             UpdateFilter(bindingFilter, AssetKind.Shader);
 
         ImGui.SameLine();
-        if (AppDraw.DrawToggleButton(GetIcon(AssetIcons.ModelIcon), assetFilter == AssetKind.Model))
+        if (AppDraw.DrawToggleButton(IconNames.Box, assetFilter == AssetKind.Model))
             UpdateFilter(bindingFilter, AssetKind.Model);
 
         ImGui.SameLine();
-        if (AppDraw.DrawToggleButton(GetIcon(AssetIcons.TextureIcon), assetFilter == AssetKind.Texture))
+        if (AppDraw.DrawToggleButton(IconNames.Image, assetFilter == AssetKind.Texture))
             UpdateFilter(bindingFilter, AssetKind.Texture);
 
         ImGui.SameLine();
-        if (AppDraw.DrawToggleButton(GetIcon(AssetIcons.MaterialIcon), assetFilter == AssetKind.Material))
+        if (AppDraw.DrawToggleButton(IconNames.Circle, assetFilter == AssetKind.Material))
             UpdateFilter(bindingFilter, AssetKind.Material);
 
-
-        ImGui.PopStyleColor(3);
     }
 
     private void DrawFolders()
@@ -242,12 +249,11 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         }
 
         var sw = TextBuffers.GetWriter();
-        var icon = GetIconData(Icons.Folder);
         for (var i = 0; i < nodes.Length; i++)
         {
             var node = nodes[i];
             var previewName = node.PreviewName;
-            var text = sw.AppendIcon((byte*)&icon).PadRight(2).Append((byte*)&previewName).AppendImGuiId(i).End();
+            var text = sw.AppendIcon(IconNames.Folder).PadRight(2).Append((byte*)&previewName).AppendImGuiId(i).End();
             
             if (ImGui.Selectable(text, false, 0, size))
                 _assetBrowser.GoToChild(node.GetFolderName());

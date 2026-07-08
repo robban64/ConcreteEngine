@@ -21,27 +21,27 @@ internal sealed class InspectCameraFields : InspectorFields<EditorCamera>
     {
         Translation = Register(new FloatField<Float3>("Translation", InputFieldKind.Input,
             static () => Camera.Translation,
-            static value => Camera.Translation = (Vector3)value) { Format = "%.3f", Delay = FieldGetDelay.Low });
+            static value => Camera.Translation = (Vector3)value) { Format = "%.3f", Delay = FieldFetchDelay.Low });
 
         Orientation = Register(new FloatField<Float2>("Orientation", InputFieldKind.Input,
             static () => (Vector2)Camera.Orientation,
             static value => Camera.Orientation = new YawPitch(value.X, value.Y))
         {
-            Format = "%.3f", Delay = FieldGetDelay.Low
+            Format = "%.3f", Delay = FieldFetchDelay.Low
         });
 
         NearFar = Register(new FloatField<Float2>("Near/Far", InputFieldKind.Input,
             static () => (Float2)Camera.NearFarPlane,
             static (v) => Camera.NearFarPlane = (Vector2)v
-        ) { Format = "%.2f", Delay = FieldGetDelay.High });
+        ) { Format = "%.2f", Delay = FieldFetchDelay.High });
 
         Fov = Register(new FloatField<Float1>("Field of view", InputFieldKind.Slider,
             static () => Camera.Fov,
             static value => Camera.Fov = value.X)
         {
             Format = "%.2f",
-            Delay = FieldGetDelay.High,
-            LabelPlacement = FieldLabelPlacement.Top,
+            Delay = FieldFetchDelay.High,
+            LabelPlacement = LabelPlacement.Top,
             Min = 10f,
             Max = 179f
         });

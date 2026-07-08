@@ -37,8 +37,6 @@ internal static unsafe class StyleMap
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte* GetIcon(Icons icon) => _iconsPtr + ((int)icon * 4);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint GetIconData(Icons icon) => ((uint*)_iconsPtr.Ptr)[(int)icon];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint GetLogLevelColor(LogLevel level) => _colorPtr[(byte)level];
@@ -64,7 +62,7 @@ internal static unsafe class StyleMap
     {
         if (_iconsPtr.IsNull) throw new InvalidOperationException("Style pointer is null");
 
-        ReadOnlySpan<char> icons = stackalloc char[]
+        ReadOnlySpan<uint> icons = stackalloc uint[]
         {
             ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Cog,
             Activity, LayoutGrid, Database, Play, Pause, Code, Minus, Plus, Folder, FolderOpen, FolderClosed,
@@ -77,7 +75,7 @@ internal static unsafe class StyleMap
         for (int i = 0; i < icons.Length; i++)
         {
             sw.SetCursor(i * 4);
-            sw.Append(icons[i]).End();
+            sw.AppendIcon(icons[i]).End();
         }
     }
 

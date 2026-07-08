@@ -67,7 +67,7 @@ internal sealed unsafe class SceneBrowser
             if (name.IsNull) name = StringArena.AllocateString(32);
 
             var sw = name.OverWriter;
-            sw.PadRight(1).AppendIcon(StyleMap.GetIcon(sceneObj.Kind.ToIcon())).PadRight(4);
+            sw.PadRight(1).AppendIcon(sceneObj.Kind.ToIntIcon()).PadRight(4);
             sw.Append(sceneObj.Name.Truncate(20));
             sw.End();
         }

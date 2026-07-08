@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Lib.Inspection;
+using ConcreteEngine.Editor.Lib.Widgets;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Field;
@@ -12,8 +13,8 @@ internal static class PropertyFieldExtensions
 {
     public static T WithProperties<T>(
         this T field,
-        FieldGetDelay delay = FieldGetDelay.Low,
-        FieldLabelPlacement? layout = null,
+        FieldFetchDelay delay = FieldFetchDelay.Low,
+        LabelPlacement? layout = null,
         InputTrigger? trigger = null) where T : PropertyField
     {
         field.Delay = delay;
@@ -29,6 +30,8 @@ internal interface IPropertyFieldBinding
     void SetFetchInterval(int intervalTicks, int ticks = 0);
     void Unbind();
 }
+
+
 
 internal sealed unsafe class PropertyFieldBinding<T> : IPropertyFieldBinding where T : unmanaged, INumberValue
 {
@@ -90,11 +93,11 @@ internal abstract unsafe class PropertyField
     protected readonly FieldMemory Memory;
 
     public bool Visible = true;
-    public FieldLabelPlacement LabelPlacement = FieldLabelPlacement.Top;
+    public LabelPlacement LabelPlacement = LabelPlacement.Top;
     public InputTrigger Trigger;
     public InputFieldKind Kind { get; protected set; }
 
-    public FieldGetDelay Delay
+    public FieldFetchDelay Delay
     {
         get;
         set
@@ -137,18 +140,18 @@ internal abstract unsafe class PropertyField
         if (!Visible || Memory.IsNull) return false;
 
         ImGui.PushID(DrawId);
-        if (LabelPlacement == FieldLabelPlacement.Top)
+        if (LabelPlacement == LabelPlacement.Top)
         {
             AppDraw.Text(Memory.TextLabelStr);
             ImGui.Separator();
         }
 
-        if (LabelPlacement != FieldLabelPlacement.None)
-            ImGui.PushItemWidth(LabelPlacement == FieldLabelPlacement.Inline ? GuiTheme.FormItemInlineWidth : GuiTheme.FormItemWidth);
+        if (LabelPlacement != LabelPlacement.None)
+            ImGui.PushItemWidth(LabelPlacement == LabelPlacement.Inline ? GuiTheme.FormItemInlineWidth : GuiTheme.FormItemWidth);
 
         var changed = OnDraw();
 
-        if (LabelPlacement != FieldLabelPlacement.None) ImGui.PopItemWidth();
+        if (LabelPlacement != LabelPlacement.None) ImGui.PopItemWidth();
 
         ImGui.PopID();
 
@@ -157,7 +160,7 @@ internal abstract unsafe class PropertyField
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected byte* GetLabel() => LabelPlacement == FieldLabelPlacement.Inline ? Memory.FullLabelStr : Memory.IdLabelStr;
+    protected byte* GetLabel() => LabelPlacement == LabelPlacement.Inline ? Memory.FullLabelStr : Memory.IdLabelStr;
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]

@@ -4,6 +4,7 @@ using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.App.UI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App;
@@ -132,47 +133,47 @@ internal sealed class TopMenuWindow
         ImGui.PopFont();
     }
 
-    private static readonly ToolbarItem Translate = new(Icons.Move3d, ContextChangeMask.Tool,
+    private static readonly ToolbarItem Translate = new(IconNames.Move3d, ContextChangeMask.Tool,
         state => state.EnqueueEvent(ToolEvent.MakeGizmo(TransformGizmoOp.Translate)),
         (prev, next, it) =>
         {
             it.Set(next.Tool.GizmoOp == TransformGizmoOp.Translate, visible: next.Tool.Enabled);
         });
 
-    private static readonly ToolbarItem Scale = new(Icons.Scale3d, ContextChangeMask.ToolSelection,
+    private static readonly ToolbarItem Scale = new(IconNames.Scale3d, ContextChangeMask.ToolSelection,
         state => state.EnqueueEvent(ToolEvent.MakeGizmo(TransformGizmoOp.Scale)),
         (prev, next, it) =>
         {
             it.Set(next.Tool.GizmoOp == TransformGizmoOp.Scale, visible: next.Tool.Enabled);
         });
 
-    private static readonly ToolbarItem Rotate = new(Icons.Rotate3d, ContextChangeMask.ToolSelection,
+    private static readonly ToolbarItem Rotate = new(IconNames.Rotate3d, ContextChangeMask.ToolSelection,
         state => state.EnqueueEvent(ToolEvent.MakeGizmo(TransformGizmoOp.Rotate)),
         (prev, next, it) =>
         {
             it.Set(next.Tool.GizmoOp == TransformGizmoOp.Rotate, visible: next.Tool.Enabled);
         });
 
-    private static readonly ToolbarItem DebugBounds = new(Icons.Box, ContextChangeMask.ToolSelection,
+    private static readonly ToolbarItem DebugBounds = new(IconNames.Box, ContextChangeMask.ToolSelection,
         state => state.EnqueueEvent(ToolEvent.MakeBounds(!state.Context.Tool.ShowDebugBounds)),
         (prev, next, it) =>
         {
             it.Set(next.Tool.ShowDebugBounds, visible: next.Selection.HasSceneObject);
         });
 
-    private static readonly ToolbarItem Selected = new(Icons.MousePointer2, ContextChangeMask.Selection,
+    private static readonly ToolbarItem Selected = new(IconNames.MousePointer2, ContextChangeMask.Selection,
         state => { },
         (prev, next, it) => it.Set(false, next.Selection.HasSceneObject));
 
-    private static readonly ToolbarItem Camera = new(Icons.Video, ContextChangeMask.Selection,
+    private static readonly ToolbarItem Camera = new(IconNames.Video, ContextChangeMask.Selection,
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Camera)),
         (prev, next, it) => it.Set(next.Selection.HasNewFixed(prev.Selection, FixedInspectorId.Camera)));
 
-    private static readonly ToolbarItem Lighting = new(Icons.Sun, ContextChangeMask.Selection,
+    private static readonly ToolbarItem Lighting = new(IconNames.Sun, ContextChangeMask.Selection,
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Lighting)),
         (prev, next, it) => it.Set(next.Selection.HasNewFixed(prev.Selection, FixedInspectorId.Lighting)));
 
-    private static readonly ToolbarItem Visual = new(Icons.Sparkles, ContextChangeMask.Selection,
+    private static readonly ToolbarItem Visual = new(IconNames.Sparkles, ContextChangeMask.Selection,
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Visual)),
         (prev, next, it) => it.Set(next.Selection.HasNewFixed(prev.Selection, FixedInspectorId.Visual)));
 }

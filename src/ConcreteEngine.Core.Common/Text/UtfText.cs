@@ -122,10 +122,14 @@ public static class UtfText
 
 public static class UtfTextExtensions
 {
-    public static byte[] ToUtf8(this string? str)
+    public static byte[] ToUtf8(this string str, int extraLength = 0)
     {
         ArgumentNullException.ThrowIfNull(str);
-        return Encoding.UTF8.GetBytes(str);
+        if (extraLength == 0) return Encoding.UTF8.GetBytes(str);
+        var textLength = Encoding.UTF8.GetByteCount(str);
+        var buffer = new byte[textLength + extraLength];
+        Encoding.UTF8.GetBytes(str, buffer);
+        return buffer;
     }
 
     public static byte[] ToUtf8(this ReadOnlySpan<char> str)

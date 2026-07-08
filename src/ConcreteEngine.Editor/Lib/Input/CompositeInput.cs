@@ -8,7 +8,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
 
-internal sealed unsafe class FloatCompositeInput<T>(string label) : UiField(label, InputFieldKind.Input)
+internal sealed unsafe class FloatCompositeInput<T>(string label) : InputField(label, InputKind.Float)
     where T : unmanaged, IFloatValue
 {
     public T Value;

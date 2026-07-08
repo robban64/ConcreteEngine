@@ -55,7 +55,7 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField where T : un
     public FloatCompositeField(string name, Func<T> getter, Action<T> setter) : base(name)
     {
         Binding = new PropertyFieldBinding<T>();
-        LabelPlacement = FieldLabelPlacement.Inline;
+        LabelPlacement = Inspection.LabelPlacement.Inline;
 
         Bind(getter, setter);
     }

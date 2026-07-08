@@ -10,6 +10,9 @@ namespace ConcreteEngine.Editor.App.Theme;
 internal static unsafe class AppDraw
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Icon(uint icon) => ImGui.TextUnformatted((byte*)&icon);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Text(NativeString text) => ImGui.TextUnformatted(text, text.TextEnd);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -65,15 +68,22 @@ internal static unsafe class AppDraw
         if (!enabled) ImGui.EndDisabled();
         return enabled && clicked;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool DrawToggleButton(byte* text, bool value, bool enabled = true)
     {
-        if(value) ImGui.PushStyleColor(ImGuiCol.Button, Palette32.FrameBgActive);
+        if (value) ImGui.PushStyleColor(ImGuiCol.Button, Palette32.FrameBgActive);
         var result = DrawButton(text, enabled);
-        if(value) ImGui.PopStyleColor();
+        if (value) ImGui.PopStyleColor();
         return result;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool DrawButton(uint icon, bool enabled = true) => DrawButton((byte*)&icon, enabled);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool DrawToggleButton(uint icon, bool value, bool enabled = true) =>
+        DrawToggleButton((byte*)&icon, value, enabled);
 
     // ReSharper disable once OutParameterValueIsAlwaysDiscarded.Global
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

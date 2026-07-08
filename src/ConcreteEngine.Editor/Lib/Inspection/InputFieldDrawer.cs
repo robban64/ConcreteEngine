@@ -1,11 +1,159 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Editor;
+using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Widgets;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Inspection;
 
 internal static unsafe class InputFieldDrawer
 {
+    private static bool InputFloat(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
+        ImGui.InputFloat(label, value, fmt);
+
+    private static bool InputFloat2(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
+        ImGui.InputFloat2(label, value, fmt);
+
+    private static bool InputFloat3(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
+        ImGui.InputFloat3(label, value, fmt);
+
+    private static bool InputFloat4(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
+        ImGui.InputFloat4(label, value, fmt);
+
+    private static bool SliderFloat(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
+        ImGui.SliderFloat(label, value, min, max, fmt);
+
+    private static bool SliderFloat2(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
+        ImGui.SliderFloat2(label, value, min, max, fmt);
+
+    private static bool SliderFloat3(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
+        ImGui.SliderFloat3(label, value, min, max, fmt);
+
+    private static bool SliderFloat4(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
+        ImGui.SliderFloat4(label, value, min, max, fmt);
+
+    private static bool DragFloat(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
+        ImGui.DragFloat(label, value, speed, min, max, fmt);
+
+    private static bool DragFloat2(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
+        ImGui.DragFloat2(label, value, speed, min, max, fmt);
+
+    private static bool DragFloat3(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
+        ImGui.DragFloat3(label, value, speed, min, max, fmt);
+
+    private static bool DragFloat4(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
+        ImGui.DragFloat4(label, value, speed, min, max, fmt);
+
+
+    public static delegate*<byte*, float*, byte*, float, float, float, bool> BindFloat2(InputStyle kind,
+        int component)
+    {
+        switch (kind)
+        {
+            case InputStyle.Input:
+                return component switch
+                {
+                    1 => &InputFloat,
+                    2 => &InputFloat2,
+                    3 => &InputFloat3,
+                    4 => &InputFloat4,
+                    _ => throw new ArgumentOutOfRangeException(nameof(component))
+                };
+            case InputStyle.Slider:
+                return component switch
+                {
+                    1 => &SliderFloat,
+                    2 => &SliderFloat2,
+                    3 => &SliderFloat3,
+                    4 => &SliderFloat4,
+                    _ => throw new ArgumentOutOfRangeException(nameof(component))
+                };
+            case InputStyle.Drag:
+                return component switch
+                {
+                    1 => &DragFloat,
+                    2 => &DragFloat2,
+                    3 => &DragFloat3,
+                    4 => &DragFloat4,
+                    _ => throw new ArgumentOutOfRangeException(nameof(component))
+                };
+            default: throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+        }
+    }
+
+    private static bool InputInt(byte* label, int* value, float speed, int min, int max) =>
+        ImGui.InputInt(label, value);
+
+    private static bool InputInt2(byte* label, int* value, float speed, int min, int max) =>
+        ImGui.InputInt2(label, value);
+
+    private static bool InputInt3(byte* label, int* value, float speed, int min, int max) =>
+        ImGui.InputInt3(label, value);
+
+    private static bool InputInt4(byte* label, int* value, float speed, int min, int max) =>
+        ImGui.InputInt4(label, value);
+
+    private static bool SliderInt(byte* label, int* value, float speed, int min, int max) =>
+        ImGui.SliderInt(label, value, min, max);
+
+    private static bool SliderInt2(byte* label, int* value, float speed, int min, int max) =>
+        ImGui.SliderInt2(label, value, min, max);
+
+    private static bool SliderInt3(byte* label, int* value, float speed, int min, int max) =>
+        ImGui.SliderInt3(label, value, min, max);
+
+    private static bool SliderInt4(byte* label, int* value, float speed, int min, int max) =>
+        ImGui.SliderInt4(label, value, min, max);
+
+
+    private static bool DragInt(byte* label, int* value, float speed, int min, int max) =>
+        ImGui.DragInt(label, value, speed, min, max);
+
+    private static bool DragInt2(byte* label, int* value, float speed, int min, int max) =>
+        ImGui.DragInt2(label, value, speed, min, max);
+
+    private static bool DragInt3(byte* label, int* value, float speed, int min, int max) =>
+        ImGui.DragInt3(label, value, speed, min, max);
+
+    private static bool DragInt4(byte* label, int* value, float speed, int min, int max) =>
+        ImGui.DragInt4(label, value, speed, min, max);
+
+    public static delegate*<byte*, int*, float, int, int, bool> BindInt2(InputStyle kind, int component)
+    {
+        switch (kind)
+        {
+            case InputStyle.Input:
+                return component switch
+                {
+                    1 => &InputInt,
+                    2 => &InputInt2,
+                    3 => &InputInt3,
+                    4 => &InputInt4,
+                    _ => throw new ArgumentOutOfRangeException(nameof(component))
+                };
+            case InputStyle.Slider:
+                return component switch
+                {
+                    1 => &SliderInt,
+                    2 => &SliderInt2,
+                    3 => &SliderInt3,
+                    4 => &SliderInt4,
+                    _ => throw new ArgumentOutOfRangeException(nameof(component))
+                };
+            case InputStyle.Drag:
+                return component switch
+                {
+                    1 => &DragInt,
+                    2 => &DragInt2,
+                    3 => &DragInt3,
+                    4 => &DragInt4,
+                    _ => throw new ArgumentOutOfRangeException(nameof(component))
+                };
+            default: throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+        }
+    }
+
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static delegate*<int, byte*, float*, byte*, float, float, float, bool> BindFloat(InputFieldKind kind)
     {

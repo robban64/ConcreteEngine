@@ -41,7 +41,7 @@ internal sealed unsafe class ComboField : PropertyField
             Binding.Bind(getter, setter);
 
 
-        Delay = FieldGetDelay.VeryHigh;
+        Delay = FieldFetchDelay.VeryHigh;
 
         _values = new int[values.Length];
         values.CopyTo(_values.AsSpan());

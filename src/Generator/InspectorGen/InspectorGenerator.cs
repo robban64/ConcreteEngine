@@ -141,21 +141,19 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
 
         if (field is not InputField input) return;
 
-        var fieldKind = 0;
-        if (input.Slider) fieldKind = 1;
-        else if (input.Drag) fieldKind = 2;
 
+        var inputStyle = $"{nameof(InputStyle)}.{input.InputStyle.ToString()}";
         if (field.ValueType.StartsWith("Int", StringComparison.Ordinal))
         {
             sb.IndentLine($"new IntInput<{input.ValueType}>(");
-            sb.Append(label).Append(", ").Append(fieldKind).Append(", ");
+            sb.Append(label).Append(", ").Append(inputStyle).Append(", ");
             sb.Append(input.Speed).Append(", ").Append((int)input.Min).Append(", ").Append((int)input.Max);
             sb.Append("),\n");
             return;
         }
 
         sb.IndentLine($"new FloatInput<{input.ValueType}>(");
-        sb.Append(label).Append(", ").Append(fieldKind).Append(", ");
+        sb.Append(label).Append(", ").Append(inputStyle).Append(", ");
         sb.Append(input.Speed).Append(", ").Append(input.Min).Append(", ").Append(input.Max);
         if (input.Format is not null) sb.Append(", ").Append(input.Format);
         sb.Append("),\n");

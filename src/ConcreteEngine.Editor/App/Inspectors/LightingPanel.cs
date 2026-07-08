@@ -16,7 +16,7 @@ internal sealed class LightingPanel : EditorPanel
 
     public LightingPanel(StateManager state) : base(InspectorId.Lighting, state)
     {
-        _inspectFields.ShadowSizeCombo.LabelPlacement = FieldLabelPlacement.None;
+        _inspectFields.ShadowSizeCombo.LabelPlacement = LabelPlacement.None;
     }
 
     public override void OnDraw()

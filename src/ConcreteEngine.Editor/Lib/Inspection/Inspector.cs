@@ -11,11 +11,6 @@ internal static class Inspector
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void ValidateName(string name, List<BoundField> fields) { }
 
-    public static BoundField<TValue> MakeFloatBinding<TValue>(FloatInput<TValue> element, 
-        Func<TValue> getter, Action<TValue> setter) where TValue : unmanaged, IFloatValue
-    {
-        return new BoundField<TValue>( element, getter, setter);
-    }
 }
 
 internal static class Inspector<T> where T : class
@@ -34,13 +29,13 @@ internal static class Inspector<T> where T : class
 
 
     public static void Register<TValue>(
-        UiField uiElement,
+        InputField input,
         Func<TValue> getter,
         Action<TValue> setter,
-        FieldGetDelay delay = FieldGetDelay.Low)
+        FieldFetchDelay delay = FieldFetchDelay.Low)
         where TValue : unmanaged, INumberValue
     {
-        Fields.Add(new BoundField<TValue>(uiElement, getter, setter) { Delay = delay });
+        Fields.Add(new BoundField<TValue>(input, getter, setter) { Delay = delay });
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

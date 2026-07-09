@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.Lib.Widgets;
 
 namespace ConcreteEngine.Editor.Lib.Inspection;
-
+/*
 internal abstract class BoundField(InputField field)
 {
     public readonly InputField Field = field;
@@ -42,3 +42,4 @@ internal sealed class BoundField<T>(InputField field, Func<T> getter, Action<T> 
         value = getter();
     }
 }
+*/

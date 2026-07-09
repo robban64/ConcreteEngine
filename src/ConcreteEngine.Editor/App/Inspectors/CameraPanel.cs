@@ -32,12 +32,8 @@ internal sealed class CameraPanel(StateManager state) : EditorPanel(InspectorId.
 
     public override void OnCreate()
     {
-        Inspector<Camera>.Bind(EditorCamera.Instance.Camera);
-        InspectCameraBindings.RegisterCamera();
-        
         _viewportStr = StringArena.AllocateString(32);
         _aspectStr = StringArena.AllocateString(24);
-
         _currentViewport = EngineWindow.Viewport;
     }
 
@@ -58,12 +54,10 @@ internal sealed class CameraPanel(StateManager state) : EditorPanel(InspectorId.
 
         ImGui.Spacing();
         avg1.BeginSample();
-        Inspector<Camera>.Draw();
+        CameraInspector.Draw();
         if (avg1.EndSample() > 40) avg1.ResetAndPrint();
 
     }        
-
-
     /*
         public void DrawSkyboxProperties(Texture texture, )
         {

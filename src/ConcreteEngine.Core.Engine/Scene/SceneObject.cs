@@ -4,9 +4,11 @@ using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
+[Inspect]
 public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObject>
 {
     public SceneObjectId Id { get; }
@@ -54,6 +56,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     [JsonIgnore]
     public SceneDirtyFlags Dirty { get; private set; }
 
+    [InspectInclude]
     public SceneTransform Transform { get; }
 
     private readonly List<RenderBlueprintInstance> _instances = [];

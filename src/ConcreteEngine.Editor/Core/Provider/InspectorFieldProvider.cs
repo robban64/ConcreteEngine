@@ -25,7 +25,6 @@ internal sealed class InspectorFieldProvider
         ParticleInstanceFields.Allocate(allocator);
         MaterialFields.Allocate(allocator);
         TextureFields.Allocate(allocator);
-        CameraFields.Allocate(allocator);
         LightningFields.Allocate(allocator);
         PostFxFields.Allocate(allocator);
     }
@@ -40,7 +39,6 @@ internal sealed class InspectorFieldProvider
     public readonly InspectMaterialFields MaterialFields = new();
     public readonly InspectTextureFields TextureFields = new();
 
-    public readonly InspectCameraFields CameraFields = new();
     public readonly InspectLightningFields LightningFields = new();
     public readonly InspectPostFxFields PostFxFields = new();
 }

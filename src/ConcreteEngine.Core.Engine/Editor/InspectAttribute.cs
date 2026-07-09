@@ -8,6 +8,11 @@ public sealed class InspectAttribute : Attribute
 }
 
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+public sealed class InspectIncludeAttribute : Attribute
+{
+}
+
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
 public abstract class InspectInputAttribute(string? label = null) : Attribute
 {
     public Type? Converter { get; init; }

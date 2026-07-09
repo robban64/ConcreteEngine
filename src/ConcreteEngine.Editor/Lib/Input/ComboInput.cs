@@ -51,12 +51,8 @@ internal sealed unsafe class ComboInput : InputField
     }
 
     public void SetItemName(int index, string newName) => _names[index] = newName;
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override ref byte GetRawValue() => ref Unsafe.As<int, byte>(ref Value);
     
-    public override bool Draw()
+    public  bool Draw()
     {
         var value = (int)Value;
         if (_lastValue != value)

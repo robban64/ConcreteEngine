@@ -15,6 +15,7 @@ public sealed partial class InspectorGenerator
         { "Vector2", "Float2" },
         { "Vector3", "Float3" },
         { "Vector4", "Float4" },
+        { "Quaternion", "Float4" },
         { "Color4", "Float4" },
         { "Size2D", "Int2" },
         { "Vector2I", "Int2" }
@@ -24,9 +25,9 @@ public sealed partial class InspectorGenerator
     private static IInspectField? MakeField(string fieldName, AttributeData attr, ITypeSymbol type)
     {
         string? typeName = null;
-
-        if (!attr.ConstructorArguments.IsEmpty && attr.ConstructorArguments[0].Value is string label)
-            fieldName = label;
+        string label = fieldName;
+        if (!attr.ConstructorArguments.IsEmpty && attr.ConstructorArguments[0].Value is string labelValue)
+            label = labelValue;
 
 
         int startAt = 0;
@@ -64,11 +65,12 @@ public sealed partial class InspectorGenerator
 
         return attr.AttributeClass?.Name switch
         {
-            InputColorAttrib => new ColorField { Label = fieldName, HasAlpha = hasAlpha },
-            InputComboAttrib => new ComboField { Label = fieldName, Placeholder = placeholder, StartAt = startAt },
+            InputColorAttrib => new ColorField { Name = fieldName, Label = label, HasAlpha = hasAlpha },
+            InputComboAttrib => new ComboField { Name = fieldName, Label = label, Placeholder = placeholder, StartAt = startAt },
             InputNumberAttrib => new InputField
             {
-                Label = fieldName,
+                Name = fieldName,
+                Label = label,
                 ValueType = typeName,
                 Format = format,
                 Min = min,

@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.Lib.Widgets;
 
 namespace ConcreteEngine.Editor.Lib.Inspection;
-
+/*
 internal static class Inspector
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -71,4 +71,4 @@ internal static class Inspector<T> where T : class
         OnUnbind?.Invoke(Target);
         Target = null;
     }
-}
+}*/

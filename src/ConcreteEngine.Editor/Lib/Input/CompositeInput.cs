@@ -7,15 +7,13 @@ using ConcreteEngine.Editor.Lib.Inspection;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
-
+/*
 internal sealed unsafe class FloatCompositeInput<T>(string label) : InputField(label, InputKind.Float)
     where T : unmanaged, IFloatValue
 {
     public T Value;
     private readonly ComponentEntry[] _fields = new ComponentEntry[T.Components];
     private int _count;
-
-    public override ref byte GetRawValue() => ref Unsafe.As<T, byte>(ref Value);
 
     public override bool Draw()
     {
@@ -89,4 +87,4 @@ internal sealed unsafe class FloatCompositeInput<T>(string label) : InputField(l
         public String8Utf8 Format = format;
         public float Speed = speed, Min = min, Max = max;
     }
-}
+}*/

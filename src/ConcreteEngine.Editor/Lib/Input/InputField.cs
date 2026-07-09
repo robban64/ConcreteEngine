@@ -37,9 +37,6 @@ internal abstract class InputField
         _label = label.ToUtf8();
     }
 
-    public abstract ref byte GetRawValue();
-    public abstract bool Draw();
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NativeView<byte> ApplyLabelLayout(NativeSpanWriter sw)
     {

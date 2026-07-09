@@ -58,12 +58,6 @@ internal sealed unsafe class TextInput : InputField
             ? MemoryMarshal.CreateReadOnlySpanFromNullTerminated(_textBuffer)
             : ReadOnlySpan<byte>.Empty;
 
-    public override ref byte GetRawValue()
-    {
-        if (_textBuffer == null) Throwers.NullPointer(nameof(_textBuffer));
-        return ref _textBuffer[0];
-    }
-
     public void UnsetTextBuffer() => _textBuffer = null;
 
     public void SetTextBuffer(NativeView<byte> buffer)
@@ -73,7 +67,7 @@ internal sealed unsafe class TextInput : InputField
         buffer.Clear();
     }
 
-    public override bool Draw()
+    public bool Draw()
     {
         var hint = Hint;
         var label = ApplyLabelLayout(TextBuffers.GetWriter());

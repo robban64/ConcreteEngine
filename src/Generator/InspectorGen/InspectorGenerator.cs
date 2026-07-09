@@ -9,50 +9,42 @@ namespace Generator.InspectorGen;
 [Generator]
 public sealed partial class InspectorGenerator : IIncrementalGenerator
 {
-    private const string OutputNamespace = "ConcreteEngine.Editor.Lib.Inspection";
+    private const string MainAttributeFullName = "ConcreteEngine.Editor.Lib.EditorInspectorAttribute";
+    private const string MainAttribute = "EditorInspectorAttribute";
+
     private const string InspectAttrib = "InspectAttribute";
+    private const string IncludeAttrib = "InspectIncludeAttribute";
     private const string InputNumberAttrib = "InputNumberAttribute";
     private const string InputColorAttrib = "InputColorAttribute";
     private const string InputComboAttrib = "InputComboAttribute";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var targetTypes = context.CompilationProvider.Select(Transformer);
-        context.RegisterSourceOutput(targetTypes, static (ctx, targets) =>
+        var valueProvider = context.SyntaxProvider
+            .ForAttributeWithMetadataName(MainAttributeFullName, Predicates.IsObjectOrStruct, Build)
+            .Where(static x => x != null!);
+
+        context.RegisterSourceOutput(valueProvider, static (ctx, value) =>
         {
-            foreach (var target in targets)
-            {
-                var source = Emit(target);
-                ctx.AddSource($"Inspector.{target.Name}.g.cs", SourceText.From(source, Encoding.UTF8));
-            }
+            var source = Emit(value);
+            ctx.AddSource($"{value.TargetName}Inspector.g.cs", SourceText.From(source, Encoding.UTF8));
         });
     }
 
-    private static EquatableArray<TargetModel> Transformer(Compilation compilation, CancellationToken ct)
+
+    private static InspectModel Build(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        var coreAssembly = compilation.SourceModule
-            .ReferencedAssemblySymbols.FirstOrDefault(a => a.Name.EndsWith("Core.Engine"));
+        var inspectorSym = (INamedTypeSymbol)ctx.TargetSymbol;
+        var inspectorAttr = inspectorSym.GetAttributes().First(x => x.AttributeClass?.Name == MainAttribute);
 
-        if (coreAssembly is null) return [];
+        var targetSym =
+            (INamedTypeSymbol)inspectorAttr.ConstructorArguments.First(x => x.Kind == TypedConstantKind.Type).Value!;
+        var targetAttr = targetSym.GetAttributes().First(x => x.AttributeClass?.Name == InspectAttrib);
+        //
 
-        var list = new List<TargetModel>();
-        foreach (var type in GetAllTypes(coreAssembly.GlobalNamespace))
-        {
-            if (!type.IsPublicClassOrStruct()) continue;
-            var attr = type.GetAttributes().FirstOrDefault(static it => it.AttributeClass?.Name == InspectAttrib);
-            if (attr is not null && Generate(type, attr) is { } targetModel)
-                list.Add(targetModel);
-        }
-
-        return list.ToImmutableArray().AsEquatableArray();
-    }
-    //private static TargetModel Build(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
-
-    private static TargetModel Generate(INamedTypeSymbol targetSym, AttributeData inspectAttr)
-    {
         string? displayName = null;
-        foreach (var (key, constant) in inspectAttr.NamedArguments)
+        foreach (var (key, constant) in targetAttr.NamedArguments)
         {
             switch (key, constant.Value)
             {
@@ -60,36 +52,68 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
             }
         }
 
-        var members = targetSym.GetMembers()
-            .Where(static sym => sym is IPropertySymbol or IFieldSymbol &&
-                                 !sym.IsImplicitlyDeclared &&
-                                 !sym.GetAttributes().IsEmpty
-            )
-            .Select(static sym =>
-            {
-                var attr = sym.GetAttributes().FirstOrDefault(
-                    static x => x.AttributeClass?.Name is InputNumberAttrib or InputColorAttrib or InputComboAttrib
-                );
-                if (attr == null) return null!;
-                var type = sym.GetFieldOrPropertyType();
-                var inputField = MakeField(sym.Name, attr, type);
-                var ns = sym.ContainingNamespace.ToDisplayString();
-                return new TargetMemberInfo
-                {
-                    Name = sym.Name, Field = inputField, TypeNamespace = ns, TypeName = type.ToDisplayString(),
-                };
-            }).Where(x => x != null!)
-            .ToEquatableArray();
-
-        var ns = targetSym.ContainingNamespace.ToDisplayString();
-        return new TargetModel(targetSym.Name, ns, members);
+        var members = GenerateMemberFor(targetSym);
+        return new InspectModel(
+            InspectorName: inspectorSym.Name,
+            InspectorNs: inspectorSym.ContainingNamespace.ToDisplayString(),
+            TargetName: targetSym.Name,
+            TargetNs: targetSym.ContainingNamespace.ToDisplayString(),
+            Members: members
+        ) { DisplayName = displayName };
     }
 
-    private static string Emit(TargetModel model)
+    private static EquatableArray<TargetMemberInfo> GenerateMemberFor(INamedTypeSymbol targetSym)
     {
-        var target = $"{model.Name}Target";
-        var fullName = $"{model.TargetNamespace}.{model.Name}";
+        List<TargetMemberInfo> list = new(4);
 
+        var members = targetSym.GetMembers().Where(MemberFilter);
+        foreach (var member in members)
+        {
+            if (CreateMember(member, null) is { } created)
+            {
+                list.Add(created);
+                continue;
+            }
+
+            var includeAttr = member.GetAttributes().FirstOrDefault(x => x.AttributeClass?.Name is IncludeAttrib);
+            if (includeAttr is not null)
+            {
+                var includeSym = member.GetFieldOrPropertyType();
+                foreach (var m in includeSym.GetMembers().Where(MemberFilter))
+                {
+                    if (CreateMember(m, member.Name) is { } createdInner) list.Add(createdInner);
+                }
+            }
+        }
+
+        return list.ToArray().ToEquatableArray();
+
+        static bool MemberFilter(ISymbol sym) =>
+            sym is IPropertySymbol or IFieldSymbol && !sym.IsImplicitlyDeclared && !sym.GetAttributes().IsEmpty;
+
+        static TargetMemberInfo? CreateMember(ISymbol sym, string? nestedMemberName)
+        {
+            var inputAttr = sym.GetAttributes().FirstOrDefault(static x =>
+                x.AttributeClass?.Name is InputNumberAttrib or InputColorAttrib or InputComboAttrib);
+
+            if (inputAttr == null) return null;
+            var type = sym.GetFieldOrPropertyType();
+            var inputField = MakeField(sym.Name, inputAttr, type);
+            var ns = sym.ContainingNamespace.ToDisplayString();
+            return new TargetMemberInfo
+            {
+                Name = sym.Name,
+                Field = inputField,
+                TypeNamespace = ns,
+                TypeName = type.ToDisplayString(),
+                NestedMemberName = nestedMemberName
+            };
+        }
+    }
+
+
+    private static string Emit(InspectModel model)
+    {
         var sb = new SourceBuilder();
         sb.AutoGeneratedHeader(nameof(InspectorGenerator));
 
@@ -97,31 +121,35 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
         sb.AppendLine("using ConcreteEngine.Editor.Lib.Inspection;");
         sb.AppendLine("using ConcreteEngine.Editor.Lib.Widgets;").AppendLine();
 
-        sb.AppendLine($"namespace {OutputNamespace};").AppendLine();
+        sb.AppendLine($"namespace {model.InspectorNs};").AppendLine();
 
-        sb.AppendLine($"internal static partial class Inspect{model.Name}Bindings");
+        sb.AppendLine($"internal static partial class {model.InspectorName}");
         sb.OpenBrace();
-
-        sb.AppendLine($"private static {fullName}? {target} => Inspector<{fullName}>.Target;");
-        sb.AppendLine();
-
-        sb.AppendLine($"public static void Register{model.Name}()");
-        sb.OpenBrace();
-
-
+        
+        // Members
         foreach (var m in model.Members)
         {
             if (m.Field is null) continue;
-            sb.AppendLine($"Inspector<{fullName}>.Register<{m.Field.ValueType}>(");
-            sb.PushIndent();
             EmitInput(m.Field, sb);
-            sb.AppendLine($"static () => ({m.Field.ValueType}){target}!.{m.Name},");
-            sb.AppendLine($"static v  => {target}!.{m.Name} = ({m.TypeName})v");
-            sb.PopIndent();
-            sb.AppendLine(");");
+            sb.AppendLine();
         }
 
-        sb.CloseBrace(); // Register()
+        // Draw
+        sb.AppendLine().AppendLine($"public static unsafe void Draw()");
+        sb.OpenBrace();
+        sb.AppendLine($"var target = Target;");
+        foreach (var m in model.Members)
+        {
+            if (m.Field is null) continue;
+
+            var lowercaseName = m.Name.ToLowerInvariant();
+            var targetPath = m.NestedMemberName is null ? $"target.{m.Name}" : $"target.{m.NestedMemberName}.{m.Name}";
+            sb.AppendLine($"var {lowercaseName} = {targetPath};");
+            sb.AppendLine($"if({m.Name}.Draw((float*)&{lowercaseName})) {targetPath} = {lowercaseName};");
+            sb.AppendLine();
+        }
+
+        sb.CloseBrace(); // draw
 
         sb.CloseBrace(); // class
 
@@ -132,30 +160,53 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
     {
         var label = Symbols.FormatLiteral(field.Label, true);
 
+        sb.IndentLine("private static readonly ");
         if (field is ColorField colorField)
         {
             var truFalse = Symbols.FormatPrimitive(colorField.HasAlpha, false, false);
-            sb.AppendLine($"new ColorInput({label}, {truFalse}),");
+            sb.Append($"ColorInput {field.Name} = ").Append($"new ColorInput({label}, {truFalse});");
             return;
         }
 
         if (field is not InputField input) return;
-
+        var comp = (int)char.GetNumericValue(field.ValueType[^1]);
 
         var inputStyle = $"{nameof(InputStyle)}.{input.InputStyle.ToString()}";
         if (field.ValueType.StartsWith("Int", StringComparison.Ordinal))
         {
-            sb.IndentLine($"new IntInput<{input.ValueType}>(");
-            sb.Append(label).Append(", ").Append(inputStyle).Append(", ");
+            sb.Append($"IntInput {field.Name} = ").Append($"new IntInput(");
+            sb.Append(label).Append(", ").Append(comp).Append(", ").Append(inputStyle).Append(", ");
             sb.Append(input.Speed).Append(", ").Append((int)input.Min).Append(", ").Append((int)input.Max);
-            sb.Append("),\n");
+            sb.Append(");");
             return;
         }
 
-        sb.IndentLine($"new FloatInput<{input.ValueType}>(");
-        sb.Append(label).Append(", ").Append(inputStyle).Append(", ");
+        sb.Append($"FloatInput {field.Name} = ").Append($"new FloatInput(");
+        sb.Append(label).Append(", ").Append(comp).Append(", ").Append(inputStyle).Append(", ");
         sb.Append(input.Speed).Append(", ").Append(input.Min).Append(", ").Append(input.Max);
         if (input.Format is not null) sb.Append(", ").Append(input.Format);
-        sb.Append("),\n");
+        sb.Append(");");
     }
 }
+
+/*
+ private static EquatableArray<TargetModel> Transformer(Compilation compilation, CancellationToken ct)
+      {
+          ct.ThrowIfCancellationRequested();
+          var coreAssembly = compilation.SourceModule
+              .ReferencedAssemblySymbols.FirstOrDefault(a => a.Name.EndsWith("Core.Engine"));
+
+          if (coreAssembly is null) return [];
+
+          var list = new List<TargetModel>();
+          foreach (var type in GetAllTypes(coreAssembly.GlobalNamespace))
+          {
+              if (!type.IsPublicClassOrStruct()) continue;
+              var attr = type.GetAttributes().FirstOrDefault(static it => it.AttributeClass?.Name == InspectAttrib);
+              if (attr is not null && Generate(type, attr) is { } targetModel)
+                  list.Add(targetModel);
+          }
+
+          return list.ToImmutableArray().AsEquatableArray();
+      }
+*/

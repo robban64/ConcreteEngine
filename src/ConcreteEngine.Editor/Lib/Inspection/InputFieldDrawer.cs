@@ -7,39 +7,51 @@ namespace ConcreteEngine.Editor.Lib.Inspection;
 
 internal static unsafe class InputFieldDrawer
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool InputFloat(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
         ImGui.InputFloat(label, value, fmt);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool InputFloat2(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
         ImGui.InputFloat2(label, value, fmt);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool InputFloat3(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
         ImGui.InputFloat3(label, value, fmt);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool InputFloat4(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
         ImGui.InputFloat4(label, value, fmt);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool SliderFloat(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
         ImGui.SliderFloat(label, value, min, max, fmt);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool SliderFloat2(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
         ImGui.SliderFloat2(label, value, min, max, fmt);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool SliderFloat3(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
         ImGui.SliderFloat3(label, value, min, max, fmt);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool SliderFloat4(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
         ImGui.SliderFloat4(label, value, min, max, fmt);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool DragFloat(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
         ImGui.DragFloat(label, value, speed, min, max, fmt);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool DragFloat2(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
         ImGui.DragFloat2(label, value, speed, min, max, fmt);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool DragFloat3(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
         ImGui.DragFloat3(label, value, speed, min, max, fmt);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool DragFloat4(byte* label, float* value, byte* fmt, float speed, float min, float max) =>
         ImGui.DragFloat4(label, value, speed, min, max, fmt);
 

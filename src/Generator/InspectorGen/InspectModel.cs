@@ -79,6 +79,7 @@ internal sealed record InputField : IInspectField
     public required string Name { get; set; }
     public required string Label { get; set; }
     public required string ValueType { get; set; }
+    public required bool IsFloat { get; init; }
     public string? Format { get; set; }
     public InputStyle InputStyle { get; init; }
 

@@ -79,9 +79,15 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
             if (includeAttr is not null)
             {
                 var includeSym = member.GetFieldOrPropertyType();
+                var includeAttrCtor = includeAttr.ConstructorArguments;
+                
+                string nestedAccessPath = member.Name;
+                if (!includeAttrCtor.IsEmpty && includeAttr.ConstructorArguments[0].Value is string accessSuffix) 
+                    nestedAccessPath += $".{accessSuffix}";
+                
                 foreach (var m in includeSym.GetMembers().Where(MemberFilter))
                 {
-                    if (CreateMember(m, member.Name) is { } createdInner) list.Add(createdInner);
+                    if (CreateMember(m, nestedAccessPath) is { } createdInner) list.Add(createdInner);
                 }
             }
         }
@@ -91,7 +97,7 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
         static bool MemberFilter(ISymbol sym) =>
             sym is IPropertySymbol or IFieldSymbol && !sym.IsImplicitlyDeclared && !sym.GetAttributes().IsEmpty;
 
-        static TargetMemberInfo? CreateMember(ISymbol sym, string? nestedMemberName)
+        static TargetMemberInfo? CreateMember(ISymbol sym, string? nestedAccessPath)
         {
             var inputAttr = sym.GetAttributes().FirstOrDefault(static x =>
                 x.AttributeClass?.Name is InputNumberAttrib or InputColorAttrib or InputComboAttrib);
@@ -106,7 +112,7 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
                 Field = inputField,
                 TypeNamespace = ns,
                 TypeName = type.ToDisplayString(),
-                NestedMemberName = nestedMemberName
+                NestedMemberName = nestedAccessPath
             };
         }
     }
@@ -145,8 +151,20 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
             var lowercaseName = m.Name.ToLowerInvariant();
             var targetPath = m.NestedMemberName is null ? $"target.{m.Name}" : $"target.{m.NestedMemberName}.{m.Name}";
             sb.AppendLine($"var {lowercaseName} = {targetPath};");
-            sb.AppendLine($"if({m.Name}.Draw((float*)&{lowercaseName})) {targetPath} = {lowercaseName};");
-            sb.AppendLine();
+
+            sb.IndentLine($"if({m.Name}.Draw(");
+            switch (m.Field)
+            {
+                case InputField input:
+                    sb.Append(input.IsFloat ? "(float*)&" : "(int*)&");
+                    sb.Append($"{lowercaseName})) {targetPath} = {lowercaseName};");
+                break;
+                case ColorField:
+                    sb.Append($"&{lowercaseName})) {targetPath} = {lowercaseName};");
+                    break;
+
+            }
+            sb.EndLine().AppendLine();
         }
 
         sb.CloseBrace(); // draw

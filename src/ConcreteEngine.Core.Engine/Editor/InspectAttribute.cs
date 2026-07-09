@@ -10,6 +10,7 @@ public sealed class InspectAttribute : Attribute
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
 public sealed class InspectIncludeAttribute : Attribute
 {
+    public string? AccessSuffix { get; init; }
 }
 
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]

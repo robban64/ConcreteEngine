@@ -5,9 +5,11 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
+[Inspect]
 public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<ushort>, IDisposable
 {
     private const int MinCapacity = 128;
@@ -22,6 +24,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public MeshId BoundMesh { get; private set; }
 
     public int Slot { get; private set; } = -1;
+    
     public int ParticleCount { get; private set; }
     public int PendingParticleCount { get; private set; }
 
@@ -29,8 +32,8 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     private FastRandom _rng;
 
-    private ParticleParams _particlesParams;
-    private EmitterParams _params;
+    private ParticleParams _particleParams;
+    private EmitterParams _emitterParams;
     private BoundingBox _localBounds;
 
     public ParticleEmitter(string name, Id16<ParticleEmitter> id, int particleCount,
@@ -43,8 +46,8 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
         Name = name;
         Id = id;
-        _params = emitterParams;
-        _particlesParams = particleParams;
+        _emitterParams = emitterParams;
+        _particleParams = particleParams;
         ParticleCount = PendingParticleCount = particleCount;
         _rng = new FastRandom((uint)Environment.TickCount + Id.Value);
 
@@ -55,19 +58,26 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     public bool IsDirty => _isDirty;
     public bool IsAttached => Slot >= 0;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly EmitterParams GetEmitterParams() => ref _emitterParams;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly ParticleParams GetParticleParams() => ref _particleParams;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly BoundingBox LocalBounds() => ref _localBounds;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly ParticleParams GetParticleParams() => ref _particlesParams;
+    [InspectInclude]
+    public ref EmitterParams EmitterParamsData => ref _emitterParams;
+    
+    [InspectInclude]
+    public ref ParticleParams ParticleParamsData => ref _particleParams;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly EmitterParams GetEmitterParams() => ref _params;
+    public StateScope<EmitterParams> EmitterParams => new(ref _emitterParams, ref _isDirty);
 
-    public StateScope<ParticleParams> ParticleParams => new(ref _particlesParams, ref _isDirty);
-    public StateScope<EmitterParams> EmitterParams => new(ref _params, ref _isDirty);
-
+    public StateScope<ParticleParams> ParticleParams => new(ref _particleParams, ref _isDirty);
+    
     internal void Attach(int slot, MeshId meshId)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);
@@ -136,7 +146,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     {
         if (!IsAttached) return;
 
-        var gravityStep = _params.Gravity * simDt;
+        var gravityStep = _emitterParams.Gravity * simDt;
         var particles = GetParticleView();
         var rng = _rng;
         for (int i = 0; i < particles.Length; i++)
@@ -159,7 +169,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
     private FastRandom RespawnParticle(ref ParticleCpuInstance p, FastRandom rng)
     {
-        ref readonly var spatialParams = ref _params;
+        ref readonly var spatialParams = ref _emitterParams;
         var speed = rng.RandomFloat(spatialParams.SpeedMinMax);
         var randDir = new Vector3(rng.RandomFloat(-1, 1), rng.RandomFloat(-1, 1), rng.RandomFloat(-1, 1)) * 0.5f;
         var spread = new Vector2(-spatialParams.Spread, spatialParams.Spread);
@@ -179,7 +189,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         var particles = _particles.Slice(start, length);
         for (var i = 0; i < particles.Length; i++)
         {
-            var randomMaxLife = _rng.RandomFloat(_params.LifeMinMax);
+            var randomMaxLife = _rng.RandomFloat(_emitterParams.LifeMinMax);
             ref var p = ref particles[i];
             p.MaxLife = randomMaxLife;
             p.Life = _rng.RandomFloat(0, randomMaxLife);

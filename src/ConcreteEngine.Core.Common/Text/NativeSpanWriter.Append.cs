@@ -44,25 +44,38 @@ public unsafe ref partial struct NativeSpanWriter
     public ref NativeSpanWriter Append(scoped ReadOnlySpan<char> value)
     {
         if (Validate(value.Length)) _cursor += Encoding.UTF8.GetBytes(value, RemainingSpan());
-        Debug.Assert(_cursor < Capacity);
         return ref this;
     }
     
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter Append(byte value)
     {
-        Buffer[_cursor++] = value;
-        Debug.Assert(_cursor < Capacity);
+        var cursor = _cursor;
+        Debug.Assert(cursor + 1 < Capacity);
+        Buffer[cursor] = value;
+        _cursor = cursor + 1;
+
         return ref this;
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter Append(char value)
     {
-        _cursor += UtfText.FormatChar(ref *(Buffer + _cursor), value);
-        Debug.Assert(_cursor < Capacity);
+        Debug.Assert(_cursor + 2 < Capacity);
+        _cursor += UtfText.FormatChar(ref Buffer[_cursor], value);
         return ref this;
     }
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter Append(char value1, char value2)
+    {
+        var cursor = _cursor;
+        Debug.Assert(cursor + 4 < Capacity);
+        cursor += UtfText.FormatChar(ref Buffer[cursor], value1);
+        cursor += UtfText.FormatChar(ref Buffer[cursor], value2);
+        _cursor = cursor;
+        return ref this;
+    }
+
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter Append(int value)

@@ -76,7 +76,8 @@ public sealed partial class InspectorGenerator
                 Min = min,
                 Max = max,
                 Speed = speed,
-                InputStyle = style
+                InputStyle = style,
+                IsFloat = typeName.StartsWith("Float")
             },
             _ => null
         };

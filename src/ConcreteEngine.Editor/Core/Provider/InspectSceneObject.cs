@@ -19,8 +19,6 @@ public sealed class InspectSceneObject
         SceneObject = sceneObject;
         Transform = sceneObject.Transform;
 
-        InspectorFieldProvider.Instance.SceneFields.Bind(this);
-
         if (sceneObject.Kind == SceneObjectKind.Model)
             InspectModel = new InspectModelInstance(sceneObject.GetInstance<ModelInstance>());
         else if (sceneObject.Kind == SceneObjectKind.Particle)
@@ -45,7 +43,7 @@ internal sealed class InspectParticleInstance
 {
     // Definition
     private readonly ParticleInstance _instance;
-    private ParticleEmitter Emitter => _instance.Emitter;
+    public ParticleEmitter Emitter => _instance.Emitter;
     public string EmitterName => _instance.Emitter.Name;
 
 

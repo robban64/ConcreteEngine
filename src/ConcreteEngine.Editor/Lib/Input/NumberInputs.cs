@@ -17,10 +17,11 @@ internal sealed unsafe class FloatInput : InputField
 
     private readonly delegate*<byte*, float*, byte*, float, float, float, bool> _drawFunc;
 
-    public FloatInput(string label, int components, InputStyle inputStyle, float speed = 1f, float min = 0, float max = 0,
+    public FloatInput(string label, int components, InputStyle inputStyle, float speed = 1f, float min = 0,
+        float max = 0,
         string format = "%.2f") : base(label, InputKind.Float)
     {
-        if(components < 0 || components > 4) throw new ArgumentOutOfRangeException(nameof(components));
+        if (components < 0 || components > 4) throw new ArgumentOutOfRangeException(nameof(components));
         _drawFunc = InputFieldDrawer.BindFloat2(inputStyle, components);
         Components = components;
         Format = format;
@@ -39,27 +40,28 @@ internal sealed unsafe class FloatInput : InputField
     }
 }
 
-internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IIntValue
+internal sealed unsafe class IntInput : InputField
 {
-    public T Value;
+    public int Components;
     public int Min, Max;
     public float Speed;
 
     private readonly delegate*< byte*, int*, float, int, int, bool> _drawFunc;
 
-    public IntInput(string label, InputStyle inputStyle, float speed = 1f, int min = 0, int max = 0)
+    public IntInput(string label, int components, InputStyle inputStyle, float speed = 1f, int min = 0, int max = 0)
         : base(label, InputKind.Int)
     {
-        _drawFunc = InputFieldDrawer.BindInt2(inputStyle, T.Components);
+        if (components < 0 || components > 4) throw new ArgumentOutOfRangeException(nameof(components));
+        _drawFunc = InputFieldDrawer.BindInt2(inputStyle, Components);
         Speed = speed;
         Min = min;
         Max = max;
     }
 
-    public  bool Draw<T>(T value) where T : unmanaged, IIntValue
+    public bool Draw(int* value)
     {
         var label = ApplyLabelLayout(TextBuffers.GetWriter());
-        var changed = _drawFunc(label, (int*)&value, Speed, Min, Max);
+        var changed = _drawFunc(label, value, Speed, Min, Max);
         return changed && ShouldTrigger();
     }
 }
@@ -68,13 +70,13 @@ internal sealed unsafe class ColorInput(string label, bool hasAlpha = true) : In
 {
     public bool HasAlpha = hasAlpha;
 
-    public bool Draw(Color4 value)
+    public bool Draw(Color4* value)
     {
         var label = ApplyLabelLayout(TextBuffers.GetWriter());
 
         var changed = HasAlpha
-            ? ImGui.ColorEdit4(label, (float*)&value)
-            : ImGui.ColorEdit3(label, (float*)&value);
+            ? ImGui.ColorEdit4(label, (float*)value)
+            : ImGui.ColorEdit3(label, (float*)value);
 
         return changed && ShouldTrigger();
     }

@@ -1,4 +1,6 @@
 using System.Text;
+using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.App.Scene;
@@ -15,13 +17,11 @@ namespace ConcreteEngine.Editor.App.Inspectors;
 internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPanel(InspectorId.SceneObject, state)
 {
     private const ImGuiTreeNodeFlags CollapseFlags = ImGuiTreeNodeFlags.DefaultOpen;
-    private static readonly char[] ValidNoneAlphaNumericChars = ['_', '-'];
+    private const string ValidNoneAlphaNumericChars = "_-";
 
     private static SelectionManager Selection => SelectionManager.Instance;
 
     private SceneObjectId _previousId = SceneObjectId.Empty;
-
-    private readonly InspectSceneFields _inspectFields = InspectorFieldProvider.Instance.SceneFields;
 
     /*
     private readonly InspectModelInstanceFields _modelInstanceFields =
@@ -40,17 +40,24 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         _title = StringArena.AllocateString(24);
     }
     
-    public override void OnAttach()
-    {
-        if (Selection.SelectedSceneObject is null) return;
-        _inspectFields.Refresh();
-    }
-    
     public override void OnLeave()
     {
         _previousId = SceneObjectId.Empty;
     }
 
+    
+    private void OnNewInspector(InspectSceneObject inspector)
+    {
+        RestoreName(inspector.SceneObject);
+        _previousId = inspector.Id;
+        _title.OverWriter.Append(inspector.Kind.ToUtf8()).Append(" - ["u8).Append(inspector.Id).Append(']').End();
+    }
+
+    private void RestoreName(SceneObject sceneObject)
+    {
+        _nameInputStr.Set(sceneObject.Name);
+    }
+    
     public override void OnDraw()
     {
         if (Selection.SelectedSceneObject is not { } inspector) return;
@@ -79,7 +86,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         ImGui.Separator();
         ImGui.Spacing();
 
-        _inspectFields.Draw();
+        SceneObjectInspector.Draw();
 
         ImGui.Spacing();
         ImGui.Separator();
@@ -117,9 +124,9 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
             for (var i = 0; i < materialCount; i++)
             {
                 var mat = modelInstance.Blueprint.GetMaterial(i);
-                var shaderName = mat.BoundShader?.Name ?? "No Shader";
-                AppDraw.Text(sw.Append('[').Append(i).Append(']').PadRight(2).Append(mat.Name)
-                    .Append(" ("u8).Append(shaderName).Append(')').End());
+                sw.Append('[').Append(i).Append(']').PadRight(2);
+                sw.Append(mat.Name).Append(' ', '(').Append(mat.BoundShader.Name).Append(')');
+                AppDraw.Text(sw.End());
             }
         }
 
@@ -141,26 +148,15 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
     private void DrawParticles(InspectParticleInstance particle)
     {
         var sw = TextBuffers.GetWriter();
+        sw.Append("Particle Emitter: "u8);
+        sw.Append(particle.EmitterName);
+        if (ImGui.CollapsingHeader(sw.End(), CollapseFlags)) return;
 
-        if (ImGui.CollapsingHeader(sw.Append("Particle Emitter: "u8).Append(particle.EmitterName).End(), CollapseFlags))
-        {
-            return;
-        }
-
+        ParticleInspector.Draw();
+        ImGui.Separator();
         _particleInstanceFields.Draw();
     }
 
-    private void OnNewInspector(InspectSceneObject inspector)
-    {
-        RestoreName(inspector.SceneObject);
-        _previousId = inspector.Id;
-        _title.OverWriter.Append(inspector.Kind.ToUtf8()).Append(" - ["u8).Append(inspector.Id).Append(']').End();
-    }
-
-    private void RestoreName(SceneObject sceneObject)
-    {
-        _nameInputStr.Set(sceneObject.Name);
-    }
 
     private void HandleRename(InspectSceneObject inspect)
     {
@@ -183,8 +179,9 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         if (data->EventFlag == ImGuiInputTextFlags.CallbackCharFilter)
         {
             var c = (char)data->EventChar;
-            if (char.IsAsciiDigit(c) || char.IsAsciiLetterOrDigit(c)) return 0;
-            if (ValidNoneAlphaNumericChars.AsSpan().Contains(c)) return 0;
+            if (char.IsAsciiDigit(c) || char.IsAsciiLetterOrDigit(c) || ValidNoneAlphaNumericChars.Contains(c))
+                return 0;
+
             return 1;
         }
 

@@ -59,11 +59,12 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
 
         var metrics = MetricSystem.Instance;
         //ImGui.GetIO().Framerate
-        _title.OverWriter.Append("Console"u8).PadRight(4)
-            .Append((byte)'[').Append(metrics.Metric.AvgMs, "F4").Append("ms"u8).Append((byte)']')
-            .PadRight(4)
-            .Append((byte)'[').Append(metrics.Metric.AllocMbPerSec, "F4").Append("MB/s"u8).Append((byte)']')
-            .End();
+        var sw = _title.OverWriter;
+        sw.Append("Console"u8).PadRight(4);
+        sw.Append((byte)'[').Append(metrics.Metric.AvgMs, "F4").Append('m', 's').Append((byte)']');
+        sw.PadRight(4);
+        sw.Append((byte)'[').Append(metrics.Metric.AllocMbPerSec, "F4").Append("MB/s"u8).Append((byte)']');
+        sw.End();
     }
 
 

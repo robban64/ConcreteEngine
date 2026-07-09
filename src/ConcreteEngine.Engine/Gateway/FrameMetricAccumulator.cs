@@ -22,7 +22,7 @@ public sealed class FrameMetricAccumulator(int windowSize)
         var frameTicks = endTick - _startTick;
 
         _accTicks += frameTicks;
-        _frameCount++;
+        ++_frameCount;
 
         _minTicks = long.Min(_minTicks, frameTicks);
         _maxTicks = long.Max(_maxTicks, frameTicks);

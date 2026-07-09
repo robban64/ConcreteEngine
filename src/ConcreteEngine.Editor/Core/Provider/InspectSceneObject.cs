@@ -30,12 +30,9 @@ internal sealed class InspectModelInstance
 {
     public readonly ModelInstance Instance;
 
-    // public ReadOnlySpan<Material> GetMaterials() => CollectionsMarshal.AsSpan(Instance.Materials);
-
     public InspectModelInstance(ModelInstance instance)
     {
         Instance = instance;
-        //InspectorFieldProvider.Instance.ModelInstanceFields.Bind(instance);
     }
 }
 
@@ -46,10 +43,8 @@ internal sealed class InspectParticleInstance
     public ParticleEmitter Emitter => _instance.Emitter;
     public string EmitterName => _instance.Emitter.Name;
 
-
     public InspectParticleInstance(ParticleInstance instance)
     {
         _instance = instance;
-        InspectorFieldProvider.Instance.ParticleInstanceFields.Bind(instance);
     }
 }

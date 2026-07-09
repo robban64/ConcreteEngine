@@ -23,14 +23,6 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
 
     private SceneObjectId _previousId = SceneObjectId.Empty;
 
-    /*
-    private readonly InspectModelInstanceFields _modelInstanceFields =
-        InspectorFieldProvider.Instance.ModelInstanceFields;
-*/
-    private readonly InspectParticleFields _particleInstanceFields =
-        InspectorFieldProvider.Instance.ParticleInstanceFields;
-
-
     private NativeString _title;
     private NativeString _nameInputStr;
 
@@ -153,8 +145,6 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         if (ImGui.CollapsingHeader(sw.End(), CollapseFlags)) return;
 
         ParticleInspector.Draw();
-        ImGui.Separator();
-        _particleInstanceFields.Draw();
     }
 
 

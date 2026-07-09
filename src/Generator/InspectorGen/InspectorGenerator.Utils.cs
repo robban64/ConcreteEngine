@@ -9,14 +9,13 @@ namespace Generator.InspectorGen;
 public sealed partial class InspectorGenerator
 {
 
-
     private static readonly Dictionary<string, string> DefaultInputMap = new()
     {
         { "Vector2", "Float2" },
         { "Vector3", "Float3" },
         { "Vector4", "Float4" },
-        { "Quaternion", "Float4" },
         { "Color4", "Float4" },
+        { "Quaternion", "Float4" },
         { "Size2D", "Int2" },
         { "Vector2I", "Int2" }
     };
@@ -26,8 +25,8 @@ public sealed partial class InspectorGenerator
     {
         string? typeName = null;
         string label = fieldName;
-        if (!attr.ConstructorArguments.IsEmpty && attr.ConstructorArguments[0].Value is string labelValue)
-            label = labelValue;
+        if (!attr.ConstructorArguments.IsEmpty && attr.ConstructorArguments[0].Value is string displayName)
+            label = displayName;
 
 
         int startAt = 0;
@@ -40,7 +39,7 @@ public sealed partial class InspectorGenerator
             var v = value.Value;
             switch (key)
             {
-                case "Converter" when v is INamedTypeSymbol converter: typeName = converter.Name; break;
+                case "Converter" when v is INamedTypeSymbol l: typeName = l.Name; break;
                 case "Min" when v is float l: min = l; break;
                 case "Max" when v is float l: max = l; break;
                 case "Speed" when v is float l: speed = l; break;

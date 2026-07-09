@@ -20,8 +20,6 @@ internal sealed class InspectorFieldProvider
     private void Allocate()
     {
         var allocator = TextBuffers.PersistentArena;
-        //ModelInstanceFields.Allocate(allocator);
-        ParticleInstanceFields.Allocate(allocator);
         MaterialFields.Allocate(allocator);
         TextureFields.Allocate(allocator);
         LightningFields.Allocate(allocator);
@@ -30,8 +28,6 @@ internal sealed class InspectorFieldProvider
 
     private InspectorFieldProvider() { }
 
-    //public readonly InspectModelInstanceFields ModelInstanceFields = new();
-    public readonly InspectParticleFields ParticleInstanceFields = new();
 
     public readonly InspectMaterialFields MaterialFields = new();
     public readonly InspectTextureFields TextureFields = new();

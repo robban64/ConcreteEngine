@@ -37,8 +37,18 @@ public sealed class SceneTransform(SceneObject sceneObject)
             sceneObject.MarkDirty(SceneDirtyFlags.Transform);
         }
     }
-
+    
     [InputNumber(Format = "%.3f")]
+    public Vector3 EulerRotation
+    {
+        get => RotationMath.QuaternionToEulerDegrees(in _transform.Rotation);
+        set
+        {
+            _transform.Rotation = RotationMath.EulerDegreesToQuaternion(value);
+            sceneObject.MarkDirty(SceneDirtyFlags.Transform);
+        }
+    }
+
     public Quaternion Rotation
     {
         get => _transform.Rotation;

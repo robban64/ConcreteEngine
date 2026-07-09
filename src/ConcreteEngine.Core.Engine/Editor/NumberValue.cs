@@ -88,14 +88,19 @@ public struct Float4(float x, float y, float z, float w = 0f) : IFloatValue
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Float4(in Vector4 v) => new(v.X, v.Y, v.Z, v.W);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Float4(in Color4 v) => new(v.R, v.G, v.B, v.A);
-    
+    public static implicit operator Float4(in Quaternion v) => new(v.X, v.Y, v.Z, v.W);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static explicit operator Color4(in Float4 v) => new(v.X, v.Y, v.Z, v.W);
+    public static implicit operator Float4(in Color4 v) => new(v.R, v.G, v.B, v.A);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Vector4(in Float4 v) => new(v.X, v.Y, v.Z, v.W);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Vector3(in Float4 v) => new(v.X, v.Y, v.Z);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator Quaternion(in Float4 v) => new(v.X, v.Y, v.Z, v.W);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static explicit operator Color4(in Float4 v) => new(v.X, v.Y, v.Z, v.W);
+
 
     public static int Components => 4;
 }

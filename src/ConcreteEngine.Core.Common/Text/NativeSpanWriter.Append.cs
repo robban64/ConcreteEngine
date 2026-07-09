@@ -12,7 +12,7 @@ public unsafe ref partial struct NativeSpanWriter
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter Append(byte* value)
     {
-        if (value == null || *value == 0) return ref this;
+        if (value == null) return ref this;
         var src = MemoryMarshal.CreateReadOnlySpanFromNullTerminated(value);
         if (Validate(src.Length))
             Unsafe.CopyBlockUnaligned(ref Buffer[_cursor], ref MemoryMarshal.GetReference(src), (uint)src.Length);
@@ -50,11 +50,9 @@ public unsafe ref partial struct NativeSpanWriter
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter Append(byte value)
     {
-        var cursor = _cursor;
-        Debug.Assert(cursor + 1 < Capacity);
-        Buffer[cursor] = value;
-        _cursor = cursor + 1;
-
+        Debug.Assert(_cursor + 1 < Capacity);
+        Buffer[_cursor] = value;
+        _cursor += 1;
         return ref this;
     }
 
@@ -69,10 +67,10 @@ public unsafe ref partial struct NativeSpanWriter
     public ref NativeSpanWriter Append(char value1, char value2)
     {
         var cursor = _cursor;
-        Debug.Assert(cursor + 4 < Capacity);
         cursor += UtfText.FormatChar(ref Buffer[cursor], value1);
         cursor += UtfText.FormatChar(ref Buffer[cursor], value2);
         _cursor = cursor;
+        Debug.Assert(_cursor < Capacity);
         return ref this;
     }
 

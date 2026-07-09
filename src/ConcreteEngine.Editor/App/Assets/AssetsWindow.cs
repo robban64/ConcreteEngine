@@ -250,7 +250,10 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         {
             var node = nodes[i];
             var previewName = node.PreviewName;
-            var text = sw.AppendIcon(IconNames.Folder).PadRight(2).Append((byte*)&previewName).AppendImGuiId(i).End();
+            sw.AppendIcon(IconNames.Folder).PadRight(2);
+            sw.Append((byte*)&previewName);
+            sw.AppendImGuiId(i);
+            var text = sw.End();
             
             if (ImGui.Selectable(text, false, 0, size))
                 _assetBrowser.GoToChild(node.GetFolderName());
@@ -289,7 +292,6 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             var fileId = fileIds[gridIndex];
 
             var startPos = ImGui.GetCursorScreenPos(); // top left
-
             if (ImGui.Selectable(sw.AppendImGuiId(fileId).End(), selectedFileId == fileId, 0, ItemSize))
                 OnListItemClick(fileId);
 
@@ -322,7 +324,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
                 ImGui.Dummy(default);
             }
 
-            gridIndex++;
+            ++gridIndex;
         }
     }
 }

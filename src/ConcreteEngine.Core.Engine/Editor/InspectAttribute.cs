@@ -14,13 +14,14 @@ public sealed class InspectIncludeAttribute : Attribute
 }
 
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
-public abstract class InspectInputAttribute(string? label = null) : Attribute
+public abstract class InspectInputAttribute(string? displayName = null) : Attribute
 {
+    public string? DisplayName { get; } = displayName;
     public Type? Converter { get; init; }
 }
 
 
-public sealed class InputNumberAttribute(string? label = null) : InspectInputAttribute(label)
+public sealed class InputNumberAttribute(string? displayName = null) : InspectInputAttribute(displayName)
 {
     public InputStyle Style { get; init; } = InputStyle.Input;
     public string? Format { get; init; } = "%.2f";
@@ -29,13 +30,13 @@ public sealed class InputNumberAttribute(string? label = null) : InspectInputAtt
     public float Speed { get; init; } = 1;
 }
 
-public sealed class InputColorAttribute(string? label = null) : InspectInputAttribute(label)
+public sealed class InputColorAttribute(string? displayName = null) : InspectInputAttribute(displayName)
 {
     public bool HasAlpha { get; init; } = true;
 }
 
 
-public sealed class InputComboAttribute(string? label = null) : InspectInputAttribute(label)
+public sealed class InputComboAttribute(string? displayName = null) : InspectInputAttribute(displayName)
 {
     public string? Placeholder { get; init; }
     public int StartAt { get; init; }

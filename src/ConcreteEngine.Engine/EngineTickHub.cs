@@ -75,8 +75,8 @@ internal sealed class EngineTickHub
         var tickCounter = 0;
         while (tickCounter < MaxTicksPerFrame && _gameTicker.DequeueTick(out tickDt))
         {
-            tickCounter++;
-            EngineTime.GameTickId++;
+            ++tickCounter;
+            ++EngineTime.GameTickId;
             _engine.OnGameTick(tickDt);
         }
 
@@ -84,7 +84,7 @@ internal sealed class EngineTickHub
         while (tickCounter < MaxTicksPerFrame && _simulationTicker.DequeueTick(out tickDt))
         {
             _engine.OnSimulateTick(tickDt);
-            tickCounter++;
+            ++tickCounter;
         }
     }
 

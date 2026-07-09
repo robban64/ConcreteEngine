@@ -57,7 +57,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
     {
         var globals = _globals.Ptr;
         var length = ctx.Tracks.Length;
-        for (var i = 0; i < length; i++)
+        for (var i = 0; i < length; ++i)
         {
             var track = ctx.Tracks[i];
             if (track.IsEmpty)
@@ -78,7 +78,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
         var writer = _skinningBuffer.WriteSlot(length);
 
         MatrixMath.MultiplyAffine(ref writer[0], in ctx.GetInverseBindPose(0), in globals[0]);
-        for (var i = 1; i < length; i++)
+        for (var i = 1; i < length; ++i)
         {
             var p = ctx.GetParentIndices(i);
             MatrixMath.MultiplyAffine(ref globals[i], in globals[p]);

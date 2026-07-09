@@ -60,8 +60,8 @@ internal sealed record InspectModel(
 internal sealed record TargetMemberInfo
 {
     public required string Name { get; init; }
+    public required string TargetNs { get; init; }
     public required string TypeName { get; init; }
-    public required string TypeNamespace { get; init; }
     public required IInspectField? Field { get; init; }
 
     public string? NestedMemberName { get; init; }

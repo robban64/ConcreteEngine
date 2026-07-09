@@ -25,6 +25,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     public int Slot { get; private set; } = -1;
     
+    //ParticleEmitter.MinCount, ParticleEmitter.MaxCount
     public int ParticleCount { get; private set; }
     public int PendingParticleCount { get; private set; }
 
@@ -68,15 +69,12 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly BoundingBox LocalBounds() => ref _localBounds;
 
+    //TEMP
     [InspectInclude]
-    public ref EmitterParams EmitterParamsData => ref _emitterParams;
-    
+    public ref EmitterParams EmitterParams => ref _emitterParams;
     [InspectInclude]
-    public ref ParticleParams ParticleParamsData => ref _particleParams;
-
-    public StateScope<EmitterParams> EmitterParams => new(ref _emitterParams, ref _isDirty);
-
-    public StateScope<ParticleParams> ParticleParams => new(ref _particleParams, ref _isDirty);
+    public ref ParticleParams ParticleParams => ref _particleParams;
+    //
     
     internal void Attach(int slot, MeshId meshId)
     {

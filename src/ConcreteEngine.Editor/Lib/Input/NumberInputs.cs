@@ -15,19 +15,20 @@ internal sealed unsafe class FloatInput : InputField
     public float Speed, Min, Max;
     public String8Utf8 Format;
 
-    private readonly delegate*<byte*, float*, byte*, float, float, float, bool> _drawFunc;
+    private readonly delegate*<int,byte*, float*, byte*, float, float, float, bool> _drawFunc;
 
     public FloatInput(string label, int components, InputStyle inputStyle, float speed = 1f, float min = 0,
         float max = 0,
         string format = "%.2f") : base(label, InputKind.Float)
     {
-        if (components < 0 || components > 4) throw new ArgumentOutOfRangeException(nameof(components));
-        _drawFunc = InputFieldDrawer.BindFloat2(inputStyle, components);
+        if (components < 1 || components > 4) throw new ArgumentOutOfRangeException(nameof(components));
         Components = components;
         Format = format;
         Speed = speed;
         Min = min;
         Max = max;
+        
+        _drawFunc = InputFieldDrawer.BindFloat((InputFieldKind)inputStyle);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -35,12 +36,12 @@ internal sealed unsafe class FloatInput : InputField
     {
         var format = Format;
         var label = ApplyLabelLayout(TextBuffers.GetWriter());
-        var changed = _drawFunc(label, value, (byte*)&format, Speed, Min, Max);
+        var changed = _drawFunc(Components, label, value, (byte*)&format, Speed, Min, Max);
         return changed && ShouldTrigger();
     }
 }
 
-internal sealed unsafe class IntInput : InputField
+internal sealed unsafe class IntInput : InputField 
 {
     public int Components;
     public int Min, Max;
@@ -51,11 +52,13 @@ internal sealed unsafe class IntInput : InputField
     public IntInput(string label, int components, InputStyle inputStyle, float speed = 1f, int min = 0, int max = 0)
         : base(label, InputKind.Int)
     {
-        if (components < 0 || components > 4) throw new ArgumentOutOfRangeException(nameof(components));
-        _drawFunc = InputFieldDrawer.BindInt2(inputStyle, Components);
+        if (components < 1 || components > 4) throw new ArgumentOutOfRangeException(nameof(components));
+        Components = components;
         Speed = speed;
         Min = min;
         Max = max;
+        
+        _drawFunc = InputFieldDrawer.BindInt2(inputStyle, components);
     }
 
     public bool Draw(int* value)

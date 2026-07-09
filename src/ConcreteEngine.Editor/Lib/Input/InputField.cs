@@ -41,13 +41,12 @@ internal abstract class InputField
     protected NativeView<byte> ApplyLabelLayout(NativeSpanWriter sw)
     {
         if (LabelPlacement is LabelPlacement.Top or LabelPlacement.Inline)
-        {
             sw.Append(_label);
-            if (LabelPlacement is LabelPlacement.Top)
-            {
-                AppDraw.Text(sw.End());
-                ImGui.Separator();
-            }
+
+        if (LabelPlacement is LabelPlacement.Top)
+        {
+            AppDraw.Text(sw.End());
+            ImGui.Separator();
         }
 
         return sw.AppendImGuiId(DrawId).End();

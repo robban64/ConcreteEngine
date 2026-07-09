@@ -62,7 +62,7 @@ internal sealed class RenderDispatcher
             if (!coreEntities[i].Alive) continue;
             var visible = _frustum.IntersectsBox(in bounds[i]);
             visible &= coreEntities[i].ToggleVisibility(VisibilityFlags.Culled, visible) == 0;
-            if (visible) visibleCount++;
+            if (visible) ++visibleCount;
         }
 
         VisibleEntities = visibleCount;
@@ -137,15 +137,15 @@ internal sealed class RenderDispatcher
                     DrawCommandResolver.BoundingVolume, resolverSlot: slot);
 
             ref readonly var worldBounds = ref Ecs.RenderCore.GetWorldBounds(query.Entity);
-            ref var data = ref _commandBuffer.SubmitDraw();
+            ref var bufferDst = ref _commandBuffer.SubmitDraw();
             MatrixMath.CreateModelMatrix(
                 worldBounds.Center,
                 worldBounds.Extent,
                 Quaternion.Identity,
-                out data.Model
+                out bufferDst.Model
             );
-            data.Normal = Matrix3X4.Identity;
-            index++;
+            bufferDst.Normal = Matrix3X4.Identity;
+            ++index;
         }
     }
 }

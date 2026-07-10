@@ -1,12 +1,8 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Editor;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Inspection;
-using ConcreteEngine.Editor.Lib.Widgets;
 
 namespace ConcreteEngine.Editor.Core.Provider.Impl;
 

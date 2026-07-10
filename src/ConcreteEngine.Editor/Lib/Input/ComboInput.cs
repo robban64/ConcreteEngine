@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Text;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Text;
@@ -54,7 +53,7 @@ internal sealed unsafe class ComboInput : InputField
     
     public  bool Draw()
     {
-        var value = (int)Value;
+        var value = Value;
         if (_lastValue != value)
             OnChanged(value);
 

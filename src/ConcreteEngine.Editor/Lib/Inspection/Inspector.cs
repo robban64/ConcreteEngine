@@ -1,8 +1,3 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Engine.Editor;
-using ConcreteEngine.Editor.Lib.Widgets;
-
 namespace ConcreteEngine.Editor.Lib.Inspection;
 /*
 internal static class Inspector

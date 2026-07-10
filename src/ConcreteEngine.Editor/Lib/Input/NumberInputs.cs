@@ -1,86 +1,128 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Lib.Field;
-using ConcreteEngine.Editor.Lib.Inspection;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
 
-internal sealed unsafe class FloatInput : InputField
+internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IFloatValue
 {
-    public int Components;
     public float Speed, Min, Max;
+
     public String8Utf8 Format;
+    
+    private readonly InputDrawer _drawer;
 
-    private readonly delegate*<int,byte*, float*, byte*, float, float, float, bool> _drawFunc;
+    private readonly Func<T> _getter;
+    private readonly Action<T> _setter;
 
-    public FloatInput(string label, int components, InputStyle inputStyle, float speed = 1f, float min = 0,
+    public FloatInput(
+        string label,
+        InputStyle inputStyle,
+        Func<T> getter,
+        Action<T> setter,
+        float speed = 1f,
+        float min = 0,
         float max = 0,
         string format = "%.2f") : base(label, InputKind.Float)
     {
-        if (components < 1 || components > 4) throw new ArgumentOutOfRangeException(nameof(components));
-        Components = components;
+        _getter = getter;
+        _setter = setter;
         Format = format;
         Speed = speed;
         Min = min;
         Max = max;
-        
-        _drawFunc = InputFieldDrawer.BindFloat((InputFieldKind)inputStyle);
+
+        _drawer = InputDrawer.Bind(inputStyle);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Draw(float* value)
+    public bool Draw()
     {
+        var value = _getter();
         var format = Format;
         var label = ApplyLabelLayout(TextBuffers.GetWriter());
-        var changed = _drawFunc(Components, label, value, (byte*)&format, Speed, Min, Max);
-        return changed && ShouldTrigger();
+        var changed = _drawer.DrawFloat(T.Components, label, (float*)&value, (byte*)&format, Speed, Min, Max);
+        if (changed && ShouldTrigger())
+        {
+            _setter(value);
+            return true;
+        }
+        return false;
     }
 }
 
-internal sealed unsafe class IntInput : InputField 
+internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IIntValue
 {
-    public int Components;
     public int Min, Max;
     public float Speed;
 
-    private readonly delegate*< byte*, int*, float, int, int, bool> _drawFunc;
+    private readonly InputDrawer _drawer;
 
-    public IntInput(string label, int components, InputStyle inputStyle, float speed = 1f, int min = 0, int max = 0)
-        : base(label, InputKind.Int)
+    private readonly Func<T> _getter;
+    private readonly Action<T> _setter;
+
+    public IntInput(
+        string label,
+        InputStyle inputStyle,
+        Func<T> getter,
+        Action<T> setter,
+        float speed = 1f,
+        int min = 0,
+        int max = 0) : base(label, InputKind.Int)
     {
-        if (components < 1 || components > 4) throw new ArgumentOutOfRangeException(nameof(components));
-        Components = components;
+        _getter = getter;
+        _setter = setter;
         Speed = speed;
         Min = min;
         Max = max;
-        
-        _drawFunc = InputFieldDrawer.BindInt2(inputStyle, components);
+
+        _drawer = InputDrawer.Bind(inputStyle);
     }
 
-    public bool Draw(int* value)
+    public bool Draw()
     {
+        var value = _getter();
         var label = ApplyLabelLayout(TextBuffers.GetWriter());
-        var changed = _drawFunc(label, value, Speed, Min, Max);
-        return changed && ShouldTrigger();
+        var changed = _drawer.DrawInt(T.Components, label, (int*)&value, Speed, Min, Max);
+        if (changed && ShouldTrigger())
+        {
+            _setter(value);
+            return true;
+        }
+        return false;
     }
 }
 
-internal sealed unsafe class ColorInput(string label, bool hasAlpha = true) : InputField(label, InputKind.Color)
+internal sealed unsafe class ColorInput : InputField
 {
-    public bool HasAlpha = hasAlpha;
+    public bool HasAlpha;
 
-    public bool Draw(Color4* value)
+    private readonly Func<Color4> _getter;
+    private readonly Action<Color4> _setter;
+
+    public ColorInput(string label, Func<Color4> getter, Action<Color4> setter, bool hasAlpha = true) 
+        : base(label, InputKind.Color)
     {
+        _getter = getter;
+        _setter = setter;
+        HasAlpha = hasAlpha;
+    }
+
+    public bool Draw()
+    {
+        var value = _getter();
         var label = ApplyLabelLayout(TextBuffers.GetWriter());
-
         var changed = HasAlpha
-            ? ImGui.ColorEdit4(label, (float*)value)
-            : ImGui.ColorEdit3(label, (float*)value);
+            ? ImGui.ColorEdit4(label, &value.R)
+            : ImGui.ColorEdit3(label, &value.R);
 
-        return changed && ShouldTrigger();
+        if (changed && ShouldTrigger())
+        {
+            _setter(value);
+            return true;
+        }
+
+        return false;
     }
 }

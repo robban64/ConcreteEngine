@@ -7,6 +7,8 @@ namespace Generator;
 internal static class Extensions
 {
 
+    public static string ToFloatStr(this float v) => $"{v}f";
+
     public static bool IsPublicClassOrStruct(this INamedTypeSymbol sym)
         => sym.TypeKind is TypeKind.Class or TypeKind.Struct && sym.DeclaredAccessibility == Accessibility.Public;
 

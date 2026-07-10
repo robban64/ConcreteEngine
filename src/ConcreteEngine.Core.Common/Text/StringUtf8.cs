@@ -78,7 +78,7 @@ public unsafe struct String8Utf8
     public const int Capacity = 8;
     public const int TextLength = 7;
 
-    private fixed byte _value[Capacity];
+    public fixed byte _value[Capacity];
 
     public String8Utf8(ReadOnlySpan<byte> span)
     {

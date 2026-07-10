@@ -16,7 +16,8 @@ internal ref struct SourceBuilder
         _indent = 0;
         _sb = new StringBuilder(capacity);
     }
-    public SourceBuilder() : this(4096) {}
+
+    public SourceBuilder() : this(4096) { }
 
     public readonly StringBuilder Builder => _sb;
 
@@ -26,36 +27,63 @@ internal ref struct SourceBuilder
     [UnscopedRef]
     public readonly ref readonly SourceBuilder AppendLine(string line = "")
     {
-        if (line.Length > 0)
-            IndentLine(line);
-        
+        if (line.Length > 0) NewLine(line);
         _sb.AppendLine();
         return ref this;
     }
-    
+
     [UnscopedRef]
-    public readonly ref readonly SourceBuilder AppendLine(string s1, string s2, string? s3 = null, string? s4 = null)
+    public readonly ref readonly SourceBuilder AppendLine(params ReadOnlySpan<string> texts)
     {
-        for (var i = 0; i < _indent; i++) _sb.Append(IndentUnit);
-        _sb.Append(s1).Append(s2);
-        if (s3 != null) _sb.Append(s3);
-        if (s4 != null) _sb.Append(s4);
+        if (texts.Length > 1)
+        {
+            NewLine(texts[0]);
+            Append(texts.Slice(1));
+        }
+
+        _sb.AppendLine();
         return ref this;
     }
 
-    
     [UnscopedRef]
-    public readonly ref readonly SourceBuilder IndentLine(string line = "")
+    public readonly ref readonly SourceBuilder NewLine(string line = "")
     {
         for (var i = 0; i < _indent; i++) _sb.Append(IndentUnit);
         _sb.Append(line);
         return ref this;
     }
-    
+
     [UnscopedRef]
     public readonly ref readonly SourceBuilder EndLine(string line = "")
     {
         _sb.AppendLine(line);
+        return ref this;
+    }
+    
+    [UnscopedRef]
+    public readonly ref readonly SourceBuilder AppendIf(bool condition, params ReadOnlySpan<string> texts)
+    {
+        if (!condition) return ref this;
+        foreach (var it in texts) _sb.Append(it);
+        return ref this;
+    }
+
+    [UnscopedRef]
+    public readonly ref readonly SourceBuilder Append(params ReadOnlySpan<string> texts)
+    {
+        foreach (var it in texts) _sb.Append(it);
+        return ref this;
+    }
+
+    [UnscopedRef]
+    public readonly ref readonly SourceBuilder AppendJoin(string s, params ReadOnlySpan<string> texts)
+    {
+        for (var i = 0; i < texts.Length; i++)
+        {
+            _sb.Append(texts[i]);
+            if (i < texts.Length - 1) _sb.Append(s);
+        }
+
         return ref this;
     }
 
@@ -67,18 +95,17 @@ internal ref struct SourceBuilder
         return ref this;
     }
 
-    
     [UnscopedRef]
     public readonly ref readonly SourceBuilder Append(int v)
     {
         _sb.Append(v);
         return ref this;
     }
-    
+
     [UnscopedRef]
     public readonly ref readonly SourceBuilder Append(float v)
     {
-        _sb.Append(v);
+        _sb.Append(v.ToFloatStr());
         return ref this;
     }
 

@@ -68,9 +68,14 @@ public unsafe ref partial struct NativeSpanWriter
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter PadRight(int amount, byte value = 0x20)
     {
-        amount = int.Clamp(amount, 0, BytesLeft);
-        NativeMemory.Fill(Buffer + _cursor, (nuint)amount, value);
-        _cursor += amount;
+        var start = _cursor;
+        var end = start + int.Clamp(amount, 0, Capacity - start);
+        while (start < end)
+        {
+            Buffer[start] = value;
+            ++start;
+        }
+        _cursor = end;
         return ref this;
     }
 }

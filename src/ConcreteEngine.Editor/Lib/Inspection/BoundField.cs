@@ -1,8 +1,3 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Engine.Editor;
-using ConcreteEngine.Editor.Lib.Widgets;
-
 namespace ConcreteEngine.Editor.Lib.Inspection;
 /*
 internal abstract class BoundField(InputField field)

@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.App.Theme;
+using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Lib.Inspection;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;

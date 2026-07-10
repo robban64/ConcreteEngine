@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using Microsoft.CodeAnalysis;
 
 namespace Generator.InspectorGen;
@@ -57,13 +58,9 @@ internal sealed record InspectModel(
     public string? DisplayName { get; init; }
 }
 
-internal sealed record TargetMemberInfo
+internal sealed record TargetMemberInfo(string Name, string TargetNs, string TypeName, IInspectField? Field)
 {
-    public required string Name { get; init; }
-    public required string TargetNs { get; init; }
-    public required string TypeName { get; init; }
-    public required IInspectField? Field { get; init; }
-
+    public string? Segment { get; init; }
     public string? NestedMemberName { get; init; }
 }
 

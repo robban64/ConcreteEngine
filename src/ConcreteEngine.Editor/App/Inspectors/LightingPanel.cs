@@ -9,13 +9,10 @@ namespace ConcreteEngine.Editor.App.Inspectors;
 
 internal sealed class LightingPanel : EditorPanel
 {
-    private readonly InspectLightningFields _inspectFields = InspectorFieldProvider.Instance.LightningFields;
-
-    public override void OnEnter() => _inspectFields.Refresh();
 
     public LightingPanel(StateManager state) : base(InspectorId.Lighting, state)
     {
-        _inspectFields.ShadowSizeCombo.LabelPlacement = LabelPlacement.None;
+        //_inspectFields.ShadowSizeCombo.LabelPlacement = LabelPlacement.None;
     }
 
     public override void OnDraw()
@@ -26,19 +23,19 @@ internal sealed class LightingPanel : EditorPanel
 
         if (ImGui.BeginTabItem("Light"u8))
         {
-            _inspectFields.Draw(0, 2);
+            IlluminationSettingsInspector.Draw();
             ImGui.EndTabItem();
         }
 
         if (ImGui.BeginTabItem("Shadow"u8))
         {
-            _inspectFields.Draw(2, 5);
+            ShadowSettingsInspector.Draw();
             ImGui.EndTabItem();
         }
 
         if (ImGui.BeginTabItem("Fog"u8))
         {
-            _inspectFields.Draw(5);
+            EnvironmentSettingsInspector.Draw();
             ImGui.EndTabItem();
         }
 

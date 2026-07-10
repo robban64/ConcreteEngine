@@ -74,13 +74,12 @@ public static unsafe class VisualUniformProcessor
     [SkipLocalsInit]
     public static void UploadShadow(in UniformUploadContext ctx)
     {
-        var shadow = VisualManager.Shadow;
+        var proj = VisualManager.Shadow.Projection;
+        var vis = VisualManager.Shadow.Visuals;
+
+        var size = 1.0f / VisualManager.Shadow.ShadowMapSize;
+
         var t = CameraManager.LightTransforms;
-
-        ref readonly var proj = ref shadow.Projection.Value;
-        ref readonly var vis = ref shadow.Visuals.Value;
-
-        var size = 1.0f / shadow.ShadowMapSize;
 
         ShadowUniform data;
         data.LightViewProj = t.ViewMatrix * t.ProjectionMatrix;
@@ -107,23 +106,20 @@ public static unsafe class VisualUniformProcessor
     [SkipLocalsInit]
     private static void UploadFrameUniformRecord(in UniformUploadContext ctx)
     {
-        var visualManager = VisualManager;
-
-        ref readonly var fogHeight = ref visualManager.Environment.FogHeight.Value;
-        ref readonly var fogOptics = ref visualManager.Environment.FogOptics.Value;
-        ref readonly var ambient = ref visualManager.Illumination.Ambient.Value;
+        var fogHeight = VisualManager.Environment.FogHeight;
+        var fogOptics = VisualManager.Environment.FogOptics;
+        var ambient = VisualManager.Illumination.Ambient;
 
         float kExp2 = 1f / (fogHeight.Density * fogHeight.Density);
-        float kHeight = 1f / MathF.Max(x: fogHeight.HeightFalloff, y: 1e-6f);
+        float kHeight = 1f / MathF.Max(fogHeight.HeightFalloff, 1e-6f);
 
         FrameUniform data;
-        data.Ambient = new Vector4(value: ambient.Ambient, w: ambient.Exposure);
-        data.AmbientGround = new Vector4(value: ambient.AmbientGround, w: 0.0f);
+        data.Ambient = new Vector4(ambient.Ambient, ambient.Exposure);
+        data.AmbientGround = new Vector4(ambient.AmbientGround, 0.0f);
 
-        data.FogColor = new Vector4(value: fogOptics.Color, w: fogOptics.Scattering);
-        data.FogParams0 = new Vector4(x: kExp2, y: kHeight, z: fogHeight.BaseHeight, w: fogHeight.Strength);
-        data.FogParams1 = new Vector4(x: fogOptics.DistanceWeight, y: fogOptics.HeightWeight, z: fogHeight.MaxDistance,
-            w: 0.0f);
+        data.FogColor = new Vector4(VisualManager.Environment.FogColor, fogOptics.Scattering);
+        data.FogParams0 = new Vector4(kExp2, kHeight, fogHeight.BaseHeight, fogHeight.Strength);
+        data.FogParams1 = new Vector4(fogOptics.DistanceWeight, fogOptics.HeightWeight, fogHeight.MaxDistance, 0.0f);
 
         ctx.UploadUniform(&data);
     }
@@ -131,7 +127,7 @@ public static unsafe class VisualUniformProcessor
     [SkipLocalsInit]
     private static void UploadDirLight(in UniformUploadContext ctx)
     {
-        ref readonly var fogHeight = ref VisualManager.Illumination.DirectionalLight.Value;
+        var fogHeight = VisualManager.Illumination.DirectionalLight;
 
         DirectionalLightUniform data;
         data.Direction = fogHeight.Direction.AsVector4();
@@ -145,16 +141,14 @@ public static unsafe class VisualUniformProcessor
     private static void UploadPost(in UniformUploadContext ctx)
     {
         var post = VisualManager.PostEffect;
-        ref readonly var grade = ref post.Grade.Value;
-        ref readonly var wb = ref post.WhiteBalance.Value;
-        ref readonly var bloom = ref post.Bloom.Value;
-        ref readonly var fx = ref post.ImageFx.Value;
+        var bloom = post.Bloom;
+        var wb = post.WhiteBalance;
 
         PostFxUniform data;
-        data.Grade = new Vector4(grade.Exposure, grade.Saturation, grade.Contrast, grade.Warmth);
+        data.Grade = Unsafe.BitCast<PostGradeParams, Vector4>(post.Grade);
         data.WhiteBalance = new Vector4(wb.Tint, wb.Strength, 0f, 0f);
         data.Bloom = new Vector4(bloom.Intensity, bloom.Threshold, bloom.Radius, 0f);
-        data.Fx = new Vector4(fx.Vignette, fx.Grain, fx.Sharpen, fx.Rolloff);
+        data.Fx = Unsafe.BitCast<PostImageFxParams, Vector4>(post.ImageFx);
 
         ctx.UploadUniform(&data);
     }

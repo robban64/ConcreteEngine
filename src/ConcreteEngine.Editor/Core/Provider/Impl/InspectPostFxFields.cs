@@ -4,7 +4,7 @@ using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Inspection;
 
 namespace ConcreteEngine.Editor.Core.Provider.Impl;
-
+/*
 internal sealed class InspectPostFxFields : InspectorFields<VisualManager>
 {
     private static VisualManager Visuals => VisualManager.Instance;
@@ -85,4 +85,4 @@ internal sealed class InspectPostFxFields : InspectorFields<VisualManager>
     }
 
     public override void Bind(VisualManager target) { }
-}
+}*/

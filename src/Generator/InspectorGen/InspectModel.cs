@@ -58,10 +58,13 @@ internal sealed record InspectModel(
     public string? DisplayName { get; init; }
 }
 
-internal sealed record TargetMemberInfo(string Name, string TargetNs, string TypeName, IInspectField? Field)
+internal sealed record TargetMemberInfo(string Name, string TargetNs, string TypeName, MemberInfo Info)
 {
+    public IInspectField? Field { get; init; }
     public string? Segment { get; init; }
     public string? NestedMemberName { get; init; }
+    public MemberInfo? ParentInfo { get; init; }
+    
 }
 
 internal interface IInspectField : IEquatable<IInspectField>

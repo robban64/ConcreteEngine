@@ -6,7 +6,7 @@ using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Inspection;
 
 namespace ConcreteEngine.Editor.Core.Provider.Impl;
-
+/*
 internal sealed class InspectLightningFields : InspectorFields<VisualManager>
 {
     private static VisualManager Visuals => VisualManager.Instance;
@@ -50,10 +50,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
             static value => Visuals.Illumination.DirectionalLight.Mutate.Intensity = (float)value
         )
         {
-            Format = "%.3f",
-            Speed = 0.01f,
-            Min = 0f,
-            Max = 10f,
+            Format = "%.3f", Speed = 0.01f, Min = 0f, Max = 10f,
             LabelPlacement = LabelPlacement.Inline
         });
         Specular = Register(new FloatField<Float1>("Specular", InputFieldKind.Drag,
@@ -81,12 +78,10 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
             static () => Visuals.Illumination.Ambient.Value.Exposure,
             static value => Visuals.Illumination.Ambient.Mutate.Exposure = (float)value)
         {
-            Format = "%.3f",
+            Format = "%.3f", Speed = 0.01f, Min = 0f, Max = 2f,
+            LabelPlacement = LabelPlacement.Inline,
             Delay = FieldFetchDelay.High,
-            Speed = 0.01f,
-            Min = 0f,
-            Max = 2f,
-            LabelPlacement = LabelPlacement.Inline
+
         });
 
         // Shadow
@@ -160,7 +155,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
                 })
             .WithProperties(FieldFetchDelay.VeryHigh)
             .WithSlider("Density", 100, 1500, "%.5f").WithSlider("BaseHeight", -1000f, 1000f, "%.3f")
-            .WithSlider("Falloff", 0.001f, 10000.0f, "%.3f").WithDrag("Influence", 0.001f, 0f, 1f, "%.3f"));
+            .WithSlider("Falloff", 0.001f, 10000.0f, "%.3f").WithDrag("Weight", 0.001f, 0f, 1f, "%.3f"));
 
         FogOpticsFields = Register(new FloatCompositeField<Float3>(
                 "Fog Optics",
@@ -195,4 +190,4 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
     }
 
     public override void Bind(VisualManager target) { }
-}
+}*/

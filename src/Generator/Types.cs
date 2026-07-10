@@ -2,24 +2,57 @@ using Microsoft.CodeAnalysis;
 
 namespace Generator;
 
+internal readonly record struct MemberInfo(bool IsField, bool IsProperty, bool IsReadOnly, MemberTypeInfo TypeInfo)
+{
+    public bool ReturnRef { get; init; }
+    
+    public bool IsClassProperty() => IsProperty && TypeInfo.IsClass();
+    public bool IsStructProperty() => IsProperty && !ReturnRef && TypeInfo.IsStruct();
+    public bool IsRefProperty() => IsProperty && ReturnRef;
 
-internal record struct MemberTypeInfo(
+    public static MemberInfo Extract(ISymbol sym)
+    {
+        if (sym is IPropertySymbol prop)
+        {
+            return new MemberInfo(false, true, prop.IsReadOnly, MemberTypeInfo.Extract(prop.Type))
+            {
+                ReturnRef = prop.ReturnsByRef || prop.ReturnsByRefReadonly
+            };
+        }
+
+        if (sym is IFieldSymbol field)
+        {
+            return new MemberInfo(true, false, field.IsReadOnly, MemberTypeInfo.Extract(field.Type));
+        }
+
+        throw new ArgumentException(nameof(sym));
+    }
+}
+
+internal readonly record struct MemberTypeInfo(
     bool IsValueType,
     bool IsUnmanaged,
     bool IsReadOnly,
+    bool IsRef,
     TypeKind TypeKind,
-    SpecialType SpecialType)
+    SpecialType SpecialType,
+    SymbolKind Symbol)
 {
-    private static MemberTypeInfo ExtractMemberTypeInfo(ISymbol sym)
+    public bool IsStruct() => TypeKind == TypeKind.Struct;
+    public bool IsClass() => TypeKind == TypeKind.Class;
+
+    public bool IsBlitStruct => IsUnmanaged && TypeKind == TypeKind.Struct;
+
+    public static MemberTypeInfo Extract(ITypeSymbol type)
     {
-        var type = sym.GetFieldOrPropertyType();
-        
         return new MemberTypeInfo(
             type.IsValueType,
             type.IsUnmanagedType,
             type.IsReadOnly,
+            type.IsRefLikeType,
             type.TypeKind,
-            type.SpecialType
+            type.SpecialType,
+            type.Kind
         );
     }
 }

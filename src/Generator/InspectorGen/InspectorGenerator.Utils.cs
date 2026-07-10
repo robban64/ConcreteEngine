@@ -20,6 +20,10 @@ public sealed partial class InspectorGenerator
         { "Vector2I", "Int2" }
     };
 
+    private static bool MemberFilter(ISymbol sym) =>
+        sym is IPropertySymbol or IFieldSymbol && sym.DeclaredAccessibility == Accessibility.Public &&
+        !sym.IsImplicitlyDeclared && sym.GetAttributes().Length > 0;
+    
 
     private static IInspectField? MakeField(string fieldName, AttributeData attr, ITypeSymbol type)
     {

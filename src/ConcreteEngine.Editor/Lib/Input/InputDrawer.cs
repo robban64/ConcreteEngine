@@ -5,14 +5,16 @@ namespace ConcreteEngine.Editor.Lib.Widgets;
 
 internal abstract class InputDrawer
 {
-    public abstract unsafe bool DrawFloat(int c, byte* label, float* value, byte* format, float speed, float min, float max);
+    public abstract unsafe bool DrawFloat(int c, byte* label, float* value, byte* format, float speed, float min,
+        float max);
+
     public abstract unsafe bool DrawInt(int c, byte* label, int* value, float speed, int min, int max);
-    
+
     public static InputDrawer Bind(InputStyle style) => style switch
     {
-        InputStyle.Input  => DefaultInputDrawer.Instance,
+        InputStyle.Input => DefaultInputDrawer.Instance,
         InputStyle.Slider => SliderDrawer.Instance,
-        InputStyle.Drag   => DragDrawer.Instance,
+        InputStyle.Drag => DragDrawer.Instance,
         _ => throw new ArgumentOutOfRangeException(nameof(style), style, null)
     };
 }
@@ -21,17 +23,19 @@ internal sealed unsafe class DefaultInputDrawer : InputDrawer
 {
     public static readonly DefaultInputDrawer Instance = new();
     private DefaultInputDrawer() { }
+
     public override bool DrawFloat(int c, byte* label, float* value, byte* format, float speed, float min, float max)
     {
         return c switch
         {
-            1 => ImGui.InputFloat(label, value,  format),
+            1 => ImGui.InputFloat(label, value, format),
             2 => ImGui.InputFloat2(label, value, format),
             3 => ImGui.InputFloat3(label, value, format),
             4 => ImGui.InputFloat4(label, value, format),
             _ => false
         };
     }
+
     public override bool DrawInt(int c, byte* label, int* value, float speed, int min, int max)
     {
         return c switch
@@ -43,13 +47,13 @@ internal sealed unsafe class DefaultInputDrawer : InputDrawer
             _ => false
         };
     }
-
 }
 
-internal sealed unsafe  class SliderDrawer : InputDrawer
+internal sealed unsafe class SliderDrawer : InputDrawer
 {
     public static readonly SliderDrawer Instance = new();
     private SliderDrawer() { }
+
     public override bool DrawFloat(int c, byte* label, float* value, byte* format, float speed, float min, float max)
     {
         return c switch
@@ -61,6 +65,7 @@ internal sealed unsafe  class SliderDrawer : InputDrawer
             _ => false
         };
     }
+
     public override bool DrawInt(int c, byte* label, int* value, float speed, int min, int max)
     {
         return c switch
@@ -72,13 +77,13 @@ internal sealed unsafe  class SliderDrawer : InputDrawer
             _ => false
         };
     }
-
 }
 
 internal sealed unsafe class DragDrawer : InputDrawer
 {
     public static readonly DragDrawer Instance = new();
     private DragDrawer() { }
+
     public override bool DrawFloat(int c, byte* label, float* value, byte* format, float speed, float min, float max)
     {
         return c switch
@@ -90,6 +95,7 @@ internal sealed unsafe class DragDrawer : InputDrawer
             _ => false
         };
     }
+
     public override bool DrawInt(int c, byte* label, int* value, float speed, int min, int max)
     {
         return c switch

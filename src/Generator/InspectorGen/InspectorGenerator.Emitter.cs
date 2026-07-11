@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace Generator.InspectorGen;
 
 file static class Helpers
@@ -12,19 +14,15 @@ file static class Helpers
         sb.AppendLine("using ConcreteEngine.Editor.Lib.Widgets;").AppendLine();
 
         sb.AppendLine($"namespace {ns};").AppendLine();
-
     }
-
-
 }
 
 public sealed partial class InspectorGenerator
 {
-
     private static string Emit(InspectModel model)
     {
         var sb = new SourceBuilder();
-        Helpers.GenerateHeaders(sb,model.InspectorNs);
+        Helpers.GenerateHeaders(sb, model.InspectorNs);
 
         sb.AppendLine($"internal static partial class {model.InspectorName}");
         sb.OpenBrace();
@@ -32,7 +30,7 @@ public sealed partial class InspectorGenerator
         // Members
         foreach (var m in model.Members)
         {
-            if (m.Field is null) continue;
+            if (m.Input is null) continue;
             EmitInputField(m, sb);
             sb.AppendLine();
         }
@@ -42,7 +40,7 @@ public sealed partial class InspectorGenerator
         sb.OpenBrace();
         foreach (var m in model.Members)
         {
-            if (m.Field is null) continue;
+            if (m.Input is null) continue;
             sb.AppendLine(m.Name, ".Draw();");
         }
 
@@ -54,85 +52,54 @@ public sealed partial class InspectorGenerator
 
     private static void EmitInputField(TargetMemberInfo member, SourceBuilder sb)
     {
-        var fullPath = member.NestedMemberName is null
+        var fullPath = member.IncludeName is null
             ? $"Target.{member.Name}"
-            : $"Target.{member.NestedMemberName}.{member.Name}";
+            : $"Target.{member.IncludeName}.{member.Name}";
 
-        var targetPath = member.NestedMemberName is null
+        var targetPath = member.IncludeName is null
             ? null
-            : $"Target.{member.NestedMemberName}";
+            : $"Target.{member.IncludeName}";
 
-        switch (member.Field)
+        sb.NewLine("private static readonly ");
+        switch (member.Input)
         {
-            case ColorField colorField:
-                sb.NewLine("private static readonly ");
-                EmitColorInput(colorField, member, sb, fullPath, targetPath);
-                return;
-            case InputField input:
-                sb.NewLine("private static readonly ");
-                EmitInput(input, member, sb, fullPath, targetPath);
-                break;
+            case NumberInput input: EmitInput(input, member, sb, fullPath, targetPath); break;
+            case ColorInput color: EmitColor(color, member, sb, fullPath, targetPath); break;
+            case ComboInput combo: EmitCombo(combo, member, sb, fullPath, targetPath); break;
+            default: throw new UnreachableException(nameof(member.Input));
         }
     }
 
-    private static void EmitColorInput(ColorField colorField,TargetMemberInfo member, SourceBuilder sb, string fullPath, string? targetPath)
+    private static void EmitInput(NumberInput input, TargetMemberInfo member, SourceBuilder sb, string fullPath,
+        string? targetPath)
     {
-        
-        string castTo = "", castFrom = "", typeName = member.TypeName;
-        if (typeName.EndsWith("Vector3") || typeName.EndsWith("Vector4") || typeName.EndsWith("ColorRgba"))
-        {
-            castTo = $"({member.TypeName})";
-            castFrom = "(Color4)";
-        }
+        // input.GetComponents() for Vector3 = 3.
+        var isFloat = input.IsFloat();
 
-        sb.Append("ColorInput ", colorField.Name, " = new(").EndLine();
-        sb.PushIndent();
-        
-        sb.AppendLine(Symbols.FormatLiteral(colorField.Label, true), ", ");
-        
-        // Getter
-        sb.AppendLine($"static () => {castFrom}{fullPath}, ");
-        
-        // Setter
-        if (member.ParentInfo is {} p && p.IsStructProperty() && targetPath is not null)
-            sb.AppendLine($"static v => {targetPath} = {targetPath} with {{ {member.Name} = {castTo}v }}, ");
-        else
-            sb.AppendLine($"static v => {fullPath} = {castTo}v, ");
-
-        sb.AppendLine(Symbols.FormatPrimitive(colorField.HasAlpha, false, false));
-        sb.PopIndent();
-        sb.AppendLine(");");
-
-    }
-    
-    private static void EmitInput(InputField input,TargetMemberInfo member, SourceBuilder sb, string fullPath, string? targetPath)
-    {
-        //var comp = (int)char.GetNumericValue(field.ValueType[^1]);
         var inputStyle = $"{nameof(InputStyle)}.{input.InputStyle.ToString()}";
-        
-        var inputClass = input.IsFloat ? "FloatInput" : "IntInput";
-        sb.Append(inputClass, $"<{input.ValueType}> ", input.Name, " = new(");
-        sb.EndLine();
+        var resultType = isFloat ? $"FloatInput<{input.ValueType}>" : $"IntInput<{input.ValueType}>";
 
+        sb.Append(resultType, " ", input.Name, " = new(").EndLine();
         sb.PushIndent();
+
         sb.AppendLine(Symbols.FormatLiteral(input.Label, true), ", ").AppendLine(inputStyle, ", ");
-        
+
         // Getter
         sb.AppendLine($"static () => Unsafe.BitCast<{member.TypeName}, {input.ValueType}>({fullPath}), ");
 
         // Setter
         var bitCastV = $"Unsafe.BitCast<{input.ValueType}, {member.TypeName}>(v)";
-        if (member.ParentInfo is {} parent && parent.IsStructProperty() && targetPath is not null)
+        if (member.ParentInfo is { } parent && parent.IsStructProperty() && targetPath is not null)
             sb.AppendLine($"static v => {targetPath} = {targetPath} with {{ {member.Name} = {bitCastV} }}, ");
         else
             sb.AppendLine($"static v => {fullPath} = {bitCastV}, ");
-        
+
         //
         sb.NewLine();
-        if (input.IsFloat)
+        if (isFloat)
         {
             sb.Append(input.Speed).Append(", ").Append(input.Min).Append(", ").Append(input.Max);
-            if (input.Format is not null) sb.Append(", ").Append(input.Format);
+            if (!string.IsNullOrEmpty(input.Format)) sb.Append(", ").Append(input.Format);
         }
         else
         {
@@ -143,6 +110,64 @@ public sealed partial class InspectorGenerator
 
         sb.PopIndent();
         sb.AppendLine(");");
+    }
 
+    private static void EmitColor(ColorInput colorInput, TargetMemberInfo member, SourceBuilder sb, string fullPath,
+        string? targetPath)
+    {
+        string castTo = "", castFrom = "", typeName = member.TypeName;
+        if (typeName.EndsWith("Vector3") || typeName.EndsWith("Vector4") || typeName.EndsWith("ColorRgba"))
+        {
+            castTo = $"({member.TypeName})";
+            castFrom = "(Color4)";
+        }
+
+        sb.Append("ColorInput ", colorInput.Name, " = new(").EndLine();
+        sb.PushIndent();
+
+        sb.AppendLine(Symbols.FormatLiteral(colorInput.Label, true), ", ");
+
+        // Getter
+        sb.AppendLine($"static () => {castFrom}{fullPath}, ");
+
+        // Setter
+        if (member.ParentInfo is { } p && p.IsStructProperty() && targetPath is not null)
+            sb.AppendLine($"static v => {targetPath} = {targetPath} with {{ {member.Name} = {castTo}v }}, ");
+        else
+            sb.AppendLine($"static v => {fullPath} = {castTo}v, ");
+
+        sb.AppendLine(Symbols.FormatPrimitive(colorInput.HasAlpha, false, false));
+        sb.PopIndent();
+        sb.AppendLine(");");
+    }
+
+    private static void EmitCombo(ComboInput input, TargetMemberInfo member, SourceBuilder sb, string fullPath,
+        string? targetPath)
+    {
+        string castTo = "", castFrom = "";
+        if (member.TypeName != "int")
+        {
+            castTo = $"({member.TypeName})";
+            castFrom = "(int)";
+        }
+
+        sb.Append("ComboInput ", input.Name, " = new(").EndLine();
+        sb.PushIndent();
+
+        sb.AppendLine(Symbols.FormatLiteral(input.Label, true), ", ");
+        sb.AppendLine(input.Values, ", ");
+        sb.AppendLine(input.Names, ", ");
+
+        // Getter
+        sb.AppendLine($"static () => {castFrom}{fullPath}, ");
+
+        // Setter
+        if (member.ParentInfo is { } p && p.IsStructProperty() && targetPath is not null)
+            sb.AppendLine($"static v => {targetPath} = {targetPath} with {{ {member.Name} = {castTo}v }}");
+        else
+            sb.AppendLine($"static v => {fullPath} = {castTo}v");
+
+        sb.PopIndent();
+        sb.AppendLine(");");
     }
 }

@@ -1,12 +1,12 @@
+using System.Collections.Immutable;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Generator;
 
-
 internal static class Extensions
 {
-
     public static string ToFloatStr(this float v) => $"{v}f";
 
     public static bool IsPublicClassOrStruct(this INamedTypeSymbol sym)
@@ -18,8 +18,12 @@ internal static class Extensions
         IPropertySymbol property => property.Type,
         _ => throw new UnreachableException()
     };
-    
-  
+
+    public static string ToCollectionString(this ImmutableArray<TypedConstant> values)
+    {
+        return $"[{string.Join(", ", values.Select(v => v.ToCSharpString()))}]";
+    }
+
 
     public static bool TryGetConst<T>(this ISymbol sym, out T? value)
     {
@@ -28,8 +32,8 @@ internal static class Extensions
             value = v;
             return true;
         }
+
         value = default;
         return false;
     }
-
 }

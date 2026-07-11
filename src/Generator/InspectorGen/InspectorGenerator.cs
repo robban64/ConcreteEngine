@@ -53,6 +53,7 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
         }
 
         var members = GenerateMemberFor(targetSym);
+        
         return new InspectModel(
             InspectorName: inspectorSym.Name,
             InspectorNs: inspectorSym.ContainingNamespace.ToDisplayString(),
@@ -64,7 +65,7 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
 
     private static EquatableArray<TargetMemberInfo> GenerateMemberFor(INamedTypeSymbol targetSym)
     {
-        List<TargetMemberInfo> list = new(4);
+        var list = new List<TargetMemberInfo>(8);
 
         var members = targetSym.GetMembers().Where(MemberFilter);
         foreach (var member in members)
@@ -102,21 +103,33 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
             var inputAttr = sym.GetAttributes().FirstOrDefault(static x =>
                 x.AttributeClass?.Name is InputNumberAttrib or InputColorAttrib or InputComboAttrib);
 
-            if (inputAttr == null) return null;
+            if (inputAttr == null || inputAttr.AttributeClass is null) return null;
 
             var typeSym = sym.GetFieldOrPropertyType();
+
+            var label = sym.Name;
+            var ctor = inputAttr.ConstructorArguments;
+            if (ctor.Length > 0 && ctor[0].Value is string displayName)
+                label = displayName;
+
+            InputField? inputField = inputAttr.AttributeClass.Name switch
+            {
+                InputNumberAttrib => MakeInputField(sym.Name, label, inputAttr, typeSym),
+                InputColorAttrib => MakeColorField(sym.Name, label, inputAttr, typeSym),
+                InputComboAttrib => MakeComboField(sym.Name, label, inputAttr, typeSym),
+                _ => throw new UnreachableException()
+            };
+            if (inputField is null) return null;
+
             var ns = sym.ContainingNamespace.ToDisplayString();
             var info = MemberInfo.Extract(sym);
             return new TargetMemberInfo(sym.Name, ns, typeSym.ToDisplayString(), info)
             {
                 //Segment = parentTypeSym?.Name,
-                Field = MakeField(sym.Name, inputAttr, typeSym),
-                NestedMemberName = nestedAccessPath,
-                ParentInfo = parentInfo
+                Input = inputField, IncludeName = nestedAccessPath, ParentInfo = parentInfo
             };
         }
     }
-
 }
 
 /*

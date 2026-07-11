@@ -35,6 +35,11 @@ internal static class EquatableArray
     {
         return new(array.ToImmutableArray());
     }
+    public static EquatableArray<T> ToEquatableArray<T>(this T[] array)
+        where T : IEquatable<T>
+    {
+        return new(array.ToImmutableArray());
+    }
 
 }
 

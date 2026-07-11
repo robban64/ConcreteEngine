@@ -10,7 +10,7 @@ internal abstract class InputDrawer
 
     public abstract unsafe bool DrawInt(int c, byte* label, int* value, float speed, int min, int max);
 
-    public static InputDrawer Bind(InputStyle style) => style switch
+    public static InputDrawer Get(InputStyle style) => style switch
     {
         InputStyle.Input => DefaultInputDrawer.Instance,
         InputStyle.Slider => SliderDrawer.Instance,

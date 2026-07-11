@@ -10,7 +10,6 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
 
-
 public enum InputTrigger : byte
 {
     OnChange,
@@ -18,11 +17,9 @@ public enum InputTrigger : byte
     AfterChangeDeactive
 }
 
-
-
 internal abstract class InputField
 {
-    private static int _currentId = 1;
+    private static int _currentId;
 
     private readonly byte[] _label;
 
@@ -33,7 +30,7 @@ internal abstract class InputField
 
     protected InputField(string label, InputKind kind)
     {
-        DrawId = _currentId++;
+        DrawId = ++_currentId;
         Kind = kind;
         _label = label.ToUtf8();
     }
@@ -41,13 +38,14 @@ internal abstract class InputField
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NativeView<byte> ApplyLabelLayout(NativeSpanWriter sw)
     {
-        if (LabelPlacement is LabelPlacement.Top or LabelPlacement.Inline)
-            sw.Append(_label);
-
         if (LabelPlacement is LabelPlacement.Top)
         {
-            AppDraw.Text(sw.End());
+            AppDraw.Text(sw.Write(_label));
             ImGui.Separator();
+        }
+        else if (LabelPlacement is LabelPlacement.Inline)
+        {
+            sw.Append(_label);
         }
 
         return sw.AppendImGuiId(DrawId).End();

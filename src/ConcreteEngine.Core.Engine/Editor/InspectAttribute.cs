@@ -36,8 +36,12 @@ public sealed class InputColorAttribute(string? displayName = null) : InspectInp
 }
 
 
-public sealed class InputComboAttribute(string? displayName = null) : InspectInputAttribute(displayName)
+public sealed class InputComboAttribute(string? displayName = null, int[]? values = null, string[]? names = null) : InspectInputAttribute(displayName)
 {
+    public string[]? Names { get; } = names;
+    public int[]? Values { get; } = values;
+
     public string? Placeholder { get; init; }
-    public int StartAt { get; init; }
+    public int StartAt { get; init; } = 0;
+
 }

@@ -8,18 +8,19 @@ namespace ConcreteEngine.Editor.Lib.Widgets;
 
 internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IFloatValue
 {
+    public readonly InputStyle Style;
+    
     public float Speed, Min, Max;
 
     public String8Utf8 Format;
-    
-    private readonly InputDrawer _drawer;
 
+    private readonly InputDrawer _drawer;
     private readonly Func<T> _getter;
     private readonly Action<T> _setter;
 
     public FloatInput(
         string label,
-        InputStyle inputStyle,
+        InputStyle style,
         Func<T> getter,
         Action<T> setter,
         float speed = 1f,
@@ -27,14 +28,14 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IFl
         float max = 0,
         string format = "%.2f") : base(label, InputKind.Float)
     {
+        Style = style;
+        _drawer = InputDrawer.Get(style);
         _getter = getter;
         _setter = setter;
         Format = format;
         Speed = speed;
         Min = min;
         Max = max;
-
-        _drawer = InputDrawer.Bind(inputStyle);
     }
 
     public bool Draw()
@@ -54,6 +55,8 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IFl
 
 internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IIntValue
 {
+    public readonly InputStyle Style;
+    
     public int Min, Max;
     public float Speed;
 
@@ -64,20 +67,21 @@ internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IIntV
 
     public IntInput(
         string label,
-        InputStyle inputStyle,
+        InputStyle style,
         Func<T> getter,
         Action<T> setter,
         float speed = 1f,
         int min = 0,
         int max = 0) : base(label, InputKind.Int)
     {
+        Style = style;
+        _drawer = InputDrawer.Get(style);
         _getter = getter;
         _setter = setter;
         Speed = speed;
         Min = min;
         Max = max;
 
-        _drawer = InputDrawer.Bind(inputStyle);
     }
 
     public bool Draw()

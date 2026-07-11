@@ -59,7 +59,7 @@ internal ref struct SourceBuilder
         _sb.AppendLine(line);
         return ref this;
     }
-    
+
     [UnscopedRef]
     public readonly ref readonly SourceBuilder AppendIf(bool condition, params ReadOnlySpan<string> texts)
     {
@@ -76,15 +76,20 @@ internal ref struct SourceBuilder
     }
 
     [UnscopedRef]
-    public readonly ref readonly SourceBuilder AppendJoin(string s, params ReadOnlySpan<string> texts)
+    public readonly ref readonly SourceBuilder AppendJoin<T>(string s, params ReadOnlySpan<T> values)
     {
-        for (var i = 0; i < texts.Length; i++)
+        for (var i = 0; i < values.Length; i++)
         {
-            _sb.Append(texts[i]);
-            if (i < texts.Length - 1) _sb.Append(s);
+            _sb.Append(values[i]);
+            if (i < values.Length - 1) _sb.Append(s);
         }
 
         return ref this;
+    }
+    [UnscopedRef]
+    public readonly ref readonly SourceBuilder AppendJoin<T>(string s, EquatableArray<T> array) where T : IEquatable<T>
+    {
+        return ref AppendJoin(s, array.AsSpan());
     }
 
 

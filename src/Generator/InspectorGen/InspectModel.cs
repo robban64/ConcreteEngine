@@ -40,14 +40,6 @@ internal enum InputStyle : byte
     Input, Slider, Drag,
 }
 
-internal record struct MemberModel
-{
-    public required string Name { get; init; }
-    public required string TypeName { get; init; }
-    public string? DisplayName { get; init; }
-    public MemberTypeInfo TypeInfo { get; init; }
-}
-
 internal sealed record InspectModel(
     string InspectorName,
     string InspectorNs,
@@ -60,55 +52,33 @@ internal sealed record InspectModel(
 
 internal sealed record TargetMemberInfo(string Name, string TargetNs, string TypeName, MemberInfo Info)
 {
-    public IInspectField? Field { get; init; }
+    public InputField? Input { get; init; }
     public string? Segment { get; init; }
-    public string? NestedMemberName { get; init; }
+    public string? IncludeName { get; init; }
     public MemberInfo? ParentInfo { get; init; }
-    
 }
 
-internal interface IInspectField : IEquatable<IInspectField>
+internal abstract record InputField(string Name, string Label);
+
+internal sealed record NumberInput(
+    string Name,
+    string Label,
+    string ValueType,
+    InputStyle InputStyle,
+    float Speed,
+    float Min,
+    float Max,
+    string? Format) : InputField(Name, Label)
 {
-    string Name { get; }
-    string Label { get; }
-    string ValueType { get; }
+    public bool IsFloat() => ValueType.StartsWith("Float");
+    public int GetComponents() => (int)char.GetNumericValue(ValueType[^1]);
 }
 
-internal sealed record InputField : IInspectField
-{
-    public required string Name { get; set; }
-    public required string Label { get; set; }
-    public required string ValueType { get; set; }
-    public required bool IsFloat { get; init; }
-    public string? Format { get; set; }
-    public InputStyle InputStyle { get; init; }
-
-    public float Min { get; set; }
-    public float Max { get; set; }
-    public float Speed { get; set; }
-
-    public bool Equals(IInspectField? other) => other is InputField field && Equals(field);
-}
-
-internal sealed record ColorField : IInspectField
-{
-    public string ValueType => "Float4";
-
-    public required string Name { get; set; }
-    public required string Label { get; set; }
-
-    public bool HasAlpha { get; set; }
-
-    public bool Equals(IInspectField? other) => other is ColorField field && Equals(field);
-}
-
-internal sealed record ComboField : IInspectField
-{
-    public string ValueType => "Int1";
-    public required string Name { get; set; }
-    public required string Label { get; set; }
-    public string? Placeholder { get; set; }
-    public int StartAt { get; set; }
-
-    public bool Equals(IInspectField? other) => other is ComboField field && Equals(field);
-}
+internal sealed record ColorInput(string Name, string Label, bool HasAlpha) : InputField(Name, Label);
+internal sealed record ComboInput(
+    string Name,
+    string Label,
+    string Values,
+    string Names,
+    string? Placeholder,
+    int StartAt) : InputField(Name, Label);

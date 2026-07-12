@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.Core.Data;
@@ -22,59 +23,80 @@ public enum TextInputFilter : byte
 
 internal sealed unsafe class TextInput : InputField
 {
-    private byte* _textBuffer = null;
-
+    public readonly NativeString Text;
     public String8Utf8 Hint;
 
-    public readonly ushort BufferSize;
-    public ushort MinLength;
-
-    public bool ClearOnResult;
-    public bool AllowEmptyResult;
-
-    public ImGuiInputTextFlags InputFlags;
-    public TextInputFilter InputFilter;
-
-    private char[] _whiteListFilter = [];
-
-    private TextInputHistory? _history;
-    private TextInputTransformer? _transformer;
+    private readonly Delegate? _callback;
     private readonly ImGuiInputTextCallback _inputCallback;
 
-    public TextInput(string label, ushort bufferSize, ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.CharsNoBlank)
+    private TextInputHistory? _history;
+    
+    public ushort MinLength { get; private set; }
+    public bool Trim, Lowercase, ClearAfter, AllowEmpty;
+    public TextInputFilter Filter;
+    public ImGuiInputTextFlags ImFlags = ImGuiInputTextFlags.CharsNoBlank;
+    public string? Whitelist;
+
+
+
+    public TextInput(string label, int capacity)
         : base(label, InputKind.Text)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(bufferSize, 4);
-        BufferSize = bufferSize;
-        InputFlags = inputFlags;
+        ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 8);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(capacity, 512);
+        if (!IntMath.IsPowerOfTwo(capacity)) throw new ArgumentOutOfRangeException(nameof(capacity));
+
         _inputCallback = OnInputCallback;
-
         LabelPlacement = LabelPlacement.None;
+        Text = StringArena.AllocateString(capacity);
+        Text.Reset();
     }
 
-    public ReadOnlySpan<byte> GetTextSpan() =>
-        _textBuffer != null
-            ? MemoryMarshal.CreateReadOnlySpanFromNullTerminated(_textBuffer)
-            : ReadOnlySpan<byte>.Empty;
+    public TextInput(string label, int capacity, Action<Span<byte>> callback) : this(label, capacity) =>
+        _callback = callback;
 
-    public void UnsetTextBuffer() => _textBuffer = null;
+    public TextInput(string label, int capacity, Action<Span<char>> callback) : this(label, capacity) =>
+        _callback = callback;
 
-    public void SetTextBuffer(NativeView<byte> buffer)
+    public TextInput WithHistory(int capacity = 16)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(BufferSize, buffer.Length);
-        _textBuffer = buffer;
-        buffer.Clear();
+        if (_history != null) throw new InvalidOperationException();
+        _history = new TextInputHistory(Text.Capacity, capacity);
+        ImFlags |= ImGuiInputTextFlags.CallbackHistory;
+        return this;
     }
 
+    public TextInput WithMinLength(ushort minLength)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(minLength, Text.Capacity);
+        MinLength = minLength;
+        return this;
+    }
+
+    public TextInput ToggleFlag(ImGuiInputTextFlags flag, bool enabled)
+    {
+        if (!enabled) ImFlags &= ~flag;
+        else ImFlags |= flag;
+        return this;
+    }
+
+    public ReadOnlySpan<byte> GetTextSpan() => !Text.IsNull ? Text.AsSpan() : ReadOnlySpan<byte>.Empty;
+    
     public bool Draw()
     {
         var hint = Hint;
         var label = ApplyLabelLayout(TextBuffers.GetWriter());
+        var triggered = ImGui.InputTextEx(label, (byte*)&hint, Text, Text.Capacity,
+            Vector2.Zero, ImFlags, _inputCallback);
 
-        var triggered = ImGui.InputTextEx(label, (byte*)&hint, _textBuffer, BufferSize,
-            new Vector2(0, 0), InputFlags, _inputCallback);
+        if (triggered && ProcessInput())
+        {
+            InvokeCallback();
+            if (ClearAfter) Text.Clear();
+            return true;
+        }
 
-        return triggered && OnTriggered(_textBuffer);
+        return false;
     }
 
     private int OnInputCallback(ImGuiInputTextCallbackData* data)
@@ -98,18 +120,52 @@ internal sealed unsafe class TextInput : InputField
         return 1;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private bool OnTriggered(byte* inputStr)
+    private void InvokeCallback()
     {
-        var src = new Span<byte>(inputStr, BufferSize).SliceNullTerminate();
-        if (src.Length < MinLength) return false;
-        if (src.IsEmpty && !AllowEmptyResult) return false;
+        if (_callback is null) return;
 
-        var hasAsciiFilter = InputFilter is TextInputFilter.AsciiLetter or TextInputFilter.AsciiLettersAndDigit;
+        var text = Text.AsSpan();
+        if (_callback is Action<Span<byte>> callbackU8)
+        {
+            if (text.Length == 0)
+            {
+                callbackU8(Span<byte>.Empty);
+                return;
+            }
+            Span<byte> dst =  stackalloc byte[text.Length];
+            text.CopyTo(dst);
+            callbackU8(dst);
+        }
+        else if (_callback is Action<Span<char>> callbackU16)
+        {
+            if (text.Length == 0)
+            {
+                callbackU16(Span<char>.Empty);
+                return;
+            }
+            Span<char> dst = stackalloc char[Encoding.UTF8.GetCharCount(text)];
+            Encoding.UTF8.GetChars(text, dst);
+           
+            callbackU16(dst);
+        }
+    }
+
+    private bool ProcessInput()
+    {
+        Text.CalculateLength();
+        var src = Text.AsSpan();
+        if (src.Length < MinLength || (src.IsEmpty && !AllowEmpty)) return false;
+
+        var hasAsciiFilter = Filter is TextInputFilter.AsciiLetter or TextInputFilter.AsciiLettersAndDigit;
         if (hasAsciiFilter && !UtfText.IsAscii(src)) return false;
 
-        if (_transformer is { } transformer && !transformer.Transform(src, AllowEmptyResult))
-            return false;
+        if (Trim)
+        {
+            src = src.TrimWhitespace();
+            if (src.IsEmpty && !AllowEmpty) return false;
+        }
+
+        if (Lowercase) src = src.ToLowerAscii();
 
         if (_history is { } history)
         {
@@ -117,16 +173,14 @@ internal sealed unsafe class TextInput : InputField
             history.LeaveHistoryMode();
         }
 
-        if (ClearOnResult) src.Clear();
         return true;
     }
 
+
     private bool FilterChar(char c)
     {
-        if (_whiteListFilter.Length > 0 && _whiteListFilter.IndexOf(c) >= 0)
-            return true;
-
-        return InputFilter switch
+        if (Whitelist is { } w && w.AsSpan().IndexOf(c) >= 0) return true;
+        return Filter switch
         {
             TextInputFilter.None => true,
             TextInputFilter.Digit => char.IsAsciiDigit(c),
@@ -134,189 +188,5 @@ internal sealed unsafe class TextInput : InputField
             TextInputFilter.AsciiLettersAndDigit => char.IsAsciiLetterOrDigit(c),
             _ => throw new ArgumentOutOfRangeException()
         };
-    }
-
-
-    public TextInput WithHistory(ushort capacity = 32)
-    {
-        _history = new TextInputHistory(BufferSize, capacity);
-        InputFlags |= ImGuiInputTextFlags.CallbackHistory;
-        return this;
-    }
-
-    public TextInput WithMinLength(ushort minLength)
-    {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(minLength, BufferSize);
-        MinLength = minLength;
-        return this;
-    }
-
-    public TextInput WithClearOnResult()
-    {
-        ClearOnResult = true;
-        return this;
-    }
-
-    public TextInput WithFilter(TextInputFilter filter, bool allowEmpty = false, char[]? whiteListFilter = null)
-    {
-        InputFilter = filter;
-        AllowEmptyResult = allowEmpty;
-        if (whiteListFilter != null) _whiteListFilter = whiteListFilter;
-        return this;
-    }
-
-    public TextInput WithTransformer(bool trimmed, bool lowercase = false)
-    {
-        _transformer ??= new TextInputTransformer();
-        _transformer.TrimmedResult = trimmed;
-        _transformer.LowercaseResult = lowercase;
-        return this;
-    }
-
-    public TextInput WithCallbackU8(Action<Span<byte>> callback)
-    {
-        _transformer ??= new TextInputTransformer();
-        _transformer.CallbackU8 = callback;
-        return this;
-    }
-
-    public TextInput WithCallbackU16(Action<Span<char>> callback)
-    {
-        _transformer ??= new TextInputTransformer();
-        _transformer.CallbackU16 = callback;
-        return this;
-    }
-
-    private sealed class TextInputHistory
-    {
-        private bool _historyActive;
-        private short _historyIndex = -1;
-        private readonly ushort _historyCapacity;
-
-        private readonly List<byte[]> _history;
-        private readonly byte[] _currentInputSnapshot;
-
-        public TextInputHistory(ushort bufferSize, ushort historyCapacity = 32)
-        {
-            ArgumentOutOfRangeException.ThrowIfLessThan(bufferSize, 4);
-            ArgumentOutOfRangeException.ThrowIfLessThan(historyCapacity, 2);
-
-            _currentInputSnapshot = new byte[bufferSize];
-            _historyCapacity = historyCapacity;
-            _history = new List<byte[]>(_historyCapacity);
-        }
-
-        public void LeaveHistoryMode()
-        {
-            _historyActive = false;
-            _historyIndex = -1;
-        }
-
-        public void AddEntry(Span<byte> src)
-        {
-            if (_history.Count != 0 && _history[^1].AsSpan().SequenceEqual(src))
-                return;
-
-            if (_history.Count == _historyCapacity) _history.RemoveAt(0);
-            _history.Add(src.ToArray());
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public int OnInputCallback(ImGuiInputTextCallbackData* data)
-        {
-            var key = data->EventKey;
-
-            if (key == ImGuiKey.UpArrow)
-            {
-                if (!_historyActive)
-                {
-                    SnapshotInput(data, _currentInputSnapshot);
-                    SetInputBuffer(data, _history[^1]);
-                    return 0;
-                }
-
-                if (_historyIndex < _history.Count - 1) _historyIndex++;
-
-                SetInputBuffer(data, _history[^(_historyIndex + 1)]);
-                return 0;
-            }
-
-            if (key == ImGuiKey.DownArrow && _historyActive)
-            {
-                if (_historyIndex > 0)
-                {
-                    _historyIndex--;
-                    SetInputBuffer(data, _history[^(_historyIndex + 1)]);
-                    return 0;
-                }
-
-                _historyIndex = -1;
-                _historyActive = false;
-                SetInputBuffer(data, _currentInputSnapshot.SliceNullTerminate());
-            }
-
-            return 0;
-        }
-
-        private void SnapshotInput(ImGuiInputTextCallbackData* data, Span<byte> snapshotBuffer)
-        {
-            snapshotBuffer.Clear();
-
-            var inputBuffer = new Span<byte>(data->Buf, _currentInputSnapshot.Length);
-            inputBuffer.SliceNullTerminate().CopyTo(snapshotBuffer);
-
-            _historyActive = true;
-            _historyIndex = 0;
-        }
-
-        private static void SetInputBuffer(ImGuiInputTextCallbackData* data, ReadOnlySpan<byte> src)
-        {
-            var copyLen = int.Min(src.Length, data->BufSize - 1);
-            var dst = new Span<byte>(data->Buf, data->BufSize);
-
-            src.CopyTo(dst);
-            dst[copyLen] = 0;
-
-            data->BufTextLen = copyLen;
-            data->BufDirty = 1;
-
-            data->CursorPos = copyLen;
-            data->SelectionStart = data->SelectionEnd = copyLen;
-        }
-    }
-
-    private sealed class TextInputTransformer
-    {
-        public bool TrimmedResult;
-        public bool LowercaseResult;
-
-        public Action<Span<byte>>? CallbackU8;
-        public Action<Span<char>>? CallbackU16;
-
-        public bool Transform(Span<byte> src, bool allowEmpty)
-        {
-            if (TrimmedResult)
-            {
-                src = src.TrimWhitespace();
-                if (src.IsEmpty && !allowEmpty) return false;
-            }
-
-            if (LowercaseResult) src = src.ToLowerAscii();
-
-            if (CallbackU8 is { } callbackU8)
-            {
-                //Span<byte> dst = stackalloc byte[src.Length];
-                // src.CopyTo(dst);
-                callbackU8(src);
-            }
-            else if (CallbackU16 is { } callbackU16)
-            {
-                Span<char> dst = stackalloc char[Encoding.UTF8.GetCharCount(src)];
-                Encoding.UTF8.GetChars(src, dst);
-                callbackU16(dst);
-            }
-
-            return true;
-        }
     }
 }

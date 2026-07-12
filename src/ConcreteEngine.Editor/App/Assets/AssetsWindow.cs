@@ -40,27 +40,19 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     private FileBinding _bindingsFilter;
 
     private NativeString _breadcrumbs;
-    private NativeString _searchString;
 
     public override ReadOnlySpan<byte> Id => WindowRoot.AssetWindowId;
 
     public AssetsWindow(StateManager state) : base(state)
     {
         _assetBrowser = new AssetBrowser(OnDirectoryChange);
-
-        _searchInput = new TextInput("search", 8)
-            .WithFilter(TextInputFilter.None, allowEmpty: true)
-            .WithTransformer(trimmed: true, lowercase: true)
-            .WithCallbackU16((searchString) => _assetBrowser.Commit(searchString, _bindingsFilter, _assetFilter));
+        _searchInput = new TextInput("search", 8, OnSearch) {AllowEmpty = true, Trim = true, Lowercase = true};
     }
 
+    private void OnSearch(Span<char> text) => _assetBrowser.Commit(text, _bindingsFilter, _assetFilter);
     protected override void OnCreate()
     {
         _breadcrumbs = StringArena.AllocateString(64);
-        _searchString = StringArena.AllocateString(8);
-
-        _searchInput.SetTextBuffer(_searchString);
-
         _assetBrowser.BuildFullDirectory();
     }
 
@@ -250,11 +242,10 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         {
             var node = nodes[i];
             var previewName = node.PreviewName;
+            
             sw.AppendIcon(IconNames.Folder).PadRight(2);
             sw.Append((byte*)&previewName);
-            sw.AppendImGuiId(i);
-            var text = sw.End();
-            
+            var text = sw.AppendImGuiId(i).End();
             if (ImGui.Selectable(text, false, 0, size))
                 _assetBrowser.GoToChild(node.GetFolderName());
             

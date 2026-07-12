@@ -25,7 +25,6 @@ internal sealed unsafe class SceneWindow : EditorWindow
     private SceneObjectKind _selectedKind;
 
     private NativeString _title;
-    private NativeString _searchString;
 
     private SceneObjectId SelectedId => State.Context.Selection.SelectedSceneId;
 
@@ -40,19 +39,14 @@ internal sealed unsafe class SceneWindow : EditorWindow
         _kindCombo.LabelPlacement = LabelPlacement.None;
         _kindCombo.SetItemName(0, "All");
 
-        _searchInput = new TextInput("search", 8)
-            .WithFilter(TextInputFilter.None, allowEmpty: true)
-            .WithTransformer(trimmed: true, lowercase: true)
-            .WithCallbackU8(Search);
+        _searchInput = new TextInput("search", 8, Search) { AllowEmpty = true, Trim = true, Lowercase = true };
     }
 
 
     protected override void OnCreate()
     {
         _title = StringArena.AllocateString(24);
-        _searchString = StringArena.AllocateString(8);
 
-        _searchInput.SetTextBuffer(_searchString);
         if (_browser.FilteredCount == 0) Search(Span<byte>.Empty);
     }
 

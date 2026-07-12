@@ -30,40 +30,39 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
     private readonly TextInput _textInput;
 
     private NativeString _title;
-    private NativeString _inputString;
-
 
     public override ReadOnlySpan<byte> Id => WindowRoot.ConsoleWindowId;
 
     public ConsoleWindow(StateManager state) : base(state)
     {
-        _textInput = new TextInput("cli", 64, ImGuiInputTextFlags.EnterReturnsTrue) { Hint = "$" }
-            .WithHistory()
-            .WithClearOnResult()
-            .WithTransformer(true, true)
-            .WithCallbackU16(static (text) => ConsoleSystem.ExecuteCommand(text));
+        _textInput =
+            new TextInput("cli", 64, ConsoleSystem.ExecuteCommand)
+                {
+                    Hint = "$", Trim = true, Lowercase = true, ClearAfter = true
+                }
+                .WithHistory()
+                .ToggleFlag(ImGuiInputTextFlags.CharsNoBlank, false)
+                .ToggleFlag(ImGuiInputTextFlags.EnterReturnsTrue, true);
     }
 
 
     protected override void OnCreate()
     {
         _title = StringArena.AllocateString(64);
-        _inputString = StringArena.AllocateString(64);
-        _textInput.SetTextBuffer(_inputString);
     }
 
     public override void OnUpdateDiagnostic()
     {
-        if(LogService.Instance.NewLogs > 0)
+        if (LogService.Instance.NewLogs > 0)
             _scrollTopBottomStepper.SetIntervalTicks(4);
 
-        var metrics = MetricSystem.Instance;
+        var m = MetricSystem.Instance;
         //ImGui.GetIO().Framerate
         var sw = _title.OverWriter;
         sw.Append("Console"u8).PadRight(4);
-        sw.Append((byte)'[').Append(metrics.Metric.AvgMs, "F4").Append('m', 's').Append((byte)']');
+        sw.Append((byte)'[').Append(m.Metric.AvgMs, "F4").Append('m', 's').Append((byte)']');
         sw.PadRight(4);
-        sw.Append((byte)'[').Append(metrics.Metric.AllocMbPerSec, "F4").Append("MB/s"u8).Append((byte)']');
+        sw.Append((byte)'[').Append(m.Metric.AllocMbPerSec, "F4").Append("MB/s").Append((byte)']');
         sw.End();
     }
 
@@ -79,7 +78,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         var innerWindow = ImGui.BeginChild("logs"u8, new Vector2(0, -InputHeight), ImGuiChildFlags.None, InnerFlags);
         if (innerWindow && LogService.Instance.LogCount > 0)
         {
-            foreach (var range in AppDraw.Clipper(LogService.Instance.LogCount, RowHeight,out _))
+            foreach (var range in AppDraw.Clipper(LogService.Instance.LogCount, RowHeight, out _))
                 DrawVisibleLogs(LogService.Instance, range.Offset, range.Length);
 
             if (_scrollTopBottomStepper.Tick())
@@ -134,5 +133,4 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         var color = level == LogLevel.Error ? Palette32.RedBase : Palette32.TextPrimary;
         cursor.Text(text.SliceFrom(LogEntry.TimestampOffset), color);
     }
-
 }

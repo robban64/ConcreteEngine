@@ -14,7 +14,7 @@ namespace ConcreteEngine.Editor.App.Inspectors;
 
 internal sealed unsafe class AssetInspectorPanel : EditorPanel
 {
-    private static readonly char[] ValidNoneAlphaNumericChars = [':', '/', '_', '-', '.'];
+    private const string ValidNoneAlphaNumericChars = ":/_-.";
 
     private static SelectionManager Selection => SelectionManager.Instance;
 
@@ -30,7 +30,6 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
     private readonly TextInput _searchInput;
 
     private NativeString _title;
-    private NativeString _nameInputStr;
     
     private Popup _popup = new(new Vector2(12f, 10f));
 
@@ -41,35 +40,33 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         _shaderInspectorUi = new ShaderInspectorUi(state);
         _modelInspectorUi = new ModelInspectorUi(state);
 
-        _searchInput = new TextInput("name", 64,
-                ImGuiInputTextFlags.CharsNoBlank | ImGuiInputTextFlags.EnterReturnsTrue)
-            .WithFilter(TextInputFilter.AsciiLettersAndDigit, whiteListFilter: ValidNoneAlphaNumericChars)
-            .WithMinLength(4)
-            .WithTransformer(trimmed: true)
-            .WithCallbackU16((value) =>
+        _searchInput = new TextInput("name", 64, OnNameInput)
             {
-                if (Selection.SelectedAsset is not { } inspectAsset) return;
-                if (value.Equals(inspectAsset.Name, StringComparison.Ordinal)) return;
-                State.EnqueueEvent(new AssetEvent(inspectAsset.Id, inspectAsset.Kind, Rename: value.ToString()));
-            });
+                Trim = true,
+                Filter = TextInputFilter.AsciiLettersAndDigit,
+                Whitelist = ValidNoneAlphaNumericChars
+            }
+            .WithMinLength(4)
+            .ToggleFlag(ImGuiInputTextFlags.EnterReturnsTrue, true);
+    }
+    
+    private  void OnNameInput(Span<char> text)
+    {
+        if (Selection.SelectedAsset is not { } inspectAsset) return;
+        if (text.Equals(inspectAsset.Name, StringComparison.Ordinal)) return;
+        State.EnqueueEvent(new AssetEvent(inspectAsset.Id, inspectAsset.Kind, Rename: text.ToString()));
     }
 
     public override void OnCreate()
     {
         _title = StringArena.AllocateString(24);
-        _nameInputStr = StringArena.AllocateString(64);
-        _searchInput.SetTextBuffer(_nameInputStr);
     }
 
-    public override void OnAttach()
-    {
-        _searchInput.SetTextBuffer(_nameInputStr);
-    }
 
     public override void OnLeave()
     {
         _previousId = AssetId.Empty;
-        _searchInput.UnsetTextBuffer();
+        _searchInput.Text.Clear();
     }
 
     private void OnNewInspector(InspectAsset inspector)
@@ -82,7 +79,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
 
     private void RestoreName(InspectAsset inspector)
     {
-        _nameInputStr.Set(inspector.Name);
+        _searchInput.Text.Set(inspector.Name);
     }
 
     public override void OnDraw()

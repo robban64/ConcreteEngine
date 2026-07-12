@@ -63,7 +63,7 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Color4 AsClampedAlpha() => this with { A = float.Clamp(A, 0f, 1f) };
+    public readonly Color4 WithClampedAlpha() => this with { A = float.Clamp(A, 0f, 1f) };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ColorRgba ToRgba()

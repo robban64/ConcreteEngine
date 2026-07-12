@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis;
 
 namespace Generator;
 
-internal readonly record struct MemberInfo(bool IsField, bool IsProperty, bool IsReadOnly, MemberTypeInfo TypeInfo)
+internal readonly record struct MemberInfo(bool IsField, bool IsProperty, bool IsReadOnly, bool ReturnRef, MemberTypeInfo TypeInfo)
 {
     public bool ReturnRef { get; init; }
     
@@ -14,15 +14,13 @@ internal readonly record struct MemberInfo(bool IsField, bool IsProperty, bool I
     {
         if (sym is IPropertySymbol prop)
         {
-            return new MemberInfo(false, true, prop.IsReadOnly, MemberTypeInfo.Extract(prop.Type))
-            {
-                ReturnRef = prop.ReturnsByRef || prop.ReturnsByRefReadonly
-            };
+            var retRef = prop.ReturnsByRef || prop.ReturnsByRefReadonly;
+            return new MemberInfo(false, true, prop.IsReadOnly, retRef, MemberTypeInfo.Extract(prop.Type));
         }
 
         if (sym is IFieldSymbol field)
         {
-            return new MemberInfo(true, false, field.IsReadOnly, MemberTypeInfo.Extract(field.Type));
+            return new MemberInfo(true, false, field.IsReadOnly, false, MemberTypeInfo.Extract(field.Type));
         }
 
         throw new ArgumentException(nameof(sym));

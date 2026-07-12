@@ -5,14 +5,15 @@ namespace Generator;
 
 internal static class Predicates
 {
-    public static bool IsObjectOrStruct(SyntaxNode node, CancellationToken ct)
+    public static bool IsClassNode(SyntaxNode node, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        return node is ClassDeclarationSyntax or InterfaceDeclarationSyntax or StructDeclarationSyntax;
+        return node is ClassDeclarationSyntax;
     }
 
-    public static bool IsPropertyOrField(SyntaxNode node, CancellationToken ct)
+    public static bool IsPropertyOrFieldNode(SyntaxNode node, CancellationToken ct)
     {
+        ct.ThrowIfCancellationRequested();
         return node is PropertyDeclarationSyntax or VariableDeclaratorSyntax;
     }
 

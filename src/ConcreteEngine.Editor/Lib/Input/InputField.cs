@@ -19,7 +19,7 @@ public enum InputTrigger : byte
 
 internal abstract class InputField
 {
-    private static int _currentId;
+    private static int _idCounter;
 
     private readonly byte[] _label;
 
@@ -30,7 +30,7 @@ internal abstract class InputField
 
     protected InputField(string label, InputKind kind)
     {
-        DrawId = ++_currentId;
+        DrawId = ++_idCounter;
         Kind = kind;
         _label = label.ToUtf8();
     }
@@ -42,10 +42,12 @@ internal abstract class InputField
         {
             AppDraw.Text(sw.Write(_label));
             ImGui.Separator();
+            ImGui.SetNextItemWidth(GuiTheme.FormItemWidth);
         }
         else if (LabelPlacement is LabelPlacement.Inline)
         {
             sw.Append(_label);
+            ImGui.SetNextItemWidth(GuiTheme.FormItemInlineWidth);
         }
 
         return sw.AppendImGuiId(DrawId).End();

@@ -45,33 +45,37 @@ internal sealed record InspectModel(
     string InspectorNs,
     string TargetName,
     string TargetNs,
-    EquatableArray<TargetMemberInfo> Members)
+    EquatableArray<InspectorMember> Members,
+    EquatableArray<InspectorGroup> Groups)
 {
     public string? DisplayName { get; init; }
 }
 
-internal sealed record TargetMemberInfo(string Name, string TargetNs, string TypeName, MemberInfo Info)
+internal sealed record InspectorGroup(
+    string Name,
+    string AccessPath,
+    MemberInfo Info,
+    EquatableArray<InspectorMember> Members);
+
+internal sealed record InspectorMember(string Name, string TargetNs, string TypeName, MemberInfo Info)
 {
     public InputField? Input { get; init; }
-    public string? Segment { get; init; }
-    public string? IncludeName { get; init; }
-    public MemberInfo? ParentInfo { get; init; }
 }
 
-internal abstract record InputField(string Name, string Label);
+internal abstract record InputField(string Name, string Label); // Label = Name || DisplayName
 
 internal sealed record NumberInput(
     string Name,
     string Label,
-    string ValueType,
+    string NumberType,
     InputStyle InputStyle,
     float Speed,
     float Min,
     float Max,
     string? Format) : InputField(Name, Label)
 {
-    public bool IsFloat() => ValueType.StartsWith("Float");
-    public int GetComponents() => (int)char.GetNumericValue(ValueType[^1]);
+    public bool IsFloat() => NumberType.StartsWith("Float");
+    public int GetComponents() => (int)char.GetNumericValue(NumberType[^1]);
 }
 
 internal sealed record ColorInput(string Name, string Label, bool HasAlpha) : InputField(Name, Label);

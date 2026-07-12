@@ -21,12 +21,12 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var valueProvider = context.SyntaxProvider
-            .ForAttributeWithMetadataName(MainAttributeFullName, Predicates.IsObjectOrStruct, Build)
+            .ForAttributeWithMetadataName(MainAttributeFullName, Predicates.IsClassNode, Build)
             .Where(static x => x != null!);
 
         context.RegisterSourceOutput(valueProvider, static (ctx, value) =>
         {
-            var source = Emit(value);
+            var source = InspectorGeneratorEmitter.Emit(value);
             ctx.AddSource($"{value.TargetName}Inspector.g.cs", SourceText.From(source, Encoding.UTF8));
         });
     }
@@ -36,11 +36,11 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
     {
         ct.ThrowIfCancellationRequested();
         var inspectorSym = (INamedTypeSymbol)ctx.TargetSymbol;
-        var inspectorAttr = inspectorSym.GetAttributes().First(x => x.AttributeClass?.Name == MainAttribute);
+        var inspectorAttr = inspectorSym.GetAttributes().First(static x => x.AttributeClass?.Name == MainAttribute);
 
-        var targetSym =
-            (INamedTypeSymbol)inspectorAttr.ConstructorArguments.First(x => x.Kind == TypedConstantKind.Type).Value!;
-        var targetAttr = targetSym.GetAttributes().First(x => x.AttributeClass?.Name == InspectAttrib);
+        var targetSym = (INamedTypeSymbol)inspectorAttr.ConstructorArguments
+            .First(static x => x.Kind == TypedConstantKind.Type).Value!;
+        var targetAttr = targetSym.GetAttributes().First(static x => x.AttributeClass?.Name == InspectAttrib);
         //
 
         string? displayName = null;
@@ -52,82 +52,81 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
             }
         }
 
-        var members = GenerateMemberFor(targetSym);
-        
+        GenerateMemberFor(targetSym, out var members, out var groups);
+
         return new InspectModel(
             InspectorName: inspectorSym.Name,
             InspectorNs: inspectorSym.ContainingNamespace.ToDisplayString(),
             TargetName: targetSym.Name,
             TargetNs: targetSym.ContainingNamespace.ToDisplayString(),
-            Members: members
+            Members: members,
+            Groups: groups
         ) { DisplayName = displayName };
     }
 
-    private static EquatableArray<TargetMemberInfo> GenerateMemberFor(INamedTypeSymbol targetSym)
+    private static void GenerateMemberFor(INamedTypeSymbol targetSym,
+        out EquatableArray<InspectorMember> memberArray,
+        out EquatableArray<InspectorGroup> groupArray)
     {
-        var list = new List<TargetMemberInfo>(8);
+        var list = new List<InspectorMember>(4);
+        var groups = new List<InspectorGroup>(4);
 
         var members = targetSym.GetMembers().Where(MemberFilter);
         foreach (var member in members)
         {
-            if (CreateMember(member, null, null) is { } created)
+            if (CreateMember(member) is { } created)
             {
                 list.Add(created);
                 continue;
             }
 
-            var includeAttr = member.GetAttributes().FirstOrDefault(x => x.AttributeClass?.Name is IncludeAttrib);
-            if (includeAttr is not null)
+            if (TryParseIncludeAttribute(member, out string? nestedName))
             {
-                var includeAttrCtor = includeAttr.ConstructorArguments;
+                var accessPath = member.Name;
+                if (nestedName is not null) accessPath += "." + nestedName;
 
-                var nestedAccessPath = member.Name;
-                if (!includeAttrCtor.IsEmpty && includeAttrCtor[0].Value is string accessSuffix)
-                    nestedAccessPath += $".{accessSuffix}";
-
-                var info = MemberInfo.Extract(member);
-                var includeTypeSym = member.GetFieldOrPropertyType();
-                foreach (var nestedMember in includeTypeSym.GetMembers().Where(MemberFilter))
+                var groupMembers = new List<InspectorMember>();
+                var includeType = member.GetFieldOrPropertyType();
+                foreach (var nestedMember in includeType.GetMembers().Where(MemberFilter))
                 {
-                    if (CreateMember(nestedMember, info, nestedAccessPath) is { } createdInner)
-                        list.Add(createdInner);
+                    if (CreateMember(nestedMember) is { } createdInner) groupMembers.Add(createdInner);
+                }
+
+                if (groupMembers.Count > 0)
+                {
+                    groups.Add(new InspectorGroup(
+                        Name: member.Name,
+                        AccessPath: accessPath,
+                        Info: MemberInfo.Extract(member),
+                        Members: groupMembers.ToEquatableArray()));
                 }
             }
         }
 
-        return list.ToEquatableArray();
+        memberArray = list.ToEquatableArray();
+        groupArray = groups.Count > 0 ? groups.ToEquatableArray() : [];
+        return;
 
-
-        static TargetMemberInfo? CreateMember(ISymbol sym, MemberInfo? parentInfo, string? nestedAccessPath)
+        static InspectorMember? CreateMember(ISymbol sym)
         {
-            var inputAttr = sym.GetAttributes().FirstOrDefault(static x =>
+            var attr = sym.GetAttributes().FirstOrDefault(static x =>
                 x.AttributeClass?.Name is InputNumberAttrib or InputColorAttrib or InputComboAttrib);
 
-            if (inputAttr == null || inputAttr.AttributeClass is null) return null;
+            if (attr == null || attr.AttributeClass is null) return null;
 
             var typeSym = sym.GetFieldOrPropertyType();
-
-            var label = sym.Name;
-            var ctor = inputAttr.ConstructorArguments;
-            if (ctor.Length > 0 && ctor[0].Value is string displayName)
-                label = displayName;
-
-            InputField? inputField = inputAttr.AttributeClass.Name switch
+            InputField? inputField = attr.AttributeClass!.Name switch
             {
-                InputNumberAttrib => MakeInputField(sym.Name, label, inputAttr, typeSym),
-                InputColorAttrib => MakeColorField(sym.Name, label, inputAttr, typeSym),
-                InputComboAttrib => MakeComboField(sym.Name, label, inputAttr, typeSym),
-                _ => throw new UnreachableException()
+                InputNumberAttrib => MakeInputField(sym.Name, attr, typeSym),
+                InputColorAttrib => MakeColorField(sym.Name, attr, typeSym),
+                InputComboAttrib => MakeComboField(sym.Name, attr, typeSym),
+                _ => null
             };
             if (inputField is null) return null;
 
             var ns = sym.ContainingNamespace.ToDisplayString();
             var info = MemberInfo.Extract(sym);
-            return new TargetMemberInfo(sym.Name, ns, typeSym.ToDisplayString(), info)
-            {
-                //Segment = parentTypeSym?.Name,
-                Input = inputField, IncludeName = nestedAccessPath, ParentInfo = parentInfo
-            };
+            return new InspectorMember(sym.Name, ns, typeSym.ToDisplayString(), info) { Input = inputField };
         }
     }
 }

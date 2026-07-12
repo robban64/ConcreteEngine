@@ -16,7 +16,7 @@ public sealed class SceneTransform(SceneObject sceneObject)
     public void GetTransformMatrix(out Matrix4x4 matrix) => MatrixMath.CreateModelMatrix(in _transform, out matrix);
 
     //
-    [InputNumber(Format = "%.3f")]
+    [InputNumber]
     public Vector3 Translation
     {
         get => _transform.Translation;
@@ -27,7 +27,7 @@ public sealed class SceneTransform(SceneObject sceneObject)
         }
     }
 
-    [InputNumber(Format = "%.3f")]
+    [InputNumber]
     public Vector3 Scale
     {
         get => _transform.Scale;
@@ -38,7 +38,7 @@ public sealed class SceneTransform(SceneObject sceneObject)
         }
     }
     
-    [InputNumber(Format = "%.3f")]
+    [InputNumber(DisplayName = "Rotation")]
     public Vector3 EulerRotation
     {
         get => RotationMath.QuaternionToEulerDegrees(in _transform.Rotation);

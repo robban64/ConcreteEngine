@@ -13,10 +13,10 @@ public struct DirLightParams(Vector3 direction, Vector3 diffuse, float intensity
 
     [InputColor(HasAlpha = false)] public Vector3 Diffuse = diffuse;
 
-    [InputNumber(Style = InputStyle.Drag, Format = "%.3f", Speed = 0.01f, Min = 0f, Max = 10f)]
+    [InputNumber(InputStyle.Drag, Format = "%.3f", Speed = 0.01f, Min = 0f, Max = 10f)]
     public float Intensity = intensity;
 
-    [InputNumber(Style = InputStyle.Drag, Format = "%.3f", Speed = 0.01f, Min = 0f, Max = 10f)]
+    [InputNumber(InputStyle.Drag, Format = "%.3f", Speed = 0.01f, Min = 0f, Max = 10f)]
     public float Specular = specular;
 }
 
@@ -27,65 +27,65 @@ public struct AmbientParams(Vector3 ambient, Vector3 ambientGround, float exposu
 
     [InputColor(HasAlpha = false)] public Vector3 AmbientGround = ambientGround;
 
-    [InputNumber(Style = InputStyle.Drag, Format = "%.3f", Speed = 0.01f, Min = 0f, Max = 2f)]
+    [InputNumber(InputStyle.Drag, Format = "%.3f", Speed = 0.01f, Min = 0f, Max = 2f)]
     public float Exposure = exposure;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public struct ShadowProjectionParams(float distance, float zPad, float constBias, float slopeBias)
 {
-    [InputNumber(Style = InputStyle.Slider, Min = 10f, Max = 500f)]
+    [InputNumber(InputStyle.Slider, Min = 10f, Max = 500f)]
     public float Distance = distance;
 
-    [InputNumber(Style = InputStyle.Slider, Min = 10f, Max = 100f)]
+    [InputNumber(InputStyle.Slider, Min = 10f, Max = 100f)]
     public float ZPad = zPad;
 
-    [InputNumber(Style = InputStyle.Drag, Speed = 0.001f, Min = 0.001f, Max = 0.01f, Format = "%.4f")]
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0.001f, Max = 0.01f, Format = "%.4f")]
     public float ConstBias = constBias;
 
-    [InputNumber(Style = InputStyle.Drag, Speed = 0.001f, Min = 0.001f, Max = 0.01f, Format = "%.4f")]
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0.001f, Max = 0.01f, Format = "%.4f")]
     public float SlopeBias = slopeBias;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public struct ShadowVisualParams(float strength, float pcfRadius)
 {
-    [InputNumber(Style = InputStyle.Slider, Min = 0, Max = 1f)]
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 1f)]
     public float Strength = strength;
 
-    [InputNumber(Style = InputStyle.Slider, Min = 0.5f, Max = 4f)]
+    [InputNumber(InputStyle.Slider, Min = 0.5f, Max = 4f)]
     public float PcfRadius = pcfRadius;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public struct FogHeightParams(float density, float strength, float maxDistance, float baseHeight, float heightFalloff)
 {
-    [InputNumber(Style = InputStyle.Slider, Min = 100, Max = 1500, Format = "%.5f")]
+    [InputNumber(InputStyle.Slider, Min = 100, Max = 1500, Format = "%.5f")]
     public float Density = density;
 
-    [InputNumber(Style = InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
     public float Strength = strength;
 
-    [InputNumber(Style = InputStyle.Drag, Speed = 1f, Min = 1f, Max = 10000f, Format = "%.0f")]
+    [InputNumber(InputStyle.Drag, Speed = 1f, Min = 1f, Max = 10000f, Format = "%.0f")]
     public float MaxDistance = maxDistance;
 
-    [InputNumber(Style = InputStyle.Slider, Min = -1000f, Max = 1000f)]
+    [InputNumber(InputStyle.Slider, Min = -1000f, Max = 1000f)]
     public float BaseHeight = baseHeight;
 
-    [InputNumber(Style = InputStyle.Slider, Min = 0.001f, Max = 10000.0f, Format = "%.3f")]
+    [InputNumber(InputStyle.Slider, Min = 0.001f, Max = 10000.0f, Format = "%.3f")]
     public float HeightFalloff = heightFalloff;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public struct FogOpticsParams(float scattering, float distanceWeight, float heightWeight)
 {
-    [InputNumber(Style = InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.5f")]
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.5f")]
     public float Scattering = scattering;
 
-    [InputNumber(Style = InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.0f")]
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.0f")]
     public float DistanceWeight = distanceWeight;
 
-    [InputNumber(Style = InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.0f")]
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.0f")]
     public float HeightWeight = heightWeight;
 }
 
@@ -96,16 +96,16 @@ public struct FogOpticsParams(float scattering, float distanceWeight, float heig
 [StructLayout(LayoutKind.Sequential)]
 public struct PostImageFxParams(float vignette, float grain, float sharpen, float rolloff)
 {
-    [InputNumber(Style = InputStyle.Slider, Min = 0, Max = 0.5f)]
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 0.5f)]
     public float Vignette = vignette;
 
-    [InputNumber(Style = InputStyle.Slider, Min = 0, Max = 0.5f)]
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 0.5f)]
     public float Grain = grain;
 
-    [InputNumber(Style = InputStyle.Slider, Min = 0, Max = 0.5f)]
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 0.5f)]
     public float Sharpen = sharpen;
 
-    [InputNumber(Style = InputStyle.Slider, Min = 0, Max = 0.5f)]
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 0.5f)]
     public float Rolloff = rolloff;
 }
 
@@ -114,13 +114,13 @@ public struct PostImageFxParams(float vignette, float grain, float sharpen, floa
 [StructLayout(LayoutKind.Sequential)]
 public struct PostBloomParams(float intensity, float threshold, float radius)
 {
-    [InputNumber(Style = InputStyle.Slider, Min = 0, Max = 2f)]
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 2f)]
     public float Intensity = intensity;
 
-    [InputNumber(Style = InputStyle.Slider, Min = 0, Max = 2f)]
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 2f)]
     public float Threshold = threshold;
 
-    [InputNumber(Style = InputStyle.Slider, Min = 0, Max = 10f)]
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 10f)]
     public float Radius = radius;
 }
 
@@ -128,10 +128,10 @@ public struct PostBloomParams(float intensity, float threshold, float radius)
 [StructLayout(LayoutKind.Sequential)]
 public struct PostWhiteBalanceParams(float tint, float strength)
 {
-    [InputNumber(Style = InputStyle.Slider, Min = 0, Max = 1f)]
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 1f)]
     public float Tint = tint;
 
-    [InputNumber(Style = InputStyle.Slider, Min = -1f, Max = 1f)]
+    [InputNumber(InputStyle.Slider, Min = -1f, Max = 1f)]
     public float Strength = strength;
 }
 
@@ -139,12 +139,15 @@ public struct PostWhiteBalanceParams(float tint, float strength)
 [StructLayout(LayoutKind.Sequential)]
 public struct PostGradeParams(float exposure, float saturation, float contrast, float warmth)
 {
-    [InputNumber(Style = InputStyle.Slider, Min = 0.5f, Max = 2f)]
+    [InputNumber(InputStyle.Slider, Min = 0.5f, Max = 2f)]
     public float Exposure = exposure;
-    [InputNumber(Style = InputStyle.Slider, Min = 0, Max = 1.5f)]
+    
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 1.5f)]
     public float Saturation = saturation;
-    [InputNumber(Style = InputStyle.Slider, Min = 0, Max = 1.5f)]
+    
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 1.5f)]
     public float Contrast = contrast;
-    [InputNumber(Style = InputStyle.Slider, Min = 0, Max = 1f)]
+    
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 1f)]
     public float Warmth = warmth;
 }

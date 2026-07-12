@@ -123,7 +123,7 @@ public sealed class MaterialState
         get;
         set
         {
-            var color = value.AsClampedAlpha();
+            var color = value.WithClampedAlpha();
             if (Color4.NearlyEqual(in field, in color)) return;
             field = color;
             _material.MarkDirty(AssetDirtyFlag.State);
@@ -135,7 +135,7 @@ public sealed class MaterialState
         get;
         set
         {
-            var color = value.AsClampedAlpha();
+            var color = value.WithClampedAlpha();
             if (Color4.NearlyEqual(in field, in color)) return;
             field = color;
             _material.MarkDirty(AssetDirtyFlag.State);

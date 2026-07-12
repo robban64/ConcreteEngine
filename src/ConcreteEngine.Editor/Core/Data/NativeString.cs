@@ -19,6 +19,14 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
         public int Length = length;
         // byte[capacity]
     }
+    //
+    
+    private readonly NativeStringHeader* _ptr;
+
+    public NativeString(NativeStringHeader* ptr) => _ptr = ptr;
+    
+    //
+    public static NativeString Null => new (null);
 
     internal static NativeString From(NativeView<byte> view)
     {
@@ -27,10 +35,6 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
         return new NativeString(ptr);
     }
     //
-    
-    private readonly NativeStringHeader* _ptr;
-
-    public NativeString(NativeStringHeader* ptr) => _ptr = ptr;
 
     public bool IsNull => _ptr == null;
     public int Length => _ptr->Length;
@@ -42,6 +46,8 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator NativeView<byte>(NativeString str) => str.Text;
+    
+    public Span<byte> AsSpan() => Text.AsSpan();
     
     public byte* TextStart
     {
@@ -88,6 +94,11 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
         }
     }
 
+    public void CalculateLength()
+    {
+        var index = Data.AsReadOnlySpan().IndexOf((byte)0);
+        SetLength(index >= 0 ? index : 0);
+    }
     public void SetLength(int length)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)length, (uint)Capacity, nameof(length));
@@ -106,8 +117,13 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
         _ptr->Length = DataWriter.Append(value, format).End().Length;
     }
 
-    public void Clear() => _ptr->Length = 0;
-
+    public void Reset() => _ptr->Length = 0;
+    public void Clear()
+    {
+        Data.Clear();
+        _ptr->Length = 0;
+    }
+    
     public static bool operator ==(NativeString left, NativeString right) => left.Equals(right);
     public static bool operator !=(NativeString left, NativeString right) => !left.Equals(right);
 

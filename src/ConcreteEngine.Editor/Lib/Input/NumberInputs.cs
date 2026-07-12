@@ -1,7 +1,9 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Editor;
+using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Lib.Inspection;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
@@ -36,6 +38,8 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IFl
         Speed = speed;
         Min = min;
         Max = max;
+
+        if (T.Components == 1) LabelPlacement = LabelPlacement.Inline;
     }
 
     public bool Draw()
@@ -81,7 +85,8 @@ internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IIntV
         Speed = speed;
         Min = min;
         Max = max;
-
+        
+        if (T.Components == 1) LabelPlacement = LabelPlacement.Inline;
     }
 
     public bool Draw()
@@ -111,12 +116,14 @@ internal sealed unsafe class ColorInput : InputField
         _getter = getter;
         _setter = setter;
         HasAlpha = hasAlpha;
+        LabelPlacement = LabelPlacement.Top;
     }
 
     public bool Draw()
     {
         var value = _getter();
         var label = ApplyLabelLayout(TextBuffers.GetWriter());
+        
         var changed = HasAlpha
             ? ImGui.ColorEdit4(label, &value.R)
             : ImGui.ColorEdit3(label, &value.R);

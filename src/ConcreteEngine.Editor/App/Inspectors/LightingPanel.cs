@@ -9,9 +9,16 @@ namespace ConcreteEngine.Editor.App.Inspectors;
 
 internal sealed class LightingPanel : EditorPanel
 {
+    
+    private IlluminationSettingsInspector _illuminationSettingsInspector;
+    private ShadowSettingsInspector _shadowSettingsInspector;
+    private EnvironmentSettingsInspector _environmentSettingsInspector;
 
     public LightingPanel(StateManager state) : base(InspectorId.Lighting, state)
     {
+        _illuminationSettingsInspector = new IlluminationSettingsInspector();
+        _shadowSettingsInspector = new ShadowSettingsInspector();
+        _environmentSettingsInspector = new EnvironmentSettingsInspector();
         //_inspectFields.ShadowSizeCombo.LabelPlacement = LabelPlacement.None;
     }
 
@@ -23,19 +30,25 @@ internal sealed class LightingPanel : EditorPanel
 
         if (ImGui.BeginTabItem("Light"u8))
         {
-            IlluminationSettingsInspector.Draw();
+            IlluminationSettingsInspector.Instance.DrawDirectionalLight();
+            IlluminationSettingsInspector.Instance.DrawAmbient();
+
             ImGui.EndTabItem();
         }
 
         if (ImGui.BeginTabItem("Shadow"u8))
         {
-            ShadowSettingsInspector.Draw();
+            ShadowSettingsInspector.Instance.DrawProjection();
+            ShadowSettingsInspector.Instance.DrawVisuals();
+
             ImGui.EndTabItem();
         }
 
         if (ImGui.BeginTabItem("Fog"u8))
         {
-            EnvironmentSettingsInspector.Draw();
+            EnvironmentSettingsInspector.Instance.DrawFogHeight();
+            EnvironmentSettingsInspector.Instance.DrawFogOptics();
+
             ImGui.EndTabItem();
         }
 

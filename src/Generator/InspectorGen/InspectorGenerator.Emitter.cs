@@ -24,16 +24,8 @@ internal static class InspectorGeneratorEmitter
         var sb = new SourceBuilder(4096);
         GenerateHeaders(sb, model.InspectorNs);
 
-        sb.AppendLine($"internal static partial class {model.InspectorName}");
+        sb.AppendLine($"internal sealed partial class {model.InspectorName}");
         sb.OpenBrace();
-
-        // Members
-        foreach (var m in model.Members.AsSpan())
-        {
-            if (m.Input is null) continue;
-            EmitInputField(sb, m, null);
-            sb.AppendLine();
-        }
 
         // Groups
         foreach (var g in model.Groups.AsSpan())
@@ -44,24 +36,16 @@ internal static class InspectorGeneratorEmitter
             sb.AppendLine();
         }
 
-        // Draw
-        sb.AppendLine().AppendLine("public static void Draw()");
-        sb.OpenBrace();
-        foreach (var m in model.Members.AsSpan())
-        {
-            if (m.Input is null) continue;
-            sb.AppendLine(m.Name, ".Draw();");
-        }
-
-        sb.CloseBrace();
-
         // DrawGroups
         foreach (var g in model.Groups.AsSpan())
         {
-            if (g.Members.AsSpan().Length == 0) continue;
-            sb.AppendLine().AppendLine("public static void Draw", g.Name, "()");
+            var memberSpan = g.Members;
+            if (memberSpan.Length == 0) continue;
+
+            var drawSuffix = g.IsRoot ? "Root" : g.Name;
+            sb.AppendLine().AppendLine("public void Draw", drawSuffix, "()");
             sb.OpenBrace();
-            foreach (var m in g.Members.AsSpan())
+            foreach (var m in memberSpan.AsSpan())
             {
                 if (m.Input is null) continue;
                 sb.AppendLine(m.Name, ".Draw();");
@@ -74,10 +58,11 @@ internal static class InspectorGeneratorEmitter
         return sb.ToString();
     }
 
-    private static void EmitInputField(SourceBuilder sb, InspectorMember member, InspectorGroup? group)
+    private static void EmitInputField(SourceBuilder sb, InspectorMember member, InspectorGroup group)
     {
+        sb.NewLine("private readonly ");
+
         var access = CreateAccessPath(member, group);
-        sb.NewLine("private static readonly ");
         switch (member.Input)
         {
             case NumberInput: EmitInput(sb, member, access); break;
@@ -96,11 +81,11 @@ internal static class InspectorGeneratorEmitter
         sb.Append(inputType, " ", input.Name, " = new(").EndLine();
         sb.PushIndent();
 
-        sb.AppendLine(Symbols.FormatLiteral(input.Label, true), ", ");
-        sb.AppendLine(GetInputStyleText(input.InputStyle), ", ");
+        sb.AppendLine(member.DisplayString, ", ");
+        sb.AppendLine(input.GetInputStyleText(), ", ");
 
         // Getter
-        sb.AppendLine($"static () => Unsafe.BitCast<{member.TypeName}, {input.NumberType}>({access.Value}), ");
+        sb.AppendLine("static () => Unsafe.BitCast", $"<{member.TypeName}, {input.NumberType}>({access.Value}), ");
         EmitSetter(sb, member, in access, $"Unsafe.BitCast<{input.NumberType}, {member.TypeName}>(v)");
 
         //
@@ -134,7 +119,7 @@ internal static class InspectorGeneratorEmitter
         sb.Append("ColorInput ", input.Name, " = new(").EndLine();
         sb.PushIndent();
 
-        sb.AppendLine(Symbols.FormatLiteral(input.Label, true), ", ");
+        sb.AppendLine(member.DisplayString, ", ");
 
         //getter & setter
         sb.AppendLine($"static () => {castFrom}{access.Value}, ");
@@ -158,7 +143,7 @@ internal static class InspectorGeneratorEmitter
         sb.Append("ComboInput ", input.Name, " = new(").EndLine();
         sb.PushIndent();
 
-        sb.AppendLine(Symbols.FormatLiteral(input.Label, true), ", ");
+        sb.AppendLine(member.DisplayString, ", ");
         sb.AppendLine(input.Values, ", ");
         sb.AppendLine(input.Names, ", ");
 
@@ -178,9 +163,9 @@ internal static class InspectorGeneratorEmitter
             sb.AppendLine($"static v => {access.Value} = {assignedValue}, ");
     }
 
-    private static AccessPath CreateAccessPath(InspectorMember member, InspectorGroup? group)
+    private static AccessPath CreateAccessPath(InspectorMember member, InspectorGroup group)
     {
-        if (group is null)
+        if (group.IsRoot)
         {
             var ownerValue = $"Target.{member.Name}";
             return new AccessPath(ownerValue, ownerValue, false);
@@ -190,12 +175,4 @@ internal static class InspectorGeneratorEmitter
         var value = $"{owner}.{member.Name}";
         return new AccessPath(owner, value, group.Info.IsStructProperty());
     }
-
-    private static string GetInputStyleText(InputStyle style) => style switch
-    {
-        InputStyle.Input => "InputStyle.Input",
-        InputStyle.Slider => "InputStyle.Slider",
-        InputStyle.Drag => "InputStyle.Drag",
-        _ => throw new ArgumentOutOfRangeException(nameof(style), style, null)
-    };
 }

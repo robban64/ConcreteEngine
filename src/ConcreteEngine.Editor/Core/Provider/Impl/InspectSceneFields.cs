@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Inspection;
 
 namespace ConcreteEngine.Editor.Core.Provider.Impl;
-
+/*
 internal sealed class InspectSceneFields : InspectorFields<InspectSceneObject>
 {
     public readonly FloatField<Float3> TranslationField;
@@ -41,7 +41,7 @@ internal sealed class InspectSceneFields : InspectorFields<InspectSceneObject>
         );
     }
 }
-
+*/
 /*
 internal sealed class InspectModelInstanceFields : InspectorFields<ModelInstance>
 {

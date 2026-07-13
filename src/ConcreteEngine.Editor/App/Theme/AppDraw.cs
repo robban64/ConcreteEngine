@@ -13,7 +13,7 @@ internal static unsafe class AppDraw
     public static void Icon(uint icon) => ImGui.TextUnformatted((byte*)&icon);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Text(NativeString text) => ImGui.TextUnformatted(text, text.TextEnd);
+    public static void Text(NativeString text) => ImGui.TextUnformatted(text.TextStart, text.TextEnd);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Text(NativeView<byte> text) => ImGui.TextUnformatted(text, text + text.Length);

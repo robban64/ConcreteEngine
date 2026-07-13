@@ -11,7 +11,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
 
-internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPanel(InspectorId.SceneObject, state)
+internal sealed unsafe class SceneInspectorPanel : EditorPanel
 {
     private const ImGuiTreeNodeFlags CollapseFlags = ImGuiTreeNodeFlags.DefaultOpen;
     private const string ValidNoneAlphaNumericChars = "_-";
@@ -22,6 +22,14 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
 
     private NativeString _title;
     private NativeString _nameInputStr;
+
+    private readonly SceneObjectInspector _inspector;
+    private readonly ParticleInspector _particleInspector;
+    public SceneInspectorPanel(StateManager state) : base(InspectorId.SceneObject, state)
+    {
+        _inspector = new SceneObjectInspector();
+        _particleInspector = new ParticleInspector();
+    }
 
     public override void OnCreate()
     {
@@ -70,12 +78,10 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
 
         ImGui.EndGroup();
 
-        ImGui.PushItemWidth(float.Min(GuiTheme.FormItemWidth, ImGui.GetContentRegionAvail().X));
         ImGui.Spacing();
-        ImGui.Separator();
-        ImGui.Spacing();
-
-        SceneObjectInspector.Draw();
+        
+        if(ImGui.CollapsingHeader("Transform"u8, ImGuiTreeNodeFlags.DefaultOpen))
+            SceneObjectInspector.Instance.DrawTransform();
 
         ImGui.Spacing();
         ImGui.Separator();
@@ -91,8 +97,6 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
             ImGui.Spacing();
             DrawParticles(particleFields);
         }
-
-        ImGui.PopItemWidth();
     }
 
     private void DrawModelInstance(InspectSceneObject inspector, ModelInstance modelInstance)
@@ -141,7 +145,9 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         sw.Append(particle.EmitterName);
         if (ImGui.CollapsingHeader(sw.End(), CollapseFlags)) return;
 
-        ParticleInspector.Draw();
+        ParticleInspector.Instance.DrawEmitterParams();
+        ParticleInspector.Instance.DrawParticleParams();
+
     }
 
 

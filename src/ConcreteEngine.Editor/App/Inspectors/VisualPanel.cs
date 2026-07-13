@@ -7,8 +7,10 @@ namespace ConcreteEngine.Editor.App.Inspectors;
 
 internal sealed class VisualPanel(StateManager state) : EditorPanel(InspectorId.Visual, state)
 {
+    private readonly PostEffectSettingsInspector _postEffectSettingsInspector = new();
+
     public override void OnDraw()
     {
-        PostEffectSettingsInspector.Draw();
+        _postEffectSettingsInspector.Draw();
     }
 }

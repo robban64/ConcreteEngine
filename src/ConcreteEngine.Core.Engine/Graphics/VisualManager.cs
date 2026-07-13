@@ -229,6 +229,7 @@ public sealed class PostEffectSettings : VisualStateObject
         }
     } = new(0.5f, 0.85f, 3.0f);
     
+    [InspectInclude]
     public PostImageFxParams ImageFx
     {
         get;

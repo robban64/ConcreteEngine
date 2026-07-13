@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
@@ -118,6 +119,7 @@ public sealed class MaterialState
         }
     } = PassMask.Default;
 
+    [InputColor]
     public Color4 Color
     {
         get;
@@ -130,6 +132,7 @@ public sealed class MaterialState
         }
     } = Color4.White;
 
+    [InputColor]
     public Color4 SpecularColor
     {
         get;
@@ -142,6 +145,7 @@ public sealed class MaterialState
         }
     } = new(1, 1, 1, 0.12f);
 
+    [InputNumber]
     public Vector4 UvTransform
     {
         get;
@@ -154,6 +158,7 @@ public sealed class MaterialState
         }
     } = new(0, 0, 1f, 1f);
 
+    [InputNumber]
     public float Shininess
     {
         get;
@@ -165,6 +170,7 @@ public sealed class MaterialState
         }
     } = 12f;
 
+    [InputNumber]
     public float Roughness
     {
         get;
@@ -176,6 +182,7 @@ public sealed class MaterialState
         }
     }
 
+    [InputNumber]
     public float Metallic
     {
         get;

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -12,11 +13,11 @@ public sealed partial class InspectorGenerator
 {
     private static readonly Dictionary<string, string> DefaultInputMap = new()
     {
-        { "Vector2", "Float2" },
-        { "Vector3", "Float3" },
-        { "Vector4", "Float4" },
+        { nameof(Vector2), "Float2" },
+        { nameof(Vector3), "Float3" },
+        { nameof(Vector4), "Float4" },
+        { nameof(Quaternion), "Float4" },
         { "Color4", "Float4" },
-        { "Quaternion", "Float4" },
         { "Size2D", "Int2" },
         { "Vector2I", "Int2" }
     };
@@ -25,6 +26,19 @@ public sealed partial class InspectorGenerator
         sym is IPropertySymbol or IFieldSymbol && sym.DeclaredAccessibility == Accessibility.Public &&
         !sym.IsImplicitlyDeclared && sym.GetAttributes().Length > 0;
 
+    private static void ExtractCommonFieldAttr(AttributeData attr, out string? displayName, out string? segment)
+    {
+        displayName = segment = null;
+        foreach (var (key, value) in attr.NamedArguments)
+        {
+            var v = value.Value;
+            switch (key)
+            {
+                case "DisplayName" when v is string l: displayName = l; break;
+                case "Segment" when v is string l: segment = l; break;
+            }
+        }
+    }
     private static bool TryParseIncludeAttribute(ISymbol member, out string? nestedName)
     {
         nestedName = null;
@@ -41,17 +55,16 @@ public sealed partial class InspectorGenerator
     private static NumberInput? MakeInputField(string fieldName, AttributeData attr, ITypeSymbol type)
     {
         var style = InputStyle.Input;
-        var ctor = attr.ConstructorArguments;
-        if (ctor.Length > 0 && ctor[0].Value is byte b) style = (InputStyle)b;
+        if (attr.ConstructorArguments.Length > 0 && attr.ConstructorArguments[0].Value is byte b) 
+            style = (InputStyle)b;
 
         float min = 0, max = 0, speed = 0;
-        string? typeName = null, label = null, format = null;
+        string? typeName = null, format = null;
         foreach (var (key, value) in attr.NamedArguments)
         {
             var v = value.Value;
             switch (key)
             {
-                case "DisplayName" when v is string l: label = l; break;
                 case "Converter" when v is INamedTypeSymbol l: typeName = l.Name; break;
                 case "Min" when v is float l: min = l; break;
                 case "Max" when v is float l: max = l; break;
@@ -69,30 +82,28 @@ public sealed partial class InspectorGenerator
             else return null;
         }
 
-        return new NumberInput(fieldName, label ?? fieldName, typeName, style, speed, min, max, format);
+        return new NumberInput(fieldName, typeName, style, speed, min, max, format);
     }
 
     private static ColorInput MakeColorField(string fieldName, AttributeData attr, ITypeSymbol type)
     {
         var hasAlpha = true;
-        string label = fieldName;
         foreach (var (key, value) in attr.NamedArguments)
         {
             var v = value.Value;
             switch (key)
             {
-                case "DisplayName" when v is string l: label = l; break;
                 case "HasAlpha" when v is bool l: hasAlpha = l; break;
             }
         }
 
-        return new ColorInput(fieldName, label, hasAlpha);
+        return new ColorInput(fieldName, hasAlpha);
     }
 
     private static ComboInput? MakeComboField(string fieldName, AttributeData attr, ITypeSymbol type)
     {
         int startAt = 0;
-        string? values, names, placeholder = null, label = null;
+        string? values, names, placeholder = null;
         if (type.TypeKind == TypeKind.Enum)
         {
             var enumMembers = type.GetMembers().OfType<IFieldSymbol>().Where(f => f.HasConstantValue).ToArray();
@@ -113,13 +124,12 @@ public sealed partial class InspectorGenerator
         {
             switch (key)
             {
-                case "DisplayName" when value.Value is string l: label = l; break;
                 case "StartAt" when value.Value is int l: startAt = l; break;
                 case "Placeholder" when value.Value is string l: placeholder = l; break;
             }
         }
 
-        return new ComboInput(fieldName, label ?? fieldName, values, names, placeholder, startAt);
+        return new ComboInput(fieldName, values, names, placeholder, startAt);
     }
 
 

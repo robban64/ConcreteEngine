@@ -32,11 +32,10 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
             Register(new FloatField<Float1>("Shininess", InputFieldKind.Slider) { Min = 0, Max = 50 });
         UvRepeatField = Register(new FloatField<Float4>("UV Repeat", InputFieldKind.Slider));
 
-        BlendCombo = Register(ComboField.Create("Blend Mode", BlendModeExt.Values, BlendModeExt.Names));
-        CullCombo = Register(ComboField.Create("Cull Mode", CullModeExt.Values, CullModeExt.Names));
-        DepthCombo = Register(ComboField.Create("Depth Mode", DepthModeExt.Values, DepthModeExt.Names));
-        PolygonCombo =
-            Register(ComboField.Create("Polygon Offset", PolygonOffsetLevelExt.Values, PolygonOffsetLevelExt.Names));
+        BlendCombo = Register(  ComboField.Create("Blend Mode", BlendModeExt.Values, BlendModeExt.Names));
+        CullCombo = Register(   ComboField.Create("Cull Mode", CullModeExt.Values, CullModeExt.Names));
+        DepthCombo = Register(  ComboField.Create("Depth Mode", DepthModeExt.Values, DepthModeExt.Names));
+        PolygonCombo = Register(ComboField.Create("Polygon Offset", PolygonOffsetLevelExt.Values, PolygonOffsetLevelExt.Names));
 
         CreateSegment("State Properties", [ColorField, SpecularField, ShininessField, UvRepeatField]);
         CreateSegment("State Value", [BlendCombo, CullCombo, DepthCombo, PolygonCombo]);

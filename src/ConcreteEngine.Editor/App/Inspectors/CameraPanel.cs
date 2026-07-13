@@ -9,11 +9,18 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
 
-internal sealed class CameraPanel(StateManager state) : EditorPanel(InspectorId.Camera, state)
+internal sealed class CameraPanel : EditorPanel
 {
     private Size2D _currentViewport;
     private NativeString _viewportStr;
     private NativeString _aspectStr;
+    private AvgFrameTimer avg1;
+
+    private CameraInspector _cameraInspector;
+    public CameraPanel(StateManager state) : base(InspectorId.Camera, state)
+    {
+        _cameraInspector = new CameraInspector();
+    }
 
     private void UpdateText()
     {
@@ -43,7 +50,7 @@ internal sealed class CameraPanel(StateManager state) : EditorPanel(InspectorId.
         if (_currentViewport != EngineWindow.Viewport.Size) UpdateText();
     }
 
-    private AvgFrameTimer avg1;
+
 
     public override void OnDraw()
     {
@@ -53,7 +60,7 @@ internal sealed class CameraPanel(StateManager state) : EditorPanel(InspectorId.
 
         ImGui.Spacing();
         avg1.BeginSample();
-        CameraInspector.Draw();
+        _cameraInspector.Draw();
         if (avg1.EndSample() > 40) avg1.ResetAndPrint();
 
     }        

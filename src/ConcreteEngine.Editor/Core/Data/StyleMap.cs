@@ -33,7 +33,6 @@ internal static unsafe class StyleMap
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte* GetIcon(Icons icon) => _iconsPtr + ((int)icon * 4);
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint GetLogLevelColor(LogLevel level) => _colorPtr[(byte)level];
 

@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Core.Provider;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGuizmo;
@@ -33,9 +33,9 @@ internal static unsafe class ViewportWindow
         state.GetOrSetTextureHandle(ImGuiSystem.OutputTexture, ref _viewportTexHandle);
         ImGui.Image(_viewportTexHandle, EngineWindow.Viewport.Size, Vector2.UnitY, Vector2.UnitX);
 
-        if (SelectionManager.Instance.SelectedSceneObject is { } inspector)
+        if (SelectionManager.Instance.SelectedSceneObject != null)
         {
-            DrawGizmos(state.Context.Tool, inspector);
+            DrawGizmos(state.Context.Tool, SelectionManager.Instance.SelectedSceneObject.Transform);
         }
 
         ImGui.End();
@@ -44,7 +44,7 @@ internal static unsafe class ViewportWindow
 
 
     [SkipLocalsInit]
-    private static void DrawGizmos(ToolContext tool, InspectSceneObject inspector)
+    private static void DrawGizmos(ToolContext tool, SceneTransform sceneTransform)
     {
         var enabled = !EditorInput.IsGizmoBlocked;
 
@@ -64,7 +64,7 @@ internal static unsafe class ViewportWindow
 
         *view = CameraManager.Instance.Camera.ViewMatrix;
         *proj = CameraManager.Instance.Camera.ProjectionMatrix;
-        MatrixMath.CreateModelMatrix(in inspector.Transform.GetTransform(), out *model);
+        MatrixMath.CreateModelMatrix(in sceneTransform.GetTransform(), out *model);
 
         var changed = ImGuizmo.Manipulate(
             &view->M11,
@@ -77,7 +77,7 @@ internal static unsafe class ViewportWindow
         if (changed && enabled)
         {
             Transform.FromMatrix(in *model, out var transform);
-            inspector.Transform.SetTransform(in transform);
+            sceneTransform.SetTransform(in transform);
         }
     }
 }

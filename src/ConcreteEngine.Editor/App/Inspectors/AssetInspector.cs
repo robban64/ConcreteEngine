@@ -1,22 +1,21 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Widgets;
+using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
 
 [EditorInspector(typeof(Texture))]
 internal sealed partial class TextureInspector : Inspector<TextureInspector>
 {
-    public static Texture Target => (Texture)SelectionManager.Instance.SelectedAsset.Asset;
+    public static Texture Target => (Texture)SelectionManager.Instance.SelectedAsset;
 }
 
 [EditorInspector(typeof(Material))]
 internal sealed partial class MaterialInspector : Inspector<MaterialInspector>
 {
-    public static Material Target => (Material)SelectionManager.Instance.SelectedAsset.Asset;
+    public static Material Target => (Material)SelectionManager.Instance.SelectedAsset;
 
     private readonly ComboInput BlendCombo = ComboInput.Create("Blend Mode",
         BlendModeExt.Values,

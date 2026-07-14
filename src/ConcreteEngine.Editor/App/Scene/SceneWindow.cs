@@ -5,8 +5,7 @@ using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Inspection;
-using ConcreteEngine.Editor.Lib.Widgets;
+using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
@@ -113,7 +112,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
                 State.EnqueueEvent(new SelectionEvent(id));
 
             ImGui.SameLine();
-            if (AppDraw.DrawButton(visible ? IconNames.Eye : IconNames.EyeClosed))
+            if (AppDraw.Button(visible ? IconNames.Eye : IconNames.EyeClosed))
                 State.EnqueueEvent(new SceneObjectEvent(id, Visible: !visible));
 
             ImGui.PopID();

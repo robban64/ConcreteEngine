@@ -1,6 +1,4 @@
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Provider;
-using ConcreteEngine.Editor.Core.Provider.Impl;
 using ConcreteEngine.Editor.Lib;
 
 namespace ConcreteEngine.Editor.App.Inspectors;

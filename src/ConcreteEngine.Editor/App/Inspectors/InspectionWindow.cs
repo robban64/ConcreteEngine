@@ -1,5 +1,4 @@
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Lib;
 
 namespace ConcreteEngine.Editor.App.Inspectors;

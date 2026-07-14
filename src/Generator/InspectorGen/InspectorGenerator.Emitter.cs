@@ -12,19 +12,18 @@ internal static class InspectorGeneratorEmitter
         sb.AppendLine("using System.Runtime.CompilerServices;");
         sb.AppendLine("using ConcreteEngine.Core.Common.Numerics;");
         sb.AppendLine("using ConcreteEngine.Core.Engine.Editor;");
-        sb.AppendLine("using ConcreteEngine.Editor.Lib.Inspection;");
-        sb.AppendLine("using ConcreteEngine.Editor.Lib.Widgets;").AppendLine();
+        sb.AppendLine("using ConcreteEngine.Editor.Lib.Field;\n");
 
-        sb.AppendLine($"namespace {ns};").AppendLine();
+        sb.AppendLine("namespace ", ns, ";\n");
     }
 
 
     public static string Emit(InspectModel model)
     {
-        var sb = new SourceBuilder(4096);
+        var sb = new SourceBuilder(4096 * 2);
         GenerateHeaders(sb, model.InspectorNs);
 
-        sb.AppendLine($"internal sealed partial class {model.InspectorName}");
+        sb.AppendLine("internal sealed partial class ", model.InspectorName);
         sb.OpenBrace();
 
         // Groups
@@ -42,8 +41,7 @@ internal static class InspectorGeneratorEmitter
             var memberSpan = g.Members;
             if (memberSpan.Length == 0) continue;
 
-            var drawSuffix = g.IsRoot ? "Root" : g.Name;
-            sb.AppendLine().AppendLine("public void Draw", drawSuffix, "()");
+            sb.AppendLine("\npublic void Draw", g.IsRoot ? "Root" : g.Name, "()");
             sb.OpenBrace();
             foreach (var m in memberSpan.AsSpan())
             {

@@ -1,14 +1,10 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.App.Inspectors;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Core.Provider;
-using ConcreteEngine.Editor.Core.Provider.Impl;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
@@ -20,27 +16,25 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
 {
     private readonly MaterialInspector _inspector = new();
 
-    public void Draw(InspectMaterial material)
+    public void Draw(Material material)
     {
-        var sw = ScratchBuffer.Writer();
-
         ImGui.SeparatorText("Material Info"u8);
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Shader: "u8);
         ImGui.SameLine();
-        ImGui.TextColored(Color4.White, sw.Write(material.Asset.BoundShader.Name));
+        AppDraw.TextColored(Palette32.White, material.BoundShader.Name);
         ImGui.EndGroup();
 
         ImGui.Spacing();
         ImGui.SeparatorText("Texture Slots"u8);
-        DrawTextureSlots(material.Asset, sw);
+        DrawTextureSlots(material);
 
         ImGui.SeparatorText("Material State"u8);
         _inspector.DrawState();
 
         ImGui.Spacing();
         ImGui.SeparatorText("Render Properties"u8);
-        DrawPipeline(material, sw);
+        DrawPipeline(material);
         ImGui.Spacing();
 
         ImGui.SeparatorText("Render Values"u8);
@@ -49,7 +43,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
     
     
 
-    private void DrawTextureSlots(Material asset, NativeSpanWriter sw)
+    private void DrawTextureSlots(Material asset)
     {
         var rowHeight = ImGui.GetFrameHeight();
         var offset = ImGui.GetContentRegionAvail().X * 0.33f + GuiTheme.ItemSpacing.X;
@@ -60,7 +54,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         {
             var binding = bindings[i];
             ImGui.PushID(i);
-            AppDraw.Text(sw.Write(usageNames[(int)binding.Usage]));
+            AppDraw.Text(usageNames[(int)binding.Usage]);
             ImGui.SameLine(offset);
             if (binding.AssetTexture.IsValid())
                 DrawAssetSlot(asset, i, AssetManager.Assets.Get<Texture>(binding.AssetTexture), rowHeight);
@@ -73,10 +67,10 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
     }
 
 
-    private void DrawPipeline(InspectMaterial editMaterial, NativeSpanWriter sw)
+    private void DrawPipeline(Material material)
     {
-        var ogDrawState = editMaterial.State.DrawState;
-        var drawState = editMaterial.State.DrawState;
+        var ogDrawState = material.State.DrawState;
+        var drawState = material.State.DrawState;
         DrawFlagToggle("Blend Mode"u8, GfxDrawFlags.Blend, ref drawState);
         DrawFlagToggle("Cull Mode"u8, GfxDrawFlags.Cull, ref drawState);
         DrawFlagToggle("Depth Test"u8, GfxDrawFlags.DepthTest, ref drawState);
@@ -86,7 +80,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         DrawFlagToggle("A2C"u8, GfxDrawFlags.Ac2, ref drawState);
 
         if (ogDrawState != drawState)
-            editMaterial.State.DrawState = drawState;
+            material.State.DrawState = drawState;
 
         if (drawState.IsEmpty()) return;
 /*

@@ -1,37 +1,36 @@
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Core.Provider;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Assets;
 
 internal sealed unsafe class ModelInspectorUi(StateManager state)
 {
-    public void Draw(InspectModel editModel)
+    public void Draw(Model model)
     {
-        var model = editModel.Asset;
         var sw = ScratchBuffer.Writer();
 
         ImGui.SeparatorText("Model Info"u8);
-        AppDraw.DrawTextProperty("Vertices:"u8, sw.Write(model.Info.VertexCount));
-        AppDraw.DrawTextProperty("Triangles:"u8, sw.Write(model.Info.FaceCount));
-        AppDraw.DrawTextProperty("Meshes:"u8, sw.Write((int)model.Info.MeshCount));
-        AppDraw.DrawTextProperty("Animated:"u8, sw.Write(model.Info.IsAnimated ? 'Y' : 'N'));
+        AppDraw.TextProperty("Vertices:"u8, sw.Write(model.Info.VertexCount));
+        AppDraw.TextProperty("Triangles:"u8, sw.Write(model.Info.FaceCount));
+        AppDraw.TextProperty("Meshes:"u8, sw.Write((int)model.Info.MeshCount));
+        AppDraw.TextProperty("Animated:"u8, sw.Write(model.Info.IsAnimated ? 'Y' : 'N'));
 
 
         ImGui.SeparatorText("Meshes"u8);
-        foreach (var mesh in editModel.Asset.GetMeshes())
+        foreach (var mesh in model.GetMeshes())
         {
             if (!ImGui.TreeNodeEx(sw.Write(mesh.Name), ImGuiTreeNodeFlags.SpanFullWidth)) continue;
 
             var spec = mesh.Info;
-            AppDraw.DrawTextProperty("Vertices:"u8, sw.Write(spec.MeshIndex));
-            AppDraw.DrawTextProperty("MatIndex:"u8, sw.Write(spec.MaterialIndex));
-            AppDraw.DrawTextProperty("Vertices:"u8, sw.Write(spec.VertexCount));
-            AppDraw.DrawTextProperty("Triangles:"u8, sw.Write(spec.TrisCount));
+            AppDraw.TextProperty("Vertices:"u8, sw.Write(spec.MeshIndex));
+            AppDraw.TextProperty("MatIndex:"u8, sw.Write(spec.MaterialIndex));
+            AppDraw.TextProperty("Vertices:"u8, sw.Write(spec.VertexCount));
+            AppDraw.TextProperty("Triangles:"u8, sw.Write(spec.TrisCount));
 
             ImGui.TreePop();
         }
@@ -43,7 +42,7 @@ internal sealed unsafe class ModelInspectorUi(StateManager state)
     private static void DrawAnimated(ModelRig rig, NativeSpanWriter sw)
     {
         ImGui.SeparatorText("Animation"u8);
-        AppDraw.DrawTextProperty("Bone Count:"u8, sw.Write(rig.BoneCount));
+        AppDraw.TextProperty("Bone Count:"u8, sw.Write(rig.BoneCount));
 
         if (ImGui.BeginTable("##anim_table"u8, 4, GuiTheme.TableFlags))
         {

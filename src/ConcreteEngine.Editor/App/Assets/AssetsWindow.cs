@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Widgets;
+using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.App.Theme.Palette32;
@@ -167,13 +167,13 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, FrameBgHovered);
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, FrameBgActive);
 
-        if (AppDraw.DrawButton(IconNames.Cog)) ImGui.OpenPopup("settings"u8);
+        if (AppDraw.Button(IconNames.Cog)) ImGui.OpenPopup("settings"u8);
 
         ImGui.SameLine();
-        if (AppDraw.DrawButton(IconNames.Plus)) ImGui.OpenPopup("menu"u8);
+        if (AppDraw.Button(IconNames.Plus)) ImGui.OpenPopup("menu"u8);
 
         ImGui.SameLine(0.0f, 12.0f);
-        if (AppDraw.DrawButton(IconNames.ChevronLeft, !_assetBrowser.IsRootPath))
+        if (AppDraw.Button(IconNames.ChevronLeft, !_assetBrowser.IsRootPath))
             _assetBrowser.GoToParent();
 
         //
@@ -205,23 +205,23 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         var bindingFilter = _bindingsFilter;
         var assetFilter = _assetFilter;
 
-        if (AppDraw.DrawToggleButton(IconNames.File, bindingFilter == FileBinding.RootFile))
+        if (AppDraw.ToggleButton(IconNames.File, bindingFilter == FileBinding.RootFile))
             UpdateFilter(FileBinding.RootFile, assetFilter);
 
         ImGui.SameLine(0, 8f);
-        if (AppDraw.DrawToggleButton(IconNames.Code, assetFilter == AssetKind.Shader))
+        if (AppDraw.ToggleButton(IconNames.Code, assetFilter == AssetKind.Shader))
             UpdateFilter(bindingFilter, AssetKind.Shader);
 
         ImGui.SameLine();
-        if (AppDraw.DrawToggleButton(IconNames.Box, assetFilter == AssetKind.Model))
+        if (AppDraw.ToggleButton(IconNames.Box, assetFilter == AssetKind.Model))
             UpdateFilter(bindingFilter, AssetKind.Model);
 
         ImGui.SameLine();
-        if (AppDraw.DrawToggleButton(IconNames.Image, assetFilter == AssetKind.Texture))
+        if (AppDraw.ToggleButton(IconNames.Image, assetFilter == AssetKind.Texture))
             UpdateFilter(bindingFilter, AssetKind.Texture);
 
         ImGui.SameLine();
-        if (AppDraw.DrawToggleButton(IconNames.Circle, assetFilter == AssetKind.Material))
+        if (AppDraw.ToggleButton(IconNames.Circle, assetFilter == AssetKind.Material))
             UpdateFilter(bindingFilter, AssetKind.Material);
 
     }

@@ -9,8 +9,37 @@ namespace ConcreteEngine.Editor.App.Theme;
 
 internal static unsafe class AppDraw
 {
+    public static void CollapseSection(ReadOnlySpan<byte> title, delegate*<void> draw, ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen)
+    {
+        if (ImGui.CollapsingHeader(title, flags)) draw();
+        ImGui.Spacing();
+        ImGui.Separator();
+    }
+    
+    public static void Section(ReadOnlySpan<byte> title, delegate*<void> draw)
+    {
+        ImGui.SeparatorText(title);
+        draw();
+        ImGui.Spacing();
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Icon(uint icon) => ImGui.TextUnformatted((byte*)&icon);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void TextColored(uint color, string text)
+    {
+        ImGui.PushStyleColor(ImGuiCol.Text, color);
+        Text(text);
+        ImGui.PopStyleColor();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Text(string text)
+    {
+        var sw = ScratchBuffer.Writer();
+        Text(sw.Write(text));
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Text(NativeString text) => ImGui.TextUnformatted(text.TextStart, text.TextEnd);
@@ -36,7 +65,7 @@ internal static unsafe class AppDraw
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DrawTextProperty(ReadOnlySpan<byte> name, NativeView<byte> text)
+    public static void TextProperty(ReadOnlySpan<byte> name, NativeView<byte> text)
     {
         ImGui.TextUnformatted(name);
         ImGui.SameLine();
@@ -44,16 +73,15 @@ internal static unsafe class AppDraw
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DrawTextProperty(ReadOnlySpan<byte> name, ReadOnlySpan<byte> text)
+    public static void TextProperty(ReadOnlySpan<byte> name, ReadOnlySpan<byte> text)
     {
         ImGui.TextUnformatted(name);
         ImGui.SameLine();
         ImGui.TextUnformatted(text);
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DrawSameLineProperty(char separator = '-')
+    public static void SameLineProperty(char separator = '-')
     {
         ImGui.SameLine();
         ImGui.TextUnformatted((byte*)&separator);
@@ -61,7 +89,7 @@ internal static unsafe class AppDraw
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool DrawButton(byte* text, bool enabled = true)
+    public static bool Button(byte* text, bool enabled = true)
     {
         if (!enabled) ImGui.BeginDisabled(true);
         var clicked = ImGui.Button(text);
@@ -70,20 +98,21 @@ internal static unsafe class AppDraw
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool DrawToggleButton(byte* text, bool value, bool enabled = true)
+    public static bool ToggleButton(byte* text, bool value, bool enabled = true)
     {
         if (value) ImGui.PushStyleColor(ImGuiCol.Button, Palette32.FrameBgActive);
-        var result = DrawButton(text, enabled);
+        var result = Button(text, enabled);
         if (value) ImGui.PopStyleColor();
         return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool DrawButton(uint icon, bool enabled = true) => DrawButton((byte*)&icon, enabled);
+    public static bool Button(uint icon, bool enabled = true) => Button((byte*)&icon, enabled);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool DrawToggleButton(uint icon, bool value, bool enabled = true) =>
-        DrawToggleButton((byte*)&icon, value, enabled);
+    public static bool ToggleButton(uint icon, bool value, bool enabled = true) =>
+        ToggleButton((byte*)&icon, value, enabled);
+
 
     // ReSharper disable once OutParameterValueIsAlwaysDiscarded.Global
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

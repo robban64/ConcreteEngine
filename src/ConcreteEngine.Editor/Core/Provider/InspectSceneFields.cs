@@ -1,9 +1,4 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine.Editor;
-using ConcreteEngine.Editor.Lib.Inspection;
-
-namespace ConcreteEngine.Editor.Core.Provider.Impl;
+namespace ConcreteEngine.Editor.Core.Provider;
 /*
 internal sealed class InspectSceneFields : InspectorFields<InspectSceneObject>
 {

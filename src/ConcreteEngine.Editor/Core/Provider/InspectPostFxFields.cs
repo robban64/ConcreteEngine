@@ -1,8 +1,4 @@
-using ConcreteEngine.Core.Engine.Editor;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Editor.Lib.Inspection;
-
-namespace ConcreteEngine.Editor.Core.Provider.Impl;
+namespace ConcreteEngine.Editor.Core.Provider;
 /*
 internal sealed class InspectPostFxFields : InspectorFields<VisualManager>
 {

@@ -8,7 +8,7 @@ using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Widgets;
+using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Logging;
 using ConcreteEngine.Editor.Metrics;
 using Hexa.NET.ImGui;

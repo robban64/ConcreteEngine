@@ -1,11 +1,11 @@
 using System.Numerics;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.App.Inspectors;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Core.Provider;
-using ConcreteEngine.Editor.Core.Provider.Impl;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Resources;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Assets;
@@ -14,24 +14,24 @@ internal sealed class TextureInspectorUi(StateManager state)
 {
     private readonly TextureInspector _inspector = new ();
 
-    public void Draw(InspectTexture editTexture)
+    public void Draw(Texture texture)
     {
         var sw = ScratchBuffer.Writer();
-        var texture = editTexture.Asset;
 
         ImGui.SeparatorText("Texture Info"u8);
 
-        AppDraw.DrawTextProperty("Dimension:"u8,
+        AppDraw.TextProperty("Dimension:"u8,
             sw.Append(texture.Size.Width).Append('x').Append(texture.Size.Height).End());
 
-        AppDraw.DrawTextProperty("InMemory:"u8, texture.HasPixelData ? "Yes"u8 : "No"u8);
+        AppDraw.TextProperty("InMemory:"u8, texture.HasPixelData ? "Yes"u8 : "No"u8);
 
         ImGui.SeparatorText("GPU Metadata"u8);
 
-        AppDraw.DrawTextProperty("Kind:"u8, sw.Write(editTexture.GfxMeta.Kind.ToText()));
-        AppDraw.DrawSameLineProperty();
-        AppDraw.DrawTextProperty("Format:"u8, sw.Write(editTexture.GfxMeta.PixelFormat.ToText()));
-        AppDraw.DrawTextProperty("Mips:"u8, sw.Write(editTexture.GfxMeta.MipLevels));
+        var meta = GfxResourceApi.GetMeta(texture.GfxId);
+        AppDraw.TextProperty("Kind:"u8, sw.Write(meta.Kind.ToText()));
+        AppDraw.SameLineProperty();
+        AppDraw.TextProperty("Format:"u8, sw.Write(meta.PixelFormat.ToText()));
+        AppDraw.TextProperty("Mips:"u8, sw.Write(meta.MipLevels));
 
         _inspector.DrawGpuState();
 

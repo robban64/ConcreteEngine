@@ -3,12 +3,15 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Core.Provider;
 
 namespace ConcreteEngine.Editor.App.Assets;
 
 internal static class AssetsExtensions
 {
+    public static Icons GetModelIcon(Model model) => model.Info.MeshCount > 1 ? Icons.Boxes : Icons.Box;
+    public static Icons GetMaterialIcon(Material material) =>
+        material.State.IsTransparent ? Icons.CircleDashed : Icons.Circle;
+
     extension(FileBinding binding)
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -49,20 +52,20 @@ internal static class AssetsExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Icons ToIcon() => kind switch
         {
-            AssetKind.Shader => AssetIcons.ShaderIcon,
-            AssetKind.Model => AssetIcons.ModelIcon,
-            AssetKind.Texture => AssetIcons.TextureIcon,
-            AssetKind.Material => AssetIcons.MaterialIcon,
+            AssetKind.Shader => Icons.Code,
+            AssetKind.Model => Icons.Box,
+            AssetKind.Texture => Icons.Image,
+            AssetKind.Material => Icons.Circle,
             _ => Throwers.Unreachable<Icons>(nameof(kind))
         };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Icons ToFileIcon() => kind switch
         {
-            AssetKind.Shader => AssetIcons.ShaderFileIcon,
-            AssetKind.Model => AssetIcons.ModelFileIcon,
-            AssetKind.Texture => AssetIcons.TextureFileIcon,
-            AssetKind.Material => AssetIcons.MaterialIcon,
+            AssetKind.Shader => Icons.FileCode,
+            AssetKind.Model => Icons.FileBox,
+            AssetKind.Texture => Icons.FileImage,
+            AssetKind.Material => Icons.FileCog,
             _ => Throwers.Unreachable<Icons>(nameof(kind))
         };
     }

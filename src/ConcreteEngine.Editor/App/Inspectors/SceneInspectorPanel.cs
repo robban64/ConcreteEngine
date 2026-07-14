@@ -5,7 +5,6 @@ using ConcreteEngine.Editor.App.Scene;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Core.Provider;
 using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 
@@ -43,11 +42,11 @@ internal sealed unsafe class SceneInspectorPanel : EditorPanel
     }
 
     
-    private void OnNewInspector(InspectSceneObject inspector)
+    private void OnNewInspector(SceneObject sceneObject)
     {
-        RestoreName(inspector.SceneObject);
-        _previousId = inspector.Id;
-        _title.OverWriter.Append(inspector.Kind.ToUtf8()).Append(" - ["u8).Append(inspector.Id).Append(']').End();
+        RestoreName(sceneObject);
+        _previousId = sceneObject.Id;
+        _title.OverWriter.Append(sceneObject.Kind.ToUtf8()).Append(" - ["u8).Append(sceneObject.Id).Append(']').End();
     }
 
     private void RestoreName(SceneObject sceneObject)
@@ -57,24 +56,24 @@ internal sealed unsafe class SceneInspectorPanel : EditorPanel
     
     public override void OnDraw()
     {
-        if (Selection.SelectedSceneObject is not { } inspector) return;
+        if (Selection.SelectedSceneObject is not { } sceneObject) return;
 
-        if (_previousId != inspector.Id)
-            OnNewInspector(inspector);
+        if (_previousId != sceneObject.Id)
+            OnNewInspector(sceneObject);
 
         //
-        ImGui.PushStyleColor(ImGuiCol.Text, inspector.Kind.ToColor());
+        ImGui.PushStyleColor(ImGuiCol.Text, sceneObject.Kind.ToColor());
         ImGui.SeparatorText(_title);
         ImGui.PopStyleColor();
 
         //string
         ImGui.BeginGroup();
         if (ImGui.Button(StyleMap.GetIcon(Icons.Undo2)))
-            RestoreName(inspector.SceneObject);
+            RestoreName(sceneObject);
 
         ImGui.SameLine();
         if (ImGui.InputText("##name"u8, _nameInputStr, 64, GuiTheme.InputNameFlags, InputCallback))
-            HandleRename(inspector);
+            HandleRename(sceneObject);
 
         ImGui.EndGroup();
 
@@ -86,28 +85,22 @@ internal sealed unsafe class SceneInspectorPanel : EditorPanel
         ImGui.Spacing();
         ImGui.Separator();
 
-        if (inspector.InspectModel is { } modelInstance)
+        if (sceneObject.TryGetInstance<ModelInstance>(out var modelInstance))
         {
             ImGui.Spacing();
-            DrawModelInstance(inspector, modelInstance.Instance);
+            DrawModelInstance(modelInstance);
         }
 
-        if (inspector.InspectParticle is { } particleFields)
+        if (sceneObject.TryGetInstance<ParticleInstance>(out var particleInstance))
         {
             ImGui.Spacing();
-            DrawParticles(particleFields);
+            DrawParticles(particleInstance);
         }
     }
 
-    private void DrawModelInstance(InspectSceneObject inspector, ModelInstance modelInstance)
+    private void DrawModelInstance(ModelInstance modelInstance)
     {
         var sw = ScratchBuffer.Writer();
-/*
-        if (ImGui.CollapsingHeader("Local Spatial"u8))
-        {
-            _modelInstanceFields.Draw();
-        }
-*/
         ImGui.Spacing();
         ImGui.Separator();
         ImGui.Spacing();
@@ -138,11 +131,11 @@ internal sealed unsafe class SceneInspectorPanel : EditorPanel
         }
     }
 
-    private void DrawParticles(InspectParticleInstance particle)
+    private void DrawParticles(ParticleInstance particle)
     {
         var sw = ScratchBuffer.Writer();
         sw.Append("Particle Emitter: "u8);
-        sw.Append(particle.EmitterName);
+        sw.Append(particle.Emitter.Name);
         if (ImGui.CollapsingHeader(sw.End(), CollapseFlags)) return;
 
         ParticleInspector.Instance.DrawEmitterParams();
@@ -150,8 +143,7 @@ internal sealed unsafe class SceneInspectorPanel : EditorPanel
 
     }
 
-
-    private void HandleRename(InspectSceneObject inspect)
+    private void HandleRename(SceneObject sceneObject)
     {
         UtfText.SliceNullTerminate(_nameInputStr.Data.AsSpan(), out var byteSpan);
         if (byteSpan.IsEmpty) return;
@@ -161,10 +153,10 @@ internal sealed unsafe class SceneInspectorPanel : EditorPanel
         Encoding.UTF8.GetChars(byteSpan, chars);
 
         chars = chars.Trim();
-        if (chars.IsEmpty || chars.Equals(inspect.SceneObject.Name, StringComparison.Ordinal)) return;
+        if (chars.IsEmpty || chars.Equals(sceneObject.Name, StringComparison.Ordinal)) return;
 
         var name = chars.ToString();
-        State.EnqueueEvent(new SceneObjectEvent(inspect.Id, Rename: name));
+        State.EnqueueEvent(new SceneObjectEvent(sceneObject.Id, Rename: name));
     }
 
     private static int InputCallback(ImGuiInputTextCallbackData* data)

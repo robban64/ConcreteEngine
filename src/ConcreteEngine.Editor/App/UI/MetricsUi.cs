@@ -58,12 +58,12 @@ internal static class MetricsUi
         if (ImGui.BeginChild("metrics-scene"u8, ImGuiChildFlags.AutoResizeY))
         {
             ref readonly var scene = ref Metrics.SceneMeta;
-            AppDraw.DrawTextProperty("SceneObjects: "u8, sw.Write(scene.SceneObjects));
-            AppDraw.DrawTextProperty("Visible Entities: "u8, sw.Write(scene.VisibleEntities));
+            AppDraw.TextProperty("SceneObjects: "u8, sw.Write(scene.SceneObjects));
+            AppDraw.TextProperty("Visible Entities: "u8, sw.Write(scene.VisibleEntities));
 
-            AppDraw.DrawTextProperty("RenderEcs: "u8, sw.Write(scene.RenderEcs));
-            AppDraw.DrawSameLineProperty();
-            AppDraw.DrawTextProperty("GameEcs: "u8, sw.Write(scene.GameEcs));
+            AppDraw.TextProperty("RenderEcs: "u8, sw.Write(scene.RenderEcs));
+            AppDraw.SameLineProperty();
+            AppDraw.TextProperty("GameEcs: "u8, sw.Write(scene.GameEcs));
         }
 
         ImGui.EndChild();

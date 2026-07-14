@@ -5,9 +5,8 @@ using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.App.UI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Core.Provider;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Widgets;
+using ConcreteEngine.Editor.Lib.Field;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
@@ -69,44 +68,44 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         _searchInput.Text.Clear();
     }
 
-    private void OnNewInspector(InspectAsset inspector)
+    private void OnNewInspector(AssetObject asset)
     {
-        RestoreName(inspector);
-        _previousId = inspector.Id;
+        RestoreName(asset);
+        _previousId = asset.Id;
 
-        _title.OverWriter.Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id.Id).Append(']').End();
+        _title.OverWriter.Append(asset.Kind.ToText()).Append(" - ["u8).Append(asset.Id).Append(']').End();
     }
 
-    private void RestoreName(InspectAsset inspector)
+    private void RestoreName(AssetObject asset)
     {
-        _searchInput.Text.Set(inspector.Name);
+        _searchInput.Text.Set(asset.Name);
     }
 
     public override void OnDraw()
     {
-        if (Selection.SelectedAsset is not { } inspector) return;
+        if (Selection.SelectedAsset is not { } asset) return;
 
-        if (_previousId != inspector.Id)
-            OnNewInspector(inspector);
+        if (_previousId != asset.Id)
+            OnNewInspector(asset);
 
-        ImGui.PushID(inspector.Id.Id);
+        ImGui.PushID(asset.Id.Id);
 
-        DrawHeader(inspector);
+        DrawHeader(asset);
         ImGui.Spacing();
         ImGui.Separator();
 
-        switch (inspector)
+        switch (asset)
         {
-            case InspectShader shader:
+            case Shader shader:
                 _shaderInspectorUi.Draw(shader);
                 break;
-            case InspectModel model:
+            case Model model:
                 _modelInspectorUi.Draw(model);
                 break;
-            case InspectTexture texture:
+            case Texture texture:
                 _textureProxyUi.Draw(texture);
                 break;
-            case InspectMaterial material:
+            case Material material:
                 _materialProxyUi.Draw(material);
                 break;
         }
@@ -114,14 +113,14 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         ImGui.PopID();
     }
 
-    private void DrawHeader(InspectAsset inspectAsset)
+    private void DrawHeader(AssetObject asset)
     {
         ImGui.BeginGroup();
-        if (ImGui.Button(StyleMap.GetIcon(inspectAsset.GetIcon()))) _popup.State = true;
+        if (ImGui.Button(StyleMap.GetIcon(asset.Kind.ToIcon()))) _popup.State = true;
 
         ImGui.SameLine();
 
-        ImGui.PushStyleColor(ImGuiCol.Text, inspectAsset.Kind.ToColor());
+        ImGui.PushStyleColor(ImGuiCol.Text, asset.Kind.ToColor());
         ImGui.SeparatorText(_title);
 
         ImGui.PopStyleColor();
@@ -132,7 +131,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         ImGui.BeginGroup();
         if (ImGui.Button(StyleMap.GetIcon(Icons.Undo2)))
         {
-            RestoreName(inspectAsset);
+            RestoreName(asset);
         }
 
         ImGui.SameLine();
@@ -143,7 +142,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         var pos = ImGui.GetItemRectMin() - new Vector2(200, 50);
         if (_popup.Begin("asset-files"u8, pos))
         {
-            DrawFilesTable(inspectAsset.Id);
+            DrawFilesTable(asset.Id);
             _popup.End();
         }
     }

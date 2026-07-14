@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.Lib.Inspection;
+namespace ConcreteEngine.Editor.Lib.Field;
 
 public enum FieldFetchDelay : ushort
 {

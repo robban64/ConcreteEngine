@@ -1,6 +1,6 @@
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.App.Inspectors;
+namespace ConcreteEngine.Editor.Lib;
 
 internal abstract class Inspector
 {

@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Engine.Editor;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib.Widgets;
+namespace ConcreteEngine.Editor.Lib.Field;
 
 internal abstract class InputDrawer
 {

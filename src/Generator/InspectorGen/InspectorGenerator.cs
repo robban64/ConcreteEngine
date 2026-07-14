@@ -9,8 +9,8 @@ namespace Generator.InspectorGen;
 [Generator]
 public sealed partial class InspectorGenerator : IIncrementalGenerator
 {
-    private const string MainAttributeFullName = "ConcreteEngine.Editor.Lib.EditorInspectorAttribute";
     private const string MainAttribute = "EditorInspectorAttribute";
+    private const string MainAttributeFullName = "ConcreteEngine.Editor.Lib.EditorInspectorAttribute";
 
     private const string InspectAttrib = "InspectAttribute";
     private const string IncludeAttrib = "InspectIncludeAttribute";

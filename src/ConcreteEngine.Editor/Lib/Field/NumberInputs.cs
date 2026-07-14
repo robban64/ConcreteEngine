@@ -1,12 +1,10 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Editor;
-using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Lib.Inspection;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib.Widgets;
+namespace ConcreteEngine.Editor.Lib.Field;
 
 internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IFloatValue
 {

@@ -1,17 +1,13 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Lib.Inspection;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib.Widgets;
+namespace ConcreteEngine.Editor.Lib.Field;
 
 public enum TextInputFilter : byte
 {

@@ -61,7 +61,7 @@ public sealed class Camera
         }
     }
 
-    [InputNumber(Converter = typeof(Float2))]
+    [InputNumber(Converter = typeof(Vector2))]
     public YawPitch Orientation
     {
         get => _transform.Orientation;

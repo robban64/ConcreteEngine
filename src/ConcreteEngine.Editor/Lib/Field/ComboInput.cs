@@ -1,6 +1,6 @@
 using System.Text;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.Core.Data;
 using Hexa.NET.ImGui;
@@ -9,9 +9,8 @@ namespace ConcreteEngine.Editor.Lib.Field;
 
 internal sealed unsafe class ComboInput : InputField
 {
-    public int Value;
+    private int _value;
     private int _lastValue = int.MinValue;
-
     private int _index = -1;
 
     private readonly byte[] _displayText = new byte[32];
@@ -21,6 +20,8 @@ internal sealed unsafe class ComboInput : InputField
 
     private readonly Func<int> _getter;
     private readonly Action<int> _setter;
+
+    private FrameStepper _stepper = new (8);
 
     public int StartAt
     {
@@ -57,16 +58,18 @@ internal sealed unsafe class ComboInput : InputField
 
     public bool Draw()
     {
-        Value = _getter();
-        if (_lastValue != Value) OnChanged();
+        if(_stepper.Tick()) _value = _getter();
+        
+        if (_lastValue != _value) OnChanged();
 
+        var label = ApplyLabelLayout();
+        
         var sw = ScratchBuffer.Writer();
-        var label = ApplyLabelLayout(sw);
         sw.SetCursor(label.Length + 1);
-        var changed = ImGui.BeginCombo(label, sw.Write(_displayText)) && DrawInner(sw);
+        var changed = ImGui.BeginCombo(label, sw.Write(_displayText)) && DrawInner();
         if (changed)
         {
-            _setter(Value);
+            _setter(_value);
             return true;
         }
 
@@ -75,8 +78,8 @@ internal sealed unsafe class ComboInput : InputField
 
     private void OnChanged()
     {
-        _index = _values.IndexOf(Value);
-        _lastValue = Value;
+        _index = _values.IndexOf(_value);
+        _lastValue = _value;
 
         var name = (uint)_index < (uint)_names.Length && _index >= StartAt ? _names[_index] : Placeholder;
 
@@ -84,7 +87,7 @@ internal sealed unsafe class ComboInput : InputField
         _displayText[int.Min(written, 31)] = 0;
     }
 
-    private bool DrawInner(NativeSpanWriter sw)
+    private bool DrawInner()
     {
         var changed = false;
         var length = _names.Length;
@@ -92,10 +95,10 @@ internal sealed unsafe class ComboInput : InputField
         {
             ImGui.PushID(i);
             var isSelected = i == _index;
-            if (ImGui.Selectable(sw.Write(_names[i]), isSelected))
+            if (ImGui.Selectable(ScratchBuffer.Write(_names[i]), isSelected))
             {
                 _index = i;
-                Value = _values[i];
+                _value = _values[i];
                 changed = true;
             }
 

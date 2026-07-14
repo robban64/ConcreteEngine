@@ -3,25 +3,20 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.App.Theme;
+using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Field;
 
-public enum InputTrigger : byte
-{
-    OnChange,
-    AfterChange,
-    AfterChangeDeactive
-}
 
 internal abstract class InputField
 {
-    private static int _idCounter;
+    private static ushort _idCounter;
 
     private readonly byte[] _label;
 
-    public readonly int DrawId;
+    public readonly ushort DrawId;
     public readonly InputKind Kind;
     public InputTrigger Trigger = InputTrigger.OnChange;
     public LabelPlacement LabelPlacement = LabelPlacement.Top;
@@ -34,8 +29,9 @@ internal abstract class InputField
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected NativeView<byte> ApplyLabelLayout(NativeSpanWriter sw)
+    protected NativeView<byte> ApplyLabelLayout()
     {
+        var sw = ScratchBuffer.Writer();
         if (LabelPlacement is LabelPlacement.Top)
         {
             AppDraw.Text(sw.Write(_label));
@@ -51,14 +47,13 @@ internal abstract class InputField
         return sw.AppendImGuiId(DrawId).End();
     }
 
-
     protected bool ShouldTrigger()
     {
         return Trigger switch
         {
             InputTrigger.OnChange => true,
             InputTrigger.AfterChange => ImGui.IsItemDeactivatedAfterEdit(),
-            InputTrigger.AfterChangeDeactive => ImGui.IsItemDeactivatedAfterEdit() && !ImGui.IsItemActive(),
+            InputTrigger.AfterChangeDeActive => ImGui.IsItemDeactivatedAfterEdit() && !ImGui.IsItemActive(),
             _ => false
         };
     }

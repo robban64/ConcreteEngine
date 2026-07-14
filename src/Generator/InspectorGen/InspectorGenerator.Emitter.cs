@@ -41,7 +41,7 @@ internal static class InspectorGeneratorEmitter
             var memberSpan = g.Members;
             if (memberSpan.Length == 0) continue;
 
-            sb.AppendLine("\npublic void Draw", g.IsRoot ? "Root" : g.Name, "()");
+            sb.AppendLine().AppendLine("public void Draw", g.IsRoot ? "Root" : g.Name, "()");
             sb.OpenBrace();
             foreach (var m in memberSpan.AsSpan())
             {

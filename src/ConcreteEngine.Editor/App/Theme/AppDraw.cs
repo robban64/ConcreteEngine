@@ -30,16 +30,12 @@ internal static unsafe class AppDraw
     public static void TextColored(uint color, string text)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, color);
-        Text(text);
+        Text(ScratchBuffer.Write(text));
         ImGui.PopStyleColor();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Text(string text)
-    {
-        var sw = ScratchBuffer.Writer();
-        Text(sw.Write(text));
-    }
+    public static void Text(string text) => Text(ScratchBuffer.Write(text));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Text(NativeString text) => ImGui.TextUnformatted(text.TextStart, text.TextEnd);

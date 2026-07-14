@@ -1,5 +1,10 @@
+using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Engine.Editor;
+using ConcreteEngine.Editor.Core.Data;
+using Hexa.NET.ImGui;
+
 namespace ConcreteEngine.Editor.Lib.Field;
-/*
+
 internal sealed unsafe class FloatInputGroup : InputField
 {
     public Float4 Value;
@@ -27,14 +32,18 @@ internal sealed unsafe class FloatInputGroup : InputField
         for (var i = 0; i < len; ++i, ++valuePtr)
         {
             var it = _fields[i];
-            var format = it.Format;
-            var label = TextBuffers.GetWriter().Write(it.Name);
+            var label = ScratchBuffer.Write(it.Name);
 
             ImGui.PushID(i);
-            changed |= it.Drawer.DrawFloat(1, label, valuePtr, (byte*)&format, it.Speed, it.Min, it.Max);
+            changed |= it.Style switch
+            {
+                InputStyle.Input => Float1.DrawInput(label, valuePtr, (byte*)&it.Format),
+                InputStyle.Slider => Float1.DrawSlider(label, valuePtr, (byte*)&it.Format, it.Min, it.Max),
+                InputStyle.Drag => Float1.DrawDrag(label, valuePtr, (byte*)&it.Format, it.Speed, it.Min, it.Max),
+                _ => false
+            };
             ImGui.PopID();
         }
-
         ImGui.PopID();
 
         if (changed && ShouldTrigger())
@@ -62,7 +71,7 @@ internal sealed unsafe class FloatInputGroup : InputField
     }
 
 
-    private sealed class ComponentEntry(
+    private struct ComponentEntry(
         string name,
         InputStyle style,
         float speed,
@@ -70,10 +79,9 @@ internal sealed unsafe class FloatInputGroup : InputField
         float max,
         string format)
     {
-        public readonly InputDrawer Drawer = InputDrawer.Get(style);
-
-        public readonly byte[] Name = name.ToUtf8();
+        public InputStyle Style = style;
         public float Speed = speed, Min = min, Max = max;
+        public readonly byte[] Name = name.ToUtf8();
         public String8Utf8 Format = format;
     }
-}*/
+}

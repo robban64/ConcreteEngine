@@ -66,15 +66,15 @@ public sealed partial class InspectorGenerator
             var v = value.Value;
             switch (key)
             {
-                case "Converter" when v is INamedTypeSymbol l: typeName = l.Name; break;
                 case "Min" when v is float l: min = l; break;
                 case "Max" when v is float l: max = l; break;
                 case "Speed" when v is float l: speed = l; break;
                 case "Format" when v is string l: format = l; break;
+                case "Converter" when v is INamedTypeSymbol l: typeName = GetDefaultValueType(l.Name); break;
             }
         }
-
-        if (typeName is null)
+        
+        if(typeName is null)
         {
             var s = type.SpecialType;
             if (s is System_Single) typeName = "Float1";

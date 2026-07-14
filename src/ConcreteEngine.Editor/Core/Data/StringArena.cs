@@ -20,7 +20,8 @@ internal sealed class StringArena : IDisposable
     }
     
     public static NativeString AllocateString(int value) => Instance.Alloc(value);
-    public static NativeString AllocateString(ReadOnlySpan<char> value) => Instance.AllocString(value);
+    public static NativeString AllocateString(ReadOnlySpan<char> value,int extraCapacity = 0) 
+        => Instance.AllocString(value, extraCapacity);
 
     public static int Remaining => Instance._arena.Remaining;
     
@@ -36,9 +37,9 @@ internal sealed class StringArena : IDisposable
         _arena.AllocBlock(CapacityUtils.PageSize);
     }
 
-    public NativeString AllocString(ReadOnlySpan<char> value)
+    public NativeString AllocString(ReadOnlySpan<char> value, int extraCapacity = 0)
     {
-        var str = Alloc(Encoding.UTF8.GetByteCount(value) + 1);
+        var str = Alloc(Encoding.UTF8.GetByteCount(value) + 1 + extraCapacity);
         str.Set(value);
         return str;
     }

@@ -81,7 +81,7 @@ internal sealed unsafe class TextInput : InputField
     public bool Draw()
     {
         var hint = Hint;
-        var label = ApplyLabelLayout(ScratchBuffer.Writer());
+        var label = ApplyLabelLayout();
         var triggered = ImGui.InputTextEx(label, (byte*)&hint, Text, Text.Capacity,
             Vector2.Zero, ImFlags, _inputCallback);
 

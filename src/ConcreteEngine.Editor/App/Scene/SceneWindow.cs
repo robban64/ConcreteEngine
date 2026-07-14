@@ -45,7 +45,6 @@ internal sealed unsafe class SceneWindow : EditorWindow
     protected override void OnCreate()
     {
         _title = StringArena.AllocateString(24);
-
         if (_browser.FilteredCount == 0) Search(Span<byte>.Empty);
     }
 

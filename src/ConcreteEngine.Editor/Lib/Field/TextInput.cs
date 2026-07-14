@@ -26,13 +26,12 @@ internal sealed unsafe class TextInput : InputField
     private readonly ImGuiInputTextCallback _inputCallback;
 
     private TextInputHistory? _history;
-    
+
     public ushort MinLength { get; private set; }
     public bool Trim, Lowercase, ClearAfter, AllowEmpty;
     public TextInputFilter Filter;
     public ImGuiInputTextFlags ImFlags = ImGuiInputTextFlags.CharsNoBlank;
     public string? Whitelist;
-
 
 
     public TextInput(string label, int capacity)
@@ -77,21 +76,18 @@ internal sealed unsafe class TextInput : InputField
     }
 
     public ReadOnlySpan<byte> GetTextSpan() => !Text.IsNull ? Text.AsSpan() : ReadOnlySpan<byte>.Empty;
-    
+
     public bool Draw()
     {
         var hint = Hint;
-        var label = ApplyLabelLayout();
-        var triggered = ImGui.InputTextEx(label, (byte*)&hint, Text, Text.Capacity,
-            Vector2.Zero, ImFlags, _inputCallback);
-
-        if (triggered && ProcessInput())
+        DrawLabel();
+        var changed = ImGui.InputTextEx(StringId, (byte*)&hint, Text, Text.Capacity, default, ImFlags, _inputCallback);
+        if (changed && ProcessInput())
         {
             InvokeCallback();
             if (ClearAfter) Text.Clear();
             return true;
         }
-
         return false;
     }
 
@@ -128,7 +124,8 @@ internal sealed unsafe class TextInput : InputField
                 callbackU8(Span<byte>.Empty);
                 return;
             }
-            Span<byte> dst =  stackalloc byte[text.Length];
+
+            Span<byte> dst = stackalloc byte[text.Length];
             text.CopyTo(dst);
             callbackU8(dst);
         }
@@ -139,9 +136,10 @@ internal sealed unsafe class TextInput : InputField
                 callbackU16(Span<char>.Empty);
                 return;
             }
+
             Span<char> dst = stackalloc char[Encoding.UTF8.GetCharCount(text)];
             Encoding.UTF8.GetChars(text, dst);
-           
+
             callbackU16(dst);
         }
     }

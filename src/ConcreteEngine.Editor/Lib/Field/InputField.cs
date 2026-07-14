@@ -1,5 +1,9 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.App.Theme;
@@ -10,41 +14,41 @@ using Hexa.NET.ImGui;
 namespace ConcreteEngine.Editor.Lib.Field;
 
 
-internal abstract class InputField
+internal abstract unsafe class InputField
 {
-    private static ushort _idCounter;
+    private static int _idCounter;
 
-    private readonly byte[] _label;
+    protected NativeString _label;
+    private readonly byte _stringIdStart;
 
-    public readonly ushort DrawId;
     public readonly InputKind Kind;
     public InputTrigger Trigger = InputTrigger.OnChange;
     public LabelPlacement LabelPlacement = LabelPlacement.Top;
 
+    protected byte* StringId => _label.TextStart + _stringIdStart;
+
     protected InputField(string label, InputKind kind)
     {
-        DrawId = ++_idCounter;
         Kind = kind;
-        _label = label.ToUtf8();
+        _label = WriteLabel(label,++_idCounter, out _stringIdStart);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected NativeView<byte> ApplyLabelLayout()
+    protected void DrawLabel()
     {
-        var sw = ScratchBuffer.Writer();
         if (LabelPlacement is LabelPlacement.Top)
         {
-            AppDraw.Text(sw.Write(_label));
+            ImGui.TextUnformatted(_label.TextStart);
             ImGui.Separator();
             ImGui.SetNextItemWidth(GuiTheme.FormItemWidth);
         }
         else if (LabelPlacement is LabelPlacement.Inline)
         {
-            sw.Append(_label);
+            ImGui.AlignTextToFramePadding();
+            ImGui.TextUnformatted(_label.TextStart);
+            ImGui.SameLine(GuiTheme.FormItemInlineOffset);
             ImGui.SetNextItemWidth(GuiTheme.FormItemInlineWidth);
         }
-
-        return sw.AppendImGuiId(DrawId).End();
     }
 
     protected bool ShouldTrigger()
@@ -57,4 +61,12 @@ internal abstract class InputField
             _ => false
         };
     }
+    
+    protected static NativeString WriteLabel(string name, int id, out byte idStart)
+    {
+        var sw = ScratchBuffer.Writer().Append(name.Truncate(31)).Append((byte)0);
+        idStart = (byte)sw.Cursor;
+        return StringArena.AllocateString(sw.AppendImGuiId(id).EndSpan());
+    }
+
 }

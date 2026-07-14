@@ -42,12 +42,13 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
     public int Remaining => _ptr->Capacity - _ptr->Length;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator byte*(NativeString str) => (byte*)str._ptr + HeaderSize;
+    public static implicit operator byte*(NativeString str) => str.TextStart;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator NativeView<byte>(NativeString str) => str.Text;
     
     public Span<byte> AsSpan() => Text.AsSpan();
+    
     
     public byte* TextStart
     {

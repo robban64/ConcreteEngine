@@ -9,18 +9,6 @@ internal static unsafe class SpanWriterExtension
     extension(ref NativeSpanWriter sw)
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref NativeSpanWriter AppendImGuiId<T>(T id) where T : unmanaged, IUtf8SpanFormattable
-        {
-            var cursor = sw.Cursor;
-            sw.Buffer[cursor++] = 0x23; // #
-            sw.Buffer[cursor++] = 0x23; // #
-            var span = MemoryMarshal.CreateSpan(ref *(sw.Buffer + cursor), sw.Capacity - cursor);
-            id.TryFormat(span, out var written, default, null);
-            sw.SetCursor(cursor + written);
-            return ref sw;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref NativeSpanWriter AppendImGuiId(int id)
         {
             var cursor = sw.Cursor;

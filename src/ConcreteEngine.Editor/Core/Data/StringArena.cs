@@ -12,19 +12,23 @@ namespace ConcreteEngine.Editor.Core.Data;
 internal sealed class StringArena : IDisposable
 {
     public static StringArena Instance { get; private set; } = null!;
-    
+
     public static void Create()
     {
-        if(Instance != null!) Throwers.InvalidOperation("StringArena already created");
+        if (Instance != null!) Throwers.InvalidOperation("StringArena already created");
         Instance = new StringArena();
     }
-    
-    public static NativeString AllocateString(int value) => Instance.Alloc(value);
-    public static NativeString AllocateString(ReadOnlySpan<char> value,int extraCapacity = 0) 
+
+    public static NativeString AllocateString(int value) => Instance.AllocString(value);
+
+    public static NativeString AllocateString(ReadOnlySpan<char> value, int extraCapacity = 0)
+        => Instance.AllocString(value, extraCapacity);
+
+    public static NativeString AllocateString(ReadOnlySpan<byte> value, int extraCapacity = 0)
         => Instance.AllocString(value, extraCapacity);
 
     public static int Remaining => Instance._arena.Remaining;
-    
+
     //
     private const int MaxBlocks = 4;
 
@@ -37,30 +41,51 @@ internal sealed class StringArena : IDisposable
         _arena.AllocBlock(CapacityUtils.PageSize);
     }
 
+    
     public NativeString AllocString(ReadOnlySpan<char> value, int extraCapacity = 0)
     {
-        var str = Alloc(Encoding.UTF8.GetByteCount(value) + 1 + extraCapacity);
+        var str = AllocString(Encoding.UTF8.GetByteCount(value) + 1 + extraCapacity);
         str.Set(value);
         return str;
     }
-    
-    public NativeString Alloc(int capacity)
+
+    public NativeString AllocString(ReadOnlySpan<byte> value, int extraCapacity = 0)
+    {
+        var str = AllocString(value.Length + 1 + extraCapacity);
+        str.Set(value);
+        return str;
+    }
+
+    public NativeString AllocString(int capacity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
         capacity = IntMath.AlignUp(capacity, 4);
 
         var sizeInBytes = Unsafe.SizeOf<NativeString.NativeStringHeader>() + capacity;
-        if (!_arena.CanAlloc(sizeInBytes))
-        {
-            if(_blockCount++ > MaxBlocks) Throwers.InvalidOperation("Too many blocks");
+        Ensure(sizeInBytes);
 
-            _arena.AllocBlock(CapacityUtils.PageSize);
-            Logger.Log(LogScope.Editor, $"StringArena - Allocated new block");
-        }
-        
         var memory = _arena.Tail.GetAllocator().AllocSlice(sizeInBytes);
         return NativeString.From(memory);
     }
+    
+    public NativeView<byte> AllocRaw(int capacity)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
+        var sizeInBytes = IntMath.AlignUp(capacity, 4);
+        Ensure(sizeInBytes);
+        return _arena.Tail.GetAllocator().AllocSlice(sizeInBytes);
+    }
 
+
+    private void Ensure(int sizeInBytes)
+    {
+        if (_arena.CanAlloc(sizeInBytes))return;
+
+        if (_blockCount++ > MaxBlocks) Throwers.InvalidOperation("Too many blocks");
+
+        _arena.AllocBlock(CapacityUtils.PageSize);
+        Logger.Log(LogScope.Editor, $"StringArena - Allocated new block");
+
+    }
     public void Dispose() => _arena.Dispose();
 }

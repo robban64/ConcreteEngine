@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
@@ -11,17 +12,15 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IFl
 {
     public readonly InputStyle Style;
 
-    public T Value;
+    public T* Value;
     public float Speed, Min, Max;
 
-    public String8Utf8 Format;
+    private readonly String8Utf8 _format;
 
     private readonly Func<T> _getter;
     private readonly Action<T> _setter;
 
     private FrameStepper _stepper = new(4);
-
-    //private readonly delegate*<int, byte*, float*, byte*, float, float, float, bool> _drawer;
 
     public FloatInput(
         string label,
@@ -36,30 +35,31 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IFl
         Style = style;
         _getter = getter;
         _setter = setter;
-        Format = format;
+        _format = format;
         Speed = speed;
         Min = min;
         Max = max;
 
+        Value = (T*)StringArena.Instance.AllocRaw(Unsafe.SizeOf<T>()).Ptr;
         if (T.Components == 1) LabelPlacement = LabelPlacement.Inline;
     }
 
     public bool Draw()
     {
-        if (_stepper.Tick()) Value = _getter();
-        var value = Value;
-        var format = Format;
-        var label = ApplyLabelLayout();
+        if (_stepper.Tick()) *Value = _getter();
+        var format = _format;
+
+        DrawLabel();
         var changed = Style switch
         {
-            InputStyle.Input => T.DrawInput(label, (float*)&value, (byte*)&format),
-            InputStyle.Slider => T.DrawSlider(label, (float*)&value, (byte*)&format, Min, Max),
-            InputStyle.Drag => T.DrawDrag(label, (float*)&value, (byte*)&format, Speed, Min, Max),
+            InputStyle.Input => T.DrawInput(StringId, (float*)Value, (byte*)&format),
+            InputStyle.Slider => T.DrawSlider(StringId, (float*)Value, (byte*)&format, Min, Max),
+            InputStyle.Drag => T.DrawDrag(StringId, (float*)Value, (byte*)&format, Speed, Min, Max),
             _ => false
         };
         if (changed && ShouldTrigger())
         {
-            _setter(Value = value);
+            _setter(*Value);
             return true;
         }
 
@@ -71,7 +71,7 @@ internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IIntV
 {
     public readonly InputStyle Style;
 
-    public T Value;
+    public T* Value;
     public int Min, Max;
     public float Speed;
 
@@ -96,24 +96,26 @@ internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IIntV
         Min = min;
         Max = max;
 
+        Value = (T*)StringArena.Instance.AllocRaw(Unsafe.SizeOf<T>()).Ptr;
         if (T.Components == 1) LabelPlacement = LabelPlacement.Inline;
     }
 
     public bool Draw()
     {
-        if (_stepper.Tick()) Value = _getter();
-        var value = Value;
-        var label = ApplyLabelLayout();
+        if (_stepper.Tick()) *Value = _getter();
+
+        DrawLabel();
         var changed = Style switch
         {
-            InputStyle.Input => T.DrawInput(label, (int*)&value),
-            InputStyle.Slider => T.DrawSlider(label, (int*)&value, Min, Max),
-            InputStyle.Drag => T.DrawDrag(label, (int*)&value, Speed, Min, Max),
+            InputStyle.Input => T.DrawInput(StringId, (int*)Value),
+            InputStyle.Slider => T.DrawSlider(StringId, (int*)Value, Min, Max),
+            InputStyle.Drag => T.DrawDrag(StringId, (int*)Value, Speed, Min, Max),
             _ => false
         };
+
         if (changed && ShouldTrigger())
         {
-            _setter(Value = value);
+            _setter(*Value);
             return true;
         }
 
@@ -125,7 +127,7 @@ internal sealed unsafe class ColorInput : InputField
 {
     public bool HasAlpha;
 
-    public Color4 Value;
+    public Color4* Value;
 
     private readonly Func<Color4> _getter;
     private readonly Action<Color4> _setter;
@@ -139,23 +141,21 @@ internal sealed unsafe class ColorInput : InputField
         _setter = setter;
         HasAlpha = hasAlpha;
         LabelPlacement = LabelPlacement.Top;
+        Value = (Color4*)StringArena.Instance.AllocRaw(Unsafe.SizeOf<Color4>()).Ptr;
     }
 
     public bool Draw()
     {
-        if (_stepper.Tick()) Value = _getter();
-        var value = Value;
-        var label = ApplyLabelLayout();
+        if (_stepper.Tick()) *Value = _getter();
 
-        ImGui.PushID(DrawId);
+        DrawLabel();
         var changed = HasAlpha
-            ? ImGui.ColorEdit4(label, &value.R)
-            : ImGui.ColorEdit3(label, &value.R);
-        ImGui.PopID();
+            ? ImGui.ColorEdit4(StringId, &Value->R)
+            : ImGui.ColorEdit3(StringId, &Value->R);
 
         if (changed && ShouldTrigger())
         {
-            _setter(Value = value);
+            _setter(*Value);
             return true;
         }
 

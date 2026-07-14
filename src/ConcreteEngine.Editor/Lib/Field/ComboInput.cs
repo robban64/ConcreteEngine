@@ -13,7 +13,7 @@ internal sealed unsafe class ComboInput : InputField
     private int _lastValue = int.MinValue;
     private int _index = -1;
 
-    private readonly byte[] _displayText = new byte[32];
+    private readonly NativeString _displayText;
 
     private readonly int[] _values;
     private readonly string[] _names;
@@ -52,6 +52,7 @@ internal sealed unsafe class ComboInput : InputField
         _setter = setter;
 
         LabelPlacement = LabelPlacement.None;
+        _displayText = StringArena.AllocateString(32);
     }
 
     public void SetItemName(int index, string newName) => _names[index] = newName;
@@ -62,12 +63,9 @@ internal sealed unsafe class ComboInput : InputField
         
         if (_lastValue != _value) OnChanged();
 
-        var label = ApplyLabelLayout();
-        
-        var sw = ScratchBuffer.Writer();
-        sw.SetCursor(label.Length + 1);
-        var changed = ImGui.BeginCombo(label, sw.Write(_displayText)) && DrawInner();
-        if (changed)
+        DrawLabel();
+        var open = ImGui.BeginCombo(StringId, _displayText);
+        if (open && DrawInner() && ShouldTrigger())
         {
             _setter(_value);
             return true;
@@ -82,20 +80,20 @@ internal sealed unsafe class ComboInput : InputField
         _lastValue = _value;
 
         var name = (uint)_index < (uint)_names.Length && _index >= StartAt ? _names[_index] : Placeholder;
-
-        int written = Encoding.UTF8.GetBytes(name.Truncate(31), _displayText);
-        _displayText[int.Min(written, 31)] = 0;
+        _displayText.Set(name);
     }
 
     private bool DrawInner()
     {
+        var sw = ScratchBuffer.Writer();
         var changed = false;
         var length = _names.Length;
         for (var i = StartAt; i < length; i++)
         {
-            ImGui.PushID(i);
             var isSelected = i == _index;
-            if (ImGui.Selectable(ScratchBuffer.Write(_names[i]), isSelected))
+            sw.Append(_names[i]);
+            sw.Append(StringId);
+            if (ImGui.Selectable(sw.Append((byte)'-').Append(i).End(), isSelected))
             {
                 _index = i;
                 _value = _values[i];
@@ -103,7 +101,6 @@ internal sealed unsafe class ComboInput : InputField
             }
 
             if (isSelected) ImGui.SetItemDefaultFocus();
-            ImGui.PopID();
         }
 
         ImGui.EndCombo();

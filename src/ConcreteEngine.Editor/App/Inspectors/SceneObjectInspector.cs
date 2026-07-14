@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Engine.Scene;
+using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
 
@@ -9,8 +10,10 @@ internal sealed partial class SceneObjectInspector : Inspector<SceneObjectInspec
 {
     private static SceneObject Target => SelectionManager.Instance.SelectedSceneObject;
 
-    public void Draw()
+    private static void DrawTransformBind() => Instance.DrawTransform();
+    
+    public unsafe void Draw()
     {
-        DrawCollapseSection("Transform"u8, static () => Instance.DrawTransform());
+        AppDraw.CollapseSection("Transform"u8, &DrawTransformBind);
     }
 }

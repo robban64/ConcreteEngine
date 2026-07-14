@@ -38,7 +38,7 @@ public sealed class SceneTransform(SceneObject sceneObject)
         }
     }
     
-    [InputNumber(DisplayName = "Rotation")]
+    [InputNumber(Label = "Rotation")]
     public Vector3 EulerRotation
     {
         get => RotationMath.QuaternionToEulerDegrees(in _transform.Rotation);

@@ -60,7 +60,7 @@ internal sealed record InspectorGroup(
 
 internal sealed record InspectorMember(
     string Name,
-    string DisplayName,
+    string Label,
     string TargetNs,
     string TypeName,
     MemberInfo Info)
@@ -68,7 +68,7 @@ internal sealed record InspectorMember(
     public string? Segment { get; init; }
     public InputField? Input { get; init; }
     
-    public string GetDisplayNameString() => Symbols.FormatLiteral(DisplayName, true);
+    public string GetLabelLiteral() => Symbols.FormatLiteral(Label, true);
 }
 
 internal abstract record InputField(string Name);
@@ -84,7 +84,7 @@ internal sealed record NumberInput(
 {
     public bool IsFloat() => NumberType.StartsWith("Float");
     public int GetComponents() => (int)char.GetNumericValue(NumberType[^1]);
-    public string GetInputStyleText() => Style switch
+    public string GetInputStyleLiteral() => Style switch
     {
         InputStyle.Input => "InputStyle.Input",
         InputStyle.Slider => "InputStyle.Slider",

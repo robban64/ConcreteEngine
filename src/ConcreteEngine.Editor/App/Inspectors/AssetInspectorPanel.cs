@@ -11,7 +11,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
 
-internal sealed unsafe class AssetInspectorPanel : EditorPanel
+internal sealed unsafe class AssetInspectorPanel
 {
     private const string ValidNoneAlphaNumericChars = ":/_-.";
 
@@ -19,8 +19,9 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
 
     public static TexturePtrHandle PopupTextureHandle;
 
-    private AssetId _previousId = AssetId.Empty;
+    private readonly NativeString _title;
 
+    private readonly StateManager _state;
     private readonly TextureInspectorUi _textureProxyUi;
     private readonly MaterialInspectorUi _materialProxyUi;
     private readonly ShaderInspectorUi _shaderInspectorUi;
@@ -28,17 +29,14 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
 
     private readonly TextInput _searchInput;
 
-    private NativeString _title;
+    private AssetId _previousId = AssetId.Empty;
     
     private Popup _popup = new(new Vector2(12f, 10f));
 
-    public AssetInspectorPanel(StateManager state) : base(InspectorId.Asset, state)
+    public AssetInspectorPanel(StateManager state)
     {
-        _textureProxyUi = new TextureInspectorUi(state);
-        _materialProxyUi = new MaterialInspectorUi(state);
-        _shaderInspectorUi = new ShaderInspectorUi(state);
-        _modelInspectorUi = new ModelInspectorUi(state);
-
+        _state = state;
+        _title = StringArena.AllocateString(24);
         _searchInput = new TextInput("name", 64, OnNameInput)
             {
                 Trim = true,
@@ -47,22 +45,23 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
             }
             .WithMinLength(4)
             .ToggleFlag(ImGuiInputTextFlags.EnterReturnsTrue, true);
+
+        _textureProxyUi = new TextureInspectorUi(state);
+        _materialProxyUi = new MaterialInspectorUi(state);
+        _shaderInspectorUi = new ShaderInspectorUi(state);
+        _modelInspectorUi = new ModelInspectorUi(state);
+
     }
     
-    private  void OnNameInput(Span<char> text)
+    private void OnNameInput(Span<char> text)
     {
         if (Selection.SelectedAsset is not { } inspectAsset) return;
         if (text.Equals(inspectAsset.Name, StringComparison.Ordinal)) return;
-        State.EnqueueEvent(new AssetEvent(inspectAsset.Id, inspectAsset.Kind, Rename: text.ToString()));
-    }
-
-    public override void OnCreate()
-    {
-        _title = StringArena.AllocateString(24);
+        _state.EnqueueEvent(new AssetEvent(inspectAsset.Id, inspectAsset.Kind, Rename: text.ToString()));
     }
 
 
-    public override void OnLeave()
+    public void OnLeave()
     {
         _previousId = AssetId.Empty;
         _searchInput.Text.Clear();
@@ -72,7 +71,6 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
     {
         RestoreName(asset);
         _previousId = asset.Id;
-
         _title.OverWriter.Append(asset.Kind.ToText()).Append(" - ["u8).Append(asset.Id).Append(']').End();
     }
 
@@ -81,7 +79,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         _searchInput.Text.Set(asset.Name);
     }
 
-    public override void OnDraw()
+    public void Draw()
     {
         if (Selection.SelectedAsset is not { } asset) return;
 
@@ -176,17 +174,4 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         ImGui.EndTable();
     }
 
-
-    private static int InputCallback(ImGuiInputTextCallbackData* data)
-    {
-        if (data->EventFlag == ImGuiInputTextFlags.CallbackCharFilter)
-        {
-            var c = (char)data->EventChar;
-            if (char.IsAsciiDigit(c) || char.IsAsciiLetterOrDigit(c)) return 0;
-            if (ValidNoneAlphaNumericChars.AsSpan().Contains(c)) return 0;
-            return 1;
-        }
-
-        return 0;
-    }
 }

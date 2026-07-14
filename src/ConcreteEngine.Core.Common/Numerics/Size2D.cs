@@ -7,7 +7,8 @@ using System.Text.Unicode;
 namespace ConcreteEngine.Core.Common.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly record struct Size2D(int Width, int Height) : IEquatable<int>, IComparable<Size2D>, IComparable<int>, IUtf8SpanFormattable, ISpanFormattable
+public readonly record struct Size2D(int Width, int Height) : IEquatable<int>, IComparable<Size2D>, IComparable<int>,
+    IUtf8SpanFormattable, ISpanFormattable
 {
     public static Size2D Zero => new(0, 0);
     public static Size2D One => new(1, 1);
@@ -99,11 +100,11 @@ public readonly record struct Size2D(int Width, int Height) : IEquatable<int>, I
         return formattable.ToString(formatProvider);
     }
 
-    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format,
-        IFormatProvider? provider) =>
-        destination.TryWrite(provider, $"Width: {Width}, Height: {Height}", out charsWritten);
-
-    public bool TryFormat(Span<byte> destination, out int bytesWritten, ReadOnlySpan<char> format,
-        IFormatProvider? provider) =>
-        Utf8.TryWrite(destination, provider, $"Width: {Width}, Height: {Height}", out bytesWritten);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryFormat(Span<char> dst, out int written, ReadOnlySpan<char> fmt, IFormatProvider? provider) =>
+        dst.TryWrite(provider, $"Width: {Width}, Height: {Height}", out written);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryFormat(Span<byte> dst, out int written, ReadOnlySpan<char> fmt, IFormatProvider? provider) =>
+        Utf8.TryWrite(dst, provider, $"Width: {Width}, Height: {Height}", out written);
 }

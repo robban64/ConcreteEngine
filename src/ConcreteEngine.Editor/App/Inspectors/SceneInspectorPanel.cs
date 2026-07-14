@@ -10,37 +10,30 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
 
-internal sealed unsafe class SceneInspectorPanel : EditorPanel
+internal sealed unsafe class SceneInspectorPanel
 {
     private const ImGuiTreeNodeFlags CollapseFlags = ImGuiTreeNodeFlags.DefaultOpen;
     private const string ValidNoneAlphaNumericChars = "_-";
 
-    private static SelectionManager Selection => SelectionManager.Instance;
+    private readonly StateManager _state;
+    private readonly SceneObjectInspector _inspector;
+    private readonly ParticleInspector _particleInspector;
+
+    private readonly NativeString _title;
+    private readonly NativeString _nameInputStr;
 
     private SceneObjectId _previousId = SceneObjectId.Empty;
 
-    private NativeString _title;
-    private NativeString _nameInputStr;
-
-    private readonly SceneObjectInspector _inspector;
-    private readonly ParticleInspector _particleInspector;
-    public SceneInspectorPanel(StateManager state) : base(InspectorId.SceneObject, state)
+    
+    public SceneInspectorPanel(StateManager state) 
     {
+        _state = state;
+        _title = StringArena.AllocateString(24);
+        _nameInputStr = StringArena.AllocateString(64);
+
         _inspector = new SceneObjectInspector();
         _particleInspector = new ParticleInspector();
     }
-
-    public override void OnCreate()
-    {
-        _nameInputStr = StringArena.AllocateString(64);
-        _title = StringArena.AllocateString(24);
-    }
-    
-    public override void OnLeave()
-    {
-        _previousId = SceneObjectId.Empty;
-    }
-
     
     private void OnNewInspector(SceneObject sceneObject)
     {
@@ -54,9 +47,9 @@ internal sealed unsafe class SceneInspectorPanel : EditorPanel
         _nameInputStr.Set(sceneObject.Name);
     }
     
-    public override void OnDraw()
+    public void Draw()
     {
-        if (Selection.SelectedSceneObject is not { } sceneObject) return;
+        if (SelectionManager.Instance.SelectedSceneObject is not { } sceneObject) return;
 
         if (_previousId != sceneObject.Id)
             OnNewInspector(sceneObject);
@@ -79,23 +72,16 @@ internal sealed unsafe class SceneInspectorPanel : EditorPanel
 
         ImGui.Spacing();
         
-        if(ImGui.CollapsingHeader("Transform"u8, ImGuiTreeNodeFlags.DefaultOpen))
-            SceneObjectInspector.Instance.DrawTransform();
-
-        ImGui.Spacing();
-        ImGui.Separator();
-
+        _inspector.Draw();
         if (sceneObject.TryGetInstance<ModelInstance>(out var modelInstance))
         {
             ImGui.Spacing();
             DrawModelInstance(modelInstance);
         }
 
-        if (sceneObject.TryGetInstance<ParticleInstance>(out var particleInstance))
-        {
-            ImGui.Spacing();
-            DrawParticles(particleInstance);
-        }
+        if (sceneObject.TryGetInstance<ParticleInstance>(out _))
+            _particleInspector.Draw();
+        
     }
 
     private void DrawModelInstance(ModelInstance modelInstance)
@@ -131,18 +117,6 @@ internal sealed unsafe class SceneInspectorPanel : EditorPanel
         }
     }
 
-    private void DrawParticles(ParticleInstance particle)
-    {
-        var sw = ScratchBuffer.Writer();
-        sw.Append("Particle Emitter: "u8);
-        sw.Append(particle.Emitter.Name);
-        if (ImGui.CollapsingHeader(sw.End(), CollapseFlags)) return;
-
-        ParticleInspector.Instance.DrawEmitterParams();
-        ParticleInspector.Instance.DrawParticleParams();
-
-    }
-
     private void HandleRename(SceneObject sceneObject)
     {
         UtfText.SliceNullTerminate(_nameInputStr.Data.AsSpan(), out var byteSpan);
@@ -156,7 +130,7 @@ internal sealed unsafe class SceneInspectorPanel : EditorPanel
         if (chars.IsEmpty || chars.Equals(sceneObject.Name, StringComparison.Ordinal)) return;
 
         var name = chars.ToString();
-        State.EnqueueEvent(new SceneObjectEvent(sceneObject.Id, Rename: name));
+        _state.EnqueueEvent(new SceneObjectEvent(sceneObject.Id, Rename: name));
     }
 
     private static int InputCallback(ImGuiInputTextCallbackData* data)

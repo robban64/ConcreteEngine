@@ -12,7 +12,7 @@ internal enum InspectorId : byte
     SceneObject,
     Camera,
     Lighting,
-    Visual
+    Visual,
 }
 
 internal enum FixedInspectorId : byte

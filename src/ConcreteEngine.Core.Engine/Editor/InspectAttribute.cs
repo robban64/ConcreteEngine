@@ -17,8 +17,8 @@ public sealed class InspectIncludeAttribute : Attribute
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
 public abstract class InspectInputAttribute : Attribute
 {
+    public string? Label { get; init; }
     public string? Segment { get; init; }
-    public string? DisplayName { get; init; }
 }
 
 

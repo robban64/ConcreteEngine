@@ -129,10 +129,10 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
             };
             if (inputField is null) return null;
 
-            ExtractCommonFieldAttr(attr, out var displayName, out var segment);
+            ExtractCommonFieldAttr(attr, out var label, out var segment);
             
             return new InspectorMember(Name: sym.Name,
-                DisplayName: displayName ?? sym.Name,
+                Label: label ?? sym.Name,
                 TargetNs: sym.ContainingNamespace.ToDisplayString(),
                 TypeName: typeSym.ToDisplayString(),
                 Info: MemberInfo.Extract(sym)) { Segment = segment, Input = inputField };

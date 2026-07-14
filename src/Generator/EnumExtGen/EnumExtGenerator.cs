@@ -94,11 +94,11 @@ public sealed class EnumExtGenerator : IIncrementalGenerator
         //
         sb.AppendLine($"public static readonly int Count = {count};").AppendLine();
 
-        sb.NewLine($"private static readonly {it.Primitive}[] values = [");
+        sb.BeginLine($"private static readonly {it.Primitive}[] values = [");
         sb.Builder.AppendJoin(',', it.Data.Array.Select(static x => x.Value));
         sb.EndLine("];");
 
-        sb.NewLine("private static readonly string[] names = [");
+        sb.BeginLine("private static readonly string[] names = [");
         sb.Builder.AppendJoin(',', nameLiterals);
         sb.EndLine("];");
 
@@ -123,7 +123,7 @@ public sealed class EnumExtGenerator : IIncrementalGenerator
         foreach (var data in it.Data)
         {
             var fullName = $"{it.TypeName}.{data.Name}";
-            sb.NewLine().Append(fullName).Append(" => nameof(").Append(fullName).EndLine("),");
+            sb.BeginLine().Append(fullName).Append(" => nameof(").Append(fullName).EndLine("),");
         }
 
         sb.CloseBrace(";");
@@ -140,7 +140,7 @@ public sealed class EnumExtGenerator : IIncrementalGenerator
             {
                 var data = it.Data[i];
                 var fullName = $"{it.TypeName}.{data.Name}";
-                sb.NewLine().Append(fullName).Append(" => ").Append(nameLiterals[i]).EndLine("u8,");
+                sb.BeginLine().Append(fullName).Append(" => ").Append(nameLiterals[i]).EndLine("u8,");
             }
 
             sb.CloseBrace(";");

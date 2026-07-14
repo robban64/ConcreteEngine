@@ -154,7 +154,7 @@ public sealed class ShadowSettings : VisualStateObject
     public bool HasPendingShadowSize { get; internal set; }
 
 
-    [InputCombo([1024, 2048, 4096, 8192], ["1024px", "2048px", "4096px", "8192px"], DisplayName = "ShadowMap Size")]
+    [InputCombo([1024, 2048, 4096, 8192], ["1024px", "2048px", "4096px", "8192px"], Label = "ShadowMap Size")]
     public int ShadowMapSize
     {
         get;

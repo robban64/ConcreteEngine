@@ -9,6 +9,7 @@ namespace ConcreteEngine.Editor.App.Theme;
 
 internal static unsafe class AppDraw
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CollapseSection(ReadOnlySpan<byte> title, delegate*<void> draw, ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen)
     {
         if (ImGui.CollapsingHeader(title, flags)) draw();
@@ -16,6 +17,7 @@ internal static unsafe class AppDraw
         ImGui.Separator();
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Section(ReadOnlySpan<byte> title, delegate*<void> draw)
     {
         ImGui.SeparatorText(title);

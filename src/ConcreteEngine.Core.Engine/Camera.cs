@@ -73,7 +73,7 @@ public sealed class Camera
         }
     }
 
-    [InputNumber(DisplayName = "Near & Far")]
+    [InputNumber(Label = "Near & Far", Segment = "Projection")]
     public Vector2 NearFarPlane
     {
         get;
@@ -86,7 +86,7 @@ public sealed class Camera
         }
     } = new(0.1f, 500f);
 
-    [InputNumber(InputStyle.Slider, DisplayName = "Field of view", Min = 10f, Max = 179f)]
+    [InputNumber(InputStyle.Slider, Label = "Field of view", Min = 10f, Max = 179f, Segment = "Projection")]
     public float Fov
     {
         get;

@@ -4,22 +4,13 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
 
-internal sealed class LightingPanel : EditorPanel
+internal sealed class LightingPanel
 {
-    
-    private IlluminationSettingsInspector _illuminationSettingsInspector;
-    private ShadowSettingsInspector _shadowSettingsInspector;
-    private EnvironmentSettingsInspector _environmentSettingsInspector;
+    private readonly IlluminationSettingsInspector _illuminationSettingsInspector = new();
+    private readonly ShadowSettingsInspector _shadowSettingsInspector = new();
+    private readonly EnvironmentSettingsInspector _environmentSettingsInspector = new();
 
-    public LightingPanel(StateManager state) : base(InspectorId.Lighting, state)
-    {
-        _illuminationSettingsInspector = new IlluminationSettingsInspector();
-        _shadowSettingsInspector = new ShadowSettingsInspector();
-        _environmentSettingsInspector = new EnvironmentSettingsInspector();
-        //_inspectFields.ShadowSizeCombo.LabelPlacement = LabelPlacement.None;
-    }
-
-    public override void OnDraw()
+    public void Draw()
     {
         ImGui.SeparatorText("Illumination"u8);
 
@@ -27,24 +18,24 @@ internal sealed class LightingPanel : EditorPanel
 
         if (ImGui.BeginTabItem("Light"u8))
         {
-            IlluminationSettingsInspector.Instance.DrawDirectionalLight();
-            IlluminationSettingsInspector.Instance.DrawAmbient();
+            _illuminationSettingsInspector.DrawDirectionalLight();
+            _illuminationSettingsInspector.DrawAmbient();
 
             ImGui.EndTabItem();
         }
 
         if (ImGui.BeginTabItem("Shadow"u8))
         {
-            ShadowSettingsInspector.Instance.DrawProjection();
-            ShadowSettingsInspector.Instance.DrawVisuals();
+            _shadowSettingsInspector.DrawProjection();
+            _shadowSettingsInspector.DrawVisuals();
 
             ImGui.EndTabItem();
         }
 
         if (ImGui.BeginTabItem("Fog"u8))
         {
-            EnvironmentSettingsInspector.Instance.DrawFogHeight();
-            EnvironmentSettingsInspector.Instance.DrawFogOptics();
+            _environmentSettingsInspector.DrawFogHeight();
+            _environmentSettingsInspector.DrawFogOptics();
 
             ImGui.EndTabItem();
         }

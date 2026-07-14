@@ -26,15 +26,15 @@ public sealed partial class InspectorGenerator
         sym is IPropertySymbol or IFieldSymbol && sym.DeclaredAccessibility == Accessibility.Public &&
         !sym.IsImplicitlyDeclared && sym.GetAttributes().Length > 0;
 
-    private static void ExtractCommonFieldAttr(AttributeData attr, out string? displayName, out string? segment)
+    private static void ExtractCommonFieldAttr(AttributeData attr, out string? label, out string? segment)
     {
-        displayName = segment = null;
+        label = segment = null;
         foreach (var (key, value) in attr.NamedArguments)
         {
             var v = value.Value;
             switch (key)
             {
-                case "DisplayName" when v is string l: displayName = l; break;
+                case "Label" when v is string l: label = l; break;
                 case "Segment" when v is string l: segment = l; break;
             }
         }

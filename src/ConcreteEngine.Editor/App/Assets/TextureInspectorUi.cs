@@ -12,12 +12,11 @@ namespace ConcreteEngine.Editor.App.Assets;
 
 internal sealed class TextureInspectorUi(StateManager state)
 {
-    public readonly InspectTextureFields InspectFields = InspectorFieldProvider.Instance.TextureFields;
-
+    private readonly TextureInspector _inspector = new ();
 
     public void Draw(InspectTexture editTexture)
     {
-        var sw = TextBuffers.GetWriter();
+        var sw = ScratchBuffer.Writer();
         var texture = editTexture.Asset;
 
         ImGui.SeparatorText("Texture Info"u8);
@@ -34,7 +33,7 @@ internal sealed class TextureInspectorUi(StateManager state)
         AppDraw.DrawTextProperty("Format:"u8, sw.Write(editTexture.GfxMeta.PixelFormat.ToText()));
         AppDraw.DrawTextProperty("Mips:"u8, sw.Write(editTexture.GfxMeta.MipLevels));
 
-        InspectFields.Draw();
+        _inspector.DrawGpuState();
 
         ImGui.Spacing();
         ImGui.Separator();

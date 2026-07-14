@@ -1,35 +1,24 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Editor.Core.Data;
 
-internal static class TextBuffers
+internal static unsafe class ScratchBuffer
 {
-    private static NativeArray<byte> _scratchBuffer;
-
-    // todo remove
-    public static ArenaAllocator PersistentArena = null!;
+    private static NativeArray<byte> _buffer;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static NativeSpanWriter GetWriter() => new(_scratchBuffer);
+    public static NativeSpanWriter Writer() => new(_buffer.Ptr, _buffer.Length);
 
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void Create()
     {
-        if (PersistentArena != null)
-            throw new InvalidOperationException("Already allocated text buffers");
-
-        _scratchBuffer = NativeArray.Allocate<byte>(512);
-        PersistentArena = new ArenaAllocator(CapacityUtils.PageSize * 2);
-
+        if(!_buffer.IsNull) throw new InvalidOperationException("Buffer is already created");
+        _buffer = NativeArray.Allocate<byte>(512);
     }
 
     public static void Dispose()
     {
-        PersistentArena.Dispose();
-        _scratchBuffer.Dispose();
+        _buffer.Dispose();
     }
 }

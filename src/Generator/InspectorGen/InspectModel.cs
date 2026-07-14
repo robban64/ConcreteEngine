@@ -60,13 +60,15 @@ internal sealed record InspectorGroup(
 
 internal sealed record InspectorMember(
     string Name,
-    string DisplayString,
+    string DisplayName,
     string TargetNs,
     string TypeName,
     MemberInfo Info)
 {
     public string? Segment { get; init; }
     public InputField? Input { get; init; }
+    
+    public string GetDisplayNameString() => Symbols.FormatLiteral(DisplayName, true);
 }
 
 internal abstract record InputField(string Name);

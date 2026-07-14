@@ -81,19 +81,19 @@ internal static class InspectorGeneratorEmitter
         sb.Append(inputType, " ", input.Name, " = new(").EndLine();
         sb.PushIndent();
 
-        sb.AppendLine(member.DisplayString, ", ");
+        sb.AppendLine(member.GetDisplayNameString(), ", ");
         sb.AppendLine(input.GetInputStyleText(), ", ");
 
         // Getter
         sb.AppendLine("static () => Unsafe.BitCast", $"<{member.TypeName}, {input.NumberType}>({access.Value}), ");
-        EmitSetter(sb, member, in access, $"Unsafe.BitCast<{input.NumberType}, {member.TypeName}>(v)");
+        sb.AppendLine(MakeSetter(member, in access, $"Unsafe.BitCast<{input.NumberType}, {member.TypeName}>(v)"), ", ");
 
         //
         sb.NewLine();
         if (isFloat)
         {
             sb.Append(input.Speed).Append(", ").Append(input.Min).Append(", ").Append(input.Max);
-            if (!string.IsNullOrEmpty(input.Format)) sb.Append(", ").Append(input.Format);
+            if (!string.IsNullOrEmpty(input.Format)) sb.Append(", ").Append(Symbols.FormatLiteral(input.Format, true));
         }
         else
         {
@@ -119,11 +119,11 @@ internal static class InspectorGeneratorEmitter
         sb.Append("ColorInput ", input.Name, " = new(").EndLine();
         sb.PushIndent();
 
-        sb.AppendLine(member.DisplayString, ", ");
+        sb.AppendLine(member.GetDisplayNameString(), ", ");
 
         //getter & setter
         sb.AppendLine($"static () => {castFrom}{access.Value}, ");
-        EmitSetter(sb, member, in access, $"{castTo}v");
+        sb.AppendLine(MakeSetter(member, in access, $"{castTo}v"), ", ");
 
         sb.AppendLine(Symbols.FormatPrimitive(input.HasAlpha, false, false));
         sb.PopIndent();
@@ -140,27 +140,28 @@ internal static class InspectorGeneratorEmitter
             castFrom = "(int)";
         }
 
-        sb.Append("ComboInput ", input.Name, " = new(").EndLine();
+        sb.Append("ComboInput ", input.Name, " = ComboInput.Create(").EndLine();
         sb.PushIndent();
 
-        sb.AppendLine(member.DisplayString, ", ");
+        sb.AppendLine(member.GetDisplayNameString(), ", ");
         sb.AppendLine(input.Values, ", ");
         sb.AppendLine(input.Names, ", ");
 
         //getter & setter
         sb.AppendLine($"static () => {castFrom}{access.Value}, ");
-        EmitSetter(sb, member, in access, $"{castTo}v");
+        sb.AppendLine(MakeSetter(member, in access, $"{castTo}v"), ", ");
+        sb.AppendLine(input.StartAt.ToString());
+        if(!string.IsNullOrEmpty(input.Placeholder)) sb.AppendLine(", ", input.Placeholder);
 
         sb.PopIndent();
         sb.AppendLine(");");
     }
-
-    private static void EmitSetter(SourceBuilder sb, InspectorMember member, in AccessPath access, string assignedValue)
+    
+    private static string MakeSetter(InspectorMember member, in AccessPath access, string assignedValue)
     {
-        if (access.UsesStructCopy)
-            sb.AppendLine($"static v => {access.Owner} = {access.Owner} with {{ {member.Name} = {assignedValue} }}, ");
-        else
-            sb.AppendLine($"static v => {access.Value} = {assignedValue}, ");
+        return access.UsesStructCopy
+            ? $"static v => {access.Owner} = {access.Owner} with {{ {member.Name} = {assignedValue} }}"
+            : $"static v => {access.Value} = {assignedValue}";
     }
 
     private static AccessPath CreateAccessPath(InspectorMember member, InspectorGroup group)

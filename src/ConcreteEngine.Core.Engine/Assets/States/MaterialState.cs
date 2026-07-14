@@ -158,7 +158,7 @@ public sealed class MaterialState
         }
     } = new(0, 0, 1f, 1f);
 
-    [InputNumber]
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 50f)]
     public float Shininess
     {
         get;
@@ -170,7 +170,7 @@ public sealed class MaterialState
         }
     } = 12f;
 
-    [InputNumber]
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 50f)]
     public float Roughness
     {
         get;
@@ -182,7 +182,7 @@ public sealed class MaterialState
         }
     }
 
-    [InputNumber]
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 50f)]
     public float Metallic
     {
         get;

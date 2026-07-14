@@ -33,8 +33,6 @@ internal sealed class InspectionWindow : EditorWindow
     {
         State.ContextChanged += OnStateOnContextChanged;
 
-        var arena = TextBuffers.PersistentArena;
-
         foreach (var panel in _panels)
             panel.OnCreate();
 

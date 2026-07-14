@@ -26,7 +26,6 @@ internal class InspectMaterial : InspectAsset
     public InspectMaterial(Material asset) : base()
     {
         Asset = asset;
-        InspectorFieldProvider.Instance.MaterialFields.Bind(this);
     }
 }
 
@@ -48,7 +47,6 @@ internal class InspectTexture : InspectAsset
     {
         Asset = asset;
         GfxMeta = GfxResourceApi.GetMeta(asset.GfxId);
-        InspectorFieldProvider.Instance.TextureFields.Bind(this);
     }
 }
 

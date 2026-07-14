@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Core.Engine.Editor;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Inspection;
@@ -7,24 +7,24 @@ namespace ConcreteEngine.Editor.Lib.Inspection;
 
 internal static unsafe class InputFieldDrawer
 {
-    public static delegate*<int, byte*, float*, byte*, float, float, float, bool> BindFloat(InputFieldKind kind)
+    public static delegate*<int, byte*, float*, byte*, float, float, float, bool> BindFloat(InputStyle kind)
     {
         return kind switch
         {
-            InputFieldKind.Input => &DrawInputFloat,
-            InputFieldKind.Slider => &DrawSliderFloat,
-            InputFieldKind.Drag => &DrawDragFloat,
+            InputStyle.Input => &DrawInputFloat,
+            InputStyle.Slider => &DrawSliderFloat,
+            InputStyle.Drag => &DrawDragFloat,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }
 
-    public static delegate*<int, byte*, int*, float, int, int, bool> BindInt(InputFieldKind kind)
+    public static delegate*<int, byte*, int*, float, int, int, bool> BindInt(InputStyle kind)
     {
         return kind switch
         {
-            InputFieldKind.Input => &DrawInputInt,
-            InputFieldKind.Slider => &DrawSliderInt,
-            InputFieldKind.Drag => &DrawDragInt,
+            InputStyle.Input => &DrawInputInt,
+            InputStyle.Slider => &DrawSliderInt,
+            InputStyle.Drag => &DrawDragInt,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }

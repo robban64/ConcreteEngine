@@ -38,7 +38,7 @@ internal sealed class ConsoleSystem
         line = line.Trim();
 
         {
-            var cmdMsg = TextBuffers.GetWriter().Append(">> ").Append(line).EndSpan();
+            var cmdMsg = ScratchBuffer.Writer().Append(">> ").Append(line).EndSpan();
             _service.PushLog(cmdMsg, default, LogLevel.None, LogScope.Command);
         }
 

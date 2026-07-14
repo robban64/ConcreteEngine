@@ -161,7 +161,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
 
         ImGui.TableHeadersRow();
 
-        var sw = TextBuffers.GetWriter();
+        var sw = ScratchBuffer.Writer();
         foreach (var it in AssetManager.GetAssetBindingsEnumerator(assetId))
         {
             ImGui.PushID(it.Id);

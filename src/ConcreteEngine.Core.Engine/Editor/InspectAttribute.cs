@@ -42,6 +42,8 @@ public sealed class InputComboAttribute(int[]? values = null, string[]? names = 
 {
     public string[]? Names { get; } = names;
     public int[]? Values { get; } = values;
+    
+    public bool UseEnumExt { get; init; }
 
     public string? Placeholder { get; init; }
     public int StartAt { get; init; }

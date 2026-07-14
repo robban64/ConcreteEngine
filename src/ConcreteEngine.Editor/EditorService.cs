@@ -42,7 +42,6 @@ internal sealed class EditorService
         _windowManager.Setup();
         _router.ForceResolve(_stateManager);
 
-        LogService.PushMessage($"PersistentArena: {TextBuffers.PersistentArena.Remaining} bytes left");
         LogService.PushMessage($"StringArena: {StringArena.Remaining} bytes left");
 
     }

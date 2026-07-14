@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
@@ -19,10 +20,12 @@ public struct TextureProperties(
     public TexturePixelFormat PixelFormat = pixelFormat;
 }
 
+[Inspect]
 public sealed class Texture : AssetObject
 {
     public readonly TextureId GfxId;
-
+    
+    [InspectInclude]
     public readonly GpuTextureState GpuState;
 
     public readonly Size2D Size;

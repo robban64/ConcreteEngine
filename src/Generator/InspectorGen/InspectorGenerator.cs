@@ -68,8 +68,7 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
         var roots = new List<InspectorMember>(4);
         var groups = new List<InspectorGroup>(4);
 
-        var members = targetSym.GetMembers().Where(MemberFilter);
-        foreach (var member in members)
+        foreach (var member in targetSym.GetMembers().Where(MemberFilter))
         {
             if (CreateMember(member) is { } created)
             {
@@ -133,7 +132,7 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
             ExtractCommonFieldAttr(attr, out var displayName, out var segment);
             
             return new InspectorMember(Name: sym.Name,
-                DisplayString: Symbols.FormatLiteral(displayName ?? sym.Name, true),
+                DisplayName: displayName ?? sym.Name,
                 TargetNs: sym.ContainingNamespace.ToDisplayString(),
                 TypeName: typeSym.ToDisplayString(),
                 Info: MemberInfo.Extract(sym)) { Segment = segment, Input = inputField };

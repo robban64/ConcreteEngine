@@ -28,7 +28,7 @@ internal sealed class MenuGroup(NativeString name, MenuItem[] items)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private unsafe void DrawChildren(StateManager stateManager)
     {
-        var sw = TextBuffers.GetWriter();
+        var sw = ScratchBuffer.Writer();
         foreach (var it in Items)
         {
             if (!it.Visible) continue;

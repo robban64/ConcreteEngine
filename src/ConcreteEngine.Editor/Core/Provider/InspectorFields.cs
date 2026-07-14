@@ -1,14 +1,6 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Editor.Lib.Field;
-using ConcreteEngine.Editor.Lib.Inspection;
-using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core.Provider;
-
+/*
 internal sealed class FieldSegment
 {
     public readonly PropertyField[] Fields;
@@ -150,4 +142,4 @@ internal abstract unsafe class InspectorFields<T>
 
         _segments[_segmentIdx++] = new FieldSegment(title, fields, width, collapsible);
     }
-}
+}*/

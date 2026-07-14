@@ -36,4 +36,17 @@ internal static class Extensions
         value = default;
         return false;
     }
+    
+    public static IEnumerable<INamedTypeSymbol> GetAllTypes(this INamespaceSymbol ns)
+    {
+        foreach (var member in ns.GetMembers())
+        {
+            if (member is INamespaceSymbol nested)
+                foreach (var t in GetAllTypes(nested))
+                    yield return t;
+            else if (member is INamedTypeSymbol type)
+                yield return type;
+        }
+    }
+
 }

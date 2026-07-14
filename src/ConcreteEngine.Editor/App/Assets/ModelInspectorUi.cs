@@ -13,7 +13,7 @@ internal sealed unsafe class ModelInspectorUi(StateManager state)
     public void Draw(InspectModel editModel)
     {
         var model = editModel.Asset;
-        var sw = TextBuffers.GetWriter();
+        var sw = ScratchBuffer.Writer();
 
         ImGui.SeparatorText("Model Info"u8);
         AppDraw.DrawTextProperty("Vertices:"u8, sw.Write(model.Info.VertexCount));

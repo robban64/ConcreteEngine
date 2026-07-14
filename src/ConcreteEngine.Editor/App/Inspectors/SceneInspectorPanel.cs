@@ -101,7 +101,7 @@ internal sealed unsafe class SceneInspectorPanel : EditorPanel
 
     private void DrawModelInstance(InspectSceneObject inspector, ModelInstance modelInstance)
     {
-        var sw = TextBuffers.GetWriter();
+        var sw = ScratchBuffer.Writer();
 /*
         if (ImGui.CollapsingHeader("Local Spatial"u8))
         {
@@ -140,7 +140,7 @@ internal sealed unsafe class SceneInspectorPanel : EditorPanel
 
     private void DrawParticles(InspectParticleInstance particle)
     {
-        var sw = TextBuffers.GetWriter();
+        var sw = ScratchBuffer.Writer();
         sw.Append("Particle Emitter: "u8);
         sw.Append(particle.EmitterName);
         if (ImGui.CollapsingHeader(sw.End(), CollapseFlags)) return;

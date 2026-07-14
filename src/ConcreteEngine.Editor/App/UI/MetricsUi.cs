@@ -54,7 +54,7 @@ internal static class MetricsUi
 
     private static void DrawSceneMetrics()
     {
-        var sw = TextBuffers.GetWriter();
+        var sw = ScratchBuffer.Writer();
         if (ImGui.BeginChild("metrics-scene"u8, ImGuiChildFlags.AutoResizeY))
         {
             ref readonly var scene = ref Metrics.SceneMeta;
@@ -73,7 +73,7 @@ internal static class MetricsUi
     private static void DrawFrameMetrics()
     {
         ref readonly var frameMeta = ref Metrics.FrameMeta;
-        var sw = TextBuffers.GetWriter();
+        var sw = ScratchBuffer.Writer();
         // Frame Info
         ImGui.SeparatorText("Frame Info"u8);
         MetricText(sw, "Frame:", frameMeta.FrameId);
@@ -128,7 +128,7 @@ internal static class MetricsUi
     {
         if (Metrics.Stores is not { } stores) return;
 
-        var sw = TextBuffers.GetWriter();
+        var sw = ScratchBuffer.Writer();
 
         if (ImGui.BeginChild("metrics-asset"u8, ImGuiChildFlags.AutoResizeY))
         {
@@ -202,7 +202,7 @@ internal static class MetricsUi
     private static void DrawBkStore(StoreMetrics storeMetrics)
     {
         var metas = storeMetrics.Gfx;
-        var sw = TextBuffers.GetWriter();
+        var sw = ScratchBuffer.Writer();
         for (int i = 0; i < metas.Length; i++)
         {
             ref readonly var it = ref metas[i];
@@ -221,7 +221,7 @@ internal static class MetricsUi
         var descriptions = storeMetrics.GfxMetaDescriptions;
         ArgumentOutOfRangeException.ThrowIfNotEqual(metas.Length, descriptions.Length);
 
-        var sw = TextBuffers.GetWriter();
+        var sw = ScratchBuffer.Writer();
         for (int i = 0; i < metas.Length; i++)
         {
             ref readonly var it = ref metas[i];

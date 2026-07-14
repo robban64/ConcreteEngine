@@ -40,11 +40,10 @@ public sealed class EditorPortal : IDisposable
 
         StyleMap.Create();
         StringArena.Create();
-        TextBuffers.Create();
+        ScratchBuffer.Create();
 
         LogService.Instance.Create();
 
-        InspectorFieldProvider.Create();
         _service = new EditorService();
         _service.Setup();
         Initialized = true;
@@ -105,7 +104,7 @@ public sealed class EditorPortal : IDisposable
     public void Dispose()
     {
         StyleMap.Dispose();
-        TextBuffers.Dispose();
+        ScratchBuffer.Dispose();
         StringArena.Instance.Dispose();
         LogService.Instance.Dispose();
 

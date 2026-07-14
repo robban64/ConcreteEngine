@@ -83,8 +83,6 @@ internal sealed class SelectionManager
         if (!id.IsValid()) return;
 
         SelectedAsset = null;
-        InspectorFieldProvider.Instance.TextureFields.Unbind();
-        InspectorFieldProvider.Instance.MaterialFields.Unbind();
     }
 
     private void SelectSceneObject(SceneObjectId id, bool showDebugBounds)

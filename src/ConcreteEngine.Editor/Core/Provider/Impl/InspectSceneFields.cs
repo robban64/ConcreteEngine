@@ -1,7 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Editor;
-using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Inspection;
 
 namespace ConcreteEngine.Editor.Core.Provider.Impl;

@@ -18,12 +18,11 @@ namespace ConcreteEngine.Editor.App.Assets;
 
 internal sealed unsafe class MaterialInspectorUi(StateManager state)
 {
-    public readonly InspectMaterialFields InspectFields = InspectorFieldProvider.Instance.MaterialFields;
     private readonly MaterialInspector _inspector = new();
 
     public void Draw(InspectMaterial material)
     {
-        var sw = TextBuffers.GetWriter();
+        var sw = ScratchBuffer.Writer();
 
         ImGui.SeparatorText("Material Info"u8);
         ImGui.BeginGroup();
@@ -38,7 +37,6 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
 
         ImGui.SeparatorText("Material State"u8);
         _inspector.DrawState();
-        //InspectFields.Draw(0, 1);
 
         ImGui.Spacing();
         ImGui.SeparatorText("Render Properties"u8);
@@ -117,7 +115,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         var clearBtnWidth = rowHeight + GuiTheme.ItemSpacing.X;
         var contentWidth = ImGui.GetContentRegionAvail().X - clearBtnWidth;
 
-        var name = TextBuffers.GetWriter().Write(slotTexture.Name);
+        var name = ScratchBuffer.Writer().Write(slotTexture.Name);
         if (ImGui.Button(name, new Vector2(contentWidth, rowHeight)))
             ImGui.OpenPopup("preview-popup"u8);
 
@@ -173,7 +171,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
     {
         var isDefined = state.IsSet(flag);
         
-        var sw = TextBuffers.GetWriter();
+        var sw = ScratchBuffer.Writer();
         sw.Append(label);
         if (ImGui.Checkbox(sw.AppendImGuiId(1).Append((byte)flag).End(), ref isDefined))
             state = new GfxDrawState(state.Enabled, state.Defined ^ flag);

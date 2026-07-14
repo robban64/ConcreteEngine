@@ -237,7 +237,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             return;
         }
 
-        var sw = TextBuffers.GetWriter();
+        var sw = ScratchBuffer.Writer();
         for (var i = 0; i < nodes.Length; i++)
         {
             var node = nodes[i];
@@ -273,7 +273,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 
     private void DrawFilesInner(int start, int length, int columnCount, AssetFileId selectedFileId)
     {
-        var sw = TextBuffers.GetWriter();
+        var sw = ScratchBuffer.Writer();
         var drawList = ImGui.GetWindowDrawList();
         var fileIds = _assetBrowser.GetFileIds(start, length);
 

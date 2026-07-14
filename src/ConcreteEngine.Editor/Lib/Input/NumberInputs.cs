@@ -16,9 +16,11 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IFl
 
     public String8Utf8 Format;
 
-    private readonly InputDrawer _drawer;
+    //private readonly InputDrawer _drawer;
     private readonly Func<T> _getter;
     private readonly Action<T> _setter;
+
+    private readonly delegate*<int, byte*, float*, byte*, float, float, float, bool> _drawFunc;
 
     public FloatInput(
         string label,
@@ -31,7 +33,7 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IFl
         string format = "%.2f") : base(label, InputKind.Float)
     {
         Style = style;
-        _drawer = InputDrawer.Get(style);
+        _drawFunc = InputFieldDrawer.BindFloat(style);//InputDrawer.Get(style);
         _getter = getter;
         _setter = setter;
         Format = format;
@@ -46,8 +48,8 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IFl
     {
         var value = _getter();
         var format = Format;
-        var label = ApplyLabelLayout(TextBuffers.GetWriter());
-        var changed = _drawer.DrawFloat(T.Components, label, (float*)&value, (byte*)&format, Speed, Min, Max);
+        var label = ApplyLabelLayout(ScratchBuffer.Writer());
+        var changed = _drawFunc(T.Components, label, (float*)&value, (byte*)&format, Speed, Min, Max);
         if (changed && ShouldTrigger())
         {
             _setter(value);
@@ -92,7 +94,7 @@ internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IIntV
     public bool Draw()
     {
         var value = _getter();
-        var label = ApplyLabelLayout(TextBuffers.GetWriter());
+        var label = ApplyLabelLayout(ScratchBuffer.Writer());
         var changed = _drawer.DrawInt(T.Components, label, (int*)&value, Speed, Min, Max);
         if (changed && ShouldTrigger())
         {
@@ -122,7 +124,7 @@ internal sealed unsafe class ColorInput : InputField
     public bool Draw()
     {
         var value = _getter();
-        var label = ApplyLabelLayout(TextBuffers.GetWriter());
+        var label = ApplyLabelLayout(ScratchBuffer.Writer());
         
         var changed = HasAlpha
             ? ImGui.ColorEdit4(label, &value.R)

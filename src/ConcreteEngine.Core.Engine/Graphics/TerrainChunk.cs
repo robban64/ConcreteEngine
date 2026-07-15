@@ -4,14 +4,14 @@ using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
-public sealed class TerrainChunk(Vector2I gridStart)
+public sealed class TerrainChunk(Int2 gridStart)
 {
     public const int ChunkQuads = 64;
     public const int ChunkSamples = ChunkQuads + 1;
 
     public bool IsDirty { get; internal set; }
 
-    public readonly Vector2I WorldStart = gridStart * ChunkQuads;
+    public readonly Int2 WorldStart = gridStart * ChunkQuads;
 
     private BoundingBox _bounds;
 
@@ -48,7 +48,7 @@ public sealed class TerrainChunk(Vector2I gridStart)
         {
             for (int x = 0; x < ChunkSamples; x++)
             {
-                var heightCoords = new Vector2I(start.X + x, start.Y + z);
+                var heightCoords = new Int2(start.X + x, start.Y + z);
                 var height = TerrainUtils.SampleHeight(heightmap, heightCoords, dimension, maxHeight);
                 minY = float.Min(minY, height);
                 maxY = float.Max(maxY, height);

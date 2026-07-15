@@ -1,6 +1,4 @@
-using System.Collections.Specialized;
 using System.Diagnostics;
-using Microsoft.CodeAnalysis;
 
 namespace Generator.InspectorGen;
 

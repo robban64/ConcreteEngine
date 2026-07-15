@@ -53,11 +53,11 @@ public static class TerrainUtils
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float SampleHeight(ReadOnlySpan<byte> data, Vector2I coords, int dimension, float maxHeight)
+    public static float SampleHeight(ReadOnlySpan<byte> data, Int2 coords, int dimension, float maxHeight)
     {
         const int channels = 4;
 
-        coords = Vector2I.Clamp(coords, 0, dimension - 1);
+        coords = Int2.Clamp(coords, 0, dimension - 1);
 
         var rowStrideBytes = data.Length / dimension;
 

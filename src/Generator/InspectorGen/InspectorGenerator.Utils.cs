@@ -1,9 +1,5 @@
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.SpecialType;
 
 namespace Generator.InspectorGen;
@@ -16,7 +12,10 @@ public sealed partial class InspectorGenerator
         nameof(Vector3) => ("InputNumeric3", true),
         nameof(Vector4) or nameof(Quaternion) or "Color4" => ("InputNumeric4", true),
         "Size2D" => ("InputNumeric2", false),
-        "Vector2I" => ("InputNumeric2", false),
+        "Size3D" => ("InputNumeric3", false),
+        "Int2" => ("InputNumeric2", false),
+        "Int3" => ("InputNumeric3", false),
+        "Int4" => ("InputNumeric4", false),
         _ => (null, false)
     };
 

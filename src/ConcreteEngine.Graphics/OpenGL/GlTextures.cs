@@ -67,7 +67,7 @@ internal sealed class GlTextures
     public void CopyTextureData(
         GfxHandle src, TextureKind srcKind, GfxHandle dst, TextureKind dstKind,
         int srcLevel, int dstLevel, Size3D srcSize,
-        Vector3I srcPos = default, Vector3I dstPos = default)
+        Int3 srcPos = default, Int3 dstPos = default)
     {
         var srcHandle = _textureStore.Get(src);
         var dstHandle = _textureStore.Get(dst);

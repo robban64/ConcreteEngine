@@ -8,6 +8,8 @@ namespace Generator;
 internal static class Extensions
 {
     public static string ToFloatStr(this float v) => $"{v}f";
+    public static string ToLiteralStr(this string s) => Symbols.FormatLiteral(s, true);
+    public static string ToLiteralStr(this bool s) => s ? "\"true\"" : "\"false\"";
 
     public static bool IsPublicClassOrStruct(this INamedTypeSymbol sym)
         => sym.TypeKind is TypeKind.Class or TypeKind.Struct && sym.DeclaredAccessibility == Accessibility.Public;
@@ -18,6 +20,7 @@ internal static class Extensions
         IPropertySymbol property => property.Type,
         _ => throw new UnreachableException()
     };
+
 
     public static string ToCollectionString(this ImmutableArray<TypedConstant> values)
     {

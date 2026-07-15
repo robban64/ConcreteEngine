@@ -18,19 +18,19 @@ internal abstract unsafe class InputField
 {
     private static int _idCounter;
 
-    protected NativeString _label;
+    public readonly NativeString Label;
     private readonly byte _stringIdStart;
 
     public readonly InputKind Kind;
     public InputTrigger Trigger = InputTrigger.OnChange;
     public LabelPlacement LabelPlacement = LabelPlacement.Top;
 
-    protected byte* StringId => _label.TextStart + _stringIdStart;
+    protected byte* StringId => Label.TextStart + _stringIdStart;
 
     protected InputField(string label, InputKind kind)
     {
         Kind = kind;
-        _label = WriteLabel(label,++_idCounter, out _stringIdStart);
+        Label = WriteLabel(label,++_idCounter, out _stringIdStart);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -38,14 +38,14 @@ internal abstract unsafe class InputField
     {
         if (LabelPlacement is LabelPlacement.Top)
         {
-            ImGui.TextUnformatted(_label.TextStart);
+            ImGui.TextUnformatted(Label.TextStart);
             ImGui.Separator();
             ImGui.SetNextItemWidth(GuiTheme.FormItemWidth);
         }
         else if (LabelPlacement is LabelPlacement.Inline)
         {
             ImGui.AlignTextToFramePadding();
-            ImGui.TextUnformatted(_label.TextStart);
+            ImGui.TextUnformatted(Label.TextStart);
             ImGui.SameLine(GuiTheme.FormItemInlineOffset);
             ImGui.SetNextItemWidth(GuiTheme.FormItemInlineWidth);
         }

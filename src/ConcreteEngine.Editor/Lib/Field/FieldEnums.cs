@@ -7,7 +7,7 @@ public enum LabelPlacement : byte
 
 public enum InputKind : byte
 {
-    Int, Float, Color, Combo, Text
+    Int, Float, Color, Combo, Text, Group
 }
 
 public enum InputTrigger : byte

@@ -37,69 +37,108 @@ internal static class InspectorGeneratorEmitter
             if (group.Members.Length == 0) continue;
 
             sb.AppendLine("// ", group.Name);
-            var segments = BuildSegments(group);
-            foreach (var segment in segments.AsSpan())
+            if (group.IsInputGroup)
             {
-                if(!segment.IsDefault) sb.AppendLine().AppendLine("// ", segment.Name!);
-
-                foreach (var member in segment.Members.AsSpan())
-                {
-                    EmitInputField(sb, member, group);
-                }
+                EmitInputGroup(sb, group);
+                continue;
             }
 
-            var isRoot = group.IsRoot;
-            foreach (var segment in segments.AsSpan())
-            {
-                if(segment.Members.Length == 0) continue;
-                
-                sb.AppendLine().BeginLine("public void Draw");
-                if (isRoot) sb.Append(segment.IsDefault ? "Root" : segment.Name!); // DrawRoot, DrawSegment
-                else if (segment.IsDefault) sb.Append(group.Name); // DrawGroup
-                else sb.Append(group.Name,"_",segment.Name!); //DrawGroup_Segment
-                sb.EndLine("()");
-                sb.OpenBrace();
+            EmitGroupSegment(sb, group);
 
-                foreach (var member in segment.Members.AsSpan())
-                    sb.AppendLine(member.Input!.Name, ".Draw();");
-
-                sb.CloseBrace();
-            }
             sb.AppendLine();
-
         }
 
-        // DrawGroups
-        /*
-        foreach (var g in model.Groups.AsSpan())
-        {
-            var memberSpan = g.Members;
-            if (memberSpan.Length == 0) continue;
-
-            sb.AppendLine().AppendLine("public void Draw", g.IsRoot ? "Root" : g.Name, "()");
-            sb.OpenBrace();
-            foreach (var m in memberSpan.AsSpan())
-            {
-                if (m.Input is null) continue;
-                sb.AppendLine(m.Name, ".Draw();");
-            }
-
-            sb.CloseBrace();
-        }
-        */
         sb.CloseBrace(); // class
         return sb.ToString();
     }
 
-    private static void EmitGrop(SourceBuilder sb, InspectorGroup group, EquatableArray<EmitSegment> segments)
+    private static void EmitGroupSegment(SourceBuilder sb, InspectorGroup group)
     {
+        var segments = BuildSegments(group);
         foreach (var segment in segments.AsSpan())
-        foreach (var member in segment.Members.AsSpan())
         {
-            EmitInputField(sb, member, group);
+            if (!segment.IsDefault) sb.AppendLine().AppendLine("// ", segment.Name!);
+            foreach (var member in segment.Members.AsSpan())
+            {
+                EmitInputField(sb, member, group);
+            }
         }
 
-        sb.EndLine();
+        var isRoot = group.IsRoot;
+        foreach (var segment in segments.AsSpan())
+        {
+            if (segment.Members.Length == 0) continue;
+
+            sb.AppendLine().BeginLine("public void Draw");
+            if (isRoot) sb.Append(segment.IsDefault ? "Root" : segment.Name!); // DrawRoot, DrawSegment
+            else if (segment.IsDefault) sb.Append(group.Name); // DrawGroup
+            else sb.Append(group.Name, "_", segment.Name!); //DrawGroup_Segment
+            sb.EndLine("()");
+            sb.OpenBrace();
+
+            foreach (var member in segment.Members.AsSpan())
+                sb.AppendLine(member.Input!.Name, ".Draw();");
+
+            sb.CloseBrace();
+        }
+    }
+
+    private static void EmitInputGroup(SourceBuilder sb, InspectorGroup group)
+    {
+        sb.BeginLine("private readonly InputGroup ");
+        sb.Append(group.Name, " = new InputGroup(", group.Name.ToLiteralStr(), ", ", group.Members.Length.ToString());
+        sb.EndLine(",");
+
+        sb.PushIndent();
+
+        // getter
+        sb.AppendLine("static dst =>");
+        sb.OpenBrace();
+        sb.AppendLine($"var value = Target.", group.AccessPath, ";");
+
+        var span = group.Members.AsSpan();
+        for (var i = 0; i < span.Length; i++)
+        {
+            var member = span[i];
+            sb.AppendLine($"dst[{i}]", " = value.", member.Name, ";");
+        }
+
+        sb.CloseBrace(",");
+
+        // setter
+        sb.AppendLine("static src =>");
+        sb.OpenBrace();
+
+        sb.AppendLine("Target.", group.AccessPath, " = new()");
+        sb.OpenBrace();
+        for (var i = 0; i < span.Length; i++)
+        {
+            var member = span[i];
+            var isFloat = ((NumberInput)member.Input).IsFloat();
+            var cast = isFloat ? "(float)" : "(int)";
+            sb.AppendLine(member.Name, " = ", cast, $"src[{i}],");
+        }
+
+        sb.CloseBrace(";");
+
+        sb.CloseBrace(")");
+        for (var i = 0; i < span.Length; i++)
+        {
+            var member = span[i];
+            var input = (NumberInput)member.Input!;
+            sb.BeginLine(input.IsFloat() ? ".WithFloatInput(" : ".WithIntInput(");
+            sb.Append(member.GetLabelLiteral(), ", ", input.ToStyleLiteral(), ", ", input.Speed.ToFloatStr(), ", ");
+            if (input.IsFloat())
+            {
+                sb.Append(input.Min.ToFloatStr()).Append(", ").Append(input.Max.ToFloatStr());
+                if (!string.IsNullOrEmpty(input.Format)) sb.Append(", ").Append(input.Format.ToLiteralStr());
+            }
+            else sb.Append((int)input.Min).Append(", ").Append((int)input.Max);
+
+            sb.EndLine(i == span.Length - 1 ? ");" : ")");
+        }
+
+        sb.EndLine("\n");
     }
 
 
@@ -123,11 +162,9 @@ internal static class InspectorGeneratorEmitter
         var isFloat = input.IsFloat();
 
         var inputType = isFloat ? $"FloatInput<{input.NumberType}>" : $"IntInput<{input.NumberType}>";
-        sb.Append(inputType, " ", input.Name, " = new(").EndLine();
+        sb.Append(inputType, " ", input.Name, " = new(", member.GetLabelLiteral(), ", ", input.ToStyleLiteral(), ", ");
+        sb.EndLine();
         sb.PushIndent();
-
-        sb.AppendLine(member.GetLabelLiteral(), ", ");
-        sb.AppendLine(input.GetInputStyleLiteral(), ", ");
 
         // Getter
         sb.AppendLine("static () => Unsafe.BitCast", $"<{member.TypeName}, {input.NumberType}>({access.Value}), ");

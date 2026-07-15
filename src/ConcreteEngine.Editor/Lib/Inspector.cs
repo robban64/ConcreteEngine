@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
@@ -11,6 +12,7 @@ internal abstract class Inspector
         ImGui.Separator();
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void DrawSection(ReadOnlySpan<byte> title, Action draw)
     {
         ImGui.SeparatorText(title);

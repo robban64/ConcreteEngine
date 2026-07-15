@@ -40,16 +40,27 @@ public sealed partial class InspectorGenerator
         }
     }
 
-    private static bool TryParseIncludeAttribute(ISymbol member, out string? nestedName)
+    private static bool TryParseIncludeAttribute(ISymbol member, out string? nestedName, out bool isInputGroup)
     {
         nestedName = null;
+        isInputGroup = false;
+        
+        bool hasInclude = false;
+        foreach (var attr in member.GetAttributes())
+        {
+            if(attr.AttributeClass is null) continue;
+            var ctor = attr.ConstructorArguments;
+            var name = attr.AttributeClass.Name;
 
-        var attr = member.GetAttributes().FirstOrDefault(static x => x.AttributeClass?.Name is IncludeAttrib);
-        if (attr == null) return false;
+            if (name is IncludeAttrib)
+            {
+                hasInclude = true;
+                if(!ctor.IsEmpty && ctor[0].Value is string accessSuffix) nestedName = accessSuffix;
+            }
+            else if (name is InputGroupAttrib) isInputGroup = true;
 
-        var ctor = attr.ConstructorArguments;
-        if (!ctor.IsEmpty && ctor[0].Value is string accessSuffix) nestedName = accessSuffix;
-        return true;
+        }
+        return hasInclude;
     }
 
 

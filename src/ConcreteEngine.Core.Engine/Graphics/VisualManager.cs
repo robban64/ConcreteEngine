@@ -196,7 +196,7 @@ public sealed class ShadowSettings : VisualStateObject
 [Inspect]
 public sealed class PostEffectSettings : VisualStateObject
 {
-    [InspectInclude]
+    [InspectInclude, InputGroup]
     public PostGradeParams Grade
     {
         get;

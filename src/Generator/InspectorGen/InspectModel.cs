@@ -53,6 +53,7 @@ internal sealed record InspectModel(
 
 internal sealed record InspectorGroup(
     bool IsRoot,
+    bool IsInputGroup,
     string Name,
     string AccessPath,
     MemberInfo Info,
@@ -84,7 +85,7 @@ internal sealed record NumberInput(
 {
     public bool IsFloat() => NumberType.StartsWith("Float");
     public int GetComponents() => (int)char.GetNumericValue(NumberType[^1]);
-    public string GetInputStyleLiteral() => Style switch
+    public string ToStyleLiteral() => Style switch
     {
         InputStyle.Input => "InputStyle.Input",
         InputStyle.Slider => "InputStyle.Slider",

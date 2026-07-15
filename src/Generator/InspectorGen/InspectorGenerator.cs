@@ -14,6 +14,8 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
 
     private const string InspectAttrib = "InspectAttribute";
     private const string IncludeAttrib = "InspectIncludeAttribute";
+    private const string InputGroupAttrib = "InputGroupAttribute";
+
     private const string InputNumberAttrib = "InputNumberAttribute";
     private const string InputColorAttrib = "InputColorAttribute";
     private const string InputComboAttrib = "InputComboAttribute";
@@ -76,7 +78,7 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
                 continue;
             }
 
-            if (TryParseIncludeAttribute(member, out string? nestedName))
+            if (TryParseIncludeAttribute(member, out var nestedName, out var isInputGroup))
             {
                 var accessPath = member.Name;
                 if (nestedName is not null) accessPath += "." + nestedName;
@@ -85,13 +87,13 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
                 var groupMembers = new List<InspectorMember>();
                 foreach (var nestedMember in includeType.GetMembers().Where(MemberFilter))
                 {
-                    if (CreateMember(nestedMember) is { } createdInner) 
+                    if (CreateMember(nestedMember) is { } createdInner)
                         groupMembers.Add(createdInner);
                 }
 
                 if (groupMembers.Count > 0)
                 {
-                    groups.Add(new InspectorGroup(false,
+                    groups.Add(new InspectorGroup(false, isInputGroup,
                         Name: member.Name,
                         AccessPath: accessPath,
                         Info: MemberInfo.Extract(member),
@@ -101,42 +103,35 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
         }
 
         if (roots.Count > 0)
-        {
-            groups.Insert(0, new InspectorGroup(true,
-                Name: "Root",
-                AccessPath: "",
-                Info: default,
-                Members: roots.ToEquatableArray()));
-        }
+            groups.Insert(0, new InspectorGroup(true, false, "Root", "", default, roots.ToEquatableArray()));
 
         groupArray = groups.Count > 0 ? groups.ToEquatableArray() : [];
-        return;
+    }
 
-        static InspectorMember? CreateMember(ISymbol sym)
+    private static InspectorMember? CreateMember(ISymbol sym)
+    {
+        var attr = sym.GetAttributes().FirstOrDefault(static x =>
+            x.AttributeClass?.Name is InputNumberAttrib or InputColorAttrib or InputComboAttrib);
+
+        if (attr is null || attr.AttributeClass is null) return null;
+
+        var typeSym = sym.GetFieldOrPropertyType();
+        InputField? inputField = attr.AttributeClass!.Name switch
         {
-            var attr = sym.GetAttributes().FirstOrDefault(static x =>
-                x.AttributeClass?.Name is InputNumberAttrib or InputColorAttrib or InputComboAttrib);
+            InputNumberAttrib => MakeInputField(sym.Name, attr, typeSym),
+            InputColorAttrib => MakeColorField(sym.Name, attr, typeSym),
+            InputComboAttrib => MakeComboField(sym.Name, attr, typeSym),
+            _ => null
+        };
+        if (inputField is null) return null;
 
-            if (attr is null || attr.AttributeClass is null) return null;
+        ExtractCommonFieldAttr(attr, out var label, out var segment);
 
-            var typeSym = sym.GetFieldOrPropertyType();
-            InputField? inputField = attr.AttributeClass!.Name switch
-            {
-                InputNumberAttrib => MakeInputField(sym.Name, attr, typeSym),
-                InputColorAttrib => MakeColorField(sym.Name, attr, typeSym),
-                InputComboAttrib => MakeComboField(sym.Name, attr, typeSym),
-                _ => null
-            };
-            if (inputField is null) return null;
-
-            ExtractCommonFieldAttr(attr, out var label, out var segment);
-            
-            return new InspectorMember(Name: sym.Name,
-                Label: label ?? sym.Name,
-                TargetNs: sym.ContainingNamespace.ToDisplayString(),
-                TypeName: typeSym.ToDisplayString(),
-                Info: MemberInfo.Extract(sym)) { Segment = segment, Input = inputField };
-        }
+        return new InspectorMember(Name: sym.Name,
+            Label: label ?? sym.Name,
+            TargetNs: sym.ContainingNamespace.ToDisplayString(),
+            TypeName: typeSym.ToDisplayString(),
+            Info: MemberInfo.Extract(sym)) { Segment = segment, Input = inputField };
     }
 }
 

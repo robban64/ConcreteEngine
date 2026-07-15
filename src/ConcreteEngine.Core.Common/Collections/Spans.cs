@@ -27,7 +27,7 @@ public readonly ref struct ZippedSpan<T1, T2>
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext() => ++_i < _length;
-
+        
         public readonly ref T1 Item1 => ref _zip.Span1[_i];
         public readonly ref T2 Item2 => ref _zip.Span2[_i];
     }

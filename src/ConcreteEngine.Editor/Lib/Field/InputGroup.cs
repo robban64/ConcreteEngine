@@ -16,43 +16,37 @@ namespace ConcreteEngine.Editor.Lib.Field;
 
 internal sealed unsafe class InputGroup : InputField
 {
-    private readonly InputEntry[] _inputs;
-   // private readonly CompositeValue[] _values;
-    private readonly NativeView<int> _values;
-
     private int _count;
+    private FrameStepper _stepper = new(8);
 
-    private readonly Action<Span<CompositeValue>> _getter;
-    private readonly Action<Span<CompositeValue>> _setter;
-
-    private FrameStepper _stepper = new(4);
+    private readonly InputEntry[] _inputs;
+    private readonly NativeView<InputNumeric1> _values;
     
-    public InputGroup(string label, int count, Action<Span<CompositeValue>> getter, Action<Span<CompositeValue>> setter)
+    private readonly Action<Span<InputNumeric1>> _getter;
+    private readonly Action<Span<InputNumeric1>> _setter;
+
+
+    public InputGroup(string label, int count, Action<Span<InputNumeric1>> getter, Action<Span<InputNumeric1>> setter)
         : base(label, InputKind.Group)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(count, 2);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(count, 16);
 
-        _values = StringArena.Instance.AllocRaw(sizeof(int) * count).Reinterpret<int>();
+        _values = StringArena.Instance.AllocRaw(sizeof(int) * count).Reinterpret<InputNumeric1>();
         _inputs = new InputEntry[count];
-        //_values = new CompositeValue[count];
         _getter = getter;
         _setter = setter;
     }
-
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Span<CompositeValue> GetValueSpan() => MemoryMarshal.Cast<int, CompositeValue>(_values.AsSpan());
-
     public bool Draw()
     {
-        if(_count != _inputs.Length) Throwers.InvalidOperation(nameof(_count));
-        if (_stepper.Tick()) _getter(GetValueSpan());
+        if (_count != _inputs.Length) Throwers.InvalidOperation(nameof(_count));
+        if (_stepper.Tick()) _getter(_values.AsSpan());
 
         ImGui.PushID(StringId);
-        
+
         var changed = false;
-        var value = (CompositeValue*)_values.Ptr;
+        var value = _values.Ptr;
         var inputs = new ReadOnlySpan<InputEntry>(_inputs);
         for (var i = 0; i < inputs.Length; ++i, ++value)
             changed |= inputs[i].Draw(value);
@@ -60,19 +54,19 @@ internal sealed unsafe class InputGroup : InputField
         ImGui.PopID();
         if (changed && ShouldTrigger())
         {
-            _setter(GetValueSpan());
+            _setter(_values.AsSpan());
             return true;
         }
 
         return false;
     }
-
+    
     public InputGroup WithFloatInput(string name, InputStyle style, float speed, float min, float max,
         string fmt = "%.2f") =>
-        Add(new InputEntry(WriteLabel(name, _count, out var start), start, style, true, speed, min, max, fmt));
+        Add(new InputEntry(CreateNativeLabel(name, _count, out var start), start, style, true, speed, min, max, fmt));
 
     public InputGroup WithIntInput(string name, InputStyle style, float speed, int min, int max) =>
-        Add(new InputEntry(WriteLabel(name, _count, out var start), start, style, false, speed, min, max));
+        Add(new InputEntry(CreateNativeLabel(name, _count, out var start), start, style, false, speed, min, max));
 
     private InputGroup Add(InputEntry entry)
     {
@@ -81,21 +75,6 @@ internal sealed unsafe class InputGroup : InputField
         return this;
     }
 
-
-    [StructLayout(LayoutKind.Explicit)]
-    internal struct CompositeValue
-    {
-        [FieldOffset(0)] public int IntValue;
-        [FieldOffset(0)] public float FloatValue;
-
-        public CompositeValue(int value) => IntValue = value;
-        public CompositeValue(float value) => FloatValue = value;
-        
-        public static implicit operator CompositeValue(int v) => new(v);
-        public static implicit operator CompositeValue(float v) => new(v);
-        public static explicit operator int(CompositeValue v) => v.IntValue;
-        public static explicit operator float(CompositeValue v) => v.FloatValue;
-    }
 
     private readonly struct InputEntry(
         NativeString label,
@@ -113,38 +92,36 @@ internal sealed unsafe class InputGroup : InputField
         private readonly InputStyle _style = style;
         private readonly byte _idStart = idStart;
         private readonly bool _isFloat = isFloat;
-        
+
         private byte* StringId => _label.TextStart + _idStart;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Draw(CompositeValue* value)
+        public bool Draw(InputNumeric1* value)
         {
-            ImGui.AlignTextToFramePadding();
-            ImGui.TextUnformatted(_label.TextStart);
-            ImGui.SameLine(GuiTheme.FormItemInlineOffset);
-            ImGui.SetNextItemWidth(GuiTheme.FormItemInlineWidth);
-            return _isFloat ? DrawFloat(&value->FloatValue) : DrawInt(&value->IntValue);
+            DrawLabel(_label, LabelPlacement.Inline);
+            return _isFloat ? DrawFloat(value) : DrawInt(value);
         }
 
-        private bool DrawFloat(float* value)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool DrawFloat(InputNumeric1* value)
         {
-            var fmt = _format;
             return _style switch
             {
-                InputStyle.Input => Float1.DrawInput(StringId, value, (byte*)&fmt),
-                InputStyle.Slider => Float1.DrawSlider(StringId, value, (byte*)&fmt, _min, _max),
-                InputStyle.Drag => Float1.DrawDrag(StringId, value, (byte*)&fmt, _speed, _min, _max),
+                InputStyle.Input => InputNumeric1.DrawFloatInput(StringId, value, _format),
+                InputStyle.Slider => InputNumeric1.DrawFloatSlider(StringId, value, _format, _min, _max),
+                InputStyle.Drag => InputNumeric1.DrawFloatDrag(StringId, value, _format, _speed, _min, _max),
                 _ => false
             };
         }
 
-        private bool DrawInt(int* value)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool DrawInt(InputNumeric1* value)
         {
             return _style switch
             {
-                InputStyle.Input => Int1.DrawInput(StringId, value),
-                InputStyle.Slider => Int1.DrawSlider(StringId, value, (int)_min, (int)_max),
-                InputStyle.Drag => Int1.DrawDrag(StringId, value, _speed, (int)_min, (int)_max),
+                InputStyle.Input => InputNumeric1.DrawIntInput(StringId, value),
+                InputStyle.Slider => InputNumeric1.DrawIntSlider(StringId, value, (int)_min, (int)_max),
+                InputStyle.Drag => InputNumeric1.DrawIntDrag(StringId, value, _speed, (int)_min, (int)_max),
                 _ => false
             };
         }

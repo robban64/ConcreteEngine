@@ -18,34 +18,55 @@ internal sealed partial class IlluminationSettingsInspector : Inspector<Illumina
 internal sealed partial class ShadowSettingsInspector : Inspector<ShadowSettingsInspector>
 {
     private static ShadowSettings Target => VisualManager.Instance.Shadow;
+    public unsafe void Draw()
+    {
+        AppDraw.Section("Shadow Projection"u8, &DrawProjection);
+        AppDraw.Section("Shadow Visuals"u8, &DrawVisuals);
+    }
+
+    private static void DrawProjection() => Instance.Projection.Draw();
+    private static void DrawVisuals() => Instance.Visuals.Draw();
+
 }
 
 [EditorInspector(typeof(EnvironmentSettings))]
 internal sealed partial class EnvironmentSettingsInspector : Inspector<EnvironmentSettingsInspector>
 {
     private static EnvironmentSettings Target => VisualManager.Instance.Environment;
+    public unsafe void Draw()
+    {
+        AppDraw.Section("Fog Optics"u8, &DrawOptics);
+        AppDraw.Section("Fog Height"u8, &DrawHeight);
+    }
+
+    private static void DrawHeight() => Instance.FogHeight.Draw();
+
+    private static void DrawOptics()
+    {
+        Instance.FogColor.Draw();
+        Instance.FogOptics.Draw();
+    }
+
 }
 
 [EditorInspector(typeof(PostEffectSettings))]
 internal sealed unsafe partial class PostEffectSettingsInspector : Inspector<PostEffectSettingsInspector>
 {
     private static PostEffectSettings Target => VisualManager.Instance.PostEffect;
-    private static AvgFrameTimer avg;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void DrawGrade() => Instance.Grade.Draw();
 
     public void Draw()
     {
-        avg.BeginSample();
-        AppDraw.Section("Grade"u8, &DrawGrade);
-        //DrawSection("Grade"u8, () => Grade.Draw());
-        if (avg.EndSample() > 40) avg.ResetAndPrint("Fx");
-
-       // DrawSection("White Balance"u8, static () => Instance.DrawWhiteBalance());
-       // DrawSection("Bloom"u8, static () => Instance.DrawBloom());
-       // DrawSection("ImageFx"u8, static () => Instance.DrawImageFx());
+        AppDraw.Section(Grade.Label, &DrawGrade);
+        AppDraw.Section(WhiteBalance.Label, &DrawWb);
+        AppDraw.Section(Bloom.Label, &DrawBloom);
+        AppDraw.Section(ImageFx.Label, &DrawFx);
     }
+    
+    private static void DrawGrade() => Instance.Grade.Draw();
+    private static void DrawWb() => Instance.WhiteBalance.Draw();
+    private static void DrawBloom() => Instance.Bloom.Draw();
+    private static void DrawFx() => Instance.ImageFx.Draw();
+
     /*
     private InputGroup G = new InputGroup("Lol", 4,
         static dst =>

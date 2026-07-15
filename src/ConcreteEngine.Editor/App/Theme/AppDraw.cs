@@ -18,6 +18,14 @@ internal static unsafe class AppDraw
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Section(NativeString title, delegate*<void> draw)
+    {
+        ImGui.SeparatorText(title);
+        draw();
+        ImGui.Spacing();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Section(ReadOnlySpan<byte> title, delegate*<void> draw)
     {
         ImGui.SeparatorText(title);

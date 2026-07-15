@@ -10,16 +10,14 @@ namespace Generator.InspectorGen;
 
 public sealed partial class InspectorGenerator
 {
-    private static string? GetDefaultValueType(string typeName) => typeName switch
+    private static (string? Type, bool IsFloat) GetDefaultValueType(string typeName) => typeName switch
     {
-        nameof(Vector2) => "Float2",
-        nameof(Vector3) => "Float3",
-        nameof(Vector4) => "Float4",
-        nameof(Quaternion) => "Float4",
-        "Color4" => "Float4",
-        "Size2D" => "Int2",
-        "Vector2I" => "Int2",
-        _ => null
+        nameof(Vector2) => ("InputNumeric2", true),
+        nameof(Vector3) => ("InputNumeric3", true),
+        nameof(Vector4) or nameof(Quaternion) or "Color4" => ("InputNumeric4", true),
+        "Size2D" => ("InputNumeric2", false),
+        "Vector2I" => ("InputNumeric2", false),
+        _ => (null, false)
     };
 
     private static bool MemberFilter(ISymbol sym) =>
@@ -70,6 +68,7 @@ public sealed partial class InspectorGenerator
         if (attr.ConstructorArguments.Length > 0 && attr.ConstructorArguments[0].Value is byte b)
             style = (InputStyle)b;
 
+        bool isFloat = false;
         float min = 0, max = 0, speed = 0;
         string? typeName = null, format = null;
         foreach (var (key, value) in attr.NamedArguments)
@@ -81,20 +80,22 @@ public sealed partial class InspectorGenerator
                 case "Max" when v is float l: max = l; break;
                 case "Speed" when v is float l: speed = l; break;
                 case "Format" when v is string l: format = l; break;
-                case "Converter" when v is INamedTypeSymbol l: typeName = GetDefaultValueType(l.Name); break;
+                case "Converter" when v is INamedTypeSymbol l:
+                    (typeName, isFloat) = GetDefaultValueType(l.Name); 
+                    break;
             }
         }
         
         if(typeName is null)
         {
             var s = type.SpecialType;
-            if (s is System_Single) typeName = "Float1";
-            else if (s is System_Enum or System_Int32 or System_Int16 or System_UInt16) typeName = "Int1";
-            else if (GetDefaultValueType(type.Name) is {} defaultValueType ) typeName = defaultValueType;
+            if (s is System_Single) (typeName, isFloat) = ("InputNumeric1", true);
+            else if (s is System_Enum or System_Int32 or System_Int16 or System_UInt16) typeName = "InputNumeric1";
+            else if (GetDefaultValueType(type.Name) is { Type: not null } d ) (typeName, isFloat) = d;
             else return null;
         }
 
-        return new NumberInput(fieldName, typeName, style, speed, min, max, format);
+        return new NumberInput(fieldName, typeName, isFloat, style, speed, min, max, format);
     }
 
     private static ColorInput MakeColorField(string fieldName, AttributeData attr, ITypeSymbol type)

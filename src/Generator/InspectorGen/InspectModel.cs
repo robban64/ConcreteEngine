@@ -77,15 +77,18 @@ internal abstract record InputField(string Name);
 internal sealed record NumberInput(
     string Name,
     string NumberType,
+    bool IsFloat,
     InputStyle Style,
     float Speed,
     float Min,
     float Max,
     string? Format) : InputField(Name)
 {
-    public bool IsFloat() => NumberType.StartsWith("Float");
     public int GetComponents() => (int)char.GetNumericValue(NumberType[^1]);
-    public string ToStyleLiteral() => Style switch
+
+    public static string BitCast(string t1, string t2, string v) => $"Unsafe.BitCast<{t1}, {t2}>({v})";
+
+    public string ToStyleString() => Style switch
     {
         InputStyle.Input => "InputStyle.Input",
         InputStyle.Slider => "InputStyle.Slider",

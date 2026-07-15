@@ -26,17 +26,13 @@ internal sealed class LightingPanel
 
         if (ImGui.BeginTabItem("Shadow"u8))
         {
-            _shadowSettingsInspector.DrawProjection();
-            _shadowSettingsInspector.DrawVisuals();
-
+            _shadowSettingsInspector.Draw();
             ImGui.EndTabItem();
         }
 
         if (ImGui.BeginTabItem("Fog"u8))
         {
-            _environmentSettingsInspector.DrawFogHeight();
-            _environmentSettingsInspector.DrawFogOptics();
-
+            _environmentSettingsInspector.Draw();
             ImGui.EndTabItem();
         }
 

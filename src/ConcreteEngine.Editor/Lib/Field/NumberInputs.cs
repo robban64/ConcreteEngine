@@ -8,7 +8,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Field;
 
-internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IFloatValue
+internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IInputNumeric<T>
 {
     public readonly InputStyle Style;
 
@@ -47,14 +47,13 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IFl
     public bool Draw()
     {
         if (_stepper.Tick()) *Value = _getter();
-        var format = _format;
 
         DrawLabel();
         var changed = Style switch
         {
-            InputStyle.Input => T.DrawInput(StringId, (float*)Value, (byte*)&format),
-            InputStyle.Slider => T.DrawSlider(StringId, (float*)Value, (byte*)&format, Min, Max),
-            InputStyle.Drag => T.DrawDrag(StringId, (float*)Value, (byte*)&format, Speed, Min, Max),
+            InputStyle.Input => T.DrawFloatInput(StringId, Value, _format),
+            InputStyle.Slider => T.DrawFloatSlider(StringId, Value, _format, Min, Max),
+            InputStyle.Drag => T.DrawFloatDrag(StringId, Value, _format, Speed, Min, Max),
             _ => false
         };
         if (changed && ShouldTrigger())
@@ -67,7 +66,7 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IFl
     }
 }
 
-internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IIntValue
+internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IInputNumeric<T>
 {
     public readonly InputStyle Style;
 
@@ -107,9 +106,9 @@ internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IIntV
         DrawLabel();
         var changed = Style switch
         {
-            InputStyle.Input => T.DrawInput(StringId, (int*)Value),
-            InputStyle.Slider => T.DrawSlider(StringId, (int*)Value, Min, Max),
-            InputStyle.Drag => T.DrawDrag(StringId, (int*)Value, Speed, Min, Max),
+            InputStyle.Input => T.DrawIntInput(StringId, Value),
+            InputStyle.Slider => T.DrawIntSlider(StringId, Value, Min, Max),
+            InputStyle.Drag => T.DrawIntDrag(StringId, Value, Speed, Min, Max),
             _ => false
         };
 

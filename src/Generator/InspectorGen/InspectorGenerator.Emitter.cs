@@ -114,7 +114,7 @@ internal static class InspectorGeneratorEmitter
         for (var i = 0; i < span.Length; i++)
         {
             var member = span[i];
-            var isFloat = ((NumberInput)member.Input).IsFloat();
+            var isFloat = ((NumberInput)member.Input).IsFloat;
             var cast = isFloat ? "(float)" : "(int)";
             sb.AppendLine(member.Name, " = ", cast, $"src[{i}],");
         }
@@ -126,9 +126,9 @@ internal static class InspectorGeneratorEmitter
         {
             var member = span[i];
             var input = (NumberInput)member.Input!;
-            sb.BeginLine(input.IsFloat() ? ".WithFloatInput(" : ".WithIntInput(");
-            sb.Append(member.GetLabelLiteral(), ", ", input.ToStyleLiteral(), ", ", input.Speed.ToFloatStr(), ", ");
-            if (input.IsFloat())
+            sb.BeginLine(input.IsFloat ? ".WithFloatInput(" : ".WithIntInput(");
+            sb.Append(member.GetLabelLiteral(), ", ", input.ToStyleString(), ", ", input.Speed.ToFloatStr(), ", ");
+            if (input.IsFloat)
             {
                 sb.Append(input.Min.ToFloatStr()).Append(", ").Append(input.Max.ToFloatStr());
                 if (!string.IsNullOrEmpty(input.Format)) sb.Append(", ").Append(input.Format.ToLiteralStr());
@@ -159,16 +159,26 @@ internal static class InspectorGeneratorEmitter
     private static void EmitInput(SourceBuilder sb, InspectorMember member, AccessPath access)
     {
         var input = (NumberInput)member.Input!;
-        var isFloat = input.IsFloat();
+        var isFloat = input.IsFloat;
 
         var inputType = isFloat ? $"FloatInput<{input.NumberType}>" : $"IntInput<{input.NumberType}>";
-        sb.Append(inputType, " ", input.Name, " = new(", member.GetLabelLiteral(), ", ", input.ToStyleLiteral(), ", ");
+        sb.Append(inputType, " ", input.Name, " = new(", member.GetLabelLiteral(), ", ", input.ToStyleString(), ", ");
         sb.EndLine();
         sb.PushIndent();
 
         // Getter
-        sb.AppendLine("static () => Unsafe.BitCast", $"<{member.TypeName}, {input.NumberType}>({access.Value}), ");
-        sb.AppendLine(MakeSetter(member, in access, $"Unsafe.BitCast<{input.NumberType}, {member.TypeName}>(v)"), ", ");
+        if (member.Info.TypeInfo.IsPrimitive())
+        {
+            var cast = isFloat ? "(float)" : "(int)";
+            sb.AppendLine($"static () => {access.Value}, ");
+            sb.AppendLine(MakeSetter(member, in access, $"{cast}v"), ", ");
+        }
+        else
+        {
+            sb.AppendLine("static () => ", NumberInput.BitCast(member.TypeName, input.NumberType, access.Value), ",");
+            var setter = MakeSetter(member, in access, NumberInput.BitCast(input.NumberType, member.TypeName, "v"));
+            sb.AppendLine(setter, ", ");
+        }
 
         //
         sb.BeginLine();

@@ -123,7 +123,7 @@ public sealed class EnvironmentSettings : VisualStateObject
         }
     } = new(0.70f, 0.89f, 0.68f);
 
-    [InspectInclude]
+    [InspectInclude, InputGroup]
     public FogHeightParams FogHeight
     {
         get;
@@ -134,7 +134,7 @@ public sealed class EnvironmentSettings : VisualStateObject
         }
     } = new(720f, 1.05f, 9500f, 0, 5200f);
     
-    [InspectInclude]
+    [InspectInclude, InputGroup]
     public FogOpticsParams FogOptics
     {
         get;
@@ -153,7 +153,6 @@ public sealed class ShadowSettings : VisualStateObject
 {
     public bool HasPendingShadowSize { get; internal set; }
 
-
     [InputCombo([1024, 2048, 4096, 8192], ["1024px", "2048px", "4096px", "8192px"], Label = "ShadowMap Size")]
     public int ShadowMapSize
     {
@@ -170,7 +169,7 @@ public sealed class ShadowSettings : VisualStateObject
         }
     }
 
-    [InspectInclude]
+    [InspectInclude, InputGroup]
     public ShadowProjectionParams Projection
     {
         get;
@@ -181,7 +180,7 @@ public sealed class ShadowSettings : VisualStateObject
         }
     }
     
-    [InspectInclude]
+    [InspectInclude, InputGroup]
     public ShadowVisualParams Visuals
     {
         get;
@@ -207,7 +206,7 @@ public sealed class PostEffectSettings : VisualStateObject
         }
     } = new(1.0f, 1.1f, 1.05f, 0.0f);
 
-    [InspectInclude]
+    [InspectInclude, InputGroup]
     public PostWhiteBalanceParams WhiteBalance
     {
         get;
@@ -218,7 +217,7 @@ public sealed class PostEffectSettings : VisualStateObject
         }
     } = new(0.0f, 0.0f);
     
-    [InspectInclude]
+    [InspectInclude, InputGroup]
     public PostBloomParams Bloom
     {
         get;
@@ -229,7 +228,7 @@ public sealed class PostEffectSettings : VisualStateObject
         }
     } = new(0.5f, 0.85f, 3.0f);
     
-    [InspectInclude]
+    [InspectInclude, InputGroup]
     public PostImageFxParams ImageFx
     {
         get;

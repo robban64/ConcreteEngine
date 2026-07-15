@@ -30,26 +30,11 @@ internal abstract unsafe class InputField
     protected InputField(string label, InputKind kind)
     {
         Kind = kind;
-        Label = WriteLabel(label,++_idCounter, out _stringIdStart);
+        Label = CreateNativeLabel(label,++_idCounter, out _stringIdStart);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void DrawLabel()
-    {
-        if (LabelPlacement is LabelPlacement.Top)
-        {
-            ImGui.TextUnformatted(Label.TextStart);
-            ImGui.Separator();
-            ImGui.SetNextItemWidth(GuiTheme.FormItemWidth);
-        }
-        else if (LabelPlacement is LabelPlacement.Inline)
-        {
-            ImGui.AlignTextToFramePadding();
-            ImGui.TextUnformatted(Label.TextStart);
-            ImGui.SameLine(GuiTheme.FormItemInlineOffset);
-            ImGui.SetNextItemWidth(GuiTheme.FormItemInlineWidth);
-        }
-    }
+    protected void DrawLabel() => DrawLabel(Label, LabelPlacement);
 
     protected bool ShouldTrigger()
     {
@@ -61,8 +46,25 @@ internal abstract unsafe class InputField
             _ => false
         };
     }
+
+    protected static void DrawLabel(NativeString label, LabelPlacement placement)
+    {
+        if (placement is LabelPlacement.Top)
+        {
+            ImGui.TextUnformatted(label);
+            ImGui.Separator();
+            ImGui.SetNextItemWidth(GuiTheme.FormItemWidth);
+        }
+        else if (placement is LabelPlacement.Inline)
+        {
+            ImGui.AlignTextToFramePadding();
+            ImGui.TextUnformatted(label);
+            ImGui.SameLine(GuiTheme.FormItemInlineOffset);
+            ImGui.SetNextItemWidth(GuiTheme.FormItemInlineWidth);
+        }
+    }
     
-    protected static NativeString WriteLabel(string name, int id, out byte idStart)
+    protected static NativeString CreateNativeLabel(string name, int id, out byte idStart)
     {
         var sw = ScratchBuffer.Writer().Append(name.Truncate(31)).Append((byte)0);
         idStart = (byte)sw.Cursor;

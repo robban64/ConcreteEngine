@@ -6,13 +6,15 @@ public sealed unsafe class ArenaAllocator : IDisposable
 {
     private bool _hasBoundBuilder;
 
+    private NativeArray<byte> _buffer;
+
     public int Cursor { get; private set; }
     public int Capacity { get; }
 
-    private NativeArray<byte> _buffer;
-
     public MemoryBlockPtr Tail { get; private set; }
     public MemoryBlockPtr Head  { get; private set; }
+    
+    public int Remaining => Capacity - Cursor;
 
     public ArenaAllocator(int capacity, int alignment = 0, bool zeroed = true)
     {
@@ -28,8 +30,6 @@ public sealed unsafe class ArenaAllocator : IDisposable
         Capacity = capacity;
     }
 
-
-    public int Remaining => Capacity - Cursor;
 
     public MemoryBlockPtr AllocBlock(int length, bool zeroed = false)
     {
@@ -98,12 +98,9 @@ public sealed unsafe class ArenaAllocator : IDisposable
         return Tail;
     }
 
-
-    public bool CanAlloc(int capacity) => capacity + MemoryBlockPtr.BlockSize < Head.Remaining;
-
     public void SetCursor(int cursor)
     {
-        if ((uint)Cursor >= (uint)Capacity)
+        if ((uint)Cursor >= (uint)Capacity) 
             Throwers.BufferOverflow(nameof(ArenaAllocator),Cursor, Capacity);
 
         Cursor = cursor;

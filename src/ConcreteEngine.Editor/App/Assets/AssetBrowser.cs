@@ -45,8 +45,12 @@ internal sealed class AssetBrowser
     public ReadOnlySpan<AssetFileId> GetFileIds(int start, int length) => new(_fileIds, start, length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public CircularListBuffer<FileItem>.Enumerator GetDrawEnumerator(int start, int length) =>
-        _buffer.GetView(start, length);
+    public CircularListBuffer<FileItem>.Enumerator GetDrawEnumerator(int start, int length,
+        out ReadOnlySpan<AssetFileId> fileIds)
+    {
+        fileIds = new ReadOnlySpan<AssetFileId>(_fileIds, start, length);
+        return _buffer.GetView(start, length);
+    }
 
     //
 
@@ -94,12 +98,12 @@ internal sealed class AssetBrowser
     public void Commit(ReadOnlySpan<char> searchText, FileBinding bindingFilter, AssetKind assetFilter)
     {
         var ids = FileRegistry.GetDirectoryIds(CurrentNode.Path);
-        if(_fileIds.Length < ids.Length)
+        if (_fileIds.Length < ids.Length)
             _fileIds = new AssetFileId[CapacityUtils.CapacityGrowthToFit(_fileIds.Length, ids.Length)];
-        else 
+        else
             Array.Clear(_fileIds);
 
-        
+
         var count = 0;
         foreach (var file in FileRegistry.MakeSparseEnumerator(ids))
         {
@@ -117,7 +121,7 @@ internal sealed class AssetBrowser
 
             _fileIds[count++] = file.Id;
         }
-        
+
         _fileIds.AsSpan(0, count).Sort(static (id1, id2) =>
         {
             AssetFile file1 = FileRegistry.Get(id1), file2 = FileRegistry.Get(id2);
@@ -129,7 +133,7 @@ internal sealed class AssetBrowser
 
         _buffer.Invalidate(0, _buffer.Capacity);
     }
-    
+
 
     private void OnInvalidateDrawBuffer(int start, Span<FileItem> span)
     {
@@ -181,20 +185,19 @@ internal sealed class AssetBrowser
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal readonly struct FileItem( string name, FileBinding binding, AssetStorage storage, Icons icon)
+    internal readonly struct FileItem(string name, FileBinding binding, AssetStorage storage, uint icon)
     {
         public readonly FileBinding Binding = binding;
         public readonly AssetStorage Storage = storage;
-        public readonly Icons Icon = icon;
+        public readonly uint Icon = icon;
 
         public readonly String16Utf8 DisplayName = name;
-
     }
 
     internal sealed class AssetDirectoryNode
     {
         private readonly int _nameOffset;
-        
+
         public readonly bool IsFileSystem;
 
         public readonly string Path;

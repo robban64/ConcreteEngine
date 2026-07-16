@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.App.Assets;
 
@@ -15,13 +16,13 @@ internal static class AssetsExtensions
     extension(FileBinding binding)
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Icons GetIcon(AssetKind kind) => binding switch
+        public uint GetIcon(AssetKind kind) => binding switch
         {
-            FileBinding.Unknown => Icons.FileHeadphone,
+            FileBinding.Unknown => IconNames.FileHeadphone,
             FileBinding.RootFile => kind.ToIcon(),
-            FileBinding.DependentFile => Icons.FileImage,
-            FileBinding.UnboundFile => Icons.File,
-            _ => Throwers.Unreachable<Icons>(nameof(binding))
+            FileBinding.DependentFile => IconNames.FileImage,
+            FileBinding.UnboundFile => IconNames.File,
+            _ => Throwers.Unreachable<uint>(nameof(binding))
         };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -50,23 +51,23 @@ internal static class AssetsExtensions
         };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Icons ToIcon() => kind switch
+        public uint ToIcon() => kind switch
         {
-            AssetKind.Shader => Icons.Code,
-            AssetKind.Model => Icons.Box,
-            AssetKind.Texture => Icons.Image,
-            AssetKind.Material => Icons.Circle,
-            _ => Throwers.Unreachable<Icons>(nameof(kind))
+            AssetKind.Shader => IconNames.Code,
+            AssetKind.Model => IconNames.Box,
+            AssetKind.Texture => IconNames.Image,
+            AssetKind.Material => IconNames.Circle,
+            _ => Throwers.Unreachable<uint>(nameof(kind))
         };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Icons ToFileIcon() => kind switch
+        public uint ToFileIcon() => kind switch
         {
-            AssetKind.Shader => Icons.FileCode,
-            AssetKind.Model => Icons.FileBox,
-            AssetKind.Texture => Icons.FileImage,
-            AssetKind.Material => Icons.FileCog,
-            _ => Throwers.Unreachable<Icons>(nameof(kind))
+            AssetKind.Shader => IconNames.FileCode,
+            AssetKind.Model => IconNames.FileBox,
+            AssetKind.Texture => IconNames.FileImage,
+            AssetKind.Material => IconNames.FileCog,
+            _ => Throwers.Unreachable<uint>(nameof(kind))
         };
     }
 

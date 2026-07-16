@@ -275,21 +275,20 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     {
         var sw = ScratchBuffer.Writer();
         var drawList = ImGui.GetWindowDrawList();
-        var fileIds = _assetBrowser.GetFileIds(start, length);
 
         var gridIndex = 0;
-        foreach (var it in _assetBrowser.GetDrawEnumerator(start, length))
+        foreach (var it in _assetBrowser.GetDrawEnumerator(start, length, out var fileIds))
         {
             var fileId = fileIds[gridIndex];
 
             var startPos = ImGui.GetCursorScreenPos(); // top left
-            if (ImGui.Selectable(sw.AppendImGuiId(fileId).End(), selectedFileId == fileId, 0, ItemSize))
+            if (ImGui.Selectable(sw.AppendImGuiId(fileId.Id).End(), selectedFileId.Id == fileId.Id, 0, ItemSize))
                 OnListItemClick(fileId);
 
             drawList.PushClipRect(startPos, startPos + ItemSize, true);
 
             AppLayout.PushFontIconLarge();
-            drawList.AddText(IconBasePos + startPos, it.Binding.GetColor(), GetIcon(it.Icon));
+            drawList.AddText(IconBasePos + startPos, it.Binding.GetColor(), (byte*)&it.Icon);
             ImGui.PopFont();
 
             var textBegin = (byte*)&it.DisplayName;
@@ -303,6 +302,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 
             drawList.AddText(labelPos, TextPrimary, textBegin, textEnd);
             drawList.PopClipRect();
+            
 
             int nextGridIndex = (gridIndex + 1) % columnCount;
             if (nextGridIndex != 0 && gridIndex + 1 < length)

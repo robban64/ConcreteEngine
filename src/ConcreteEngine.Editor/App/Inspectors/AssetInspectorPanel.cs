@@ -7,6 +7,7 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
@@ -114,7 +115,7 @@ internal sealed unsafe class AssetInspectorPanel
     private void DrawHeader(AssetObject asset)
     {
         ImGui.BeginGroup();
-        if (ImGui.Button(StyleMap.GetIcon(asset.Kind.ToIcon()))) _popup.State = true;
+        if (AppDraw.Button(asset.Kind.ToIcon())) _popup.State = true;
 
         ImGui.SameLine();
 
@@ -127,7 +128,7 @@ internal sealed unsafe class AssetInspectorPanel
         ImGui.Spacing();
 
         ImGui.BeginGroup();
-        if (ImGui.Button(StyleMap.GetIcon(Icons.Undo2)))
+        if (AppDraw.Button(IconNames.Undo2))
         {
             RestoreName(asset);
         }

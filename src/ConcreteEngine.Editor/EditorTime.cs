@@ -24,7 +24,6 @@ public static class EditorTime
 
         _accumulator.Accumulate(frameDelta);
         return _accumulator.DequeueTick(out editorDelta);
-
     }
 
     public static void WakeUp()

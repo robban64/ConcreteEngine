@@ -8,7 +8,7 @@ internal enum ContextChangeMask : ushort
     Selection = 1 << 1,
 
     ToolSelection = Tool | Selection,
-    All =  Tool | Selection
+    All = Tool | Selection
 }
 
 internal sealed record EditorContext

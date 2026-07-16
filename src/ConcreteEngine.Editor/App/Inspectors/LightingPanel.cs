@@ -1,5 +1,3 @@
-using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Inspectors;

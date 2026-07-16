@@ -1,8 +1,6 @@
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Core.Common.Text;
@@ -25,7 +23,7 @@ public unsafe ref partial struct NativeSpanWriter
 
     public readonly int Cursor => _cursor;
     public readonly int BytesLeft => Capacity - _cursor;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref *Buffer, Capacity - 1);
 
@@ -44,15 +42,15 @@ public unsafe ref partial struct NativeSpanWriter
         if ((uint)cursor >= (uint)Capacity) Throwers.BufferOverflow(nameof(NativeSpanWriter), cursor, Capacity);
         _cursor = cursor;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool Validate(int length)
     {
-        if ((uint)length + (uint)_cursor >= (uint)Capacity) 
+        if ((uint)length + (uint)_cursor >= (uint)Capacity)
             Throwers.BufferOverflow(nameof(NativeSpanWriter), length + _cursor, Capacity);
         return length > 0;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<byte> EndSpan() => End().AsSpan();
 
@@ -64,7 +62,7 @@ public unsafe ref partial struct NativeSpanWriter
         Buffer[cursor] = 0;
         return new NativeView<byte>(Buffer, 0, cursor);
     }
-    
+
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter PadRight(int amount, byte value = 0x20)
     {
@@ -75,6 +73,7 @@ public unsafe ref partial struct NativeSpanWriter
             Buffer[start] = value;
             ++start;
         }
+
         _cursor = end;
         return ref this;
     }

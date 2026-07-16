@@ -5,7 +5,6 @@ using ConcreteEngine.Editor.App.Scene;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
@@ -24,8 +23,8 @@ internal sealed unsafe class SceneInspectorPanel
 
     private SceneObjectId _previousId = SceneObjectId.Empty;
 
-    
-    public SceneInspectorPanel(StateManager state) 
+
+    public SceneInspectorPanel(StateManager state)
     {
         _state = state;
         _title = StringArena.AllocateString(24);
@@ -34,7 +33,7 @@ internal sealed unsafe class SceneInspectorPanel
         _inspector = new SceneObjectInspector();
         _particleInspector = new ParticleInspector();
     }
-    
+
     private void OnNewInspector(SceneObject sceneObject)
     {
         RestoreName(sceneObject);
@@ -46,7 +45,7 @@ internal sealed unsafe class SceneInspectorPanel
     {
         _nameInputStr.Set(sceneObject.Name);
     }
-    
+
     public void Draw()
     {
         if (SelectionManager.Instance.SelectedSceneObject is not { } sceneObject) return;
@@ -71,7 +70,7 @@ internal sealed unsafe class SceneInspectorPanel
         ImGui.EndGroup();
 
         ImGui.Spacing();
-        
+
         _inspector.Draw();
         if (sceneObject.TryGetInstance<ModelInstance>(out var modelInstance))
         {
@@ -81,7 +80,6 @@ internal sealed unsafe class SceneInspectorPanel
 
         if (sceneObject.TryGetInstance<ParticleInstance>(out _))
             _particleInspector.Draw();
-        
     }
 
     private void DrawModelInstance(ModelInstance modelInstance)

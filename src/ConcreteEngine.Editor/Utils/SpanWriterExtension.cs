@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Editor.Utils;
@@ -18,7 +17,7 @@ internal static unsafe class SpanWriterExtension
             sw.SetCursor(cursor);
             return ref sw;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref NativeSpanWriter AppendIcon(uint iconData)
         {
@@ -39,7 +38,5 @@ internal static unsafe class SpanWriterExtension
             sw.SetCursor(cursor);
             return ref sw;
         }
-
-
     }
 }

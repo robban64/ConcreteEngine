@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Attributes;
 
 namespace ConcreteEngine.Core.Diagnostics.Logging;
@@ -12,7 +11,7 @@ public enum LogFilter : ushort
     LogAction = 1 << 2
 }
 
-[EnumExt(ToUtf8 =  true)]
+[EnumExt(ToUtf8 = true)]
 public enum LogLevel : byte
 {
     None = 0,
@@ -24,7 +23,7 @@ public enum LogLevel : byte
     Critical = 6
 }
 
-[EnumExt(ToUtf8 =  true)]
+[EnumExt(ToUtf8 = true)]
 public enum LogScope : byte
 {
     Unknown = 0,
@@ -37,7 +36,6 @@ public enum LogScope : byte
     Backend = 7,
     Editor = 8,
 }
-
 
 public enum LogTopic : byte
 {
@@ -60,7 +58,6 @@ public enum LogTopic : byte
     Core = 16,
     ArrayBuffer = 17
 }
-
 
 public enum LogAction : byte
 {

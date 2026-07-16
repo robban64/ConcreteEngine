@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Graphics.Utility;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;

@@ -12,7 +12,7 @@ namespace ConcreteEngine.Editor.App.Assets;
 
 internal sealed class TextureInspectorUi(StateManager state)
 {
-    private readonly TextureInspector _inspector = new ();
+    private readonly TextureInspector _inspector = new();
 
     public void Draw(Texture texture)
     {
@@ -20,7 +20,7 @@ internal sealed class TextureInspectorUi(StateManager state)
 
         ImGui.SeparatorText("Texture Info"u8);
 
-        AppDraw.TextProperty("Dimension:"u8,sw.Write(texture.Size));
+        AppDraw.TextProperty("Dimension:"u8, sw.Write(texture.Size));
 
         AppDraw.TextProperty("InMemory:"u8, texture.HasPixelData ? "Yes"u8 : "No"u8);
 

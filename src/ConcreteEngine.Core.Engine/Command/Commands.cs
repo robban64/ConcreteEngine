@@ -6,8 +6,9 @@ public sealed class Commands
 
     private static Commands _instance = null!;
     internal static void Create(ICommandSink commandBus) => _instance = new Commands(commandBus);
-    
+
     private readonly ICommandSink _commandSink;
+
     private Commands(ICommandSink commandBus)
     {
         _commandSink = commandBus;

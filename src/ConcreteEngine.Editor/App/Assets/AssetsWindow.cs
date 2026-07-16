@@ -9,7 +9,6 @@ using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.App.Theme.Palette32;
-using static ConcreteEngine.Editor.Core.Data.StyleMap;
 
 namespace ConcreteEngine.Editor.App.Assets;
 
@@ -46,10 +45,11 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     public AssetsWindow(StateManager state) : base(state)
     {
         _assetBrowser = new AssetBrowser(OnDirectoryChange);
-        _searchInput = new TextInput("search", 8, OnSearch) {AllowEmpty = true, Trim = true, Lowercase = true};
+        _searchInput = new TextInput("search", 8, OnSearch) { AllowEmpty = true, Trim = true, Lowercase = true };
     }
 
     private void OnSearch(Span<char> text) => _assetBrowser.Commit(text, _bindingsFilter, _assetFilter);
+
     protected override void OnCreate()
     {
         _breadcrumbs = StringArena.AllocateString(64);
@@ -138,9 +138,10 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 
             ImGui.PopStyleVar();
         }
+
         ImGui.EndChild();
         ImGui.PopStyleVar();
-        
+
         ImGui.SameLine();
         ImGuiP.SeparatorEx(ImGuiSeparatorFlags.Vertical);
 
@@ -194,7 +195,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         //
 
         ImGui.SameLine();
-        
+
         DrawFilters();
 
         ImGui.PopStyleColor(3);
@@ -223,7 +224,6 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         ImGui.SameLine();
         if (AppDraw.ToggleButton(IconNames.Circle, assetFilter == AssetKind.Material))
             UpdateFilter(bindingFilter, AssetKind.Material);
-
     }
 
     private void DrawFolders()
@@ -242,13 +242,13 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         {
             var node = nodes[i];
             var previewName = node.PreviewName;
-            
+
             sw.AppendIcon(IconNames.Folder).PadRight(2);
             sw.Append((byte*)&previewName);
             var text = sw.AppendImGuiId(i).End();
             if (ImGui.Selectable(text, false, 0, size))
                 _assetBrowser.GoToChild(node.GetFolderName());
-            
+
             ImGui.Spacing();
         }
     }
@@ -302,7 +302,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 
             drawList.AddText(labelPos, TextPrimary, textBegin, textEnd);
             drawList.PopClipRect();
-            
+
 
             int nextGridIndex = (gridIndex + 1) % columnCount;
             if (nextGridIndex != 0 && gridIndex + 1 < length)

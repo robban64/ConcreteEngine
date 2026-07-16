@@ -1,6 +1,5 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
@@ -54,7 +53,7 @@ public struct FogHeightParams(float density, float strength, float baseHeight, f
 
     [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
     public float Strength = strength;
-    
+
     [InputNumber(InputStyle.Slider, Min = -1000f, Max = 1000f)]
     public float BaseHeight = baseHeight;
 
@@ -73,7 +72,7 @@ public struct FogOpticsParams(float scattering, float distanceWeight, float heig
 
     [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
     public float HeightWeight = heightWeight;
-    
+
     [InputNumber(InputStyle.Drag, Speed = 1f, Min = 1f, Max = 10000f, Format = "%.2f")]
     public float MaxDistance = maxDistance;
 }
@@ -130,13 +129,13 @@ public struct PostGradeParams(float exposure, float saturation, float contrast, 
 {
     [InputNumber(InputStyle.Slider, Min = 0.5f, Max = 2f)]
     public float Exposure = exposure;
-    
+
     [InputNumber(InputStyle.Slider, Min = 0, Max = 1.5f)]
     public float Saturation = saturation;
-    
+
     [InputNumber(InputStyle.Slider, Min = 0, Max = 1.5f)]
     public float Contrast = contrast;
-    
+
     [InputNumber(InputStyle.Slider, Min = 0, Max = 1f)]
     public float Warmth = warmth;
 }

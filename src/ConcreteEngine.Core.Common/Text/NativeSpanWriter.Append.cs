@@ -16,7 +16,7 @@ public unsafe ref partial struct NativeSpanWriter
         var src = MemoryMarshal.CreateReadOnlySpanFromNullTerminated(value);
         if (Validate(src.Length))
             Unsafe.CopyBlockUnaligned(ref Buffer[_cursor], ref MemoryMarshal.GetReference(src), (uint)src.Length);
-        
+
         _cursor += src.Length;
         return ref this;
     }
@@ -46,7 +46,7 @@ public unsafe ref partial struct NativeSpanWriter
         if (Validate(value.Length)) _cursor += Encoding.UTF8.GetBytes(value, RemainingSpan());
         return ref this;
     }
-    
+
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter Append(byte value)
     {
@@ -63,6 +63,7 @@ public unsafe ref partial struct NativeSpanWriter
         _cursor += UtfText.FormatChar(ref Buffer[_cursor], value);
         return ref this;
     }
+
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter Append(char value1, char value2)
     {

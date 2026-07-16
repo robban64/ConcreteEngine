@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Logging;
 
 namespace ConcreteEngine.Core.Diagnostics.Extensions;

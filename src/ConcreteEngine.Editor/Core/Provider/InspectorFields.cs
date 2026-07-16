@@ -1,4 +1,3 @@
-
 namespace ConcreteEngine.Editor.Core.Provider;
 /*
 internal sealed class FieldSegment

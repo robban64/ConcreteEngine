@@ -13,7 +13,7 @@ internal sealed class LogService : IDisposable
     public static readonly LogService Instance = new();
 
     public int NewLogs { get; private set; }
-    
+
     private int _head;
     private int _count;
 
@@ -56,7 +56,7 @@ internal sealed class LogService : IDisposable
 
         var buffer = stackalloc byte[256];
         var writer = new NativeSpanWriter(buffer, 256);
-        
+
         int drainLimit = EnqueuedLogCount < 100 ? DrainPerTick : DrainPerTickHigh;
         while (drainLimit-- > 0)
         {
@@ -83,9 +83,8 @@ internal sealed class LogService : IDisposable
 
             writer.Clear();
         }
-
     }
-    
+
     public void PushLog(ReadOnlySpan<byte> message, DateTime timestamp, LogLevel level = LogLevel.None,
         LogScope scope = LogScope.Unknown)
     {
@@ -107,7 +106,7 @@ internal sealed class LogService : IDisposable
 
         NewLogs++;
     }
-    
+
     public void ClearLog()
     {
         if (_count == 0) return;
@@ -126,7 +125,7 @@ internal sealed class LogService : IDisposable
 
     public static void Log(StringLogEvent log) => Instance.Enqueue(log);
     public static void LogValue(in LogEvent log) => Instance.Enqueue(in log);
-    
+
     [SkipLocalsInit]
     public static unsafe void PushMessage(ReadOnlySpan<char> message)
     {

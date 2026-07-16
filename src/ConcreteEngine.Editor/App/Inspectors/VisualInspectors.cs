@@ -1,10 +1,6 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Field;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
 
@@ -23,18 +19,19 @@ internal sealed partial class DirectionalLightInspector : Inspector<DirectionalL
 internal sealed partial class ShadowSettingsInspector : Inspector<ShadowSettingsInspector>
 {
     private static ShadowSettings Target => VisualManager.Instance.Shadow;
+
     public void Draw()
     {
         AppDraw.Section(Projection);
         AppDraw.Section(Visuals);
     }
-
 }
 
 [EditorInspector(typeof(EnvironmentSettings))]
 internal sealed partial class EnvironmentSettingsInspector : Inspector<EnvironmentSettingsInspector>
 {
     private static EnvironmentSettings Target => VisualManager.Instance.Environment;
+
     public unsafe void Draw()
     {
         AppDraw.CollapseSection("Ambient"u8, &DrawAmbient);
@@ -61,5 +58,4 @@ internal sealed partial class PostEffectSettingsInspector : Inspector<PostEffect
         AppDraw.Section(Bloom);
         AppDraw.Section(ImageFx);
     }
-
 }

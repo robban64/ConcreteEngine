@@ -24,9 +24,8 @@ public struct TextureProperties(
 public sealed class Texture : AssetObject
 {
     public readonly TextureId GfxId;
-    
-    [InspectInclude]
-    public readonly GpuTextureState GpuState;
+
+    [InspectInclude] public readonly GpuTextureState GpuState;
 
     public readonly Size2D Size;
 

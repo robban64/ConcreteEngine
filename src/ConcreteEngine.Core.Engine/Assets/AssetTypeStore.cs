@@ -60,7 +60,7 @@ public sealed class AssetTypeStore(AssetKind kind)
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Id, nameof(asset.Id));
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)asset.Kind, (int)Kind, nameof(asset));
         _dirtyIds.TryAddUniqueSorted(asset.Id.Id);
-            }
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void ClearDirty() => _dirtyIds.Clear();

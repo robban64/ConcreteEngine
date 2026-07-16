@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Text.Unicode;
 
 namespace ConcreteEngine.Core.Common.Text;
 

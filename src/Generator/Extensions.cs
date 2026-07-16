@@ -11,15 +11,16 @@ internal static class Extensions
     public static string ToLiteralStr(this string s) => Symbols.FormatLiteral(s, true);
     public static string ToLiteralStr(this bool s) => s ? "\"true\"" : "\"false\"";
 
-    public static bool IsPublicClassOrStruct(this INamedTypeSymbol sym)
-        => sym.TypeKind is TypeKind.Class or TypeKind.Struct && sym.DeclaredAccessibility == Accessibility.Public;
+    public static bool IsPublicClassOrStruct(this INamedTypeSymbol sym) =>
+        sym.TypeKind is TypeKind.Class or TypeKind.Struct && sym.DeclaredAccessibility == Accessibility.Public;
 
-    public static ITypeSymbol GetFieldOrPropertyType(this ISymbol sym) => sym switch
-    {
-        IFieldSymbol field => field.Type,
-        IPropertySymbol property => property.Type,
-        _ => throw new UnreachableException()
-    };
+    public static ITypeSymbol GetFieldOrPropertyType(this ISymbol sym) =>
+        sym switch
+        {
+            IFieldSymbol field => field.Type,
+            IPropertySymbol property => property.Type,
+            _ => throw new UnreachableException()
+        };
 
 
     public static string ToCollectionString(this ImmutableArray<TypedConstant> values)
@@ -39,7 +40,7 @@ internal static class Extensions
         value = default;
         return false;
     }
-    
+
     public static IEnumerable<INamedTypeSymbol> GetAllTypes(this INamespaceSymbol ns)
     {
         foreach (var member in ns.GetMembers())
@@ -51,5 +52,4 @@ internal static class Extensions
                 yield return type;
         }
     }
-
 }

@@ -37,7 +37,7 @@ public sealed class SceneTransform(SceneObject sceneObject)
             sceneObject.MarkDirty(SceneDirtyFlags.Transform);
         }
     }
-    
+
     [InputNumber(Label = "Rotation")]
     public Vector3 EulerRotation
     {

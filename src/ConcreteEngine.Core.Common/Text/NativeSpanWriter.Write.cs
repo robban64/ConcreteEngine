@@ -15,7 +15,7 @@ public unsafe ref partial struct NativeSpanWriter
         Buffer[written] = 0;
         return new NativeView<byte>(Buffer, written);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeView<byte> Write(char value) => ReturnWritten(UtfText.FormatChar(ref *Buffer, value));
 

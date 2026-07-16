@@ -5,7 +5,7 @@ internal sealed class EventDispatcher
     private readonly Queue<EditorEvent> _queue = new(8);
     private readonly Dictionary<Type, Dispatcher> _eventHandler = new(8);
 
-    
+
     public void DrainQueue(StateManager ctx)
     {
         if (_queue.Count == 0) return;

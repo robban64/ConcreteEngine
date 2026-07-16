@@ -19,7 +19,7 @@ internal static class WindowRoot
         ImGuiDockNodeFlags.NoUndocking | ImGuiDockNodeFlags.NoDockingSplit |
         ImGuiDockNodeFlags.PassthruCentralNode;
 
-    
+
     public static ReadOnlySpan<byte> LeftWindowId => "##Left"u8;
     public static ReadOnlySpan<byte> RightWindowId => "##Right"u8;
     public static ReadOnlySpan<byte> ViewportWindowId => "##Viewport"u8;
@@ -28,7 +28,7 @@ internal static class WindowRoot
     public static ReadOnlySpan<byte> AssetWindowId => "##BottomAsset"u8;
     public static ReadOnlySpan<byte> ConsoleWindowId => "##BottomConsole"u8;
 
-    
+
     public static bool HasDockSpace { get; private set; }
     public static uint DockSpaceId { get; private set; }
     public static uint ViewportId { get; private set; }
@@ -61,7 +61,6 @@ internal static class WindowRoot
         var node = ImGuiP.DockBuilderGetNode(ViewportId);
         if ((Vector2)EngineWindow.Viewport.Size != node.Size || EngineWindow.Viewport.Position != node.Pos)
             EngineWindow.SetViewport(new ViewportRect(node.Pos, node.Size));
-
     }
 
 
@@ -94,7 +93,7 @@ internal static class WindowRoot
 
         uint dockBottomLeftId = 0, dockBottomRightId = 0;
         ImGuiP.DockBuilderSplitNode(*dockBottomId, ImGuiDir.Left, 0.6f, &dockBottomLeftId, &dockBottomRightId);
-        
+
         //(ImGuiDockNodeFlags)4096;
         const ImGuiDockNodeFlags noTabBarBit = (ImGuiDockNodeFlags)ImGuiDockNodeFlagsPrivate.NoTabBar;
         ImGuiP.DockBuilderGetNode(*dockLeftId).LocalFlags |= noTabBarBit;

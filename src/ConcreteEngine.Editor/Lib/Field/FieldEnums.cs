@@ -18,14 +18,13 @@ public enum InputTrigger : byte
     OnChange, AfterChange, AfterChangeDeActive
 }
 
-
 internal sealed unsafe class CheckboxInput : InputField
 {
     private bool _value;
-    
+
     private readonly Func<bool> _getter;
     private readonly Action<bool> _setter;
-    
+
     private FrameStepper _stepper = new(12);
 
     public CheckboxInput(string label, Func<bool> getter, Action<bool> setter) : base(label, InputKind.Bool)
@@ -36,9 +35,9 @@ internal sealed unsafe class CheckboxInput : InputField
 
     public bool Draw()
     {
-        if(_stepper.Tick()) _value = _getter();
+        if (_stepper.Tick()) _value = _getter();
         var value = _value;
-        
+
         DrawLabel();
         var changed = ImGui.Checkbox(StringId, &value);
         if (changed)
@@ -46,6 +45,7 @@ internal sealed unsafe class CheckboxInput : InputField
             _setter(value);
             _value = value;
         }
+
         return changed;
     }
 }

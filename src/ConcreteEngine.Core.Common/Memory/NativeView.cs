@@ -17,7 +17,7 @@ public readonly unsafe struct NativeView<T>(T* ptr, int offset, int length)
 
     public int End => Offset + Length;
     public bool IsNull => Ptr == null;
-    
+
     public int SizeInBytes => Length * Unsafe.SizeOf<T>();
     public int OffsetInBytes => Length * Unsafe.SizeOf<T>();
 

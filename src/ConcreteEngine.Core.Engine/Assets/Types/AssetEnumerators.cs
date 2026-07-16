@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Engine.Assets;
+
 public ref struct AssetEnumerator<T>(ReadOnlySpan<AssetId> assetIds, ReadOnlySpan<AssetObject?> assets)
     where T : AssetObject
 {

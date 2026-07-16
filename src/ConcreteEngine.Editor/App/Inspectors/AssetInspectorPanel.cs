@@ -5,7 +5,6 @@ using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.App.UI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -31,7 +30,7 @@ internal sealed unsafe class AssetInspectorPanel
     private readonly TextInput _searchInput;
 
     private AssetId _previousId = AssetId.Empty;
-    
+
     private Popup _popup = new(new Vector2(12f, 10f));
 
     public AssetInspectorPanel(StateManager state)
@@ -40,9 +39,7 @@ internal sealed unsafe class AssetInspectorPanel
         _title = StringArena.AllocateString(24);
         _searchInput = new TextInput("name", 64, OnNameInput)
             {
-                Trim = true,
-                Filter = TextInputFilter.AsciiLettersAndDigit,
-                Whitelist = ValidNoneAlphaNumericChars
+                Trim = true, Filter = TextInputFilter.AsciiLettersAndDigit, Whitelist = ValidNoneAlphaNumericChars
             }
             .WithMinLength(4)
             .ToggleFlag(ImGuiInputTextFlags.EnterReturnsTrue, true);
@@ -51,9 +48,8 @@ internal sealed unsafe class AssetInspectorPanel
         _materialProxyUi = new MaterialInspectorUi(state);
         _shaderInspectorUi = new ShaderInspectorUi(state);
         _modelInspectorUi = new ModelInspectorUi(state);
-
     }
-    
+
     private void OnNameInput(Span<char> text)
     {
         if (Selection.SelectedAsset is not { } inspectAsset) return;
@@ -174,5 +170,4 @@ internal sealed unsafe class AssetInspectorPanel
 
         ImGui.EndTable();
     }
-
 }

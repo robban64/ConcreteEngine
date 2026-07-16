@@ -37,7 +37,6 @@ internal sealed class MenuGroup(NativeString name, MenuItem[] items)
             if (ImGui.MenuItem(sw.Write(it.Name), (byte*)&shortcut, it.Enabled))
                 it.OnClick(stateManager);
         }
-
     }
 }
 

@@ -28,9 +28,9 @@ public sealed class GpuTextureState(Texture texture, TextureProperties props)
             texture.MarkDirty(AssetDirtyFlag.Structure);
         }
     } = props.PixelFormat;
-    
+
     //
-    [InputNumber(InputStyle.Slider, Min=-1,Max = 1)]
+    [InputNumber(InputStyle.Slider, Min = -1, Max = 1)]
     public float LodBias
     {
         get;
@@ -41,7 +41,7 @@ public sealed class GpuTextureState(Texture texture, TextureProperties props)
             texture.MarkDirty(AssetDirtyFlag.State);
         }
     } = props.Lod;
- 
+
 
     [InputCombo(UseEnumExt = true, StartAt = 1)]
     public TexturePreset Preset

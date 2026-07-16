@@ -17,7 +17,7 @@ internal static unsafe class AppDraw
         inputGroup.Draw();
         ImGui.Spacing();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CollapseSection(InputGroup inputGroup, ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen)
     {
@@ -25,9 +25,10 @@ internal static unsafe class AppDraw
         ImGui.Spacing();
         ImGui.Separator();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CollapseSection(ReadOnlySpan<byte> title, delegate*<void> draw, ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen)
+    public static void CollapseSection(ReadOnlySpan<byte> title, delegate*<void> draw,
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen)
     {
         if (ImGui.CollapsingHeader(title, flags)) draw();
         ImGui.Spacing();

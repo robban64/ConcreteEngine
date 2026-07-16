@@ -64,7 +64,7 @@ public unsafe ref struct UiDrawCursor
         ImGui.SetCursorPosY(Cursor.Y - Start.Y);
         ImGui.Dummy(default);
     }
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SameLine(float spacing = -1f) => Cursor.X += spacing >= 0 ? spacing : ItemSpacing.X;

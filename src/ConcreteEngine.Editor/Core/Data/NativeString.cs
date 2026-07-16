@@ -16,17 +16,18 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
     internal struct NativeStringHeader(int capacity, int length = 0)
     {
         public readonly int Capacity = capacity;
+
         public int Length = length;
         // byte[capacity]
     }
     //
-    
+
     private readonly NativeStringHeader* _ptr;
 
     public NativeString(NativeStringHeader* ptr) => _ptr = ptr;
-    
+
     //
-    public static NativeString Null => new (null);
+    public static NativeString Null => new(null);
 
     internal static NativeString From(NativeView<byte> view)
     {
@@ -46,10 +47,10 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator NativeView<byte>(NativeString str) => str.Text;
-    
+
     public Span<byte> AsSpan() => Text.AsSpan();
-    
-    
+
+
     public byte* TextStart
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -61,19 +62,19 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => TextStart + Length;
     }
-    
+
     public NativeView<byte> Text
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new(TextStart, Length);
     }
-    
+
     public NativeView<byte> Data
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new(TextStart, Capacity);
     }
-    
+
     public NativeSpanWriter OverWriter
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -90,7 +91,7 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            if((uint)Length >= (uint)Capacity) Throwers.BufferOverflow(nameof(Capacity), Length, Capacity);
+            if ((uint)Length >= (uint)Capacity) Throwers.BufferOverflow(nameof(Capacity), Length, Capacity);
             return new NativeSpanWriter(Data, Capacity, Length);
         }
     }
@@ -100,18 +101,20 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
         var index = Data.AsReadOnlySpan().IndexOf((byte)0);
         SetLength(index >= 0 ? index : 0);
     }
+
     public void SetLength(int length)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)length, (uint)Capacity, nameof(length));
         Data[length] = 0;
         _ptr->Length = length;
     }
-    
+
     public void Set(ReadOnlySpan<byte> str) => _ptr->Length = OverWriter.Write(str.Truncate(Capacity)).Length;
-    public void Set(ReadOnlySpan<char> str)  => _ptr->Length = OverWriter.Write(str.Truncate(Capacity)).Length;
-    
+    public void Set(ReadOnlySpan<char> str) => _ptr->Length = OverWriter.Write(str.Truncate(Capacity)).Length;
+
     public void Append(ReadOnlySpan<byte> str) => _ptr->Length = DataWriter.Append(str).End().Length;
     public void Append(ReadOnlySpan<char> str) => _ptr->Length = DataWriter.Append(str).End().Length;
+
     public void Append<T>(T value, ReadOnlySpan<char> format = default)
         where T : IUtf8SpanFormattable
     {
@@ -119,12 +122,13 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
     }
 
     public void Reset() => _ptr->Length = 0;
+
     public void Clear()
     {
         Data.Clear();
         _ptr->Length = 0;
     }
-    
+
     public static bool operator ==(NativeString left, NativeString right) => left.Equals(right);
     public static bool operator !=(NativeString left, NativeString right) => !left.Equals(right);
 

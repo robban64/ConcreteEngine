@@ -249,7 +249,7 @@ internal static class InspectorGeneratorEmitter
         sb.PopIndent();
         sb.AppendLine(");");
     }
-    
+
     private static void EmitCheckbox(SourceBuilder sb, InspectorMember member, AccessPath access)
     {
         sb.Append("CheckboxInput ", member.Name, " = new CheckboxInput(", member.GetLabelLiteral(), ", ");

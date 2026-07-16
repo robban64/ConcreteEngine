@@ -71,5 +71,4 @@ internal sealed class EngineGateway : IDisposable
         Enabled = false;
         _editor.Dispose();
     }
-
 }

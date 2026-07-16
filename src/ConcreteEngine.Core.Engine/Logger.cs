@@ -8,18 +8,18 @@ namespace ConcreteEngine.Core.Engine;
 public sealed class Logger
 {
     private static readonly Logger Instance = new();
-    
+
     private bool _isBound;
-    
+
     private List<StringLogEvent>? _tempLogs = new();
-    
+
     private Action<StringLogEvent> _logDel = ConsoleLogger;
     private Action<ReadOnlySpan<char>> _messageDel = Console.WriteLine;
-    
-    private Logger(){}
+
+    private Logger() { }
 
     public static bool IsBound => Instance._isBound;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Message(ReadOnlySpan<char> message) => Instance._messageDel(message);
 
@@ -29,11 +29,11 @@ public sealed class Logger
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Log(StringLogEvent log) => Instance._logDel(log);
-    
+
     private unsafe void Bind(LogBinding binding)
     {
-        if(_isBound) Throwers.InvalidOperation("Logger can only be bound once");
-        if(binding.ValueLogger == null) Throwers.InvalidArgument(nameof(binding));
+        if (_isBound) Throwers.InvalidOperation("Logger can only be bound once");
+        if (binding.ValueLogger == null) Throwers.InvalidArgument(nameof(binding));
 
         _logDel = binding.Logger;
         _messageDel = binding.Message;
@@ -62,12 +62,11 @@ public sealed class Logger
     }
 
     public static void ToggleGfxLog(bool enabled) => GfxLog.Enabled = enabled;
-    
+
 
     private static void ConsoleLogger(StringLogEvent log)
     {
         Instance._tempLogs?.Add(log);
         Console.WriteLine(log.Message);
     }
-
 }

@@ -7,7 +7,7 @@ public sealed class CircularListBuffer<T>
     private readonly int _capacity;
 
     private readonly Action<int, Span<T>> _callback;
-    
+
     public int Capacity => _capacity;
 
     public CircularListBuffer(int capacity, Action<int, Span<T>> callback)
@@ -68,7 +68,7 @@ public sealed class CircularListBuffer<T>
 
         return new Enumerator(_buffer, logicalStart, length);
     }
-    
+
     public ref struct Enumerator
     {
         private readonly Span<T> _buffer;
@@ -83,11 +83,11 @@ public sealed class CircularListBuffer<T>
             _capacity = buffer.Length;
             _length = length;
             _currentIndex = -1;
-        
+
             int startIdx = logicalStart % _capacity;
             _physicalIndex = startIdx == 0 ? _capacity - 1 : startIdx - 1;
         }
-    
+
         public bool MoveNext()
         {
             if (++_currentIndex < _length)
@@ -95,13 +95,12 @@ public sealed class CircularListBuffer<T>
                 if (++_physicalIndex == _capacity) _physicalIndex = 0;
                 return true;
             }
+
             return false;
         }
 
         public readonly ref T Current => ref _buffer[_physicalIndex];
-    
-        public readonly Enumerator GetEnumerator() => this;
 
+        public readonly Enumerator GetEnumerator() => this;
     }
 }
-

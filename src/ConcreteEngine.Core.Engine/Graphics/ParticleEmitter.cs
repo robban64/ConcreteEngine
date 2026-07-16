@@ -24,7 +24,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public MeshId BoundMesh { get; private set; }
 
     public int Slot { get; private set; } = -1;
-    
+
     //ParticleEmitter.MinCount, ParticleEmitter.MaxCount
     public int ParticleCount { get; private set; }
     public int PendingParticleCount { get; private set; }
@@ -59,7 +59,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     public bool IsDirty => _isDirty;
     public bool IsAttached => Slot >= 0;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly EmitterParams GetEmitterParams() => ref _emitterParams;
 
@@ -70,12 +70,10 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public ref readonly BoundingBox LocalBounds() => ref _localBounds;
 
     //TEMP
-    [InspectInclude]
-    public ref EmitterParams EmitterParams => ref _emitterParams;
-    [InspectInclude]
-    public ref ParticleParams ParticleParams => ref _particleParams;
+    [InspectInclude] public ref EmitterParams EmitterParams => ref _emitterParams;
+    [InspectInclude] public ref ParticleParams ParticleParams => ref _particleParams;
     //
-    
+
     internal void Attach(int slot, MeshId meshId)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);

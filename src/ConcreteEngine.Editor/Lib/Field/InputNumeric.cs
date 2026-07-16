@@ -8,7 +8,7 @@ namespace ConcreteEngine.Editor.Lib.Field;
 internal interface IInputNumeric<T> where T : unmanaged, IInputNumeric<T>
 {
     static abstract byte Components { get; }
-    
+
     static abstract unsafe bool DrawFloatInput(byte* str, T* v, String8Utf8 fmt);
     static abstract unsafe bool DrawFloatSlider(byte* str, T* v, String8Utf8 fmt, float min, float max);
     static abstract unsafe bool DrawFloatDrag(byte* str, T* v, String8Utf8 fmt, float speed, float min, float max);
@@ -31,10 +31,10 @@ internal struct InputNumeric1 : IInputNumeric<InputNumeric1>
     public static implicit operator InputNumeric1(float v) => new(v);
     public static explicit operator int(InputNumeric1 v) => v.I1;
     public static explicit operator float(InputNumeric1 v) => v.F1;
-    
+
     public static byte Components => 1;
-    
-    
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool DrawFloatInput(byte* str, InputNumeric1* v, String8Utf8 fmt) =>
         ImGui.InputFloat(str, &v->F1, (byte*)&fmt);
@@ -44,12 +44,12 @@ internal struct InputNumeric1 : IInputNumeric<InputNumeric1>
         ImGui.SliderFloat(str, &v->F1, min, max, (byte*)&fmt);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe bool DrawFloatDrag(byte* str, InputNumeric1* v, String8Utf8 fmt, float speed, float min, float max) =>
+    public static unsafe bool DrawFloatDrag(byte* str, InputNumeric1* v, String8Utf8 fmt, float speed, float min,
+        float max) =>
         ImGui.DragFloat(str, &v->F1, speed, min, max, (byte*)&fmt);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe bool DrawIntInput(byte* str, InputNumeric1* v) =>
-        ImGui.InputInt(str, &v->I1);
+    public static unsafe bool DrawIntInput(byte* str, InputNumeric1* v) => ImGui.InputInt(str, &v->I1);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool DrawIntSlider(byte* str, InputNumeric1* v, int min, int max) =>
@@ -70,7 +70,7 @@ internal struct InputNumeric2 : IInputNumeric<InputNumeric2>
     [FieldOffset(04)] public float F2;
 
     public static byte Components => 2;
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool DrawFloatInput(byte* str, InputNumeric2* v, String8Utf8 fmt) =>
@@ -81,12 +81,12 @@ internal struct InputNumeric2 : IInputNumeric<InputNumeric2>
         ImGui.SliderFloat2(str, &v->F1, min, max, (byte*)&fmt);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe bool DrawFloatDrag(byte* str, InputNumeric2* v, String8Utf8 fmt, float speed, float min, float max) =>
+    public static unsafe bool DrawFloatDrag(byte* str, InputNumeric2* v, String8Utf8 fmt, float speed, float min,
+        float max) =>
         ImGui.DragFloat2(str, &v->F1, speed, min, max, (byte*)&fmt);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe bool DrawIntInput(byte* str, InputNumeric2* v) =>
-        ImGui.InputInt2(str, &v->I1);
+    public static unsafe bool DrawIntInput(byte* str, InputNumeric2* v) => ImGui.InputInt2(str, &v->I1);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool DrawIntSlider(byte* str, InputNumeric2* v, int min, int max) =>
@@ -107,9 +107,9 @@ internal struct InputNumeric3 : IInputNumeric<InputNumeric3>
     [FieldOffset(00)] public float F1;
     [FieldOffset(04)] public float F2;
     [FieldOffset(08)] public float F3;
-    
+
     public static byte Components => 3;
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool DrawFloatInput(byte* str, InputNumeric3* v, String8Utf8 fmt) =>
@@ -120,12 +120,12 @@ internal struct InputNumeric3 : IInputNumeric<InputNumeric3>
         ImGui.SliderFloat3(str, &v->F1, min, max, (byte*)&fmt);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe bool DrawFloatDrag(byte* str, InputNumeric3* v, String8Utf8 fmt, float speed, float min, float max) =>
+    public static unsafe bool DrawFloatDrag(byte* str, InputNumeric3* v, String8Utf8 fmt, float speed, float min,
+        float max) =>
         ImGui.DragFloat3(str, &v->F1, speed, min, max, (byte*)&fmt);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe bool DrawIntInput(byte* str, InputNumeric3* v) =>
-        ImGui.InputInt3(str, &v->I1);
+    public static unsafe bool DrawIntInput(byte* str, InputNumeric3* v) => ImGui.InputInt3(str, &v->I1);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool DrawIntSlider(byte* str, InputNumeric3* v, int min, int max) =>
@@ -134,7 +134,6 @@ internal struct InputNumeric3 : IInputNumeric<InputNumeric3>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool DrawIntDrag(byte* str, InputNumeric3* v, float speed, int min, int max) =>
         ImGui.DragInt3(str, &v->I1, speed, min, max);
-
 }
 
 [StructLayout(LayoutKind.Explicit)]
@@ -149,9 +148,9 @@ internal struct InputNumeric4 : IInputNumeric<InputNumeric4>
     [FieldOffset(04)] public float F2;
     [FieldOffset(08)] public float F3;
     [FieldOffset(12)] public float F4;
-    
+
     public static byte Components => 4;
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool DrawFloatInput(byte* str, InputNumeric4* v, String8Utf8 fmt) =>
@@ -162,12 +161,12 @@ internal struct InputNumeric4 : IInputNumeric<InputNumeric4>
         ImGui.SliderFloat4(str, &v->F1, min, max, (byte*)&fmt);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe bool DrawFloatDrag(byte* str, InputNumeric4* v, String8Utf8 fmt, float speed, float min, float max) =>
+    public static unsafe bool DrawFloatDrag(byte* str, InputNumeric4* v, String8Utf8 fmt, float speed, float min,
+        float max) =>
         ImGui.DragFloat4(str, &v->F1, speed, min, max, (byte*)&fmt);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe bool DrawIntInput(byte* str, InputNumeric4* v) =>
-        ImGui.InputInt4(str, &v->I1);
+    public static unsafe bool DrawIntInput(byte* str, InputNumeric4* v) => ImGui.InputInt4(str, &v->I1);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool DrawIntSlider(byte* str, InputNumeric4* v, int min, int max) =>
@@ -176,5 +175,4 @@ internal struct InputNumeric4 : IInputNumeric<InputNumeric4>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool DrawIntDrag(byte* str, InputNumeric4* v, float speed, int min, int max) =>
         ImGui.DragInt4(str, &v->I1, speed, min, max);
-
 }

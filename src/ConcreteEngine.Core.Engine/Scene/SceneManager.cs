@@ -79,6 +79,4 @@ public sealed class SceneManager
     }
 
     internal void ClearDirty() => _dirtyIds.Clear();
-    
-
 }

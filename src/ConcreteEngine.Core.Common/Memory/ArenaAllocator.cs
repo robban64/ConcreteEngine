@@ -12,8 +12,8 @@ public sealed unsafe class ArenaAllocator : IDisposable
     public int Capacity { get; }
 
     public MemoryBlockPtr Tail { get; private set; }
-    public MemoryBlockPtr Head  { get; private set; }
-    
+    public MemoryBlockPtr Head { get; private set; }
+
     public int Remaining => Capacity - Cursor;
 
     public ArenaAllocator(int capacity, int alignment = 0, bool zeroed = true)
@@ -50,7 +50,7 @@ public sealed unsafe class ArenaAllocator : IDisposable
 
         if (zeroed) memory.Clear();
         var block = new MemoryBlockPtr(new NativeView<byte>(memory.Ptr, length));
-        
+
         if (Head == null)
             Head = block;
         else
@@ -90,7 +90,7 @@ public sealed unsafe class ArenaAllocator : IDisposable
 
         int length = Tail.Cursor, totalLength = length + MemoryBlockPtr.BlockSize;
         if (Cursor + totalLength > Capacity)
-            Throwers.BufferOverflow(nameof(ArenaAllocator),Cursor + totalLength, Capacity);
+            Throwers.BufferOverflow(nameof(ArenaAllocator), Cursor + totalLength, Capacity);
 
         Cursor += totalLength;
         Tail.SetLength(length);
@@ -100,8 +100,8 @@ public sealed unsafe class ArenaAllocator : IDisposable
 
     public void SetCursor(int cursor)
     {
-        if ((uint)Cursor >= (uint)Capacity) 
-            Throwers.BufferOverflow(nameof(ArenaAllocator),Cursor, Capacity);
+        if ((uint)Cursor >= (uint)Capacity)
+            Throwers.BufferOverflow(nameof(ArenaAllocator), Cursor, Capacity);
 
         Cursor = cursor;
     }

@@ -1,15 +1,10 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Editor;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core.Data;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Field;
@@ -21,7 +16,7 @@ internal sealed unsafe class InputGroup : InputField
 
     private readonly InputEntry[] _inputs;
     private readonly NativeView<InputNumeric1> _values;
-    
+
     private readonly Action<Span<InputNumeric1>> _getter;
     private readonly Action<Span<InputNumeric1>> _setter;
 
@@ -37,7 +32,7 @@ internal sealed unsafe class InputGroup : InputField
         _getter = getter;
         _setter = setter;
     }
-    
+
     public bool Draw()
     {
         if (_count != _inputs.Length) Throwers.InvalidOperation(nameof(_count));
@@ -60,7 +55,7 @@ internal sealed unsafe class InputGroup : InputField
 
         return false;
     }
-    
+
     public InputGroup WithFloatInput(string name, InputStyle style, float speed, float min, float max,
         string fmt = "%.2f") =>
         Add(new InputEntry(CreateNativeLabel(name, _count, out var start), start, style, true, speed, min, max, fmt));

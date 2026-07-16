@@ -103,7 +103,7 @@ public readonly record struct Size2D(int Width, int Height) : IEquatable<int>, I
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryFormat(Span<char> dst, out int written, ReadOnlySpan<char> fmt, IFormatProvider? provider) =>
         dst.TryWrite(provider, $"Width: {Width}, Height: {Height}", out written);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryFormat(Span<byte> dst, out int written, ReadOnlySpan<char> fmt, IFormatProvider? provider) =>
         Utf8.TryWrite(dst, provider, $"Width: {Width}, Height: {Height}", out written);

@@ -66,7 +66,7 @@ internal sealed record InspectorMember(
 {
     public string? Segment { get; init; }
     public InputField? Input { get; init; }
-    
+
     public string GetLabelLiteral() => Symbols.FormatLiteral(Label, true);
 }
 
@@ -86,19 +86,19 @@ internal sealed record NumberInput(
 
     public static string BitCast(string t1, string t2, string v) => $"Unsafe.BitCast<{t1}, {t2}>({v})";
 
-    public string ToStyleString() => Style switch
-    {
-        InputStyle.Input => "InputStyle.Input",
-        InputStyle.Slider => "InputStyle.Slider",
-        InputStyle.Drag => "InputStyle.Drag",
-        _ => throw new UnreachableException()
-    };
-
+    public string ToStyleString() =>
+        Style switch
+        {
+            InputStyle.Input => "InputStyle.Input",
+            InputStyle.Slider => "InputStyle.Slider",
+            InputStyle.Drag => "InputStyle.Drag",
+            _ => throw new UnreachableException()
+        };
 }
 
 internal sealed record ColorInput(string Name, bool HasAlpha) : InputField(Name);
 
 internal sealed record ComboInput(string Name, string Values, string Names, string? Placeholder, int StartAt)
     : InputField(Name);
-    
+
 internal sealed record CheckboxInput(string Name) : InputField(Name);

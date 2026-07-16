@@ -54,11 +54,12 @@ internal sealed partial class MaterialInspector : Inspector<MaterialInspector>
     {
         AppDraw.Section("Material State"u8, &DrawState);
     }
-    
+
     public unsafe void DrawPipeline()
     {
         AppDraw.Section("Material Pipeline"u8, &DrawPipelineCombos);
     }
+
     private static void DrawPipelineCombos()
     {
         Instance.BlendCombo.Draw();

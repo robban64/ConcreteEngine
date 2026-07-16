@@ -1,18 +1,11 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Field;
-
 
 internal abstract unsafe class InputField
 {
@@ -30,7 +23,7 @@ internal abstract unsafe class InputField
     protected InputField(string label, InputKind kind)
     {
         Kind = kind;
-        Label = CreateNativeLabel(label,++_idCounter, out _stringIdStart);
+        Label = CreateNativeLabel(label, ++_idCounter, out _stringIdStart);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -63,12 +56,11 @@ internal abstract unsafe class InputField
             ImGui.SetNextItemWidth(GuiTheme.FormItemInlineWidth);
         }
     }
-    
+
     protected static NativeString CreateNativeLabel(string name, int id, out byte idStart)
     {
         var sw = ScratchBuffer.Writer().Append(name.Truncate(31)).Append((byte)0);
         idStart = (byte)sw.Cursor;
         return StringArena.AllocateString(sw.AppendImGuiId(id).EndSpan());
     }
-
 }

@@ -1,9 +1,7 @@
-using System.Numerics;
 using System.Text;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.Core.Data;
 using Hexa.NET.ImGui;
 
@@ -88,6 +86,7 @@ internal sealed unsafe class TextInput : InputField
             if (ClearAfter) Text.Clear();
             return true;
         }
+
         return false;
     }
 

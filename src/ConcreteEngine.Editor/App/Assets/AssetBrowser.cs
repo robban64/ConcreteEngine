@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Editor.App.Shared;
-using ConcreteEngine.Editor.Core.Data;
 using static ConcreteEngine.Core.Engine.Assets.AssetManager;
 
 namespace ConcreteEngine.Editor.App.Assets;

@@ -34,7 +34,7 @@ internal sealed class StringArena : IDisposable
         _arena.AllocBlock(CapacityUtils.PageSize);
     }
 
-    
+
     public NativeString AllocString(ReadOnlySpan<char> value, int extraCapacity = 0)
     {
         var str = AllocString(Encoding.UTF8.GetByteCount(value) + 1 + extraCapacity);
@@ -60,7 +60,7 @@ internal sealed class StringArena : IDisposable
         var memory = _arena.Tail.GetAllocator().AllocSlice(sizeInBytes);
         return NativeString.From(memory);
     }
-    
+
     public NativeView<byte> AllocRaw(int capacity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
@@ -77,17 +77,16 @@ internal sealed class StringArena : IDisposable
 
         _arena.AllocBlock(CapacityUtils.PageSize);
         Logger.Log(LogScope.Editor, $"StringArena - Allocated new block");
-
     }
+
     public void Dispose() => _arena.Dispose();
-    
+
     //
     public static NativeString AllocateString(int value) => Instance.AllocString(value);
 
-    public static NativeString AllocateString(ReadOnlySpan<char> value, int extraCapacity = 0)
-        => Instance.AllocString(value, extraCapacity);
+    public static NativeString AllocateString(ReadOnlySpan<char> value, int extraCapacity = 0) =>
+        Instance.AllocString(value, extraCapacity);
 
-    public static NativeString AllocateString(ReadOnlySpan<byte> value, int extraCapacity = 0)
-        => Instance.AllocString(value, extraCapacity);
-
+    public static NativeString AllocateString(ReadOnlySpan<byte> value, int extraCapacity = 0) =>
+        Instance.AllocString(value, extraCapacity);
 }

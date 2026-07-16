@@ -9,5 +9,4 @@ public static class LogConsts
 
     public const int DrainPerTick = 6;
     public const int DrainPerTickHigh = 12;
-
 }

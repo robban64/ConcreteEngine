@@ -10,7 +10,7 @@ public static class CapacityUtils
         while (newSize < required) newSize *= 2;
         return newSize;
     }
-    
+
     public static int CapacityGrowthPageSize(int current, int required)
     {
         var newSize = int.Max(current, PageSize);

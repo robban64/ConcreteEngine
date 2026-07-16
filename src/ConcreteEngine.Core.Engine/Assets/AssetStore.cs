@@ -10,7 +10,7 @@ namespace ConcreteEngine.Core.Engine.Assets;
 public sealed partial class AssetStore
 {
     private const int DefaultCap = 512;
-    
+
     public int Count { get; private set; }
 
     private AssetObject?[] _assets = new AssetObject?[DefaultCap];
@@ -215,7 +215,7 @@ public sealed partial class AssetStore
     //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SparseObjectEnumerator<AssetId, AssetObject> GetAssetEnumerator(AssetKind kind) => 
+    public SparseObjectEnumerator<AssetId, AssetObject> GetAssetEnumerator(AssetKind kind) =>
         new(GetTypeStore(kind).AsSpan(), _assets.AsSpan());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

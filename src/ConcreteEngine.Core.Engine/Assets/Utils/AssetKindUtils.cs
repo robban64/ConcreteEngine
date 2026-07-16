@@ -1,6 +1,4 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Assets.Utils;
 

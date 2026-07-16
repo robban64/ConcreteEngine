@@ -16,8 +16,8 @@ internal abstract class EditorWindow(StateManager state)
     protected readonly StateManager State = state;
 
     public abstract ReadOnlySpan<byte> Id { get; }
-    
-    public virtual void OnUpdateDiagnostic(){}
+
+    public virtual void OnUpdateDiagnostic() { }
     protected abstract void OnCreate();
     protected abstract void OnDraw();
 
@@ -29,17 +29,17 @@ internal abstract class EditorWindow(StateManager state)
 
     public void Draw()
     {
-        if(!Enabled) return;
+        if (!Enabled) return;
 
         if (NoBorder) ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-        
+
         if (ImGui.Begin(Id, Flags))
         {
             OnDraw();
         }
-        ImGui.End();
-        
-        if(NoBorder) ImGui.PopStyleVar();
 
+        ImGui.End();
+
+        if (NoBorder) ImGui.PopStyleVar();
     }
 }

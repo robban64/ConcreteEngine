@@ -51,5 +51,4 @@ internal static class EditorInput
 
         return isDragging || isUsingGizmo || isIsHoveringGizmo;
     }
-
 }

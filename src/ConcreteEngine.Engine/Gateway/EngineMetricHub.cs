@@ -16,7 +16,8 @@ internal sealed class EngineMetricHub
 {
     private MetricSystem? _metricSystem;
 
-    private readonly FrameMetricAccumulator _frameMetricAccumulator = new((int)(EngineSettings.Current.Display.FrameRate / 4f));
+    private readonly FrameMetricAccumulator _frameMetricAccumulator =
+        new((int)(EngineSettings.Current.Display.FrameRate / 4f));
 
     private int _frameCount;
 

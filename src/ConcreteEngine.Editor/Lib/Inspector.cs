@@ -1,12 +1,6 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Editor.Lib.Field;
-using Hexa.NET.ImGui;
-
 namespace ConcreteEngine.Editor.Lib;
 
-internal abstract class Inspector
-{
-}
+internal abstract class Inspector { }
 
 internal abstract class Inspector<TSelf> : Inspector where TSelf : Inspector<TSelf>
 {
@@ -17,5 +11,4 @@ internal abstract class Inspector<TSelf> : Inspector where TSelf : Inspector<TSe
         if (Instance != null) throw new InvalidOperationException($"{typeof(TSelf).Name} already initialized.");
         Instance = (TSelf)this;
     }
-
 }

@@ -21,7 +21,7 @@ public ref struct SpanWriter(Span<char> buffer)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<char> WrittenSpan() => _buffer.Slice(0, _cursor + 1);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<char> LeftSpan() => _buffer.Slice(_cursor);
 

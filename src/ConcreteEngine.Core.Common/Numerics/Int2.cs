@@ -67,8 +67,7 @@ public struct Int2(int x, int y) : IEquatable<Int2>, IComparable<Int2>
     public static Int2 Clamp(Int2 v, Int2 min, Int2 max) => Max(min, Min(v, max));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Int2 Clamp(Int2 v, int min, int max) =>
-        new(int.Clamp(v.X, min, max), int.Clamp(v.Y, min, max));
+    public static Int2 Clamp(Int2 v, int min, int max) => new(int.Clamp(v.X, min, max), int.Clamp(v.Y, min, max));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Int2 Abs(Int2 v) => new(int.Abs(v.X), int.Abs(v.Y));

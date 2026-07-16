@@ -41,7 +41,7 @@ internal static unsafe class StyleMap
         if (!_iconsPtr.IsNull) throw new InvalidOperationException("Already allocated");
 
         var size = IconCount * 4 + LogLevelExt.Count * sizeof(uint);
-        var capacity =  IntMath.AlignUp(size, 64);
+        var capacity = IntMath.AlignUp(size, 64);
 
         _buffer = NativeArray.Allocate<byte>(capacity);
         _iconsPtr = _buffer.Slice(0, IconCount * 4);
@@ -59,11 +59,10 @@ internal static unsafe class StyleMap
 
         ReadOnlySpan<uint> icons = stackalloc uint[]
         {
-            ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Cog,
-            Activity, LayoutGrid, Database, Play, Pause, Code, Minus, Plus, Folder, FolderOpen, FolderClosed,
-            IconNames.File, FileImage, FileCode, FileBraces, FileAxis3d, FileBox, FileHeadphone, FileCog,
-            FileChartLine, Move3d, Scale3d, Rotate3d, MousePointer2, Sun, CloudFog, Sparkles, Undo2, Eye, EyeClosed,
-            Image, Video, Cuboid, Box, Boxes, Circle, CircleDashed,
+            ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Cog, Activity, LayoutGrid, Database, Play, Pause,
+            Code, Minus, Plus, Folder, FolderOpen, FolderClosed, IconNames.File, FileImage, FileCode, FileBraces,
+            FileAxis3d, FileBox, FileHeadphone, FileCog, FileChartLine, Move3d, Scale3d, Rotate3d, MousePointer2,
+            Sun, CloudFog, Sparkles, Undo2, Eye, EyeClosed, Image, Video, Cuboid, Box, Boxes, Circle, CircleDashed,
         };
 
         var sw = _iconsPtr.Writer();

@@ -19,7 +19,7 @@ public static class EnginePath
     public const int AssetBasePathOffset = 17;
     public const string AssetBasePath = Root + "/" + AssetRoot;
     public const string AssetCoreBasePath = Root + "/" + AssetCoreRoot;
-    
+
     public static readonly string ShaderCorePath = Path.Join(AssetCoreBasePath, ShaderFolder);
     public static readonly string ShaderDefPath = Path.Join(AssetCoreBasePath, "shader-definitions");
 

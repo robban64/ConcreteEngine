@@ -1,7 +1,4 @@
-using System.Text;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.Core.Data;
 using Hexa.NET.ImGui;
 
@@ -21,7 +18,7 @@ internal sealed unsafe class ComboInput : InputField
     private readonly Func<int> _getter;
     private readonly Action<int> _setter;
 
-    private FrameStepper _stepper = new (8);
+    private FrameStepper _stepper = new(8);
 
     public int StartAt
     {
@@ -59,8 +56,8 @@ internal sealed unsafe class ComboInput : InputField
 
     public bool Draw()
     {
-        if(_stepper.Tick()) _value = _getter();
-        
+        if (_stepper.Tick()) _value = _getter();
+
         if (_lastValue != _value) OnChanged();
 
         DrawLabel();

@@ -34,7 +34,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
         _browser = new SceneBrowser();
         _kindCombo = ComboInput.Create("scene-combo", SceneObjectKindExt.Values, SceneObjectKindExt.Names,
             () => (int)_selectedKind, v => OnCategoryChange((SceneObjectKind)v));
-        
+
         _kindCombo.LabelPlacement = LabelPlacement.None;
         _kindCombo.SetItemName(0, "All");
 

@@ -54,8 +54,8 @@ internal sealed class TopMenuWindow
         _toolbar[1] = new ToolbarGroup(ToolbarGroupAlignment.Center, [Translate, Scale, Rotate, DebugBounds]);
         _toolbar[2] = new ToolbarGroup(ToolbarGroupAlignment.Right, [Selected, Camera, Lighting, Visual]);
     }
-    
-    
+
+
     public void SyncToolbar()
     {
         foreach (var it in _toolbar) it.UpdateVisibleCount();
@@ -66,7 +66,7 @@ internal sealed class TopMenuWindow
         DrawMenu(stateManager);
         DrawToolbar(stateManager);
     }
-    
+
     public void DrawMenu(StateManager stateManager)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, GuiTheme.MenuFramePadding);
@@ -77,6 +77,7 @@ internal sealed class TopMenuWindow
 
             ImGui.EndMainMenuBar();
         }
+
         ImGui.PopStyleVar();
     }
 
@@ -92,7 +93,7 @@ internal sealed class TopMenuWindow
         if (ImGui.Begin(WindowRoot.ToolbarWindowId, TopbarFlags))
         {
             ToolbarGroup left = _toolbar[0], center = _toolbar[1], right = _toolbar[2];
-            
+
             var offsetX = GuiTheme.WindowPadding.X;
             var centerX = float.Max(width * 0.5f - center.TotalWidth * 0.5f, left.TotalWidth);
             var rightX = float.Max(width - right.TotalWidth, centerX + center.TotalWidth) - right.VisibleCount * 6f;

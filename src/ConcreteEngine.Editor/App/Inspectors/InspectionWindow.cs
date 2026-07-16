@@ -13,7 +13,7 @@ internal sealed class InspectionWindow : EditorWindow
 
     private readonly CameraInspector _cameraInspector;
     private readonly PostEffectSettingsInspector _postFxInspector;
-    
+
     private readonly LightingPanel _lightingPanel;
     private readonly AssetInspectorPanel _assetInspectorPanel;
     private readonly SceneInspectorPanel _sceneInspectorPanel;
@@ -42,7 +42,9 @@ internal sealed class InspectionWindow : EditorWindow
             case InspectorId.Asset: _assetInspectorPanel.Draw(); break;
             case InspectorId.SceneObject: _sceneInspectorPanel.Draw(); break;
             case InspectorId.Lighting: _lightingPanel.Draw(); break;
-            default: Throwers.Unreachable(nameof(ActiveState)); return;
+            default:
+                Throwers.Unreachable(nameof(ActiveState));
+                return;
         }
     }
 

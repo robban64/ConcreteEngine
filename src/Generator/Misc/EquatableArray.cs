@@ -25,19 +25,21 @@ internal static class EquatableArray
     {
         return new(array);
     }
+
     public static EquatableArray<T> ToEquatableArray<T>(this IEnumerable<T> array) where T : IEquatable<T>
     {
         return new(array.ToImmutableArray());
     }
+
     public static EquatableArray<T> ToEquatableArray<T>(this List<T> array) where T : IEquatable<T>
     {
         return new(array.ToImmutableArray());
     }
+
     public static EquatableArray<T> ToEquatableArray<T>(this T[] array) where T : IEquatable<T>
     {
         return new(array.ToImmutableArray());
     }
-
 }
 
 /// <summary>
@@ -51,7 +53,7 @@ internal readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IEnu
     /// The underlying <typeparamref name="T"/> array.
     /// </summary>
     private readonly T[]? array;
-    
+
     public T[] Array => array ?? System.Array.Empty<T>();
     public int Length => array?.Length ?? 0;
 
@@ -213,6 +215,7 @@ internal readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IEnu
         return !left.Equals(right);
     }
 }
+
 internal struct HashCode
 {
     private const uint Prime1 = 2654435761U;
@@ -363,7 +366,9 @@ internal struct HashCode
     }
 
     /// <inheritdoc/>
-    [Obsolete("HashCode is a mutable struct and should not be compared with other HashCodes. Use ToHashCode to retrieve the computed hash code.", error: true)]
+    [Obsolete(
+        "HashCode is a mutable struct and should not be compared with other HashCodes. Use ToHashCode to retrieve the computed hash code.",
+        error: true)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override int GetHashCode() => throw new NotSupportedException();
 

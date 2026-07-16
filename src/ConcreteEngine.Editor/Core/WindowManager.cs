@@ -48,7 +48,7 @@ internal sealed class WindowManager
         ConsoleWindow.NoBorder = true;
         ConsoleWindow.Flags |= ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
     }
-    
+
     public void Setup()
     {
         TopMenuWindow.Instance.RegisterMenuToolbar();
@@ -57,8 +57,9 @@ internal sealed class WindowManager
         foreach (var it in _windows) it.Create();
 
         TopMenuWindow.Instance.SyncToolbar();
-        
+
         return;
+
         void RegisterDebugWindows()
         {
             _debugWindows[DebugMetricsWindow] = MetricsUi.Draw;
@@ -76,6 +77,7 @@ internal sealed class WindowManager
         {
             if (it is T window) return window;
         }
+
         Throwers.InvalidArgument(nameof(T));
         return null;
     }
@@ -91,10 +93,10 @@ internal sealed class WindowManager
     public void Draw()
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-        
+
         WindowRoot.BeginDockSpace();
         ViewportWindow.Draw(_stateManager);
-        
+
         ImGui.PopStyleVar();
 
         TopMenuWindow.Instance.Draw(_stateManager);
@@ -107,6 +109,4 @@ internal sealed class WindowManager
         if ((uint)_stateManager.ActiveDebugWindow < (uint)_debugWindows.Length)
             _debugWindows[_stateManager.ActiveDebugWindow]();
     }
-
-
 }

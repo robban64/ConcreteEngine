@@ -1,6 +1,4 @@
 using System.Text;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Core.Engine.Command;
@@ -23,4 +21,3 @@ public abstract record EngineCommandRecord(CommandScope Scope)
 
 public sealed record AssetCommandRecord(CommandAssetAction Action, AssetId Asset, AssetKind Kind)
     : EngineCommandRecord(CommandScope.Asset);
-

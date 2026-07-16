@@ -1,5 +1,3 @@
-using ConcreteEngine.Core.Engine.Editor;
-
 namespace ConcreteEngine.Core.Engine.Assets;
 
 public readonly struct ModelInfo(

@@ -17,6 +17,7 @@ public static class ListExtensions
     {
         return SearchMethod.TryGetBinarySearch(CollectionsMarshal.AsSpan(list), value, out result);
     }
+
     public static bool TryAddUniqueSorted<T>(this List<T> list, T item) where T : IComparable<T>
     {
         if (list.Count == 0)
@@ -37,8 +38,8 @@ public static class ListExtensions
 
         //
         var index = BinarySearch(list, item);
-        if(index >= 0) return false;
-        
+        if (index >= 0) return false;
+
         list.Add(item);
         list.Sort();
         return true;

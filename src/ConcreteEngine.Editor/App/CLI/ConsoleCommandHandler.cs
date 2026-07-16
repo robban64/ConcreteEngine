@@ -18,14 +18,13 @@ internal sealed class AssetCommandHandler() : ConsoleCommandHandler("asset")
     public override void Execute(ReadOnlySpan<char> arg1, ReadOnlySpan<char> arg2) { }
 }
 
-
 internal sealed class UtilityCommandHandler() : ConsoleCommandHandler("utility")
 {
     public override void Execute(ReadOnlySpan<char> arg1, ReadOnlySpan<char> arg2)
     {
         if (arg1 is "struct-size") OnStructSizesCmd();
     }
-    
+
     private static void OnStructSizesCmd()
     {
         LogService.PushMessage(StructStr<DrawCommand>());
@@ -38,8 +37,8 @@ internal sealed class UtilityCommandHandler() : ConsoleCommandHandler("utility")
         LogService.PushMessage(StructStr<FrameMetric>());
         LogService.PushMessage(StructStr<PassMutationState>());
         return;
+
         static string StructStr<T>() where T : struct =>
             $"{Unsafe.SizeOf<T>().ToString(),-2} {"bytes",-10} {typeof(T).Name}";
     }
-
 }

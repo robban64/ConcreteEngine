@@ -86,6 +86,7 @@ internal ref struct SourceBuilder
 
         return ref this;
     }
+
     [UnscopedRef]
     public readonly ref readonly SourceBuilder AppendJoin<T>(string s, EquatableArray<T> array) where T : IEquatable<T>
     {

@@ -19,7 +19,7 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
     private const string InputComboAttrib = "InputComboAttribute";
     private const string InputCheckboxAttrib = "InputCheckboxAttribute";
 
-    
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var valueProvider = context.SyntaxProvider

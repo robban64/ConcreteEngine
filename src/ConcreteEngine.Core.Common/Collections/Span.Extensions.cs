@@ -1,4 +1,3 @@
-using System.Text;
 using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Core.Common.Collections;

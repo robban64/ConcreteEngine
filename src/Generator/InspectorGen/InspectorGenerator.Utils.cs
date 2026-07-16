@@ -6,18 +6,19 @@ namespace Generator.InspectorGen;
 
 public sealed partial class InspectorGenerator
 {
-    private static (string? Type, bool IsFloat) GetDefaultValueType(string typeName) => typeName switch
-    {
-        nameof(Vector2) => ("InputNumeric2", true),
-        nameof(Vector3) => ("InputNumeric3", true),
-        nameof(Vector4) or nameof(Quaternion) or "Color4" => ("InputNumeric4", true),
-        "Size2D" => ("InputNumeric2", false),
-        "Size3D" => ("InputNumeric3", false),
-        "Int2" => ("InputNumeric2", false),
-        "Int3" => ("InputNumeric3", false),
-        "Int4" => ("InputNumeric4", false),
-        _ => (null, false)
-    };
+    private static (string? Type, bool IsFloat) GetDefaultValueType(string typeName) =>
+        typeName switch
+        {
+            nameof(Vector2) => ("InputNumeric2", true),
+            nameof(Vector3) => ("InputNumeric3", true),
+            nameof(Vector4) or nameof(Quaternion) or "Color4" => ("InputNumeric4", true),
+            "Size2D" => ("InputNumeric2", false),
+            "Size3D" => ("InputNumeric3", false),
+            "Int2" => ("InputNumeric2", false),
+            "Int3" => ("InputNumeric3", false),
+            "Int4" => ("InputNumeric4", false),
+            _ => (null, false)
+        };
 
     private static bool MemberFilter(ISymbol sym) =>
         sym is IPropertySymbol or IFieldSymbol && sym.DeclaredAccessibility == Accessibility.Public &&
@@ -41,22 +42,22 @@ public sealed partial class InspectorGenerator
     {
         nestedName = null;
         isInputGroup = false;
-        
+
         bool hasInclude = false;
         foreach (var attr in member.GetAttributes())
         {
-            if(attr.AttributeClass is null) continue;
+            if (attr.AttributeClass is null) continue;
             var ctor = attr.ConstructorArguments;
             var name = attr.AttributeClass.Name;
 
             if (name is IncludeAttrib)
             {
                 hasInclude = true;
-                if(!ctor.IsEmpty && ctor[0].Value is string accessSuffix) nestedName = accessSuffix;
+                if (!ctor.IsEmpty && ctor[0].Value is string accessSuffix) nestedName = accessSuffix;
             }
             else if (name is InputGroupAttrib) isInputGroup = true;
-
         }
+
         return hasInclude;
     }
 
@@ -80,17 +81,17 @@ public sealed partial class InspectorGenerator
                 case "Speed" when v is float l: speed = l; break;
                 case "Format" when v is string l: format = l; break;
                 case "Converter" when v is INamedTypeSymbol l:
-                    (typeName, isFloat) = GetDefaultValueType(l.Name); 
+                    (typeName, isFloat) = GetDefaultValueType(l.Name);
                     break;
             }
         }
-        
-        if(typeName is null)
+
+        if (typeName is null)
         {
             var s = type.SpecialType;
             if (s is System_Single) (typeName, isFloat) = ("InputNumeric1", true);
             else if (s is System_Enum or System_Int32 or System_Int16 or System_UInt16) typeName = "InputNumeric1";
-            else if (GetDefaultValueType(type.Name) is { Type: not null } d ) (typeName, isFloat) = d;
+            else if (GetDefaultValueType(type.Name) is { Type: not null } d) (typeName, isFloat) = d;
             else return null;
         }
 
@@ -124,7 +125,7 @@ public sealed partial class InspectorGenerator
                 case "StartAt" when value.Value is int l: startAt = l; break;
                 case "Placeholder" when value.Value is string l: placeholder = l; break;
                 case "UseEnumExt" when value.Value is bool l:
-                    if(!l) break;
+                    if (!l) break;
                     var ns = type.ContainingNamespace.ToDisplayString();
                     values = $"{ns}.{type.Name}Ext.Values";
                     names = $"{ns}.{type.Name}Ext.Names";
@@ -150,5 +151,4 @@ public sealed partial class InspectorGenerator
 
         return new ComboInput(fieldName, values, names, placeholder, startAt);
     }
-
 }

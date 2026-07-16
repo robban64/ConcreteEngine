@@ -1,7 +1,6 @@
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
-using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
@@ -14,11 +13,9 @@ public sealed class AssetFile : IComparable<AssetFile>
 {
     public Guid GId { get; }
 
-    [JsonIgnore]
-    public AssetFileId Id { get; }
+    [JsonIgnore] public AssetFileId Id { get; }
 
-    [JsonIgnore]
-    public AssetId AssetRootId { get; }
+    [JsonIgnore] public AssetId AssetRootId { get; }
 
     public string LogicalName { get; internal set; }
     public string RelativePath { get; }
@@ -27,7 +24,7 @@ public sealed class AssetFile : IComparable<AssetFile>
     public AssetStorage Storage { get; }
     public DateTime LastWriteTime { get; internal set; }
     public long SizeBytes { get; internal set; }
-    
+
     private AssetFile(
         Guid gId,
         AssetFileId id,
@@ -44,8 +41,8 @@ public sealed class AssetFile : IComparable<AssetFile>
         ArgumentOutOfRangeException.ThrowIfZero((int)binding, nameof(binding));
         ArgumentOutOfRangeException.ThrowIfZero((int)storage, nameof(storage));
 
-        if(assetRootId.IsValid() && gId == Guid.Empty) Throwers.InvalidArgument(nameof(gId));
-        if(assetRootId.IsValid() && binding != FileBinding.RootFile) Throwers.InvalidArgument(nameof(binding));
+        if (assetRootId.IsValid() && gId == Guid.Empty) Throwers.InvalidArgument(nameof(gId));
+        if (assetRootId.IsValid() && binding != FileBinding.RootFile) Throwers.InvalidArgument(nameof(binding));
 
         GId = gId;
         Id = id;
@@ -56,7 +53,6 @@ public sealed class AssetFile : IComparable<AssetFile>
         SizeBytes = sizeBytes;
         LogicalName = logicalName;
         RelativePath = relativePath;
-        
     }
 
     public void MakeDependent()
@@ -70,9 +66,9 @@ public sealed class AssetFile : IComparable<AssetFile>
         if (ReferenceEquals(this, other)) return 0;
         return other is null ? 1 : Id.CompareTo(other.Id);
     }
-    
+
     //
-    
+
     internal static AssetFile MakeRoot(AssetFileId id, AssetId assetRootId, string assetName, Guid assetGuid,
         in FileScanInfo scanInfo)
     {
@@ -87,7 +83,7 @@ public sealed class AssetFile : IComparable<AssetFile>
             logicalName: assetName,
             relativePath: scanInfo.RelativePath);
     }
-    
+
     internal static AssetFile MakeFile(AssetFileId id, bool isUnbound, in FileScanInfo scanInfo)
     {
         return new AssetFile(
@@ -101,5 +97,4 @@ public sealed class AssetFile : IComparable<AssetFile>
             logicalName: scanInfo.Name,
             relativePath: scanInfo.RelativePath);
     }
-
 }

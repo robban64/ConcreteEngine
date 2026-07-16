@@ -38,7 +38,7 @@ public sealed class Camera
     public Vector3 Right { get; private set; }
 
     public float AspectRatio { get; private set; }
-    
+
     public Camera(Size2D viewport)
     {
         if (viewport < 128) Throwers.InvalidArgument(nameof(viewport));

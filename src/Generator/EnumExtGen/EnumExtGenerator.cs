@@ -11,8 +11,9 @@ public sealed class EnumExtGenerator : IIncrementalGenerator
     private const string AttributeFullName = "ConcreteEngine.Core.Common.Attributes." + AttributeName;
 
     private const int AggressiveInliningLimit = 12;
-    
+
     private record struct EnumExtAttrib(bool ToUtf8, bool ToIndex);
+
     private sealed record BuildResult(
         EquatableArray<(string Name, object Value)> Data,
         string TypeName,
@@ -115,7 +116,7 @@ public sealed class EnumExtGenerator : IIncrementalGenerator
         }
 
         //
-        if(count <= AggressiveInliningLimit) 
+        if (count <= AggressiveInliningLimit)
             sb.AppendLine().AppendLine(Consts.AggressiveInliningText);
         sb.AppendLine($"public static string ToText(this {it.TypeName} value) => value switch");
         sb.OpenBrace();
@@ -131,7 +132,7 @@ public sealed class EnumExtGenerator : IIncrementalGenerator
 
         if (it.Attrib.ToUtf8)
         {
-            if(count <= AggressiveInliningLimit) 
+            if (count <= AggressiveInliningLimit)
                 sb.AppendLine().AppendLine(Consts.AggressiveInliningText);
             sb.AppendLine($"public static ReadOnlySpan<byte> ToUtf8(this {it.TypeName} value) => value switch");
             sb.OpenBrace();
@@ -152,16 +153,17 @@ public sealed class EnumExtGenerator : IIncrementalGenerator
         return sb.ToString();
     }
 
-    private static string ConstantValueToPrimitive(object constantValue) => constantValue switch
-    {
-        byte => "byte",
-        sbyte => "sbyte",
-        short => "short",
-        ushort => "ushort",
-        int => "int",
-        uint => "uint",
-        long => "long",
-        ulong => "ulong",
-        _ => throw new ArgumentOutOfRangeException()
-    };
+    private static string ConstantValueToPrimitive(object constantValue) =>
+        constantValue switch
+        {
+            byte => "byte",
+            sbyte => "sbyte",
+            short => "short",
+            ushort => "ushort",
+            int => "int",
+            uint => "uint",
+            long => "long",
+            ulong => "ulong",
+            _ => throw new ArgumentOutOfRangeException()
+        };
 }

@@ -23,7 +23,7 @@ internal static class GuiTheme
 
     public const float FontSizeSmall = 13.0f, FontSizeDefault = 14.0f, FontSizeMedium = 16.0f;
     public const float FontSizeLarge = 18.0f, FontSizeXl = 24.0f;
-    
+
     public const float FormItemWidth = 220f;
     public const float FormItemInlineWidth = 120f + 12f;
     public const float FormItemInlineOffset = 100f;

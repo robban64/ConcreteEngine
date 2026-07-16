@@ -31,21 +31,19 @@ internal sealed class EditorService
 
         _windowManager = new WindowManager(_stateManager);
         _router = new PanelRouter(_stateManager, _windowManager);
-
     }
 
     public void Setup()
     {
         RegisterEvents();
         RegisterCli();
-        
+
         _windowManager.Setup();
         _router.ForceResolve(_stateManager);
 
         LogService.PushMessage($"StringArena: {StringArena.Remaining} bytes left");
-
     }
-    
+
     private void RegisterCli()
     {
         _cli.RegisterCommand<UtilityCommandHandler>();
@@ -58,13 +56,13 @@ internal sealed class EditorService
         _eventDispatcher.Register<SelectionEvent>(EventHandler.OnSelectionEvent);
         _eventDispatcher.Register<ToolEvent>(EventHandler.OnToolEvent);
     }
-    
+
     public void Draw()
     {
         AppLayout.PushFontText();
         _windowManager.Draw();
         ImGui.PopFont();
-        
+
         if (EditorInput.UpdateInputState(_selectionManager.HasSceneObject))
             EditorTime.WakeUp();
 

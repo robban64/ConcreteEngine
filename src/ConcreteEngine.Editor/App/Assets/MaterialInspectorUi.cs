@@ -37,14 +37,13 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
 
         _inspector.DrawPipeline();
     }
-    
-    
+
 
     private void DrawTextureSlots(Material asset)
     {
         var rowHeight = ImGui.GetFrameHeight();
         var offset = ImGui.GetContentRegionAvail().X * 0.33f + GuiTheme.ItemSpacing.X;
-        
+
         var usageNames = TextureUsageExt.Names;
         var bindings = asset.GetSourceSpan();
         for (var i = 0; i < bindings.Length; i++)
@@ -60,7 +59,6 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
 
             ImGui.PopID();
         }
-
     }
 
 
@@ -82,7 +80,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         if (drawState.IsEmpty()) return;
 /*
         ImGui.SeparatorText("State Value"u8);
-        
+
         ImGui.PushItemWidth(110);
 
         if (drawState.IsSet(GfxDrawFlags.Blend))
@@ -113,7 +111,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         DropTexture(material, slot);
 
         ImGui.SameLine();
-        
+
         if (slotTexture.Id.IsValid() && ImGui.Button("X"u8, new Vector2(rowHeight, rowHeight)))
             material.SetTextureSlot(slot, null);
 
@@ -161,7 +159,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
     private static void DrawFlagToggle(ReadOnlySpan<byte> label, GfxDrawFlags flag, ref GfxDrawState state)
     {
         var isDefined = state.IsSet(flag);
-        
+
         var sw = ScratchBuffer.Writer();
         sw.Append(label);
         if (ImGui.Checkbox(sw.AppendImGuiId(1).Append((byte)flag).End(), ref isDefined))

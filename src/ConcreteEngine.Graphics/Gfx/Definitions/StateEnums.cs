@@ -2,7 +2,6 @@ using ConcreteEngine.Core.Common.Attributes;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-
 public enum ClearBufferFlag : byte
 {
     None = 0,
@@ -20,7 +19,6 @@ public enum BlendMode : byte
     Additive = 3,
     OneZero = 4
 }
-
 
 [EnumExt]
 public enum CullMode : byte

@@ -8,13 +8,13 @@ internal static class AppLayout
 {
     public static ImFontPtr TextFont;
     public static ImFontPtr IconFont;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontTextMedium() => ImGui.PushFont(TextFont, FontSizeMedium);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontText() => ImGui.PushFont(TextFont, FontSizeDefault);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontTextSmall() => ImGui.PushFont(TextFont, FontSizeSmall);
 

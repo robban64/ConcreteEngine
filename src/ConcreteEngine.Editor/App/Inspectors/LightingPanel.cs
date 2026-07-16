@@ -6,7 +6,7 @@ namespace ConcreteEngine.Editor.App.Inspectors;
 
 internal sealed class LightingPanel
 {
-    private readonly IlluminationSettingsInspector _illuminationSettingsInspector = new();
+    private readonly DirectionalLightInspector _directionalLightInspector = new();
     private readonly ShadowSettingsInspector _shadowSettingsInspector = new();
     private readonly EnvironmentSettingsInspector _environmentSettingsInspector = new();
 
@@ -16,11 +16,9 @@ internal sealed class LightingPanel
 
         if (!ImGui.BeginTabBar("##tabs"u8)) return;
 
-        if (ImGui.BeginTabItem("Light"u8))
+        if (ImGui.BeginTabItem("Sun"u8))
         {
-            _illuminationSettingsInspector.DrawDirectionalLight();
-            _illuminationSettingsInspector.DrawAmbient();
-
+            _directionalLightInspector.Draw();
             ImGui.EndTabItem();
         }
 
@@ -30,7 +28,7 @@ internal sealed class LightingPanel
             ImGui.EndTabItem();
         }
 
-        if (ImGui.BeginTabItem("Fog"u8))
+        if (ImGui.BeginTabItem("Enviroment"u8))
         {
             _environmentSettingsInspector.Draw();
             ImGui.EndTabItem();
@@ -38,38 +36,4 @@ internal sealed class LightingPanel
 
         ImGui.EndTabBar();
     }
-/*
-
-    private static void DrawLight()
-    {
-        ImGui.SeparatorText("Directional Light"u8);
-        LightFields.Direction.Draw();
-        LightFields.Diffuse.Draw();
-        LightFields.Intensity.Draw();
-        LightFields.Specular.Draw();
-
-        ImGui.Spacing();
-        ImGui.SeparatorText("Ambient Light"u8);
-        LightFields.Ambient.Draw();
-        LightFields.AmbientGround.Draw();
-        LightFields.Exposure.Draw();
-    }
-
-
-    private static void DrawShadow()
-    {
-        ImGui.SeparatorText("Shadow Map Size"u8);
-
-        ShadowFields.ShadowSizeCombo.Draw();
-
-        ImGui.SeparatorText("Shadow Projection"u8);
-        ShadowFields.ShadowProjectionFields.Draw();
-
-        ImGui.Spacing();
-        ImGui.Separator();
-
-        ImGui.SeparatorText("Shadow Visuals"u8);
-        ShadowFields.ShadowVisualFields.Draw();
-    }
-    */
 }

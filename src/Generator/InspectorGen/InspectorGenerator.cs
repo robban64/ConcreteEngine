@@ -17,7 +17,9 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
     private const string InputNumberAttrib = "InputNumberAttribute";
     private const string InputColorAttrib = "InputColorAttribute";
     private const string InputComboAttrib = "InputComboAttribute";
+    private const string InputCheckboxAttrib = "InputCheckboxAttribute";
 
+    
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var valueProvider = context.SyntaxProvider
@@ -109,16 +111,18 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
     private static InspectorMember? CreateMember(ISymbol sym)
     {
         var attr = sym.GetAttributes().FirstOrDefault(static x =>
-            x.AttributeClass?.Name is InputNumberAttrib or InputColorAttrib or InputComboAttrib);
+            x.AttributeClass?.Name is InputNumberAttrib or InputColorAttrib or InputComboAttrib or InputCheckboxAttrib);
 
         if (attr is null || attr.AttributeClass is null) return null;
 
         var typeSym = sym.GetFieldOrPropertyType();
+        var specialType = typeSym.SpecialType;
         InputField? inputField = attr.AttributeClass!.Name switch
         {
             InputNumberAttrib => MakeInputField(sym.Name, attr, typeSym),
             InputColorAttrib => MakeColorField(sym.Name, attr, typeSym),
             InputComboAttrib => MakeComboField(sym.Name, attr, typeSym),
+            InputCheckboxAttrib => specialType == SpecialType.System_Boolean ? new CheckboxInput(sym.Name) : null,
             _ => null
         };
         if (inputField is null) return null;

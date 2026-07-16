@@ -10,10 +10,8 @@ internal sealed partial class SceneObjectInspector : Inspector<SceneObjectInspec
 {
     private static SceneObject Target => SelectionManager.Instance.SelectedSceneObject;
 
-    private static void DrawTransformBind() => Instance.DrawTransform();
-    
     public unsafe void Draw()
     {
-        AppDraw.CollapseSection("Transform"u8, &DrawTransformBind);
+        AppDraw.CollapseSection("Transform"u8, &DrawTransform);
     }
 }

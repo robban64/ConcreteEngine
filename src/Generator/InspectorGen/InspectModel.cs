@@ -100,3 +100,5 @@ internal sealed record ColorInput(string Name, bool HasAlpha) : InputField(Name)
 
 internal sealed record ComboInput(string Name, string Values, string Names, string? Placeholder, int StartAt)
     : InputField(Name);
+    
+internal sealed record CheckboxInput(string Name) : InputField(Name);

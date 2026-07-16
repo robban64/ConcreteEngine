@@ -34,6 +34,7 @@ internal struct InputNumeric1 : IInputNumeric<InputNumeric1>
     
     public static byte Components => 1;
     
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool DrawFloatInput(byte* str, InputNumeric1* v, String8Utf8 fmt) =>
         ImGui.InputFloat(str, &v->F1, (byte*)&fmt);
@@ -58,6 +59,7 @@ internal struct InputNumeric1 : IInputNumeric<InputNumeric1>
     public static unsafe bool DrawIntDrag(byte* str, InputNumeric1* v, float speed, int min, int max) =>
         ImGui.DragInt(str, &v->I1, speed, min, max);
 }
+
 [StructLayout(LayoutKind.Explicit)]
 internal struct InputNumeric2 : IInputNumeric<InputNumeric2>
 {
@@ -68,6 +70,7 @@ internal struct InputNumeric2 : IInputNumeric<InputNumeric2>
     [FieldOffset(04)] public float F2;
 
     public static byte Components => 2;
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool DrawFloatInput(byte* str, InputNumeric2* v, String8Utf8 fmt) =>
@@ -93,6 +96,7 @@ internal struct InputNumeric2 : IInputNumeric<InputNumeric2>
     public static unsafe bool DrawIntDrag(byte* str, InputNumeric2* v, float speed, int min, int max) =>
         ImGui.DragInt2(str, &v->I1, speed, min, max);
 }
+
 [StructLayout(LayoutKind.Explicit)]
 internal struct InputNumeric3 : IInputNumeric<InputNumeric3>
 {
@@ -105,6 +109,7 @@ internal struct InputNumeric3 : IInputNumeric<InputNumeric3>
     [FieldOffset(08)] public float F3;
     
     public static byte Components => 3;
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool DrawFloatInput(byte* str, InputNumeric3* v, String8Utf8 fmt) =>
@@ -131,6 +136,7 @@ internal struct InputNumeric3 : IInputNumeric<InputNumeric3>
         ImGui.DragInt3(str, &v->I1, speed, min, max);
 
 }
+
 [StructLayout(LayoutKind.Explicit)]
 internal struct InputNumeric4 : IInputNumeric<InputNumeric4>
 {
@@ -145,6 +151,7 @@ internal struct InputNumeric4 : IInputNumeric<InputNumeric4>
     [FieldOffset(12)] public float F4;
     
     public static byte Components => 4;
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool DrawFloatInput(byte* str, InputNumeric4* v, String8Utf8 fmt) =>

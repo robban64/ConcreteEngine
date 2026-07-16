@@ -21,17 +21,6 @@ public struct DirLightParams(Vector3 direction, Vector3 diffuse, float intensity
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct AmbientParams(Vector3 ambient, Vector3 ambientGround, float exposure)
-{
-    [InputColor(HasAlpha = false)] public Vector3 Ambient = ambient;
-
-    [InputColor(HasAlpha = false)] public Vector3 AmbientGround = ambientGround;
-
-    [InputNumber(InputStyle.Drag, Format = "%.3f", Speed = 0.01f, Min = 0f, Max = 2f)]
-    public float Exposure = exposure;
-}
-
-[StructLayout(LayoutKind.Sequential)]
 public struct ShadowProjectionParams(float distance, float zPad, float constBias, float slopeBias)
 {
     [InputNumber(InputStyle.Slider, Min = 10f, Max = 500f)]
@@ -58,35 +47,35 @@ public struct ShadowVisualParams(float strength, float pcfRadius)
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct FogHeightParams(float density, float strength, float maxDistance, float baseHeight, float heightFalloff)
+public struct FogHeightParams(float density, float strength, float baseHeight, float heightFalloff)
 {
-    [InputNumber(InputStyle.Slider, Min = 100, Max = 1500, Format = "%.5f")]
+    [InputNumber(InputStyle.Slider, Min = 100, Max = 1500)]
     public float Density = density;
 
     [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
     public float Strength = strength;
-
-    [InputNumber(InputStyle.Drag, Speed = 1f, Min = 1f, Max = 10000f, Format = "%.0f")]
-    public float MaxDistance = maxDistance;
-
+    
     [InputNumber(InputStyle.Slider, Min = -1000f, Max = 1000f)]
     public float BaseHeight = baseHeight;
 
-    [InputNumber(InputStyle.Slider, Min = 0.001f, Max = 10000.0f, Format = "%.3f")]
+    [InputNumber(InputStyle.Slider, Min = 0.001f, Max = 10000.0f)]
     public float HeightFalloff = heightFalloff;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct FogOpticsParams(float scattering, float distanceWeight, float heightWeight)
+public struct FogOpticsParams(float scattering, float distanceWeight, float heightWeight, float maxDistance)
 {
-    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.5f")]
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
     public float Scattering = scattering;
 
-    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.0f")]
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
     public float DistanceWeight = distanceWeight;
 
-    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.0f")]
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
     public float HeightWeight = heightWeight;
+    
+    [InputNumber(InputStyle.Drag, Speed = 1f, Min = 1f, Max = 10000f, Format = "%.2f")]
+    public float MaxDistance = maxDistance;
 }
 
 // -1..+1 > -0.10..+0.10 

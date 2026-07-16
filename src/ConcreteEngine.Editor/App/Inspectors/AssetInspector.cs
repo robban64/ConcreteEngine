@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
@@ -10,6 +11,11 @@ namespace ConcreteEngine.Editor.App.Inspectors;
 internal sealed partial class TextureInspector : Inspector<TextureInspector>
 {
     public static Texture Target => (Texture)SelectionManager.Instance.SelectedAsset;
+
+    public unsafe void Draw()
+    {
+        AppDraw.Section("Gpu State"u8, &DrawGpuState);
+    }
 }
 
 [EditorInspector(typeof(Material))]
@@ -44,11 +50,20 @@ internal sealed partial class MaterialInspector : Inspector<MaterialInspector>
             PolygonOffset = (PolygonOffsetLevel)v
         });
 
-    public void DrawPipeline()
+    public unsafe void DrawMaterialState()
     {
-        BlendCombo.Draw();
-        CullCombo.Draw();
-        DepthCombo.Draw();
-        PolygonCombo.Draw();
+        AppDraw.Section("Material State"u8, &DrawState);
+    }
+    
+    public unsafe void DrawPipeline()
+    {
+        AppDraw.Section("Material Pipeline"u8, &DrawPipelineCombos);
+    }
+    private static void DrawPipelineCombos()
+    {
+        Instance.BlendCombo.Draw();
+        Instance.CullCombo.Draw();
+        Instance.DepthCombo.Draw();
+        Instance.PolygonCombo.Draw();
     }
 }

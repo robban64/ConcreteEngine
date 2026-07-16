@@ -8,7 +8,7 @@ using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.App.Scene;
 
-internal sealed unsafe class SceneBrowser
+internal sealed class SceneBrowser
 {
     private int _count;
     private SceneObjectId[] _sceneIds;

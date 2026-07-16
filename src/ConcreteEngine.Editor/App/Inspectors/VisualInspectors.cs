@@ -8,24 +8,26 @@ using ConcreteEngine.Editor.Lib.Field;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
 
-[EditorInspector(typeof(IlluminationSettings))]
-internal sealed partial class IlluminationSettingsInspector : Inspector<IlluminationSettingsInspector>
+[EditorInspector(typeof(DirectionalLight))]
+internal sealed partial class DirectionalLightInspector : Inspector<DirectionalLightInspector>
 {
-    private static IlluminationSettings Target => VisualManager.Instance.Illumination;
+    private static DirectionalLight Target => VisualManager.Instance.Illumination;
+
+    public unsafe void Draw()
+    {
+        AppDraw.Section("Directional Light"u8, &DrawRoot);
+    }
 }
 
 [EditorInspector(typeof(ShadowSettings))]
 internal sealed partial class ShadowSettingsInspector : Inspector<ShadowSettingsInspector>
 {
     private static ShadowSettings Target => VisualManager.Instance.Shadow;
-    public unsafe void Draw()
+    public void Draw()
     {
-        AppDraw.Section("Shadow Projection"u8, &DrawProjection);
-        AppDraw.Section("Shadow Visuals"u8, &DrawVisuals);
+        AppDraw.Section(Projection);
+        AppDraw.Section(Visuals);
     }
-
-    private static void DrawProjection() => Instance.Projection.Draw();
-    private static void DrawVisuals() => Instance.Visuals.Draw();
 
 }
 
@@ -35,54 +37,29 @@ internal sealed partial class EnvironmentSettingsInspector : Inspector<Environme
     private static EnvironmentSettings Target => VisualManager.Instance.Environment;
     public unsafe void Draw()
     {
-        AppDraw.Section("Fog Optics"u8, &DrawOptics);
-        AppDraw.Section("Fog Height"u8, &DrawHeight);
+        AppDraw.CollapseSection("Ambient"u8, &DrawAmbient);
+        AppDraw.CollapseSection("Fog"u8, &DrawFogSection);
     }
 
-    private static void DrawHeight() => Instance.FogHeight.Draw();
-
-    private static void DrawOptics()
+    private static void DrawFogSection()
     {
+        AppDraw.Section(Instance.FogOptics);
         Instance.FogColor.Draw();
-        Instance.FogOptics.Draw();
+        AppDraw.Section(Instance.FogHeight);
     }
-
 }
 
 [EditorInspector(typeof(PostEffectSettings))]
-internal sealed unsafe partial class PostEffectSettingsInspector : Inspector<PostEffectSettingsInspector>
+internal sealed partial class PostEffectSettingsInspector : Inspector<PostEffectSettingsInspector>
 {
     private static PostEffectSettings Target => VisualManager.Instance.PostEffect;
 
     public void Draw()
     {
-        AppDraw.Section(Grade.Label, &DrawGrade);
-        AppDraw.Section(WhiteBalance.Label, &DrawWb);
-        AppDraw.Section(Bloom.Label, &DrawBloom);
-        AppDraw.Section(ImageFx.Label, &DrawFx);
+        AppDraw.Section(Grade);
+        AppDraw.Section(WhiteBalance);
+        AppDraw.Section(Bloom);
+        AppDraw.Section(ImageFx);
     }
-    
-    private static void DrawGrade() => Instance.Grade.Draw();
-    private static void DrawWb() => Instance.WhiteBalance.Draw();
-    private static void DrawBloom() => Instance.Bloom.Draw();
-    private static void DrawFx() => Instance.ImageFx.Draw();
-
-    /*
-    private InputGroup G = new InputGroup("Lol", 4,
-        static dst =>
-        {
-            var value = Target.ImageFx;
-            dst[0] = value.Grain;
-            dst[1] = value.Rolloff;
-        },
-        static src =>
-        {
-            Target.ImageFx = new()
-            {
-                Grain = (float)src[0], Rolloff =  (float)src[1]
-            };
-        }
-    ).WithFloatInput();
-    */
 
 }

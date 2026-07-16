@@ -106,20 +106,20 @@ public static unsafe class VisualUniformProcessor
     [SkipLocalsInit]
     private static void UploadFrameUniformRecord(in UniformUploadContext ctx)
     {
-        var fogHeight = VisualManager.Environment.FogHeight;
-        var fogOptics = VisualManager.Environment.FogOptics;
-        var ambient = VisualManager.Illumination.Ambient;
+        var env = VisualManager.Environment;
+        var fogHeight = env.FogHeight;
+        var fogOptics = env.FogOptics;
 
         float kExp2 = 1f / (fogHeight.Density * fogHeight.Density);
         float kHeight = 1f / MathF.Max(fogHeight.HeightFalloff, 1e-6f);
 
         FrameUniform data;
-        data.Ambient = new Vector4(ambient.Ambient, ambient.Exposure);
-        data.AmbientGround = new Vector4(ambient.AmbientGround, 0.0f);
+        data.Ambient = new Vector4(env.Ambient, env.Exposure);
+        data.AmbientGround = new Vector4(env.AmbientGround, 0.0f);
 
-        data.FogColor = new Vector4(VisualManager.Environment.FogColor, fogOptics.Scattering);
+        data.FogColor = new Vector4(env.FogColor, fogOptics.Scattering);
         data.FogParams0 = new Vector4(kExp2, kHeight, fogHeight.BaseHeight, fogHeight.Strength);
-        data.FogParams1 = new Vector4(fogOptics.DistanceWeight, fogOptics.HeightWeight, fogHeight.MaxDistance, 0.0f);
+        data.FogParams1 = new Vector4(fogOptics.DistanceWeight, fogOptics.HeightWeight, fogOptics.MaxDistance, 0.0f);
 
         ctx.UploadUniform(&data);
     }
@@ -127,12 +127,12 @@ public static unsafe class VisualUniformProcessor
     [SkipLocalsInit]
     private static void UploadDirLight(in UniformUploadContext ctx)
     {
-        var fogHeight = VisualManager.Illumination.DirectionalLight;
+        var it = VisualManager.Illumination;
 
         DirectionalLightUniform data;
-        data.Direction = fogHeight.Direction.AsVector4();
-        data.Diffuse = new Vector4(fogHeight.Diffuse, fogHeight.Intensity);
-        data.Specular = new Vector4(fogHeight.Specular, 0.0f, 0.0f, 0.0f);
+        data.Direction = it.Direction.AsVector4();
+        data.Diffuse = new Vector4(it.Diffuse, it.Intensity);
+        data.Specular = new Vector4(it.Specular, 0.0f, 0.0f, 0.0f);
 
         ctx.UploadUniform(&data);
     }

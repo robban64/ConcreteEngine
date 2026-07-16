@@ -21,7 +21,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 
     private const float GridInnerSize = 72.0f, GridPadding = 8.0f;
     private const float GridCellSize = GridInnerSize + GridPadding;
-    private const float GridIconSize = GuiTheme.IconSizeLarge;
+    private const float GridIconSize = GuiTheme.FontSizeXl;
 
     private static readonly Vector2 ItemSize = new(GridInnerSize);
 

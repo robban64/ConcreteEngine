@@ -1,29 +1,29 @@
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 namespace ConcreteEngine.Core.Engine.Editor;
 
-[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class InspectAttribute : Attribute
-{ 
-    public string DisplayName { get; init; }
+{
+    public string DisplayName { get; init; } = null!;
 }
 
-[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public sealed class InspectIncludeAttribute : Attribute
 {
     public string? AccessSuffix { get; init; } 
 }
 
-[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
-public sealed class InputGroupAttribute : Attribute
-{
-}
-
 
 //
-[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public abstract class InspectInputAttribute : Attribute
 {
     public string? Label { get; init; }
     public string? Segment { get; init; }
+}
+
+public sealed class InputGroupAttribute : InspectInputAttribute
+{
 }
 
 
@@ -53,4 +53,6 @@ public sealed class InputComboAttribute(int[]? values = null, string[]? names = 
     public string? Placeholder { get; init; }
     public int StartAt { get; init; }
 }
+
+public sealed class InputCheckboxAttribute : InspectInputAttribute {}
 

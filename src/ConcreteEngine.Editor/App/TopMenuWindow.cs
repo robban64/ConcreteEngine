@@ -70,16 +70,13 @@ internal sealed class TopMenuWindow
     public void DrawMenu(StateManager stateManager)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, GuiTheme.MenuFramePadding);
-        if (!ImGui.BeginMainMenuBar())
+        if (ImGui.BeginMainMenuBar())
         {
-            ImGui.PopStyleVar();
-            return;
+            foreach (var it in _menuBar)
+                it.Draw(stateManager);
+
+            ImGui.EndMainMenuBar();
         }
-
-        foreach (var it in _menuBar)
-            it.Draw(stateManager);
-
-        ImGui.EndMainMenuBar();
         ImGui.PopStyleVar();
     }
 

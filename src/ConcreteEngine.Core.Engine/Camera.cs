@@ -49,7 +49,7 @@ public sealed class Camera
     }
 
 
-    [InputNumber]
+    [InputNumber(Segment = "Transform")]
     public Vector3 Translation
     {
         get => _transform.Translation;
@@ -61,7 +61,7 @@ public sealed class Camera
         }
     }
 
-    [InputNumber(Converter = typeof(Vector2))]
+    [InputNumber(Segment = "Transform", Converter = typeof(Vector2))]
     public YawPitch Orientation
     {
         get => _transform.Orientation;

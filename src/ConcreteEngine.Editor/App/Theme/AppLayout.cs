@@ -10,16 +10,19 @@ internal static class AppLayout
     public static ImFontPtr IconFont;
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void PushFontTextMedium() => ImGui.PushFont(TextFont, FontSizeMedium);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontText() => ImGui.PushFont(TextFont, FontSizeDefault);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontTextSmall() => ImGui.PushFont(TextFont, FontSizeSmall);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontIcon() => ImGui.PushFont(IconFont, IconSizeDefault);
+    public static void PushFontIcon() => ImGui.PushFont(IconFont, FontSizeLarge);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontIconLarge() => ImGui.PushFont(IconFont, IconSizeLarge);
+    public static void PushFontIconLarge() => ImGui.PushFont(IconFont, FontSizeXl);
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -29,7 +32,7 @@ internal static class AppLayout
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float GetRowWidthForItems(int itemCount) =>
-        (ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X) / itemCount;
+        (ImGui.GetContentRegionAvail().X - ItemSpacing.X) / itemCount;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

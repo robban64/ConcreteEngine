@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Editor.App.Shared;
 using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Lib.Field;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Theme;
@@ -10,19 +11,27 @@ namespace ConcreteEngine.Editor.App.Theme;
 internal static unsafe class AppDraw
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CollapseSection(ReadOnlySpan<byte> title, delegate*<void> draw, ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen)
+    public static void Section(InputGroup inputGroup)
     {
-        if (ImGui.CollapsingHeader(title, flags)) draw();
+        ImGui.SeparatorText(inputGroup.Label);
+        inputGroup.Draw();
+        ImGui.Spacing();
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void CollapseSection(InputGroup inputGroup, ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen)
+    {
+        if (ImGui.CollapsingHeader(inputGroup.Label, flags)) inputGroup.Draw();
         ImGui.Spacing();
         ImGui.Separator();
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Section(NativeString title, delegate*<void> draw)
+    public static void CollapseSection(ReadOnlySpan<byte> title, delegate*<void> draw, ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen)
     {
-        ImGui.SeparatorText(title);
-        draw();
+        if (ImGui.CollapsingHeader(title, flags)) draw();
         ImGui.Spacing();
+        ImGui.Separator();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

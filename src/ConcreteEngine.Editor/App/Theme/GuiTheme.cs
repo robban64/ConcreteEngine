@@ -21,10 +21,8 @@ internal static class GuiTheme
     public const float MenuBarHeight = 30f;
     public const float TopOffset = TopbarHeight + MenuBarHeight;
 
-    public const float FontSizeSmall = 13.0f;
-    public const float FontSizeDefault = 14.0f;
-    public const float IconSizeDefault = 18.0f;
-    public const float IconSizeLarge = 24.0f;
+    public const float FontSizeSmall = 13.0f, FontSizeDefault = 14.0f, FontSizeMedium = 16.0f;
+    public const float FontSizeLarge = 18.0f, FontSizeXl = 24.0f;
     
     public const float FormItemWidth = 220f;
     public const float FormItemInlineWidth = 120f + 12f;

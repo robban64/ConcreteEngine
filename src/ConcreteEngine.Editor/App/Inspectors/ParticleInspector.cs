@@ -14,16 +14,12 @@ namespace ConcreteEngine.Editor.App.Inspectors;
 [EditorInspector(typeof(ParticleEmitter))]
 internal partial class ParticleInspector : Inspector<ParticleInspector>
 {
-    private static SceneObjectId _lastSceneObjectId;
     private static ParticleEmitter Target =>
         SelectionManager.Instance.SelectedSceneObject?.GetInstance<ParticleInstance>()?.Emitter;
 
-    private static void DrawEmitterBind() => Instance.DrawEmitterParams();
-    private static void DrawParticleBind() => Instance.DrawEmitterParams();
-
     public unsafe void Draw()
     {
-        AppDraw.Section("Emitter"u8, &DrawEmitterBind);
-        AppDraw.Section("Particle"u8, &DrawParticleBind);
+        AppDraw.Section("Emitter"u8, &DrawEmitterParams);
+        AppDraw.Section("Particle"u8, &DrawParticleParams);
     }
 }

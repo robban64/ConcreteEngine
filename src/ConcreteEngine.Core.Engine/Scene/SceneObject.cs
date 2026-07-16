@@ -29,6 +29,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         }
     }
 
+    [InputCheckbox]
     public bool Enabled
     {
         get;

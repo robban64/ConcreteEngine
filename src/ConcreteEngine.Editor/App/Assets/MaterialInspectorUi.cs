@@ -29,15 +29,12 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         ImGui.SeparatorText("Texture Slots"u8);
         DrawTextureSlots(material);
 
-        ImGui.SeparatorText("Material State"u8);
-        _inspector.DrawState();
+        _inspector.DrawMaterialState();
 
-        ImGui.Spacing();
         ImGui.SeparatorText("Render Properties"u8);
         DrawPipeline(material);
         ImGui.Spacing();
 
-        ImGui.SeparatorText("Render Values"u8);
         _inspector.DrawPipeline();
     }
     

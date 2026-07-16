@@ -37,7 +37,7 @@ public sealed class CameraManager
         if (!Camera.Ensure() && !shadow.WasDirty) return;
 
         var shadowProj = shadow.Projection;
-        var lightDir = visuals.Illumination.DirectionalLight.Direction;
+        var lightDir = visuals.Illumination.Direction;
         UpdateLightView(shadow.ShadowMapSize, shadowProj.Distance, shadowProj.ZPad, lightDir);
     }
 

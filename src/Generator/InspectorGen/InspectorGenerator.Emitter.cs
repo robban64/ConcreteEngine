@@ -69,7 +69,7 @@ internal static class InspectorGeneratorEmitter
         {
             if (segment.Members.Length == 0) continue;
 
-            sb.AppendLine().BeginLine("public void Draw");
+            sb.AppendLine().BeginLine("public static void Draw");
             if (isRoot) sb.Append(segment.IsDefault ? "Root" : segment.Name!); // DrawRoot, DrawSegment
             else if (segment.IsDefault) sb.Append(group.Name); // DrawGroup
             else sb.Append(group.Name, "_", segment.Name!); //DrawGroup_Segment
@@ -77,7 +77,7 @@ internal static class InspectorGeneratorEmitter
             sb.OpenBrace();
 
             foreach (var member in segment.Members.AsSpan())
-                sb.AppendLine(member.Input!.Name, ".Draw();");
+                sb.AppendLine("Instance.", member.Input!.Name, ".Draw();");
 
             sb.CloseBrace();
         }
@@ -152,6 +152,7 @@ internal static class InspectorGeneratorEmitter
             case NumberInput: EmitInput(sb, member, access); break;
             case ColorInput: EmitColor(sb, member, access); break;
             case ComboInput: EmitCombo(sb, member, access); break;
+            case CheckboxInput: EmitCheckbox(sb, member, access); break;
             default: throw new UnreachableException(nameof(member.Input));
         }
     }
@@ -247,6 +248,17 @@ internal static class InspectorGeneratorEmitter
 
         sb.PopIndent();
         sb.AppendLine(");");
+    }
+    
+    private static void EmitCheckbox(SourceBuilder sb, InspectorMember member, AccessPath access)
+    {
+        sb.Append("CheckboxInput ", member.Name, " = new CheckboxInput(", member.GetLabelLiteral(), ", ");
+        sb.EndLine();
+        sb.PushIndent();
+        sb.AppendLine($"static () => {access.Value}, ");
+        sb.AppendLine(MakeSetter(member, in access, "v"), ");");
+        sb.PopIndent();
+        sb.AppendLine();
     }
 
     private static string MakeSetter(InspectorMember member, in AccessPath access, string assignedValue)

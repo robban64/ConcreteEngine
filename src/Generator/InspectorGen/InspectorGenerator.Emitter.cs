@@ -127,10 +127,11 @@ internal static class InspectorGeneratorEmitter
             var member = span[i];
             var input = (NumberInput)member.Input!;
             sb.BeginLine(input.IsFloat ? ".WithFloatInput(" : ".WithIntInput(");
-            sb.Append(member.GetLabelLiteral(), ", ", input.ToStyleString(), ", ", input.Speed.ToFloatStr(), ", ");
+            sb.Append(member.GetLabelLiteral(), ", ", input.ToStyleString(), ", ");
+            sb.Append(input.Speed).Append(", ");
             if (input.IsFloat)
             {
-                sb.Append(input.Min.ToFloatStr()).Append(", ").Append(input.Max.ToFloatStr());
+                sb.Append(input.Min).Append(", ").Append(input.Max);
                 if (!string.IsNullOrEmpty(input.Format)) sb.Append(", ").Append(input.Format.ToLiteralStr());
             }
             else sb.Append((int)input.Min).Append(", ").Append((int)input.Max);
@@ -162,8 +163,9 @@ internal static class InspectorGeneratorEmitter
         var input = (NumberInput)member.Input!;
         var isFloat = input.IsFloat;
 
-        var inputType = isFloat ? $"FloatInput<{input.NumberType}>" : $"IntInput<{input.NumberType}>";
-        sb.Append(inputType, " ", input.Name, " = new(", member.GetLabelLiteral(), ", ", input.ToStyleString(), ", ");
+        if (isFloat) sb.Builder.Append($"FloatInput<{input.NumberType}> ");
+        else sb.Builder.Append($"IntInput<{input.NumberType}> ");
+        sb.Append(input.Name, " = new(", member.GetLabelLiteral(), ", ", input.ToStyleString(), ", ");
         sb.EndLine();
         sb.PushIndent();
 
@@ -171,7 +173,7 @@ internal static class InspectorGeneratorEmitter
         if (member.Info.TypeInfo.IsPrimitive())
         {
             var cast = isFloat ? "(float)" : "(int)";
-            sb.AppendLine($"static () => {access.Value}, ");
+            sb.AppendLine($"static () => ", access.Value, ", ");
             sb.AppendLine(MakeSetter(member, in access, $"{cast}v"), ", ");
         }
         else
@@ -215,7 +217,7 @@ internal static class InspectorGeneratorEmitter
         sb.AppendLine(member.GetLabelLiteral(), ", ");
 
         //getter & setter
-        sb.AppendLine($"static () => {castFrom}{access.Value}, ");
+        sb.AppendLine($"static () => ", castFrom, access.Value, ", ");
         sb.AppendLine(MakeSetter(member, in access, $"{castTo}v"), ", ");
 
         sb.AppendLine(Symbols.FormatPrimitive(input.HasAlpha, false, false));
@@ -241,7 +243,7 @@ internal static class InspectorGeneratorEmitter
         sb.AppendLine(input.Names, ", ");
 
         //getter & setter
-        sb.AppendLine($"static () => {castFrom}{access.Value}, ");
+        sb.AppendLine($"static () => ", castFrom, access.Value, ", ");
         sb.AppendLine(MakeSetter(member, in access, $"{castTo}v"), ", ");
         sb.AppendLine(input.StartAt.ToString());
         if (!string.IsNullOrEmpty(input.Placeholder)) sb.AppendLine(", ", input.Placeholder);
@@ -255,7 +257,7 @@ internal static class InspectorGeneratorEmitter
         sb.Append("CheckboxInput ", member.Name, " = new CheckboxInput(", member.GetLabelLiteral(), ", ");
         sb.EndLine();
         sb.PushIndent();
-        sb.AppendLine($"static () => {access.Value}, ");
+        sb.AppendLine($"static () => ", access.Value, ", ");
         sb.AppendLine(MakeSetter(member, in access, "v"), ");");
         sb.PopIndent();
         sb.AppendLine();

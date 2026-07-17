@@ -266,7 +266,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         foreach (var range in AppDraw.Clipper(rowCount, GridCellSize, out _))
         {
             var start = range.Offset * columnCount;
-            var length = range.Length * columnCount;
+            var length = start + range.Length;
             DrawFilesInner(start, length, columnCount, _selectedFile);
         }
     }

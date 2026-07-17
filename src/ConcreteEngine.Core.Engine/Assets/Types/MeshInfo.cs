@@ -25,4 +25,6 @@ public readonly struct MeshInfo(int vertexCount, int trisCount, byte meshIndex, 
     public readonly ushort BoneCount = boneCount;
     public readonly byte MeshIndex = meshIndex;
     public readonly byte MaterialIndex = materialIndex;
+
+    public bool Has16BitIndex => VertexCount < ushort.MaxValue;
 }

@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Primitives;
@@ -11,10 +12,10 @@ internal sealed unsafe partial class ModelImporter
 {
     private static void WriteIndicesU32(AssimpMesh* mesh, NativeView<uint> indices)
     {
-        var faceLen = mesh->MNumFaces;
+        var length = mesh->MNumFaces;
         var faces = mesh->MFaces;
         var ptr = indices.Ptr;
-        for (var i = 0; i < faceLen; i++)
+        for (var i = 0; i < length; i++)
         {
             var face = faces[i];
             *ptr++ = face.MIndices[0];
@@ -25,10 +26,10 @@ internal sealed unsafe partial class ModelImporter
 
     private static void WriteIndicesU16(AssimpMesh* mesh, NativeView<ushort> indices)
     {
-        var faceLen = mesh->MNumFaces;
+        var length = mesh->MNumFaces;
         var faces = mesh->MFaces;
         var ptr = indices.Ptr;
-        for (var i = 0; i < faceLen; i++)
+        for (var i = 0; i < length; i++)
         {
             var face = faces[i];
             *ptr++ = (ushort)face.MIndices[0];
@@ -41,34 +42,39 @@ internal sealed unsafe partial class ModelImporter
         AssimpMesh* aiMesh,
         int meshIndex,
         MeshImportContext ctx,
-        NativeView<Vertex3D> vertices)
+        NativeView<VertexShading> vertices)
     {
         var count = (int)aiMesh->MNumVertices;
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
 
         var meshEntry = ctx.Meshes[meshIndex];
+/*
         var bounds = BoundingBox.Infinite;
+        for (int i = 0; i < count; i++)
+        {
+            bounds.FromPoint(aiMesh->MVertices[i]);
+        }
+*/
+        BoundingBox.FromPoints(new ReadOnlySpan<Vector3>(aiMesh->MVertices, count), out var bounds);
+        meshEntry.SetBounds(in bounds);
+
         var texCoords = aiMesh->MTextureCoords[0];
         for (int i = 0; i < count; i++)
         {
             ref var v = ref vertices[i];
-            v.Position = aiMesh->MVertices[i];
             v.TexCoords = texCoords[i].AsVector2();
             v.Normal = aiMesh->MNormals[i];
             v.Tangent = aiMesh->MTangents[i];
-            bounds.FromPoint(v.Position);
         }
-
-        meshEntry.SetBounds(in bounds);
     }
 
     private static void WriteSkinningData(AssimpMesh* aMesh, ModelImportContext ctx,
-        NativeView<SkinningData> vertices)
+        NativeView<SkinningData> skinningData)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((int)aMesh->MNumBones, AssimpUtils.BoneLimit);
 
         // clear
-        vertices.AsSpan().Fill(SkinningData.Identity);
+        skinningData.Reinterpret<byte>().AsSpan().Fill(byte.MaxValue);
 
         // write
         {
@@ -81,53 +87,84 @@ internal sealed unsafe partial class ModelImporter
                 ctx.TryGetBoneIndex(AssimpUtils.GetNameHash(bone->MName), out var boneIndex);
                 inverseBindPose[boneIndex] = bone->MOffsetMatrix;
 
-                WriteWeightAndIndices(bone, boneIndex, vertices);
+                WriteWeightAndIndices(bone, (byte)boneIndex, skinningData);
             }
         }
 
         // sanitize
-        for (var i = 0; i < vertices.Length; i++)
+        for (var i = 0; i < skinningData.Length; i++)
         {
-            ref var boneIndices = ref vertices[i].BoneIndices;
-            boneIndices.X = int.Max(boneIndices.X, 0);
-            boneIndices.Y = int.Max(boneIndices.Y, 0);
-            boneIndices.Z = int.Max(boneIndices.Z, 0);
-            boneIndices.W = int.Max(boneIndices.W, 0);
+            ref var data = ref skinningData[i];
+            if (data.I0 == byte.MaxValue)
+            {
+                data.I0 = 0;
+                data.I1 = 0;
+                data.I2 = 0;
+                data.I3 = 0;
+
+                data.W0 = 0;
+                data.W1 = 0;
+                data.W2 = 0;
+                data.W3 = 0;
+            }
+            else if (data.I1 == byte.MaxValue)
+            {
+                data.I1 = 0;
+                data.I2 = 0;
+                data.I3 = 0;
+
+                data.W1 = 0;
+                data.W2 = 0;
+                data.W3 = 0;
+            }
+            else if (data.I2 == byte.MaxValue)
+            {
+                data.I2 = 0;
+                data.I3 = 0;
+
+                data.W2 = 0;
+                data.W3 = 0;
+            }
+            else if (data.I3 == byte.MaxValue)
+            {
+                data.I3 = 0;
+                data.W3 = 0;
+            }
         }
     }
 
-    private static void WriteWeightAndIndices(Bone* bone, int boneIndex, NativeView<SkinningData> skinningData)
+    private static void WriteWeightAndIndices(Bone* bone, byte boneIndex, NativeView<SkinningData> skinningData)
     {
         var weightLen = bone->MNumWeights;
         var weights = bone->MWeights;
-
         for (var j = 0; j < weightLen; j++)
         {
             var weight = weights[j];
+            var vertexId = (int)weight.MVertexId;
+            if (vertexId >= skinningData.Length) continue;
 
-            if (weight.MVertexId >= skinningData.Length) continue;
+            ref var data = ref skinningData[vertexId];
+            var packedWeight = (byte)float.Clamp(float.Round(weight.MWeight * 255f), 0f, 255f);
 
-            ref var data = ref *(skinningData.Ptr + weight.MVertexId);
-
-            if (data.BoneIndices.X < 0)
+            if (data.I0 == byte.MaxValue)
             {
-                data.BoneIndices.X = boneIndex;
-                data.BoneWeights.X = weight.MWeight;
+                data.I0 = boneIndex;
+                data.W0 = packedWeight;
             }
-            else if (data.BoneIndices.Y < 0)
+            else if (data.I1 == byte.MaxValue)
             {
-                data.BoneIndices.Y = boneIndex;
-                data.BoneWeights.Y = weight.MWeight;
+                data.I1 = boneIndex;
+                data.W1 = packedWeight;
             }
-            else if (data.BoneIndices.Z < 0)
+            else if (data.I2 == byte.MaxValue)
             {
-                data.BoneIndices.Z = boneIndex;
-                data.BoneWeights.Z = weight.MWeight;
+                data.I2 = boneIndex;
+                data.W2 = packedWeight;
             }
-            else if (data.BoneIndices.W < 0)
+            else if (data.I3 == byte.MaxValue)
             {
-                data.BoneIndices.W = boneIndex;
-                data.BoneWeights.W = weight.MWeight;
+                data.I3 = boneIndex;
+                data.W3 = packedWeight;
             }
         }
     }

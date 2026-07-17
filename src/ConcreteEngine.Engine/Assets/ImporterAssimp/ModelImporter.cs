@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
@@ -112,11 +113,11 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         foreach (var mesh in meshes)
         {
             var meshIndex = mesh.Info.MeshIndex;
-            var is16Bit = meshCtx.GetMeshData(meshIndex, out var vertices, out var skinned, out var indices);
+            var data =  meshCtx.GetMeshData(meshIndex, out var is16Bit);
 
             var meshId = isAnimated
-                ? gfxUploader.UploadAnimatedMesh(vertices, skinned, indices, is16Bit)
-                : gfxUploader.UploadMesh(vertices, indices, is16Bit);
+                ? gfxUploader.UploadAnimatedMesh(in data, is16Bit)
+                : gfxUploader.UploadMesh(in data, is16Bit);
 
             if (!meshId.IsValid())
                 Throwers.InvalidOperation("Upload returned invalid MeshId");
@@ -257,16 +258,18 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ProcessMeshVertices(AssimpMesh* aiMesh, int meshIndex, ModelImportContext ctx)
     {
-        var is16Bit = ctx.MeshContext.GetMeshData(meshIndex, out var vertices, out var skinned, out var indices);
+        ref var data = ref ctx.MeshContext.GetMeshData(meshIndex, out var is16Bit);
+        
+        data.Positions = new NativeView<Vector3>(aiMesh->MVertices, (int)aiMesh->MNumVertices);
+
+        WriteVertices(aiMesh, meshIndex, ctx.MeshContext, data.Vertices);
 
         if (is16Bit)
-            WriteIndicesU16(aiMesh, indices.Reinterpret<ushort>());
+            WriteIndicesU16(aiMesh, data.Indices.Reinterpret<ushort>());
         else
-            WriteIndicesU32(aiMesh, indices.Reinterpret<uint>());
-
-        WriteVertices(aiMesh, meshIndex, ctx.MeshContext, vertices);
+            WriteIndicesU32(aiMesh, data.Indices.Reinterpret<uint>());
 
         if (ctx.IsAnimated)
-            WriteSkinningData(aiMesh, ctx, skinned);
+            WriteSkinningData(aiMesh, ctx, data.Skinning);
     }
 }

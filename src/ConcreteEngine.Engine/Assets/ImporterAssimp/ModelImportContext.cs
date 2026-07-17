@@ -12,6 +12,8 @@ namespace ConcreteEngine.Engine.Assets.ImporterAssimp;
 
 using static AssimpUtils;
 
+using Mesh = Core.Engine.Graphics.Mesh;
+
 internal sealed class ModelImportContext(TextureLoader textureLoader)
 {
     public string? ModelName;
@@ -22,7 +24,7 @@ internal sealed class ModelImportContext(TextureLoader textureLoader)
     public int HashIndex;
     public readonly uint[] Hashes = new uint[BoneLimit * 2];
     public readonly IntPtr[] Nodes = new IntPtr[BoneLimit * 2];
-    public readonly short[] BoneIndices = new short[BoneLimit * 2];
+    public readonly short[] BoneIndices = new short[BoneLimit];
     public readonly Dictionary<string, int> BoneIndexByName = new(BoneLimit);
 
     public readonly MeshImportContext MeshContext = new();
@@ -76,7 +78,7 @@ internal sealed class ModelImportContext(TextureLoader textureLoader)
         EmbeddedContext.Reset();
     }
 
-    public ModelInfo Compile(List<IEmbeddedAsset> embeddedSink, out ReadOnlySpan<Core.Engine.Graphics.Mesh> meshes,
+    public ModelInfo Compile(List<IEmbeddedAsset> embeddedSink, out ReadOnlySpan<Mesh> meshes,
         out ModelRig? rig)
     {
         rig = IsAnimated ? AnimationContext.Compile(BoneIndexByName) : null;
@@ -96,6 +98,7 @@ internal sealed class ModelImportContext(TextureLoader textureLoader)
     }
 }
 
+
 internal sealed class MeshImportContext
 {
     public int MeshCount;
@@ -104,10 +107,10 @@ internal sealed class MeshImportContext
 
     public BoundingBox ModelBounds;
 
-    public Core.Engine.Graphics.Mesh[] Meshes = new Core.Engine.Graphics.Mesh[16];
-    public MemoryBlockPtr[] MeshMemory = new MemoryBlockPtr[16];
+    public Mesh[] Meshes = new Mesh[16];
+    public MeshImportData[] MeshData = new MeshImportData[16];
 
-    public ReadOnlySpan<Core.Engine.Graphics.Mesh> Compile()
+    public ReadOnlySpan<Mesh> Compile()
     {
         if (MeshCount == 0) Throwers.InvalidOperation(nameof(MeshCount));
         return Meshes.AsSpan(0, MeshCount);
@@ -124,7 +127,7 @@ internal sealed class MeshImportContext
         {
             int length = int.Max(meta.MeshCount, Meshes.Length * 2);
             Array.Resize(ref Meshes, length);
-            Array.Resize(ref MeshMemory, length);
+            Array.Resize(ref MeshData, length);
         }
     }
 
@@ -135,43 +138,17 @@ internal sealed class MeshImportContext
         TotalVertexCount = 0;
         TotalFaceCount = 0;
         Array.Clear(Meshes);
-        Array.Clear(MeshMemory);
+        Array.Clear(MeshData);
     }
 
 
-    public bool GetMeshData(
-        int meshIndex,
-        out NativeView<Vertex3D> vertices,
-        out NativeView<SkinningData> skinned,
-        out NativeView<byte> indices)
+    public ref MeshImportData GetMeshData(int meshIndex, out bool is16Bit)
     {
         if (MeshCount == 0) Throwers.InvalidOperation(nameof(MeshCount));
-
-        var mesh = Meshes[meshIndex];
-        var block = MeshMemory[meshIndex];
-        var is16Bit = mesh.Info.VertexCount < ushort.MaxValue;
-
-        vertices = block.Data.Reinterpret<Vertex3D>();
-        block = block.Next;
-
-        if (block.IsNull) Throwers.NullPointer("Index block is null");
-
-        indices = block.Data;
-        if (is16Bit) indices = indices.Slice(0, indices.Length / 2);
-
-        block = block.Next;
-
-        if (mesh.Info.BoneCount > 0)
-        {
-            if (block.IsNull) Throwers.NullPointer("Skinned block is null");
-            skinned = block.Data.Reinterpret<SkinningData>();
-        }
-        else
-        {
-            skinned = default;
-        }
-
-        return is16Bit;
+        is16Bit = Meshes[meshIndex].Info.Has16BitIndex;
+        var data = MeshData[meshIndex];
+        if(data.Vertices.IsNull) Throwers.InvalidOperation(nameof(MeshData));
+        return ref MeshData[meshIndex];
     }
 }
 

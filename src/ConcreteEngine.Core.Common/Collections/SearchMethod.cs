@@ -1,25 +1,11 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Core.Common.Collections;
 
 public static class SearchMethod
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int BinarySearchUnmanaged<T>(this List<T> list, T value) where T : unmanaged, IComparable<T>
-    {
-        return BinarySearch(CollectionsMarshal.AsSpan(list), value);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int BinarySearchManaged<TClass, TValue>(this List<TClass?> list, TValue value,
-        out TClass result) where TClass : class, IComparable<TValue>
-    {
-        return BinarySearchManaged(CollectionsMarshal.AsSpan(list), value, out result);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int BinarySearch<T>(ReadOnlySpan<T> collection, T value) where T : unmanaged, IComparable<T>
+    public static int BinarySearch<T>(ReadOnlySpan<T> collection, T value) where T : IComparable<T>
     {
         int lo = 0, hi = collection.Length - 1;
         while (lo <= hi)
@@ -36,8 +22,11 @@ public static class SearchMethod
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining),]
-    public static int BinarySearchManaged<TClass, TValue>(ReadOnlySpan<TClass?> collection, TValue value,
-        out TClass result) where TClass : class, IComparable<TValue>
+    public static int TryGetBinarySearch<TClass, TValue>(
+        ReadOnlySpan<TClass?> collection,
+        TValue value,
+        out TClass result
+    ) where TClass : class, IComparable<TValue>
     {
         var lo = 0;
         var hi = collection.Length - 1;

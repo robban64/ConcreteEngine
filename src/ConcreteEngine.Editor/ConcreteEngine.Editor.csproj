@@ -1,4 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <GeneratorId>Editor</GeneratorId>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <CompilerVisibleProperty Include="GeneratorId" />
+    </ItemGroup>
+
     <ItemGroup>
         <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" />
         <PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.18" />
@@ -13,11 +21,18 @@
         <ProjectReference Include="..\ConcreteEngine.Core.Common\ConcreteEngine.Core.Common.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Core.Diagnostics\ConcreteEngine.Core.Diagnostics.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj" />
+        <ProjectReference Include="..\Generator\Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
     
     <ItemGroup>
-        <Content Include="Content\**\*">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
+      <Compile Remove="Content\**" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <EmbeddedResource Remove="Content\**" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <None Remove="Content\**" />
     </ItemGroup>
 </Project>

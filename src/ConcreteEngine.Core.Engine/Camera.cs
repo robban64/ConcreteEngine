@@ -4,10 +4,12 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Common.Visuals;
+using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine;
 
+[Inspect]
 public sealed class Camera
 {
     private const float MinNearPlane = 0.1f;
@@ -27,7 +29,6 @@ public sealed class Camera
 
     private float _viewZ;
 
-    private ProjectionInfo _projection = new(70, 0.1f, 500);
     private ViewTransform _transform, _prevTransform;
 
     internal readonly CameraTransform Transform;
@@ -36,6 +37,7 @@ public sealed class Camera
     public Vector3 Up { get; private set; }
     public Vector3 Right { get; private set; }
 
+    public float AspectRatio { get; private set; }
 
     public Camera(Size2D viewport)
     {
@@ -47,15 +49,7 @@ public sealed class Camera
     }
 
 
-    internal Vector2 Tan => new(1f / Transform.ProjectionMatrix.M11, 1f / Transform.ProjectionMatrix.M22);
-
-    public ref readonly Matrix4x4 ViewMatrix => ref Transform.ViewMatrix;
-    public ref readonly Matrix4x4 ProjectionMatrix => ref Transform.ProjectionMatrix;
-    public ref readonly Matrix4x4 InverseProjectionViewMatrix => ref Transform.InverseProjectionViewMatrix;
-
-    public ref readonly ProjectionInfo ProjectionInfo => ref _projection;
-
-
+    [InputNumber(Segment = "Transform")]
     public Vector3 Translation
     {
         get => _transform.Translation;
@@ -67,6 +61,7 @@ public sealed class Camera
         }
     }
 
+    [InputNumber(Segment = "Transform", Converter = typeof(Vector2))]
     public YawPitch Orientation
     {
         get => _transform.Orientation;
@@ -78,52 +73,37 @@ public sealed class Camera
         }
     }
 
-    public float AspectRatio
+    [InputNumber(Label = "Near & Far", Segment = "Projection")]
+    public Vector2 NearFarPlane
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private set
+        set
         {
-            if (FloatMath.NearlyEqual(field, value)) return;
-            field = value;
+            if (VectorMath.NearlyEqual(value, field, MetricUnits.Millimeter)) return;
+            field.X = float.Min(float.Max(value.X, MinNearPlane), MaxNearPlane);
+            field.Y = float.Min(float.Max(value.Y, MinFarPlane), MaxFarPlane);
             _dirty = true;
         }
-    }
+    } = new(0.1f, 500f);
 
+    [InputNumber(InputStyle.Slider, Label = "Field of view", Min = 10f, Max = 179f, Segment = "Projection")]
     public float Fov
     {
-        get => _projection.Fov;
+        get;
         set
         {
-            if (FloatMath.NearlyEqual(value, _projection.Fov, MetricUnits.Decimeter)) return;
-            _projection.Fov = float.Clamp(value, MinFov, MaxFov);
+            if (FloatMath.NearlyEqual(value, field, MetricUnits.Decimeter)) return;
+            field = float.Clamp(value, MinFov, MaxFov);
             _dirty = true;
         }
-    }
+    } = 70;
 
 
-    public float FarPlane
-    {
-        get => _projection.Far;
-        set
-        {
-            if (FloatMath.NearlyEqual(value, _projection.Far, MetricUnits.Millimeter)) return;
-            _projection.Far = float.Min(float.Max(value, MinFarPlane), MaxFarPlane);
-            _dirty = true;
-        }
-    }
-
-    public float NearPlane
-    {
-        get => _projection.Near;
-        set
-        {
-            if (FloatMath.NearlyEqual(value, _projection.Near, MetricUnits.Millimeter)) return;
-            _projection.Near = float.Min(float.Max(value, MinNearPlane), MaxNearPlane);
-            _dirty = true;
-        }
-    }
+    //
+    public ref readonly Matrix4x4 ViewMatrix => ref Transform.ViewMatrix;
+    public ref readonly Matrix4x4 ProjectionMatrix => ref Transform.ProjectionMatrix;
+    public ref readonly Matrix4x4 InverseProjectionViewMatrix => ref Transform.InverseProjectionViewMatrix;
+    //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void BeginUpdate() => _prevTransform = _transform;
@@ -141,6 +121,8 @@ public sealed class Camera
         _dirty = false;
         Version++;
 
+        AspectRatio = EngineWindow.Viewport.Size.AspectRatio;
+
         ref var viewMatrix = ref Transform.ViewMatrix;
         ref var projectionMatrix = ref Transform.ProjectionMatrix;
 
@@ -152,10 +134,10 @@ public sealed class Camera
         Matrix4x4.Invert(modelMatrix, out viewMatrix);
 
         projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(
-            FloatMath.ToRadians(_projection.Fov * 0.5f),
+            FloatMath.ToRadians(Fov * 0.5f),
             AspectRatio,
-            _projection.Near,
-            _projection.Far
+            NearFarPlane.X,
+            NearFarPlane.Y
         );
 
         Matrix4x4.Invert(projectionMatrix, out var invProjection);
@@ -174,11 +156,11 @@ public sealed class Camera
     internal ushort MakeDepthKey(Vector3 worldPos)
     {
         var d = Vector3.Dot(Forward, worldPos) - _viewZ;
+        var nearFar = NearFarPlane;
+        if (d <= nearFar.X) return 0;
+        if (d >= nearFar.Y) return ushort.MaxValue;
 
-        if (d <= _projection.Near) return 0;
-        if (d >= _projection.Far) return ushort.MaxValue;
-
-        var t = (d - _projection.Near) / (_projection.Far - _projection.Near);
+        var t = (d - nearFar.X) / (nearFar.Y - nearFar.X);
         return (ushort)(t * ushort.MaxValue + 0.5f);
     }
 }

@@ -1,34 +1,51 @@
+using ConcreteEngine.Core.Diagnostics.Time;
+using Hexa.NET.ImGui;
+
 namespace ConcreteEngine.Editor.Lib.Field;
 
-public enum FieldGetDelay : ushort
+public enum LabelPlacement : byte
 {
-    None = 0,
-    Low = 4,
-    Medium = 40,
-    High = 160,
-    VeryHigh = 1440
+    None, Top, Inline,
 }
 
-public enum FieldWidgetKind : byte
+public enum InputKind : byte
 {
-    Input,
-    Slider,
-    Drag,
-    Combo,
-    Composite,
-    InputText
+    Int, Float, Color, Bool, Combo, Text, Group
 }
 
-public enum FieldLayout : byte
+public enum InputTrigger : byte
 {
-    None,
-    Top,
-    Inline,
+    OnChange, AfterChange, AfterChangeDeActive
 }
 
-public enum FieldTrigger : byte
+internal sealed unsafe class CheckboxInput : InputField
 {
-    OnChange,
-    AfterChange,
-    AfterChangeDeactive
+    private bool _value;
+
+    private readonly Func<bool> _getter;
+    private readonly Action<bool> _setter;
+
+    private FrameStepper _stepper = new(12);
+
+    public CheckboxInput(string label, Func<bool> getter, Action<bool> setter) : base(label, InputKind.Bool)
+    {
+        _getter = getter;
+        _setter = setter;
+    }
+
+    public bool Draw()
+    {
+        if (_stepper.Tick()) _value = _getter();
+        var value = _value;
+
+        DrawLabel();
+        var changed = ImGui.Checkbox(StringId, &value);
+        if (changed)
+        {
+            _setter(value);
+            _value = value;
+        }
+
+        return changed;
+    }
 }

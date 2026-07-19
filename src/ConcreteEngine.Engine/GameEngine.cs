@@ -28,7 +28,7 @@ public sealed class GameEngine : IDisposable
     private readonly SceneSystem _sceneSystem;
     private readonly EngineRenderSystem _renderSystem;
 
-    private readonly EngineCommandQueue _commandQueues;
+    private readonly CommandBus _commandBuses;
 
     private readonly EngineGateway _gateway;
 
@@ -47,7 +47,7 @@ public sealed class GameEngine : IDisposable
         _renderSystem = new EngineRenderSystem(gfxBundle.Graphics);
         _sceneSystem = new SceneSystem(sceneFactories);
 
-        _commandQueues = new EngineCommandQueue(new EngineCommandContext(_assetSystem));
+        _commandBuses = new CommandBus(new EngineCommandContext(_assetSystem));
 
         _gateway = new EngineGateway(_renderSystem.Program);
 
@@ -61,7 +61,7 @@ public sealed class GameEngine : IDisposable
             Assets = _assetSystem,
             Renderer = _renderSystem,
             SceneSystem = _sceneSystem,
-            CommandQueue = _commandQueues
+            CommandBus = _commandBuses
         });
     }
 
@@ -74,8 +74,8 @@ public sealed class GameEngine : IDisposable
         _graphics.Gfx.Commands.Clear(ColorRgba.Black, ClearBufferFlag.ColorAndDepth);
         if (!isDone) return;
 
-        Console.WriteLine("Engine Setup Complete. Swapping to Game Loop.");
-        Logger.LogString(LogScope.Engine, "Engine Setup Complete. Swapping to Game Loop.");
+        Logger.Log(LogScope.Engine, "Engine Setup: Complete. Swapping to Game Loop.");
+
         runner.Teardown();
 
         OnSystemTick(0);
@@ -105,7 +105,7 @@ public sealed class GameEngine : IDisposable
 
     private void Draw(float dt)
     {
-        _graphics.BeginFrame(new GfxFrameArgs(dt, EngineWindow.Viewport.Size));
+        _graphics.BeginFrame(EngineWindow.Viewport.Size);
         _renderSystem.Render(dt);
         _graphics.EndFrame();
 
@@ -131,8 +131,8 @@ public sealed class GameEngine : IDisposable
         if (_assetSystem.PendingAssetCount > 0)
             _assetSystem.ProcessPendingQueue();
 
-        if (_commandQueues.QueuesCount > 0)
-            _commandQueues.DrainDispatch();
+        if (_commandBuses.QueuesCount > 0)
+            _commandBuses.DrainDispatch();
     }
 
     internal void OnDiagnosticTick(float dt) => _gateway.UpdateDiagnostics(dt);

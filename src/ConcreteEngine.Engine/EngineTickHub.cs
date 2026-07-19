@@ -11,10 +11,10 @@ internal sealed class EngineTickHub
 
     private readonly GameEngine _engine;
 
-    private FrameTickTimer _gameTicker;
-    private FrameTickTimer _simulationTicker;
-    private FrameTickTimer _diagnosticTicker;
-    private FrameTickTimer _systemTicker;
+    private FrameAccumulator _gameTicker;
+    private FrameAccumulator _simulationTicker;
+    private FrameAccumulator _diagnosticTicker;
+    private FrameAccumulator _systemTicker;
 
 
     internal EngineTickHub(GameEngine engine)
@@ -22,10 +22,10 @@ internal sealed class EngineTickHub
         ArgumentNullException.ThrowIfNull(engine);
 
         var sim = EngineSettings.Current.Simulation;
-        _gameTicker = new FrameTickTimer(1.0f / sim.GameSimRate);
-        _simulationTicker = new FrameTickTimer(1.0f / sim.EnvironmentSimRate);
-        _diagnosticTicker = new FrameTickTimer(1.0f / sim.DiagnosticSimRate);
-        _systemTicker = new FrameTickTimer(0.25f);
+        _gameTicker = new FrameAccumulator(1.0f / sim.GameSimRate);
+        _simulationTicker = new FrameAccumulator(1.0f / sim.EnvironmentSimRate);
+        _diagnosticTicker = new FrameAccumulator(1.0f / sim.DiagnosticSimRate);
+        _systemTicker = new FrameAccumulator(0.25f);
 
         _engine = engine;
 
@@ -75,8 +75,8 @@ internal sealed class EngineTickHub
         var tickCounter = 0;
         while (tickCounter < MaxTicksPerFrame && _gameTicker.DequeueTick(out tickDt))
         {
-            tickCounter++;
-            EngineTime.GameTickId++;
+            ++tickCounter;
+            ++EngineTime.GameTickId;
             _engine.OnGameTick(tickDt);
         }
 
@@ -84,7 +84,7 @@ internal sealed class EngineTickHub
         while (tickCounter < MaxTicksPerFrame && _simulationTicker.DequeueTick(out tickDt))
         {
             _engine.OnSimulateTick(tickDt);
-            tickCounter++;
+            ++tickCounter;
         }
     }
 

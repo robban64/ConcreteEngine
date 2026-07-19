@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Graphics.Handles;
 
@@ -7,7 +8,6 @@ public readonly record struct GfxId<TMeta>(ushort Id) : IComparable<GfxId<TMeta>
     public GfxId(int id) : this((ushort)id) { }
 
     public readonly ushort Id = Id;
-    public int Value => Id;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsValid() => Id > 0;

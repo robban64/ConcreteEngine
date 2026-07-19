@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Logging;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Graphics.Resources;
 using Hexa.NET.ImGui;
@@ -11,7 +11,7 @@ internal sealed class StateManager(EventDispatcher eventDispatcher)
 {
     public event Action<EditorContext, EditorContext>? ContextChanged;
 
-    public EditorContext Context = new() { Mode = new ModeContext { Id = ModeId.Asset } };
+    public EditorContext Context = new();
     public int ActiveDebugWindow { get; private set; } = -1;
 
     public void ToggleDebugWindow(int id)
@@ -30,7 +30,7 @@ internal sealed class StateManager(EventDispatcher eventDispatcher)
     {
         if (Context == context)
         {
-            ConsoleGateway.LogPlain("Identical context emitted");
+            LogService.PushMessage("Identical context emitted");
             return;
         }
 
@@ -44,7 +44,7 @@ internal sealed class StateManager(EventDispatcher eventDispatcher)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void GetOrSetTextureHandle(TextureId id, scoped ref TexturePtrHandle texHandle)
     {
-        ArgumentOutOfRangeException.ThrowIfZero(id.Value, nameof(id));
+        ArgumentOutOfRangeException.ThrowIfZero(id.Id, nameof(id));
         var handle = GfxResourceApi.GetNativeHandle(id);
         if (texHandle.Handle == handle) return;
 

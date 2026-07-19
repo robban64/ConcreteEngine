@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Engine.Assets;
 
@@ -15,16 +14,6 @@ internal sealed class EngineCommandContext(AssetSystem assetSystem)
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
-        }
-    }
-
-    public void ApplyRender(FboCommandRecord cmd)
-    {
-        switch (cmd.Action)
-        {
-            case CommandFboAction.ShadowSize: VisualManager.Instance.Shadow.ShadowMapSize = cmd.Size.Width; break;
-            case CommandFboAction.None: break;
-            default: throw new ArgumentOutOfRangeException();
         }
     }
 }

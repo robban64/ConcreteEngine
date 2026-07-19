@@ -1,27 +1,16 @@
-using System.Text;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Assets;
-
 namespace ConcreteEngine.Core.Engine.Command;
 
-public abstract record EngineCommandRecord(CommandScope Scope)
+public sealed class Commands
 {
-    private static int _idx;
-    public int Id { get; } = ++_idx;
-    public DateTime Timestamp { get; } = DateTime.Now;
+    public static void Enqueue(EngineCommandRecord record) => _instance._commandSink.Enqueue(record);
 
-    protected virtual bool PrintMembers(StringBuilder builder)
+    private static Commands _instance = null!;
+    internal static void Create(ICommandSink commandBus) => _instance = new Commands(commandBus);
+
+    private readonly ICommandSink _commandSink;
+
+    private Commands(ICommandSink commandBus)
     {
-        builder.Append("Id = ");
-        builder.Append(Id);
-        builder.Append(", Scope = ");
-        builder.Append(EnumCache<CommandScope>.Names[(int)Scope]);
-        return true;
+        _commandSink = commandBus;
     }
 }
-
-public sealed record AssetCommandRecord(CommandAssetAction Action, AssetId Asset, AssetKind Kind)
-    : EngineCommandRecord(CommandScope.Asset);
-
-public sealed record FboCommandRecord(CommandFboAction Action, Size2D Size) : EngineCommandRecord(CommandScope.Render);

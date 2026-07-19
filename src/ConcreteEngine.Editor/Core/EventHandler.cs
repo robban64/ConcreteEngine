@@ -1,18 +1,11 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.UI.Assets;
 
 namespace ConcreteEngine.Editor.Core;
 
 internal static class EventHandler
 {
-    public static void OnModeEvent(ModeEvent evt, StateManager ctx)
-    {
-        ctx.EmitChange(ctx.Context with { Mode = new ModeContext { Id = evt.Mode } });
-    }
-
     public static void OnToolEvent(ToolEvent evt, StateManager ctx)
     {
         if (evt.ShowDebugBounds is null && evt.GizmoEnabled is null)
@@ -50,9 +43,6 @@ internal static class EventHandler
             return;
         }
 
-        if (evt.Asset == null && evt.SceneObject == null)
-            throw new ArgumentException("Either Asset or SceneObject must be set");
-
         if (evt.Asset is { } asset)
         {
             if (selection.SelectedAssetId == asset) return;
@@ -74,14 +64,22 @@ internal static class EventHandler
                 }
             });
         }
+        else
+        {
+            throw new ArgumentException("Either Asset or SceneObject must be set");
+        }
     }
 
     public static void OnSceneObjectEvent(SceneObjectEvent evt, StateManager ctx)
     {
-        if (evt.Rename is { } name)
+        var sceneObject = SceneManager.SceneStore.Get(evt.SceneObject);
+        if (evt.Visible is { } visible)
         {
-            var asset = SceneManager.SceneStore.Get(evt.SceneObject);
-            asset.SetName(name);
+            sceneObject.Visible = visible;
+        }
+        else if (evt.Rename is { } name)
+        {
+            sceneObject.SetName(name);
         }
     }
 
@@ -90,12 +88,11 @@ internal static class EventHandler
         if (evt.Rename is { } name)
         {
             var asset = AssetManager.Assets.Get<AssetObject>(evt.Asset);
-            if (asset.SetName(name))
-                AssetListPanel.RenamedAsset = asset.Id;
+            if (asset.SetName(name)) ;
         }
         else if (evt.Reload)
         {
-            CommandDispatcher.DispatchCommand(new AssetCommandRecord(CommandAssetAction.Reload, evt.Asset, evt.Kind));
+            Commands.Enqueue(new AssetCommandRecord(CommandAssetAction.Reload, evt.Asset, evt.Kind));
         }
     }
 }

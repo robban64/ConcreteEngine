@@ -63,7 +63,7 @@ public static class EngineWindow
         _viewport = _nextViewport;
         WindowSize = _nextWindowSize;
         OutputSize = _nextOutputSize;
-        Logger.LogString(LogScope.Engine, $"ScreenResized: {WindowSize}");
+        Logger.Log(LogScope.Engine, $"ScreenResized: {WindowSize}");
 
         return true;
     }
@@ -74,7 +74,7 @@ public static class EngineWindow
         set => _platformWindow.Title = value;
     }
 
-    public static Vector2I Position
+    public static Int2 Position
     {
         get => _platformWindow.Position.ToVec2Int();
         set => _platformWindow.Position = new Vector2D<int>(value.X, value.Y);

@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
@@ -118,30 +119,33 @@ public sealed class MaterialState
         }
     } = PassMask.Default;
 
+    [InputColor]
     public Color4 Color
     {
         get;
         set
         {
-            var color = value.AsClampedAlpha();
+            var color = value.WithClampedAlpha();
             if (Color4.NearlyEqual(in field, in color)) return;
             field = color;
             _material.MarkDirty(AssetDirtyFlag.State);
         }
     } = Color4.White;
 
+    [InputColor]
     public Color4 SpecularColor
     {
         get;
         set
         {
-            var color = value.AsClampedAlpha();
+            var color = value.WithClampedAlpha();
             if (Color4.NearlyEqual(in field, in color)) return;
             field = color;
             _material.MarkDirty(AssetDirtyFlag.State);
         }
     } = new(1, 1, 1, 0.12f);
 
+    [InputNumber]
     public Vector4 UvTransform
     {
         get;
@@ -154,6 +158,7 @@ public sealed class MaterialState
         }
     } = new(0, 0, 1f, 1f);
 
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 50f)]
     public float Shininess
     {
         get;
@@ -165,6 +170,7 @@ public sealed class MaterialState
         }
     } = 12f;
 
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 50f)]
     public float Roughness
     {
         get;
@@ -176,6 +182,7 @@ public sealed class MaterialState
         }
     }
 
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 50f)]
     public float Metallic
     {
         get;

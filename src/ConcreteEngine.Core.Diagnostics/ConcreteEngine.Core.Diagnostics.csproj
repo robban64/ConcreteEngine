@@ -1,5 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <GeneratorId>Diagnostics</GeneratorId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <CompilerVisibleProperty Include="GeneratorId" />
+    </ItemGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\ConcreteEngine.Core.Common\ConcreteEngine.Core.Common.csproj"/>
+        <ProjectReference Include="..\Generator\Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true"/>
     </ItemGroup>
 </Project>

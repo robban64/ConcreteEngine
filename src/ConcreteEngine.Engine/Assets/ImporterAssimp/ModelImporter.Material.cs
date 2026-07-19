@@ -42,18 +42,6 @@ internal static unsafe class MaterialModelImporter
             var material = new EmbeddedSceneMaterial(assetName, i, ctx.IsAnimated);
             ProcessMaterialProperties(aiMat, material, ctx);
 
-            material.FileSpec = new AssetFile(
-                gId: Guid.NewGuid(),
-                id: AssetFileId.Empty,
-                binding: FileBinding.RootFile,
-                storage: AssetStorage.Embedded,
-                relativePath: assetName,
-                logicalName: material.EmbeddedName,
-                lastWriteTime: DateTime.MinValue,
-                sizeBytes: 0
-                //Source: ctx.Filename
-            );
-
             embeddedContext.Materials.Add(material);
         }
 
@@ -68,17 +56,6 @@ internal static unsafe class MaterialModelImporter
         {
             var aiTexture = scene->MTextures[texture.TextureIndex];
             int textureSize = LoadTextureData(ctx.EmbeddedContext, aiTexture, texture);
-            texture.FileSpec = new AssetFile(
-                gId: Guid.NewGuid(),
-                id: AssetFileId.Empty,
-                binding: FileBinding.RootFile,
-                storage: AssetStorage.Embedded,
-                relativePath: texture.Name,
-                logicalName: texture.EmbeddedName,
-                sizeBytes: textureSize,
-                lastWriteTime: DateTime.MinValue
-                //Source: ctx.Filename
-            );
         }
     }
 

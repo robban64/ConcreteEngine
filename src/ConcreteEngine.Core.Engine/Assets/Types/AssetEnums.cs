@@ -1,3 +1,5 @@
+using ConcreteEngine.Core.Common.Attributes;
+
 namespace ConcreteEngine.Core.Engine.Assets;
 
 [Flags]
@@ -12,6 +14,7 @@ public enum AssetDirtyFlag : byte
     Lifecycle = 1 << 5,
 }
 
+[EnumExt(ToIndex = true, ToUtf8 = true)]
 public enum AssetKind : byte
 {
     Unknown = 0,
@@ -36,7 +39,6 @@ public enum AssetStorage : byte
     None = 0,
     FileSystem = 1,
     InMemory = 2,
-    Package = 2,
     Embedded = 3
 }
 

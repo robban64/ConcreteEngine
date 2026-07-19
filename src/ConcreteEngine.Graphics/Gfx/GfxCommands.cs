@@ -49,10 +49,10 @@ public sealed class GfxCommands
         SetCullMode(CullMode.BackCcw);
     }
 
-    internal void BeginFrame(GfxFrameArgs args)
+    internal void BeginFrame(Size2D outputSize)
     {
-        _outputSize = args.OutputSize;
-        _activeOutputSize = args.OutputSize;
+        _outputSize = outputSize;
+        _activeOutputSize = outputSize;
         _passFlags = default;
         _stateFunctions = default;
         _lastDrawState = default;

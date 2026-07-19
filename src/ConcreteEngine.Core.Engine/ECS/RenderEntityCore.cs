@@ -146,7 +146,7 @@ public sealed class RenderEntityCore : EcsStore
         _modelMatrices.Resize(newSize, true);
         _normalMatrices.Resize(newSize, true);
 
-        Logger.LogString(LogScope.Ecs, $"{nameof(RenderEntityCore)}: resized {newSize}", LogLevel.Warn);
+        Logger.Log(LogScope.Ecs, $"{nameof(RenderEntityCore)}: resized {newSize}", LogLevel.Warn);
     }
 
 

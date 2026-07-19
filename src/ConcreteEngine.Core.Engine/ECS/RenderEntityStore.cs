@@ -118,7 +118,7 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
 
-        Logger.LogString(LogScope.Ecs, $"{GetType().Name}: resized {newSize}", LogLevel.Warn);
+        Logger.Log(LogScope.Ecs, $"{GetType().Name}: resized {newSize}", LogLevel.Warn);
     }
 
     public override void Dispose() { }

@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Text.Unicode;
 
 namespace ConcreteEngine.Core.Common.Text;
 
@@ -34,26 +33,6 @@ public static class UtfText
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetNullTerminateIndex(ref byte str, int capacity)
-    {
-        var i = 0;
-        while (Unsafe.Add(ref str, i) != 0)
-        {
-            if (++i >= capacity) return -1;
-        }
-
-        return i;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int WriteCharToByteSpan(ReadOnlySpan<char> span, Span<byte> dst)
-    {
-        Utf8.FromUtf16(span, dst[..^1], out _, out var bytesWritten, replaceInvalidSequences: false);
-        return bytesWritten;
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int FormatChar(ref byte value, char c)
     {
         if (c <= 0x7F)
@@ -77,11 +56,9 @@ public static class UtfText
 
     public static uint PackFormatChar(char c)
     {
-        if (c <= 0x7F)
-            return StringPacker.PackUtf8((byte)c, 0, 0);
+        if (c <= 0x7F) return StringPacker.PackUtf8((byte)c, 0, 0);
 
-        if (c <= 0x7FF)
-            return StringPacker.PackUtf8((byte)(0xC0 | (c >> 6)), (byte)(0x80 | (c & 0x3F)), 0);
+        if (c <= 0x7FF) return StringPacker.PackUtf8((byte)(0xC0 | (c >> 6)), (byte)(0x80 | (c & 0x3F)), 0);
 
         return StringPacker.PackUtf8(
             (byte)(0xE0 | (c >> 12)),
@@ -144,10 +121,14 @@ public static class UtfText
 
 public static class UtfTextExtensions
 {
-    public static byte[] ToUtf8(this string? str)
+    public static byte[] ToUtf8(this string str, int extraLength = 0)
     {
         ArgumentNullException.ThrowIfNull(str);
-        return Encoding.UTF8.GetBytes(str);
+        if (extraLength == 0) return Encoding.UTF8.GetBytes(str);
+        var textLength = Encoding.UTF8.GetByteCount(str);
+        var buffer = new byte[textLength + extraLength];
+        Encoding.UTF8.GetBytes(str, buffer);
+        return buffer;
     }
 
     public static byte[] ToUtf8(this ReadOnlySpan<char> str)

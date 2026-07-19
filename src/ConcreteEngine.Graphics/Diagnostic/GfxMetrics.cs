@@ -1,5 +1,5 @@
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
 
@@ -7,7 +7,7 @@ namespace ConcreteEngine.Graphics.Diagnostic;
 
 public static class GfxMetrics
 {
-    public static readonly int StoreCount = EnumCache<GraphicsKind>.Count - 1;
+    public static readonly int StoreCount = GraphicsKindExt.Count - 1;
     private static readonly IStoreMetrics[] StoreMetrics = new IStoreMetrics[StoreCount];
 
     public static GpuFrameMeta FrameMeta;

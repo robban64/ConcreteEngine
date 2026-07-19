@@ -74,7 +74,7 @@ public sealed class GameEntityCore : EcsStore
     protected override void Resize(int newSize)
     {
         Array.Resize(ref _entities, newSize);
-        Logger.LogString(LogScope.Ecs, $"{nameof(GameEntityCore)}: resized {newSize}", LogLevel.Warn);
+        Logger.Log(LogScope.Ecs, $"{nameof(GameEntityCore)}: resized {newSize}", LogLevel.Warn);
     }
 
     public override void Dispose() { }

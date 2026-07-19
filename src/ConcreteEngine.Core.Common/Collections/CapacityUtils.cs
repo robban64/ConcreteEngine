@@ -4,13 +4,20 @@ public static class CapacityUtils
 {
     public const int PageSize = 4_096;
 
-
     public static int CapacityGrowthToFit(int current, int required)
     {
-        var newSize = current;
+        var newSize = int.Max(current, 4);
         while (newSize < required) newSize *= 2;
         return newSize;
     }
+
+    public static int CapacityGrowthPageSize(int current, int required)
+    {
+        var newSize = int.Max(current, PageSize);
+        while (newSize < required) newSize += PageSize;
+        return newSize;
+    }
+
 /*
 
    public static int CapacityGrowthSafe(int currentCapacity, int requiredSize,

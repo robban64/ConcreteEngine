@@ -26,7 +26,7 @@ public static class EngineTime
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void AdvanceFrame(float deltaTime, float gameAlpha, float envAlpha)
     {
-        FrameId++;
+        ++FrameId;
         DeltaTime = deltaTime;
         Time += deltaTime;
         Fps = deltaTime / (deltaTime * deltaTime + FloatMath.SingularEpsilon);

@@ -6,4 +6,5 @@
   <Project Path="src/ConcreteEngine.Engine/ConcreteEngine.Engine.csproj" />
   <Project Path="src/ConcreteEngine.Graphics/ConcreteEngine.Graphics.csproj" />
   <Project Path="src/ConcreteEngine.Renderer/ConcreteEngine.Renderer.csproj" />
+  <Project Path="src/Generator/Generator.csproj" />
 </Solution>

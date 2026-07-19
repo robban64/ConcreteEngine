@@ -118,7 +118,7 @@ public sealed class GfxTextures
                 srcLevel: mip,
                 dstLevel: mip,
                 srcSize: CalcMipSize(mip, size).ToSize3D(1),
-                dstPos: new Vector3I(0, 0, layer)
+                dstPos: new Int3(0, 0, layer)
             );
         }
     }

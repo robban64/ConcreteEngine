@@ -1,93 +1,45 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Core;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
 
-internal sealed unsafe class EditorWindow
+internal abstract class EditorWindow(StateManager state)
 {
     private const ImGuiWindowFlags DefaultFlags =
         ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
         ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
 
-    public readonly string Name;
-    public readonly WindowId Id;
-
     public ImGuiWindowFlags Flags = DefaultFlags;
-
-    public uint? BgColor;
+    public bool Enabled { get; private set; }
     public bool NoBorder;
 
-    public bool IsDirty { get; private set; }
-    public bool Visible { get; private set; }
-    public EditorPanel? PendingPanel { get; private set; }
-    public EditorPanel? ActivePanel { get; private set; }
+    protected readonly StateManager State = state;
 
-    public MemoryBlockPtr Memory;
-    private RangeU16 _labelHandle;
+    public abstract ReadOnlySpan<byte> Id { get; }
 
-    //private readonly Stack<EditorPanel> _backStack = new();
-    //public Action<StateManager>? CustomDrawer;
+    public virtual void OnUpdateDiagnostic() { }
+    protected abstract void OnCreate();
+    protected abstract void OnDraw();
 
-    public EditorWindow(string name, WindowId id)
+    public void Create()
     {
-        ArgumentException.ThrowIfNullOrEmpty(name);
-
-        Name = name;
-        Id = id;
+        OnCreate();
+        Enabled = true;
     }
 
-    public void OnDraw()
+    public void Draw()
     {
-        if (PendingPanel is not null)
-            ApplyPanel();
+        if (!Enabled) return;
 
-        if (NoBorder)
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-        if (BgColor is { } bgColor)
-            ImGui.PushStyleColor(ImGuiCol.WindowBg, bgColor);
+        if (NoBorder) ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
 
-        Visible = ImGui.Begin(Memory.Data.Slice(_labelHandle), Flags);
-        if (Visible && ActivePanel is { } activePanel)
+        if (ImGui.Begin(Id, Flags))
         {
-            //CustomDrawer?.Invoke(_stateManager);
-            activePanel.OnDraw();
+            OnDraw();
         }
 
         ImGui.End();
 
-
         if (NoBorder) ImGui.PopStyleVar();
-        if (BgColor.HasValue) ImGui.PopStyleColor();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void OnUpdateDiagnostic() => ActivePanel?.OnUpdateDiagnostic();
-
-    public void EnqueuePanel(EditorPanel panel) => PendingPanel = panel;
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private void ApplyPanel()
-    {
-        if (PendingPanel is null) return;
-
-        if (ActivePanel is not null)
-        {
-            ActivePanel.OnLeave();
-            ActivePanel.DataPtr = NativeView<byte>.MakeNull();
-        }
-
-        Memory.ResetCursor();
-
-        var allocator = Memory.GetAllocator();
-        _labelHandle = allocator.AllocStringSlice(Name).AsRange16();
-
-        ActivePanel = PendingPanel;
-        ActivePanel.DataPtr = Memory.Data;
-        ActivePanel.OnEnter(allocator);
-
-        PendingPanel = null;
     }
 }

@@ -36,7 +36,7 @@ public static unsafe class NativeExtensions
         public ReadOnlySpan<T> AsReadOnlySpan(int offset = 0)
         {
             Debug.Assert((uint)offset <= (uint)it.Length);
-            return new Span<T>(it.Ptr + offset, it.Length - offset);
+            return new ReadOnlySpan<T>(it.Ptr + offset, it.Length - offset);
         }
     }
 

@@ -1,11 +1,12 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Input;
-using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Logging;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
@@ -36,12 +37,21 @@ public sealed class EditorPortal : IDisposable
     {
         if (Initialized) Throwers.InvalidOperation(nameof(Initialized));
 
-        TextBuffers.AllocateBuffers();
-        ConsoleGateway.Service.Setup();
+        StyleMap.Create();
+        StringArena.Create();
+        ScratchBuffer.Create();
 
-        InspectorFieldProvider.Create();
+        LogService.Instance.Create();
+
         _service = new EditorService();
+        _service.Setup();
         Initialized = true;
+    }
+
+    public unsafe LogBinding GetLogBindings()
+    {
+        if (!Initialized) Throwers.InvalidOperation(nameof(Initialized));
+        return new LogBinding(LogService.Log, LogService.PushMessage, &LogService.LogValue);
     }
 
     public void OnDiagnosticTick() => _isDiagnosticTick = true;
@@ -56,27 +66,30 @@ public sealed class EditorPortal : IDisposable
 
     public void Render(float deltaTime, TextureId outputTexture)
     {
-        if (EditorTime.Advance(deltaTime))
-            Update(outputTexture);
+        if (!Initialized) return;
+
+        if (EditorTime.Advance(deltaTime, out var editorDelta))
+            Update(editorDelta, outputTexture);
 
         ImGuiSystem.RenderDrawData();
     }
 
-    private void Update(TextureId outputTexture)
+    private void Update(float editorDelta, TextureId outputTexture)
     {
-        ImGuiSystem.NewFrame(EditorTime.DeltaTime, outputTexture);
+        ImGuiSystem.NewFrame(editorDelta, outputTexture);
 
         if (_isDiagnosticTick)
         {
             _isDiagnosticTick = false;
             _wasDiagnosticTick = true;
-            ConsoleGateway.Service.OnTick();
+            LogService.Instance.OnTick();
         }
 
         if (_wasDiagnosticTick)
         {
             _wasDiagnosticTick = false;
             _service.OnDiagnosticTick();
+            LogService.Instance.ResetNewLogCount();
         }
 
         _service.Draw();
@@ -89,7 +102,10 @@ public sealed class EditorPortal : IDisposable
 
     public void Dispose()
     {
-        TextBuffers.Dispose();
+        StyleMap.Dispose();
+        ScratchBuffer.Dispose();
+        StringArena.Instance.Dispose();
+        LogService.Instance.Dispose();
 
         ImGuiImplOpenGL3.Shutdown();
         ImGuiImplOpenGL3.SetCurrentContext(null);
@@ -97,24 +113,11 @@ public sealed class EditorPortal : IDisposable
         ImGuiImplGLFW.SetCurrentContext(null);
         ImGui.DestroyContext();
     }
-/*
-    public static ViewportRect PredictInitialViewport(Size2D outputSize)
-    {
-        float width = outputSize.Width * (1.0f - 0.20f - 0.20f);
-        float height = outputSize.Height * (1.0f - 0.25f) - GuiTheme.TopOffset;
 
-        float posX = outputSize.Width * 0.20f;
-        float posY = GuiTheme.TopOffset;
-
-        return new ViewportRect(new Vector2I(width, height), new Size2D(posX, posY));
-    }
-*/
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void RunStaticCtor()
     {
-        RuntimeHelpers.RunClassConstructor(typeof(ConsoleGateway).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(CommandDispatcher).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EditorInput).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GuiTheme).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(Palette).TypeHandle);

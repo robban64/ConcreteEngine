@@ -63,7 +63,7 @@ public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
     public static void FromAxisBox(in BoundingAxisBox axisBox, out BoundingBox result) =>
         result = new BoundingBox(axisBox.Min, axisBox.Max);
 
-    public static void FromPoints(Span<Vector3> points, out BoundingBox result)
+    public static void FromPoints(ReadOnlySpan<Vector3> points, out BoundingBox result)
     {
         var min = new Vector3(float.MaxValue);
         var max = new Vector3(float.MinValue);

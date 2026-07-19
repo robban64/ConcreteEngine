@@ -4,16 +4,17 @@ using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
+[Inspect]
 public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObject>
 {
     public SceneObjectId Id { get; }
     public Guid GId { get; }
 
-    [JsonIgnore]
-    public ulong PackedName { get; private set; }
+    [JsonIgnore] public ulong PackedName { get; private set; }
 
     public string Name
     {
@@ -27,6 +28,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         }
     }
 
+    [InputCheckbox]
     public bool Enabled
     {
         get;
@@ -51,10 +53,9 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     public SceneObjectKind Kind { get; private set; }
 
-    [JsonIgnore]
-    public SceneDirtyFlags Dirty { get; private set; }
+    [JsonIgnore] public SceneDirtyFlags Dirty { get; private set; }
 
-    public SceneTransform Transform { get; }
+    [InspectInclude] public SceneTransform Transform { get; }
 
     private readonly List<RenderBlueprintInstance> _instances = [];
 

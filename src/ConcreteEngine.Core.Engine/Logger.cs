@@ -1,27 +1,57 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Diagnostic;
 
 namespace ConcreteEngine.Core.Engine;
 
-public static class Logger
+public sealed class Logger
 {
-    private static List<StringLogEvent>? _tempLogs = new();
-    private static Action<StringLogEvent> _boundLogger = ConsoleLogger;
+    private static readonly Logger Instance = new();
 
-    internal static void BindLogger(Action<StringLogEvent> logger)
+    private bool _isBound;
+
+    private List<StringLogEvent>? _tempLogs = new();
+
+    private Action<StringLogEvent> _logDel = ConsoleLogger;
+    private Action<ReadOnlySpan<char>> _messageDel = Console.WriteLine;
+
+    private Logger() { }
+
+    public static bool IsBound => Instance._isBound;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Message(ReadOnlySpan<char> message) => Instance._messageDel(message);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Log(LogScope scope, string message, LogLevel level = LogLevel.Info) =>
+        Instance._logDel(new StringLogEvent(scope, message, level));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Log(StringLogEvent log) => Instance._logDel(log);
+
+    private unsafe void Bind(LogBinding binding)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        _boundLogger = logger;
+        if (_isBound) Throwers.InvalidOperation("Logger can only be bound once");
+        if (binding.ValueLogger == null) Throwers.InvalidArgument(nameof(binding));
 
-        if (_tempLogs is null) return;
+        _logDel = binding.Logger;
+        _messageDel = binding.Message;
+        BindGfxLogger(binding.ValueLogger);
 
-        foreach (var log in _tempLogs) logger(log);
-        _tempLogs.Clear();
-        _tempLogs = null;
+        if (_tempLogs is not null)
+        {
+            foreach (var log in _tempLogs) binding.Logger(log);
+            _tempLogs.Clear();
+            _tempLogs = null;
+        }
+
+        _isBound = true;
     }
 
-    internal static unsafe void BindGfxLogger(delegate*<in LogEvent, void> logger)
+    internal static void BindLogger(LogBinding binding) => Instance.Bind(binding);
+
+    private static unsafe void BindGfxLogger(delegate*<in LogEvent, void> logger)
     {
         if (GfxLog.IsBound) throw new InvalidOperationException("GfxLogger is already active");
         GfxLog.Setup(logger);
@@ -29,32 +59,14 @@ public static class Logger
 
         GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Backend);
         GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Gfx);
-/*
-        GfxLog.ToggleLog(false, LogTopic.VertexBuffer, LogScope.Backend);
-        GfxLog.ToggleLog(false, LogTopic.IndexBuffer, LogScope.Backend);
-        GfxLog.ToggleLog(false, LogTopic.Mesh, LogScope.Backend);
-        GfxLog.ToggleLog(false, LogTopic.FrameBuffer, LogScope.Backend);
-        GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Backend);
-
-        GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
-        GfxLog.ToggleLog(false, LogTopic.VertexBuffer, LogScope.Gfx);
-        GfxLog.ToggleLog(false, LogTopic.IndexBuffer, LogScope.Gfx);
-*/
     }
 
     public static void ToggleGfxLog(bool enabled) => GfxLog.Enabled = enabled;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void LogString(LogScope scope, string message, LogLevel level = LogLevel.Info) =>
-        _boundLogger(new StringLogEvent(scope, message, level));
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Log(StringLogEvent log) => _boundLogger(log);
-
 
     private static void ConsoleLogger(StringLogEvent log)
     {
-        _tempLogs?.Add(log);
+        Instance._tempLogs?.Add(log);
         Console.WriteLine(log.Message);
     }
 }

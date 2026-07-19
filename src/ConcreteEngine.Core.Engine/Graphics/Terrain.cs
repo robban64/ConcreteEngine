@@ -217,7 +217,7 @@ public sealed class Terrain
             int rowStart = z * chunkCount;
             for (int x = 0; x < chunkCount; x++)
             {
-                var chunk = new TerrainChunk(new Vector2I(x, z));
+                var chunk = new TerrainChunk(new Int2(x, z));
                 chunk.FillChunkHeights(heightmap, Dimension, MaxHeight);
                 _chunks[rowStart + x] = chunk;
             }

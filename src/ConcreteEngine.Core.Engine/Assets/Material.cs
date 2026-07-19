@@ -1,16 +1,19 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
+using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
+[Inspect]
 public sealed class Material : AssetObject
 {
     public Id16<MaterialSlot> MaterialId => State.MaterialId;
     public MaterialProfileId ProfileId { get; private set; }
 
-    public readonly MaterialState State;
+    [InspectInclude] public readonly MaterialState State;
+
     private TextureSource[] _textureSources = [];
 
     public override AssetCategory Category => AssetCategory.Renderer;

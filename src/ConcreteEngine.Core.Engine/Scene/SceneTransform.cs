@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -15,6 +16,7 @@ public sealed class SceneTransform(SceneObject sceneObject)
     public void GetTransformMatrix(out Matrix4x4 matrix) => MatrixMath.CreateModelMatrix(in _transform, out matrix);
 
     //
+    [InputNumber]
     public Vector3 Translation
     {
         get => _transform.Translation;
@@ -25,12 +27,24 @@ public sealed class SceneTransform(SceneObject sceneObject)
         }
     }
 
+    [InputNumber]
     public Vector3 Scale
     {
         get => _transform.Scale;
         set
         {
             _transform.Scale = value;
+            sceneObject.MarkDirty(SceneDirtyFlags.Transform);
+        }
+    }
+
+    [InputNumber(Label = "Rotation")]
+    public Vector3 EulerRotation
+    {
+        get => RotationMath.QuaternionToEulerDegrees(in _transform.Rotation);
+        set
+        {
+            _transform.Rotation = RotationMath.EulerDegreesToQuaternion(value);
             sceneObject.MarkDirty(SceneDirtyFlags.Transform);
         }
     }

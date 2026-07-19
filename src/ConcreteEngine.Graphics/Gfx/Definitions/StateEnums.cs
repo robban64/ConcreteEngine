@@ -1,13 +1,6 @@
-namespace ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Core.Common.Attributes;
 
-public enum BlendMode : byte
-{
-    Unset = 0,
-    Alpha = 1,
-    PremultipliedAlpha = 2,
-    Additive = 3,
-    OneZero = 4
-}
+namespace ConcreteEngine.Graphics.Gfx;
 
 public enum ClearBufferFlag : byte
 {
@@ -17,6 +10,17 @@ public enum ClearBufferFlag : byte
     ColorAndDepth = 3
 }
 
+[EnumExt]
+public enum BlendMode : byte
+{
+    Unset = 0,
+    Alpha = 1,
+    PremultipliedAlpha = 2,
+    Additive = 3,
+    OneZero = 4
+}
+
+[EnumExt]
 public enum CullMode : byte
 {
     Unset = 0,
@@ -27,6 +31,7 @@ public enum CullMode : byte
     FrontCw = 5
 }
 
+[EnumExt]
 public enum DepthMode : byte
 {
     Unset = 0,
@@ -37,6 +42,7 @@ public enum DepthMode : byte
     Greater = 5
 }
 
+[EnumExt]
 public enum PolygonOffsetLevel : byte
 {
     Unset = 0,

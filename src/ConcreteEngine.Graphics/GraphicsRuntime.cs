@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Error;
@@ -93,9 +94,9 @@ public sealed class GraphicsRuntime : IDisposable
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BeginFrame(GfxFrameArgs frameCtx)
+    public void BeginFrame(Size2D outputSize)
     {
-        _cmd.BeginFrame(frameCtx);
+        _cmd.BeginFrame(outputSize);
         _draw.BeginFrame();
     }
 

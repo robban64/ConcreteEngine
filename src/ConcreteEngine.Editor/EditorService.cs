@@ -1,7 +1,8 @@
-using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.App.CLI;
+using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Theme;
+using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Logging;
 using Hexa.NET.ImGui;
 using EventHandler = ConcreteEngine.Editor.Core.EventHandler;
 
@@ -17,11 +18,12 @@ internal sealed class EditorService
 
     private readonly PanelRouter _router;
     private readonly SelectionManager _selectionManager;
+    private readonly ConsoleSystem _cli;
 
     public EditorService()
     {
         _eventDispatcher = new EventDispatcher();
-
+        _cli = new ConsoleSystem();
         _stateManager = new StateManager(_eventDispatcher);
 
         _selectionManager = new SelectionManager(_stateManager);
@@ -29,13 +31,22 @@ internal sealed class EditorService
 
         _windowManager = new WindowManager(_stateManager);
         _router = new PanelRouter(_stateManager, _windowManager);
+    }
 
+    public void Setup()
+    {
         RegisterEvents();
+        RegisterCli();
 
-        _windowManager.Init(ConsoleGateway.Service);
+        _windowManager.Setup();
         _router.ForceResolve(_stateManager);
 
-        ConsoleGateway.LogPlain($"PersistentArena: {TextBuffers.PersistentArena.Remaining} bytes left");
+        LogService.PushMessage($"StringArena: {StringArena.Remaining} bytes left");
+    }
+
+    private void RegisterCli()
+    {
+        _cli.RegisterCommand<UtilityCommandHandler>();
     }
 
     private void RegisterEvents()
@@ -44,16 +55,15 @@ internal sealed class EditorService
         _eventDispatcher.Register<AssetEvent>(EventHandler.OnAssetUpdateEvent);
         _eventDispatcher.Register<SelectionEvent>(EventHandler.OnSelectionEvent);
         _eventDispatcher.Register<ToolEvent>(EventHandler.OnToolEvent);
-        _eventDispatcher.Register<ModeEvent>(EventHandler.OnModeEvent);
     }
 
     public void Draw()
     {
-        GuiTheme.PushFontText();
+        AppLayout.PushFontText();
         _windowManager.Draw();
         ImGui.PopFont();
 
-        if (EditorInput.UpdateInputState())
+        if (EditorInput.UpdateInputState(_selectionManager.HasSceneObject))
             EditorTime.WakeUp();
 
         _interactionHandler.Update();

@@ -1,5 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <GeneratorId>Common</GeneratorId>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <CompilerVisibleProperty Include="GeneratorId" />
+    </ItemGroup>
+
     <ItemGroup>
         <PackageReference Include="Silk.NET.Maths" Version="2.23.0"/>
+    </ItemGroup>
+    
+    <ItemGroup>
+        <ProjectReference Include="..\Generator\Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true"/>
     </ItemGroup>
 </Project>

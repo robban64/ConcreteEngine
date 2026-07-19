@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Core;
 using Hexa.NET.ImGuizmo;
 
 namespace ConcreteEngine.Editor.Utils;
@@ -16,7 +16,7 @@ internal static class EditorEnumExtensions
             TransformGizmoOp.Translate => ImGuizmoOperation.Translate,
             TransformGizmoOp.Rotate => ImGuizmoOperation.Rotate,
             TransformGizmoOp.Scale => ImGuizmoOperation.Scale,
-            _ => Throwers.Unreachable<ImGuizmoOperation>(nameof(op))
+            _ => throw new ArgumentOutOfRangeException(nameof(op))
         };
     }
 }

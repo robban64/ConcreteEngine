@@ -1,59 +1,80 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct DirLightParams(Vector3 direction, Vector3 diffuse, float intensity, float specular)
 {
+    [InputNumber(Format = "%.3f", Speed = 0.01f, Min = -1f, Max = 1f)]
     public Vector3 Direction = direction;
-    public Vector3 Diffuse = diffuse;
-    public float Intensity = intensity;
-    public float Specular = specular;
-}
 
-[StructLayout(LayoutKind.Sequential)]
-public struct AmbientParams(Color4 ambient, Color4 ambientGround, float exposure)
-{
-    public Color4 Ambient = ambient;
-    public Color4 AmbientGround = ambientGround;
-    public float Exposure = exposure;
+    [InputColor(HasAlpha = false)] public Vector3 Diffuse = diffuse;
+
+    [InputNumber(InputStyle.Drag, Format = "%.3f", Speed = 0.01f, Min = 0f, Max = 10f)]
+    public float Intensity = intensity;
+
+    [InputNumber(InputStyle.Drag, Format = "%.3f", Speed = 0.01f, Min = 0f, Max = 10f)]
+    public float Specular = specular;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public struct ShadowProjectionParams(float distance, float zPad, float constBias, float slopeBias)
 {
+    [InputNumber(InputStyle.Slider, Min = 10f, Max = 500f)]
     public float Distance = distance;
+
+    [InputNumber(InputStyle.Slider, Min = 10f, Max = 100f)]
     public float ZPad = zPad;
+
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0.001f, Max = 0.01f, Format = "%.4f")]
     public float ConstBias = constBias;
+
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0.001f, Max = 0.01f, Format = "%.4f")]
     public float SlopeBias = slopeBias;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public struct ShadowVisualParams(float strength, float pcfRadius)
 {
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 1f)]
     public float Strength = strength;
+
+    [InputNumber(InputStyle.Slider, Min = 0.5f, Max = 4f)]
     public float PcfRadius = pcfRadius;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct FogHeightParams
+public struct FogHeightParams(float density, float strength, float baseHeight, float heightFalloff)
 {
-    public float Density;
-    public float Strength;
-    public float MaxDistance;
-    public float BaseHeight;
-    public float HeightFalloff;
+    [InputNumber(InputStyle.Slider, Min = 100, Max = 1500)]
+    public float Density = density;
+
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
+    public float Strength = strength;
+
+    [InputNumber(InputStyle.Slider, Min = -1000f, Max = 1000f)]
+    public float BaseHeight = baseHeight;
+
+    [InputNumber(InputStyle.Slider, Min = 0.001f, Max = 10000.0f)]
+    public float HeightFalloff = heightFalloff;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct FogOpticsParams
+public struct FogOpticsParams(float scattering, float distanceWeight, float heightWeight, float maxDistance)
 {
-    public Color4 Color;
-    public float Scattering;
-    public float DistanceWeight;
-    public float HeightWeight;
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
+    public float Scattering = scattering;
+
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
+    public float DistanceWeight = distanceWeight;
+
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
+    public float HeightWeight = heightWeight;
+
+    [InputNumber(InputStyle.Drag, Speed = 1f, Min = 1f, Max = 10000f, Format = "%.2f")]
+    public float MaxDistance = maxDistance;
 }
 
 // -1..+1 > -0.10..+0.10 
@@ -63,9 +84,16 @@ public struct FogOpticsParams
 [StructLayout(LayoutKind.Sequential)]
 public struct PostImageFxParams(float vignette, float grain, float sharpen, float rolloff)
 {
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 0.5f)]
     public float Vignette = vignette;
+
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 0.5f)]
     public float Grain = grain;
+
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 0.5f)]
     public float Sharpen = sharpen;
+
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 0.5f)]
     public float Rolloff = rolloff;
 }
 
@@ -74,8 +102,13 @@ public struct PostImageFxParams(float vignette, float grain, float sharpen, floa
 [StructLayout(LayoutKind.Sequential)]
 public struct PostBloomParams(float intensity, float threshold, float radius)
 {
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 2f)]
     public float Intensity = intensity;
+
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 2f)]
     public float Threshold = threshold;
+
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 10f)]
     public float Radius = radius;
 }
 
@@ -83,7 +116,10 @@ public struct PostBloomParams(float intensity, float threshold, float radius)
 [StructLayout(LayoutKind.Sequential)]
 public struct PostWhiteBalanceParams(float tint, float strength)
 {
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 1f)]
     public float Tint = tint;
+
+    [InputNumber(InputStyle.Slider, Min = -1f, Max = 1f)]
     public float Strength = strength;
 }
 
@@ -91,8 +127,15 @@ public struct PostWhiteBalanceParams(float tint, float strength)
 [StructLayout(LayoutKind.Sequential)]
 public struct PostGradeParams(float exposure, float saturation, float contrast, float warmth)
 {
+    [InputNumber(InputStyle.Slider, Min = 0.5f, Max = 2f)]
     public float Exposure = exposure;
+
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 1.5f)]
     public float Saturation = saturation;
+
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 1.5f)]
     public float Contrast = contrast;
+
+    [InputNumber(InputStyle.Slider, Min = 0, Max = 1f)]
     public float Warmth = warmth;
 }

@@ -37,9 +37,8 @@ public sealed class CameraManager
         if (!Camera.Ensure() && !shadow.WasDirty) return;
 
         var shadowProj = shadow.Projection;
-        var lightDir = visuals.Illumination.DirectionalLight.Value.Direction;
-
-        UpdateLightView(shadow.ShadowMapSize, shadowProj.Value.Distance, shadowProj.Value.ZPad, lightDir);
+        var lightDir = visuals.Illumination.Direction;
+        UpdateLightView(shadow.ShadowMapSize, shadowProj.Distance, shadowProj.ZPad, lightDir);
     }
 
 
@@ -128,8 +127,8 @@ file static class CameraUtils
     {
         var tan = camera.Transform.Tan;
 
-        var near = camera.NearPlane;
-        var far = MathF.Min(camera.FarPlane, near + distance);
+        var near = camera.NearFarPlane.X;
+        var far = MathF.Min(camera.NearFarPlane.Y, near + distance);
         Vector3 forward = camera.Forward, up = camera.Up, right = camera.Right;
 
         // extents at near/far

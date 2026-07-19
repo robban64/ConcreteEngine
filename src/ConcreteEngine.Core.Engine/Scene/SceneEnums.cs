@@ -1,5 +1,8 @@
+using ConcreteEngine.Core.Common.Attributes;
+
 namespace ConcreteEngine.Core.Engine.Scene;
 
+[EnumExt(ToUtf8 = true)]
 public enum SceneObjectKind : byte
 {
     Empty = 0,

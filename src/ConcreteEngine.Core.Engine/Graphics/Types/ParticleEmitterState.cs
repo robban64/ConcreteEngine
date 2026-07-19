@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
@@ -16,9 +17,9 @@ public struct ParticleCpuInstance
 [StructLayout(LayoutKind.Sequential)]
 public struct ParticleParams
 {
-    public Color4 StartColor;
-    public Color4 EndColor;
-    public Vector2 SizeStartEnd;
+    [InputColor] public Color4 StartColor;
+    [InputColor] public Color4 EndColor;
+    [InputNumber] public Vector2 SizeStartEnd;
 
     public static ParticleParams MakeDefault() =>
         new()
@@ -33,14 +34,14 @@ public struct ParticleParams
 public struct EmitterParams
 {
     // Physics
-    public Vector3 Gravity;
-    public float Drag;
-    public float Spread;
+    [InputNumber] public Vector3 Gravity;
+    [InputNumber] public float Drag;
+    [InputNumber] public float Spread;
 
     // Spawn Parameters
-    public Vector3 Direction;
-    public Vector2 SpeedMinMax;
-    public Vector2 LifeMinMax;
+    [InputNumber] public Vector3 Direction;
+    [InputNumber] public Vector2 SpeedMinMax;
+    [InputNumber] public Vector2 LifeMinMax;
 
     public static EmitterParams MakeDefault() =>
         new()

@@ -1,3 +1,5 @@
+using ConcreteEngine.Core.Common.Attributes;
+
 namespace ConcreteEngine.Renderer.Core;
 
 public enum SurfaceNormalMode : byte
@@ -21,6 +23,7 @@ public enum ShadingModelMode : byte
     BlinnPhong = 2
 }
 
+[EnumExt]
 public enum TextureUsage : byte
 {
     Albedo,

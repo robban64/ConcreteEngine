@@ -1,13 +1,5 @@
-using System.Numerics;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Editor.Lib.Widgets;
-using ConcreteEngine.Editor.Theme;
-using Hexa.NET.ImGui;
-
 namespace ConcreteEngine.Editor.Lib.Reflection;
-
+/*
 public sealed class InspectorEditorObjectV2(string typeName, Type type)
 {
     public Type Type = type;
@@ -220,4 +212,4 @@ public readonly struct FormatOptions(string? format, InspectorTypeKind typeKind 
 {
     public readonly string? Format = format;
     public readonly InspectorTypeKind TypeKind = typeKind;
-}
+}*/

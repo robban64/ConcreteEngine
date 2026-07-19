@@ -13,6 +13,7 @@ internal sealed unsafe class ShaderImporter
     public const int MinBlockSize = 4096;
 
     private static ReadOnlySpan<byte> Identifier => "@import "u8;
+    private static ReadOnlySpan<byte> Std140Header => "layout(std140, binding = "u8;
 
     private sealed class UboDictEntry(int slot, byte[] data)
     {
@@ -89,8 +90,10 @@ internal sealed unsafe class ShaderImporter
             if (type.SequenceEqual("ubo"u8))
             {
                 var uboEntry = _uboDict[strName];
-                sw.Append("layout(std140, binding = "u8).Append(uboEntry.Slot).Append(") "u8);
-                sw.Append(uboEntry.Data).Append('\n');
+                sw.Append(Std140Header);
+                sw.Append(uboEntry.Slot).Append((byte)')').Append(' ');
+                sw.Append(uboEntry.Data);
+                sw.Append('\n');
             }
             else if (type.SequenceEqual("struct"u8))
                 sw.Append(_structsDict[strName]).Append('\n');

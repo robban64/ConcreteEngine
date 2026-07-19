@@ -75,26 +75,7 @@ public sealed class SceneManager
     internal void MarkDirty(SceneObjectId sceneObjectId)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sceneObjectId.Id, nameof(sceneObjectId));
-        var id = sceneObjectId.Id;
-        if (_dirtyIds.Count == 0)
-        {
-            _dirtyIds.Add(id);
-            return;
-        }
-
-        var lastId = _dirtyIds[^1];
-        if (lastId == id) return;
-
-        if (id > lastId)
-        {
-            _dirtyIds.Add(id);
-            return;
-        }
-
-        var existingIndex = SearchMethod.BinarySearch(CollectionsMarshal.AsSpan(_dirtyIds), id);
-        if (existingIndex >= 0) return;
-        _dirtyIds.Add(id);
-        _dirtyIds.Sort();
+        _dirtyIds.TryAddUniqueSorted(sceneObjectId.Id);
     }
 
     internal void ClearDirty() => _dirtyIds.Clear();

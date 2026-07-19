@@ -1,17 +1,10 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 
 namespace ConcreteEngine.Core.Engine.Assets.Utils;
 
 internal static class AssetKindUtils
 {
-    public static readonly int AssetTypeCount = EnumCache<AssetKind>.Count - 1;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int ToIndex(this AssetKind kind) => (int)kind - 1;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int ToAssetIndex(Type type) => ToAssetKind(type).ToIndex();
+    public static readonly int AssetTypeCount = 4;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AssetKind ToAssetKind(Type type)

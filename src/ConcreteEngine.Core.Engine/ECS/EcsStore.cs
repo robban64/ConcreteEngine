@@ -73,7 +73,7 @@ public abstract class EcsStore : IDisposable
         foreach (var callback in StoreMeta.OnResizeCallbacks)
             callback(this);
 
-        Logger.LogString(LogScope.Ecs, $"GameEntities: resized {newSize}", LogLevel.Warn);
+        Logger.Log(LogScope.Ecs, $"GameEntities: resized {newSize}", LogLevel.Warn);
     }
 
     public abstract void Dispose();

@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Gateway;
 using ConcreteEngine.Engine.Render;
@@ -21,7 +21,7 @@ internal sealed class EngineSetupCtx
     public required EngineGateway EngineGateway;
     public required EngineTickHub TickHub;
 
-    public required EngineCommandQueue CommandQueue;
+    public required CommandBus CommandBus;
     public required AssetSystem Assets;
     public required EngineRenderSystem Renderer;
     public required SceneSystem SceneSystem;
@@ -84,9 +84,6 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnSetupInternal(EngineSetupCtx ctx)
     {
-        Logger.BindLogger(ConsoleGateway.Log);
-        unsafe { Logger.BindGfxLogger(&ConsoleGateway.LogStruct); }
-
         return true;
     }
 
@@ -110,24 +107,17 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnLoadEditor(EngineSetupCtx ctx)
     {
-        ctx.EngineGateway.SetupEditor(ctx.CommandQueue, ctx.Graphics.Gfx);
+        ctx.EngineGateway.SetupEditor(ctx.CommandBus, ctx.Graphics.Gfx);
         Logger.ToggleGfxLog(true);
-
-        for (int i = 0; i < 3; i++) EngineWarmup.YeetGenerics();
-
         return true;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnWarmup(EngineSetupCtx ctx)
     {
-        ctx.Graphics.BeginFrame(new GfxFrameArgs(0, EngineWindow.Viewport.Size));
-        //ctx.Renderer.Program.PrepareFrameWarmup(ctx.Window.WindowSize, ctx.Window.OutputSize);
-
+        ctx.Graphics.BeginFrame(EngineWindow.Viewport.Size);
         ctx.Renderer.Program.Render();
-
         ctx.Graphics.EndFrame();
-
         ctx.EngineGateway.RenderEditor(0);
 
         return false;

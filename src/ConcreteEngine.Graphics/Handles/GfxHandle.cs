@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Graphics.Handles;
 

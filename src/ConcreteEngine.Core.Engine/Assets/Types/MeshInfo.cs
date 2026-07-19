@@ -1,8 +1,5 @@
-using ConcreteEngine.Core.Engine.Editor;
-
 namespace ConcreteEngine.Core.Engine.Assets;
 
-[Inspectable]
 public readonly struct ModelInfo(
     int vertexCount,
     int faceCount,
@@ -21,7 +18,6 @@ public readonly struct ModelInfo(
     public readonly bool IsAnimated = isAnimated;
 }
 
-[Inspectable]
 public readonly struct MeshInfo(int vertexCount, int trisCount, byte meshIndex, byte materialIndex, ushort boneCount)
 {
     public readonly int VertexCount = vertexCount;
@@ -29,4 +25,6 @@ public readonly struct MeshInfo(int vertexCount, int trisCount, byte meshIndex, 
     public readonly ushort BoneCount = boneCount;
     public readonly byte MeshIndex = meshIndex;
     public readonly byte MaterialIndex = materialIndex;
+
+    public bool Has16BitIndex => VertexCount < ushort.MaxValue;
 }

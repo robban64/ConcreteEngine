@@ -1,11 +1,10 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Editor;
 
-namespace ConcreteEngine.Core.Engine;
+namespace ConcreteEngine.Core.Engine.Graphics;
 
 public sealed class VisualManager
 {
@@ -14,7 +13,7 @@ public sealed class VisualManager
     public bool AnyWasDirty { get; private set; }
 
     public readonly ShadowSettings Shadow;
-    public readonly IlluminationSettings Illumination;
+    public readonly DirectionalLight Illumination;
     public readonly EnvironmentSettings Environment;
     public readonly PostEffectSettings PostEffect;
 
@@ -26,7 +25,7 @@ public sealed class VisualManager
             throw new InvalidOperationException($"{nameof(VisualManager)} is already initialized");
 
         Shadow = new ShadowSettings();
-        Illumination = new IlluminationSettings();
+        Illumination = new DirectionalLight();
         Environment = new EnvironmentSettings();
         PostEffect = new PostEffectSettings();
     }
@@ -80,54 +79,132 @@ public abstract class VisualStateObject
 
         return WasDirty;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected StateScope<T> MakeScope<T>(ref T value) where T : unmanaged => new(ref value, ref IsDirty);
 }
 
-public sealed class IlluminationSettings : VisualStateObject
+[Inspect]
+public sealed class DirectionalLight : VisualStateObject
 {
-    private DirLightParams _directionalLight = new(
-        direction: new Vector3(-0.35f, -0.95f, 0.25f),
-        diffuse: new Vector3(1.05f, 0.92f, 0.82f),
-        intensity: 1.35f,
-        specular: 0.75f
-    );
+    [InputNumber(Format = "%.3f", Speed = 0.01f, Min = -1f, Max = 1f)]
+    public Vector3 Direction
+    {
+        get;
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
+    } = new Vector3(-0.35f, -0.95f, 0.25f);
 
-    private AmbientParams _ambient = new(
-        ambient: new Color4(0.34f, 0.38f, 0.44f),
-        ambientGround: new Color4(0.20f, 0.17f, 0.15f),
-        exposure: 0.26f
-    );
+    [InputColor(HasAlpha = false)]
+    public Vector3 Diffuse
+    {
+        get;
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
+    } = new Vector3(1.05f, 0.92f, 0.82f);
 
-    public StateScope<DirLightParams> DirectionalLight => MakeScope(ref _directionalLight);
-    public StateScope<AmbientParams> Ambient => MakeScope(ref _ambient);
+    [InputNumber(InputStyle.Drag, Format = "%.3f", Speed = 0.01f, Min = 0f, Max = 10f)]
+    public float Intensity
+    {
+        get;
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
+    } = 1.35f;
+
+    [InputNumber(InputStyle.Drag, Format = "%.3f", Speed = 0.01f, Min = 0f, Max = 10f)]
+    public float Specular
+    {
+        get;
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
+    } = 0.75f;
 }
 
+[Inspect]
 public sealed class EnvironmentSettings : VisualStateObject
 {
-    private FogHeightParams _fogHeight = new()
+    [InputColor(HasAlpha = false, Segment = "Ambient")]
+    public Vector3 Ambient
     {
-        Density = 720f,
-        Strength = 1.05f,
-        MaxDistance = 9500f,
-        BaseHeight = 0,
-        HeightFalloff = 5200f
-    };
+        get;
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
+    } = new Vector3(0.34f, 0.38f, 0.44f);
 
-    private FogOpticsParams _fogOptics = new()
+    [InputColor(HasAlpha = false, Segment = "Ambient")]
+    public Vector3 AmbientGround
     {
-        Color = new Color4(0.70f, 0.89f, 0.68f), Scattering = 0.09f, DistanceWeight = 1f, HeightWeight = 0.85f
-    };
+        get;
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
+    } = new Vector3(0.20f, 0.17f, 0.15f);
 
-    public StateScope<FogHeightParams> FogHeight => MakeScope(ref _fogHeight);
-    public StateScope<FogOpticsParams> FogOptics => MakeScope(ref _fogOptics);
+    [InputNumber(InputStyle.Drag, Segment = "Ambient", Format = "%.3f", Speed = 0.01f, Min = 0f, Max = 2f)]
+    public float Exposure
+    {
+        get;
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
+    } = 0.26f;
+
+    [InputColor(Segment = "Fog")]
+    public Color4 FogColor
+    {
+        get;
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
+    } = new(0.70f, 0.89f, 0.68f);
+
+    [InspectInclude, InputGroup(Segment = "Fog")]
+    public FogHeightParams FogHeight
+    {
+        get;
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
+    } = new(720f, 1.05f, 0, 5200f);
+
+    [InspectInclude, InputGroup(Segment = "Fog")]
+    public FogOpticsParams FogOptics
+    {
+        get;
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
+    } = new(0.09f, 1f, 0.85f, 9500f);
 }
 
+[Inspect]
 public sealed class ShadowSettings : VisualStateObject
 {
     public bool HasPendingShadowSize { get; internal set; }
 
+    [InputCombo([1024, 2048, 4096, 8192], ["1024px", "2048px", "4096px", "8192px"], Label = "ShadowMap Size")]
     public int ShadowMapSize
     {
         get;
@@ -137,30 +214,81 @@ public sealed class ShadowSettings : VisualStateObject
             ArgumentOutOfRangeException.ThrowIfEqual(IntMath.IsPowerOfTwo(value), false, nameof(value));
 
             field = value;
-            _projection = VisualUtils.MakeSizedShadow(value, 20.0f);
+            Projection = VisualUtils.MakeSizedShadow(value, 20.0f);
             IsDirty = true;
             HasPendingShadowSize = true;
         }
     }
 
-    private ShadowProjectionParams _projection;
-    private ShadowVisualParams _visuals = new(1f, 1f);
+    [InspectInclude, InputGroup]
+    public ShadowProjectionParams Projection
+    {
+        get;
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
+    }
 
-    public StateScope<ShadowProjectionParams> Projection => MakeScope(ref _projection);
-    public StateScope<ShadowVisualParams> Visuals => MakeScope(ref _visuals);
+    [InspectInclude, InputGroup]
+    public ShadowVisualParams Visuals
+    {
+        get;
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
+    } = new(1f, 1f);
 }
 
+[Inspect]
 public sealed class PostEffectSettings : VisualStateObject
 {
-    private PostGradeParams _grade = new(1.0f, 1.1f, 1.05f, 0.0f);
-    private PostWhiteBalanceParams _whiteBalance = new(0.0f, 0.0f);
-    private PostBloomParams _bloom = new(0.5f, 0.85f, 3.0f);
-    private PostImageFxParams _imageFx = new(0.25f, 0.15f, 0.20f, 0.0f);
+    [InspectInclude, InputGroup]
+    public PostGradeParams Grade
+    {
+        get;
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
+    } = new(1.0f, 1.1f, 1.05f, 0.0f);
 
-    public StateScope<PostGradeParams> Grade => MakeScope(ref _grade);
-    public StateScope<PostWhiteBalanceParams> WhiteBalance => MakeScope(ref _whiteBalance);
-    public StateScope<PostBloomParams> Bloom => MakeScope(ref _bloom);
-    public StateScope<PostImageFxParams> ImageFx => MakeScope(ref _imageFx);
+    [InspectInclude, InputGroup]
+    public PostWhiteBalanceParams WhiteBalance
+    {
+        get;
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
+    } = new(0.0f, 0.0f);
+
+    [InspectInclude, InputGroup]
+    public PostBloomParams Bloom
+    {
+        get;
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
+    } = new(0.5f, 0.85f, 3.0f);
+
+    [InspectInclude, InputGroup]
+    public PostImageFxParams ImageFx
+    {
+        get;
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
+    } = new(0.25f, 0.15f, 0.20f, 0.0f);
 }
 
 file static class VisualUtils

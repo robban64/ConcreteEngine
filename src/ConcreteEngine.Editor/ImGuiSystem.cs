@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Input;
-using ConcreteEngine.Editor.Theme;
+using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
@@ -136,12 +136,12 @@ internal static unsafe class ImGuiSystem
         config->GlyphOffset.Y = 1f;
 
         pathUtf8 = PathUtils.JoinPath(buffer, "./", EnginePath.EditorContentPath, IconFilename);
-        GuiTheme.TextFont = fonts->AddFontFromFileTTF(pathUtf8, fontSize, config, glyphs.GetRanges());
+        AppLayout.TextFont = fonts->AddFontFromFileTTF(pathUtf8, fontSize, config, glyphs.GetRanges());
 
         config->MergeMode = 0;
         config->GlyphOffset.Y = 0;
-        config->GlyphMinAdvanceX = GuiTheme.IconSizeMedium * scale;
-        GuiTheme.IconFont = fonts->AddFontFromFileTTF(pathUtf8, GuiTheme.IconSizeMedium * scale, config);
+        config->GlyphMinAdvanceX = GuiTheme.FontSizeLarge * scale;
+        AppLayout.IconFont = fonts->AddFontFromFileTTF(pathUtf8, GuiTheme.FontSizeLarge * scale, config);
 
         fonts->CompactCache();
     }

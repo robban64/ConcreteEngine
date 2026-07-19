@@ -12,6 +12,11 @@ public static unsafe class NativeArray
         Validate(length, Unsafe.SizeOf<T>(), alignment);
         return new NativeArray<T>(ptr, length, alignment);
     }
+    public static NativeArray<byte> Allocate(int capacity, bool zeroed = true) 
+    {
+        var ptr = AllocMemory(capacity, 1, 0, zeroed);
+        return new NativeArray<byte>((byte*)ptr, capacity, 0);
+    }
 
     public static NativeArray<T> Allocate<T>(int capacity, bool zeroed = true) where T : unmanaged
     {

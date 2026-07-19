@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 
@@ -41,6 +42,7 @@ public sealed class AssetManager
         _profileEntries = MaterialProfile.CreateProfiles();
     }
 
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetFile GetAssetRootFile(AssetId id) => Files.Get(Store.GetAssetBinding(id, 0));
 
@@ -59,7 +61,8 @@ public sealed class AssetManager
     internal AssetId RegisterInMemoryAsset(Guid gid, AssetKind kind, string name)
     {
         var assetId = Store.Register(gid, 0);
-        var file = Files.RegisterRoot(assetId, name, new FileScanInfo(string.Empty, name));
+        var file = Files.RegisterRoot(assetId, name, gid,
+            new FileScanInfo(name, string.Empty, storage: AssetStorage.InMemory));
         Store.SetAssetBinding(assetId, file.Id, 0);
         return assetId;
     }
@@ -72,7 +75,7 @@ public sealed class AssetManager
             Throwers.InvalidArgument($"Asset name {record.Name} already registered");
 
         var assetId = Store.Register(record.Id, record.FileCount);
-        var file = Files.RegisterRoot(assetId, record.Name, in fileInfo);
+        var file = Files.RegisterRoot(assetId, record.Name, record.Id, in fileInfo);
         Store.SetAssetBinding(assetId, file.Id, 0); // root
         return assetId;
     }
@@ -85,18 +88,19 @@ public sealed class AssetManager
         if (!Files.TryGetFileByPath(relativePath, out var file))
             Throwers.InvalidArgument(nameof(relativePath), $"Invalid file path {relativePath}");
 
-        file.Binding = FileBinding.DependentFile;
+        file.MakeDependent();
         Store.SetAssetBinding(assetId, file.Id, fileIndex);
     }
 
     internal AssetId RegisterEmbedded(AssetId sourceId, IEmbeddedAsset embedded)
     {
-        ArgumentNullException.ThrowIfNull(embedded.FileSpec);
+        ArgumentNullException.ThrowIfNull(embedded.Name);
+
         if (!Store.HasBinding(sourceId))
             Throwers.InvalidArgument($"Missing original asset for {embedded.Name}");
 
         var assetId = RegisterInMemoryAsset(embedded.GId, embedded.Kind, embedded.Name);
-        RegisterExistingBindings(assetId, [embedded.FileSpec]);
+        //RegisterExistingBindings(assetId, [AssetFile.MakeRoot()]);
         return assetId;
     }
 
@@ -123,6 +127,6 @@ public sealed class AssetManager
         AssetStore.Core.CreateMaterials(this);
     }
 
-    public static AssetBindingEnumerator GetAssetBindingsEnumerator(AssetId assetId) =>
-        new(Assets.GetAllAssetBindings(assetId), FileRegistry);
+    public static SparseObjectEnumerator<AssetFileId, AssetFile> GetAssetBindingsEnumerator(AssetId assetId) =>
+        new(Assets.GetAllAssetBindings(assetId), FileRegistry.GetFileSpan());
 }

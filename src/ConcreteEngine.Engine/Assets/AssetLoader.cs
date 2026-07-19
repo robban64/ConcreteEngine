@@ -59,7 +59,7 @@ internal sealed class AssetLoader
         if (IsActive || _loaderContext != null) Throwers.InvalidOperation("Invalid states");
         _loaderContext = new AssetLoaderContext(true);
         foreach (var loader in _loaders) loader.Activate(true);
-        Logger.LogString(LogScope.Assets, "Startup Asset Loader - Activated");
+        Logger.Log(LogScope.Assets, "Startup Asset Loader - Activated");
         return _loaderContext;
     }
 
@@ -77,7 +77,7 @@ internal sealed class AssetLoader
 
         _loaders[kind.ToIndex()].Activate(false);
 
-        Logger.LogString(LogScope.Assets, $"Loader ({EnumCache<AssetKind>.Names[(int)kind]}) - Reactivated");
+        Logger.Log(LogScope.Assets, $"Loader ({AssetKindExt.Names[(int)kind]}) - Reactivated");
     }
 
     public void DeactivateLoader()
@@ -85,7 +85,7 @@ internal sealed class AssetLoader
         _loaderContext = null;
         foreach (var loader in _loaders) loader.DeActivate();
 
-        Logger.LogString(LogScope.Assets, "Asset Loader - Closed");
+        Logger.Log(LogScope.Assets, "Asset Loader - Closed");
     }
 
 

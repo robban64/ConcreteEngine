@@ -12,7 +12,6 @@ internal sealed class ParticleManager : IDisposable
 
     private readonly SlotArray<ParticleEmitter> _emitters = new(8);
     private readonly List<Id16<ParticleEmitter>> _pendingEmitters = new(4);
-    private readonly List<Id16<ParticleEmitter>> _dirtyEmitters = new(4);
 
     private readonly Dictionary<string, Id16<ParticleEmitter>> _byName = new(4);
 

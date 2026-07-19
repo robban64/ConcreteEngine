@@ -24,7 +24,7 @@ internal static class AssetsExtensions
                 FileBinding.RootFile => kind.ToIcon(),
                 FileBinding.DependentFile => IconNames.FileImage,
                 FileBinding.UnboundFile => IconNames.File,
-                _ => Throwers.Unreachable<uint>(nameof(binding))
+                _ => throw new ArgumentOutOfRangeException(nameof(kind))
             };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -35,7 +35,7 @@ internal static class AssetsExtensions
                 FileBinding.RootFile => Palette32.TextLightBlue,
                 FileBinding.DependentFile => Palette32.TextSecondary,
                 FileBinding.UnboundFile => Palette32.TextMuted,
-                _ => Throwers.Unreachable<uint>(nameof(binding))
+                _ => throw new ArgumentOutOfRangeException(nameof(binding))
             };
     }
 
@@ -51,7 +51,7 @@ internal static class AssetsExtensions
                 AssetKind.Model => Palette32.Model,
                 AssetKind.Texture => Palette32.Texture,
                 AssetKind.Material => Palette32.Material,
-                _ => Throwers.Unreachable<uint>(nameof(kind))
+                _ => throw new ArgumentOutOfRangeException(nameof(kind))
             };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -62,7 +62,7 @@ internal static class AssetsExtensions
                 AssetKind.Model => IconNames.Box,
                 AssetKind.Texture => IconNames.Image,
                 AssetKind.Material => IconNames.Circle,
-                _ => Throwers.Unreachable<uint>(nameof(kind))
+                _ => throw new ArgumentOutOfRangeException(nameof(kind))
             };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -73,7 +73,7 @@ internal static class AssetsExtensions
                 AssetKind.Model => IconNames.FileBox,
                 AssetKind.Texture => IconNames.FileImage,
                 AssetKind.Material => IconNames.FileCog,
-                _ => Throwers.Unreachable<uint>(nameof(kind))
+                _ => throw new ArgumentOutOfRangeException(nameof(kind))
             };
     }
 }

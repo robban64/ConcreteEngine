@@ -18,7 +18,7 @@ internal static class SceneExtensions
                 SceneObjectKind.Empty => Palette32.TextSecondary,
                 SceneObjectKind.Model => Palette32.Model,
                 SceneObjectKind.Particle => Palette32.Material,
-                _ => Throwers.Unreachable<uint>(nameof(kind))
+                _ => throw new ArgumentOutOfRangeException(nameof(kind))
             };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -28,7 +28,7 @@ internal static class SceneExtensions
                 SceneObjectKind.Empty => Icons.Minus,
                 SceneObjectKind.Model => Icons.Box,
                 SceneObjectKind.Particle => Icons.Sparkles,
-                _ => Throwers.Unreachable<Icons>(nameof(kind))
+                _ => throw new ArgumentOutOfRangeException(nameof(kind))
             };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -38,7 +38,7 @@ internal static class SceneExtensions
                 SceneObjectKind.Empty => IconNames.Minus,
                 SceneObjectKind.Model => IconNames.Box,
                 SceneObjectKind.Particle => IconNames.Sparkles,
-                _ => Throwers.Unreachable<uint>(nameof(kind))
+                _ => throw new ArgumentOutOfRangeException(nameof(kind))
             };
     }
 }

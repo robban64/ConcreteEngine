@@ -1,4 +1,5 @@
 using System.Text;
+using Generator.Misc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 

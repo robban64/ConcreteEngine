@@ -18,7 +18,7 @@ internal static class GfxEnumUtils
             VertexFormat.UByte => 1,
             VertexFormat.UShort => 2,
             VertexFormat.Half => 2,
-            _ => Throwers.Unreachable<int>(nameof(fmt))
+            _ => throw new ArgumentOutOfRangeException(nameof(fmt))
         };
 
     public static int ToPrimitiveSize(this DrawElementSize t) =>
@@ -27,7 +27,7 @@ internal static class GfxEnumUtils
             DrawElementSize.UnsignedByte => 1,
             DrawElementSize.UnsignedShort => 2,
             DrawElementSize.UnsignedInt => 4,
-            _ => Throwers.Unreachable<int>(nameof(t))
+            _ => throw new ArgumentOutOfRangeException(nameof(t))
         };
 
     public static DrawElementSize ToDrawElementSize(int stride) =>
@@ -36,7 +36,7 @@ internal static class GfxEnumUtils
             1 => DrawElementSize.UnsignedByte,
             2 => DrawElementSize.UnsignedShort,
             4 => DrawElementSize.UnsignedInt,
-            _ => Throwers.Unreachable<DrawElementSize>(nameof(stride))
+            _ => throw new ArgumentOutOfRangeException(nameof(stride))
         };
 
     public static int ToAnisotropy(this TextureAnisotropy anisotropy)
@@ -48,7 +48,7 @@ internal static class GfxEnumUtils
             TextureAnisotropy.X4 => 4,
             TextureAnisotropy.X8 => 8,
             TextureAnisotropy.X16 => 16,
-            _ => Throwers.Unreachable<int>(nameof(anisotropy))
+            _ => throw new ArgumentOutOfRangeException(nameof(anisotropy))
         };
     }
 
@@ -60,7 +60,7 @@ internal static class GfxEnumUtils
             RenderBufferMsaa.X2 => 2,
             RenderBufferMsaa.X4 => 4,
             RenderBufferMsaa.X8 => 8,
-            _ => Throwers.Unreachable<int>(nameof(msaa))
+            _ => throw new ArgumentOutOfRangeException(nameof(msaa))
         };
     }
 
@@ -73,7 +73,7 @@ internal static class GfxEnumUtils
             2 => RenderBufferMsaa.X2,
             4 => RenderBufferMsaa.X4,
             8 => RenderBufferMsaa.X8,
-            _ => Throwers.Unreachable<RenderBufferMsaa>(nameof(samples))
+            _ => throw new ArgumentOutOfRangeException(nameof(samples))
         };
     }
 }

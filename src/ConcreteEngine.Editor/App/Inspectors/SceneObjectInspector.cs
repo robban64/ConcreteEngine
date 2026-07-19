@@ -8,7 +8,7 @@ namespace ConcreteEngine.Editor.App.Inspectors;
 [EditorInspector(typeof(SceneObject))]
 internal sealed partial class SceneObjectInspector : Inspector<SceneObjectInspector>
 {
-    private static SceneObject Target => SelectionManager.Instance.SelectedSceneObject;
+    private static SceneObject Target => SelectionManager.Instance.SelectedSceneObject!;
 
     public unsafe void Draw()
     {

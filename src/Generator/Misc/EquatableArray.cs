@@ -8,7 +8,15 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 
-namespace Generator;
+// ReSharper disable LocalVariableHidesMember
+// ReSharper disable ConvertTypeCheckPatternToNullCheck
+// ReSharper disable ParameterHidesMember
+// ReSharper disable UnusedMember.Global
+// ReSharper disable HeapView.BoxingAllocation
+// ReSharper disable HeapView.PossibleBoxingAllocation
+#pragma warning disable CS0809 // Obsolete member overrides non-obsolete member
+
+namespace Generator.Misc;
 
 /// <summary>
 /// Extensions for <see cref="EquatableArray{T}"/>.
@@ -234,7 +242,7 @@ internal struct HashCode
     /// Initializes the default seed.
     /// </summary>
     /// <returns>A random seed.</returns>
-    private static unsafe uint GenerateGlobalSeed()
+    private static uint GenerateGlobalSeed()
     {
         byte[] bytes = new byte[4];
 

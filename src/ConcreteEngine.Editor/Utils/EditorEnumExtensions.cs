@@ -16,7 +16,7 @@ internal static class EditorEnumExtensions
             TransformGizmoOp.Translate => ImGuizmoOperation.Translate,
             TransformGizmoOp.Rotate => ImGuizmoOperation.Rotate,
             TransformGizmoOp.Scale => ImGuizmoOperation.Scale,
-            _ => Throwers.Unreachable<ImGuizmoOperation>(nameof(op))
+            _ => throw new ArgumentOutOfRangeException(nameof(op))
         };
     }
 }

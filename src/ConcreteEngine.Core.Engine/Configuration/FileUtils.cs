@@ -27,7 +27,7 @@ public static class FileUtils
             AssetKind.Model => ValidModelExtension,
             AssetKind.Texture => ValidTextureExtension,
             AssetKind.Material => ValidMaterialExtension,
-            _ => Throwers.Unreachable<string>(nameof(kind))
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

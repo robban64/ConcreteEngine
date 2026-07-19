@@ -26,9 +26,6 @@ public static class Throwers
         throw new ArgumentException($"{message} not found", name);
 
     [DoesNotReturn]
-    public static T Unreachable<T>(string name) => throw new UnreachableException(name);
-
-    [DoesNotReturn]
     public static void Unreachable(string name) => throw new UnreachableException(name);
 
     [DoesNotReturn]

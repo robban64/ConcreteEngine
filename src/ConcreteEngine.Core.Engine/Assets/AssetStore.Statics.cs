@@ -26,7 +26,7 @@ public sealed partial class AssetStore
             AssetKind.Model => TypeStore<Model>.Store,
             AssetKind.Texture => TypeStore<Texture>.Store,
             AssetKind.Material => TypeStore<Material>.Store,
-            _ => Throwers.Unreachable<AssetTypeStore>(nameof(kind))
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
 
     internal static void EnsureStoreCapacity(int shader, int model, int texture, int material)

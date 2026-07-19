@@ -10,7 +10,7 @@ namespace ConcreteEngine.Editor.App.Inspectors;
 internal partial class ParticleInspector : Inspector<ParticleInspector>
 {
     private static ParticleEmitter Target =>
-        SelectionManager.Instance.SelectedSceneObject?.GetInstance<ParticleInstance>()?.Emitter;
+        SelectionManager.Instance.SelectedSceneObject?.GetInstance<ParticleInstance>().Emitter!;
 
     public unsafe void Draw()
     {

@@ -81,7 +81,7 @@ internal static class GlEnumExtensions
             GfxStateFlags.Srgb => GLEnum.FramebufferSrgb,
             GfxStateFlags.PolygonOffset => GLEnum.PolygonOffsetFill,
             GfxStateFlags.Ac2 => GLEnum.SampleAlphaToCoverage,
-            _ => Throwers.Unreachable<GLEnum>(nameof(flag))
+            _ => throw new ArgumentOutOfRangeException(nameof(flag))
         };
     }
 
@@ -95,7 +95,7 @@ internal static class GlEnumExtensions
             TextureKind.CubeMap => GLEnum.TextureCubeMap,
             TextureKind.Texture2DArray => GLEnum.Texture2DArray,
             TextureKind.Multisample2D => GLEnum.Texture2DMultisample,
-            _ => Throwers.Unreachable<GLEnum>(nameof(textureKind))
+            _ => throw new ArgumentOutOfRangeException(nameof(textureKind))
         };
     }
 
@@ -142,7 +142,7 @@ internal static class GlEnumExtensions
                 FrameBufferAttachmentSlot.Color => GLEnum.ColorAttachment0,
                 FrameBufferAttachmentSlot.Depth => GLEnum.DepthAttachment,
                 FrameBufferAttachmentSlot.DepthStencil => GLEnum.DepthStencilAttachment,
-                _ => Throwers.Unreachable<GLEnum>(nameof(slot))
+                _ => throw new ArgumentOutOfRangeException(nameof(slot))
             };
         }
 
@@ -154,7 +154,7 @@ internal static class GlEnumExtensions
                 FrameBufferAttachmentSlot.Color => InternalFormat.Rgb8,
                 FrameBufferAttachmentSlot.Depth => InternalFormat.DepthComponent24,
                 FrameBufferAttachmentSlot.DepthStencil => InternalFormat.Depth24Stencil8,
-                _ => Throwers.Unreachable<InternalFormat>(nameof(slot))
+                _ => throw new ArgumentOutOfRangeException(nameof(slot))
             };
         }
     }
@@ -193,7 +193,7 @@ internal static class GlEnumExtensions
             DepthMode.Less => DepthFunction.Less,
             DepthMode.Equal => DepthFunction.Equal,
             DepthMode.Greater => DepthFunction.Greater,
-            _ => Throwers.Unreachable<DepthFunction>(nameof(preset))
+            _ => throw new ArgumentOutOfRangeException(nameof(preset))
         };
     }
 
@@ -223,7 +223,7 @@ internal static class GlEnumExtensions
             DrawPrimitive.Lines => PrimitiveType.Lines,
             DrawPrimitive.LineLoop => PrimitiveType.LineLoop,
             DrawPrimitive.LineStrip => PrimitiveType.LineStrip,
-            _ => Throwers.Unreachable<PrimitiveType>(nameof(value))
+            _ => throw new ArgumentOutOfRangeException(nameof(value))
         };
     }
 
@@ -235,7 +235,7 @@ internal static class GlEnumExtensions
             DrawElementSize.UnsignedByte => DrawElementsType.UnsignedByte,
             DrawElementSize.UnsignedShort => DrawElementsType.UnsignedShort,
             DrawElementSize.UnsignedInt => DrawElementsType.UnsignedInt,
-            _ => Throwers.Unreachable<DrawElementsType>(nameof(value))
+            _ => throw new ArgumentOutOfRangeException(nameof(value))
         };
     }
 
@@ -249,8 +249,7 @@ internal static class GlEnumExtensions
             VertexFormat.UByte => GLEnum.UnsignedByte,
             VertexFormat.UShort => GLEnum.UnsignedShort,
             VertexFormat.Half => GLEnum.HalfFloat,
-
-            _ => Throwers.Unreachable<GLEnum>(nameof(value))
+            _ => throw new ArgumentOutOfRangeException(nameof(value))
         };
     }
 
@@ -263,7 +262,7 @@ internal static class GlEnumExtensions
             ClearBufferFlag.Color => ClearBufferMask.ColorBufferBit,
             ClearBufferFlag.Depth => ClearBufferMask.DepthBufferBit,
             ClearBufferFlag.ColorAndDepth => ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit,
-            _ => Throwers.Unreachable<ClearBufferMask>(nameof(flags))
+            _ => throw new ArgumentOutOfRangeException(nameof(flags))
         };
     }
 
@@ -278,7 +277,7 @@ internal static class GlEnumExtensions
                 TexturePixelFormat.SrgbAlpha => SizedInternalFormat.Srgb8Alpha8,
                 TexturePixelFormat.Depth => SizedInternalFormat.DepthComponent24,
                 TexturePixelFormat.Red => SizedInternalFormat.R8,
-                _ => Throwers.Unreachable<SizedInternalFormat>(nameof(format))
+                _ => throw new ArgumentOutOfRangeException(nameof(format))
             };
         }
 
@@ -292,7 +291,6 @@ internal static class GlEnumExtensions
                 TexturePixelFormat.SrgbAlpha => (PixelFormat.Rgba, PixelType.UnsignedByte),
                 TexturePixelFormat.Red => (PixelFormat.Red, PixelType.UnsignedByte),
                 TexturePixelFormat.Depth => (PixelFormat.DepthComponent, PixelType.UnsignedByte),
-
                 _ => throw new ArgumentOutOfRangeException(nameof(format))
             };
         }
@@ -304,7 +302,7 @@ internal static class GlEnumExtensions
             BufferStorage.Static => BufferUsage.StaticDraw,
             BufferStorage.Dynamic => BufferUsage.DynamicDraw,
             BufferStorage.Stream => BufferUsage.StreamDraw,
-            _ => Throwers.Unreachable<BufferUsage>(nameof(storage))
+            _ => throw new ArgumentOutOfRangeException(nameof(storage))
         };
 
 
@@ -316,7 +314,7 @@ internal static class GlEnumExtensions
             BufferUsage.StaticDraw => BufferUsageARB.StaticDraw,
             BufferUsage.DynamicDraw => BufferUsageARB.DynamicDraw,
             BufferUsage.StreamDraw => BufferUsageARB.StreamDraw,
-            _ => Throwers.Unreachable<BufferUsageARB>(nameof(usage))
+            _ => throw new ArgumentOutOfRangeException(nameof(usage))
         };
     }
 
@@ -327,7 +325,7 @@ internal static class GlEnumExtensions
         {
             BufferTarget.VertexBuffer => BufferTargetARB.ArrayBuffer,
             BufferTarget.IndexBuffer => BufferTargetARB.ElementArrayBuffer,
-            _ => Throwers.Unreachable<BufferTargetARB>(nameof(target))
+            _ => throw new ArgumentOutOfRangeException(nameof(target))
         };
     }
 }

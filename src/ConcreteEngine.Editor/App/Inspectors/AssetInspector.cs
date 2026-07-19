@@ -10,7 +10,7 @@ namespace ConcreteEngine.Editor.App.Inspectors;
 [EditorInspector(typeof(Texture))]
 internal sealed partial class TextureInspector : Inspector<TextureInspector>
 {
-    public static Texture Target => (Texture)SelectionManager.Instance.SelectedAsset;
+    public static Texture Target => (Texture)SelectionManager.Instance.SelectedAsset!;
 
     public unsafe void Draw()
     {
@@ -21,7 +21,7 @@ internal sealed partial class TextureInspector : Inspector<TextureInspector>
 [EditorInspector(typeof(Material))]
 internal sealed partial class MaterialInspector : Inspector<MaterialInspector>
 {
-    public static Material Target => (Material)SelectionManager.Instance.SelectedAsset;
+    public static Material Target => (Material)SelectionManager.Instance.SelectedAsset!;
 
     private readonly ComboInput BlendCombo = ComboInput.Create("Blend Mode",
         BlendModeExt.Values,

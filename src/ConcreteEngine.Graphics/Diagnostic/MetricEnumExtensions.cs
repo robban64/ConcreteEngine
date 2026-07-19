@@ -19,7 +19,7 @@ public static class MetricEnumExtensions
             GraphicsKind.UniformBuffer => LogTopic.UniformBuffer,
             GraphicsKind.FrameBuffer => LogTopic.FrameBuffer,
             GraphicsKind.RenderBuffer => LogTopic.RenderBuffer,
-            _ => Throwers.Unreachable<LogTopic>(nameof(kind))
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
     }
 
@@ -36,7 +36,7 @@ public static class MetricEnumExtensions
             LogTopic.UniformBuffer => GraphicsKind.UniformBuffer,
             LogTopic.FrameBuffer => GraphicsKind.FrameBuffer,
             LogTopic.RenderBuffer => GraphicsKind.RenderBuffer,
-            _ => Throwers.Unreachable<GraphicsKind>(nameof(topic))
+            _ => throw new ArgumentOutOfRangeException(nameof(topic))
         };
     }
 }

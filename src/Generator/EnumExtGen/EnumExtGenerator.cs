@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Text;
+using Generator.Misc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
@@ -31,13 +33,13 @@ public sealed class EnumExtGenerator : IIncrementalGenerator
 
         context.RegisterSourceOutput(enums, static (ctx, it) =>
         {
-            var source = Generate(it);
-            ctx.AddSource($"EnumExtended.{it.TypeName}.g.cs", SourceText.From(source, Encoding.UTF8));
+            var source = Generate(it!);
+            ctx.AddSource($"EnumExtended.{it!.TypeName}.g.cs", SourceText.From(source, Encoding.UTF8));
         });
     }
 
 
-    private static BuildResult Build(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
+    private static BuildResult? Build(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         var enumSymbol = (INamedTypeSymbol)ctx.TargetSymbol;
@@ -71,6 +73,8 @@ public sealed class EnumExtGenerator : IIncrementalGenerator
         var data = enumSymbol.GetMembers().OfType<IFieldSymbol>().Where(f => f.HasConstantValue)
             .Select(static m => (m.Name, ConstantValue: m.ConstantValue!)).ToEquatableArray();
 
+        if (data.AsSpan().Length == 0) return null;
+
         return new BuildResult(
             Data: data,
             Attrib: param,
@@ -95,7 +99,7 @@ public sealed class EnumExtGenerator : IIncrementalGenerator
         sb.BeginLine();
         sb.Builder.Append($"public static readonly int Count = {count};");
         sb.EndLine("\n");
-        
+
         sb.BeginLine();
         sb.Builder.Append($"private static readonly {it.Primitive}[] values = [");
         sb.Builder.AppendJoin(',', it.Data.Array.Select(static x => x.Value));
@@ -122,20 +126,20 @@ public sealed class EnumExtGenerator : IIncrementalGenerator
         //
         if (count <= AggressiveInliningLimit)
             sb.AppendLine().AppendLine(Consts.AggressiveInliningText);
-        
+
         sb.BeginLine();
         sb.Builder.Append($"public static string ToText(this {it.TypeName} value) => value switch");
         sb.EndLine();
 
         sb.OpenBrace();
 
-        foreach (var data in it.Data)
+        for (int i = 0; i < it.Data.Length; i++)
         {
-            sb.BeginLine();
-            sb.Append(it.TypeName).Append(".").Append(data.Name).Append(" => nameof(");
-            sb.Append(it.TypeName).Append(".").Append(data.Name);
-            sb.EndLine("),");    
+            sb.BeginLine(it.TypeName).Append(".").Append(it.Data[i].Name);
+            sb.Append(" => ").Append(nameLiterals[i]).EndLine(",");
         }
+
+        sb.AppendLine("_ => throw new ArgumentOutOfRangeException(nameof(value))");
 
         sb.CloseBrace(";");
         //
@@ -144,7 +148,7 @@ public sealed class EnumExtGenerator : IIncrementalGenerator
         {
             if (count <= AggressiveInliningLimit)
                 sb.AppendLine().AppendLine(Consts.AggressiveInliningText);
-            
+
             sb.BeginLine();
             sb.Builder.Append($"public static ReadOnlySpan<byte> ToUtf8(this {it.TypeName} value) => value switch");
             sb.EndLine();
@@ -153,14 +157,13 @@ public sealed class EnumExtGenerator : IIncrementalGenerator
 
             for (var i = 0; i < it.Data.Length; i++)
             {
-                var data = it.Data[i];
-                sb.BeginLine(it.TypeName).Append(".").Append(data.Name);
+                sb.BeginLine(it.TypeName).Append(".").Append(it.Data[i].Name);
                 sb.Append(" => ").Append(nameLiterals[i]).EndLine("u8,");
             }
+            sb.AppendLine("_ => throw new ArgumentOutOfRangeException(nameof(value))");
 
             sb.CloseBrace(";");
         }
-
 
         sb.CloseBrace();
 

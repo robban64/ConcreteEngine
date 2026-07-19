@@ -109,7 +109,7 @@ public sealed class MaterialProfile
                 or TextureUsage.Splatmap or TextureUsage.Heightmap => GfxTextures.Fallback.AlbedoId,
             TextureUsage.Normal => GfxTextures.Fallback.NormalId,
             TextureUsage.Mask => GfxTextures.Fallback.AlphaMaskId,
-            _ => Throwers.Unreachable<TextureId>(nameof(usage))
+            _ => throw new ArgumentOutOfRangeException(nameof(usage))
         };
     }
 

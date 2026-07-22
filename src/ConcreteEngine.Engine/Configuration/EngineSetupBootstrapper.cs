@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Gateway;
 using ConcreteEngine.Engine.Render;

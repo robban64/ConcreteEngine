@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Engine.Graphics;
+namespace ConcreteEngine.Core.Engine.Graphics.Animations;
 
 public sealed class AnimationClip
 {

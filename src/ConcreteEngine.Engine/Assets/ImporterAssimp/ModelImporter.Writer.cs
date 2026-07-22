@@ -97,15 +97,7 @@ internal sealed unsafe partial class ModelImporter
             ref var data = ref skinningData[i];
             if (data.I0 == byte.MaxValue)
             {
-                data.I0 = 0;
-                data.I1 = 0;
-                data.I2 = 0;
-                data.I3 = 0;
-
-                data.W0 = 0;
-                data.W1 = 0;
-                data.W2 = 0;
-                data.W3 = 0;
+                data = default;
             }
             else if (data.I1 == byte.MaxValue)
             {

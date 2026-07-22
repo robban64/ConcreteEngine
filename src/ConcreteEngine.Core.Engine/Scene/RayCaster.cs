@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Graphics.Enviroment;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 

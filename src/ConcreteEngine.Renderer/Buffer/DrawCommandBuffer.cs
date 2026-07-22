@@ -88,6 +88,13 @@ public sealed class DrawCommandBuffer : IDisposable
         new(ref _commands[Count], ref _metas[Count], _commands.Length - Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref DrawObjectUniform GetTransform(int i) => ref _transforms[Count + i];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<DrawObjectUniform> GetTransforms() => _transforms.Slice(Count, _commands.Length - Count);
+
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int SubmitIdentity(DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = Count++;
@@ -105,6 +112,12 @@ public sealed class DrawCommandBuffer : IDisposable
         var index = Count++;
         _indices[index] = new DrawCommandRef(_metas[index], index);
         return ref _transforms[index];
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SubmitDraw2()
+    {
+        var index = Count++;
+        _indices[index] = new DrawCommandRef(_metas[index], index);
     }
 
     internal unsafe void ReadyDrawCommands()

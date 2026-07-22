@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Editor;
 
-namespace ConcreteEngine.Core.Engine.Graphics;
+namespace ConcreteEngine.Core.Engine.Graphics.Visuals;
 
 public sealed class VisualManager
 {

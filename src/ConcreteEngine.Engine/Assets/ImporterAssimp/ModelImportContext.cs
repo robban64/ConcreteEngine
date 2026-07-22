@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Graphics.Primitives;
 

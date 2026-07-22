@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Graphics.Enviroment;
 using ConcreteEngine.Core.Engine.Scene.Modules;
 
 namespace ConcreteEngine.Core.Engine.Scene;

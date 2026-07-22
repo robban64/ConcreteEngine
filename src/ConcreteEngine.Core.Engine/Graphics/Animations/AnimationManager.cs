@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
-namespace ConcreteEngine.Core.Engine.Graphics;
+namespace ConcreteEngine.Core.Engine.Graphics.Animations;
 
 internal sealed class AnimationManager
 {

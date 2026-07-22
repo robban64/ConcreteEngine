@@ -7,7 +7,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Editor;
 
-namespace ConcreteEngine.Core.Engine.Graphics;
+namespace ConcreteEngine.Core.Engine.Graphics.Particles;
 
 [Inspect]
 public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<ushort>, IDisposable
@@ -16,25 +16,27 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public const int MinCount = 16;
     public const int MaxCount = 8192;
 
-    private NativeArray<ParticleCpuInstance> _particles;
+    private bool _isDirty;
+    private FastRandom _rng;
+    private NativeArray<ParticleState> _particles;
+
+    public readonly Id16<ParticleEmitter> Id;
 
     public readonly string Name;
 
-    public readonly Id16<ParticleEmitter> Id;
     public MeshId BoundMesh { get; private set; }
 
     public int Slot { get; private set; } = -1;
 
-    //ParticleEmitter.MinCount, ParticleEmitter.MaxCount
     public int ParticleCount { get; private set; }
     public int PendingParticleCount { get; private set; }
 
-    private bool _isDirty;
-
-    private FastRandom _rng;
 
     private ParticleParams _particleParams;
     private EmitterParams _emitterParams;
+    [InputNumber(Segment = "Simulation")] public Vector3 Gravity = new Vector3(0.0f, 0.015f, 0.0f);
+    [InputNumber(Segment = "Simulation")] public float Drag;
+
     private BoundingBox _localBounds;
 
     public ParticleEmitter(string name, Id16<ParticleEmitter> id, int particleCount,
@@ -53,7 +55,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         _rng = new FastRandom((uint)Environment.TickCount + Id.Value);
 
         var length = int.Max(MinCapacity, IntMath.AlignUp(particleCount, 128));
-        _particles = NativeArray.Allocate<ParticleCpuInstance>(length, zeroed: true);
+        _particles = NativeArray.Allocate<ParticleState>(length, zeroed: true);
         InitializeParticles(0, ParticleCount);
     }
 
@@ -84,7 +86,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal NativeView<ParticleCpuInstance> GetParticleView()
+    internal NativeView<ParticleState> GetParticleView()
     {
         if (_particles.IsNull || _particles.Length < ParticleCount)
             Throwers.InvalidOperation("ParticleEmitter: invalid particle data");
@@ -142,39 +144,37 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     {
         if (!IsAttached) return;
 
-        var gravityStep = _emitterParams.Gravity * simDt;
-        var particles = GetParticleView();
+        var gravityStep = Gravity * simDt;
+        var spawnParam = _emitterParams;
+
         var rng = _rng;
-        for (int i = 0; i < particles.Length; i++)
+        foreach (ref var p in _particles.Slice(0, ParticleCount).AsSpan())
         {
-            ref var p = ref particles[i];
-            if (p.Life <= 0)
+            var life = p.Life;
+            if (life <= 0f)
             {
-                rng = RespawnParticle(ref p, rng);
+                var speed = rng.RandomFloat(spawnParam.SpeedMinMax);
+                var randDir = rng.NextVector3(-0.5f, 0.5f);
+                p.Position = rng.NextVector3(-spawnParam.Spread, spawnParam.Spread);
+                p.Velocity = Vector3.Normalize(spawnParam.Direction + randDir) * speed;
+
+                life = rng.RandomFloat(spawnParam.LifeMinMax);
+                p.Life = life;
+                p.InvMaxLife = 1f / life;
+                p.InvLife = 0f;
                 continue;
             }
 
-            p.Life -= simDt;
-            p.Velocity += gravityStep;
-            p.Position += p.Velocity * simDt;
+            var velocity = p.Velocity + gravityStep;
+            p.Velocity = velocity;
+            p.Position += velocity * simDt;
+
+            life -= simDt;
+            p.Life = life;
+            p.InvLife = float.Clamp(1f - life * p.InvMaxLife, 0f, 1f);
         }
 
         _rng = rng;
-    }
-
-    [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private FastRandom RespawnParticle(ref ParticleCpuInstance p, FastRandom rng)
-    {
-        ref readonly var spatialParams = ref _emitterParams;
-        var speed = rng.RandomFloat(spatialParams.SpeedMinMax);
-        var randDir = new Vector3(rng.RandomFloat(-1, 1), rng.RandomFloat(-1, 1), rng.RandomFloat(-1, 1)) * 0.5f;
-        var spread = new Vector2(-spatialParams.Spread, spatialParams.Spread);
-
-        p.Position = new Vector3(rng.RandomFloat(spread), rng.RandomFloat(spread), rng.RandomFloat(spread));
-        p.Velocity = Vector3.Normalize(spatialParams.Direction + randDir) * speed;
-        p.MaxLife = rng.RandomFloat(spatialParams.LifeMinMax);
-        p.Life = p.MaxLife;
-        return rng;
     }
 
     private void InitializeParticles(int start, int length)
@@ -182,14 +182,17 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         if ((uint)start + (uint)length > (uint)_particles.Length)
             Throwers.IndexOutOfRange(nameof(_particles), start + length, _particles.Length);
 
+        var rng = _rng;
         var particles = _particles.Slice(start, length);
         for (var i = 0; i < particles.Length; i++)
         {
-            var randomMaxLife = _rng.RandomFloat(_emitterParams.LifeMinMax);
             ref var p = ref particles[i];
-            p.MaxLife = randomMaxLife;
-            p.Life = _rng.RandomFloat(0, randomMaxLife);
+            var randomMaxLife = rng.RandomFloat(_emitterParams.LifeMinMax);
+            p.Life = rng.RandomFloat(0, randomMaxLife);
+            p.InvMaxLife = 1f / p.Life;
         }
+
+        _rng = rng;
     }
 
     private void UpdateLocalBounds()

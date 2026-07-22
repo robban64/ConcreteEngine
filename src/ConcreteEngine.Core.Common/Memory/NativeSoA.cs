@@ -1,0 +1,126 @@
+namespace ConcreteEngine.Core.Common.Memory;
+
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+// ReSharper disable OutParameterValueIsAlwaysDiscarded.Local
+public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where T2 : unmanaged
+{
+    public int Length;
+    private T1* _ptr1;
+    private T2* _ptr2;
+
+    public NativeSoA(int length)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(length, 4);
+
+        var capacity = GetSizeInBytes(length, out var sizeT1, out _);
+        var array = NativeArray.Allocate(capacity);
+
+        Length = length;
+        _ptr1 = (T1*)array.Ptr;
+        _ptr2 = (T2*)(array.Ptr + sizeT1);
+    }
+    
+    public readonly bool IsNull => _ptr1 == null;
+
+    public readonly NativeView<T1> View1 => new(_ptr1, 0, Length);
+    public readonly NativeView<T2> View2 => new(_ptr2, 0, Length);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ref T1 At1(int index) => ref _ptr1[index];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ref T2 At2(int index) => ref _ptr2[index];
+
+    public void Resize(int length, bool zeroed)
+    {
+        int sizeT1 = length * Unsafe.SizeOf<T1>(), sizeT2 = length * Unsafe.SizeOf<T2>();
+        
+        var array = new NativeArray<byte>((byte*)_ptr1, sizeT1 + sizeT2, 0);
+        array.Resize(sizeT1 + sizeT2, zeroed);
+        
+        Length = length;
+        _ptr1 = (T1*)array.Ptr;
+        _ptr2 = (T2*)(array.Ptr + sizeT1);
+    }
+
+    public void Dispose()
+    {
+        NativeArray.DisposeArray(_ptr1, 0);
+        _ptr1 = null;
+        _ptr2 = null;
+    }
+    
+    private static int GetSizeInBytes(int len, out int sizeT1, out int sizeT2)
+    {
+        sizeT1 = len * Unsafe.SizeOf<T1>();
+        sizeT2 = len * Unsafe.SizeOf<T2>();
+        return sizeT1 + sizeT2;
+    }
+
+}
+
+public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
+{
+    public int Length;
+    private T1* _ptr1;
+    private T2* _ptr2;
+    private T3* _ptr3;
+
+    public NativeSoA(int length)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(length, 4);
+        var capacity = GetSizeInBytes(length, out var sizeT1, out var sizeT2, out _);
+        var bytes = NativeArray.Allocate(capacity);
+
+        Length = length;
+        _ptr1 = (T1*)bytes.Ptr;
+        _ptr2 = (T2*)(bytes.Ptr + sizeT1);
+        _ptr3 = (T3*)((byte*)_ptr2 + sizeT2);
+    }
+
+    public readonly bool IsNull => _ptr1 == null;
+
+    public readonly NativeView<T1> View1 => new(_ptr1, 0, Length);
+    public readonly NativeView<T2> View2 => new(_ptr2, 0, Length);
+    public readonly NativeView<T3> View3 => new(_ptr3, 0, Length);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ref T1 At1(int index) => ref _ptr1[index];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ref T2 At2(int index) => ref _ptr2[index];
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ref T3 At3(int index) => ref _ptr3[index];
+
+    public void Resize(int length, bool zeroed)
+    {
+        var capacity = GetSizeInBytes(length, out var sizeT1, out var sizeT2, out _);
+        var array = new NativeArray<byte>((byte*)_ptr1, capacity, 0);
+        array.Resize(sizeT1 + sizeT2, zeroed);
+        
+        Length = length;
+        _ptr1 = (T1*)array.Ptr;
+        _ptr2 = (T2*)(array.Ptr + sizeT1);
+        _ptr3 = (T3*)((byte*)_ptr2 + sizeT2);
+
+    }
+
+    public void Dispose()
+    {
+        NativeArray.DisposeArray(_ptr1, 0);
+        _ptr1 = null;
+        _ptr2 = null;
+        _ptr3 = null;
+    }
+
+    private static int GetSizeInBytes(int len, out int sizeT1, out int sizeT2, out int sizeT3)
+    {
+        sizeT1 = len * Unsafe.SizeOf<T1>();
+        sizeT2 = len * Unsafe.SizeOf<T2>();
+        sizeT3 = len * Unsafe.SizeOf<T3>();
+        return sizeT1 + sizeT2 + sizeT3;
+    }
+}

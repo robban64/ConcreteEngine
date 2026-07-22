@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Graphics.Enviroment;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
 using Camera = ConcreteEngine.Core.Engine.Camera;
@@ -93,13 +94,35 @@ internal sealed class RenderDispatcher
 
     private void UploadDrawCommands()
     {
-        foreach (var entity in Ecs.RenderCore.VisibleQuery(Ecs.RenderCore.GetModelView(),
+        foreach (var entity in Ecs.RenderCore.VisibleQuery(
+                     Ecs.RenderCore.GetModelView(),
                      Ecs.RenderCore.GetNormalsView()))
         {
             ref var bufferData = ref _commandBuffer.SubmitDraw();
             bufferData.Model = entity.Data.Item1;
             bufferData.Normal = entity.Data.Item2;
         }
+    }
+    private void UploadDrawCommands2()
+    {
+        var cmd = _commandBuffer;
+        var dst = _commandBuffer.GetTransforms();
+
+        var i = 0;
+        foreach (var entity in Ecs.RenderCore.VisibleQuery(
+                     Ecs.RenderCore.GetModelView(),
+                     Ecs.RenderCore.GetNormalsView()))
+        {
+            dst[i].Model = entity.Data.Item1;
+            dst[i].Normal = entity.Data.Item2;
+            ++i;
+        }
+        
+        foreach (var it in Ecs.RenderCore.GetCoreEntityView().AsSpan())
+        {
+            if(it.IsVisible()) cmd.SubmitDraw2();
+        }
+
     }
 
     public void TagUploadSelectionEffect()

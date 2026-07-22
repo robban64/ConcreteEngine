@@ -2,6 +2,8 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Graphics.Animations;
+using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer;
 

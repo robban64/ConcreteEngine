@@ -2,7 +2,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Engine.Editor;
 
-namespace ConcreteEngine.Core.Engine.Graphics;
+namespace ConcreteEngine.Core.Engine.Graphics.Visuals;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct DirLightParams(Vector3 direction, Vector3 diffuse, float intensity, float specular)

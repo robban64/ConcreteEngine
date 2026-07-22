@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Engine.Graphics.Animations;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 

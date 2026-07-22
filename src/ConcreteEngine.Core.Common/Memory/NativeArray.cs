@@ -88,7 +88,7 @@ public static unsafe class NativeArray
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void DisposeArray(void* ptr, int capacity, int alignment)
+    public static void DisposeArray(void* ptr, int alignment)
     {
         if (ptr == null) return;
 
@@ -178,7 +178,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void Dispose()
     {
-        if (Ptr != null) NativeArray.DisposeArray(Ptr, SizeInBytes, Alignment);
+        if (Ptr != null) NativeArray.DisposeArray(Ptr, Alignment);
         Ptr = null;
         Length = 0;
     }

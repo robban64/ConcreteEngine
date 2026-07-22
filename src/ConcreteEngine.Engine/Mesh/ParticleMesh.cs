@@ -16,10 +16,10 @@ using ConcreteEngine.Graphics.Utility;
 namespace ConcreteEngine.Engine.Mesh;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct ParticleGpuInstance
+internal struct ParticleGpuInstance(in Vector4 positionSize, ColorRgba color)
 {
-    public Vector4 PositionSize;
-    public ColorRgba Color;
+    public Vector4 PositionSize = positionSize;
+    public ColorRgba Color = color;
 }
 
 internal readonly struct ParticleMeshHandle(MeshId meshId, VertexBufferId vboInstanceId)
@@ -64,6 +64,14 @@ internal sealed class ParticleMesh : IDisposable
 
         EnsureCapacity(count);
         return _particleData.Slice(0, count);
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public unsafe ParticleGpuInstance* GetBufferPtr(int count)
+    {
+        if (_particleData.IsNull) Throwers.NullPointer(nameof(_particleData));
+
+        EnsureCapacity(count);
+        return _particleData.Ptr;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

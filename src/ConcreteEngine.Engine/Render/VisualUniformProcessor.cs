@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Core;

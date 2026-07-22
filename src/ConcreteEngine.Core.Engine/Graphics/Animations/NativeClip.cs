@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 
-namespace ConcreteEngine.Core.Engine.Graphics;
+namespace ConcreteEngine.Core.Engine.Graphics.Animations;
 
 [StructLayout(LayoutKind.Sequential)]
 internal readonly unsafe struct NativeClip

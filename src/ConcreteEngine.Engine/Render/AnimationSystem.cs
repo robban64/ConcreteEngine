@@ -28,10 +28,8 @@ internal sealed unsafe class AnimationSystem : IDisposable
 
     public void Simulate(float dt)
     {
-        foreach (var it in _animations)
-            it.AdvanceTime(dt);
+        foreach (var it in _animations) it.AdvanceTime(dt);
     }
-
 
     public void Execute()
     {
@@ -49,41 +47,41 @@ internal sealed unsafe class AnimationSystem : IDisposable
             if (count == 0) continue;
 
             var time = animation.Interpolate();
-            WriteSkinned(time, animation.GetSkinningContext());
+            WriteSkinned(animation.GetSkinningContext(), time);
             ++slot;
         }
     }
 
-    private void WriteSkinned(float time, SkinningContext ctx)
+    private void WriteSkinned(SkinningContext ctx, float time)
     {
         var globals = _globals.Ptr;
+        var track = ctx.Tracks.BoneTracks;
         var length = ctx.Tracks.Length;
-        for (var i = 0; i < length; ++i)
+        for (var i = 0; i < length; ++i, ++track, ++globals)
         {
-            var track = ctx.Tracks[i];
-            if (track.IsEmpty)
+            if (track->IsEmpty)
             {
-                globals[i] = ctx.GetBindPose(i);
+                *globals = ctx.GetBindPose(i);
                 continue;
             }
 
-            var posFactor = GetIndexFactor(time, track.PositionTimes, out var posIndex);
-            var rotFactor = GetIndexFactor(time, track.RotationTimes, out var rotIndex);
+            var posFactor = GetIndexFactor(time, track->PositionTimes, out var posIndex);
+            var rotFactor = GetIndexFactor(time, track->RotationTimes, out var rotIndex);
 
-            var pos = GetPosition(posIndex, posFactor, track.Positions);
-            var rot = GetRotation(rotIndex, rotFactor, track.Rotations);
+            var pos = GetPosition(posIndex, posFactor, track->Positions);
+            var rot = GetRotation(rotIndex, rotFactor, track->Rotations);
 
-            MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out globals[i]);
+            MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out *globals);
         }
 
-        var writer = _skinningBuffer.WriteSlot(length);
-
-        MatrixMath.MultiplyAffine(ref writer[0], in ctx.GetInverseBindPose(0), in globals[0]);
-        for (var i = 1; i < length; ++i)
+        globals = _globals.Ptr;
+        var dst = _skinningBuffer.WriteSlot(length).Ptr;
+        MatrixMath.MultiplyAffine(ref *++dst, in ctx.GetInverseBindPose(0), in globals[0]);
+        for (var i = 1; i < length; ++i, ++dst)
         {
             var p = ctx.GetParentIndices(i);
             MatrixMath.MultiplyAffine(ref globals[i], in globals[p]);
-            MatrixMath.MultiplyAffine(ref writer[i], in ctx.GetInverseBindPose(i), in globals[i]);
+            MatrixMath.MultiplyAffine(ref *dst, in ctx.GetInverseBindPose(i), in globals[i]);
         }
     }
 

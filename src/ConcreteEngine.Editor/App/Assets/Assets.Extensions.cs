@@ -9,10 +9,10 @@ namespace ConcreteEngine.Editor.App.Assets;
 
 internal static class AssetsExtensions
 {
-    public static Icons GetModelIcon(Model model) => model.Info.MeshCount > 1 ? Icons.Boxes : Icons.Box;
+    public static uint GetModelIcon(Model model) => model.Info.MeshCount > 1 ? IconNames.Boxes : IconNames.Box;
 
-    public static Icons GetMaterialIcon(Material material) =>
-        material.State.IsTransparent ? Icons.CircleDashed : Icons.Circle;
+    public static uint GetMaterialIcon(Material material) =>
+        material.State.IsTransparent ? IconNames.CircleDashed : IconNames.Circle;
 
     extension(FileBinding binding)
     {

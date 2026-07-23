@@ -61,7 +61,7 @@ public static partial class Ecs
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public readonly VisibleCoreEnumerator GetEnumerator() => new(_core);
         }
-
+/*
         public ref struct VisibleCoreEnumerator<T>(NativeView<RenderEntity> entities, NativeView<T> data)
             where T : unmanaged
         {
@@ -122,6 +122,7 @@ public static partial class Ecs
             public readonly RenderEntityId Entity = new(index + 1);
             public readonly int Index = index;
         }
+        */
     }
 
     public static class RenderQuery<T1> where T1 : unmanaged, IRenderComponent<T1>

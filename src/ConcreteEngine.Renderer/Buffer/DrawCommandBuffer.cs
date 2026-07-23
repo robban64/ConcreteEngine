@@ -10,47 +10,6 @@ using static ConcreteEngine.Renderer.RenderLimits;
 
 namespace ConcreteEngine.Renderer.Buffer;
 
-internal sealed class DrawCommandBufferRanges : IDisposable
-{
-    private const int DefaultTicketCapacity = 1024 * 4;
-
-    public NativeArray<int> DrawTickets = NativeArray.Allocate<int>(DefaultTicketCapacity);
-    public NativeArray<int> CountHeads = NativeArray.Allocate<int>(PassSlots * 2);
-    public readonly Range32[] PassRanges = new Range32[PassSlots];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int FillPassRanges()
-    {
-        var total = 0;
-        for (var p = 0; p < PassSlots; p++)
-        {
-            var c = CountHeads[p];
-            PassRanges[p] = new Range32(total, c);
-            total += c;
-        }
-
-        for (var p = 0; p < PassSlots; p++)
-            CountHeads[PassSlots + p] = PassRanges[p].Offset;
-
-        return total;
-    }
-
-
-    public void EnsureTicketsCapacity(int total)
-    {
-        if (DrawTickets.Length >= total) return;
-        var newSize = CapacityUtils.CapacityGrowthToFit(DrawTickets.Length, total);
-        DrawTickets.Resize(newSize, false);
-        Console.WriteLine("DrawTickets buffer resize");
-    }
-
-    public void Dispose()
-    {
-        DrawTickets.Dispose();
-        CountHeads.Dispose();
-    }
-}
-
 public sealed class DrawCommandBuffer : IDisposable
 {
     private const int DefaultCommandBuffCapacity = 512;
@@ -60,12 +19,8 @@ public sealed class DrawCommandBuffer : IDisposable
 
     public int Count { get; private set; }
 
-    private NativeArray<DrawCommand> _commands;
-    private NativeArray<DrawCommandMeta> _metas;
-    private NativeArray<DrawCommandRef> _indices;
-
+    private NativeSoA<DrawCommand, DrawCommandIndex> _commands;
     private NativeArray<DrawObjectUniform> _transforms;
-
     private NativeArray<int> _drawTickets;
 
     private readonly Range32[] _passRanges;
@@ -74,51 +29,38 @@ public sealed class DrawCommandBuffer : IDisposable
     internal DrawCommandBuffer()
     {
         if (_allocated) throw new InvalidOperationException("Already allocated");
-        _commands = NativeArray.Allocate<DrawCommand>(DefaultCommandBuffCapacity);
-        _metas = NativeArray.Allocate<DrawCommandMeta>(DefaultCommandBuffCapacity);
-        _indices = NativeArray.Allocate<DrawCommandRef>(DefaultCommandBuffCapacity);
+        _allocated = true;
+        Count = 0;
+
+        _commands = new NativeSoA<DrawCommand, DrawCommandIndex>(DefaultCommandBuffCapacity);
         _transforms = NativeArray.AlignedAllocate<DrawObjectUniform>(DefaultCommandBuffCapacity, alignment: 16);
         _drawTickets = NativeArray.Allocate<int>(DefaultTicketCapacity);
         _passRanges = new Range32[PassSlots];
-        Count = 0;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public UnsafeZippedSpan<DrawCommand, DrawCommandMeta> GetCommandMetaSpan() =>
-        new(ref _commands[Count], ref _metas[Count], _commands.Length - Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref DrawObjectUniform GetTransform(int i) => ref _transforms[Count + i];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<DrawObjectUniform> GetTransforms() => _transforms.Slice(Count, _commands.Length - Count);
-
-    
+    public ref DrawCommand GetCommand(int i) => ref _commands.At1(Count + i);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int SubmitIdentity(DrawCommand cmd, DrawCommandMeta meta)
+    public ref DrawCommandIndex GetCommandIndex(int i) => ref _commands.At2(Count + i);
+
+    public void IncrementDrawCount(int count) => Count += count;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int SubmitIdentity(DrawCommand cmd, PassMask pass, DrawCommandQueue queue, ushort depthKey)
     {
         var idx = Count++;
-        _commands[idx] = cmd;
-        _metas[idx] = meta;
-        _indices[idx] = new DrawCommandRef(meta, idx);
+        _commands.View1[idx] = cmd;
+        _commands.View2[idx] = new DrawCommandIndex(idx, pass, queue, depthKey);
         _transforms[idx].Model = Matrix4x4.Identity;
         _transforms[idx].Normal = Matrix3X4.Identity;
         return idx;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawObjectUniform SubmitDraw()
-    {
-        var index = Count++;
-        _indices[index] = new DrawCommandRef(_metas[index], index);
-        return ref _transforms[index];
-    }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitDraw2()
-    {
-        var index = Count++;
-        _indices[index] = new DrawCommandRef(_metas[index], index);
-    }
+    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref DrawObjectUniform SubmitDraw() => ref _transforms[Count++];
 
     internal unsafe void ReadyDrawCommands()
     {
@@ -126,12 +68,12 @@ public sealed class DrawCommandBuffer : IDisposable
 
         if (length <= 1) return;
 
-        if ((uint)length > (uint)_metas.Length)
+        if ((uint)length > (uint)_commands.Length)
             Throwers.InvalidOperation();
 
         Array.Clear(_passRanges);
 
-        _indices.AsSpan(0, length).Sort();
+        _commands.View2.AsSpan(0, length).Sort();
 
         var heads = stackalloc int[PassSlots * 2];
 
@@ -150,13 +92,11 @@ public sealed class DrawCommandBuffer : IDisposable
 
     private unsafe void CountTickets(int* heads, int length)
     {
-        var indices = _indices;
-        var metas = _metas;
+        var indices = _commands.View2;
 
         for (var i = 0; i < length; i++)
         {
-            var idx = indices[i].Index;
-            var mask = (uint)metas[idx].Passes;
+            var mask = (uint)indices[i].Pass;
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);
@@ -187,13 +127,12 @@ public sealed class DrawCommandBuffer : IDisposable
     {
         // fill tickets in sorted order
         var drawTickets = _drawTickets;
-        var indices = _indices;
-        var metas = _metas;
+        var indices = _commands.View2;
 
         for (var i = 0; i < length; i++)
         {
             var idx = indices[i].Index;
-            var mask = (uint)metas[idx].Passes;
+            var mask = (uint)indices[i].Pass;
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);
@@ -215,12 +154,13 @@ public sealed class DrawCommandBuffer : IDisposable
 
     internal unsafe void DispatchDrawPass(DrawCommandProcessor cmd, PassId passId)
     {
-        var pass = _passRanges[passId];
-        var tickets = _drawTickets + pass.Offset;
-        for (var i = 0; i < pass.Length; i++)
+        var commands = _commands.View1;
+        var passRange = _passRanges[passId];
+        var ticket = _drawTickets + passRange.Offset;
+        for (var i = 0; i < passRange.Length; ++i, ++ticket)
         {
-            var ticket = tickets[i];
-            cmd.DrawMesh(_commands[ticket], ticket);
+            var submitIndex = *ticket;
+            cmd.DrawMesh(commands[submitIndex], submitIndex);
         }
     }
 
@@ -228,11 +168,11 @@ public sealed class DrawCommandBuffer : IDisposable
     {
         var pass = _passRanges[passId];
         var tickets = _drawTickets + pass.Offset;
+        var commands = _commands.View1;
         for (var i = 0; i < pass.Length; i++)
         {
             var ticket = tickets[i];
-            ref readonly var meta = ref _metas[ticket];
-            cmd.DrawSpecialResolveMesh(_commands[ticket], meta.Resolver, meta.ResolverSlot, ticket);
+            cmd.DrawSpecialResolveMesh(commands[ticket], commands[ticket].Resolver, commands[ticket].ResolverSlot, ticket);
         }
     }
 
@@ -257,8 +197,6 @@ public sealed class DrawCommandBuffer : IDisposable
             Throwers.BufferOverflow(nameof(DrawCommandBuffer), newCap, MaxCommandBuffCapacity);
 
         _commands.Resize(newCap, true);
-        _metas.Resize(newCap, true);
-        _indices.Resize(newCap, true);
         _transforms.Resize(newCap, false);
 
         Console.WriteLine("Command buffer resize");
@@ -267,8 +205,6 @@ public sealed class DrawCommandBuffer : IDisposable
     public void Dispose()
     {
         _commands.Dispose();
-        _metas.Dispose();
-        _indices.Dispose();
         _transforms.Dispose();
 
         _drawTickets.Dispose();

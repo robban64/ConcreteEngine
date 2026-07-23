@@ -162,20 +162,6 @@ public sealed class RenderEntityCore : EcsStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public VisibleCoreEnumerator VisibilityQuery() => new(this);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public VisibleCoreEnumerator<T1> VisibleQuery<T1>(NativeView<T1> view1)
-        where T1 : unmanaged
-    {
-        return new VisibleCoreEnumerator<T1>(GetCoreEntityView(), view1);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public VisibleCoreEnumerator<T1, T2> VisibleQuery<T1, T2>(NativeView<T1> view1, NativeView<T2> view2)
-        where T1 : unmanaged where T2 : unmanaged
-    {
-        return new VisibleCoreEnumerator<T1, T2>(GetCoreEntityView(), view1, view2);
-    }
-
     [StackTraceHidden]
     private static void ValidateSource(SourceComponent source)
     {

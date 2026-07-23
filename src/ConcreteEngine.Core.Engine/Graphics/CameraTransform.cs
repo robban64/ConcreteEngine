@@ -9,17 +9,16 @@ public sealed class CameraFrustum
 {
     private BoundingFrustum _frustum;
 
-    public ref readonly BoundingFrustum GetBoundingFrustum() => ref _frustum;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Update(in Matrix4x4 viewProj) => _frustum.UpdateFrom(in viewProj);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IntersectsBox(in BoundingBox box)
+    public bool IntersectsBox(BoundingBox box)
     {
-        for (int i = 0; i < 6; i++)
+        ref var start = ref Unsafe.As<BoundingFrustum, Plane>(ref _frustum);
+        for (int i = 0; i < 6; ++i)
         {
-            if (CollisionMethods.IsOutsidePlane(in box, in Unsafe.Add(ref _frustum.LeftPlane, i))) return false;
+            if (CollisionMethods.IsOutsidePlane(in box, in Unsafe.Add(ref start, i))) return false;
         }
 
         return true;
@@ -32,9 +31,23 @@ public sealed class CameraTransformSnapshot
     public Matrix4x4 ViewMatrix;
     public Matrix4x4 ProjectionMatrix;
 
-    public Vector3 Right => new(ViewMatrix.M11, ViewMatrix.M21, ViewMatrix.M31);
-    public Vector3 Up => new(ViewMatrix.M12, ViewMatrix.M22, ViewMatrix.M32);
-    public Vector3 Forward => new(-ViewMatrix.M13, -ViewMatrix.M23, -ViewMatrix.M33);
+    public Vector3 Right
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(ViewMatrix.M11, ViewMatrix.M21, ViewMatrix.M31);
+    }
+
+    public Vector3 Up
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(ViewMatrix.M12, ViewMatrix.M22, ViewMatrix.M32);
+    }
+
+    public Vector3 Forward
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(-ViewMatrix.M13, -ViewMatrix.M23, -ViewMatrix.M33);
+    }
 }
 
 public sealed class CameraTransform
@@ -43,9 +56,27 @@ public sealed class CameraTransform
     public Matrix4x4 ProjectionMatrix;
     public Matrix4x4 InverseProjectionViewMatrix;
 
-    public Vector3 Right => new(ViewMatrix.M11, ViewMatrix.M21, ViewMatrix.M31);
-    public Vector3 Up => new(ViewMatrix.M12, ViewMatrix.M22, ViewMatrix.M32);
-    public Vector3 Forward => new(-ViewMatrix.M13, -ViewMatrix.M23, -ViewMatrix.M33);
+    public Vector3 Right
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(ViewMatrix.M11, ViewMatrix.M21, ViewMatrix.M31);
+    }
 
-    public Vector2 Tan => new(1f / ProjectionMatrix.M11, 1f / ProjectionMatrix.M22);
+    public Vector3 Up
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(ViewMatrix.M12, ViewMatrix.M22, ViewMatrix.M32);
+    }
+
+    public Vector3 Forward
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(-ViewMatrix.M13, -ViewMatrix.M23, -ViewMatrix.M33);
+    }
+
+    public Vector2 Tan
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(1f / ProjectionMatrix.M11, 1f / ProjectionMatrix.M22);
+    }
 }

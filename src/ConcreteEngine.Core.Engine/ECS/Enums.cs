@@ -12,7 +12,6 @@ public enum EntitySourceKind : byte
 public enum VisibilityFlags : byte
 {
     Visible = 0,
-    UserHidden = 1 << 0, // editor
-    Culled = 1 << 1,
-    ForceHidden = 1 << 2 // script
+    Culled = 1 << 0,
+    ForceHidden = 1 << 1 
 }

@@ -6,6 +6,12 @@ using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
+public struct SortComponent(DrawCommandQueue queue, PassMask passes)
+{
+    public DrawCommandQueue Queue = queue;
+    public PassMask Passes = passes;
+}
+
 [StructLayout(LayoutKind.Sequential)]
 public struct SourceComponent(
     MeshId mesh,
@@ -14,14 +20,14 @@ public struct SourceComponent(
     EntitySourceKind kind,
     DrawCommandQueue queue,
     PassMask passes)
-    : IRenderComponent<SourceComponent>
 {
     public MeshId Mesh = mesh;
     public Id16<MaterialSlot> Material = material;
 
-    public PassMask Passes = passes;
     public byte MeshIndex = (byte)meshIndex;
+    public PassMask Passes = passes;
     public DrawCommandQueue Queue = queue;
+
     public EntitySourceKind Kind = kind;
 
     public ushort AnimationSlot = 0;
@@ -36,16 +42,7 @@ public struct SourceComponent(
         cmd.MeshId = Mesh;
         cmd.MaterialId = Material;
         cmd.AnimationSlot = AnimationSlot;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal readonly void WriteMeta(scoped ref DrawCommandMeta meta, ushort depth)
-    {
-        meta.Id = DrawCommandId.Model;
-        meta.Queue = Queue;
-        meta.Passes = Passes;
-        meta.DepthKey = Queue < DrawCommandQueue.Transparent ? depth : (ushort)(ushort.MaxValue - depth);
-        meta.Resolver = Resolver;
-        meta.ResolverSlot = ResolverSlot;
+        cmd.Resolver = Resolver;
+        cmd.ResolverSlot = ResolverSlot;
     }
 }

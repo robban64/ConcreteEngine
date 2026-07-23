@@ -28,7 +28,6 @@ internal sealed class UtilityCommandHandler() : ConsoleCommandHandler("utility")
     private static void OnStructSizesCmd()
     {
         LogService.PushMessage(StructStr<DrawCommand>());
-        LogService.PushMessage(StructStr<DrawCommandMeta>());
         LogService.PushMessage(StructStr<SourceComponent>());
         LogService.PushMessage(StructStr<SkinningComponent>());
 

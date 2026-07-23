@@ -5,6 +5,7 @@ using ConcreteEngine.Editor.App.Scene;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
@@ -60,7 +61,7 @@ internal sealed unsafe class SceneInspectorPanel
 
         //string
         ImGui.BeginGroup();
-        if (ImGui.Button(StyleMap.GetIcon(Icons.Undo2)))
+        if (AppDraw.Button(IconNames.Undo2))
             RestoreName(sceneObject);
 
         ImGui.SameLine();

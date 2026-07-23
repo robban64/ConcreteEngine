@@ -31,7 +31,7 @@ internal sealed class TerrainSystem
         MainTerrain.IsDirty = false;
         Allocate();
     }
-
+/*
     public void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, CameraFrustum camera)
     {
         var material = MainTerrain.MaterialId;
@@ -40,19 +40,19 @@ internal sealed class TerrainSystem
         foreach (var it in TerrainMesh.GetMeshChunks())
         {
             if (!camera.IntersectsBox(in MainTerrain.GetChunk(it.Slot).GetBounds())) continue;
-            var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
+            var meta = new DrawCommandMeta(DrawCommandQueue.Terrain);
             var cmd = new DrawCommand(it.TerrainMeshId, material);
             commandBuffer.SubmitIdentity(cmd, meta);
 
             if (it.FoliageCount > 0)
             {
-                meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Transparent);
+                meta = new DrawCommandMeta(DrawCommandQueue.Transparent);
                 cmd = new DrawCommand(it.FoliageMeshId, foliageMaterial, instanceCount: (uint)it.FoliageCount);
                 commandBuffer.SubmitIdentity(cmd, meta);
             }
         }
     }
-
+*/
     private void Allocate()
     {
         if (!TerrainMesh.TerrainIboId.IsValid() && MainTerrain.Heightmap?.TryGetPixelSpan(out var heightData) == true)

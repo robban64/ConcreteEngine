@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics;
@@ -84,9 +85,12 @@ public sealed class EngineRenderSystem : IDisposable
 
         // process and upload draw commands
         _renderDispatcher.CullEntities();
+
         _particleSystem.Execute();
         _animationSystem.Execute();
+
         _renderDispatcher.Execute();
+
 
         // prepare buffers
         Program.CollectDrawBuffers();

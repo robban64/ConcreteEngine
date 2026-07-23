@@ -1,12 +1,18 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Enviroment;
+using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
 using Camera = ConcreteEngine.Core.Engine.Camera;
@@ -16,6 +22,8 @@ namespace ConcreteEngine.Engine.Render;
 internal sealed class RenderDispatcher
 {
     public int VisibleEntities { get; private set; }
+
+    private RenderEntityId[] _visibleEntities;
 
     private readonly Camera _camera;
     private readonly CameraFrustum _frustum;
@@ -36,96 +44,122 @@ internal sealed class RenderDispatcher
         _effectBuffer = uploadBuffers.Effects;
         _commandBuffer = uploadBuffers.Commands;
         _terrainSystem = terrainSystem;
+
+        _visibleEntities = new RenderEntityId[Ecs.RenderCore.Capacity];
     }
 
     public void Execute()
     {
         _commandBuffer.EnsureCapacity(Ecs.Render.Core.Count + 64);
-        UploadOthers();
+        SubmitEnvironment();
 
         if (VisibleEntities == 0) return;
+        SubmitSelectionEffect();
 
-        TagUploadSelectionEffect();
-        CollectEntities();
-        UploadDrawCommands();
-
+        SubmitCommands();
+        SubmitTransforms();
         SubmitDebugBounds();
     }
 
-    public void CullEntities()
+
+    public unsafe void CullEntities()
     {
+        var core = Ecs.RenderCore.GetCoreEntityView().Ptr;
+        var bounds = Ecs.RenderCore.GetWorldBoundsView().Ptr;
+
         var visibleCount = 0;
-        var length = Ecs.RenderCore.Count;
-        var bounds = Ecs.RenderCore.GetWorldBoundsView();
-        var coreEntities = Ecs.RenderCore.GetCoreEntityView();
-        for (var i = 0; i < length; i++)
+        var visibleEntities = _visibleEntities.AsSpan(0, Ecs.RenderCore.Count);
+        for (var i = 0; i < visibleEntities.Length; ++i, ++core, ++bounds)
         {
-            if (!coreEntities[i].Alive) continue;
-            var visible = _frustum.IntersectsBox(in bounds[i]);
-            visible &= coreEntities[i].ToggleVisibility(VisibilityFlags.Culled, visible) == 0;
-            if (visible) ++visibleCount;
+            if (!core->Alive) continue;
+
+            var visible = _frustum.IntersectsBox(*bounds);
+
+            visible &= core->ToggleVisibility(VisibilityFlags.Culled, visible) == 0;
+            if (visible) visibleEntities[visibleCount++] = new RenderEntityId(i + 1);
         }
 
         VisibleEntities = visibleCount;
     }
 
-    private void UploadOthers()
-    {
-        _terrainSystem.SubmitDrawTerrain(_commandBuffer, _frustum);
 
-        var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passes: PassMask.Main);
-        var cmd = new DrawCommand(Skybox.Current.MeshId, Skybox.Current.MaterialId);
-        _commandBuffer.SubmitIdentity(cmd, meta);
+    private void SubmitEnvironment()
+    {
+        var mainTerrain = _terrainSystem.MainTerrain;
+        var terrainMat = mainTerrain.MaterialId;
+        var foliageMat = mainTerrain.FoliageMaterialId;
+
+        foreach (var it in _terrainSystem.TerrainMesh.GetMeshChunks())
+        {
+            if (!_frustum.IntersectsBox(mainTerrain.GetChunk(it.Slot).GetBounds())) continue;
+            var cmd = new DrawCommand(it.TerrainMeshId, terrainMat);
+            _commandBuffer.SubmitIdentity(cmd, PassMask.Default, DrawCommandQueue.Terrain, 0);
+
+            if (it.FoliageCount > 0)
+            {
+                cmd = new DrawCommand(it.FoliageMeshId, foliageMat, instanceCount: (uint)it.FoliageCount);
+                _commandBuffer.SubmitIdentity(cmd, PassMask.Default, DrawCommandQueue.Transparent, 0);
+            }
+        }
+
+        _commandBuffer.SubmitIdentity(
+            new DrawCommand(Skybox.Current.MeshId, Skybox.Current.MaterialId),
+            PassMask.Main, DrawCommandQueue.Skybox, 0);
     }
 
-    private void CollectEntities()
+    private void SubmitCommands()
+    {
+        var forward = _camera.Forward;
+        var viewZ = _camera.ViewMatrix.M43;
+        var nearFar = _camera.NearFarPlane;
+
+        var index = 0;
+        var submitIdx = _commandBuffer.Count;
+        foreach (var entity in _visibleEntities.AsSpan(0, VisibleEntities))
+        {
+            var depthKey = MakeDepthKey(entity, forward, nearFar, viewZ);
+            ref var source = ref Ecs.RenderCore.GetSource(entity);
+            var passes = source.Passes;
+            var queue = source.Queue;
+
+            _commandBuffer.GetCommandIndex(index) = new DrawCommandIndex(submitIdx, passes, queue, depthKey);
+            source.WriteCommand(ref _commandBuffer.GetCommand(index));
+
+            ++index;
+            ++submitIdx;
+        }
+
+        return;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static ushort MakeDepthKey(RenderEntityId entity, Vector3 forward, Vector2 nearFar, float viewZ)
+        {
+            const float maxValueF = 65535f;
+
+            var worldPos = Ecs.RenderCore.GetModelMatrix(entity).Translation;
+            var d = Vector3.Dot(forward, worldPos) - viewZ;
+            if (d <= nearFar.X) return 0;
+            if (d >= nearFar.Y) return ushort.MaxValue;
+            var t = (d - nearFar.X) / (nearFar.Y - nearFar.X);
+            return (ushort)(t * maxValueF + 0.5f);
+        }
+    }
+
+
+    private void SubmitTransforms()
     {
         var index = 0;
-        var cmd = _commandBuffer.GetCommandMetaSpan();
-        foreach (var query in
-                 Ecs.RenderCore.VisibleQuery(Ecs.RenderCore.GetSourceView(), Ecs.RenderCore.GetModelView()))
+        foreach (var entity in _visibleEntities.AsSpan(0, VisibleEntities))
         {
-            var depth = _camera.MakeDepthKey(query.Data.Item2.Translation);
-            query.Data.Item1.WriteCommand(ref cmd.At1(index));
-            query.Data.Item1.WriteMeta(ref cmd.At2(index), depth);
-            ++index;
+            ref var bufferData = ref _commandBuffer.GetTransform(index++);
+            bufferData.Model = Ecs.RenderCore.GetModelMatrix(entity);
+            bufferData.Normal = Ecs.RenderCore.GetNormalMatrix(entity);
         }
+
+        _commandBuffer.IncrementDrawCount(index);
     }
 
-    private void UploadDrawCommands()
-    {
-        foreach (var entity in Ecs.RenderCore.VisibleQuery(
-                     Ecs.RenderCore.GetModelView(),
-                     Ecs.RenderCore.GetNormalsView()))
-        {
-            ref var bufferData = ref _commandBuffer.SubmitDraw();
-            bufferData.Model = entity.Data.Item1;
-            bufferData.Normal = entity.Data.Item2;
-        }
-    }
-    private void UploadDrawCommands2()
-    {
-        var cmd = _commandBuffer;
-        var dst = _commandBuffer.GetTransforms();
-
-        var i = 0;
-        foreach (var entity in Ecs.RenderCore.VisibleQuery(
-                     Ecs.RenderCore.GetModelView(),
-                     Ecs.RenderCore.GetNormalsView()))
-        {
-            dst[i].Model = entity.Data.Item1;
-            dst[i].Normal = entity.Data.Item2;
-            ++i;
-        }
-        
-        foreach (var it in Ecs.RenderCore.GetCoreEntityView().AsSpan())
-        {
-            if(it.IsVisible()) cmd.SubmitDraw2();
-        }
-
-    }
-
-    public void TagUploadSelectionEffect()
+    public void SubmitSelectionEffect()
     {
         var store = Ecs.GetRenderStore<SelectionComponent>();
         if (store.Count == 0) return;
@@ -134,9 +168,10 @@ internal sealed class RenderDispatcher
         {
             var slot = _effectBuffer.Submit(new EffectUniformParams(query.Component.HighlightColor));
             ref var source = ref Ecs.RenderCore.GetSource(query.Entity);
-            source.Passes = PassMask.Effect | PassMask.Depth;
             source.Resolver = DrawCommandResolver.Highlight;
             source.ResolverSlot = slot;
+
+            Ecs.RenderCore.GetSource(query.Entity).Passes = PassMask.Effect | PassMask.Depth;
         }
     }
 
@@ -145,22 +180,22 @@ internal sealed class RenderDispatcher
         var store = Ecs.GetRenderStore<DebugBoundsComponent>();
         if (store.Count == 0) return;
 
-        var index = 0;
         var materialId = AssetStore.Core.DebugBoundsMaterial.MaterialId;
-        var ctx = _commandBuffer.GetCommandMetaSpan();
+
+        var index = 0;
+        var submitIndex = _commandBuffer.Count;
+
         foreach (var query in store.VisibilityQuery())
         {
             var slot = _effectBuffer.Submit(new EffectUniformParams(query.Component.Color));
-            var depthKey = _camera.MakeDepthKey(Ecs.RenderCore.GetModelMatrix(query.Entity).Translation);
-            depthKey = (ushort)(ushort.MaxValue - depthKey);
 
-            ctx.At1(index) = new DrawCommand(GfxMeshes.Cube, materialId);
-            ctx.At2(index) =
-                new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey,
-                    DrawCommandResolver.BoundingVolume, resolverSlot: slot);
+            _commandBuffer.GetCommand(index) = new DrawCommand(GfxMeshes.Cube, materialId, resolver: DrawCommandResolver.BoundingVolume,
+                resolverSlot: slot);
+            _commandBuffer.GetCommandIndex(index) = new DrawCommandIndex(submitIndex, PassMask.Effect, DrawCommandQueue.Effect, 0);
+
 
             ref readonly var worldBounds = ref Ecs.RenderCore.GetWorldBounds(query.Entity);
-            ref var bufferDst = ref _commandBuffer.SubmitDraw();
+            ref var bufferDst = ref _commandBuffer.GetTransform(index);
             MatrixMath.CreateModelMatrix(
                 worldBounds.Center,
                 worldBounds.Extent,
@@ -168,7 +203,11 @@ internal sealed class RenderDispatcher
                 out bufferDst.Model
             );
             bufferDst.Normal = Matrix3X4.Identity;
+            
             ++index;
+            ++submitIndex;
         }
+        _commandBuffer.IncrementDrawCount(index);
+
     }
 }

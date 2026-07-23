@@ -33,7 +33,6 @@ internal sealed class TerrainChunkMesh(int slot)
 
     public int FoliageCount;
 
-
     internal void CreateChunkMesh(
         GfxMeshes gfx,
         IndexBufferId terrainIboId,

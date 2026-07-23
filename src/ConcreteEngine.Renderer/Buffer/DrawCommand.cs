@@ -11,7 +11,6 @@ public struct DrawCommand(
     Id16<MaterialSlot> materialId,
     uint instanceCount = 0,
     ushort animationSlot = 0,
-    PassMask passes = PassMask.Default,
     DrawCommandResolver resolver = DrawCommandResolver.None,
     byte resolverSlot = 0)
 {

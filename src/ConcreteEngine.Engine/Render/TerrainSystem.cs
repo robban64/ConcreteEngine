@@ -1,9 +1,7 @@
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Enviroment;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Renderer.Buffer;
 
 namespace ConcreteEngine.Engine.Render;
 

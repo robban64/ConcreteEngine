@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
@@ -12,7 +11,6 @@ public struct SortComponent(DrawCommandQueue queue, PassMask passes)
     public PassMask Passes = passes;
 }
 
-[StructLayout(LayoutKind.Sequential)]
 public struct SourceComponent(
     MeshId mesh,
     Id16<MaterialSlot> material,
@@ -37,7 +35,7 @@ public struct SourceComponent(
     public byte ResolverSlot;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal readonly void WriteCommand(scoped ref DrawCommand cmd)
+    internal readonly void WriteTo(scoped ref DrawCommand cmd)
     {
         cmd.MeshId = Mesh;
         cmd.MaterialId = Material;

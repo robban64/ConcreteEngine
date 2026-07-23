@@ -30,7 +30,7 @@ public static partial class Ecs
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static RenderQuery<T1>.QueryEnumerator Query<T1>() where T1 : unmanaged, IRenderComponent<T1> =>
+        public static RenderQuery.QueryEnumerator<T1> Query<T1>() where T1 : unmanaged, IRenderComponent<T1> =>
             Stores<T1>.Store.Query();
     }
 }

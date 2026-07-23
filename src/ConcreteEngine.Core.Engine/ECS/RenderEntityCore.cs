@@ -14,19 +14,14 @@ public sealed class RenderEntityCore : EcsStore
 {
     private NativeArray<RenderEntity> _entities;
     private NativeArray<SourceComponent> _sources;
-    private NativeArray<BoundingBox> _worldBounds;
-    private NativeArray<Matrix4x4> _modelMatrices;
-    private NativeArray<Matrix3X4> _normalMatrices;
+    private NativeSoA<BoundingBox, Matrix4x4, Matrix3X4> _spatial;
 
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
         _entities = NativeArray.Allocate<RenderEntity>(initialCapacity);
         _sources = NativeArray.Allocate<SourceComponent>(initialCapacity);
-        _worldBounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
-        _modelMatrices = NativeArray.AlignedAllocate<Matrix4x4>(initialCapacity);
-        _normalMatrices = NativeArray.Allocate<Matrix3X4>(initialCapacity);
-
+        _spatial = new NativeSoA<BoundingBox, Matrix4x4, Matrix3X4>(initialCapacity);
         StoreMeta.Listeners.EnsureCapacity(128);
     }
 
@@ -35,9 +30,9 @@ public sealed class RenderEntityCore : EcsStore
 
     internal NativeView<RenderEntity> GetCoreEntityView() => _entities.Slice(0, Count);
     internal NativeView<SourceComponent> GetSourceView() => _sources.Slice(0, Count);
-    internal NativeView<BoundingBox> GetWorldBoundsView() => _worldBounds.Slice(0, Count);
-    internal NativeView<Matrix4x4> GetModelView() => _modelMatrices.Slice(0, Count);
-    internal NativeView<Matrix3X4> GetNormalsView() => _normalMatrices.Slice(0, Count);
+    internal NativeView<BoundingBox> GetWorldBoundsView() => _spatial.View1.Slice(0, Count);
+    internal NativeView<Matrix4x4> GetModelView() => _spatial.View2.Slice(0, Count);
+    internal NativeView<Matrix3X4> GetNormalsView() => _spatial.View3.Slice(0, Count);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -60,13 +55,13 @@ public sealed class RenderEntityCore : EcsStore
     public ref SourceComponent GetSource(RenderEntityId e) => ref _sources[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoundingBox GetWorldBounds(RenderEntityId e) => ref _worldBounds[e.Index()];
+    public ref BoundingBox GetWorldBounds(RenderEntityId e) => ref _spatial.At1(e.Index());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix4x4 GetModelMatrix(RenderEntityId e) => ref _modelMatrices[e.Index()];
+    public ref Matrix4x4 GetModelMatrix(RenderEntityId e) => ref _spatial.At2(e.Index());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix3X4 GetNormalMatrix(RenderEntityId e) => ref _normalMatrices[e.Index()];
+    public ref Matrix3X4 GetNormalMatrix(RenderEntityId e) => ref _spatial.At3(e.Index());
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -75,24 +70,14 @@ public sealed class RenderEntityCore : EcsStore
         return _entities[entity.Index()].ToggleVisibility(flag, isVisible);
     }
 
-    public RenderEntityId Copy(RenderEntityId entity)
-    {
-        var newEntity = AllocateNewEntity();
-        GetSource(newEntity) = GetSource(entity);
-        GetWorldBounds(newEntity) = GetWorldBounds(entity);
-        GetModelMatrix(newEntity) = GetModelMatrix(entity);
-        return newEntity;
-    }
-
     public RenderEntityId AddEntity(SourceComponent source)
     {
         ValidateSource(source);
 
         var entity = AllocateNewEntity();
         _sources[entity.Index()] = source;
-        _worldBounds[entity.Index()] = BoundingBox.One;
-        _modelMatrices[entity.Index()] = Matrix4x4.Identity;
-        _normalMatrices[entity.Index()] = Matrix3X4.Identity;
+        
+        _spatial.Set(entity.Index(), BoundingBox.One, Matrix4x4.Identity, Matrix3X4.Identity);
 
         foreach (var it in StoreMeta.Listeners)
             it.EntityAdded(entity.Id, this);
@@ -121,9 +106,8 @@ public sealed class RenderEntityCore : EcsStore
 
         _entities[index] = default;
         _sources[index] = default;
-        _worldBounds[index] = default;
-        _modelMatrices[index] = default;
-        _normalMatrices[index] = default;
+        _spatial.Set(entity.Index(), default, default, default);
+
         FreeEntity(index);
 
         foreach (var it in StoreMeta.Listeners)
@@ -134,18 +118,14 @@ public sealed class RenderEntityCore : EcsStore
     protected override void Resize(int newSize)
     {
         var curLen = _entities.Length;
-        if (_sources.Length != curLen || _worldBounds.Length != curLen || _modelMatrices.Length != curLen ||
-            _normalMatrices.Length != curLen)
+        if (_sources.Length != curLen || _spatial.Length != curLen)
         {
             Throwers.InvalidOperation("Length mismatch");
         }
 
         _entities.Resize(newSize, true);
         _sources.Resize(newSize, true);
-        _worldBounds.Resize(newSize, true);
-        _modelMatrices.Resize(newSize, true);
-        _normalMatrices.Resize(newSize, true);
-
+        _spatial.Resize(newSize, true);
         Logger.Log(LogScope.Ecs, $"{nameof(RenderEntityCore)}: resized {newSize}", LogLevel.Warn);
     }
 
@@ -154,9 +134,7 @@ public sealed class RenderEntityCore : EcsStore
     {
         _entities.Dispose();
         _sources.Dispose();
-        _worldBounds.Dispose();
-        _modelMatrices.Dispose();
-        _normalMatrices.Dispose();
+        _spatial.Dispose();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

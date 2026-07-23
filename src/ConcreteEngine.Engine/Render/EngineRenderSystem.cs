@@ -1,8 +1,6 @@
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Graphics;
@@ -41,7 +39,7 @@ public sealed class EngineRenderSystem : IDisposable
         _materialProcessor = new MaterialProcessor(Program);
     }
 
-    public int VisibleCount => _renderDispatcher.VisibleEntities;
+    public int VisibleCount => _renderDispatcher.VisibleCount;
 
     internal void Initialize() { }
 

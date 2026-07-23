@@ -104,10 +104,10 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
     public void UnbindListener(IRenderComponentListener<T> listener) => _listeners.Remove(listener);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Ecs.RenderQuery<T>.QueryEnumerator Query() => new(this);
+    public Ecs.RenderQuery.QueryEnumerator<T> Query() => new(this);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Ecs.RenderQuery<T>.VisibleQueryEnumerator VisibilityQuery() => new(this, Ecs.Render.Core);
+    public Ecs.RenderQuery.VisibleQueryEnumerator<T> VisibilityQuery() => new(this, Ecs.Render.Core);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     protected override void Resize(int newSize)

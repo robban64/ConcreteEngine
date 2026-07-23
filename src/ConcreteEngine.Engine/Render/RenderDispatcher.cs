@@ -1,18 +1,13 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Enviroment;
-using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
 using Camera = ConcreteEngine.Core.Engine.Camera;
@@ -21,7 +16,7 @@ namespace ConcreteEngine.Engine.Render;
 
 internal sealed class RenderDispatcher
 {
-    public int VisibleEntities { get; private set; }
+    public int VisibleCount { get; private set; }
 
     private RenderEntityId[] _visibleEntities;
 
@@ -50,11 +45,11 @@ internal sealed class RenderDispatcher
 
     public void Execute()
     {
-        _commandBuffer.EnsureCapacity(Ecs.Render.Core.Count + 64);
+        Ensure();
         SubmitEnvironment();
 
-        if (VisibleEntities == 0) return;
-        SubmitSelectionEffect();
+        if (VisibleCount == 0) return;
+        ProcessSelectionEffect();
 
         SubmitCommands();
         SubmitTransforms();
@@ -79,9 +74,15 @@ internal sealed class RenderDispatcher
             if (visible) visibleEntities[visibleCount++] = new RenderEntityId(i + 1);
         }
 
-        VisibleEntities = visibleCount;
+        VisibleCount = visibleCount;
     }
 
+    private void Ensure()
+    {
+        var ecsCount = Ecs.RenderCore.Count;
+        if(ecsCount > _visibleEntities.Length) Array.Resize(ref _visibleEntities, ecsCount);
+        _commandBuffer.EnsureCapacity(ecsCount + 64);
+    }
 
     private void SubmitEnvironment()
     {
@@ -114,16 +115,17 @@ internal sealed class RenderDispatcher
         var nearFar = _camera.NearFarPlane;
 
         var index = 0;
-        var submitIdx = _commandBuffer.Count;
-        foreach (var entity in _visibleEntities.AsSpan(0, VisibleEntities))
+        var submitIdx = _commandBuffer.Count; 
+        
+        foreach (var entity in _visibleEntities.AsSpan(0, VisibleCount))
         {
             var depthKey = MakeDepthKey(entity, forward, nearFar, viewZ);
             ref var source = ref Ecs.RenderCore.GetSource(entity);
             var passes = source.Passes;
             var queue = source.Queue;
-
-            _commandBuffer.GetCommandIndex(index) = new DrawCommandIndex(submitIdx, passes, queue, depthKey);
-            source.WriteCommand(ref _commandBuffer.GetCommand(index));
+            
+            _commandBuffer.IndexRef(index) = new DrawCommandIndex(submitIdx, passes, queue, depthKey);
+            source.WriteTo(ref _commandBuffer.CommandRef(index));
 
             ++index;
             ++submitIdx;
@@ -149,9 +151,9 @@ internal sealed class RenderDispatcher
     private void SubmitTransforms()
     {
         var index = 0;
-        foreach (var entity in _visibleEntities.AsSpan(0, VisibleEntities))
+        foreach (var entity in _visibleEntities.AsSpan(0, VisibleCount))
         {
-            ref var bufferData = ref _commandBuffer.GetTransform(index++);
+            ref var bufferData = ref _commandBuffer.TransformRef(index++);
             bufferData.Model = Ecs.RenderCore.GetModelMatrix(entity);
             bufferData.Normal = Ecs.RenderCore.GetNormalMatrix(entity);
         }
@@ -159,7 +161,7 @@ internal sealed class RenderDispatcher
         _commandBuffer.IncrementDrawCount(index);
     }
 
-    public void SubmitSelectionEffect()
+    private void ProcessSelectionEffect()
     {
         var store = Ecs.GetRenderStore<SelectionComponent>();
         if (store.Count == 0) return;
@@ -189,13 +191,13 @@ internal sealed class RenderDispatcher
         {
             var slot = _effectBuffer.Submit(new EffectUniformParams(query.Component.Color));
 
-            _commandBuffer.GetCommand(index) = new DrawCommand(GfxMeshes.Cube, materialId, resolver: DrawCommandResolver.BoundingVolume,
+            _commandBuffer.CommandRef(index) = new DrawCommand(GfxMeshes.Cube, materialId, resolver: DrawCommandResolver.BoundingVolume,
                 resolverSlot: slot);
-            _commandBuffer.GetCommandIndex(index) = new DrawCommandIndex(submitIndex, PassMask.Effect, DrawCommandQueue.Effect, 0);
+            _commandBuffer.IndexRef(index) = new DrawCommandIndex(submitIndex, PassMask.Effect, DrawCommandQueue.Effect, 0);
 
 
             ref readonly var worldBounds = ref Ecs.RenderCore.GetWorldBounds(query.Entity);
-            ref var bufferDst = ref _commandBuffer.GetTransform(index);
+            ref var bufferDst = ref _commandBuffer.TransformRef(index);
             MatrixMath.CreateModelMatrix(
                 worldBounds.Center,
                 worldBounds.Extent,

@@ -39,12 +39,12 @@ public sealed class DrawCommandBuffer : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawObjectUniform GetTransform(int i) => ref _transforms[Count + i];
+    public ref DrawObjectUniform TransformRef(int i) => ref _transforms[Count + i];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawCommand GetCommand(int i) => ref _commands.At1(Count + i);
+    public ref DrawCommand CommandRef(int i) => ref _commands.At1(Count + i);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawCommandIndex GetCommandIndex(int i) => ref _commands.At2(Count + i);
+    public ref DrawCommandIndex IndexRef(int i) => ref _commands.At2(Count + i);
 
     public void IncrementDrawCount(int count) => Count += count;
 

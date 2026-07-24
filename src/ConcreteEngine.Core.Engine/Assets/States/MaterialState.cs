@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
 
@@ -53,8 +54,8 @@ public sealed class MaterialState
         if (CastShadow) Passes |= PassMask.Depth;
         else Passes &= ~PassMask.Depth;
 
-        if (IsTransparent && profile.DrawQueue == Renderer.Buffer.DrawQueue.Opaque)
-            DrawQueue = Renderer.Buffer.DrawQueue.Transparent;
+        if (IsTransparent && profile.DrawQueue == DrawQueue.Opaque)
+            DrawQueue = DrawQueue.Transparent;
         else
             DrawQueue = profile.DrawQueue;
     }

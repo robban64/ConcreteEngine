@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics.Particles;
+using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Buffer;
 
 namespace ConcreteEngine.Core.Engine.Scene;
@@ -60,10 +61,10 @@ public sealed class ParticleInstance : RenderBlueprintInstance
     {
         if (RenderEntityIds.Count == 0) return;
         var entity = RenderEntityIds[0];
-
-        Ecs.Render.Core.GetModelMatrix(entity) = rootMatrix;
+        
         BoundingBox.GetWorldBounds(in Emitter.LocalBounds(), in rootMatrix, out WorldBounds);
-        Ecs.Render.Core.GetWorldBounds(entity) = WorldBounds;
+        Ecs.RenderCore.GetModelMatrix(entity) = rootMatrix;
+        Ecs.RenderCore.GetWorldBounds(entity) = WorldBounds;
     }
 
     public void OnAssetChanged(AssetObject asset) { }

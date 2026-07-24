@@ -12,6 +12,7 @@ using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Enviroment;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Buffer;
 using Camera = ConcreteEngine.Core.Engine.Camera;
 

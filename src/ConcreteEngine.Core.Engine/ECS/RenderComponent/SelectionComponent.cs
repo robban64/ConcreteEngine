@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Buffer;
 
 namespace ConcreteEngine.Core.Engine.ECS.RenderComponent;

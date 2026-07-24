@@ -85,6 +85,6 @@ public sealed unsafe class GfxDraw : IDisposable
         _drawTable[(int)meta.Kind](meta.Primitive, meta.ElementSize, meta.DrawCount, meta.InstanceCount);
         _frameMeta.AddDrawCall(meta.DrawCount, instances);
     }
-
+    
     public void Dispose() => _tableMemory.Dispose();
 }

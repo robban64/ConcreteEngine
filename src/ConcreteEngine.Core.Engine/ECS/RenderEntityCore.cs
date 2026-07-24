@@ -13,14 +13,14 @@ namespace ConcreteEngine.Core.Engine.ECS;
 public sealed class RenderEntityCore : EcsStore
 {
     private NativeArray<RenderEntity> _entities;
-    private NativeArray<SourceComponent> _sources;
+    private NativeSoA<RenderSource, DrawPolicy> _sources;
     private NativeSoA<BoundingBox, Matrix4x4, Matrix3X4> _spatial;
 
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
         _entities = NativeArray.Allocate<RenderEntity>(initialCapacity);
-        _sources = NativeArray.Allocate<SourceComponent>(initialCapacity);
+        _sources = new NativeSoA<RenderSource, DrawPolicy>(initialCapacity);
         _spatial = new NativeSoA<BoundingBox, Matrix4x4, Matrix3X4>(initialCapacity);
         StoreMeta.Listeners.EnsureCapacity(128);
     }
@@ -29,7 +29,7 @@ public sealed class RenderEntityCore : EcsStore
     public override EcsStoreType StoreType => EcsStoreType.RenderCore;
 
     internal NativeView<RenderEntity> GetCoreEntityView() => _entities.Slice(0, Count);
-    internal NativeView<SourceComponent> GetSourceView() => _sources.Slice(0, Count);
+    internal NativeView<RenderSource> GetSourceView() => _sources.View1.Slice(0, Count);
     internal NativeView<BoundingBox> GetWorldBoundsView() => _spatial.View1.Slice(0, Count);
     internal NativeView<Matrix4x4> GetModelView() => _spatial.View2.Slice(0, Count);
     internal NativeView<Matrix3X4> GetNormalsView() => _spatial.View3.Slice(0, Count);
@@ -52,7 +52,10 @@ public sealed class RenderEntityCore : EcsStore
     public ref RenderEntity GetCoreEntity(RenderEntityId e) => ref _entities[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref SourceComponent GetSource(RenderEntityId e) => ref _sources[e.Index()];
+    public ref RenderSource GetSource(RenderEntityId e) => ref _sources.At1(e.Index());
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref DrawPolicy GetDrawPolicy(RenderEntityId e) => ref _sources.At2(e.Index());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref BoundingBox GetWorldBounds(RenderEntityId e) => ref _spatial.At1(e.Index());
@@ -65,19 +68,20 @@ public sealed class RenderEntityCore : EcsStore
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public VisibilityFlags ToggleVisibility(RenderEntityId entity, VisibilityFlags flag, bool isVisible)
+    public EntityVisibility ToggleVisibility(RenderEntityId entity, EntityVisibility flag, bool isVisible)
     {
         return _entities[entity.Index()].ToggleVisibility(flag, isVisible);
     }
 
-    public RenderEntityId AddEntity(SourceComponent source)
+    public RenderEntityId AddEntity(RenderSource source, DrawPolicy policy)
     {
         ValidateSource(source);
 
         var entity = AllocateNewEntity();
-        _sources[entity.Index()] = source;
+        var index = entity.Index();
         
-        _spatial.Set(entity.Index(), BoundingBox.One, Matrix4x4.Identity, Matrix3X4.Identity);
+        _sources.Set(index, source, policy);
+        _spatial.Set(index, BoundingBox.One, Matrix4x4.Identity, Matrix3X4.Identity);
 
         foreach (var it in StoreMeta.Listeners)
             it.EntityAdded(entity.Id, this);
@@ -92,7 +96,7 @@ public sealed class RenderEntityCore : EcsStore
         ref var entity = ref _entities[index];
         if (entity.Alive) Throwers.InvalidOperation($"Entity {entity} already exists");
         entity.Alive = true;
-        entity.Visibility = VisibilityFlags.Visible;
+        entity.EntityVisibility = EntityVisibility.Visible;
         return new RenderEntityId(index + 1);
     }
 
@@ -105,7 +109,7 @@ public sealed class RenderEntityCore : EcsStore
         if (!_entities[index].Alive) throw new InvalidOperationException();
 
         _entities[index] = default;
-        _sources[index] = default;
+        _sources.Set(index, default, default);
         _spatial.Set(entity.Index(), default, default, default);
 
         FreeEntity(index);
@@ -141,7 +145,7 @@ public sealed class RenderEntityCore : EcsStore
     public VisibleCoreEnumerator VisibilityQuery() => new(this);
 
     [StackTraceHidden]
-    private static void ValidateSource(SourceComponent source)
+    private static void ValidateSource(RenderSource source)
     {
         if (source.Kind == EntitySourceKind.Particle) return;
         ArgumentOutOfRangeException.ThrowIfZero(source.Mesh.Id, nameof(source.Mesh));

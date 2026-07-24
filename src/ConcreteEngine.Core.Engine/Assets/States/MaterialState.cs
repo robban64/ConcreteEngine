@@ -53,8 +53,8 @@ public sealed class MaterialState
         if (CastShadow) Passes |= PassMask.Depth;
         else Passes &= ~PassMask.Depth;
 
-        if (IsTransparent && profile.DrawQueue == DrawCommandQueue.Opaque)
-            DrawQueue = DrawCommandQueue.Transparent;
+        if (IsTransparent && profile.DrawQueue == Renderer.Buffer.DrawQueue.Opaque)
+            DrawQueue = Renderer.Buffer.DrawQueue.Transparent;
         else
             DrawQueue = profile.DrawQueue;
     }
@@ -96,7 +96,7 @@ public sealed class MaterialState
         }
     } = new(BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None);
 
-    public DrawCommandQueue DrawQueue
+    public DrawQueue DrawQueue
     {
         get;
         set
@@ -105,7 +105,7 @@ public sealed class MaterialState
             field = value;
             _material.MarkDirty(AssetDirtyFlag.Structure);
         }
-    } = DrawCommandQueue.Opaque;
+    } = DrawQueue.Opaque;
 
 
     public PassMask Passes

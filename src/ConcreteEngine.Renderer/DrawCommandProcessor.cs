@@ -72,12 +72,13 @@ internal sealed class DrawCommandProcessor
         }
 
         _buffers.BindDrawObject(submitIdx);
+        
         _gfxDraw.BindDraw(cmd.MeshId, cmd.InstanceCount);
     }
 
     private void BindMaterial(Id16<MaterialSlot> materialId)
     {
-        var texSlots = _buffers.ResolveMaterial(materialId, out var materialMeta);
+        var textureBindings = _buffers.BindResolveMaterial(materialId, out var materialMeta);
 
         if (!materialMeta.DrawState.IsEmpty())
         {
@@ -85,14 +86,16 @@ internal sealed class DrawCommandProcessor
             _gfxCmd.ApplyStateFunctions(materialMeta.DrawFunctions);
         }
 
-        if (PassMode == PassStateMode.Depth && texSlots.Length > 0)
+        if (PassMode == PassStateMode.Depth && textureBindings.Length > 0)
         {
-            BindDepthTextureSlots(texSlots);
+            BindDepthTextureSlots(textureBindings);
             return;
         }
 
         _gfxCmd.UseShader(materialMeta.ShaderId);
-        BindTextureSlots(texSlots, materialMeta.ShadowMapBinding);
+        
+        BindTextureSlots(textureBindings, materialMeta.ShadowMapBinding);
+
     }
 
     private void BindTextureSlots(ReadOnlySpan<TextureBinding> slots, sbyte shadowMapBinding)
@@ -151,7 +154,7 @@ internal sealed class DrawCommandProcessor
 
         _buffers.UploadEditorEffectUniform(resolverSlot, isAnimated);
 
-        var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
+        var texSlots = _buffers.BindResolveMaterial(cmd.MaterialId, out var materialMeta);
         foreach (var slot in texSlots)
         {
             if (slot.SlotKind == TextureUsage.Albedo) _gfxCmd.BindTexture(slot.Texture, 0);

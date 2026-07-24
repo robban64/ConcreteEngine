@@ -20,8 +20,10 @@ public sealed class MaterialBuffer : IDisposable
     private int _slotCount;
 
     private RangeU16[] _slotRanges = new RangeU16[DefaultMaterialBufferCapacity];
-    private TextureBinding[] _textureSlots = new TextureBinding[DefaultTextureSlotCapacity];
     private RenderMaterialMeta[] _metas = new RenderMaterialMeta[DefaultMaterialBufferCapacity];
+
+    private NativeArray<TextureBinding> _textureSlots =
+        NativeArray.Allocate<TextureBinding>(DefaultTextureSlotCapacity);
 
     private NativeArray<MaterialUniform> _buffer =
         NativeArray.Allocate<MaterialUniform>(DefaultMaterialBufferCapacity);
@@ -30,12 +32,13 @@ public sealed class MaterialBuffer : IDisposable
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ReadOnlySpan<TextureBinding> GetMetaAndSlots(Id16<MaterialSlot> materialId, out RenderMaterialMeta meta)
+    internal unsafe ReadOnlySpan<TextureBinding> GetMetaAndSlots(Id16<MaterialSlot> materialId, out RenderMaterialMeta meta)
     {
         var index = materialId.Index();
-        meta = _metas[index];
         var range = _slotRanges[index];
-        return _textureSlots.AsSpan(range.Offset, range.Length);
+        
+        meta = _metas[index];
+        return new ReadOnlySpan<TextureBinding>(_textureSlots + range.Offset, range.Length);
     }
 
     public void SubmitBindings(Id16<MaterialSlot> id, ReadOnlySpan<TextureBinding> slots)
@@ -46,7 +49,7 @@ public sealed class MaterialBuffer : IDisposable
         var slotIdx = _slotCount;
         for (var i = 0; i < slots.Length; i++, slotIdx++)
             _textureSlots[slotIdx] = slots[i];
-
+        
         _slotRanges[id.Index()] = new RangeU16(_slotCount, slots.Length);
         _slotCount = slotIdx;
     }
@@ -106,7 +109,7 @@ public sealed class MaterialBuffer : IDisposable
             Throwers.BufferOverflow("MaterialTextureBuffer", newCap, MaxMaterialBufferCapacity);
 
         Console.WriteLine($"{nameof(MaterialBuffer)} TextureSlots resize");
-        Array.Resize(ref _textureSlots, newCap);
+        _textureSlots.Resize(newCap, true);
     }
 
     public void Dispose() => _buffer.Dispose();

@@ -102,6 +102,7 @@ public sealed class EngineRenderSystem : IDisposable
 
     public void Dispose()
     {
+        _renderDispatcher.Dispose();
         _particleSystem.Dispose();
         _animationSystem.Dispose();
         Program.Dispose();

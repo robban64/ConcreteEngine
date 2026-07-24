@@ -36,11 +36,11 @@ public sealed class ParticleInstance : RenderBlueprintInstance
 
     internal override void OnCreate()
     {
-        var materialId = ParticleMaterial.MaterialId;
-        var source = new SourceComponent(default, materialId, 0, EntitySourceKind.Particle,
-            DrawCommandQueue.Particles, PassMask.Main);
+        var matId = ParticleMaterial.MaterialId;
+        var policy = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
+        var source = new RenderSource(default, matId, 0, EntitySourceKind.Particle);
 
-        var entity = Ecs.RenderCore.AddEntity(source);
+        var entity = Ecs.RenderCore.AddEntity(source, policy);
         var particle = new ParticleComponent(Emitter.Id);
         Ecs.GetRenderStore<ParticleComponent>().Add(entity, in particle);
         Ecs.SceneLink.BindSceneHandle(entity, Owner.Id);
@@ -51,11 +51,9 @@ public sealed class ParticleInstance : RenderBlueprintInstance
     {
         if (RenderEntityIds.Count == 0) return;
         var entity = RenderEntityIds[0];
+        Ecs.RenderCore.GetSource(entity).Mesh = Emitter.BoundMesh;
+        Ecs.RenderCore.GetDrawPolicy(entity) = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
 
-        ref var source = ref Ecs.Render.Core.GetSource(entity);
-        source.Queue = DrawCommandQueue.Particles;
-        source.Passes = PassMask.Main;
-        source.Mesh = Emitter.BoundMesh;
     }
 
     internal override void ApplyTransform(in Matrix4x4 rootMatrix)

@@ -27,7 +27,7 @@ public static partial class Ecs
         if (SceneLink != null!) throw new InvalidOperationException("ECS already initialized");
         InitRenderEcs();
         InitGameEcs();
-        SceneLink = new EntitySceneLink(Render.Core, Game.Core);
+        SceneLink = new EntitySceneLink(RenderCore, Game.Core);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

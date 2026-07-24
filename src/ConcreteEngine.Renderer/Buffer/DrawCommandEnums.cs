@@ -1,16 +1,6 @@
 namespace ConcreteEngine.Renderer.Buffer;
 
-public enum DrawCommandId : byte
-{
-    Invalid,
-    Model,
-    Terrain,
-    Skybox,
-    Particle,
-    Effect
-}
-
-public enum DrawCommandQueue : byte
+public enum DrawQueue : byte
 {
     None = 0,
     Terrain = 20,

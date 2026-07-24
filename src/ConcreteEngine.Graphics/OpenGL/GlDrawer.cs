@@ -10,7 +10,7 @@ internal static unsafe class GlDraw
 
     public static void DrawInvalid(DrawPrimitive primitive, DrawElementSize size, uint count, uint instances) =>
         throw new NotSupportedException();
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void DrawArrays(DrawPrimitive primitive, DrawElementSize size, uint count, uint instances)
     {

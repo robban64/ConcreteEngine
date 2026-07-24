@@ -46,17 +46,16 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
     {
         foreach (var entity in GetRenderEntities())
         {
-            ref var source = ref Ecs.Render.Core.GetSource(entity);
-            if (source.Material.Value > 0 && source.Material != material.MaterialId) continue;
-            source.Queue = material.DrawQueue;
-            source.Passes = material.Passes;
+            var materialId = Ecs.RenderCore.GetSource(entity).Material;
+            if (materialId > 0 && materialId != material.MaterialId) continue;
+            Ecs.RenderCore.GetDrawPolicy(entity) = new DrawPolicy(material.DrawQueue, material.Passes);
         }
     }
 
     public void ToggleVisibility(bool visible)
     {
         foreach (var entity in GetRenderEntities())
-            Ecs.RenderCore.ToggleVisibility(entity, VisibilityFlags.ForceHidden, visible);
+            Ecs.RenderCore.ToggleVisibility(entity, EntityVisibility.ForceHidden, visible);
     }
 
     public void ToggleSelection(bool isSelected)
@@ -65,15 +64,16 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
 
         foreach (var entity in GetRenderEntities())
         {
-            ref var source = ref Ecs.RenderCore.GetSource(entity);
             if (isSelected)
             {
-                selectionStore.Add(entity, new SelectionComponent(SelectionComponent.DefaultHighlight, source.Passes));
+                var passes = Ecs.RenderCore.GetDrawPolicy(entity).Passes;
+                selectionStore.Add(entity, new SelectionComponent(SelectionComponent.DefaultHighlight, passes));
             }
             else
             {
                 var passes = selectionStore.Get(entity).OriginalPasses;
-                source = source with { Resolver = 0, ResolverSlot = 0, Passes = passes };
+                Ecs.RenderCore.GetSource(entity).SetResolve(0, 0);
+                Ecs.RenderCore.GetDrawPolicy(entity).Passes = passes;
                 selectionStore.Remove(entity);
             }
         }

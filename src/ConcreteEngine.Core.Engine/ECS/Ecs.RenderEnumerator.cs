@@ -16,7 +16,7 @@ public static partial class Ecs
 
             public ref RenderEntity EntityCore => ref core.GetCoreEntity(Entity);
 
-            public ref SourceComponent Source
+            public ref RenderSource Source
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get => ref core.GetSource(Entity);

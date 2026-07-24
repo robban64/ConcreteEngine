@@ -22,24 +22,23 @@ public struct DrawCommand(
     public byte ResolverSlot = resolverSlot;
 }
 
-
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawCommandIndex : IComparable<DrawCommandIndex>
 {
     private readonly ulong _sortKey;
-    public readonly int Index; // submit index, stable sort
-    public readonly PassMask Pass;
+    
+    // submit index, stable sort
+    public int Index => (int)((_sortKey >> 8) & 0x00FF_FFFF);
+    public PassMask Pass => (PassMask)_sortKey;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DrawCommandIndex(int index, PassMask pass, DrawCommandQueue queue, ushort depthKey)
+    public DrawCommandIndex(int index, PassMask pass, DrawQueue queue, ushort depthKey)
     {
-        Index = index;
-        Pass = pass;
-
-        var depth = queue < DrawCommandQueue.Transparent ? depthKey : (ushort)(ushort.MaxValue - depthKey);
+        var depth = queue < DrawQueue.Transparent ? depthKey : (ushort)(ushort.MaxValue - depthKey);
         _sortKey = ((ulong)queue << 48) |
                    ((ulong)depth << 32) |
-                   (uint)index;
+                   ((ulong)index << 8) |
+                   (byte)pass;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

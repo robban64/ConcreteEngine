@@ -7,18 +7,18 @@ namespace ConcreteEngine.Core.Engine.ECS;
 public struct RenderEntity
 {
     public bool Alive;
-    public VisibilityFlags Visibility;
+    public EntityVisibility EntityVisibility;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool IsVisible() => Alive && Visibility == 0;
+    public readonly bool IsVisible() => Alive && EntityVisibility == 0;
 
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public VisibilityFlags ToggleVisibility(VisibilityFlags flag, bool isVisible)
+    public EntityVisibility ToggleVisibility(EntityVisibility flag, bool isVisible)
     {
-        if (isVisible) Visibility &= ~flag;
-        else Visibility |= flag;
-        return Visibility;
+        if (isVisible) EntityVisibility &= ~flag;
+        else EntityVisibility |= flag;
+        return EntityVisibility;
     }
 }
 

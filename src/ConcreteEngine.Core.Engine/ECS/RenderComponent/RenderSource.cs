@@ -5,29 +5,23 @@ using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
-public struct SortComponent(DrawCommandQueue queue, PassMask passes)
+public struct DrawPolicy(DrawQueue queue, PassMask passes)
 {
-    public DrawCommandQueue Queue = queue;
+    public DrawQueue Queue = queue;
     public PassMask Passes = passes;
 }
 
-public struct SourceComponent(
+public struct RenderSource(
     MeshId mesh,
     Id16<MaterialSlot> material,
     int meshIndex,
-    EntitySourceKind kind,
-    DrawCommandQueue queue,
-    PassMask passes)
+    EntitySourceKind kind)
 {
     public MeshId Mesh = mesh;
     public Id16<MaterialSlot> Material = material;
-
+    
     public byte MeshIndex = (byte)meshIndex;
-    public PassMask Passes = passes;
-    public DrawCommandQueue Queue = queue;
-
     public EntitySourceKind Kind = kind;
-
     public ushort AnimationSlot = 0;
 
     // maybe rework this
@@ -42,5 +36,11 @@ public struct SourceComponent(
         cmd.AnimationSlot = AnimationSlot;
         cmd.Resolver = Resolver;
         cmd.ResolverSlot = ResolverSlot;
+    }
+
+    internal void SetResolve(DrawCommandResolver resolver, byte resolverSlot)
+    {
+        Resolver = resolver;
+        ResolverSlot = resolverSlot;
     }
 }

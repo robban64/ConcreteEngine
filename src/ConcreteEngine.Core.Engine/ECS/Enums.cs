@@ -9,7 +9,7 @@ public enum EntitySourceKind : byte
 }
 
 [Flags]
-public enum VisibilityFlags : byte
+public enum EntityVisibility : byte
 {
     Visible = 0,
     Culled = 1 << 0,

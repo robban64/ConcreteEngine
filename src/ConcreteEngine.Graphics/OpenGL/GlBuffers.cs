@@ -103,8 +103,8 @@ internal sealed unsafe class GlBuffers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindUniformBufferRange(GfxHandle uboRef, uint slot, int offset, int size)
     {
-        var nHandle = _uboStore.Get(uboRef);
-        _gl.BindBufferRange(BufferTargetARB.UniformBuffer, slot, nHandle, offset, (nuint)size);
+        var handle = _uboStore.Get(uboRef);
+        _gl.BindBufferRange(BufferTargetARB.UniformBuffer, slot, handle, offset, (nuint)size);
     }
 
     private NativeHandle CreateBufferNative(byte* data, in CreateBufferInfo desc, bool nullData)

@@ -43,13 +43,14 @@ public sealed class DrawCommandBuffer : IDisposable
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref DrawCommand CommandRef(int i) => ref _commands.At1(Count + i);
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref DrawCommandIndex IndexRef(int i) => ref _commands.At2(Count + i);
 
     public void IncrementDrawCount(int count) => Count += count;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int SubmitIdentity(DrawCommand cmd, PassMask pass, DrawCommandQueue queue, ushort depthKey)
+    public int SubmitIdentity(DrawCommand cmd, PassMask pass, DrawQueue queue, ushort depthKey)
     {
         var idx = Count++;
         _commands.View1[idx] = cmd;
@@ -58,9 +59,6 @@ public sealed class DrawCommandBuffer : IDisposable
         _transforms[idx].Normal = Matrix3X4.Identity;
         return idx;
     }
-
-    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawObjectUniform SubmitDraw() => ref _transforms[Count++];
 
     internal unsafe void ReadyDrawCommands()
     {
@@ -92,30 +90,31 @@ public sealed class DrawCommandBuffer : IDisposable
 
     private unsafe void CountTickets(int* heads, int length)
     {
-        var indices = _commands.View2;
+        var drawIndex = _commands.View2.Ptr;
+        var drawIndexEnd = drawIndex + length;
 
-        for (var i = 0; i < length; i++)
+        while (drawIndex < drawIndexEnd)
         {
-            var mask = (uint)indices[i].Pass;
+            var mask = (uint)drawIndex->Pass;
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);
-                heads[p]++;
+                ++heads[p];
                 mask &= mask - 1;
             }
+
+            ++drawIndex;
         }
     }
 
     private unsafe int CountPasses(int* heads)
     {
-        var passRanges = _passRanges;
-
         var total = 0;
-        for (var p = 0; p < PassSlots; p++)
+        for (var p = 0; p < PassSlots; ++p)
         {
             var c = heads[p];
-            var range = passRanges[p] = new Range32(total, c);
-            heads[PassSlots + p] += range.Offset;
+            heads[PassSlots + p] += total;
+            _passRanges[p] = new Range32(total, c);
             total += c;
         }
 
@@ -127,12 +126,13 @@ public sealed class DrawCommandBuffer : IDisposable
     {
         // fill tickets in sorted order
         var drawTickets = _drawTickets;
-        var indices = _commands.View2;
-
-        for (var i = 0; i < length; i++)
+        
+        var drawIndex = _commands.View2.Ptr;
+        var drawIndexEnd = drawIndex + length;
+        while (drawIndex < drawIndexEnd)
         {
-            var idx = indices[i].Index;
-            var mask = (uint)indices[i].Pass;
+            var idx = drawIndex->Index;
+            var mask = (uint)drawIndex->Pass;
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);
@@ -140,6 +140,8 @@ public sealed class DrawCommandBuffer : IDisposable
                 drawTickets[w] = idx;
                 mask &= mask - 1;
             }
+
+            ++drawIndex;
         }
     }
 
@@ -154,8 +156,9 @@ public sealed class DrawCommandBuffer : IDisposable
 
     internal unsafe void DispatchDrawPass(DrawCommandProcessor cmd, PassId passId)
     {
-        var commands = _commands.View1;
         var passRange = _passRanges[passId];
+
+        var commands = _commands.View1;
         var ticket = _drawTickets + passRange.Offset;
         for (var i = 0; i < passRange.Length; ++i, ++ticket)
         {

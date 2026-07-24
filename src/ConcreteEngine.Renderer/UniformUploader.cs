@@ -66,13 +66,16 @@ internal sealed unsafe class UniformUploader
         }
     }
 
-    internal ReadOnlySpan<TextureBinding> ResolveMaterial(Id16<MaterialSlot> materialId,
+    internal ReadOnlySpan<TextureBinding> BindResolveMaterial(Id16<MaterialSlot> materialId,
         out RenderMaterialMeta materialMeta)
     {
         if (PrevMaterial != materialId)
         {
             PrevMaterial = materialId;
-            BindMaterialObject(materialId);
+            
+            var cursor = _materialUbo.SetDrawCursor(materialId.Index());
+            _gfxBuffers.BindUniformBufferRange(_materialUbo.Id, _materialUbo.Slot, cursor, _materialUbo.Stride);
+            
             return _materialBuffer.GetMetaAndSlots(materialId, out materialMeta);
         }
 
@@ -81,12 +84,6 @@ internal sealed unsafe class UniformUploader
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void BindMaterialObject(Id16<MaterialSlot> matId)
-    {
-        var cursor = _materialUbo.SetDrawCursor(matId.Index());
-        _gfxBuffers.BindUniformBufferRange(_materialUbo.Id, _materialUbo.Slot, cursor, _materialUbo.Stride);
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void BindDrawObject(int submitIndex)

@@ -23,7 +23,7 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
     }
 
     public readonly bool IsNull => _ptr1 == null;
-
+    
     public readonly NativeView<T1> View1 => new(_ptr1, 0, Length);
     public readonly NativeView<T2> View2 => new(_ptr2, 0, Length);
 

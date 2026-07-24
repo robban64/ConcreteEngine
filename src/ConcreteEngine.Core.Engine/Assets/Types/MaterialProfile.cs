@@ -27,7 +27,7 @@ public sealed class MaterialProfile
     public Shader Shader { get; private set; } = null!;
 
     public readonly string ShaderName;
-    public readonly DrawCommandQueue DrawQueue;
+    public readonly DrawQueue DrawQueue;
 
     public readonly MaterialShading Shading;
 
@@ -43,13 +43,13 @@ public sealed class MaterialProfile
 
     private readonly TextureUsage[] _slots;
 
-    public MaterialProfile(string shaderName, DrawCommandQueue drawQueue, params TextureUsage[] slots)
+    public MaterialProfile(string shaderName, DrawQueue drawQueue, params TextureUsage[] slots)
         : this(shaderName, drawQueue, DefaultToggle, slots) { }
 
     public MaterialProfile(string shaderName, params TextureUsage[] slots)
-        : this(shaderName, DrawCommandQueue.Opaque, DefaultToggle, slots) { }
+        : this(shaderName, DrawQueue.Opaque, DefaultToggle, slots) { }
 
-    public MaterialProfile(string shader, DrawCommandQueue queue, MaterialShading shading, params TextureUsage[] slots)
+    public MaterialProfile(string shader, DrawQueue queue, MaterialShading shading, params TextureUsage[] slots)
     {
         _slots = slots;
         ShaderName = shader;
@@ -145,7 +145,7 @@ public sealed class MaterialProfile
 
     private static MaterialProfile TransparentProfile =>
         new(
-            "Model", DrawCommandQueue.Transparent,
+            "Model", DrawQueue.Transparent,
             MaterialShading.Shadows | MaterialShading.Transparent,
             TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask
         )
@@ -160,7 +160,7 @@ public sealed class MaterialProfile
 
     private static MaterialProfile AlphaMaskedProfile =>
         new(
-            "Model", DrawCommandQueue.Transparent,
+            "Model", DrawQueue.Transparent,
             MaterialShading.Shadows | MaterialShading.Transparent,
             TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask
         )
@@ -174,7 +174,7 @@ public sealed class MaterialProfile
 
 
     private static MaterialProfile ParticleProfile =>
-        new("Particle", DrawCommandQueue.Particles, MaterialShading.Transparent, TextureUsage.Albedo)
+        new("Particle", DrawQueue.Particles, MaterialShading.Transparent, TextureUsage.Albedo)
         {
             StateValues = MaterialStateRecord.Make(0, 0),
             DrawState = GfxDrawState.Set(
@@ -192,7 +192,7 @@ public sealed class MaterialProfile
 
     private static MaterialProfile FoliageProfile =>
         new(
-            "Foliage", DrawCommandQueue.Transparent,
+            "Foliage", DrawQueue.Transparent,
             MaterialShading.Transparent | MaterialShading.ReceiveShadows,
             TextureUsage.Albedo
         )
@@ -206,7 +206,7 @@ public sealed class MaterialProfile
         };
 
     private static MaterialProfile SkyProfile =>
-        new("Skybox", DrawCommandQueue.Skybox, MaterialShading.DoubleSided, TextureUsage.Albedo)
+        new("Skybox", DrawQueue.Skybox, MaterialShading.DoubleSided, TextureUsage.Albedo)
         {
             StateValues = MaterialStateRecord.Make(0, 0),
             DrawState = GfxDrawState.Disable(GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2 | GfxDrawFlags.PolygonOffset |

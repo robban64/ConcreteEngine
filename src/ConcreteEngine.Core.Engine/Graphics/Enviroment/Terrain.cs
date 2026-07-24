@@ -74,14 +74,14 @@ public sealed class Terrain
 
     public void SetMaterial(Material material)
     {
-        material.State.DrawQueue = DrawCommandQueue.Terrain;
+        material.State.DrawQueue = DrawQueue.Terrain;
         GroundMaterial = material;
         IsDirty = true;
     }
 
     public void SetFoliageMaterial(Material material)
     {
-        material.State.DrawQueue = DrawCommandQueue.Transparent;
+        material.State.DrawQueue = DrawQueue.Transparent;
         FoliageMaterial = material;
         IsDirty = true;
     }

@@ -57,17 +57,12 @@ public sealed class ModelInstance : RenderBlueprintInstance
         for (int i = 0; i < meshes.Length; i++)
         {
             var mesh = Model.GetMesh(i);
-            var material = Blueprint.GetMaterial(i);
+            var mat = Blueprint.GetMaterial(i);
 
-            var source = new SourceComponent(
-                mesh.MeshId,
-                material.MaterialId,
-                mesh.Info.MeshIndex,
-                EntitySourceKind.Model,
-                material.State.DrawQueue,
-                material.State.Passes);
+            var policy = new DrawPolicy(mat.State.DrawQueue, mat.State.Passes);
+            var source = new RenderSource(mesh.MeshId, mat.MaterialId, mesh.Info.MeshIndex, EntitySourceKind.Model);
 
-            var entity = Ecs.RenderCore.AddEntity(source);
+            var entity = Ecs.RenderCore.AddEntity(source, policy);
             Ecs.SceneLink.BindSceneHandle(entity, Owner.Id);
             RenderEntityIds.Add(entity);
         }

@@ -158,8 +158,14 @@ internal sealed class RenderDispatcher : IDisposable
         foreach (var entity in visibleEntities)
         {
             ref var source = ref Ecs.RenderCore.GetSource(entity);
-            source.WriteTo(ref _commandBuffer.CommandRef(index));
-            ++index;
+            ref var cmd = ref _commandBuffer.CommandRef(index++);
+            source.WriteTo(ref cmd);
+            /*
+            cmd.MeshId = source.Mesh;
+            cmd.MaterialId = source.Material;
+            cmd.Resolver = source.Resolver;
+            cmd.ResolverSlot = source.ResolverSlot;
+            */
         }
     }
 

@@ -7,6 +7,7 @@ using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Core.Common.Text;
 
+[InterpolatedStringHandler]
 public unsafe ref partial struct NativeSpanWriter
 {
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -48,6 +49,13 @@ public unsafe ref partial struct NativeSpanWriter
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter Append(scoped ref DefaultInterpolatedStringHandler handler)
+    {
+        if (Validate(handler.Text.Length)) _cursor += Encoding.UTF8.GetBytes(handler.Text, RemainingSpan());
+        return ref this;
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter Append(byte value)
     {
         Debug.Assert(_cursor + 1 < Capacity);
@@ -63,18 +71,6 @@ public unsafe ref partial struct NativeSpanWriter
         _cursor += UtfText.FormatChar(ref Buffer[_cursor], value);
         return ref this;
     }
-
-    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref NativeSpanWriter Append(char value1, char value2)
-    {
-        var cursor = _cursor;
-        cursor += UtfText.FormatChar(ref Buffer[cursor], value1);
-        cursor += UtfText.FormatChar(ref Buffer[cursor], value2);
-        _cursor = cursor;
-        Debug.Assert(_cursor < Capacity);
-        return ref this;
-    }
-
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter Append(int value)
@@ -99,6 +95,40 @@ public unsafe ref partial struct NativeSpanWriter
             Throwers.BufferOverflow(nameof(NativeSpanWriter), _cursor + written, Capacity);
 
         _cursor += written;
+        return ref this;
+    }
+
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter AppendAscii(char c1)
+    {
+        var cursor = _cursor;
+        Debug.Assert(_cursor + 1 < Capacity);
+        Buffer[cursor] = (byte)c1;
+        _cursor += 1;
+        return ref this;
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter AppendAscii(char c1, char c2)
+    {
+        var cursor = _cursor;
+        Debug.Assert(_cursor + 2 < Capacity);
+        Buffer[cursor + 0] = (byte)c1;
+        Buffer[cursor + 1] = (byte)c2;
+        _cursor += 2;
+        return ref this;
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter AppendAscii(char c1, char c2, char c3)
+    {
+        var cursor = _cursor;
+        Debug.Assert(_cursor + 3 < Capacity);
+        Buffer[cursor + 0] = (byte)c1;
+        Buffer[cursor + 1] = (byte)c2;
+        Buffer[cursor + 2] = (byte)c3;
+        _cursor += 3;
         return ref this;
     }
 }

@@ -36,17 +36,19 @@ internal static class ValueLogParser
         var topic = log.Topic.ToLogText();
 
         sw.Clear();
-        sw.Append(action).PadRight(4).Append('-').Append(topic).PadRight(4)
-            .Append(' ').Append(id).Append(eq).Append(log.Id)
-            .Append(" Gen=").Append(log.Gen).Append(" { ");
+        sw.Append(action).PadRight(4).AppendAscii('-');
+        sw.Append(topic).PadRight(4).AppendAscii(' ');
+        sw.Append(id).Append(eq).Append(log.Id);
+        sw.Append(" Gen=").Append(log.Gen);
+        sw.AppendAscii(' ', '{', ' ');
 
-        if (p0 is not null) sw.Append(p0).Append(eq).Append($"{log.Param0,-2}").Append("; ");
-        if (p1 is not null) sw.Append(p1).Append(eq).Append($"{log.Param1,-2}").Append("; ");
-        if (fp is not null) sw.Append(fp).Append(eq).Append($"{log.FParam0,-2}").Append("; ");
-        if (gen is not null) sw.Append(gen).Append(eq).Append($"{log.Gen,2}").Append("; ");
-        if (flags is not null) sw.Append(flags).Append(eq).Append(log.Flags).Append("; ");
+        if (p0 is not null) sw.Append(p0).Append(eq).Append($"{log.Param0,-2}").AppendAscii(';', ' ');
+        if (p1 is not null) sw.Append(p1).Append(eq).Append($"{log.Param1,-2}").AppendAscii(';', ' ');
+        if (fp is not null) sw.Append(fp).Append(eq).Append($"{log.FParam0,-2}").AppendAscii(';', ' ');
+        if (gen is not null) sw.Append(gen).Append(eq).Append($"{log.Gen,2}").AppendAscii(';', ' ');
+        if (flags is not null) sw.Append(flags).Append(eq).Append(log.Flags).AppendAscii(';', ' ');
 
-        sw.Append(" }");
+        sw.AppendAscii(' ','}');
         return sw.EndSpan();
     }
 }

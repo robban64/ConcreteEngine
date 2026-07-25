@@ -95,8 +95,8 @@ internal sealed unsafe class SceneInspectorPanel
             for (var i = 0; i < materialCount; i++)
             {
                 var mat = modelInstance.Blueprint.GetMaterial(i);
-                sw.Append('[').Append(i).Append(']').PadRight(2);
-                sw.Append(mat.Name).Append(' ', '(').Append(mat.BoundShader.Name).Append(')');
+                sw.AppendAscii('[').Append(i).AppendAscii(']').PadRight(2);
+                sw.Append(mat.Name).AppendAscii(' ', '(').Append(mat.BoundShader.Name).AppendAscii(')');
                 AppDraw.Text(sw.End());
             }
         }

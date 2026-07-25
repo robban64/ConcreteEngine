@@ -49,13 +49,13 @@ internal sealed class PassCommandQueue
         while (_sourceQueue.TryPeek(out _, out var k) && k.TagIndex == tagIndex)
         {
             _sourceQueue.TryDequeue(out var id, out k);
-            slots[k.TextureSlot] = id;
+            _textureSlots[k.TextureSlot] = id;
             _textureSlotHigh = int.Max(_textureSlotHigh, k.TextureSlot);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<TextureId> GetPassSources() => _textureSlots.AsSpan(0, int.Max(_textureSlotHigh, 1));
+    public ReadOnlySpan<TextureId> GetPassSources() => new(_textureSlots, 0, int.Max(_textureSlotHigh, 1));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Prepare()

@@ -1,9 +1,32 @@
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Core.Common.Text;
 
 public static class SpanWriterExtensions
 {
     extension(ref SpanWriter sw)
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref SpanWriter AppendChar(char c1, char c2)
+        {
+            var cursor = sw.Cursor;
+            sw.Buffer[cursor + 0] = c1;
+            sw.Buffer[cursor + 1] = c2;
+            sw.Advance(2);
+            return ref sw;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref SpanWriter AppendChar(char c1, char c2, char c3)
+        {
+            var cursor = sw.Cursor;
+            sw.Buffer[cursor + 0] = c1;
+            sw.Buffer[cursor + 1] = c2;
+            sw.Buffer[cursor + 2] = c3;
+            sw.Advance(3);
+            return ref sw;
+        }
+
         public ref SpanWriter Start(scoped ReadOnlySpan<byte> value)
         {
             sw.Clear();

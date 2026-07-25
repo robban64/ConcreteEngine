@@ -60,7 +60,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         //ImGui.GetIO().Framerate
         var sw = _title.OverWriter;
         sw.Append("Console"u8).PadRight(4);
-        sw.Append((byte)'[').Append(m.Metric.AvgMs, "F4").Append('m', 's').Append((byte)']');
+        sw.Append((byte)'[').Append(m.Metric.AvgMs, "F4").AppendAscii('m', 's').Append((byte)']');
         sw.PadRight(4);
         sw.Append((byte)'[').Append(m.Metric.AllocMbPerSec, "F4").Append("MB/s").Append((byte)']');
         sw.End();

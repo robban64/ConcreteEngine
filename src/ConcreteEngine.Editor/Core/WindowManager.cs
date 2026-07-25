@@ -51,7 +51,7 @@ internal sealed class WindowManager
 
     public void Setup()
     {
-        TopMenuWindow.Instance.RegisterMenuToolbar();
+        TopMenuWindow.Create();
         RegisterDebugWindows();
 
         foreach (var it in _windows) it.Create();

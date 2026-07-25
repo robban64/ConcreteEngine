@@ -48,7 +48,6 @@ internal sealed class RenderPassCtx
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<TextureId> GetPassSources() => PassQueue.GetPassSources();
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SampleTo<TTag>(FboVariant variant, TexSlot texSlot) where TTag : class
     {

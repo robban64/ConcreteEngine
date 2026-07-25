@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
@@ -191,24 +192,24 @@ public sealed class RenderFboRegistry
     {
         private static bool _isBound;
         private static byte _tagIndex;
-        private static PassIdVariants _passIds;
+        private static InlineArray4<byte> _passIds;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe PassTagKey PassKey(FboVariant variant) =>
-            new(_tagIndex, variant, new PassId(_passIds.Value[variant]));
+        public static PassTagKey PassKey(FboVariant variant) =>
+            new(_tagIndex, variant, new PassId(_passIds[variant]));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FboTagKey FboKey(FboVariant variant) => new(_tagIndex, variant);
 
-        public static unsafe PassTagKey BindFboPassId(FboVariant variant, PassId passId)
+        public static PassTagKey BindFboPassId(FboVariant variant, PassId passId)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(variant.Value, RenderLimits.MaxFboVariants);
 
             if (!_isBound) throw new InvalidOperationException($"PassTag not registered. {typeof(TTag).Name}");
 
-            if (_passIds.Value[variant] != 0) throw new InvalidOperationException(nameof(variant));
+            if (_passIds[variant] != 0) throw new InvalidOperationException(nameof(variant));
 
-            _passIds.Value[variant] = passId.Value;
+            _passIds[variant] = passId.Value;
             return PassKey(variant);
         }
 
@@ -222,10 +223,5 @@ public sealed class RenderFboRegistry
             _tagIndex = _passTagCounter++;
             _isBound = true;
         }
-    }
-
-    private unsafe struct PassIdVariants
-    {
-        public fixed byte Value[RenderLimits.MaxFboVariants];
     }
 }

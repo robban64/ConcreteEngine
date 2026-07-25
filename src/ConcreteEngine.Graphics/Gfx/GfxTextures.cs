@@ -137,9 +137,9 @@ public sealed class GfxTextures
             meta.CompareTextureFunc,
             meta.BorderColor, msaa);
 
-        var newTexRef = CreateDriverTexture(size, in props, out var newMeta);
-        _textureStore.Replace(textureId, in newMeta, in newTexRef, out _);
-        return newTexRef;
+        var newHandle = CreateDriverTexture(size, in props, out var newMeta);
+        _textureStore.Replace(textureId, in newMeta, newHandle, out _);
+        return newHandle;
     }
 
     public void ApplyProperties(TextureId textureId)

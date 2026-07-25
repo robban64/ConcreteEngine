@@ -152,7 +152,7 @@ public sealed class GfxFrameBuffers
         var newRboRef = _driver.CreateRenderBuffer(attachmentSlot, size, samples);
         _driver.AttachRenderBuffer(fboRef, newRboRef, attachmentSlot);
         meta = new RenderBufferMeta(size, attachmentSlot, msaa);
-        return _rboStore.Replace(rboId, in meta, in newRboRef, out _);
+        return _rboStore.Replace(rboId, in meta, newRboRef, out _);
     }
 
     private void AttachTexture(GfxHandle fbo, GfxHandle tex,

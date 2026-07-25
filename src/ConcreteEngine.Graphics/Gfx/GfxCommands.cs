@@ -40,9 +40,9 @@ public sealed class GfxCommands
         _cmdStates = ctx.Driver.States;
         _frameBuffers = ctx.Driver.FrameBuffers;
 
-        _fboStore = GfxRegistry.GetGfxStore<FrameBufferMeta>();
-        _textureStore = GfxRegistry.GetGfxStore<TextureMeta>();
-        _shaderStore = GfxRegistry.GetGfxStore<ShaderMeta>();
+        _fboStore = GfxRegistry.GetStore<FrameBufferMeta>();
+        _textureStore = GfxRegistry.GetStore<TextureMeta>();
+        _shaderStore = GfxRegistry.GetStore<ShaderMeta>();
 
         SetBlendMode(BlendMode.Alpha);
         SetDepthMode(DepthMode.Lequal);
@@ -116,7 +116,7 @@ public sealed class GfxCommands
         var fromHandle = _fboStore.GetHandleAndMeta(fromId, out var fromMeta);
         var toHandle = _fboStore.TryGet(toId, out _);
 
-        if (!toHandle.IsValid)
+        if (!toHandle.IsValid())
         {
             _frameBuffers.BlitDefault(fromHandle, fromMeta.Size, _activeOutputSize, false);
             return;

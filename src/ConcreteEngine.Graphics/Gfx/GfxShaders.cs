@@ -18,7 +18,7 @@ public sealed class GfxShaders
 
     internal GfxShaders(GfxContextInternal context)
     {
-        _store = GfxRegistry.GetGfxStore<ShaderMeta>();
+        _store = GfxRegistry.GetStore<ShaderMeta>();
         _driver = context.Driver.Shaders;
         _disposer = context.Disposer;
         _debugger = context.Driver.Debugger;
@@ -44,12 +44,12 @@ public sealed class GfxShaders
         if (fs.IsNull || fs.Length == 0) throw new ArgumentOutOfRangeException(nameof(fs));
 
         _debugger.ToggleDebug(false);
-        GfxHandle oldRef, newRef;
+        GfxHandle oldHandle, newHandle;
         int samplerCount = 0;
         try
         {
-            oldRef = _store.GetHandleAndMeta(shaderId, out var oldMeta);
-            newRef = _driver.CreateShader(vs, fs);
+            oldHandle = _store.GetHandleAndMeta(shaderId, out var oldMeta);
+            newHandle = _driver.CreateShader(vs, fs);
             samplerCount = oldMeta.SamplerSlots;
         }
         finally
@@ -58,12 +58,11 @@ public sealed class GfxShaders
         }
 
         var samplerList = new List<GfxUniformSampler>(samplerCount);
-        _driver.GetSamplersFromProgram(newRef, samplerList);
+        _driver.GetSamplersFromProgram(newHandle, samplerList);
         samplers = samplerList.ToArray();
 
         var meta = new ShaderMeta(samplers.Length);
-        _store.Replace(shaderId, in meta, newRef, out _);
-
-        _disposer.EnqueueReplace(oldRef);
+        _store.Replace(shaderId, in meta, newHandle);
+        _disposer.EnqueueReplace(shaderId, oldHandle);
     }
 }

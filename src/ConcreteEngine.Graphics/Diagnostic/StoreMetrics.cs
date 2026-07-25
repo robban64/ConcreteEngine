@@ -16,26 +16,20 @@ internal interface IStoreMetrics
     void GetResult(out GfxStoreMeta data);
 }
 
-internal sealed class StoreMetrics<TMeta>(
-    GraphicsKind kind,
-    GfxResourceStore<TMeta> gfxStore,
-    BackendResourceStore backendStore)
-    : IStoreMetrics where TMeta : unmanaged, IResourceMeta
-
+internal sealed class StoreMetrics<TMeta>(GfxResourceStore<TMeta> gfxStore) : IStoreMetrics where TMeta : unmanaged, IResourceMeta
 {
-    public GraphicsKind Kind { get; } = kind;
-    public string Name { get; } = kind.ToText();
-    public string ShortName { get; } = kind.ToShortText();
+    public GraphicsKind Kind { get; } = TMeta.ResourceKind;
+    public string Name { get; } = TMeta.ResourceKind.ToText();
+    public string ShortName { get; } = TMeta.ResourceKind.ToShortText();
 
     private GfxStoreMeta _data;
 
     public void GetResult(out GfxStoreMeta data)
     {
         var gfx = gfxStore;
-        var bk = backendStore;
 
         _data.Fk = new CollectionSample(gfx.Count, gfx.Capacity, gfx.GetAliveCount(), gfx.FreeCount);
-        _data.Bk = new CollectionSample(bk.Count, bk.Capacity, bk.GetAliveCount(), bk.FreeCount);
+        _data.Bk = default;
         _data.MetaInfo = GetSpecialMetric();
         _data.Kind = Kind;
         data = _data;

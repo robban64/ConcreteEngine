@@ -32,12 +32,6 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         while (drainCount < DrainPerFrame && _disposeQueue.TryGetNext(DrainDelayTicks, out var cmd))
         {
             driver.Disposer.DeleteGlResource(cmd);
-            GfxRegistry.GetBackendStore(cmd.Handle.Kind).Remove(cmd.Handle);
-            if (!cmd.Replace)
-            {
-                GfxRegistry.GetGfxStore(cmd.Handle.Kind).Remove(new GfxId(cmd.GfxId, cmd.Handle.Kind));
-            }
-
             drainCount++;
         }
     }
@@ -45,27 +39,17 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
     public void EnqueueRemoval<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
     {
         ArgumentOutOfRangeException.ThrowIfZero(id.Id);
-        var resourceKind = TMeta.ResourceKind;
-        var fStore = GfxRegistry.GetGfxStore<TMeta>();
-        var gfxHandle = fStore.GetHandle(id);
-
-        var bkHandle = GfxRegistry.GetBackendStore<TMeta>().GetSafe(gfxHandle);
-
-        var cmd = DeleteResourceCommand.MakeDelete(gfxHandle, bkHandle, id);
+        var handle = GfxRegistry.GetStore<TMeta>().GetHandle(id);
+        var cmd = new DeleteResourceCommand(handle, id, TMeta.ResourceKind, false);
         _disposeQueue.Enqueue(cmd);
-
-        GfxLog.LogBackend(bkHandle, gfxHandle, resourceKind.ToLogTopic(), LogAction.Evict);
+        GfxLog.LogBackend(handle, id, TMeta.ResourceKind.ToLogTopic(), LogAction.Evict);
     }
 
-    public void EnqueueReplace(GfxHandle handle)
+    public void EnqueueReplace<TMeta>(GfxId<TMeta> id, GfxHandle handle) where TMeta : unmanaged, IResourceMeta
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(handle.IsValid, false);
-
-        var bkHandle = GfxRegistry.GetBackendStore(handle.Kind).GetSafe(handle);
-        var cmd = DeleteResourceCommand.MakeReplace(handle, bkHandle);
+        ArgumentOutOfRangeException.ThrowIfEqual(handle.IsValid(), false);
+        var cmd = new DeleteResourceCommand(handle, id, TMeta.ResourceKind, true);
         _disposeQueue.Enqueue(cmd);
-
-        GfxLog.LogBackend(bkHandle, handle, handle.Kind.ToLogTopic(), LogAction.Evict);
     }
 
 

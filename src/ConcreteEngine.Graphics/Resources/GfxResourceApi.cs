@@ -9,16 +9,15 @@ public static class GfxResourceApi
     private static readonly HashSet<int> Receivers = new(4);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static NativeHandle GetNativeHandle<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
+    public static GfxHandle GetNativeHandle<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
     {
-        var handle = GfxRegistry.GetGfxStore<TMeta>().GetHandle(id);
-        return GfxRegistry.GetBackendStore<TMeta>().GetSafe(handle);
+        return GfxRegistry.GetStore<TMeta>().GetHandle(id);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TMeta GetMeta<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
     {
-        return GfxRegistry.GetGfxStore<TMeta>().GetMeta(id);
+        return GfxRegistry.GetStore<TMeta>().GetMeta(id);
     }
 
     public static void BindMetaChanged(GraphicsKind kind, Action<int> callback)
@@ -28,7 +27,7 @@ public static class GfxResourceApi
         if (!Receivers.Add((int)kind))
             throw new InvalidOperationException($"{kind} Already registered");
 
-        var store = GfxRegistry.GetGfxStore(kind);
+        var store = GfxRegistry.GetStore(kind);
         store.BindOnUpdateCallback(callback);
     }
 }

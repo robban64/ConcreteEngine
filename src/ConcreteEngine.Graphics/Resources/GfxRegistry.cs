@@ -11,29 +11,19 @@ namespace ConcreteEngine.Graphics.Resources;
 public static class GfxRegistry
 {
     private static readonly IGfxResourceStore[] GfxStores = new IGfxResourceStore[GfxMetrics.StoreCount];
-    private static readonly BackendResourceStore[] BackendStores = new BackendResourceStore[GfxMetrics.StoreCount];
 
     private static class Store<TMeta> where TMeta : unmanaged, IResourceMeta
     {
         public static readonly GfxResourceStore<TMeta> Gfx = new(GetCapacity(TMeta.ResourceKind));
-        public static readonly BackendResourceStore Backend = new(GetCapacity(TMeta.ResourceKind), TMeta.ResourceKind);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static GfxResourceStore<TMeta> GetGfxStore<TMeta>()
-        where TMeta : unmanaged, IResourceMeta =>
+    internal static GfxResourceStore<TMeta> GetStore<TMeta>() where TMeta : unmanaged, IResourceMeta =>
         Store<TMeta>.Gfx;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static BackendResourceStore GetBackendStore<TMeta>()
-        where TMeta : unmanaged, IResourceMeta =>
-        Store<TMeta>.Backend;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static IGfxResourceStore GetGfxStore(GraphicsKind kind) => GfxStores[(int)kind - 1];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static BackendResourceStore GetBackendStore(GraphicsKind kind) => BackendStores[(int)kind - 1];
+    internal static IGfxResourceStore GetStore(GraphicsKind kind) => GfxStores[(int)kind - 1];
 
     internal static void CreateStores()
     {
@@ -50,18 +40,16 @@ public static class GfxRegistry
     internal static void DisposeAllStores()
     {
         foreach (var store in GfxStores) store.Dispose();
-        foreach (var store in BackendStores) store.Dispose();
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void CreateStore<TMeta>() where TMeta : unmanaged, IResourceMeta
     {
         var index = (int)TMeta.ResourceKind - 1;
-        if (GfxStores[index] != null! || BackendStores[index] != null!)
+        if (GfxStores[index] != null!)
             Throwers.InvalidOperation($"Store {nameof(TMeta)} already initialized");
 
         GfxStores[index] = Store<TMeta>.Gfx;
-        BackendStores[index] = Store<TMeta>.Backend;
     }
 
 

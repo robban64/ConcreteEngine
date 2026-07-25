@@ -26,7 +26,7 @@ public sealed unsafe class GfxDraw : IDisposable
         if (!_tableMemory.IsNull) throw new InvalidOperationException("DrawTable is already initialized.");
 
         _states = ctx.Driver.States;
-        _meshStore = GfxRegistry.GetGfxStore<MeshMeta>();
+        _meshStore = GfxRegistry.GetStore<MeshMeta>();
 
         _tableMemory = NativeArray.Allocate<byte>(sizeof(nint) * 4);
 

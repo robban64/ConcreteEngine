@@ -11,10 +11,6 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlStates
 {
     private readonly GL _gl = GlBackendDriver.Gl;
-    private readonly BackendResourceStore _meshStore = GfxRegistry.GetBackendStore<MeshMeta>();
-    private readonly BackendResourceStore _textureStore = GfxRegistry.GetBackendStore<TextureMeta>();
-    private readonly BackendResourceStore _fboStore = GfxRegistry.GetBackendStore<FrameBufferMeta>();
-    private readonly BackendResourceStore _shaderStore = GfxRegistry.GetBackendStore<ShaderMeta>();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearColor(ColorRgba color)
@@ -138,26 +134,26 @@ internal sealed class GlStates
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindTexture(GfxHandle texRef, int slot) => _gl.BindTextureUnit((uint)slot, _textureStore.Get(texRef));
+    public void BindTexture(GfxHandle textureHandle, int slot) => _gl.BindTextureUnit((uint)slot, textureHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindTextureSlot(int slot) => _gl.BindTextureUnit((uint)slot, 0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindFrameBuffer(GfxHandle fboRef) =>
-        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _fboStore.Get(fboRef));
+    public void BindFrameBuffer(GfxHandle fboHandle) =>
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, fboHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindFrameBuffer() => _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindMesh(GfxHandle mesh) => _gl.BindVertexArray(_meshStore.Get(mesh));
+    public void BindMesh(GfxHandle meshHandle) => _gl.BindVertexArray(meshHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindMesh() => _gl.BindVertexArray(0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UseShader(GfxHandle shaderRef) => _gl.UseProgram(_shaderStore.Get(shaderRef));
+    public void UseShader(GfxHandle shanderHandle) => _gl.UseProgram(shanderHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindShader() => _gl.UseProgram(0);

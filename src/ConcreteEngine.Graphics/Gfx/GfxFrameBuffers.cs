@@ -23,9 +23,9 @@ public sealed class GfxFrameBuffers
 
     internal GfxFrameBuffers(GfxContextInternal context, GfxTextures gfxTextures)
     {
-        _fboStore = GfxRegistry.GetGfxStore<FrameBufferMeta>();
-        _rboStore = GfxRegistry.GetGfxStore<RenderBufferMeta>();
-        _textureStore = GfxRegistry.GetGfxStore<TextureMeta>();
+        _fboStore = GfxRegistry.GetStore<FrameBufferMeta>();
+        _rboStore = GfxRegistry.GetStore<RenderBufferMeta>();
+        _textureStore = GfxRegistry.GetStore<TextureMeta>();
 
         _disposer = context.Disposer;
         _driver = context.Driver.FrameBuffers;
@@ -36,7 +36,7 @@ public sealed class GfxFrameBuffers
     {
         EnsureCreateFrameBuffer(in desc);
         var size = desc.Size;
-        var fboRef = _driver.CreateFrameBuffer();
+        var fboHandle = _driver.CreateFrameBuffer();
 
         var isMultisample = desc.Multisample != RenderBufferMsaa.None;
 
@@ -52,7 +52,7 @@ public sealed class GfxFrameBuffers
 
             var textureId = _gfxTextures.CreateTextureEmpty(size.ToSize3D(1), texProps);
             var texRef = _textureStore.GetHandle(textureId);
-            AttachTexture(fboRef, texRef, FrameBufferAttachmentSlot.Color);
+            AttachTexture(fboHandle, texRef, FrameBufferAttachmentSlot.Color);
             attachments = attachments with { ColorTexture = textureId };
         }
 
@@ -65,13 +65,13 @@ public sealed class GfxFrameBuffers
 
             var textureId = _gfxTextures.CreateTextureEmpty(size.ToSize3D(1), texProps);
             var texRef = _textureStore.GetHandle(textureId);
-            AttachTexture(fboRef, texRef, FrameBufferAttachmentSlot.Depth);
+            AttachTexture(fboHandle, texRef, FrameBufferAttachmentSlot.Depth);
             attachments = attachments with { DepthTexture = textureId };
         }
 
         if (desc.ColorBuffer)
         {
-            var rboId = CreateAttachRenderBuffer(fboRef, size,
+            var rboId = CreateAttachRenderBuffer(fboHandle, size,
                 FrameBufferAttachmentSlot.Color, desc.Multisample, out _);
 
             attachments = attachments with { ColorRbo = rboId };
@@ -79,80 +79,79 @@ public sealed class GfxFrameBuffers
 
         if (desc.DepthStencilBuffer)
         {
-            var rboId = CreateAttachRenderBuffer(fboRef, size,
+            var rboId = CreateAttachRenderBuffer(fboHandle, size,
                 FrameBufferAttachmentSlot.DepthStencil, desc.Multisample, out _);
             attachments = attachments with { DepthRbo = rboId };
         }
 
-        _driver.ValidateComplete(fboRef, desc.ColorTexture is not null);
+        _driver.ValidateComplete(fboHandle, desc.ColorTexture is not null);
 
         var fboMeta = new FrameBufferMeta(size, attachments, desc.Multisample);
-        var fboId = _fboStore.Add(in fboMeta, fboRef);
+        var fboId = _fboStore.Add(in fboMeta, fboHandle);
         return fboId;
     }
 
     public void RecreateFrameBuffer(FrameBufferId fboId, Size2D newSize)
     {
         ArgumentOutOfRangeException.ThrowIfZero(fboId.Id, nameof(fboId));
-        var oldFboRef = _fboStore.GetHandleAndMeta(fboId, out var oldMeta);
-        _disposer.EnqueueReplace(oldFboRef);
+        var oldFboHandle = _fboStore.GetHandleAndMeta(fboId, out var oldMeta);
+        _disposer.EnqueueReplace(fboId, oldFboHandle);
 
         var newMeta = FrameBufferMeta.MakeResizeCopy(in oldMeta, newSize);
-        var fboRef = _driver.CreateFrameBuffer();
-        _fboStore.Replace(fboId, in newMeta, fboRef, out _);
+        var fboHandle = _driver.CreateFrameBuffer();
+        _fboStore.Replace(fboId, in newMeta, fboHandle);
 
         var attachments = newMeta.Attachments;
         if (attachments.ColorTexture.IsValid())
         {
             var texRef = _gfxTextures.ReplaceTexture(attachments.ColorTexture, newSize.ToSize3D(1));
             _gfxTextures.ApplyProperties(attachments.ColorTexture);
-            AttachTexture(fboRef, texRef, FrameBufferAttachmentSlot.Color);
+            AttachTexture(fboHandle, texRef, FrameBufferAttachmentSlot.Color);
         }
 
         if (attachments.DepthTexture.IsValid())
         {
             var texRef = _gfxTextures.ReplaceTexture(attachments.DepthTexture, newSize.ToSize3D(1));
             _gfxTextures.ApplyProperties(attachments.DepthTexture);
-            AttachTexture(fboRef, texRef, FrameBufferAttachmentSlot.Depth);
+            AttachTexture(fboHandle, texRef, FrameBufferAttachmentSlot.Depth);
         }
 
         if (attachments.ColorRbo.IsValid())
         {
-            RecreateAttachRenderBuffer(attachments.ColorRbo, fboRef, newSize,
+            RecreateAttachRenderBuffer(attachments.ColorRbo, fboHandle, newSize,
                 FrameBufferAttachmentSlot.Color, newMeta.MultiSample, out _);
         }
 
         if (attachments.DepthRbo.IsValid())
         {
-            RecreateAttachRenderBuffer(attachments.DepthRbo, fboRef, newSize,
+            RecreateAttachRenderBuffer(attachments.DepthRbo, fboHandle, newSize,
                 FrameBufferAttachmentSlot.DepthStencil, newMeta.MultiSample, out _);
         }
 
-        _driver.ValidateComplete(fboRef, attachments.ColorTexture.IsValid());
+        _driver.ValidateComplete(fboHandle, attachments.ColorTexture.IsValid());
     }
 
     private RenderBufferId CreateAttachRenderBuffer(GfxHandle fbo, Size2D size,
         FrameBufferAttachmentSlot attachmentSlot, RenderBufferMsaa msaa, out RenderBufferMeta meta)
     {
         var samples = msaa.ToSamples();
-        var rboRef = _driver.CreateRenderBuffer(attachmentSlot, size, samples);
-        _driver.AttachRenderBuffer(fbo, rboRef, attachmentSlot);
+        var rboHandle = _driver.CreateRenderBuffer(attachmentSlot, size, samples);
+        _driver.AttachRenderBuffer(fbo, rboHandle, attachmentSlot);
         meta = new RenderBufferMeta(size, attachmentSlot, msaa);
-        return _rboStore.Add(in meta, rboRef);
+        return _rboStore.Add(in meta, rboHandle);
     }
 
-    private RenderBufferId RecreateAttachRenderBuffer(RenderBufferId rboId, GfxHandle fboRef,
-        Size2D size, FrameBufferAttachmentSlot attachmentSlot,
-        RenderBufferMsaa msaa, out RenderBufferMeta meta)
+    private RenderBufferId RecreateAttachRenderBuffer(RenderBufferId rboId, GfxHandle fboHandle,
+        Size2D size, FrameBufferAttachmentSlot attachmentSlot, RenderBufferMsaa msaa, out RenderBufferMeta meta)
     {
-        var rboRef = _rboStore.GetHandle(rboId);
-        _disposer.EnqueueReplace(rboRef);
+        var rboHandle = _rboStore.GetHandle(rboId);
+        _disposer.EnqueueReplace(rboId, rboHandle);
 
-        var samples = msaa.ToSamples();
-        var newRboRef = _driver.CreateRenderBuffer(attachmentSlot, size, samples);
-        _driver.AttachRenderBuffer(fboRef, newRboRef, attachmentSlot);
+        var newRboHandle = _driver.CreateRenderBuffer(attachmentSlot, size, msaa.ToSamples());
+        _driver.AttachRenderBuffer(fboHandle, newRboHandle, attachmentSlot);
+        
         meta = new RenderBufferMeta(size, attachmentSlot, msaa);
-        return _rboStore.Replace(rboId, in meta, newRboRef, out _);
+        return _rboStore.Replace(rboId, in meta, newRboHandle);
     }
 
     private void AttachTexture(GfxHandle fbo, GfxHandle tex,

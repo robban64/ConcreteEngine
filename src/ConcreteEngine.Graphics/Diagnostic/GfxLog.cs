@@ -61,17 +61,13 @@ public static unsafe class GfxLog
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void LogGfxStore(int id, GfxHandle h, LogTopic topic, LogAction action, ushort flags = 0) =>
-        Event(LogGfx(id, h.Slot, h.Gen, flags, h.IsValid, topic, action));
+        Event(LogGfx(id, 0, 0, flags, h.IsValid(), topic, action));
 
     //
-    private static LogEvent LogBk(uint handle, int slot, ushort flags, bool alive, LogTopic topic, LogAction action) =>
+    private static LogEvent LogBk(GfxHandle handle, int slot, ushort flags, bool alive, LogTopic topic, LogAction action) =>
         new(handle, slot, alive ? 1 : 0, flags: flags, scope: LogScope.Backend, topic: topic, action: action);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void LogBkStore(uint handle, int slot, LogTopic topic, LogAction action, ushort flags = 0) =>
-        Event(LogBk(handle, slot, flags, handle > 0, topic, action));
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void LogBackend(uint handle, GfxHandle h, LogTopic topic, LogAction action, ushort flags = 0) =>
-        Event(LogBk(handle, h.Slot, flags, h.IsValid, topic, action));
+    internal static void LogBackend(GfxHandle handle, ushort h, LogTopic topic, LogAction action, ushort flags = 0) =>
+        Event(LogBk(handle, h, flags, handle.IsValid(), topic, action));
 }

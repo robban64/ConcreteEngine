@@ -24,7 +24,6 @@ public static class GfxMetrics
         var kind = TMeta.ResourceKind;
         ArgumentOutOfRangeException.ThrowIfLessThan((int)kind, 1, nameof(kind));
 
-        StoreMetrics[(int)kind - 1] =
-            new StoreMetrics<TMeta>(kind, GfxRegistry.GetGfxStore<TMeta>(), GfxRegistry.GetBackendStore<TMeta>());
+        StoreMetrics[(int)kind - 1] = new StoreMetrics<TMeta>(GfxRegistry.GetStore<TMeta>());
     }
 }

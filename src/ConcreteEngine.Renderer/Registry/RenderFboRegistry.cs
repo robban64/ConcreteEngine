@@ -155,8 +155,7 @@ public sealed class RenderFboRegistry
     {
         ValidateOutputSize(outputSize, false);
 
-        try
-        {
+   
             foreach (var fbo in GetFrameBuffers())
             {
                 if (fbo.IsFixedSize) continue;
@@ -164,11 +163,7 @@ public sealed class RenderFboRegistry
             }
 
             OutputSize = outputSize;
-        }
-        catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex))
-        {
-            throw new GraphicsException($"Failed to recreate screen fbo: {ex.Message}", ex);
-        }
+     
     }
 
     private static void ValidateOutputSize(Size2D outputSize, bool isShadowMap)

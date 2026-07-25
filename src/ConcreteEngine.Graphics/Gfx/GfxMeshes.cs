@@ -31,9 +31,9 @@ public sealed class GfxMeshes
     {
         _driver = context.Driver;
         _buffers = buffers;
-        _meshStore = GfxRegistry.GetGfxStore<MeshMeta>();
-        _vboStore = GfxRegistry.GetGfxStore<VertexBufferMeta>();
-        _iboStore = GfxRegistry.GetGfxStore<IndexBufferMeta>();
+        _meshStore = GfxRegistry.GetStore<MeshMeta>();
+        _vboStore = GfxRegistry.GetStore<VertexBufferMeta>();
+        _iboStore = GfxRegistry.GetStore<IndexBufferMeta>();
 
         _meshAttributes = new Dictionary<int, MeshLayout>(int.Max(64, _meshStore.Capacity));
         CreatePrimitives(this);

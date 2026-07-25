@@ -26,7 +26,7 @@ public sealed class GfxTextures
     internal GfxTextures(GfxContextInternal context)
     {
         _disposer = context.Disposer;
-        _textureStore = GfxRegistry.GetGfxStore<TextureMeta>();
+        _textureStore = GfxRegistry.GetStore<TextureMeta>();
         _driver = context.Driver.Textures;
 
         Fallback.AlbedoId = CreateOnePixelTexture([255, 255, 255, 255], TexturePixelFormat.SrgbAlpha);
@@ -43,8 +43,8 @@ public sealed class GfxTextures
 
     private TextureId CreateTexture(Size3D size, in CreateTextureProps props)
     {
-        var textRef = CreateDriverTexture(size, in props, out var meta);
-        var textureId = _textureStore.Add(in meta, textRef);
+        var handle = CreateDriverTexture(size, in props, out var meta);
+        var textureId = _textureStore.Add(in meta, handle);
         return textureId;
     }
 
@@ -125,8 +125,8 @@ public sealed class GfxTextures
 
     internal GfxHandle ReplaceTexture(TextureId textureId, Size3D size, int? samples = null)
     {
-        var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
-        _disposer.EnqueueReplace(texRef);
+        var texHandle = _textureStore.GetHandleAndMeta(textureId, out var meta);
+        _disposer.EnqueueReplace(textureId, texHandle);
 
         samples = meta.Kind == TextureKind.Multisample2D ? samples ?? meta.Samples : samples;
         var msaa = GfxEnumUtils.ToRenderBufferMsaa(samples);
@@ -138,38 +138,38 @@ public sealed class GfxTextures
             meta.BorderColor, msaa);
 
         var newHandle = CreateDriverTexture(size, in props, out var newMeta);
-        _textureStore.Replace(textureId, in newMeta, newHandle, out _);
+        _textureStore.Replace(textureId, in newMeta, newHandle);
         return newHandle;
     }
 
     public void ApplyProperties(TextureId textureId)
     {
-        var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
+        var texHandle = _textureStore.GetHandleAndMeta(textureId, out var meta);
         if (meta.IsMsaa) return;
         var wrapR = SupportsWrapR(meta.Kind);
-        ApplyTextureProperties(texRef, in meta, wrapR);
+        ApplyTextureProperties(texHandle, in meta, wrapR);
     }
 
 
     public void UploadTexture2D(TextureId textureId, ReadOnlySpan<byte> data, Size2D size)
     {
-        var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
+        var texHandle = _textureStore.GetHandleAndMeta(textureId, out var meta);
         if (meta.Kind == TextureKind.Unknown) throw new GraphicsException(nameof(meta.Kind));
 
         ValidateUploadSize(size, meta.AsSize2D());
 
-        _driver.UploadTexture2D_Data(texRef, data, meta.PixelFormat, size);
+        _driver.UploadTexture2D_Data(texHandle, data, meta.PixelFormat, size);
     }
 
     public void UploadTexture3D(TextureId textureId, ReadOnlySpan<byte> data, int width, int height, int depth)
     {
-        var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
+        var texHandle = _textureStore.GetHandleAndMeta(textureId, out var meta);
         if (meta.Kind != TextureKind.Texture3D) throw new GraphicsException(nameof(meta.Kind));
 
         var (size, metaSize) = (new Size3D(width, height, depth), new Size3D(meta.Width, meta.Height, meta.Depth));
         ValidateUploadSize3D(size, metaSize);
 
-        _driver.UploadTexture3D_Data(texRef, data, meta.PixelFormat, size, zOffset: 0);
+        _driver.UploadTexture3D_Data(texHandle, data, meta.PixelFormat, size, zOffset: 0);
     }
 
     public void UploadCubeMapFace(TextureId textureId, ReadOnlySpan<byte> data, Size2D size, int faceIndex)
@@ -178,40 +178,40 @@ public sealed class GfxTextures
         ArgumentOutOfRangeException.ThrowIfZero(data.Length, nameof(data.Length));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(faceIndex, 5);
 
-        var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
+        var texHandle = _textureStore.GetHandleAndMeta(textureId, out var meta);
         if (meta.Kind != TextureKind.CubeMap) throw new GraphicsException(nameof(meta.Kind));
 
         ValidateUploadSize(size, meta.AsSize2D());
 
-        _driver.UploadTexture3D_Data(texRef, data, meta.PixelFormat, size.ToSize3D(1), faceIndex);
+        _driver.UploadTexture3D_Data(texHandle, data, meta.PixelFormat, size.ToSize3D(1), faceIndex);
     }
 
     public void GenerateMipMaps(TextureId textureId)
     {
-        var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
+        var texHandle = _textureStore.GetHandleAndMeta(textureId, out var meta);
         Debug.Assert(meta.MipLevels > 1);
-        _driver.GenerateMipMaps(texRef);
+        _driver.GenerateMipMaps(texHandle);
     }
 
-    private void ApplyTextureProperties(GfxHandle texRef, in TextureMeta meta, bool wrapR)
+    private void ApplyTextureProperties(GfxHandle texHandle, in TextureMeta meta, bool wrapR)
     {
         if (meta.Preset != TexturePreset.None)
-            _driver.SetTexturePreset(texRef, meta.Preset, wrapR);
+            _driver.SetTexturePreset(texHandle, meta.Preset, wrapR);
 
         if (meta.CompareTextureFunc is not (DepthMode.Unset or DepthMode.None))
-            _driver.SetCompareTextureFunc(texRef, meta.CompareTextureFunc);
+            _driver.SetCompareTextureFunc(texHandle, meta.CompareTextureFunc);
 
         if (meta.BorderColor.Enabled)
-            _driver.SetBorder(texRef, meta.BorderColor);
+            _driver.SetBorder(texHandle, meta.BorderColor);
 
         if (meta.Anisotropy != TextureAnisotropy.Off)
-            _driver.SetAnisotropy(texRef, meta.Anisotropy.ToAnisotropy());
+            _driver.SetAnisotropy(texHandle, meta.Anisotropy.ToAnisotropy());
 
         if (meta.Lod != Half.Zero)
-            _driver.SetLodBias(texRef, (float)meta.Lod);
+            _driver.SetLodBias(texHandle, (float)meta.Lod);
 
         if (meta.MipLevels > 1 && meta.Kind != TextureKind.Texture2DArray)
-            _driver.GenerateMipMaps(texRef);
+            _driver.GenerateMipMaps(texHandle);
     }
 
     private GfxHandle CreateDriverTexture(Size3D size, in CreateTextureProps props, out TextureMeta meta)
@@ -221,23 +221,23 @@ public sealed class GfxTextures
         if (levels < 1) throw new GraphicsException(nameof(levels));
         var samples = props.Samples.ToSamples();
 
-        var texRef = _driver.CreateTexture(props.Kind);
+        var texHandle = _driver.CreateTexture(props.Kind);
 
         switch (props.Kind)
         {
             case TextureKind.Texture2D:
-                _driver.TextureStorage2D(texRef, size, GpuTextureProps.Make(props.Format, levels, 0));
+                _driver.TextureStorage2D(texHandle, size, GpuTextureProps.Make(props.Format, levels, 0));
                 break;
             case TextureKind.CubeMap:
-                _driver.TextureStorage2D(texRef, size, GpuTextureProps.Make(props.Format, levels, 0));
+                _driver.TextureStorage2D(texHandle, size, GpuTextureProps.Make(props.Format, levels, 0));
                 break;
             case TextureKind.Multisample2D:
                 var msaaStoreProps = GpuTextureProps.Make(props.Format, levels, props.Samples.ToSamples());
-                _driver.TextureStorage2D_MultiSample(texRef, size, msaaStoreProps);
+                _driver.TextureStorage2D_MultiSample(texHandle, size, msaaStoreProps);
                 break;
             case TextureKind.Texture3D:
                 var tex3DStoreProps = GpuTextureProps.Make(props.Format, levels, 0);
-                _driver.TextureStorage3D(texRef, size, tex3DStoreProps);
+                _driver.TextureStorage3D(texHandle, size, tex3DStoreProps);
                 break;
             default: throw new ArgumentOutOfRangeException(nameof(props.Kind));
         }
@@ -248,6 +248,6 @@ public sealed class GfxTextures
             props.CompareTextureFunc, props.BorderColor
         );
 
-        return texRef;
+        return texHandle;
     }
 }

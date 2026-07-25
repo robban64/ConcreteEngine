@@ -16,10 +16,9 @@ internal sealed class GlDisposer
 
     public void DeleteGlResource(DeleteResourceCommand cmd)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cmd.BackendHandle.Value, nameof(cmd.BackendHandle));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)cmd.BackendHandle.Value, uint.MaxValue);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cmd.Handle.Value, nameof(cmd.Handle));
 
-        switch (cmd.Handle.Kind)
+        switch (cmd.Kind)
         {
             case GraphicsKind.Texture:
                 DisposeTexture(cmd);
@@ -42,23 +41,23 @@ internal sealed class GlDisposer
             case GraphicsKind.RenderBuffer:
                 DisposeRbo(cmd);
                 break;
-            default: throw new ArgumentOutOfRangeException(nameof(cmd), cmd, $"Invalid resource {cmd.Handle.Kind}");
+            default: throw new ArgumentOutOfRangeException(nameof(cmd));
         }
 
         _dispatcher.OnDelete(cmd);
     }
 
-    private void DisposeTexture(DeleteResourceCommand cmd) => Gl.DeleteTexture(cmd.BackendHandle);
+    private void DisposeTexture(DeleteResourceCommand cmd) => Gl.DeleteTexture(cmd.Handle);
 
-    private void DisposeShader(DeleteResourceCommand cmd) => Gl.DeleteProgram(cmd.BackendHandle);
+    private void DisposeShader(DeleteResourceCommand cmd) => Gl.DeleteProgram(cmd.Handle);
 
-    private void DisposeVao(DeleteResourceCommand cmd) => Gl.DeleteVertexArray(cmd.BackendHandle);
+    private void DisposeVao(DeleteResourceCommand cmd) => Gl.DeleteVertexArray(cmd.Handle);
 
-    private void DisposeVbo(DeleteResourceCommand cmd) => Gl.DeleteBuffer(cmd.BackendHandle);
+    private void DisposeVbo(DeleteResourceCommand cmd) => Gl.DeleteBuffer(cmd.Handle);
 
-    private void DisposeIbo(DeleteResourceCommand cmd) => Gl.DeleteBuffer(cmd.BackendHandle);
+    private void DisposeIbo(DeleteResourceCommand cmd) => Gl.DeleteBuffer(cmd.Handle);
 
-    private void DisposeFbo(DeleteResourceCommand cmd) => Gl.DeleteFramebuffer(cmd.BackendHandle);
+    private void DisposeFbo(DeleteResourceCommand cmd) => Gl.DeleteFramebuffer(cmd.Handle);
 
-    private void DisposeRbo(DeleteResourceCommand cmd) => Gl.DeleteRenderbuffer(cmd.BackendHandle);
+    private void DisposeRbo(DeleteResourceCommand cmd) => Gl.DeleteRenderbuffer(cmd.Handle);
 }

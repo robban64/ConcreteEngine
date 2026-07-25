@@ -16,8 +16,6 @@ internal sealed class GlShaders
 
     private static readonly Dictionary<uint, string> UniformSamplerByHash = new(16);
 
-    private readonly BackendResourceStore _shaderStore = GfxRegistry.GetBackendStore<ShaderMeta>();
-
     public GfxHandle CreateShader(NativeView<byte> vertexSource, NativeView<byte> fragmentSource)
     {
         uint vertexShader = 0, fragmentShader = 0;
@@ -34,7 +32,7 @@ internal sealed class GlShaders
             throw;
         }
 
-        NativeHandle handle = default;
+        GfxHandle handle = default;
         try
         {
             handle = CreateShaderProgram(vertexShader, fragmentShader);
@@ -52,10 +50,10 @@ internal sealed class GlShaders
             Gl.DeleteShader(fragmentShader);
         }
 
-        return _shaderStore.Add(handle);
+        return handle;
     }
 
-    private static NativeHandle CreateShaderProgram(uint vertexShader, uint fragmentShader)
+    private static GfxHandle CreateShaderProgram(uint vertexShader, uint fragmentShader)
     {
         var program = Gl.CreateProgram();
         Gl.AttachShader(program, vertexShader);
@@ -66,7 +64,7 @@ internal sealed class GlShaders
         if (status != (int)GLEnum.True)
             throw GraphicsException.ShaderLinkFailed(program.ToString(), Gl.GetProgramInfoLog(program));
 
-        return new NativeHandle(program);
+        return new GfxHandle(program);
     }
 
     private static unsafe uint CompileShader(ShaderType shaderType, NativeView<byte> source)
@@ -87,9 +85,9 @@ internal sealed class GlShaders
     }
 
 
-    public void GetSamplersFromProgram(GfxHandle shaderRef, List<GfxUniformSampler> result)
+    public void GetSamplersFromProgram(GfxHandle handle, List<GfxUniformSampler> result)
     {
-        if (!shaderRef.IsValid) Throwers.InvalidArgument(nameof(shaderRef));
+        if (!handle.IsValid()) Throwers.InvalidArgument(nameof(handle));
 
         ArgumentNullException.ThrowIfNull(result);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(result.Count, 1, nameof(result));
@@ -99,7 +97,6 @@ internal sealed class GlShaders
         Span<int> size = stackalloc int[1];
         Span<GLEnum> types = stackalloc GLEnum[1];
 
-        var handle = _shaderStore.Get(shaderRef);
         Gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
         for (uint i = 0; i < uniformsLength; i++)
         {

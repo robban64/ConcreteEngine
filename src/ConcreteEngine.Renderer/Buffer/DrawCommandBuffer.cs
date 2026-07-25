@@ -39,13 +39,13 @@ public sealed class DrawCommandBuffer : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawObjectUniform TransformRef(int i) => ref _transforms[Count + i];
+    public ref DrawObjectUniform TransformRef(int i) => ref _transforms[i];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawCommand CommandRef(int i) => ref _commands.At1(Count + i);
+    public ref DrawCommand CommandRef(int i) => ref _commands.At1(i);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawCommandIndex IndexRef(int i) => ref _commands.At2(Count + i);
+    public ref DrawCommandIndex IndexRef(int i) => ref _commands.At2(i);
 
     public void IncrementDrawCount(int count) => Count += count;
 
@@ -53,8 +53,8 @@ public sealed class DrawCommandBuffer : IDisposable
     public int SubmitIdentity(DrawCommand cmd, PassMask pass, DrawQueue queue, ushort depthKey)
     {
         var idx = Count++;
-        _commands.View1[idx] = cmd;
-        _commands.View2[idx] = new DrawCommandIndex(idx, pass, queue, depthKey);
+        _commands.At1(idx) = cmd;
+        _commands.At2(idx) = new DrawCommandIndex(idx, pass, queue, depthKey);
         _transforms[idx].Model = Matrix4x4.Identity;
         _transforms[idx].Normal = Matrix3X4.Identity;
         return idx;
@@ -148,7 +148,7 @@ public sealed class DrawCommandBuffer : IDisposable
     internal NativeView<DrawObjectUniform> DrainTransformBuffer()
     {
         var len = Count;
-        if (_transforms.Length == 0) return NativeView<DrawObjectUniform>.MakeNull();
+        if (len == 0) return NativeView<DrawObjectUniform>.MakeNull();
         if ((uint)len > (uint)_transforms.Length) Throwers.InvalidOperation();
 
         return _transforms.Slice(0, len);

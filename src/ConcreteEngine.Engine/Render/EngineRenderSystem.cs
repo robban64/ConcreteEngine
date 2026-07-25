@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
@@ -35,7 +36,7 @@ public sealed class EngineRenderSystem : IDisposable
         _particleSystem = new ParticleSystem(graphics.Gfx);
         _animationSystem = new AnimationSystem(AnimationManager.Instance, Program.UploadBuffers.Skinning);
 
-        _renderDispatcher = new RenderDispatcher(_cameraManager, _terrainSystem, Program.UploadBuffers);
+        _renderDispatcher = new RenderDispatcher(_cameraManager.Frustum, Program.UploadBuffers);
         _materialProcessor = new MaterialProcessor(Program);
     }
 
@@ -74,21 +75,21 @@ public sealed class EngineRenderSystem : IDisposable
         _particleSystem.Simulate(dt);
     }
 
-    internal void Render(float dt)
+    internal void Render(float dt, float alpha)
     {
         Program.PrepareFrame();
 
         // frame update
-        _cameraManager.CommitFrame(EngineTime.GameAlpha);
+        _cameraManager.CommitFrame(alpha);
 
         // process and upload draw commands
         _renderDispatcher.CullEntities();
-
-        _particleSystem.Execute();
-        _animationSystem.Execute();
-
         _renderDispatcher.Execute();
+        
+        _particleSystem.Execute();
+        _animationSystem.Execute(alpha);
 
+        _renderDispatcher.SubmitSystems(_animationSystem, _terrainSystem);
 
         // prepare buffers
         Program.CollectDrawBuffers();

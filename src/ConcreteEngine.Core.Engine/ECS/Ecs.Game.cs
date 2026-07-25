@@ -10,6 +10,10 @@ public static partial class Ecs
         private static readonly List<IGameEntityStore> All = new(8);
         public static readonly GameEntityCore Core = new(DefaultGameCap);
 
+        public static int EntityCount => Core.Count;
+        public static int ActiveCount => Core.ActiveCount;
+        public static int StoreCount => All.Count;
+
         public static class Stores<T> where T : unmanaged, IGameComponent<T>
         {
             public static GameEntityStore<T> Store = null!;
@@ -23,10 +27,6 @@ public static partial class Ecs
                 Store = store;
             }
         }
-
-        public static int EntityCount => Core.Count;
-        public static int ActiveCount => Core.ActiveCount;
-        public static int StoreCount => All.Count;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static GameQuery<T1>.QueryEnumerator Query<T1>() where T1 : unmanaged, IGameComponent<T1> =>

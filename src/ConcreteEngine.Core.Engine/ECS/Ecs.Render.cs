@@ -10,6 +10,10 @@ public static partial class Ecs
         private static readonly List<IRenderEntityStore> All = new(8);
         public static readonly RenderEntityCore Core = new(DefaultRenderCap);
 
+        public static int EntityCount => Core.Count;
+        public static int ActiveCount => Core.ActiveCount;
+        public static int StoreCount => All.Count;
+
         public static class Stores<T> where T : unmanaged, IRenderComponent<T>
         {
             public static RenderEntityStore<T> Store = null!;
@@ -23,14 +27,5 @@ public static partial class Ecs
                 Store = store;
             }
         }
-
-        public static int EntityCount => Core.Count;
-        public static int ActiveCount => Core.ActiveCount;
-        public static int StoreCount => All.Count;
-
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static RenderQuery.QueryEnumerator<T1> Query<T1>() where T1 : unmanaged, IRenderComponent<T1> =>
-            Stores<T1>.Store.Query();
     }
 }

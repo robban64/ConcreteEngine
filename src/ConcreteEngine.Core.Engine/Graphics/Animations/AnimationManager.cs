@@ -91,7 +91,7 @@ public sealed class AnimationInstance : IComparable<AnimationInstance>
     public void AdvanceTime(float delta) => _animationTime.AdvanceTime(delta);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float Interpolate() => _animationTime.Interpolate(EngineTime.GameAlpha);
+    public float Interpolate(float alpha) => _animationTime.Interpolate(alpha);
 
     public void AddEntity(RenderEntityId entity)
     {

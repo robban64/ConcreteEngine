@@ -6,50 +6,44 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
-using static ConcreteEngine.Core.Engine.ECS.Ecs.RenderQuery;
 
 namespace ConcreteEngine.Core.Engine.ECS;
 
 public sealed class RenderEntityCore : EcsStore
 {
-    private NativeArray<RenderEntity> _entities;
+    private NativeArray<RenderEntityMeta> _entityMeta;
     private NativeSoA<RenderSource, DrawPolicy> _sources;
     private NativeSoA<BoundingBox, Matrix4x4, Matrix3X4> _spatial;
 
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
-        _entities = NativeArray.Allocate<RenderEntity>(initialCapacity);
+        _entityMeta = NativeArray.Allocate<RenderEntityMeta>(initialCapacity);
         _sources = new NativeSoA<RenderSource, DrawPolicy>(initialCapacity);
         _spatial = new NativeSoA<BoundingBox, Matrix4x4, Matrix3X4>(initialCapacity);
         StoreMeta.Listeners.EnsureCapacity(128);
     }
 
-    public override int Capacity => _entities.Length;
+    public override int Capacity => _entityMeta.Length;
     public override EcsStoreType StoreType => EcsStoreType.RenderCore;
 
-    internal NativeView<RenderEntity> GetCoreEntityView() => _entities.Slice(0, Count);
-    internal NativeView<RenderSource> GetSourceView() => _sources.View1.Slice(0, Count);
-    internal NativeView<BoundingBox> GetWorldBoundsView() => _spatial.View1.Slice(0, Count);
-    internal NativeView<Matrix4x4> GetModelView() => _spatial.View2.Slice(0, Count);
-    internal NativeView<Matrix3X4> GetNormalsView() => _spatial.View3.Slice(0, Count);
-
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has(RenderEntityId e)
+    public bool IsAlive(RenderEntityId e)
     {
         var index = e.Index();
-        return (uint)index < (uint)_entities.Length && _entities[index].Alive;
+        return (uint)index < (uint)_entityMeta.Length && _entityMeta[index].Alive;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsVisible(RenderEntityId e)
+    {
+        var index = e.Index();
+        return (uint)index < (uint)_entityMeta.Length && _entityMeta[index].IsVisible();
     }
 
+    //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsAlive(RenderEntityId e) => _entities[e.Index()].Alive;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsVisible(RenderEntityId e) => _entities[e.Index()].IsVisible();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref RenderEntity GetCoreEntity(RenderEntityId e) => ref _entities[e.Index()];
+    public ref RenderEntityMeta GetMeta(RenderEntityId e) => ref _entityMeta[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref RenderSource GetSource(RenderEntityId e) => ref _sources.At1(e.Index());
@@ -70,7 +64,8 @@ public sealed class RenderEntityCore : EcsStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityVisibility ToggleVisibility(RenderEntityId entity, EntityVisibility flag, bool isVisible)
     {
-        return _entities[entity.Index()].ToggleVisibility(flag, isVisible);
+        if(!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
+        return _entityMeta[entity.Index()].ToggleVisibility(flag, isVisible);
     }
 
     public RenderEntityId AddEntity(RenderSource source, DrawPolicy policy)
@@ -79,7 +74,7 @@ public sealed class RenderEntityCore : EcsStore
 
         var entity = AllocateNewEntity();
         var index = entity.Index();
-        
+
         _sources.Set(index, source, policy);
         _spatial.Set(index, BoundingBox.One, Matrix4x4.Identity, Matrix3X4.Identity);
 
@@ -93,10 +88,10 @@ public sealed class RenderEntityCore : EcsStore
     private RenderEntityId AllocateNewEntity()
     {
         var index = AllocateNext();
-        ref var entity = ref _entities[index];
+        ref var entity = ref _entityMeta[index];
         if (entity.Alive) Throwers.InvalidOperation($"Entity {entity} already exists");
         entity.Alive = true;
-        entity.EntityVisibility = EntityVisibility.Visible;
+        entity.Visibility = EntityVisibility.Visible;
         return new RenderEntityId(index + 1);
     }
 
@@ -106,9 +101,9 @@ public sealed class RenderEntityCore : EcsStore
         ArgumentOutOfRangeException.ThrowIfGreaterThan(entity.Id, Count, nameof(entity));
 
         var index = entity.Index();
-        if (!_entities[index].Alive) throw new InvalidOperationException();
+        if (!_entityMeta[index].Alive) throw new InvalidOperationException();
 
-        _entities[index] = default;
+        _entityMeta[index] = default;
         _sources.Set(index, default, default);
         _spatial.Set(entity.Index(), default, default, default);
 
@@ -121,13 +116,13 @@ public sealed class RenderEntityCore : EcsStore
 
     protected override void Resize(int newSize)
     {
-        var curLen = _entities.Length;
+        var curLen = _entityMeta.Length;
         if (_sources.Length != curLen || _spatial.Length != curLen)
         {
             Throwers.InvalidOperation("Length mismatch");
         }
 
-        _entities.Resize(newSize, true);
+        _entityMeta.Resize(newSize, true);
         _sources.Resize(newSize, true);
         _spatial.Resize(newSize, true);
         Logger.Log(LogScope.Ecs, $"{nameof(RenderEntityCore)}: resized {newSize}", LogLevel.Warn);
@@ -136,13 +131,17 @@ public sealed class RenderEntityCore : EcsStore
 
     public override void Dispose()
     {
-        _entities.Dispose();
+        _entityMeta.Dispose();
         _sources.Dispose();
         _spatial.Dispose();
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public unsafe Enumerator GetEnumerator() => new(_entityMeta, Count);
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public VisibleCoreEnumerator VisibilityQuery() => new(this);
+    public VisibleCoreEnumerator VisibilityQuery() => new(this, _entityMeta.AsReadOnlySpan(0, Count));
 
     [StackTraceHidden]
     private static void ValidateSource(RenderSource source)
@@ -151,5 +150,88 @@ public sealed class RenderEntityCore : EcsStore
         ArgumentOutOfRangeException.ThrowIfZero(source.Mesh.Id, nameof(source.Mesh));
         ArgumentOutOfRangeException.ThrowIfZero(source.Material.Value, nameof(source.Material));
         ArgumentOutOfRangeException.ThrowIfEqual((int)source.Kind, (int)EntitySourceKind.Unknown, nameof(source.Kind));
+    }
+
+
+    public readonly ref struct RenderQueryItem(RenderEntityId entity, RenderEntityCore core)
+    {
+        public readonly RenderEntityId Entity = entity;
+        public ref RenderEntityMeta Meta => ref core.GetMeta(Entity);
+        public ref RenderSource Source
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => ref core.GetSource(Entity);
+        }
+
+        public ref Matrix4x4 Model
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => ref core.GetModelMatrix(Entity);
+        }
+
+        public ref BoundingBox Bounds
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => ref core.GetWorldBounds(Entity);
+        }
+    }
+
+    public readonly ref struct RenderQueryItem2(RenderEntityId entity, ref RenderEntityMeta meta)
+    {
+        public readonly RenderEntityId Entity = entity;
+        public readonly ref RenderEntityMeta Meta = ref meta;
+    }
+    public unsafe ref struct Enumerator(RenderEntityMeta* entities, int length)
+    {
+        private int _i = -1;
+        private readonly int _length = length;
+        private readonly RenderEntityMeta* _entities = entities;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext()
+        {
+            while (++_i < _length)
+            {
+                if (_entities[_i].Alive) return true;
+            }
+
+            return false;
+        }
+
+        public readonly RenderQueryItem2 Current
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(new RenderEntityId(_i + 1), ref _entities[_i]);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Enumerator GetEnumerator() => this;
+    }
+
+    public ref struct VisibleCoreEnumerator(RenderEntityCore core, ReadOnlySpan<RenderEntityMeta> entities)
+    {
+        private int _i = -1;
+        private readonly ReadOnlySpan<RenderEntityMeta> _entities = entities;
+        private readonly RenderEntityCore _core = core;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext()
+        {
+            while (++_i < _entities.Length)
+            {
+                if (_entities[_i].IsVisible()) return true;
+            }
+
+            return false;
+        }
+
+        public readonly RenderQueryItem Current
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(new RenderEntityId(_i + 1), _core);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly VisibleCoreEnumerator GetEnumerator() => new(_core, _entities);
     }
 }

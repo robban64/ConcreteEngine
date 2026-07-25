@@ -24,25 +24,17 @@ internal sealed class RenderDispatcher : IDisposable
 
     private NativeArray<RenderEntityId> _visibleEntities;
 
-    private readonly Camera _camera;
     private readonly CameraFrustum _frustum;
     private readonly DrawCommandBuffer _commandBuffer;
     private readonly EffectBuffer _effectBuffer;
-    private readonly TerrainSystem _terrainSystem;
-
-    internal RenderDispatcher(CameraManager cameraManager, TerrainSystem terrainSystem,
-        RenderUploadBuffers uploadBuffers)
+    
+    internal RenderDispatcher(CameraFrustum frustum, RenderUploadBuffers uploadBuffers)
     {
-        ArgumentNullException.ThrowIfNull(cameraManager);
+        ArgumentNullException.ThrowIfNull(frustum);
         ArgumentNullException.ThrowIfNull(uploadBuffers);
-        if (cameraManager.Camera == null! || cameraManager.Frustum == null!)
-            throw new ArgumentNullException(nameof(cameraManager));
-
-        _camera = cameraManager.Camera;
-        _frustum = cameraManager.Frustum;
+        _frustum = frustum;
         _effectBuffer = uploadBuffers.Effects;
         _commandBuffer = uploadBuffers.Commands;
-        _terrainSystem = terrainSystem;
 
         _visibleEntities = NativeArray.Allocate<RenderEntityId>(Ecs.RenderCore.Capacity);
     }
@@ -50,7 +42,6 @@ internal sealed class RenderDispatcher : IDisposable
     public unsafe void Execute()
     {
         Ensure();
-        SubmitEnvironment();
 
         if (VisibleCount == 0) return;
         ProcessSelectionEffect();
@@ -59,34 +50,34 @@ internal sealed class RenderDispatcher : IDisposable
         SubmitDrawPolicy(visibleSpan);
         SubmitCommands(visibleSpan);
         SubmitTransforms(visibleSpan);
-
         SubmitDebugBounds();
     }
 
 
-    public unsafe void CullEntities()
+    public void CullEntities()
     {
         var length = Ecs.RenderCore.Count;
         if ((uint)length > (uint)_visibleEntities.Length)
             Throwers.BufferOverflow(nameof(_visibleEntities));
 
-        var core = Ecs.RenderCore.GetCoreEntityView().Ptr;
-        var bounds = Ecs.RenderCore.GetWorldBoundsView().Ptr;
-
         var visibleCount = 0;
-        for (var i = 0; i < length; ++i, ++core, ++bounds)
+        foreach (var query in Ecs.RenderCore)
         {
-            if (!core->Alive) continue;
+            var visible = _frustum.IntersectsBox(Ecs.RenderCore.GetWorldBounds(query.Entity));
 
-            var visible = _frustum.IntersectsBox(*bounds);
-
-            visible &= core->ToggleVisibility(EntityVisibility.Culled, visible) == 0;
-            if (visible) _visibleEntities[visibleCount++] = new RenderEntityId(i + 1);
+            visible &= query.Meta.ToggleVisibility(EntityVisibility.Culled, visible) == 0;
+            if (visible) _visibleEntities[visibleCount++] = query.Entity;
         }
-
         VisibleCount = visibleCount;
     }
 
+    public unsafe void SubmitSystems(AnimationSystem animationSystem, TerrainSystem terrainSystem)
+    {
+        var visibleSpan = new ReadOnlySpan<RenderEntityId>(_visibleEntities, VisibleCount);
+        animationSystem.WriteCommandSlot(_commandBuffer, visibleSpan);
+        SubmitEnvironment(terrainSystem);
+    }
+    
     private void Ensure()
     {
         var ecsCount = Ecs.RenderCore.Count;
@@ -94,46 +85,19 @@ internal sealed class RenderDispatcher : IDisposable
         _commandBuffer.EnsureCapacity(ecsCount + 64);
     }
 
-    private void SubmitEnvironment()
-    {
-        var mainTerrain = _terrainSystem.MainTerrain;
-        var terrainMat = mainTerrain.MaterialId;
-        var foliageMat = mainTerrain.FoliageMaterialId;
-
-        foreach (var it in _terrainSystem.TerrainMesh.GetMeshChunks())
-        {
-            if (!_frustum.IntersectsBox(mainTerrain.GetChunk(it.Slot).GetBounds())) continue;
-            var cmd = new DrawCommand(it.TerrainMeshId, terrainMat);
-            _commandBuffer.SubmitIdentity(cmd, PassMask.Default, DrawQueue.Terrain, 0);
-
-            if (it.FoliageCount > 0)
-            {
-                cmd = new DrawCommand(it.FoliageMeshId, foliageMat, instanceCount: (uint)it.FoliageCount);
-                _commandBuffer.SubmitIdentity(cmd, PassMask.Default, DrawQueue.Transparent, 0);
-            }
-        }
-
-        _commandBuffer.SubmitIdentity(
-            new DrawCommand(Skybox.Current.MeshId, Skybox.Current.MaterialId),
-            PassMask.Main, DrawQueue.Skybox, 0);
-    }
-
     private void SubmitDrawPolicy(ReadOnlySpan<RenderEntityId> visibleEntities)
     {
-        var forward = _camera.Forward;
-        var viewZ = _camera.ViewMatrix.M43;
-        var nearFar = _camera.NearFarPlane;
+        var forward = CameraManager.Instance.Camera.Forward;
+        var viewZ = CameraManager.Instance.Camera.ViewMatrix.M43;
+        var nearFar = CameraManager.Instance.Camera.NearFarPlane;
 
         var index = 0;
-        var submitIdx = _commandBuffer.Count;
-
         foreach (var entity in visibleEntities)
         {
             var depthKey = MakeDepthKey(entity, forward, nearFar, viewZ);
             var policy = Ecs.RenderCore.GetDrawPolicy(entity);
-            _commandBuffer.IndexRef(index) = new DrawCommandIndex(submitIdx, policy.Passes, policy.Queue, depthKey);
+            _commandBuffer.IndexRef(index) = new DrawCommandIndex(index, policy.Passes, policy.Queue, depthKey);
             ++index;
-            ++submitIdx;
         }
 
         return;
@@ -154,18 +118,15 @@ internal sealed class RenderDispatcher : IDisposable
 
     private void SubmitCommands(ReadOnlySpan<RenderEntityId> visibleEntities)
     {
-        var index = 0;
-        foreach (var entity in visibleEntities)
+        for (var i = 0; i < visibleEntities.Length; ++i)
         {
-            ref var source = ref Ecs.RenderCore.GetSource(entity);
-            ref var cmd = ref _commandBuffer.CommandRef(index++);
-            source.WriteTo(ref cmd);
-            /*
+            var entity = visibleEntities[i];
+            ref readonly var source = ref Ecs.RenderCore.GetSource(entity);
+            ref var cmd = ref _commandBuffer.CommandRef(i);
             cmd.MeshId = source.Mesh;
             cmd.MaterialId = source.Material;
             cmd.Resolver = source.Resolver;
             cmd.ResolverSlot = source.ResolverSlot;
-            */
         }
     }
 
@@ -198,6 +159,31 @@ internal sealed class RenderDispatcher : IDisposable
             Ecs.RenderCore.GetDrawPolicy(query.Entity).Passes = PassMask.Effect | PassMask.Depth;
         }
     }
+    
+    private void SubmitEnvironment(TerrainSystem terrainSystem)
+    {
+        var mainTerrain = terrainSystem.MainTerrain;
+        var terrainMat = mainTerrain.MaterialId;
+        var foliageMat = mainTerrain.FoliageMaterialId;
+
+        foreach (var it in terrainSystem.TerrainMesh.GetMeshChunks())
+        {
+            if (!_frustum.IntersectsBox(mainTerrain.GetChunk(it.Slot).GetBounds())) continue;
+            var cmd = new DrawCommand(it.TerrainMeshId, terrainMat);
+            _commandBuffer.SubmitIdentity(cmd, PassMask.Default, DrawQueue.Terrain, 0);
+
+            if (it.FoliageCount > 0)
+            {
+                cmd = new DrawCommand(it.FoliageMeshId, foliageMat, instanceCount: (uint)it.FoliageCount);
+                _commandBuffer.SubmitIdentity(cmd, PassMask.Default, DrawQueue.Transparent, 0);
+            }
+        }
+
+        _commandBuffer.SubmitIdentity(
+            new DrawCommand(Skybox.Current.MeshId, Skybox.Current.MaterialId),
+            PassMask.Main, DrawQueue.Skybox, 0);
+    }
+
 
     private void SubmitDebugBounds()
     {
@@ -206,8 +192,7 @@ internal sealed class RenderDispatcher : IDisposable
 
         var materialId = AssetStore.Core.DebugBoundsMaterial.MaterialId;
 
-        var index = 0;
-        var submitIndex = _commandBuffer.Count;
+        var index = _commandBuffer.Count;
 
         foreach (var query in store.VisibilityQuery())
         {
@@ -217,7 +202,7 @@ internal sealed class RenderDispatcher : IDisposable
                 resolver: DrawCommandResolver.BoundingVolume,
                 resolverSlot: slot);
             _commandBuffer.IndexRef(index) =
-                new DrawCommandIndex(submitIndex, PassMask.Effect, DrawQueue.Effect, 0);
+                new DrawCommandIndex(index, PassMask.Effect, DrawQueue.Effect, 0);
 
             ref var bufferDst = ref _commandBuffer.TransformRef(index);
             ref readonly var worldBounds = ref Ecs.RenderCore.GetWorldBounds(query.Entity);
@@ -230,7 +215,6 @@ internal sealed class RenderDispatcher : IDisposable
             bufferDst.Normal = Matrix3X4.Identity;
 
             ++index;
-            ++submitIndex;
         }
 
         _commandBuffer.IncrementDrawCount(index);

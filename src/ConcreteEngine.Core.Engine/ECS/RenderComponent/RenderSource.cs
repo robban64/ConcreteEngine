@@ -23,21 +23,10 @@ public struct RenderSource(
     
     public byte MeshIndex = (byte)meshIndex;
     public EntitySourceKind Kind = kind;
-    public ushort AnimationSlot = 0;
 
     // maybe rework this
     public DrawCommandResolver Resolver;
     public byte ResolverSlot;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal readonly void WriteTo(scoped ref DrawCommand cmd)
-    {
-        cmd.MeshId = Mesh;
-        cmd.MaterialId = Material;
-        cmd.AnimationSlot = AnimationSlot;
-        cmd.Resolver = Resolver;
-        cmd.ResolverSlot = ResolverSlot;
-    }
 
     internal void SetResolve(DrawCommandResolver resolver, byte resolverSlot)
     {

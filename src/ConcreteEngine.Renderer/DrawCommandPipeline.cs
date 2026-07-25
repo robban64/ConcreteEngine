@@ -25,13 +25,12 @@ internal sealed class DrawCommandPipeline(RenderUploadBuffers buffers)
         UniformUploader.Prepare();
     }
 
-    private AvgFrameTimer avg;
     internal void PrepareDrawBuffers()
     {
         // Sort command buffer and prepare passes
         buffers.Commands.ReadyDrawCommands();
-        var drawCap = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(buffers.Commands.Count + 32);
-        var matCap = UniformBufferUtils.GetCapacityForEntities<MaterialUniform>(buffers.Materials.Count + 4);
+        _ = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(buffers.Commands.Count + 32);
+        _ = UniformBufferUtils.GetCapacityForEntities<MaterialUniform>(buffers.Materials.Count + 4);
 
         UniformUploader.EnsureUboSizes(buffers.Commands.Count + 32, buffers.Materials.Count + 4);
     }
@@ -57,12 +56,10 @@ internal sealed class DrawCommandPipeline(RenderUploadBuffers buffers)
     {
         UniformUploader.Prepare();
         _drawCmd.PrepareDrawPass();
-        avg.BeginSample();
         if (defaultDraw)
             buffers.Commands.DispatchDrawPass(_drawCmd, passId);
         else
             buffers.Commands.DispatchResolveDrawPass(_drawCmd, passId);
-        if (avg.EndSample() > 144*4) avg.ResetAndPrint();
 
     }
 }

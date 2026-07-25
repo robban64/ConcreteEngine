@@ -11,6 +11,9 @@ namespace ConcreteEngine.Engine.Render;
 
 internal sealed unsafe class AnimationSystem : IDisposable
 {
+    private int _frameCount;
+    private (RenderEntityId entity, ushort slot)[] _entitySlots;
+
     private NativeArray<Matrix4x4> _globals;
 
     private readonly AnimationManager _animations;
@@ -21,6 +24,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
         _globals = NativeArray.AlignedAllocate<Matrix4x4>(RenderLimits.BoneCapacity, alignment: 16);
         _animations = animations;
         _skinningBuffer = skinningBuffer;
+        _entitySlots = new (RenderEntityId entity, ushort slot)[64];
     }
 
     public void Dispose() => _globals.Dispose();
@@ -30,32 +34,61 @@ internal sealed unsafe class AnimationSystem : IDisposable
         foreach (var it in _animations) it.AdvanceTime(dt);
     }
 
-    public void Execute()
+    public void Execute(float alpha)
     {
+        _frameCount = 0;
+        var cursor = 0;
         ushort slot = 1;
         foreach (var animation in _animations)
         {
-            var count = 0;
-            foreach (var entity in animation.GetEntitySpan())
-            {
-                if (!Ecs.RenderCore.IsVisible(entity)) continue;
-                Ecs.RenderCore.GetSource(entity).AnimationSlot = slot;
-                ++count;
-            }
-
+            var count = FilterEntities(animation, cursor, slot);
             if (count == 0) continue;
 
-            var time = animation.Interpolate();
+            var time = animation.Interpolate(alpha);
             WriteSkinned(animation.GetSkinningContext(), time);
             ++slot;
+            cursor += count;
+        }
+
+        _frameCount = cursor;
+    }
+
+    private int FilterEntities(AnimationInstance animation, int cursor, ushort slot)
+    {
+        var count = 0;
+        foreach (var entity in animation.GetEntitySpan())
+        {
+            if (!Ecs.RenderCore.IsVisible(entity)) continue;
+            
+            var index = cursor + count;
+            if((uint)index >= (uint)_entitySlots.Length)
+                Array.Resize(ref _entitySlots, _entitySlots.Length * 2);
+            
+            _entitySlots[index] = (entity, slot);
+            ++count;
+        }
+
+        return count;
+    }
+
+    public void WriteCommandSlot(DrawCommandBuffer cmd, ReadOnlySpan<RenderEntityId> visibleEntities)
+    {
+        var length = _frameCount;
+        for (int i = 0; i < length; ++i)
+        {
+            var entitySlot = _entitySlots[i];
+            var index = visibleEntities.BinarySearch(entitySlot.entity);
+            if (index >= 0) cmd.CommandRef(index).AnimationSlot = entitySlot.slot;
         }
     }
+
 
     private void WriteSkinned(SkinningContext ctx, float time)
     {
         var globals = _globals.Ptr;
         var track = ctx.Tracks.BoneTracks;
         var length = ctx.Tracks.Length;
+        
         for (var i = 0; i < length; ++i, ++track, ++globals)
         {
             if (track->IsEmpty)

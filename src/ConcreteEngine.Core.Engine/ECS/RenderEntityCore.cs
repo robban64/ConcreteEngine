@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
@@ -9,23 +10,32 @@ using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.ECS;
 
-public sealed class RenderEntityCore : EcsStore
+public sealed class RenderEntityCore
 {
+    public int Count { get; private set; }
+    
     private NativeArray<RenderEntityMeta> _entityMeta;
     private NativeSoA<RenderSource, DrawPolicy> _sources;
-    private NativeSoA<BoundingBox, Matrix4x4, Matrix3X4> _spatial;
+    private NativeSoA<Matrix4x4, Matrix3X4> _matrices;
+    private NativeArray<BoundingBox> _bounds;
+
+    private readonly Stack<int> _free = [];
+    private readonly List<Action<int>> _resizeCallbacks = [];
 
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
         _entityMeta = NativeArray.Allocate<RenderEntityMeta>(initialCapacity);
         _sources = new NativeSoA<RenderSource, DrawPolicy>(initialCapacity);
-        _spatial = new NativeSoA<BoundingBox, Matrix4x4, Matrix3X4>(initialCapacity);
-        StoreMeta.Listeners.EnsureCapacity(128);
+        _matrices = new NativeSoA<Matrix4x4, Matrix3X4>(initialCapacity);
+        _bounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
     }
 
-    public override int Capacity => _entityMeta.Length;
-    public override EcsStoreType StoreType => EcsStoreType.RenderCore;
+    public int ActiveCount => Count - _free.Count;
+    public int Capacity => _entityMeta.Length;
+    
+    public void AddResizeCallback(Action<int> callback) => _resizeCallbacks.Add(callback);
+    public void RemoveResizeCallback(Action<int> callback) => _resizeCallbacks.Remove(callback);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsAlive(RenderEntityId e)
@@ -33,7 +43,7 @@ public sealed class RenderEntityCore : EcsStore
         var index = e.Index();
         return (uint)index < (uint)_entityMeta.Length && _entityMeta[index].Alive;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsVisible(RenderEntityId e)
     {
@@ -52,19 +62,19 @@ public sealed class RenderEntityCore : EcsStore
     public ref DrawPolicy GetDrawPolicy(RenderEntityId e) => ref _sources.At2(e.Index());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoundingBox GetWorldBounds(RenderEntityId e) => ref _spatial.At1(e.Index());
+    public ref BoundingBox GetWorldBounds(RenderEntityId e) => ref _bounds[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix4x4 GetModelMatrix(RenderEntityId e) => ref _spatial.At2(e.Index());
+    public ref Matrix4x4 GetModelMatrix(RenderEntityId e) => ref _matrices.At1(e.Index());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix3X4 GetNormalMatrix(RenderEntityId e) => ref _spatial.At3(e.Index());
+    public ref Matrix3X4 GetNormalMatrix(RenderEntityId e) => ref _matrices.At2(e.Index());
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityVisibility ToggleVisibility(RenderEntityId entity, EntityVisibility flag, bool isVisible)
     {
-        if(!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
+        if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
         return _entityMeta[entity.Index()].ToggleVisibility(flag, isVisible);
     }
 
@@ -76,20 +86,24 @@ public sealed class RenderEntityCore : EcsStore
         var index = entity.Index();
 
         _sources.Set(index, source, policy);
-        _spatial.Set(index, BoundingBox.One, Matrix4x4.Identity, Matrix3X4.Identity);
-
-        foreach (var it in StoreMeta.Listeners)
-            it.EntityAdded(entity.Id, this);
-
+        _matrices.At1(index) = Matrix4x4.Identity;
+        _matrices.At2(index) = Matrix3X4.Identity;
+        _bounds[index] = BoundingBox.One;
         return entity;
     }
 
 
     private RenderEntityId AllocateNewEntity()
     {
-        var index = AllocateNext();
+        var index = SlotHelper.NextSlot(_free, Count);
+        if (index < 0)
+        {
+            if (Count >= Capacity) EnsureCapacity(1);
+            index = Count++;
+        }
+
         ref var entity = ref _entityMeta[index];
-        if (entity.Alive) Throwers.InvalidOperation($"Entity {entity} already exists");
+        if (entity.Alive) Throwers.InvalidOperation("Entity already exists");
         entity.Alive = true;
         entity.Visibility = EntityVisibility.Visible;
         return new RenderEntityId(index + 1);
@@ -105,40 +119,46 @@ public sealed class RenderEntityCore : EcsStore
 
         _entityMeta[index] = default;
         _sources.Set(index, default, default);
-        _spatial.Set(entity.Index(), default, default, default);
+        _matrices.At1(index) = Matrix4x4.Identity;
+        _matrices.At2(index) = Matrix3X4.Identity;
+        _bounds[index] = BoundingBox.One;
 
-        FreeEntity(index);
-
-        foreach (var it in StoreMeta.Listeners)
-            it.EntityRemoved(entity.Id, this);
+        Count = SlotHelper.FreeSlot(_free, index, Count);
     }
 
 
-    protected override void Resize(int newSize)
+    private void EnsureCapacity(int amount)
     {
-        var curLen = _entityMeta.Length;
-        if (_sources.Length != curLen || _spatial.Length != curLen)
-        {
+        var length = _entityMeta.Length;
+        var required = Count + amount;
+        if (length >= required) return;
+
+        if (_sources.Length != length || _matrices.Length != length || _bounds.Length != length)
             Throwers.InvalidOperation("Length mismatch");
-        }
+
+        var newSize = CapacityUtils.CapacityGrowthToFit(length, required);
+        Logger.Log(LogScope.Ecs, $"{nameof(RenderEntityCore)}: resized {newSize}", LogLevel.Warn);
 
         _entityMeta.Resize(newSize, true);
         _sources.Resize(newSize, true);
-        _spatial.Resize(newSize, true);
-        Logger.Log(LogScope.Ecs, $"{nameof(RenderEntityCore)}: resized {newSize}", LogLevel.Warn);
+        _matrices.Resize(newSize, false);
+        _bounds.Resize(newSize, false);
+        
+        foreach (var callback in _resizeCallbacks) callback(newSize);
+
     }
 
 
-    public override void Dispose()
+    public void Dispose()
     {
         _entityMeta.Dispose();
         _sources.Dispose();
-        _spatial.Dispose();
+        _matrices.Dispose();
+        _bounds.Dispose();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe Enumerator GetEnumerator() => new(_entityMeta, Count);
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public VisibleCoreEnumerator VisibilityQuery() => new(this, _entityMeta.AsReadOnlySpan(0, Count));
@@ -157,6 +177,7 @@ public sealed class RenderEntityCore : EcsStore
     {
         public readonly RenderEntityId Entity = entity;
         public ref RenderEntityMeta Meta => ref core.GetMeta(Entity);
+
         public ref RenderSource Source
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -181,6 +202,7 @@ public sealed class RenderEntityCore : EcsStore
         public readonly RenderEntityId Entity = entity;
         public readonly ref RenderEntityMeta Meta = ref meta;
     }
+
     public unsafe ref struct Enumerator(RenderEntityMeta* entities, int length)
     {
         private int _i = -1;

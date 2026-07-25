@@ -9,7 +9,6 @@ public enum EcsStoreType : byte
 {
     Unknown,
     Render,
-    RenderCore,
     Game,
     GameCore
 }

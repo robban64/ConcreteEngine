@@ -53,11 +53,11 @@ internal sealed class DrawCommandProcessor
 
     public void DrawMesh(DrawCommand cmd, int submitIdx)
     {
-        if (_buffers.PrevMaterial != cmd.MaterialId) BindMaterial(cmd.MaterialId);
+         BindMaterial(cmd.MaterialId);
 
         if (cmd.AnimationSlot > 0 && cmd.AnimationSlot != _lastAnimationSlot)
         {
-            _lastAnimationSlot = cmd.AnimationSlot;
+            _lastAnimationSlot = cmd.AnimationSlot - 1;
             _buffers.BindAnimation(cmd.AnimationSlot - 1);
         }
 
@@ -78,6 +78,8 @@ internal sealed class DrawCommandProcessor
 
     private void BindMaterial(Id16<MaterialSlot> materialId)
     {
+        if (_buffers.PrevMaterial == materialId) return;
+        
         var textureBindings = _buffers.BindResolveMaterial(materialId, out var materialMeta);
 
         if (!materialMeta.DrawState.IsEmpty())

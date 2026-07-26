@@ -60,8 +60,6 @@ public readonly struct MeshMeta : IResourceMeta
 {
     public uint DrawCount { get; init; }
     public uint InstanceCount { get; init; }
-    public int AttributeCount { get; init; }
-    public byte VboCount { get; init; }
     public DrawPrimitive Primitive { get; init; }
     public DrawMeshKind Kind { get; init; }
     public DrawElementSize ElementSize { get; init; }

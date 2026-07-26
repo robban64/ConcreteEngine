@@ -9,7 +9,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-public sealed class GfxDraw 
+public sealed class GfxDraw
 {
     private MeshId _boundMeshId;
     private RenderFrameMeta _frameMeta;
@@ -42,17 +42,17 @@ public sealed class GfxDraw
             GlStates.BindMesh(GfxRegistry.MeshStore.GetHandle(id));
         }
 
-        ref readonly var meta = ref GfxRegistry.MeshStore.GetMeta(id);
+        var meta = GfxRegistry.MeshStore.GetMeta(id);
         if (meta.Kind < DrawMeshKind.ArraysInstanced)
         {
-            GlStates.Draw(in meta);
+            GlStates.Draw(meta);
         }
         else
         {
             instanceCount = uint.Max(meta.InstanceCount, instanceCount);
-            GlStates.DrawInstance(in meta, instanceCount);
+            GlStates.DrawInstance(meta, instanceCount);
         }
+
         _frameMeta.AddDrawCall(meta.DrawCount, instanceCount);
     }
-
 }

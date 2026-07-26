@@ -33,20 +33,8 @@ public sealed class GfxMeshes
         meta = GfxRegistry.MeshStore.GetMeta(meshId);
         return _meshAttributes[meshId];
     }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public void EnsureMeshCount(int count)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(count);
-        GfxRegistry.MeshStore.EnsureCapacity(count);
-        GfxRegistry.VboStore.EnsureCapacity(count);
-        GfxRegistry.IboStore.EnsureCapacity(count);
-        _meshAttributes.EnsureCapacity(count);
-    }
-
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public MeshId CreateEmptyMesh(in MeshDrawProperties props, int vboCount, ReadOnlySpan<VertexAttributeDef> attrib)
+    
+    public MeshId CreateEmptyMesh(in MeshDrawProperties props, int vboCount, VertexAttributeDef[] attrib)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(vboCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(vboCount, GfxLimits.MaxVboBindings);
@@ -58,8 +46,6 @@ public sealed class GfxMeshes
 
         var meta = new MeshMeta
         {
-            VboCount = (byte)vboCount,
-            AttributeCount = attrib.Length,
             Kind = props.Kind,
             ElementSize = props.ElementSize,
             Primitive = props.Primitive,
@@ -68,11 +54,11 @@ public sealed class GfxMeshes
         };
 
         var meshId = GfxRegistry.MeshStore.Add(in meta, meshRef);
-        _meshAttributes.Add(meshId, new MeshLayout(meshId, vboCount, attrib.ToArray()));
+        _meshAttributes.Add(meshId, new MeshLayout(meshId, vboCount, attrib));
         return meshId;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
+
     public VertexBufferId CreateAttachVertexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateVboArgs args)
         where T : unmanaged
     {
@@ -83,7 +69,6 @@ public sealed class GfxMeshes
         return vbo;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public IndexBufferId CreateAttachIndexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateIboArgs args)
         where T : unmanaged
     {
@@ -99,9 +84,6 @@ public sealed class GfxMeshes
         var meshView = GfxRegistry.MeshStore.GetHandleAndMeta(meshId, out var meta);
         var vboRef = GfxRegistry.VboStore.GetHandleAndMeta(vboId, out var vboMeta);
         GlMeshes.AttachVertexBuffer(meshView, binding, vboRef, in vboMeta);
-
-        var newMeta = meta with { VboCount = (byte)(meta.VboCount + 1) };
-        GfxRegistry.MeshStore.ReplaceMeta(meshId, in newMeta, out _);
         _meshAttributes[meshId].VboIds[binding] = vboId;
     }
 
@@ -113,7 +95,6 @@ public sealed class GfxMeshes
 
         var elementSize = GfxEnumUtils.ToDrawElementSize(iboMeta.Stride);
         GfxRegistry.MeshStore.ReplaceMeta(meshId, meta with { ElementSize = elementSize }, out _);
-
         _meshAttributes[meshId].IboId = iboId;
     }
 

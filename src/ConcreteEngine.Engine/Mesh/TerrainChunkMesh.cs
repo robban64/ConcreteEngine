@@ -42,7 +42,7 @@ internal sealed class TerrainChunkMesh(int slot)
     {
         var props = MeshDrawProperties.MakeElemental(size: DrawElementSize.UnsignedShort, drawCount: drawCount);
 
-        var meshId = gfx.CreateEmptyMesh(in props, 2, VertexAttributes.GetVertex3DAttributesV2());
+        var meshId = gfx.CreateEmptyMesh(in props, 2, VertexAttributes.MainVertexAttributes);
         gfx.CreateAttachVertexBuffer(meshId, vPos.AsReadOnlySpan(), CreateVboArgs.MakeDynamic(0));
         gfx.CreateAttachVertexBuffer(meshId, vShading.AsReadOnlySpan(), CreateVboArgs.MakeDynamic(1));
 
@@ -93,7 +93,7 @@ internal sealed class TerrainChunkMesh(int slot)
             drawCount: indices.Length,
             instances: instanceCount);
 
-        var meshId = FoliageMeshId = gfxMeshes.CreateEmptyMesh(in drawProps, 2, attribs);
+        var meshId = FoliageMeshId = gfxMeshes.CreateEmptyMesh(in drawProps, 2, attribs.ToArray());
 
         gfxMeshes.CreateAttachVertexBuffer(meshId, vertices, CreateVboArgs.MakeDefault(0));
 

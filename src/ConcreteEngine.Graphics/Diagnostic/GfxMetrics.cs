@@ -17,7 +17,8 @@ public static class GfxMetrics
             store.FillGfxStoreMeta(out data[i++]);
         }
     }
-   internal static GfxMetaInfo GetSpecialMetric(GraphicsKind kind)
+
+    internal static GfxMetaInfo GetSpecialMetric(GraphicsKind kind)
     {
         return kind switch
         {
@@ -42,7 +43,7 @@ public static class GfxMetrics
         var count = GfxRegistry.TextureStore.Count;
         for (var i = 0; i < count; i++)
         {
-            if(!GfxRegistry.TextureStore.TryGet(new (i + 1), out var m).IsValid())
+            if (!GfxRegistry.TextureStore.TryGet(new(i + 1), out var m).IsValid())
                 continue;
             long dim = m.Width >= m.Height ? m.Width : m.Height;
             if (!UpdateMax(ref max, ref maxIdx, dim, i)) continue;
@@ -57,11 +58,11 @@ public static class GfxMetrics
     {
         long max = 0;
         var maxIdx = 0;
-        
+
         var count = GfxRegistry.ShaderStore.Count;
         for (var i = 0; i < count; i++)
         {
-            if(!GfxRegistry.ShaderStore.TryGet(new (i + 1), out var m).IsValid())
+            if (!GfxRegistry.ShaderStore.TryGet(new(i + 1), out var m).IsValid())
                 continue;
             long v = m.SamplerSlots;
             UpdateMax(ref max, ref maxIdx, v, i);
@@ -77,7 +78,7 @@ public static class GfxMetrics
         var count = GfxRegistry.MeshStore.Count;
         for (var i = 0; i < count; i++)
         {
-            if(!GfxRegistry.MeshStore.TryGet(new (i + 1), out var m).IsValid())
+            if (!GfxRegistry.MeshStore.TryGet(new(i + 1), out var m).IsValid())
                 continue;
             UpdateMax(ref max, ref maxIdx, m.DrawCount, i);
         }
@@ -94,7 +95,7 @@ public static class GfxMetrics
         var count = GfxRegistry.VboStore.Count;
         for (var i = 0; i < count; i++)
         {
-            if(!GfxRegistry.VboStore.TryGet(new (i + 1), out var m).IsValid())
+            if (!GfxRegistry.VboStore.TryGet(new(i + 1), out var m).IsValid())
                 continue;
 
             if (UpdateMax(ref max, ref maxIdx, m.Capacity, i))
@@ -111,7 +112,7 @@ public static class GfxMetrics
         var count = GfxRegistry.IboStore.Count;
         for (var i = 0; i < count; i++)
         {
-            if(!GfxRegistry.IboStore.TryGet(new (i + 1), out var m).IsValid())
+            if (!GfxRegistry.IboStore.TryGet(new(i + 1), out var m).IsValid())
                 continue;
             if (UpdateMax(ref max, ref maxIdx, m.Capacity, i))
                 stride = m.Stride;
@@ -127,7 +128,7 @@ public static class GfxMetrics
         var count = GfxRegistry.UboStore.Count;
         for (var i = 0; i < count; i++)
         {
-            if(!GfxRegistry.UboStore.TryGet(new (i + 1), out var m).IsValid())
+            if (!GfxRegistry.UboStore.TryGet(new(i + 1), out var m).IsValid())
                 continue;
             if (UpdateMax(ref max, ref maxIdx, m.Capacity, i))
                 stride = m.Stride;
@@ -144,7 +145,7 @@ public static class GfxMetrics
         var count = GfxRegistry.FboStore.Count;
         for (var i = 0; i < count; i++)
         {
-            if(!GfxRegistry.FboStore.TryGet(new (i + 1), out var m).IsValid())
+            if (!GfxRegistry.FboStore.TryGet(new(i + 1), out var m).IsValid())
                 continue;
             var pix = (long)m.Size.Width * m.Size.Height;
             if (!UpdateMax(ref max, ref maxIdx, pix, i)) continue;
@@ -169,7 +170,7 @@ public static class GfxMetrics
         var count = GfxRegistry.RboStore.Count;
         for (var i = 0; i < count; i++)
         {
-            if(!GfxRegistry.RboStore.TryGet(new (i + 1), out var m).IsValid())
+            if (!GfxRegistry.RboStore.TryGet(new(i + 1), out var m).IsValid())
                 continue;
             var v = (long)m.Multisample;
             UpdateMax(ref max, ref maxIdx, v, i);
@@ -177,7 +178,7 @@ public static class GfxMetrics
 
         return new GfxMetaInfo(max, maxIdx + 1, 0);
     }
-    
+
     private static bool UpdateMax(ref long max, ref int maxIdx, long candidate, int idx)
     {
         if (candidate <= max) return false;

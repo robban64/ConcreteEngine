@@ -160,10 +160,11 @@ public sealed class DrawCommandBuffer : IDisposable
 
         var commands = _commands.View1;
         var ticket = _drawTickets + passRange.Offset;
-        for (var i = 0; i < passRange.Length; ++i, ++ticket)
+        var end = ticket + passRange.Length;
+        while (ticket < end)
         {
-            var submitIndex = *ticket;
-            cmd.DrawMesh(commands[submitIndex], submitIndex);
+            cmd.DrawMesh(commands[*ticket], *ticket);
+            ++ticket;
         }
     }
 

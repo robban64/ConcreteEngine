@@ -106,7 +106,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
         var properties = MeshDrawProperties.MakeElemental(drawCount: indices, size: drawSize);
         var iboArgs = CreateIboArgs.MakeDefault();
 
-        var meshId = gfx.CreateEmptyMesh(in properties, 2, VertexAttributes.GetVertex3DAttributesV2());
+        var meshId = gfx.CreateEmptyMesh(in properties, 2, VertexAttributes.MainVertexAttributes);
         gfx.CreateAttachVertexBuffer(meshId, data.Positions.AsReadOnlySpan(), CreateVboArgs.MakeDefault(0));
         gfx.CreateAttachVertexBuffer(meshId, data.Vertices.AsReadOnlySpan(), CreateVboArgs.MakeDefault(1));
         if (is16Bit)
@@ -123,7 +123,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
         var properties = MeshDrawProperties.MakeElemental(drawCount: indices, size: drawSize);
         var iboArgs = CreateIboArgs.MakeDefault();
 
-        var meshId = gfx.CreateEmptyMesh(in properties, 3, VertexAttributes.GetSkinnedAttributesV2());
+        var meshId = gfx.CreateEmptyMesh(in properties, 3, VertexAttributes.SkinnedAttributes);
         gfx.CreateAttachVertexBuffer(meshId, data.Positions.AsReadOnlySpan(), CreateVboArgs.MakeDefault(0));
         gfx.CreateAttachVertexBuffer(meshId, data.Vertices.AsReadOnlySpan(), CreateVboArgs.MakeDefault(1));
         gfx.CreateAttachVertexBuffer(meshId, data.Skinning.AsReadOnlySpan(), CreateVboArgs.MakeDefault(2));

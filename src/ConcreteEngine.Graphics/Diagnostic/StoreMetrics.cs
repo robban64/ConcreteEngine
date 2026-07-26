@@ -37,6 +37,8 @@ internal sealed class StoreMetrics<TMeta>(GfxResourceStore<TMeta> gfxStore) : IS
 
     private GfxMetaInfo GetSpecialMetric()
     {
+        return default;
+        /*
         return gfxStore switch
         {
             GfxResourceStore<TextureMeta> texStore =>
@@ -57,5 +59,6 @@ internal sealed class StoreMetrics<TMeta>(GfxResourceStore<TMeta> gfxStore) : IS
                 GetRboMetric(renderBufferStore.GetMetaSpan()),
             _ => throw new ArgumentOutOfRangeException()
         };
+        */
     }
 }

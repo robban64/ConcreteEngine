@@ -27,8 +27,13 @@ internal interface IGfxResourceStore : IDisposable
 
 internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore where TMeta : unmanaged, IResourceMeta
 {
-    private NativeSoA<TMeta, GfxHandle> _data;
-
+    private struct Entry
+    {
+        public GfxHandle Handle;
+        public TMeta Meta;
+    }
+    
+    private NativeArray<Entry> _data;
     private readonly Stack<int> _free;
 
     private Action<int>? _onUpdate;
@@ -43,7 +48,7 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore where TMeta : 
 
         if (GraphicsKind == GraphicsKind.Invalid) Throwers.InvalidOperation(nameof(GraphicsKind));
 
-        _data = new NativeSoA<TMeta, GfxHandle>(initialCapacity);
+        _data = NativeArray.Allocate<Entry>(initialCapacity);
         _free = new Stack<int>();
     }
 
@@ -51,23 +56,20 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore where TMeta : 
     public int FreeCount => _free.Count;
     public int Capacity => _data.Length;
 
-    public ReadOnlySpan<TMeta> GetMetaSpan() => MemoryMarshal.CreateReadOnlySpan(ref _data.At1(0), Count);
+   // public ReadOnlySpan<TMeta> GetMetaSpan() => MemoryMarshal.CreateReadOnlySpan(ref _data[0], Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxHandle GetHandle(GfxId<TMeta> id)
-    {
-        return _data.At2(id - 1);
-    }
+    public GfxHandle GetHandle(GfxId<TMeta> id) => _data[id.Index()].Handle;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly TMeta GetMeta(GfxId<TMeta> id) => ref _data.At1(id - 1);
+    public ref readonly TMeta GetMeta(GfxId<TMeta> id) => ref _data[id.Index()].Meta;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxHandle GetHandleAndMeta(GfxId<TMeta> id, out TMeta meta)
     {
-        var idx = id - 1;
-        meta = _data.At1(idx);
-        return GetHandle(id);
+        var index = id.Index();
+        meta = _data[index].Meta;
+        return _data[index].Handle;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -85,8 +87,8 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore where TMeta : 
         ArgumentOutOfRangeException.ThrowIfZero(handle.Value, nameof(handle));
 
         var index = AllocateNext();
-        _data.At1(index) = meta;
-        _data.At2(index) = handle;
+        _data[index].Handle = handle;
+        _data[index].Meta = meta;
 
         var id = new GfxId<TMeta>((ushort)(index + 1));
         GfxLog.LogGfxStore(id, handle, GraphicsKind.ToLogTopic(), LogAction.Add);
@@ -104,10 +106,11 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore where TMeta : 
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id, 0);
         var index = id - 1;
-        var handle = _data.At2(index);
-        oldMeta = _data.At1(index);
-        _data.At1(index) = default;
-        _data.At2(index) = default;
+        
+        var handle = _data[index].Handle;
+        oldMeta = _data[index].Meta;
+        
+        _data[index] = default;
 
         Count = SlotHelper.FreeSlot(_free, index, Count);
 
@@ -122,8 +125,8 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore where TMeta : 
         ArgumentOutOfRangeException.ThrowIfZero(newHandle.Value, nameof(newHandle));
 
         var index = id - 1;
-        _data.At1(index) = newMeta;
-        _data.At2(index) = newHandle;
+        _data[index].Handle = newHandle;
+        _data[index].Meta = newMeta;
 
         GfxLog.LogGfxStore(id, newHandle, GraphicsKind.ToLogTopic(), LogAction.Replace);
         _onUpdate?.Invoke(id);
@@ -134,8 +137,9 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore where TMeta : 
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id, 0);
         int index = id - 1;
-        oldMeta = _data.At1(index);
-        _data.At1(index) = newMeta;
+
+        oldMeta = _data[index].Meta;
+        _data[index].Meta = newMeta;
         _onUpdate?.Invoke(id);
     }
 
@@ -145,7 +149,7 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore where TMeta : 
         var length = Count;
         for (var i = 0; i < length; i++)
         {
-            if (_data.At2(i).IsValid()) count++;
+            if (_data[i].Handle.IsValid()) count++;
         }
 
         return count;

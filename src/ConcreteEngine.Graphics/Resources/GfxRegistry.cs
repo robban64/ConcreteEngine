@@ -16,14 +16,24 @@ public static class GfxRegistry
     {
         public static readonly GfxResourceStore<TMeta> Gfx = new(GetCapacity(TMeta.ResourceKind));
     }
+    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static GfxResourceStore<TMeta> GetStore<TMeta>() where TMeta : unmanaged, IResourceMeta =>
         Store<TMeta>.Gfx;
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static IGfxResourceStore GetStore(GraphicsKind kind) => GfxStores[(int)kind - 1];
+    
+    internal static GfxResourceStore<TextureMeta> TextureStore => Store<TextureMeta>.Gfx;
+    internal static GfxResourceStore<ShaderMeta> ShaderStore => Store<ShaderMeta>.Gfx;
+    internal static GfxResourceStore<MeshMeta> MeshStore => Store<MeshMeta>.Gfx;
+    internal static GfxResourceStore<VertexBufferMeta> VboStore => Store<VertexBufferMeta>.Gfx;
+    internal static GfxResourceStore<IndexBufferMeta> IboStore => Store<IndexBufferMeta>.Gfx;
+    internal static GfxResourceStore<FrameBufferMeta> FboStore => Store<FrameBufferMeta>.Gfx;
+    internal static GfxResourceStore<RenderBufferMeta> RboStore => Store<RenderBufferMeta>.Gfx;
+    internal static GfxResourceStore<UniformBufferMeta> UboStore => Store<UniformBufferMeta>.Gfx;
+
 
     internal static void CreateStores()
     {

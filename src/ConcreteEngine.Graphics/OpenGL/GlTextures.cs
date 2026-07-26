@@ -1,40 +1,38 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
-using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
+using static ConcreteEngine.Graphics.OpenGL.GlDriver;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlTextures
+internal static class GlTextures
 {
-    private static GL Gl => GlBackendDriver.Gl;
-
-    public GfxHandle CreateTexture(TextureKind kind)
+    public static GfxHandle CreateTexture(TextureKind kind)
     {
         Gl.CreateTextures(kind.ToGlEnum(), 1, out uint texture);
         return new GfxHandle(texture);
     }
 
-    public void TextureStorage2D(GfxHandle handle, Size2D size, GpuTextureProps desc)
+    public static void TextureStorage2D(GfxHandle handle, Size2D size, GpuTextureProps desc)
     {
         (uint width, uint height) = size.ToUnsigned();
         Gl.TextureStorage2D(handle, desc.Levels, desc.Format.ToStorageFormat(), width, height);
     }
 
-    public void TextureStorage2D_MultiSample(GfxHandle handle, Size2D size, GpuTextureProps desc)
+    public static void TextureStorage2D_MultiSample(GfxHandle handle, Size2D size, GpuTextureProps desc)
     {
         (uint width, uint height) = size.ToUnsigned();
         Gl.TextureStorage2DMultisample(handle, desc.Samples, desc.Format.ToStorageFormat(), width, height, true);
     }
 
-    public void TextureStorage3D(GfxHandle handle, Size3D size, GpuTextureProps desc)
+    public static void TextureStorage3D(GfxHandle handle, Size3D size, GpuTextureProps desc)
     {
         (uint width, uint height, uint depth) = size.ToUnsigned();
         Gl.TextureStorage3D(handle, desc.Levels, desc.Format.ToStorageFormat(), width, height, depth);
     }
 
-    public void UploadTexture2D_Data(GfxHandle handle, ReadOnlySpan<byte> data, TexturePixelFormat format,
+    public static void UploadTexture2D_Data(GfxHandle handle, ReadOnlySpan<byte> data, TexturePixelFormat format,
         Size2D size)
     {
         (uint width, uint height) = size.ToUnsigned();
@@ -42,7 +40,7 @@ internal sealed class GlTextures
         Gl.TextureSubImage2D(handle, 0, 0, 0, width, height, fmt, type, data);
     }
 
-    public void UploadTexture3D_Data(GfxHandle handle, ReadOnlySpan<byte> data, TexturePixelFormat format,
+    public static void UploadTexture3D_Data(GfxHandle handle, ReadOnlySpan<byte> data, TexturePixelFormat format,
         Size3D size, int zOffset)
     {
         (uint width, uint height, uint depth) = size.ToUnsigned();
@@ -56,7 +54,7 @@ internal sealed class GlTextures
         );
     }
 
-    public void CopyTextureData(
+    public static void CopyTextureData(
         GfxHandle src, TextureKind srcKind, GfxHandle dst, TextureKind dstKind,
         int srcLevel, int dstLevel, Size3D srcSize,
         Int3 srcPos = default, Int3 dstPos = default)
@@ -71,23 +69,23 @@ internal sealed class GlTextures
     }
 
 
-    public void SetLodBias(GfxHandle handle, float lodBias) =>
+    public static void SetLodBias(GfxHandle handle, float lodBias) =>
         Gl.TextureParameter(handle, GLEnum.TextureLodBias, lodBias);
 
-    public void SetAnisotropy(GfxHandle handle, int anisotropy)
+    public static void SetAnisotropy(GfxHandle handle, int anisotropy)
     {
         Gl.TextureParameter(handle, GLEnum.TextureMaxAnisotropy, anisotropy);
     }
 
-    public void GenerateMipMaps(GfxHandle handle) => Gl.GenerateTextureMipmap(handle);
+    public static void GenerateMipMaps(GfxHandle handle) => Gl.GenerateTextureMipmap(handle);
 
-    public void SetBorder(GfxHandle handle, GpuTextureBorder b)
+    public static void SetBorder(GfxHandle handle, GpuTextureBorder b)
     {
         Span<int> border = stackalloc int[] { b.R, b.G, b.B, b.A };
         Gl.TextureParameterI(handle, GLEnum.TextureBorderColor, border);
     }
 
-    public void SetCompareTextureFunc(GfxHandle handle, DepthMode depthMode)
+    public static void SetCompareTextureFunc(GfxHandle handle, DepthMode depthMode)
     {
         if (depthMode == DepthMode.Unset) return;
 
@@ -97,7 +95,7 @@ internal sealed class GlTextures
         Gl.TextureParameterI(handle, GLEnum.TextureCompareFunc, in depthFunc);
     }
 
-    public void SetTexturePreset(GfxHandle handle, TexturePreset preset, bool wrapR)
+    public static void SetTexturePreset(GfxHandle handle, TexturePreset preset, bool wrapR)
     {
         switch (preset)
         {

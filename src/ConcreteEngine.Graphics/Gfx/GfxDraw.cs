@@ -5,37 +5,18 @@ using ConcreteEngine.Graphics.Gfx.Internals;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
+using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-public sealed unsafe class GfxDraw : IDisposable
+public sealed class GfxDraw 
 {
-    private static NativeArray<byte> _tableMemory;
-
     private MeshId _boundMeshId;
-    private MeshMeta _boundMeshMeta;
     private RenderFrameMeta _frameMeta;
 
-    private readonly GlStates _states;
-    private readonly MeshStore _meshStore;
 
-    private readonly delegate*<DrawPrimitive, DrawElementSize, uint, uint, void>* _drawTable;
-
-    internal GfxDraw(GfxContextInternal ctx)
+    internal GfxDraw()
     {
-        if (!_tableMemory.IsNull) throw new InvalidOperationException("DrawTable is already initialized.");
-
-        _states = ctx.Driver.States;
-        _meshStore = GfxRegistry.GetStore<MeshMeta>();
-
-        _tableMemory = NativeArray.Allocate<byte>(sizeof(nint) * 4);
-
-        _drawTable = (delegate*<DrawPrimitive, DrawElementSize, uint, uint, void>*)_tableMemory.Ptr;
-        _drawTable[(int)DrawMeshKind.Invalid] = &GlDraw.DrawInvalid;
-        _drawTable[(int)DrawMeshKind.Arrays] = &GlDraw.DrawArrays;
-        _drawTable[(int)DrawMeshKind.Elements] = &GlDraw.DrawElements;
-        _drawTable[(int)DrawMeshKind.ArraysInstanced] = &GlDraw.DrawInstanced;
-        _drawTable[(int)DrawMeshKind.ElementsInstanced] = &GlDraw.DrawElementsInstanced;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -48,43 +29,31 @@ public sealed unsafe class GfxDraw : IDisposable
     internal void EndFrame(out RenderFrameMeta result)
     {
         _boundMeshId = default;
-        _boundMeshMeta = default;
-        BindMesh(default);
+        GlStates.BindMesh(default);
         result = _frameMeta;
     }
 
-    public void BindMesh(MeshId id)
-    {
-        if (_boundMeshId == id) return;
-
-        if (id == default)
-        {
-            _states.UnbindMesh();
-            _boundMeshId = default;
-            _boundMeshMeta = default;
-            return;
-        }
-
-        var handle = _meshStore.GetHandleAndMeta(id, out _boundMeshMeta);
-        _states.BindMesh(handle);
-        _boundMeshId = id;
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindDraw(MeshId id, uint instanceCount = 0)
     {
-        ref var meta = ref _boundMeshMeta;
         if (_boundMeshId != id)
         {
             _boundMeshId = id;
-            var handle = _meshStore.GetHandleAndMeta(id, out meta);
-            _states.BindMesh(handle);
+            GlStates.BindMesh(GfxRegistry.GetStore<MeshMeta>().GetHandle(id));
         }
 
-        var instances = uint.Max(meta.InstanceCount, instanceCount);
-        _drawTable[(int)meta.Kind](meta.Primitive, meta.ElementSize, meta.DrawCount, meta.InstanceCount);
-        _frameMeta.AddDrawCall(meta.DrawCount, instances);
+        ref readonly var meta = ref GfxRegistry.GetStore<MeshMeta>().GetMeta(id);
+        if (meta.Kind < DrawMeshKind.ArraysInstanced)
+        {
+            GlStates.Draw(in meta);
+        }
+        else
+        {
+            instanceCount = uint.Max(meta.InstanceCount, instanceCount);
+            GlStates.DrawInstance(in meta, instanceCount);
+        }
+        _frameMeta.AddDrawCall(meta.DrawCount, instanceCount);
     }
-    
-    public void Dispose() => _tableMemory.Dispose();
+
 }

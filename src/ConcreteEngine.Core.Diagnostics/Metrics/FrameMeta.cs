@@ -20,6 +20,12 @@ public struct RenderFrameMeta(uint draws, uint tris, uint instances)
     public uint Draws = draws;
     public uint Tris = tris;
     public uint Instances = instances;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AddDrawCall(uint tris)
+    {
+        Draws++;
+        Tris += tris;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddDrawCall(uint tris, uint instances)

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
@@ -64,6 +65,8 @@ internal sealed class DrawCommandProcessor
         _gfxDraw.BindDraw(cmd.MeshId, cmd.InstanceCount);
     }
 
+    public static AvgFrameTimer avg;
+
     public void DrawSpecialResolveMesh(DrawCommand cmd, DrawCommandResolver resolver, byte resolverSlot, int submitIdx)
     {
         if (PassMode != PassStateMode.Depth)
@@ -72,7 +75,6 @@ internal sealed class DrawCommandProcessor
         }
 
         _buffers.BindDrawObject(submitIdx);
-        
         _gfxDraw.BindDraw(cmd.MeshId, cmd.InstanceCount);
     }
 
@@ -91,10 +93,10 @@ internal sealed class DrawCommandProcessor
             BindDepthTextureSlots(textureBindings);
             return;
         }
-
+        avg.BeginSample();
         _gfxCmd.UseShader(materialMeta.ShaderId);
-        
         BindTextureSlots(textureBindings, materialMeta.ShadowMapBinding);
+        avg.EndSample();
 
     }
 

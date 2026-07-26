@@ -52,14 +52,18 @@ internal sealed class DrawCommandPipeline(RenderUploadBuffers buffers)
             UniformUploader.UploadAnimationData(animationPayload);
     }
 
+    private AvgFrameTimer avg;
     internal void ExecuteDrawPass(PassId passId, bool defaultDraw)
     {
         UniformUploader.Prepare();
         _drawCmd.PrepareDrawPass();
+        avg.BeginSample();
         if (defaultDraw)
             buffers.Commands.DispatchDrawPass(_drawCmd, passId);
         else
             buffers.Commands.DispatchResolveDrawPass(_drawCmd, passId);
+        
+        if(avg.EndSample() > 144 * 4) avg.ResetAndPrint();
 
     }
 }

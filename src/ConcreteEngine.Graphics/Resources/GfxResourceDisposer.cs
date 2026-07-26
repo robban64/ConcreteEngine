@@ -21,17 +21,19 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
     public int PendingCount => _disposeQueue.PendingCount;
 
-    internal GfxResourceDisposer()
+    private readonly ResourceBackendDispatcher _dispatcher;
+    internal GfxResourceDisposer(ResourceBackendDispatcher dispatcher)
     {
+        _dispatcher = dispatcher;
         _disposeQueue = new ResourceDisposeQueue();
     }
 
-    public void DrainDisposeQueue(GlBackendDriver driver)
+    public void DrainDisposeQueue()
     {
         int drainCount = 0;
         while (drainCount < DrainPerFrame && _disposeQueue.TryGetNext(DrainDelayTicks, out var cmd))
         {
-            driver.Disposer.DeleteGlResource(cmd);
+            GlDisposer.DeleteGlResource(_dispatcher, cmd);
             drainCount++;
         }
     }

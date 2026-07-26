@@ -18,8 +18,6 @@ public sealed class GraphicsRuntime : IDisposable
     private static bool _isInitialized;
     private static bool _isDisposed;
 
-    private GlBackendDriver _driver = null!;
-
     private GfxResourceDisposer _disposer = null!;
     private GfxResourceManager _resources = null!;
 
@@ -44,7 +42,7 @@ public sealed class GraphicsRuntime : IDisposable
             throw GraphicsException.UnsupportedFeature("Only OpenGL is supported");
 
         _resources = new GfxResourceManager();
-        _disposer = new GfxResourceDisposer();
+        _disposer = new GfxResourceDisposer(_resources.BackendDispatcher);
 
         var capabilities = InitializeDriver(glConfig);
 
@@ -58,15 +56,15 @@ public sealed class GraphicsRuntime : IDisposable
 
     private void InitializeGfx()
     {
-        var gfxCtxInternal = new GfxContextInternal(_driver, _resources, _disposer);
+        var gfxCtxInternal = new GfxContextInternal( _resources, _disposer);
 
-        _buffers = new GfxBuffers(gfxCtxInternal);
+        _buffers = new GfxBuffers();
         _shaders = new GfxShaders(gfxCtxInternal);
         _textures = new GfxTextures(gfxCtxInternal);
-        _meshes = new GfxMeshes(gfxCtxInternal, _buffers);
+        _meshes = new GfxMeshes(_buffers);
         _frameBuffers = new GfxFrameBuffers(gfxCtxInternal, _textures);
-        _cmd = new GfxCommands(gfxCtxInternal);
-        _draw = new GfxDraw(gfxCtxInternal);
+        _cmd = new GfxCommands();
+        _draw = new GfxDraw();
 
         Gfx = new GfxContext
         {
@@ -83,12 +81,8 @@ public sealed class GraphicsRuntime : IDisposable
 
     private GlCapabilities InitializeDriver(GlStartupConfig glConfig)
     {
-        var driver = new GlBackendDriver(glConfig, _resources);
-        var caps = driver.Initialize();
-        _driver = driver;
-
+        var caps = GlBackendDriver.Initialize(glConfig);
         UniformBufferUtils.Init(caps.Capabilities.UniformBufferOffsetAlignment);
-
         return caps;
     }
 
@@ -102,7 +96,9 @@ public sealed class GraphicsRuntime : IDisposable
 
     public void EndFrame()
     {
-        if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue(_driver);
+        if (_disposer.PendingCount > 0) 
+            _disposer.DrainDisposeQueue();
+        
         ref var meta = ref GfxMetrics.FrameMeta;
         _buffers.EndFrame(out meta.Buffer);
         _draw.EndFrame(out meta.Frame);
@@ -114,7 +110,6 @@ public sealed class GraphicsRuntime : IDisposable
         if (_isDisposed) return;
         _isDisposed = true;
 
-        _draw.Dispose();
         _resources.Dispose();
     }
 

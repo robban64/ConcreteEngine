@@ -2,32 +2,31 @@ using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
+using static ConcreteEngine.Graphics.OpenGL.GlDriver;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlMeshes
+internal static class GlMeshes
 {
-    private static GL Gl => GlBackendDriver.Gl;
-
-    public GfxHandle CreateVertexArray()
+    public static GfxHandle CreateVertexArray()
     {
         Gl.CreateVertexArrays(1, out uint vao);
         return new GfxHandle(vao);
     }
 
-    public void AttachIndexBuffer(GfxHandle vao, GfxHandle ibo)
+    public static void AttachIndexBuffer(GfxHandle vao, GfxHandle ibo)
     {
         Gl.VertexArrayElementBuffer(vao, ibo);
     }
 
-    public void AttachVertexBuffer(GfxHandle vao, int binding, GfxHandle vbo, in VertexBufferMeta meta)
+    public static void AttachVertexBuffer(GfxHandle vao, int binding, GfxHandle vbo, in VertexBufferMeta meta)
     {
         Gl.VertexArrayVertexBuffer(vao, (uint)binding, vbo, 0, (uint)meta.Stride);
         if (meta.Divisor != 0)
             Gl.VertexArrayBindingDivisor(vao, (uint)binding, meta.Divisor);
     }
 
-    public void AddVertexAttributes(GfxHandle vao, ReadOnlySpan<VertexAttributeDef> attribs)
+    public static void AddVertexAttributes(GfxHandle vao, ReadOnlySpan<VertexAttributeDef> attribs)
     {
         foreach (var attrib in attribs)
             AddVertexAttribute(vao, attrib);

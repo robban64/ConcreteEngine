@@ -7,16 +7,15 @@ using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
+using static ConcreteEngine.Graphics.OpenGL.GlDriver;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlShaders
+internal static class GlShaders
 {
-    private static GL Gl => GlBackendDriver.Gl;
-
     private static readonly Dictionary<uint, string> UniformSamplerByHash = new(16);
 
-    public GfxHandle CreateShader(NativeView<byte> vertexSource, NativeView<byte> fragmentSource)
+    public static GfxHandle CreateShader(NativeView<byte> vertexSource, NativeView<byte> fragmentSource)
     {
         uint vertexShader = 0, fragmentShader = 0;
 
@@ -85,7 +84,7 @@ internal sealed class GlShaders
     }
 
 
-    public void GetSamplersFromProgram(GfxHandle handle, List<GfxUniformSampler> result)
+    public static void GetSamplersFromProgram(GfxHandle handle, List<GfxUniformSampler> result)
     {
         if (!handle.IsValid()) Throwers.InvalidArgument(nameof(handle));
 

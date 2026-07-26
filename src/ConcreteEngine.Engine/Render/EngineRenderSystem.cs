@@ -60,6 +60,7 @@ public sealed class EngineRenderSystem : IDisposable
         {
             Logger.Log(LogScope.Engine, "Recreating screen framebuffers");
             Program.ResizeScreenFrameBuffers(EngineWindow.Viewport.Size);
+            _cameraManager.Camera.SetAspectRatio(EngineWindow.AspectRatio);
         }
 
         if (_visualManager.CommitShadowSize())

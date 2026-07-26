@@ -16,8 +16,6 @@ public sealed class GfxMeshes
     public static MeshId Sphere { get; private set; }
 
     //
-    private readonly GlBackendDriver _driver;
-
     private readonly GfxBuffers _buffers;
 
     private readonly MeshStore _meshStore;
@@ -27,9 +25,8 @@ public sealed class GfxMeshes
     private readonly Dictionary<int, MeshLayout> _meshAttributes;
 
 
-    internal GfxMeshes(GfxContextInternal context, GfxBuffers buffers)
+    internal GfxMeshes(GfxBuffers buffers)
     {
-        _driver = context.Driver;
         _buffers = buffers;
         _meshStore = GfxRegistry.GetStore<MeshMeta>();
         _vboStore = GfxRegistry.GetStore<VertexBufferMeta>();
@@ -64,8 +61,8 @@ public sealed class GfxMeshes
         ArgumentOutOfRangeException.ThrowIfZero(attrib.Length);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(attrib.Length, GfxLimits.MaxVertexAttribs);
 
-        var meshRef = _driver.Meshes.CreateVertexArray();
-        _driver.Meshes.AddVertexAttributes(meshRef, attrib);
+        var meshRef = GlMeshes.CreateVertexArray();
+        GlMeshes.AddVertexAttributes(meshRef, attrib);
 
         var meta = new MeshMeta
         {
@@ -109,7 +106,7 @@ public sealed class GfxMeshes
     {
         var meshView = _meshStore.GetHandleAndMeta(meshId, out var meta);
         var vboRef = _vboStore.GetHandleAndMeta(vboId, out var vboMeta);
-        _driver.Meshes.AttachVertexBuffer(meshView, binding, vboRef, in vboMeta);
+        GlMeshes.AttachVertexBuffer(meshView, binding, vboRef, in vboMeta);
 
         var newMeta = meta with { VboCount = (byte)(meta.VboCount + 1) };
         _meshStore.ReplaceMeta(meshId, in newMeta, out _);
@@ -120,7 +117,7 @@ public sealed class GfxMeshes
     {
         var meshRef = _meshStore.GetHandleAndMeta(meshId, out var meta);
         var iboRef = _iboStore.GetHandleAndMeta(iboId, out var iboMeta);
-        _driver.Meshes.AttachIndexBuffer(meshRef, iboRef);
+        GlMeshes.AttachIndexBuffer(meshRef, iboRef);
 
         var elementSize = GfxEnumUtils.ToDrawElementSize(iboMeta.Stride);
         _meshStore.ReplaceMeta(meshId, meta with { ElementSize = elementSize }, out _);

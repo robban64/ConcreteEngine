@@ -80,30 +80,32 @@ public sealed class RenderProgram : IDisposable
     {
         _drawPipeline.UploadUniforms();
 
-        while (_passPipeline.NextPass(out var nextPassRes))
+        while (_passPipeline.NextPass(out var nextPassId, out var passAction))
         {
-            if (nextPassRes.Action == NextPassAction.Skip) continue;
-            ExecutePass(nextPassRes.PassId);
+            if (passAction == NextPassAction.Skip) continue;
+            var passResult = _passPipeline.ApplyPass();
+
+            switch (passResult.Op)
+            {
+                case PassOp.Draw:
+                    _drawPipeline.ExecuteDrawPass(nextPassId, true);
+                    break;
+                case PassOp.DrawEffect:
+                    _drawPipeline.ExecuteDrawPass(nextPassId, false);
+                    break;
+            }
+
+            _passPipeline.ApplyAfterPass();
+        }
+
+        if (++ticks > 144)
+        {
+            ticks = 0;
+            DrawCommandProcessor.avg.ResetAndPrint("Draw");
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ExecutePass(PassId passId)
-    {
-        var passResult = _passPipeline.ApplyPass();
-
-        switch (passResult.Op)
-        {
-            case PassOp.Draw:
-                _drawPipeline.ExecuteDrawPass(passId, true);
-                break;
-            case PassOp.DrawEffect:
-                _drawPipeline.ExecuteDrawPass(passId, false);
-                break;
-        }
-
-        _passPipeline.ApplyAfterPass();
-    }
+    private static int ticks;
 
     //
     public RenderSetupBuilder StartBuilder(Size2D outputSize)

@@ -4,8 +4,6 @@ using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer.Passes;
 
-internal readonly record struct PreparePassResult(PassId PassId, NextPassAction Action);
-
 internal sealed class RenderPassPipeline
 {
     private readonly RenderFboRegistry _fboRegistry;
@@ -73,11 +71,12 @@ internal sealed class RenderPassPipeline
         _ctx.PassQueue.Prepare();
     }
 
-    internal bool NextPass(out PreparePassResult result)
+    internal bool NextPass(out PassId passId, out NextPassAction action)
     {
         if ((uint)_activePassIndex >= (uint)_entries.Count)
         {
-            result = default;
+            passId = default;
+            action = default;
             return false;
         }
 
@@ -88,19 +87,19 @@ internal sealed class RenderPassPipeline
             ? new FboTagKey(dependsOnKey.TagIndex, passKey.Variant)
             : new FboTagKey(passKey.TagIndex, passKey.Variant);
 
-        var kind = NextPassAction.Run;
+        action = NextPassAction.Run;
 
         if (_fboRegistry.TryGetRenderFbo(key, out var fbo))
             _ctx.AttachPass(fbo, passKey);
         else if (passEntry.PassOp == PassOp.Screen)
             _ctx.AttachScreenPass(passKey, RenderContext.Instance.OutputSize);
         else
-            kind = NextPassAction.Skip;
+            action = NextPassAction.Skip;
 
         _ctx.PassQueue.DequeueMutationTo(passEntry);
         _ctx.PassQueue.DequeuePassSources(passEntry);
 
-        result = new PreparePassResult(passEntry.PassKey.Pass, kind);
+        passId = passEntry.PassKey.Pass;
         return true;
     }
 

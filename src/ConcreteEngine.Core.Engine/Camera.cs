@@ -40,6 +40,12 @@ public sealed class Camera
         IsDirty = true;
     }
 
+    internal void SetAspectRatio(float aspectRatio)
+    {
+        AspectRatio = aspectRatio;
+        IsDirty = true;
+    }
+
 
     [InputNumber(Segment = "Transform")]
     public Vector3 Translation
@@ -116,9 +122,7 @@ public sealed class Camera
         if (!isDirty) return false;
         IsDirty = false;
         Version++;
-
-        AspectRatio = EngineWindow.AspectRatio;
-
+        
         MatrixMath.CreateFixedSizeModelMatrix(
             in _viewTransform.Translation,
             RotationMath.YawPitchToQuaternion(_viewTransform.Orientation),

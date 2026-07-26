@@ -14,8 +14,6 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxBuffers
 {
-    private readonly GlBuffers _driverBuffer;
-
     private readonly VboStore _vboStore;
     private readonly IboStore _iboStore;
     private readonly UboStore _uboStore;
@@ -24,9 +22,8 @@ public sealed class GfxBuffers
     private static long _iboUploadSize;
     private static long _uboUploadSize;
 
-    internal GfxBuffers(GfxContextInternal context)
+    internal GfxBuffers()
     {
-        _driverBuffer = context.Driver.Buffers;
         _vboStore = GfxRegistry.GetStore<VertexBufferMeta>();
         _iboStore = GfxRegistry.GetStore<IndexBufferMeta>();
         _uboStore = GfxRegistry.GetStore<UniformBufferMeta>();
@@ -54,7 +51,7 @@ public sealed class GfxBuffers
         var meta = new VertexBufferMeta(stride, componentCount, offset, divisor, usage, storage, access);
 
         var payload = data.Length > 0 ? MemoryMarshal.AsBytes(data) : ReadOnlySpan<byte>.Empty;
-        var vboHandle = _driverBuffer.CreateVertexBuffer(payload, new CreateBufferInfo(size, storage, access));
+        var vboHandle = GlBuffers.CreateVertexBuffer(payload, new CreateBufferInfo(size, storage, access));
 
         return _vboStore.Add(meta, vboHandle);
     }
@@ -72,7 +69,7 @@ public sealed class GfxBuffers
             GraphicsException.ThrowInvalidType(typeof(T).Name, "Invalid elemental size");
 
         var meta = new IndexBufferMeta(componentCount, stride, usage, storage, access);
-        var iboHandle = _driverBuffer.CreateIndexBuffer(MemoryMarshal.AsBytes(data),
+        var iboHandle = GlBuffers.CreateIndexBuffer(MemoryMarshal.AsBytes(data),
             new CreateBufferInfo(size, storage, access));
 
         return _iboStore.Add(meta, iboHandle);
@@ -96,7 +93,7 @@ public sealed class GfxBuffers
             BufferStorage.Dynamic,
             BufferAccess.MapWrite);
 
-        var uboHandle = _driverBuffer.CreateUniformBuffer(slot, new CreateBufferInfo((uint)stride, storage, access));
+        var uboHandle = GlBuffers.CreateUniformBuffer(slot, new CreateBufferInfo((uint)stride, storage, access));
         return _uboStore.Add(meta, uboHandle);
     }
 
@@ -110,7 +107,7 @@ public sealed class GfxBuffers
             GraphicsException.ThrowInvalidBufferData(nameof(vboId), "Buffer is static");
 
         var (stride, size) = ToStrideAndSize<T>(data.Length);
-        _driverBuffer.SetBufferData(vboHandle, MemoryMarshal.AsBytes(data), size, usage);
+        GlBuffers.SetBufferData(vboHandle, MemoryMarshal.AsBytes(data), size, usage);
 
         var newMeta = VertexBufferMeta.CreateCopy(in meta, data.Length, stride, offset, usage);
         _vboStore.ReplaceMeta(vboId, in newMeta, out _);
@@ -124,7 +121,7 @@ public sealed class GfxBuffers
             GraphicsException.ThrowInvalidBufferData(nameof(iboId), "Buffer is static");
 
         var (stride, size) = ToStrideAndSize<T>(data.Length);
-        _driverBuffer.SetBufferData(iboHandle, MemoryMarshal.AsBytes(data), size, usage);
+        GlBuffers.SetBufferData(iboHandle, MemoryMarshal.AsBytes(data), size, usage);
 
         var newMeta = IndexBufferMeta.CreateCopy(in meta, data.Length, stride, usage);
         _iboStore.ReplaceMeta(iboId, in newMeta, out _);
@@ -138,13 +135,13 @@ public sealed class GfxBuffers
         capacity = IntMath.AlignUp(capacity, meta.Stride);
         var newMeta = UniformBufferMeta.MakeResizeCopy(in meta, capacity);
         _uboStore.ReplaceMeta(uboId, in newMeta, out _);
-        _driverBuffer.ResizeBuffer(handle, capacity, BufferUsage.DynamicDraw);
+        GlBuffers.ResizeBuffer(handle, capacity, BufferUsage.DynamicDraw);
     }
 
     public void ClearUniformBufferData(UniformBufferId uboId)
     {
         var handle = _uboStore.GetHandleAndMeta(uboId, out var meta);
-        _driverBuffer.ResizeBuffer(handle, meta.Capacity, BufferUsage.DynamicDraw);
+        GlBuffers.ResizeBuffer(handle, meta.Capacity, BufferUsage.DynamicDraw);
     }
 
     public void SetVertexBufferCapacity(VertexBufferId vboId, int elements)
@@ -154,7 +151,7 @@ public sealed class GfxBuffers
         if (meta.ElementCount == elements) return;
 
         var capacity = elements * meta.Stride;
-        _driverBuffer.ResizeBuffer(handle, capacity, meta.Usage);
+        GlBuffers.ResizeBuffer(handle, capacity, meta.Usage);
         _vboStore.ReplaceMeta(vboId, meta with { ElementCount = elements }, out _);
     }
 
@@ -167,7 +164,7 @@ public sealed class GfxBuffers
 
         var vboHandle = _vboStore.GetHandle(vboId);
         var bytes = MemoryMarshal.AsBytes(data);
-        _driverBuffer.UploadBufferData(vboHandle, bytes, offset, size);
+        GlBuffers.UploadBufferData(vboHandle, bytes, offset, size);
         _vboUploadSize += bytes.Length;
     }
 
@@ -177,7 +174,7 @@ public sealed class GfxBuffers
         var iboHandle = _iboStore.GetHandle(iboId);
         var (offset, size) = ToSizeAndOffset<T>(offsetElements, data.Length);
         var bytes = MemoryMarshal.AsBytes(data);
-        _driverBuffer.UploadBufferData(iboHandle, bytes, offset, size);
+        GlBuffers.UploadBufferData(iboHandle, bytes, offset, size);
         _iboUploadSize += bytes.Length;
     }
 
@@ -185,7 +182,7 @@ public sealed class GfxBuffers
     public unsafe void UploadSingleUniform<T>(UniformBufferId id, T* data, int offset) where T : unmanaged, IUniform
     {
         var uboHandle = _uboStore.GetHandleAndMeta(id, out var meta);
-        _driverBuffer.UploadBufferData(uboHandle, (byte*)data, offset, meta.Stride);
+        GlBuffers.UploadBufferData(uboHandle, (byte*)data, offset, meta.Stride);
         _uboUploadSize += meta.Stride;
     }
 
@@ -197,7 +194,7 @@ public sealed class GfxBuffers
         if (offset + sizeInBytes > meta.Capacity)
             GraphicsException.ThrowCapabilityExceeded(nameof(T), sizeInBytes, (int)meta.Capacity);
 
-        _driverBuffer.UploadBufferData(handle, (byte*)data.Ptr, offset, sizeInBytes);
+        GlBuffers.UploadBufferData(handle, (byte*)data.Ptr, offset, sizeInBytes);
         _uboUploadSize += sizeInBytes;
     }
 
@@ -205,13 +202,13 @@ public sealed class GfxBuffers
     public void BindUniformBufferRange(UniformBufferId id, int offset, int size)
     {
         var handle = _uboStore.GetHandleAndMeta(id, out var meta);
-        _driverBuffer.BindUniformBufferRange(handle, meta.Slot, offset, size);
+        GlBuffers.BindUniformBufferRange(handle, meta.Slot, offset, size);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindUniformBufferRange(UniformBufferId id, UboSlot slot, int offset, int size)
     {
-        _driverBuffer.BindUniformBufferRange(_uboStore.GetHandle(id), slot, offset, size);
+        GlBuffers.BindUniformBufferRange(_uboStore.GetHandle(id), slot, offset, size);
     }
 
 

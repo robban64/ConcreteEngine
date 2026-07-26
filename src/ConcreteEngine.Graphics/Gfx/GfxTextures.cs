@@ -18,8 +18,6 @@ public sealed class GfxTextures
         public static TextureId AlphaMaskId { get; internal set; }
     }
 
-    private readonly GlTextures _driver;
-
     private readonly GfxResourceDisposer _disposer;
     private readonly TextureStore _textureStore;
 
@@ -27,7 +25,6 @@ public sealed class GfxTextures
     {
         _disposer = context.Disposer;
         _textureStore = GfxRegistry.GetStore<TextureMeta>();
-        _driver = context.Driver.Textures;
 
         Fallback.AlbedoId = CreateOnePixelTexture([255, 255, 255, 255], TexturePixelFormat.SrgbAlpha);
         Fallback.NormalId = CreateOnePixelTexture([128, 128, 255], TexturePixelFormat.Rgb);
@@ -82,10 +79,10 @@ public sealed class GfxTextures
         var baseMeta = _textureStore.GetMeta(baseTexId);
         if (baseMeta.Kind != TextureKind.Texture2D) throw new GraphicsException(nameof(baseMeta.Kind));
 
-        var handle = _driver.CreateTexture(TextureKind.Texture2DArray);
+        var handle = GlTextures.CreateTexture(TextureKind.Texture2DArray);
 
         var gpuProps = new GpuTextureProps(baseMeta.PixelFormat, baseMeta.MipLevels, baseMeta.Samples);
-        _driver.TextureStorage3D(handle, new Size3D(baseMeta.Width, baseMeta.Height, layerCount), gpuProps);
+        GlTextures.TextureStorage3D(handle, new Size3D(baseMeta.Width, baseMeta.Height, layerCount), gpuProps);
 
         var meta = baseMeta with { Kind = TextureKind.Texture2DArray, Depth = (ushort)layerCount };
         var textureId = _textureStore.Add(in meta, handle);
@@ -110,7 +107,7 @@ public sealed class GfxTextures
         var size = dstMeta.AsSize2D();
         for (int mip = 0; mip < dstMeta.MipLevels; mip++)
         {
-            _driver.CopyTextureData(
+            GlTextures.CopyTextureData(
                 src: srcHandle,
                 srcKind: TextureKind.Texture2D,
                 dst: dstHandle,
@@ -158,7 +155,7 @@ public sealed class GfxTextures
 
         ValidateUploadSize(size, meta.AsSize2D());
 
-        _driver.UploadTexture2D_Data(texHandle, data, meta.PixelFormat, size);
+        GlTextures.UploadTexture2D_Data(texHandle, data, meta.PixelFormat, size);
     }
 
     public void UploadTexture3D(TextureId textureId, ReadOnlySpan<byte> data, int width, int height, int depth)
@@ -169,7 +166,7 @@ public sealed class GfxTextures
         var (size, metaSize) = (new Size3D(width, height, depth), new Size3D(meta.Width, meta.Height, meta.Depth));
         ValidateUploadSize3D(size, metaSize);
 
-        _driver.UploadTexture3D_Data(texHandle, data, meta.PixelFormat, size, zOffset: 0);
+        GlTextures.UploadTexture3D_Data(texHandle, data, meta.PixelFormat, size, zOffset: 0);
     }
 
     public void UploadCubeMapFace(TextureId textureId, ReadOnlySpan<byte> data, Size2D size, int faceIndex)
@@ -183,35 +180,35 @@ public sealed class GfxTextures
 
         ValidateUploadSize(size, meta.AsSize2D());
 
-        _driver.UploadTexture3D_Data(texHandle, data, meta.PixelFormat, size.ToSize3D(1), faceIndex);
+        GlTextures.UploadTexture3D_Data(texHandle, data, meta.PixelFormat, size.ToSize3D(1), faceIndex);
     }
 
     public void GenerateMipMaps(TextureId textureId)
     {
         var texHandle = _textureStore.GetHandleAndMeta(textureId, out var meta);
         Debug.Assert(meta.MipLevels > 1);
-        _driver.GenerateMipMaps(texHandle);
+        GlTextures.GenerateMipMaps(texHandle);
     }
 
     private void ApplyTextureProperties(GfxHandle texHandle, in TextureMeta meta, bool wrapR)
     {
         if (meta.Preset != TexturePreset.None)
-            _driver.SetTexturePreset(texHandle, meta.Preset, wrapR);
+            GlTextures.SetTexturePreset(texHandle, meta.Preset, wrapR);
 
         if (meta.CompareTextureFunc is not (DepthMode.Unset or DepthMode.None))
-            _driver.SetCompareTextureFunc(texHandle, meta.CompareTextureFunc);
+            GlTextures.SetCompareTextureFunc(texHandle, meta.CompareTextureFunc);
 
         if (meta.BorderColor.Enabled)
-            _driver.SetBorder(texHandle, meta.BorderColor);
+            GlTextures.SetBorder(texHandle, meta.BorderColor);
 
         if (meta.Anisotropy != TextureAnisotropy.Off)
-            _driver.SetAnisotropy(texHandle, meta.Anisotropy.ToAnisotropy());
+            GlTextures.SetAnisotropy(texHandle, meta.Anisotropy.ToAnisotropy());
 
         if (meta.Lod != Half.Zero)
-            _driver.SetLodBias(texHandle, (float)meta.Lod);
+            GlTextures.SetLodBias(texHandle, (float)meta.Lod);
 
         if (meta.MipLevels > 1 && meta.Kind != TextureKind.Texture2DArray)
-            _driver.GenerateMipMaps(texHandle);
+            GlTextures.GenerateMipMaps(texHandle);
     }
 
     private GfxHandle CreateDriverTexture(Size3D size, in CreateTextureProps props, out TextureMeta meta)
@@ -221,23 +218,23 @@ public sealed class GfxTextures
         if (levels < 1) throw new GraphicsException(nameof(levels));
         var samples = props.Samples.ToSamples();
 
-        var texHandle = _driver.CreateTexture(props.Kind);
+        var texHandle = GlTextures.CreateTexture(props.Kind);
 
         switch (props.Kind)
         {
             case TextureKind.Texture2D:
-                _driver.TextureStorage2D(texHandle, size, GpuTextureProps.Make(props.Format, levels, 0));
+                GlTextures.TextureStorage2D(texHandle, size, GpuTextureProps.Make(props.Format, levels, 0));
                 break;
             case TextureKind.CubeMap:
-                _driver.TextureStorage2D(texHandle, size, GpuTextureProps.Make(props.Format, levels, 0));
+                GlTextures.TextureStorage2D(texHandle, size, GpuTextureProps.Make(props.Format, levels, 0));
                 break;
             case TextureKind.Multisample2D:
                 var msaaStoreProps = GpuTextureProps.Make(props.Format, levels, props.Samples.ToSamples());
-                _driver.TextureStorage2D_MultiSample(texHandle, size, msaaStoreProps);
+                GlTextures.TextureStorage2D_MultiSample(texHandle, size, msaaStoreProps);
                 break;
             case TextureKind.Texture3D:
                 var tex3DStoreProps = GpuTextureProps.Make(props.Format, levels, 0);
-                _driver.TextureStorage3D(texHandle, size, tex3DStoreProps);
+                GlTextures.TextureStorage3D(texHandle, size, tex3DStoreProps);
                 break;
             default: throw new ArgumentOutOfRangeException(nameof(props.Kind));
         }

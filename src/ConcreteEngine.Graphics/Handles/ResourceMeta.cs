@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
@@ -90,6 +91,8 @@ public readonly struct VertexBufferMeta(
 
     public static GraphicsKind ResourceKind => GraphicsKind.VertexBuffer;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool HasCapacity(int elementCount) => elementCount * Stride <= Capacity;
 
     public static VertexBufferMeta CreateCopy(in VertexBufferMeta m, int count, int stride, uint offset,
         BufferUsage usage) =>
@@ -113,6 +116,9 @@ public readonly struct IndexBufferMeta(
 
     public nint Capacity => Stride * ElementCount;
     public static GraphicsKind ResourceKind => GraphicsKind.IndexBuffer;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool HasCapacity(int elementCount) => elementCount * Stride <= Capacity;
 
     public static IndexBufferMeta CreateCopy(in IndexBufferMeta meta, int count, int stride, BufferUsage usage) =>
         new(count, stride, usage, meta.Storage, meta.Access);
@@ -165,6 +171,9 @@ public readonly struct UniformBufferMeta(
     public readonly BufferAccess Access = access;
     public static GraphicsKind ResourceKind => GraphicsKind.UniformBuffer;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool HasCapacity(int elementCount) => elementCount * Stride <= Capacity;
+    
     public static UniformBufferMeta MakeResizeCopy(in UniformBufferMeta meta, int capacity) =>
         new(meta.Slot, meta.Stride, capacity, meta.Usage, meta.Storage, meta.Access);
 }

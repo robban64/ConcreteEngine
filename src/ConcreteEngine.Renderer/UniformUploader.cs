@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Registry;
@@ -12,10 +13,6 @@ namespace ConcreteEngine.Renderer;
 
 internal sealed unsafe class UniformUploader
 {
-    private readonly RenderUbo _drawUbo;
-    private readonly RenderUbo _materialUbo;
-    private readonly RenderUbo _animationUbo;
-
     private readonly GfxBuffers _gfxBuffers;
     private readonly MaterialBuffer _materialBuffer;
     private readonly SkinningBuffer _skinningBuffer;
@@ -32,38 +29,27 @@ internal sealed unsafe class UniformUploader
 
         _gfxBuffers = gfx.Buffers;
 
-        var registry = renderRegistry.UboRegistry;
-
-        _drawUbo = registry.GetRenderUbo<DrawObjectUniform>();
-        _materialUbo = registry.GetRenderUbo<MaterialUniform>();
-        _animationUbo = registry.GetRenderUbo<DrawAnimationUniform>();
-
         UploadLight(); // set the buffer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Prepare()
     {
-        _drawUbo.ResetCursor();
-        _materialUbo.ResetCursor();
-        _animationUbo.ResetCursor();
+        DrawObjectUniform.UploadCursor = 0;
+        MaterialUniform.UploadCursor = 0;
+        DrawAnimationUniform.UploadCursor = 0;
 
         PrevMaterial = default;
     }
 
     internal void EnsureUboSizes(int drawCount, int materialCount)
     {
-        if (drawCount * _drawUbo.Stride > _drawUbo.Capacity)
-        {
-            var capacity = _drawUbo.GetCapacityFor(drawCount);
-            _gfxBuffers.SetUniformBufferCapacity(_drawUbo.Id, capacity);
-        }
+        if(!GfxResourceApi.GetMeta(DrawObjectUniform.UboId).HasCapacity(drawCount))
+            _gfxBuffers.SetUniformBufferCount(DrawObjectUniform.UboId, drawCount);
+        
+        if(!GfxResourceApi.GetMeta(MaterialUniform.UboId).HasCapacity(drawCount))
+            _gfxBuffers.SetUniformBufferCount(MaterialUniform.UboId, materialCount);
 
-        if (materialCount * _materialUbo.Stride > _materialUbo.Capacity)
-        {
-            var capacity = _materialUbo.GetCapacityFor(materialCount);
-            _gfxBuffers.SetUniformBufferCapacity(_materialUbo.Id, capacity);
-        }
     }
 
     internal ReadOnlySpan<TextureBinding> BindResolveMaterial(Id16<MaterialSlot> materialId,
@@ -72,10 +58,8 @@ internal sealed unsafe class UniformUploader
         if (PrevMaterial != materialId)
         {
             PrevMaterial = materialId;
-            
-            var cursor = _materialUbo.SetDrawCursor(materialId.Index());
-            _gfxBuffers.BindUniformBufferRange(_materialUbo.Id, _materialUbo.Slot, cursor, _materialUbo.Stride);
-            
+            var stride = Unsafe.SizeOf<MaterialUniform>();
+            _gfxBuffers.BindUniformBufferRange<MaterialUniform>(materialId.Index() * stride, stride);
             return _materialBuffer.GetMetaAndSlots(materialId, out materialMeta);
         }
 
@@ -88,31 +72,28 @@ internal sealed unsafe class UniformUploader
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void BindDrawObject(int submitIndex)
     {
-        var cursor = _drawUbo.SetDrawCursor(submitIndex);
-        _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, _drawUbo.Slot, cursor, _drawUbo.Stride);
+        var stride = Unsafe.SizeOf<DrawObjectUniform>();
+        _gfxBuffers.BindUniformBufferRange<DrawObjectUniform>(submitIndex * stride, stride);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void BindAnimation(int slot)
     {
         var range = _skinningBuffer.GetSlotRange(slot);
-        _gfxBuffers.BindUniformBufferRange(_animationUbo.Id, range.Offset * 64, range.Length * 64);
+        _gfxBuffers.BindUniformBufferRange<DrawAnimationUniform>(range.Offset * 64, range.Length * 64);
     }
 
-    internal void UploadMaterial(NativeView<MaterialUniform> data) =>
-        _gfxBuffers.UploadUniform(_materialUbo.Id, data, _materialUbo.SetUploadCursor(0));
-
-    internal void UploadDrawObjects(NativeView<DrawObjectUniform> data) =>
-        _gfxBuffers.UploadUniform(_drawUbo.Id, data, _drawUbo.SetUploadCursor(0));
-
+    internal void UploadMaterial(NativeView<MaterialUniform> data) => _gfxBuffers.UploadUniform(data, 0);
+    internal void UploadDrawObjects(NativeView<DrawObjectUniform> data) => _gfxBuffers.UploadUniform(data, 0);
 
     internal void UploadAnimationData(NativeView<Matrix4x4> boneData)
     {
         var uploadSize = boneData.Length * 64;
-        if (uploadSize > _animationUbo.Capacity)
-            _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, uploadSize);
 
-        _gfxBuffers.UploadUniform(_animationUbo.Id, boneData, 0);
+        if (uploadSize > GfxResourceApi.GetMeta(DrawAnimationUniform.UboId).Capacity)
+            _gfxBuffers.SetUniformBufferCapacity(DrawAnimationUniform.UboId, uploadSize);
+
+        _gfxBuffers.UploadUniform(new NativeView<DrawAnimationUniform>((DrawAnimationUniform*)boneData.Ptr, boneData.Length), 0);
     }
 
     // Globals //
@@ -120,7 +101,7 @@ internal sealed unsafe class UniformUploader
     {
         ref readonly var effect = ref _effectBuffer.Get(slot);
         var data = new EditorEffectsUniform(isAnimated, effect.Color);
-        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<EditorEffectsUniform>(), &data, 0);
+        _gfxBuffers.UploadSingleUniform(&data, 0);
     }
 
     internal void UploadViewUniforms()
@@ -140,7 +121,7 @@ internal sealed unsafe class UniformUploader
     public void UploadLight()
     {
         LightUniform data = default;
-        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<LightUniform>(), &data, 0);
+        _gfxBuffers.UploadSingleUniform(&data, 0);
     }
 
 
@@ -153,6 +134,6 @@ public readonly ref struct UniformUploadContext(GfxBuffers gfxBuffers)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void UploadUniform<T>(T* data) where T : unmanaged, IUniform
     {
-        gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<T>(), data, 0);
+        gfxBuffers.UploadSingleUniform(data, 0);
     }
 }

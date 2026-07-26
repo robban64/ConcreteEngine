@@ -9,6 +9,7 @@ using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Graphics.Diagnostic;
+using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Engine.Gateway;
 
@@ -24,7 +25,7 @@ internal sealed class EngineMetricHub
     public void ConnectEditor(MetricSystem metricSystem)
     {
         _metricSystem = metricSystem;
-        metricSystem.BindStore(GfxMetrics.StoreCount, AssetKindUtils.AssetTypeCount, WriteStoreMeta);
+        metricSystem.BindStore(GfxRegistry.StoreCount, AssetKindUtils.AssetTypeCount, WriteStoreMeta);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

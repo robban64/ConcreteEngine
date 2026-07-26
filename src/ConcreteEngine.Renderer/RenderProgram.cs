@@ -98,14 +98,8 @@ public sealed class RenderProgram : IDisposable
             _passPipeline.ApplyAfterPass();
         }
 
-        if (++ticks > 144)
-        {
-            ticks = 0;
-            DrawCommandProcessor.avg.ResetAndPrint("Draw");
-        }
     }
 
-    private static int ticks;
 
     //
     public RenderSetupBuilder StartBuilder(Size2D outputSize)

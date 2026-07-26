@@ -10,31 +10,26 @@ namespace ConcreteEngine.Graphics.Resources;
 // ReSharper disable StaticMemberInGenericType
 public static class GfxRegistry
 {
-    private static readonly IGfxResourceStore[] GfxStores = new IGfxResourceStore[GfxMetrics.StoreCount];
+    public static int StoreCount => GraphicsKindExt.Count - 1;
 
-    private static class Store<TMeta> where TMeta : unmanaged, IResourceMeta
-    {
-        public static readonly GfxResourceStore<TMeta> Gfx = new(GetCapacity(TMeta.ResourceKind));
-    }
-    
-
+    private static readonly IGfxResourceStore[] GfxStores = new IGfxResourceStore[StoreCount];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static GfxResourceStore<TMeta> GetStore<TMeta>() where TMeta : unmanaged, IResourceMeta =>
-        Store<TMeta>.Gfx;
+    internal static GfxStore<TMeta> GetStore<TMeta>() where TMeta : unmanaged, IResourceMeta =>
+        GfxStore<TMeta>.Instance;
+    
+    internal static GfxStore<TextureMeta> TextureStore => GfxStore<TextureMeta>.Instance;
+    internal static GfxStore<ShaderMeta> ShaderStore => GfxStore<ShaderMeta>.Instance;
+    internal static GfxStore<MeshMeta> MeshStore => GfxStore<MeshMeta>.Instance;
+    internal static GfxStore<VertexBufferMeta> VboStore => GfxStore<VertexBufferMeta>.Instance;
+    internal static GfxStore<IndexBufferMeta> IboStore => GfxStore<IndexBufferMeta>.Instance;
+    internal static GfxStore<FrameBufferMeta> FboStore => GfxStore<FrameBufferMeta>.Instance;
+    internal static GfxStore<RenderBufferMeta> RboStore => GfxStore<RenderBufferMeta>.Instance;
+    internal static GfxStore<UniformBufferMeta> UboStore => GfxStore<UniformBufferMeta>.Instance;
 
     internal static IGfxResourceStore GetStore(GraphicsKind kind) => GfxStores[(int)kind - 1];
+    internal static ReadOnlySpan<IGfxResourceStore> GetStores() => GfxStores;
     
-    internal static GfxResourceStore<TextureMeta> TextureStore => Store<TextureMeta>.Gfx;
-    internal static GfxResourceStore<ShaderMeta> ShaderStore => Store<ShaderMeta>.Gfx;
-    internal static GfxResourceStore<MeshMeta> MeshStore => Store<MeshMeta>.Gfx;
-    internal static GfxResourceStore<VertexBufferMeta> VboStore => Store<VertexBufferMeta>.Gfx;
-    internal static GfxResourceStore<IndexBufferMeta> IboStore => Store<IndexBufferMeta>.Gfx;
-    internal static GfxResourceStore<FrameBufferMeta> FboStore => Store<FrameBufferMeta>.Gfx;
-    internal static GfxResourceStore<RenderBufferMeta> RboStore => Store<RenderBufferMeta>.Gfx;
-    internal static GfxResourceStore<UniformBufferMeta> UboStore => Store<UniformBufferMeta>.Gfx;
-
-
     internal static void CreateStores()
     {
         CreateStore<TextureMeta>();
@@ -59,7 +54,7 @@ public static class GfxRegistry
         if (GfxStores[index] != null!)
             Throwers.InvalidOperation($"Store {nameof(TMeta)} already initialized");
 
-        GfxStores[index] = Store<TMeta>.Gfx;
+        GfxStores[index] = new GfxStore<TMeta>(GetCapacity(TMeta.ResourceKind));
     }
 
 

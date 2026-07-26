@@ -13,22 +13,7 @@ internal sealed class GfxResourceManager : IDisposable
         GfxRegistry.CreateStores();
 
         BackendDispatcher = new ResourceBackendDispatcher { OnDelete = OnDeleted };
-
-        RegisterMetricsBindings();
     }
-
-    private void RegisterMetricsBindings()
-    {
-        GfxMetrics.BindStore<TextureMeta>();
-        GfxMetrics.BindStore<ShaderMeta>();
-        GfxMetrics.BindStore<MeshMeta>();
-        GfxMetrics.BindStore<VertexBufferMeta>();
-        GfxMetrics.BindStore<IndexBufferMeta>();
-        GfxMetrics.BindStore<FrameBufferMeta>();
-        GfxMetrics.BindStore<RenderBufferMeta>();
-        GfxMetrics.BindStore<UniformBufferMeta>();
-    }
-
 
     private static void OnDeleted(DeleteResourceCommand cmd)
     {

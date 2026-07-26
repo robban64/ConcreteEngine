@@ -9,11 +9,9 @@ namespace ConcreteEngine.Graphics.Gfx;
 public sealed class GfxShaders
 {
     private readonly GfxResourceDisposer _disposer;
-    private readonly ShaderStore _store;
 
     internal GfxShaders(GfxContextInternal context)
     {
-        _store = GfxRegistry.GetStore<ShaderMeta>();
         _disposer = context.Disposer;
     }
 
@@ -26,7 +24,7 @@ public sealed class GfxShaders
         samplerInfo = samplerList.ToArray();
 
         var meta = new ShaderMeta(samplerInfo.Length);
-        return _store.Add(in meta, programRef);
+        return GfxRegistry.ShaderStore.Add(in meta, programRef);
     }
 
     public void RecreateShader(ShaderId shaderId, NativeView<byte> vs, NativeView<byte> fs,
@@ -41,7 +39,7 @@ public sealed class GfxShaders
         int samplerCount = 0;
         try
         {
-            oldHandle = _store.GetHandleAndMeta(shaderId, out var oldMeta);
+            oldHandle = GfxRegistry.ShaderStore.GetHandleAndMeta(shaderId, out var oldMeta);
             newHandle = GlShaders.CreateShader(vs, fs);
             samplerCount = oldMeta.SamplerSlots;
         }
@@ -55,7 +53,7 @@ public sealed class GfxShaders
         samplers = samplerList.ToArray();
 
         var meta = new ShaderMeta(samplers.Length);
-        _store.Replace(shaderId, in meta, newHandle);
+        GfxRegistry.ShaderStore.Replace(shaderId, in meta, newHandle);
         _disposer.EnqueueReplace(shaderId, oldHandle);
     }
 }

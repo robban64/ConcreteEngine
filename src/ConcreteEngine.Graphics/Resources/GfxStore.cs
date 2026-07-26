@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx;
@@ -23,10 +24,13 @@ internal interface IGfxResourceStore : IDisposable
     void BindOnUpdateCallback(Action<int> callback);
 
     GfxHandle Remove(GfxId id);
+     void FillGfxStoreMeta( out GfxStoreMeta data);
 }
 
-internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore where TMeta : unmanaged, IResourceMeta
+internal sealed class GfxStore<TMeta> : IGfxResourceStore where TMeta : unmanaged, IResourceMeta
 {
+    public static GfxStore<TMeta> Instance = null!;
+    
     private struct Entry
     {
         public GfxHandle Handle;
@@ -41,8 +45,9 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore where TMeta : 
     public int Count { get; private set; }
     public GraphicsKind GraphicsKind { get; } = TMeta.ResourceKind;
 
-    internal GfxResourceStore(int initialCapacity)
+    internal GfxStore(int initialCapacity)
     {
+        if(Instance != null!) Throwers.InvalidOperation(nameof(Instance)); 
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, GfxLimits.StoreLimit);
 
@@ -50,6 +55,7 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore where TMeta : 
 
         _data = NativeArray.Allocate<Entry>(initialCapacity);
         _free = new Stack<int>();
+        Instance = this;
     }
 
     public int ActiveCount => Count - _free.Count;
@@ -157,6 +163,7 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore where TMeta : 
 
     public void BindOnUpdateCallback(Action<int> callback)
     {
+        ArgumentNullException.ThrowIfNull(callback);
         if (_onUpdate is not null) Throwers.InvalidOperation(nameof(_onUpdate));
         _onUpdate = callback;
     }
@@ -168,7 +175,7 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore where TMeta : 
 
         var newCap = CapacityUtils.CapacityGrowthToFit(_data.Length, capacity);
         if (newCap > GfxLimits.StoreLimit)
-            Throwers.BufferOverflow(typeof(GfxResourceStore<TMeta>).Name, newCap, GfxLimits.StoreLimit);
+            Throwers.BufferOverflow(typeof(GfxStore<TMeta>).Name, newCap, GfxLimits.StoreLimit);
 
         GfxLog.Event(new LogEvent(0, 0, newCap, 0, 0, 0, LogTopic.ArrayBuffer, LogScope.Gfx, LogAction.Resize,
             LogLevel.Warn));
@@ -185,8 +192,15 @@ internal sealed class GfxResourceStore<TMeta> : IGfxResourceStore where TMeta : 
         return Count++;
     }
 
-    public void Dispose()
+    public void Dispose() => _data.Dispose();
+
+    public void FillGfxStoreMeta( out GfxStoreMeta data)
     {
-        _data.Dispose();
+        data.Fk = new CollectionSample(Count, Capacity, GetAliveCount(), FreeCount);
+        data.Bk = default;
+        data.Kind = GraphicsKind;
+        data.MetaInfo = GfxMetrics.GetSpecialMetric(GraphicsKind);
     }
+
 }
+

@@ -14,7 +14,6 @@ public sealed class GfxDraw
     private MeshId _boundMeshId;
     private RenderFrameMeta _frameMeta;
 
-
     internal GfxDraw()
     {
     }
@@ -40,10 +39,10 @@ public sealed class GfxDraw
         if (_boundMeshId != id)
         {
             _boundMeshId = id;
-            GlStates.BindMesh(GfxRegistry.GetStore<MeshMeta>().GetHandle(id));
+            GlStates.BindMesh(GfxRegistry.MeshStore.GetHandle(id));
         }
 
-        ref readonly var meta = ref GfxRegistry.GetStore<MeshMeta>().GetMeta(id);
+        ref readonly var meta = ref GfxRegistry.MeshStore.GetMeta(id);
         if (meta.Kind < DrawMeshKind.ArraysInstanced)
         {
             GlStates.Draw(in meta);

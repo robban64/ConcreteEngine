@@ -6,10 +6,8 @@ namespace ConcreteEngine.Graphics.Resources;
 
 public static class GfxResourceApi
 {
-    private static readonly HashSet<int> Receivers = new(4);
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static GfxHandle GetNativeHandle<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
+    public static GfxHandle GetHandle<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
     {
         return GfxRegistry.GetStore<TMeta>().GetHandle(id);
     }
@@ -20,14 +18,8 @@ public static class GfxResourceApi
         return GfxRegistry.GetStore<TMeta>().GetMeta(id);
     }
 
-    public static void BindMetaChanged(GraphicsKind kind, Action<int> callback)
+    public static void BindMetaChanged<TMeta>(Action<int> callback) where TMeta : unmanaged, IResourceMeta
     {
-        ArgumentNullException.ThrowIfNull(callback);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero((int)kind, nameof(kind));
-        if (!Receivers.Add((int)kind))
-            throw new InvalidOperationException($"{kind} Already registered");
-
-        var store = GfxRegistry.GetStore(kind);
-        store.BindOnUpdateCallback(callback);
+        GfxRegistry.GetStore<TMeta>().BindOnUpdateCallback(callback);
     }
 }

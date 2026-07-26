@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Renderer.Registry;
@@ -33,7 +34,7 @@ public sealed class RenderRegistry
         FboRegistry.FinishRegistration();
         ShaderRegistry.FinishRegistration();
 
-        GfxResourceApi.BindMetaChanged(GraphicsKind.FrameBuffer, FboRegistry.OnFboChange);
-        GfxResourceApi.BindMetaChanged(GraphicsKind.UniformBuffer, UboRegistry.OnUboChanged);
+        GfxResourceApi.BindMetaChanged<FrameBufferMeta>(FboRegistry.OnFboChange);
+        GfxResourceApi.BindMetaChanged<UniformBufferMeta>(UboRegistry.OnUboChanged);
     }
 }

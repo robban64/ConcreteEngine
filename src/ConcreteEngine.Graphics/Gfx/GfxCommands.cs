@@ -71,7 +71,7 @@ public sealed class GfxCommands
         ArgumentOutOfRangeException.ThrowIfZero(fboId.Id, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState("FBO is already bound.", fboId);
 
-        var size = GfxRegistry.GetStore<FrameBufferMeta>().GetMeta(fboId).Size;
+        var size = GfxRegistry.FboStore.GetMeta(fboId).Size;
 
         BindFramebuffer(fboId);
         SetViewport(size);
@@ -100,8 +100,8 @@ public sealed class GfxCommands
         Debug.Assert(fromId != default);
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
 
-        var fromHandle = GfxRegistry.GetStore<FrameBufferMeta>().GetHandleAndMeta(fromId, out var fromMeta);
-        var toHandle = GfxRegistry.GetStore<FrameBufferMeta>().TryGet(toId, out _);
+        var fromHandle = GfxRegistry.FboStore.GetHandleAndMeta(fromId, out var fromMeta);
+        var toHandle = GfxRegistry.FboStore.TryGet(toId, out _);
 
         if (!toHandle.IsValid())
         {
@@ -227,7 +227,7 @@ public sealed class GfxCommands
             return;
         }
 
-        GlStates.BindFrameBuffer(GfxRegistry.GetStore<FrameBufferMeta>().GetHandle(id));
+        GlStates.BindFrameBuffer(GfxRegistry.FboStore.GetHandle(id));
         _boundFboId = id;
     }
 
@@ -244,7 +244,7 @@ public sealed class GfxCommands
             return;
         }
 
-        var refHandle = GfxRegistry.GetStore<TextureMeta>().GetHandle(boundTexture);
+        var refHandle = GfxRegistry.TextureStore.GetHandle(boundTexture);
         GlStates.BindTexture(refHandle, slot);
     }
 
@@ -268,7 +268,7 @@ public sealed class GfxCommands
             return;
         }
 
-        var handle = GfxRegistry.GetStore<ShaderMeta>().GetHandle(id);
+        var handle = GfxRegistry.ShaderStore.GetHandle(id);
         GlStates.UseShader(handle);
         _boundShaderId = id;
     }

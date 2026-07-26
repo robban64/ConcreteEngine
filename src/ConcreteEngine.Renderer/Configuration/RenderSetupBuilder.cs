@@ -30,7 +30,7 @@ public sealed class RenderSetupBuilder
     internal RenderBuilderContext Build()
     {
         EnsureNotDone();
-        if (Ctx.FboSetup == null! | Ctx.ShaderIds == null! || Ctx.Version == RenderPipelineVersion.None)
+        if (Ctx.FboSetup == null! |  Ctx.Version == RenderPipelineVersion.None)
             Throwers.InvalidOperation(nameof(Ctx));
 
         Ctx.Done = true;
@@ -49,13 +49,6 @@ public sealed class RenderSetupBuilder
 
         void Action(FboVariant v, RegisterFboEntry e) =>
             ProgramCtx.Registry.FboRegistry.Register<TTag>(v, e, Ctx.OutputSize);
-    }
-
-    public RenderSetupBuilder RegisterShaders(ShaderId[] shaderIds, CoreShaders coreShaders)
-    {
-        Ctx.CoreShaders = coreShaders;
-        Ctx.ShaderIds = shaderIds;
-        return this;
     }
 
     public void SetupPassPipeline(RenderPipelineVersion version)

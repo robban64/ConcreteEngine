@@ -9,48 +9,48 @@ namespace ConcreteEngine.Renderer.Registry;
 
 public sealed class RenderRegistry
 {
-    public readonly RenderShaderRegistry ShaderRegistry;
+    public static ShaderId DepthShader { get; set; }
+    public static ShaderId CompositeShader { get; set; }
+    public static ShaderId ColorFilterShader { get; set; }
+    public static ShaderId PresentShader { get; set; }
+    public static ShaderId HighlightShader { get; set; }
+    public static ShaderId BoundingBoxShader { get; set; }
+
     public readonly RenderFboRegistry FboRegistry;
-    private readonly GfxBuffers _gfxBuffers;
 
     internal RenderRegistry(GfxContext gfx)
     {
-        ShaderRegistry = new RenderShaderRegistry();
         FboRegistry = new RenderFboRegistry(gfx);
-        _gfxBuffers = gfx.Buffers;
     }
 
-    internal void BeginRegistration(Size2D outputSize)
+    internal void BeginRegistration(GfxBuffers gfxBuffers, Size2D outputSize)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Width, 1, nameof(outputSize));
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Height, 1, nameof(outputSize));
 
-        RegisterUbo();
+        RegisterUbo(gfxBuffers);
         FboRegistry.BeginRegistration(outputSize);
     }
 
     internal void FinishRegistration()
     {
         FboRegistry.FinishRegistration();
-        ShaderRegistry.FinishRegistration();
-
         GfxResourceApi.BindMetaChanged<FrameBufferMeta>(FboRegistry.OnFboChange);
     }
 
-    private void RegisterUbo()
+    private static void RegisterUbo(GfxBuffers gfxBuffers)
     {
-        EngineUniformRecord.UboId = _gfxBuffers.CreateUniformBuffer<EngineUniformRecord>();
-        FrameUniform.UboId = _gfxBuffers.CreateUniformBuffer<FrameUniform>();
-        CameraUniform.UboId = _gfxBuffers.CreateUniformBuffer<CameraUniform>();
-        DirectionalLightUniform.UboId = _gfxBuffers.CreateUniformBuffer<DirectionalLightUniform>();
-        LightUniform.UboId = _gfxBuffers.CreateUniformBuffer<LightUniform>();
-        ShadowUniform.UboId = _gfxBuffers.CreateUniformBuffer<ShadowUniform>();
-        MaterialUniform.UboId = _gfxBuffers.CreateUniformBuffer<MaterialUniform>();
-        DrawObjectUniform.UboId = _gfxBuffers.CreateUniformBuffer<DrawObjectUniform>();
-        DrawAnimationUniform.UboId = _gfxBuffers.CreateUniformBuffer<DrawAnimationUniform>();
-        PostFxUniform.UboId = _gfxBuffers.CreateUniformBuffer<PostFxUniform>();
-        EditorEffectsUniform.UboId = _gfxBuffers.CreateUniformBuffer<EditorEffectsUniform>();
-
+        EngineUniformRecord.UboId = gfxBuffers.CreateUniformBuffer<EngineUniformRecord>();
+        FrameUniform.UboId = gfxBuffers.CreateUniformBuffer<FrameUniform>();
+        CameraUniform.UboId = gfxBuffers.CreateUniformBuffer<CameraUniform>();
+        DirectionalLightUniform.UboId = gfxBuffers.CreateUniformBuffer<DirectionalLightUniform>();
+        LightUniform.UboId = gfxBuffers.CreateUniformBuffer<LightUniform>();
+        ShadowUniform.UboId = gfxBuffers.CreateUniformBuffer<ShadowUniform>();
+        MaterialUniform.UboId = gfxBuffers.CreateUniformBuffer<MaterialUniform>();
+        DrawObjectUniform.UboId = gfxBuffers.CreateUniformBuffer<DrawObjectUniform>();
+        DrawAnimationUniform.UboId = gfxBuffers.CreateUniformBuffer<DrawAnimationUniform>();
+        PostFxUniform.UboId = gfxBuffers.CreateUniformBuffer<PostFxUniform>();
+        EditorEffectsUniform.UboId = gfxBuffers.CreateUniformBuffer<EditorEffectsUniform>();
     }
 
 }

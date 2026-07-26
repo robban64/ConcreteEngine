@@ -2,12 +2,13 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Passes;
+using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer.Configuration;
 
 internal static class PassPipeline3D
 {
-    public static void RegisterPassPipeline(RenderPassPipeline passPipeline, in CoreShaders shaders)
+    public static void RegisterPassPipeline(RenderPassPipeline passPipeline)
     {
         // Shadow
         passPipeline.Register<ShadowPassTag>(FboVariant.V0, new PassId(0), PassOp.Draw, RenderPassState.MakeShadow())
@@ -65,7 +66,7 @@ internal static class PassPipeline3D
 
         // Post A
         passPipeline.Register<PostPassTag>(FboVariant.V0, new PassId(4), PassOp.Fsq,
-                RenderPassState.MakePostProcess(shaders.CompositeShader))
+                RenderPassState.MakePostProcess(RenderRegistry.CompositeShader))
             .OnPassBegin(static (ctx, in state) =>
             {
                 ctx.GfxCmd.BeginRenderPass(ctx.Target.FboId, state.PassState);
@@ -80,7 +81,7 @@ internal static class PassPipeline3D
 
         // Post B
         passPipeline.Register<PostPassTag>(FboVariant.V1, new PassId(5), PassOp.Fsq,
-                RenderPassState.MakePostProcess(shaders.ColorFilterShader))
+                RenderPassState.MakePostProcess(RenderRegistry.ColorFilterShader))
             .OnPassBegin(static (ctx, in state) =>
             {
                 ctx.GfxCmd.BeginRenderPass(ctx.Target.FboId, state.PassState);
@@ -95,7 +96,7 @@ internal static class PassPipeline3D
 
         // Screen
         passPipeline.Register<OutputPassTag>(FboVariant.V0, new PassId(6), PassOp.Screen,
-                RenderPassState.MakeScreen(shaders.PresentShader))
+                RenderPassState.MakeScreen(RenderRegistry.PresentShader))
             .OnPassBegin(static (ctx, in state) =>
             {
                 ctx.GfxCmd.BeginRenderPass(ctx.Target.FboId, state.PassState);

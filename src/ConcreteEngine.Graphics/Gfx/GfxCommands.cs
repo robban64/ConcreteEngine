@@ -13,24 +13,22 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxCommands
 {
-    private static Size2D _outputSize;
-    private static Size2D _activeOutputSize;
-
     //States
     private readonly TextureId[] _boundTextures = new TextureId[GfxLimits.TextureSlots];
 
     private FrameBufferId _boundFboId;
     private ShaderId _boundShaderId;
 
+    private Size2D _outputSize;
+    private Size2D _activeOutputSize;
+
     private GfxStateFlags _passFlags;
     private GfxDrawFunctions _stateFunctions;
 
     private GfxDrawState _lastDrawState;
 
-
     internal GfxCommands()
     {
-
         SetBlendMode(BlendMode.Alpha);
         SetDepthMode(DepthMode.Lequal);
         SetCullMode(CullMode.BackCcw);
@@ -244,8 +242,8 @@ public sealed class GfxCommands
             return;
         }
 
-        var refHandle = GfxRegistry.TextureStore.GetHandle(boundTexture);
-        GlStates.BindTexture(refHandle, slot);
+        var handle = GfxRegistry.TextureStore.GetHandle(boundTexture);
+        GlStates.BindTexture(handle, slot);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

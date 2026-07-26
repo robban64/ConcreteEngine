@@ -13,6 +13,7 @@ using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Configuration;
 using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Passes;
+using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Engine.Configuration;
 
@@ -64,16 +65,10 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnSetupRender(EngineSetupCtx ctx)
     {
+        RegisterCoreShaders(AssetManager.Assets);
         var builder = ctx.Renderer.Program.StartBuilder(EngineWindow.Viewport.Size);
-        var shaderCount = AssetStore.GetTypeStore<Shader>().Count;
 
-        var shaderIndex = 0;
-        var shaderIds = new ShaderId[shaderCount];
-        foreach (var it in AssetManager.Assets.GetAssetEnumerator<Shader>())
-            shaderIds[shaderIndex++] = it.GfxId;
-
-        builder.RegisterShaders(shaderIds, SetupUtils.GetCoreShaders(AssetManager.Assets));
-        SetupUtils.RegisterFrameBuffers(builder);
+        RegisterFrameBuffers(builder);
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
         ctx.Renderer.Program.ApplyBuilder(builder);
 
@@ -129,10 +124,7 @@ internal static class EngineSetupBootstrapper
     {
         return true;
     }
-}
-
-file static class SetupUtils
-{
+    
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void RegisterFrameBuffers(RenderSetupBuilder builder)
     {
@@ -158,15 +150,13 @@ file static class SetupUtils
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Default()));
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static CoreShaders GetCoreShaders(AssetStore store) =>
-        new()
-        {
-            DepthShader = store.GetByName<Shader>("Depth").GfxId,
-            ColorFilterShader = store.GetByName<Shader>("ColorFilter").GfxId,
-            CompositeShader = store.GetByName<Shader>("Composite").GfxId,
-            PresentShader = store.GetByName<Shader>("Present").GfxId,
-            HighlightShader = store.GetByName<Shader>("Highlight").GfxId,
-            BoundingBoxShader = store.GetByName<Shader>("BoundingBox").GfxId,
-        };
+    internal static void RegisterCoreShaders(AssetStore store)
+    {
+        RenderRegistry.DepthShader = store.GetByName<Shader>("Depth").GfxId;
+        RenderRegistry.ColorFilterShader = store.GetByName<Shader>("ColorFilter").GfxId;
+        RenderRegistry.CompositeShader = store.GetByName<Shader>("Composite").GfxId;
+        RenderRegistry.PresentShader = store.GetByName<Shader>("Present").GfxId;
+        RenderRegistry.HighlightShader = store.GetByName<Shader>("Highlight").GfxId;
+        RenderRegistry.BoundingBoxShader = store.GetByName<Shader>("BoundingBox").GfxId;
+    }
 }

@@ -17,7 +17,7 @@ internal sealed class DrawCommandProcessor
     private readonly GfxDraw _gfxDraw;
     private readonly UniformUploader _buffers;
 
-    public TextureId DepthTexture { get; private set; }
+    private readonly TextureId _depthTexture;
 
     private int _lastAnimationSlot;
 
@@ -30,7 +30,7 @@ internal sealed class DrawCommandProcessor
         _gfxDraw = gfx.Draw;
 
         var depthFbo = renderRegistry.FboRegistry.GetByKey(PassTags<ShadowPassTag>.FboKey(FboVariant.V0));
-        DepthTexture = depthFbo!.Attachments.DepthTexture;
+        _depthTexture = depthFbo!.Attachments.DepthTexture;
     }
 
 
@@ -47,7 +47,7 @@ internal sealed class DrawCommandProcessor
         _lastAnimationSlot = 0;
         if (PassMode != PassStateMode.Depth) return;
 
-        _gfxCmd.UseShader(RenderShaderRegistry.CoreShaders.DepthShader);
+        _gfxCmd.UseShader(RenderRegistry.DepthShader);
         _gfxCmd.UnbindAllTextures();
     }
 
@@ -99,7 +99,7 @@ internal sealed class DrawCommandProcessor
     private void BindTextureSlots(ReadOnlySpan<TextureBinding> slots, sbyte shadowMapBinding)
     {
         if (shadowMapBinding >= 0)
-            _gfxCmd.BindTexture(DepthTexture, shadowMapBinding);
+            _gfxCmd.BindTexture(_depthTexture, shadowMapBinding);
 
         foreach (var value in slots)
         {
@@ -134,11 +134,11 @@ internal sealed class DrawCommandProcessor
         switch (resolver)
         {
             case DrawCommandResolver.Highlight:
-                shader = RenderShaderRegistry.CoreShaders.HighlightShader;
+                shader = RenderRegistry.HighlightShader;
                 break;
             case DrawCommandResolver.BoundingVolume:
                 isAnimated = false;
-                shader = RenderShaderRegistry.CoreShaders.BoundingBoxShader;
+                shader = RenderRegistry.BoundingBoxShader;
                 break;
             case DrawCommandResolver.Wireframe:
             default:

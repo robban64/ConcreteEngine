@@ -23,9 +23,6 @@ public sealed class RenderBuilderContext
     public bool Done { get; internal set; }
     internal RenderPipelineVersion Version { get; set; } = RenderPipelineVersion.None;
     internal List<FboSetupRecord> FboSetup { get; private set; } = new(8);
-    internal ShaderId[] ShaderIds { get; set; } = [];
-
-    internal CoreShaders CoreShaders;
 
     internal RenderBuilderContext(GfxContext gfx, Size2D outputSize)
     {

@@ -21,7 +21,7 @@ internal sealed unsafe class UniformUploader
     public Id16<MaterialSlot> PrevMaterial { get; private set; } = new(-1);
 
 
-    internal UniformUploader(GfxContext gfx, RenderRegistry renderRegistry, RenderUploadBuffers buffers)
+    internal UniformUploader(GfxContext gfx, RenderUploadBuffers buffers)
     {
         _materialBuffer = buffers.Materials;
         _skinningBuffer = buffers.Skinning;

@@ -14,7 +14,7 @@ internal sealed class DrawCommandPipeline(RenderUploadBuffers buffers)
     public void Initialize(RenderProgramContext ctx)
     {
         //
-        UniformUploader = new UniformUploader(ctx.Gfx, ctx.Registry, buffers);
+        UniformUploader = new UniformUploader(ctx.Gfx, buffers);
         _drawCmd = new DrawCommandProcessor(ctx.Gfx, ctx.Registry, UniformUploader);
     }
 

@@ -1,11 +1,11 @@
 namespace ConcreteEngine.Renderer.Core;
 
-public readonly struct CoreShaders
+public static class CoreShaders
 {
-    public required ShaderId DepthShader { get; init; }
-    public required ShaderId CompositeShader { get; init; }
-    public required ShaderId ColorFilterShader { get; init; }
-    public required ShaderId PresentShader { get; init; }
-    public required ShaderId HighlightShader { get; init; }
-    public required ShaderId BoundingBoxShader { get; init; }
+    public static ShaderId DepthShader { get; set; }
+    public static ShaderId CompositeShader { get; set; }
+    public static ShaderId ColorFilterShader { get; set; }
+    public static ShaderId PresentShader { get; set; }
+    public static ShaderId HighlightShader { get; set; }
+    public static ShaderId BoundingBoxShader { get; set; }
 }

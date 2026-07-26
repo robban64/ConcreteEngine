@@ -114,21 +114,19 @@ public sealed class RenderProgram : IDisposable
         var plan = builder.Build();
 
         // Registry setup
-        Registry.BeginRegistration(plan.OutputSize);
+        Registry.BeginRegistration(_programContext.Gfx.Buffers, plan.OutputSize);
 
         // register FBO
         foreach (var it in plan.FboSetup)
             it.RegisterFbo(it.Variant, it.Entry);
 
         // Register Shaders
-        Registry.ShaderRegistry.RegisterCollection(plan.ShaderIds);
-        Registry.ShaderRegistry.RegisterCoreShader(in plan.CoreShaders);
         Registry.FinishRegistration();
 
         _drawPipeline.Initialize(_programContext);
         _passPipeline.Initialize(_programContext);
 
-        PassPipeline3D.RegisterPassPipeline(_passPipeline, in RenderShaderRegistry.CoreShaders);
+        PassPipeline3D.RegisterPassPipeline(_passPipeline);
         Initialized = true;
     }
 

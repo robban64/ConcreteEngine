@@ -3,10 +3,10 @@ using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-internal readonly struct DeleteResourceCommand(GfxHandle handle, ushort gfxId, GraphicsKind kind, bool replace)
+internal readonly struct DeleteResourceCommand(NativeHandle handle, ushort gfxId, GraphicsKind kind, bool replace)
     : IEquatable<DeleteResourceCommand>
 {
-    public readonly GfxHandle Handle = handle;
+    public readonly NativeHandle Handle = handle;
     public readonly ushort GfxId = gfxId;
     public readonly bool Replace = replace;
     public readonly GraphicsKind Kind = kind;

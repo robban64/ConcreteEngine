@@ -15,7 +15,7 @@ internal static class GlShaders
 {
     private static readonly Dictionary<uint, string> UniformSamplerByHash = new(16);
 
-    public static GfxHandle CreateShader(NativeView<byte> vertexSource, NativeView<byte> fragmentSource)
+    public static NativeHandle CreateShader(NativeView<byte> vertexSource, NativeView<byte> fragmentSource)
     {
         uint vertexShader = 0, fragmentShader = 0;
 
@@ -31,7 +31,7 @@ internal static class GlShaders
             throw;
         }
 
-        GfxHandle handle = default;
+        NativeHandle handle = default;
         try
         {
             handle = CreateShaderProgram(vertexShader, fragmentShader);
@@ -52,7 +52,7 @@ internal static class GlShaders
         return handle;
     }
 
-    private static GfxHandle CreateShaderProgram(uint vertexShader, uint fragmentShader)
+    private static NativeHandle CreateShaderProgram(uint vertexShader, uint fragmentShader)
     {
         var program = Gl.CreateProgram();
         Gl.AttachShader(program, vertexShader);
@@ -63,7 +63,7 @@ internal static class GlShaders
         if (status != (int)GLEnum.True)
             throw GraphicsException.ShaderLinkFailed(program.ToString(), Gl.GetProgramInfoLog(program));
 
-        return new GfxHandle(program);
+        return new NativeHandle(program);
     }
 
     private static unsafe uint CompileShader(ShaderType shaderType, NativeView<byte> source)
@@ -84,7 +84,7 @@ internal static class GlShaders
     }
 
 
-    public static void GetSamplersFromProgram(GfxHandle handle, List<GfxUniformSampler> result)
+    public static void GetSamplersFromProgram(NativeHandle handle, List<GfxUniformSampler> result)
     {
         if (!handle.IsValid()) Throwers.InvalidArgument(nameof(handle));
 

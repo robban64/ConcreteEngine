@@ -118,7 +118,7 @@ public sealed class GfxTextures
         }
     }
 
-    internal GfxHandle ReplaceTexture(TextureId textureId, Size3D size, int? samples = null)
+    internal NativeHandle ReplaceTexture(TextureId textureId, Size3D size, int? samples = null)
     {
         var texHandle = GfxRegistry.TextureStore.GetHandleAndMeta(textureId, out var meta);
         _disposer.EnqueueReplace(textureId, texHandle);
@@ -188,7 +188,7 @@ public sealed class GfxTextures
         GlTextures.GenerateMipMaps(texHandle);
     }
 
-    private void ApplyTextureProperties(GfxHandle texHandle, in TextureMeta meta, bool wrapR)
+    private void ApplyTextureProperties(NativeHandle texHandle, in TextureMeta meta, bool wrapR)
     {
         if (meta.Preset != TexturePreset.None)
             GlTextures.SetTexturePreset(texHandle, meta.Preset, wrapR);
@@ -209,7 +209,7 @@ public sealed class GfxTextures
             GlTextures.GenerateMipMaps(texHandle);
     }
 
-    private GfxHandle CreateDriverTexture(Size3D size, in CreateTextureProps props, out TextureMeta meta)
+    private NativeHandle CreateDriverTexture(Size3D size, in CreateTextureProps props, out TextureMeta meta)
     {
         ValidateTextureDescriptor(size, props);
         GetMipValues(size, props.Preset, out var levels);

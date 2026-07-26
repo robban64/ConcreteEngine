@@ -4,10 +4,10 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core.Data;
 
-internal struct TexturePtrHandle(ImTextureRefPtr texturePtr, GfxHandle handle)
+internal struct TexturePtrHandle(ImTextureRefPtr texturePtr, NativeHandle handle)
 {
     public ImTextureRefPtr TexturePtr = texturePtr;
-    public GfxHandle Handle = handle;
+    public NativeHandle Handle = handle;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe implicit operator ImTextureRef(TexturePtrHandle it) => *it.TexturePtr.Handle;

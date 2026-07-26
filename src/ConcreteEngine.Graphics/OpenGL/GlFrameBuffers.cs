@@ -12,7 +12,7 @@ internal static class GlFrameBuffers
 {
 
     // Fix ClearBufferMask and Filter, depth/stencil use filter = Nearest
-    public static void Blit(GfxHandle readFbo, GfxHandle drawFbo,
+    public static void Blit(NativeHandle readFbo, NativeHandle drawFbo,
         Size2D srcSize, Size2D dstSize, bool linear)
     {
         var filter = linear ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest;
@@ -27,7 +27,7 @@ internal static class GlFrameBuffers
         );
     }
 
-    public static void BlitDefault(GfxHandle readFbo, Size2D srcSize, Size2D dstSize, bool linear)
+    public static void BlitDefault(NativeHandle readFbo, Size2D srcSize, Size2D dstSize, bool linear)
     {
         var filter = linear ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest;
         //Gl.ReadBuffer(ReadBufferMode.ColorAttachment0);
@@ -41,13 +41,13 @@ internal static class GlFrameBuffers
         );
     }
 
-    public static GfxHandle CreateFrameBuffer()
+    public static NativeHandle CreateFrameBuffer()
     {
         Gl.CreateFramebuffers(1, out uint fbo);
-        return new GfxHandle(fbo);
+        return new NativeHandle(fbo);
     }
 
-    public static GfxHandle CreateRenderBuffer(FrameBufferAttachmentSlot attachment, Size2D size, int samples)
+    public static NativeHandle CreateRenderBuffer(FrameBufferAttachmentSlot attachment, Size2D size, int samples)
     {
         var internalFormat = attachment.ToGlInternalFormatEnum();
         var (width, height) = size.ToUnsigned();
@@ -58,30 +58,30 @@ internal static class GlFrameBuffers
         else
             Gl.NamedRenderbufferStorage(rbo, internalFormat, width, height);
 
-        return new GfxHandle(rbo);
+        return new NativeHandle(rbo);
     }
 
-    public static void AttachTexture(GfxHandle fboHandle, GfxHandle textureHandle, FrameBufferAttachmentSlot attachmentSlot)
+    public static void AttachTexture(NativeHandle fboHandle, NativeHandle textureHandle, FrameBufferAttachmentSlot attachmentSlot)
     {
         var glAttachment = attachmentSlot.ToGlAttachmentEnum();
         Gl.NamedFramebufferTexture(fboHandle, glAttachment, textureHandle, 0);
     }
 
-    public static void AttachRenderBuffer(GfxHandle fboHandle, GfxHandle rboHandle,
+    public static void AttachRenderBuffer(NativeHandle fboHandle, NativeHandle rboHandle,
         FrameBufferAttachmentSlot attachmentSlot)
     {
         var glAttachment = attachmentSlot.ToGlAttachmentEnum();
         Gl.NamedFramebufferRenderbuffer(fboHandle, glAttachment, RenderbufferTarget.Renderbuffer, rboHandle);
     }
 
-    public static void SetDrawReadBuffer(GfxHandle fboHandle, bool colorAttachment)
+    public static void SetDrawReadBuffer(NativeHandle fboHandle, bool colorAttachment)
     {
         var glEnum = colorAttachment ? GLEnum.ColorAttachment0 : GLEnum.None;
         Gl.NamedFramebufferDrawBuffer(fboHandle, glEnum);
         Gl.NamedFramebufferReadBuffer(fboHandle, glEnum);
     }
 
-    public static void ValidateComplete(GfxHandle fboHandle, bool colorAttachment)
+    public static void ValidateComplete(NativeHandle fboHandle, bool colorAttachment)
     {
         var glEnum = colorAttachment ? GLEnum.ColorAttachment0 : GLEnum.None;
         Gl.NamedFramebufferDrawBuffer(fboHandle, glEnum);

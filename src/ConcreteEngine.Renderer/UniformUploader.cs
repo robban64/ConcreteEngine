@@ -35,21 +35,16 @@ internal sealed unsafe class UniformUploader
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Prepare()
     {
-        DrawObjectUniform.UploadCursor = 0;
-        MaterialUniform.UploadCursor = 0;
-        DrawAnimationUniform.UploadCursor = 0;
-
         PrevMaterial = default;
     }
 
     internal void EnsureUboSizes(int drawCount, int materialCount)
     {
-        if(!GfxResourceApi.GetMeta(DrawObjectUniform.UboId).HasCapacity(drawCount))
+        if (!GfxResourceApi.GetMeta(DrawObjectUniform.UboId).HasCapacity(drawCount))
             _gfxBuffers.SetUniformBufferCount(DrawObjectUniform.UboId, drawCount);
-        
-        if(!GfxResourceApi.GetMeta(MaterialUniform.UboId).HasCapacity(drawCount))
-            _gfxBuffers.SetUniformBufferCount(MaterialUniform.UboId, materialCount);
 
+        if (!GfxResourceApi.GetMeta(MaterialUniform.UboId).HasCapacity(drawCount))
+            _gfxBuffers.SetUniformBufferCount(MaterialUniform.UboId, materialCount);
     }
 
     internal ReadOnlySpan<TextureBinding> BindResolveMaterial(Id16<MaterialSlot> materialId,
@@ -58,8 +53,7 @@ internal sealed unsafe class UniformUploader
         if (PrevMaterial != materialId)
         {
             PrevMaterial = materialId;
-            var stride = Unsafe.SizeOf<MaterialUniform>();
-            _gfxBuffers.BindUniformBufferRange<MaterialUniform>(materialId.Index() * stride, stride);
+            _gfxBuffers.BindUniformBufferRange<MaterialUniform>(materialId.Index(), 1);
             return _materialBuffer.GetMetaAndSlots(materialId, out materialMeta);
         }
 
@@ -68,19 +62,17 @@ internal sealed unsafe class UniformUploader
     }
 
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void BindDrawObject(int submitIndex)
     {
-        var stride = Unsafe.SizeOf<DrawObjectUniform>();
-        _gfxBuffers.BindUniformBufferRange<DrawObjectUniform>(submitIndex * stride, stride);
+        _gfxBuffers.BindUniformBufferRange<DrawObjectUniform>(submitIndex , 1);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void BindAnimation(int slot)
     {
         var range = _skinningBuffer.GetSlotRange(slot);
-        _gfxBuffers.BindUniformBufferRange<DrawAnimationUniform>(range.Offset * 64, range.Length * 64);
+        _gfxBuffers.BindUniformBufferRange<DrawAnimationUniform>(range.Offset , range.Length );
     }
 
     internal void UploadMaterial(NativeView<MaterialUniform> data) => _gfxBuffers.UploadUniform(data, 0);
@@ -88,12 +80,11 @@ internal sealed unsafe class UniformUploader
 
     internal void UploadAnimationData(NativeView<Matrix4x4> boneData)
     {
-        var uploadSize = boneData.Length * 64;
+        if (!GfxResourceApi.GetMeta(DrawAnimationUniform.UboId).HasCapacity(boneData.Length))
+            _gfxBuffers.SetUniformBufferCount(DrawAnimationUniform.UboId, boneData.Length);
 
-        if (uploadSize > GfxResourceApi.GetMeta(DrawAnimationUniform.UboId).Capacity)
-            _gfxBuffers.SetUniformBufferCapacity(DrawAnimationUniform.UboId, uploadSize);
-
-        _gfxBuffers.UploadUniform(new NativeView<DrawAnimationUniform>((DrawAnimationUniform*)boneData.Ptr, boneData.Length), 0);
+        var view = new NativeView<DrawAnimationUniform>((DrawAnimationUniform*)boneData.Ptr, boneData.Length);
+        _gfxBuffers.UploadUniform(view, 0);
     }
 
     // Globals //

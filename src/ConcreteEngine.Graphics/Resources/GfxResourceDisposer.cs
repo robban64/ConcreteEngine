@@ -47,7 +47,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         GfxLog.LogBackend(handle, id, TMeta.ResourceKind.ToLogTopic(), LogAction.Evict);
     }
 
-    public void EnqueueReplace<TMeta>(GfxId<TMeta> id, GfxHandle handle) where TMeta : unmanaged, IResourceMeta
+    public void EnqueueReplace<TMeta>(GfxId<TMeta> id, NativeHandle handle) where TMeta : unmanaged, IResourceMeta
     {
         ArgumentOutOfRangeException.ThrowIfEqual(handle.IsValid(), false);
         var cmd = new DeleteResourceCommand(handle, id, TMeta.ResourceKind, true);

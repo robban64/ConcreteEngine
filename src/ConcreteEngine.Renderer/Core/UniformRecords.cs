@@ -38,13 +38,11 @@ public struct EngineUniformRecord : IUniform
         EngineParams0 = new Vector4(time, deltaTime, random, 0);
         EngineParams1 = new Vector4(invResolution.X, invResolution.Y, mouse.X, mouse.Y);
     }
-
-    public static int DrawCursor { get; set; }
-    public static int UploadCursor { get; set; }
+    
     public static UniformBufferId UboId { get; set; }
 
     public static byte Slot => 0;
-    public static int OverrideSize => 0;
+    public static int Stride => Unsafe.SizeOf<EngineUniformRecord>();
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -56,12 +54,11 @@ public struct FrameUniform : IUniform
     public Vector4 FogParams0; // x=exp2_k, y=height_k, z=height0, w=globalStrength
     public Vector4 FogParams1; // x=expWeight, y=heightWeight, z=maxDistance, w=reserved
 
-    public static int DrawCursor { get; set; }
-    public static int UploadCursor { get; set; }
+    
     public static UniformBufferId UboId { get; set; }
 
     public static byte Slot => 1;
-    public static int OverrideSize => 0;
+    public static int Stride => Unsafe.SizeOf<FrameUniform>();
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -80,12 +77,11 @@ public struct CameraUniform : IUniform
     public Vector3 CameraRight;
     private float _cameraRightPad;
 
-    public static int DrawCursor { get; set; }
-    public static int UploadCursor { get; set; }
+    
     public static UniformBufferId UboId { get; set; }
 
     public static byte Slot => 2;
-    public static int OverrideSize => 0;
+    public static int Stride => Unsafe.SizeOf<CameraUniform>();
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -95,12 +91,11 @@ public struct DirectionalLightUniform : IUniform
     public Vector4 Diffuse; // rgb=color, a=intensity
     public Vector4 Specular; // x = specular multiplier
 
-    public static int DrawCursor { get; set; }
-    public static int UploadCursor { get; set; }
+    
     public static UniformBufferId UboId { get; set; }
 
     public static byte Slot => 3;
-    public static int OverrideSize => 0;
+    public static int Stride => Unsafe.SizeOf<DirectionalLightUniform>();
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -118,12 +113,12 @@ public struct LightUniform : IUniform
     public LightDataStruct L6;
     public LightDataStruct L7;
 
-    public static int DrawCursor { get; set; }
-    public static int UploadCursor { get; set; }
+    
     public static UniformBufferId UboId { get; set; }
 
     public static byte Slot => 4;
-    public static int OverrideSize => 0;
+    public static int Stride => Unsafe.SizeOf<LightUniform>();
+
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -133,12 +128,11 @@ public struct ShadowUniform : IUniform
     public Vector4 ShadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
     public Vector4 ShadowParams1; // x=strength, y=pcfRadius, z=NormalBias, w=MaxDistance
 
-    public static int DrawCursor { get; set; }
-    public static int UploadCursor { get; set; }
+    
     public static UniformBufferId UboId { get; set; }
 
     public static byte Slot => 5;
-    public static int OverrideSize => 0;
+    public static int Stride => Unsafe.SizeOf<ShadowUniform>();
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -157,13 +151,11 @@ public struct MaterialUniform : IUniform
     public int ShadowToggle;
     private int _pad22, _pad23;
 
-    public static int DrawCursor { get; set; }
-    public static int UploadCursor { get; set; }
+    
     public static UniformBufferId UboId { get; set; }
 
-    public static int Stride => Unsafe.SizeOf<MaterialUniform>();
     public static byte Slot => 6;
-    public static int OverrideSize => 0;
+    public static int Stride => Unsafe.SizeOf<MaterialUniform>();
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -172,13 +164,11 @@ public struct DrawObjectUniform : IUniform
     public Matrix4x4 Model;
     public Matrix3X4 Normal;
 
-    public static int DrawCursor { get; set; }
-    public static int UploadCursor { get; set; }
+    
     public static UniformBufferId UboId { get; set; }
 
-    public static int Stride => Unsafe.SizeOf<DrawObjectUniform>();
     public static byte Slot => 7;
-    public static int OverrideSize => 0;
+    public static int Stride => Unsafe.SizeOf<DrawObjectUniform>();
 }
 
 //TODO remove
@@ -187,12 +177,11 @@ public struct DrawAnimationUniform : IUniform
 {
     public Matrix4x4 BoneMatrix;
     
-    public static int DrawCursor { get; set; }
-    public static int UploadCursor { get; set; }
+    
     public static UniformBufferId UboId { get; set; }
 
     public static byte Slot => 8;
-    public static int OverrideSize => 64 * 64;
+    public static int Stride => 64 * 64;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -203,11 +192,10 @@ public struct PostFxUniform : IUniform
     public Vector4 Bloom;
     public Vector4 Fx;
     
-    public static int DrawCursor { get; set; }
-    public static int UploadCursor { get; set; }
+    
     public static UniformBufferId UboId { get; set; }
     public static byte Slot => 9;
-    public static int OverrideSize => 0;
+    public static int Stride => Unsafe.SizeOf<PostFxUniform>();
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -217,11 +205,10 @@ public struct EditorEffectsUniform : IUniform
     private int _effectPad1, _effectPad2, _effectPad3;
     public Vector4 EffectColor1;
 
-    public static int DrawCursor { get; set; }
-    public static int UploadCursor { get; set; }
+    
     public static UniformBufferId UboId { get; set; }
     public static byte Slot => 10;
-    public static int OverrideSize => 0;
+    public static int Stride => Unsafe.SizeOf<EditorEffectsUniform>();
 
     public EditorEffectsUniform(bool isAnimated, in Color4 effectColor1)
     {

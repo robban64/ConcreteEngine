@@ -155,7 +155,7 @@ public readonly struct RenderBufferMeta(
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct UniformBufferMeta(
-    UboSlot slot,
+    byte slot,
     int stride,
     int capacity,
     BufferUsage usage,
@@ -165,7 +165,7 @@ public readonly struct UniformBufferMeta(
 {
     public readonly int Capacity = capacity;
     public readonly int Stride = stride;
-    public readonly UboSlot Slot = slot;
+    public readonly byte Slot = slot;
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;

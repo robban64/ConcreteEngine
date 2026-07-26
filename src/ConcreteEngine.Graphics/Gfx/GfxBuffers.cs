@@ -18,9 +18,7 @@ public sealed class GfxBuffers
     private static long _iboUploadSize;
     private static long _uboUploadSize;
 
-    internal GfxBuffers()
-    {
-    }
+    internal GfxBuffers() { }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void EndFrame(out GpuBufferMeta result)
@@ -68,27 +66,6 @@ public sealed class GfxBuffers
         return GfxRegistry.IboStore.Add(meta, iboHandle);
     }
 
-    //BufferStorage.Dynamic, BufferAccess.MapWrite
-    public UniformBufferId CreateUniformBuffer<T>(
-        BufferStorage storage = BufferStorage.Dynamic,
-        BufferAccess access = BufferAccess.MapWrite) where T : unmanaged, IUniform
-    {
-        var stride = T.OverrideSize > 0 ? T.OverrideSize : Unsafe.SizeOf<T>();
-
-        if (!UniformBufferUtils.IsStd140Aligned(stride))
-            throw GraphicsException.InvalidStd140Layout(stride);
-
-        stride = IntMath.AlignUp(stride, UniformBufferUtils.UboOffsetAlign);
-
-        var meta = new UniformBufferMeta(T.Slot, stride, stride,
-            BufferUsage.DynamicDraw,
-            BufferStorage.Dynamic,
-            BufferAccess.MapWrite);
-
-        var uboHandle = GlBuffers.CreateUniformBuffer(T.Slot, new CreateBufferInfo((uint)stride, storage, access));
-        return GfxRegistry.UboStore.Add(meta, uboHandle);
-    }
-
 
     public void SetVertexBufferData<T>(VertexBufferId vboId, uint offset, ReadOnlySpan<T> data, BufferUsage usage)
         where T : unmanaged
@@ -118,42 +95,7 @@ public sealed class GfxBuffers
         var newMeta = IndexBufferMeta.CreateCopy(in meta, data.Length, stride, usage);
         GfxRegistry.IboStore.ReplaceMeta(iboId, in newMeta, out _);
     }
-
-    public void SetUniformBufferCapacity(UniformBufferId uboId, int capacity)
-    {
-        ArgumentOutOfRangeException.ThrowIfEqual(0, capacity);
-        var handle = GfxRegistry.UboStore.GetHandleAndMeta(uboId, out var meta);
-        
-        if (meta.Capacity == capacity) return;
-        capacity = IntMath.AlignUp(capacity, meta.Stride);
-        
-        var newMeta = UniformBufferMeta.MakeResizeCopy(in meta, capacity);
-        GfxRegistry.UboStore.ReplaceMeta(uboId, in newMeta, out _);
-        GlBuffers.ResizeBuffer(handle, capacity, BufferUsage.DynamicDraw);
-    }
-
-    public void SetUniformBufferCount(UniformBufferId uboId, int count)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(count);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(uboId.Id);
-
-        var handle = GfxRegistry.UboStore.GetHandleAndMeta(uboId, out var meta);
-
-        var capacity = meta.Stride * count;
-        if (capacity == meta.Capacity) return;
-        capacity = IntMath.AlignUp(capacity, meta.Stride);
-
-        var newMeta = UniformBufferMeta.MakeResizeCopy(in meta, capacity);
-        GfxRegistry.UboStore.ReplaceMeta(uboId, in newMeta, out _);
-        GlBuffers.ResizeBuffer(handle, capacity, BufferUsage.DynamicDraw);
-    }
-
-
-    public void ClearUniformBufferData(UniformBufferId uboId)
-    {
-        var handle = GfxRegistry.UboStore.GetHandleAndMeta(uboId, out var meta);
-        GlBuffers.ResizeBuffer(handle, meta.Capacity, BufferUsage.DynamicDraw);
-    }
+    
 
     public void SetVertexBufferCapacity(VertexBufferId vboId, int elements)
     {
@@ -189,19 +131,60 @@ public sealed class GfxBuffers
         _iboUploadSize += bytes.Length;
     }
 
+    //BufferStorage.Dynamic, BufferAccess.MapWrite
+    public UniformBufferId CreateUniformBuffer<T>(
+        BufferStorage storage = BufferStorage.Dynamic,
+        BufferAccess access = BufferAccess.MapWrite) where T : unmanaged, IUniform
+    {
+        var stride = T.Stride > 0 ? T.Stride : Unsafe.SizeOf<T>();
+
+        if (!UniformBufferUtils.IsStd140Aligned(stride))
+            throw GraphicsException.InvalidStd140Layout(stride);
+
+        stride = IntMath.AlignUp(stride, UniformBufferUtils.UboOffsetAlign);
+
+        var meta = new UniformBufferMeta(T.Slot, stride, stride,
+            BufferUsage.DynamicDraw,
+            BufferStorage.Dynamic,
+            BufferAccess.MapWrite);
+
+        var uboHandle = GlBuffers.CreateUniformBuffer(T.Slot, new CreateBufferInfo((uint)stride, storage, access));
+        return GfxRegistry.UboStore.Add(meta, uboHandle);
+    }
+    
+    public void SetUniformBufferCount(UniformBufferId uboId, int count)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(count);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(uboId.Id);
+
+        var handle = GfxRegistry.UboStore.GetHandleAndMeta(uboId, out var meta);
+
+        var capacity = meta.Stride * count;
+        if (capacity == meta.Capacity) return;
+        capacity = IntMath.AlignUp(capacity, meta.Stride);
+
+        var newMeta = UniformBufferMeta.MakeResizeCopy(in meta, capacity);
+        GfxRegistry.UboStore.ReplaceMeta(uboId, in newMeta, out _);
+        GlBuffers.ResizeBuffer(handle, capacity, BufferUsage.DynamicDraw);
+    }
+    public void ClearUniformBufferData(UniformBufferId uboId)
+    {
+        var handle = GfxRegistry.UboStore.GetHandleAndMeta(uboId, out var meta);
+        GlBuffers.ResizeBuffer(handle, meta.Capacity, BufferUsage.DynamicDraw);
+    }
 
     public unsafe void UploadSingleUniform<T>(T* data, int offset) where T : unmanaged, IUniform
     {
         var uboHandle = GfxRegistry.UboStore.GetHandle(T.UboId);
-        GlBuffers.UploadBufferData(uboHandle, (byte*)data, offset, Unsafe.SizeOf<T>());
-        _uboUploadSize += Unsafe.SizeOf<T>();
+        GlBuffers.UploadBufferData(uboHandle, (byte*)data, offset, T.Stride);
+        _uboUploadSize += T.Stride;
     }
 
-    public unsafe void UploadUniform<T>( NativeView<T> data, int offset) where T : unmanaged, IUniform
+    public unsafe void UploadUniform<T>(NativeView<T> data, int offset) where T : unmanaged, IUniform
     {
         var handle = GfxRegistry.UboStore.GetHandle(T.UboId);
         var capacity = GfxRegistry.UboStore.GetMeta(T.UboId).Capacity;
-        var sizeInBytes = Unsafe.SizeOf<T>() * data.Length;
+        var sizeInBytes = data.Length * T.Stride;
 
         if (offset + sizeInBytes > capacity)
             GraphicsException.ThrowCapabilityExceeded(nameof(T), sizeInBytes, capacity);
@@ -211,9 +194,10 @@ public sealed class GfxBuffers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindUniformBufferRange<T>(int cursor, int stride) where T : unmanaged, IUniform
+    public void BindUniformBufferRange<T>(int offset, int length) where T : unmanaged, IUniform
     {
-        GlBuffers.BindUniformBufferRange(GfxRegistry.UboStore.GetHandle(T.UboId), T.Slot, cursor, stride);
+        var id = GfxRegistry.UboStore.GetHandle(T.UboId);
+        GlBuffers.BindUniformBufferRange(id, T.Slot, offset * T.Stride, length * T.Stride);
     }
 
     private static (uint Offset, uint Size) ToSizeAndOffset<T>(int offsetElements, int count) where T : unmanaged

@@ -25,6 +25,20 @@ public sealed class RenderRegistry
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Width, 1, nameof(outputSize));
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Height, 1, nameof(outputSize));
 
+        RegisterUbo();
+        FboRegistry.BeginRegistration(outputSize);
+    }
+
+    internal void FinishRegistration()
+    {
+        FboRegistry.FinishRegistration();
+        ShaderRegistry.FinishRegistration();
+
+        GfxResourceApi.BindMetaChanged<FrameBufferMeta>(FboRegistry.OnFboChange);
+    }
+
+    private void RegisterUbo()
+    {
         EngineUniformRecord.UboId = _gfxBuffers.CreateUniformBuffer<EngineUniformRecord>();
         FrameUniform.UboId = _gfxBuffers.CreateUniformBuffer<FrameUniform>();
         CameraUniform.UboId = _gfxBuffers.CreateUniformBuffer<CameraUniform>();
@@ -37,17 +51,6 @@ public sealed class RenderRegistry
         PostFxUniform.UboId = _gfxBuffers.CreateUniformBuffer<PostFxUniform>();
         EditorEffectsUniform.UboId = _gfxBuffers.CreateUniformBuffer<EditorEffectsUniform>();
 
-        FboRegistry.BeginRegistration(outputSize);
     }
-
-    internal void FinishRegistration()
-    {
-        FboRegistry.FinishRegistration();
-        ShaderRegistry.FinishRegistration();
-
-        GfxResourceApi.BindMetaChanged<FrameBufferMeta>(FboRegistry.OnFboChange);
-    }
-    
-
 
 }

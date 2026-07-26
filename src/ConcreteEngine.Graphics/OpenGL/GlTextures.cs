@@ -8,31 +8,31 @@ namespace ConcreteEngine.Graphics.OpenGL;
 
 internal static class GlTextures
 {
-    public static GfxHandle CreateTexture(TextureKind kind)
+    public static NativeHandle CreateTexture(TextureKind kind)
     {
         Gl.CreateTextures(kind.ToGlEnum(), 1, out uint texture);
-        return new GfxHandle(texture);
+        return new NativeHandle(texture);
     }
 
-    public static void TextureStorage2D(GfxHandle handle, Size2D size, GpuTextureProps desc)
+    public static void TextureStorage2D(NativeHandle handle, Size2D size, GpuTextureProps desc)
     {
         (uint width, uint height) = size.ToUnsigned();
         Gl.TextureStorage2D(handle, desc.Levels, desc.Format.ToStorageFormat(), width, height);
     }
 
-    public static void TextureStorage2D_MultiSample(GfxHandle handle, Size2D size, GpuTextureProps desc)
+    public static void TextureStorage2D_MultiSample(NativeHandle handle, Size2D size, GpuTextureProps desc)
     {
         (uint width, uint height) = size.ToUnsigned();
         Gl.TextureStorage2DMultisample(handle, desc.Samples, desc.Format.ToStorageFormat(), width, height, true);
     }
 
-    public static void TextureStorage3D(GfxHandle handle, Size3D size, GpuTextureProps desc)
+    public static void TextureStorage3D(NativeHandle handle, Size3D size, GpuTextureProps desc)
     {
         (uint width, uint height, uint depth) = size.ToUnsigned();
         Gl.TextureStorage3D(handle, desc.Levels, desc.Format.ToStorageFormat(), width, height, depth);
     }
 
-    public static void UploadTexture2D_Data(GfxHandle handle, ReadOnlySpan<byte> data, TexturePixelFormat format,
+    public static void UploadTexture2D_Data(NativeHandle handle, ReadOnlySpan<byte> data, TexturePixelFormat format,
         Size2D size)
     {
         (uint width, uint height) = size.ToUnsigned();
@@ -40,7 +40,7 @@ internal static class GlTextures
         Gl.TextureSubImage2D(handle, 0, 0, 0, width, height, fmt, type, data);
     }
 
-    public static void UploadTexture3D_Data(GfxHandle handle, ReadOnlySpan<byte> data, TexturePixelFormat format,
+    public static void UploadTexture3D_Data(NativeHandle handle, ReadOnlySpan<byte> data, TexturePixelFormat format,
         Size3D size, int zOffset)
     {
         (uint width, uint height, uint depth) = size.ToUnsigned();
@@ -55,7 +55,7 @@ internal static class GlTextures
     }
 
     public static void CopyTextureData(
-        GfxHandle src, TextureKind srcKind, GfxHandle dst, TextureKind dstKind,
+        NativeHandle src, TextureKind srcKind, NativeHandle dst, TextureKind dstKind,
         int srcLevel, int dstLevel, Size3D srcSize,
         Int3 srcPos = default, Int3 dstPos = default)
     {
@@ -69,23 +69,23 @@ internal static class GlTextures
     }
 
 
-    public static void SetLodBias(GfxHandle handle, float lodBias) =>
+    public static void SetLodBias(NativeHandle handle, float lodBias) =>
         Gl.TextureParameter(handle, GLEnum.TextureLodBias, lodBias);
 
-    public static void SetAnisotropy(GfxHandle handle, int anisotropy)
+    public static void SetAnisotropy(NativeHandle handle, int anisotropy)
     {
         Gl.TextureParameter(handle, GLEnum.TextureMaxAnisotropy, anisotropy);
     }
 
-    public static void GenerateMipMaps(GfxHandle handle) => Gl.GenerateTextureMipmap(handle);
+    public static void GenerateMipMaps(NativeHandle handle) => Gl.GenerateTextureMipmap(handle);
 
-    public static void SetBorder(GfxHandle handle, GpuTextureBorder b)
+    public static void SetBorder(NativeHandle handle, GpuTextureBorder b)
     {
         Span<int> border = stackalloc int[] { b.R, b.G, b.B, b.A };
         Gl.TextureParameterI(handle, GLEnum.TextureBorderColor, border);
     }
 
-    public static void SetCompareTextureFunc(GfxHandle handle, DepthMode depthMode)
+    public static void SetCompareTextureFunc(NativeHandle handle, DepthMode depthMode)
     {
         if (depthMode == DepthMode.Unset) return;
 
@@ -95,7 +95,7 @@ internal static class GlTextures
         Gl.TextureParameterI(handle, GLEnum.TextureCompareFunc, in depthFunc);
     }
 
-    public static void SetTexturePreset(GfxHandle handle, TexturePreset preset, bool wrapR)
+    public static void SetTexturePreset(NativeHandle handle, TexturePreset preset, bool wrapR)
     {
         switch (preset)
         {

@@ -7,7 +7,7 @@ namespace ConcreteEngine.Graphics.Resources;
 public static class GfxResourceApi
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static GfxHandle GetHandle<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
+    public static NativeHandle GetHandle<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
     {
         return GfxRegistry.GetStore<TMeta>().GetHandle(id);
     }

@@ -23,7 +23,7 @@ internal interface IGfxResourceStore : IDisposable
 
     void BindOnUpdateCallback(Action<int> callback);
 
-    GfxHandle Remove(GfxId id);
+    NativeHandle Remove(GfxId id);
      void FillGfxStoreMeta( out GfxStoreMeta data);
 }
 
@@ -33,7 +33,7 @@ internal sealed class GfxStore<TMeta> : IGfxResourceStore where TMeta : unmanage
     
     private struct Entry
     {
-        public GfxHandle Handle;
+        public NativeHandle Handle;
         public TMeta Meta;
     }
     
@@ -65,13 +65,13 @@ internal sealed class GfxStore<TMeta> : IGfxResourceStore where TMeta : unmanage
    // public ReadOnlySpan<TMeta> GetMetaSpan() => MemoryMarshal.CreateReadOnlySpan(ref _data[0], Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxHandle GetHandle(GfxId<TMeta> id) => _data[id.Index()].Handle;
+    public NativeHandle GetHandle(GfxId<TMeta> id) => _data[id.Index()].Handle;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly TMeta GetMeta(GfxId<TMeta> id) => ref _data[id.Index()].Meta;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxHandle GetHandleAndMeta(GfxId<TMeta> id, out TMeta meta)
+    public NativeHandle GetHandleAndMeta(GfxId<TMeta> id, out TMeta meta)
     {
         var index = id.Index();
         meta = _data[index].Meta;
@@ -79,7 +79,7 @@ internal sealed class GfxStore<TMeta> : IGfxResourceStore where TMeta : unmanage
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxHandle TryGet(GfxId<TMeta> id, out TMeta result)
+    public NativeHandle TryGet(GfxId<TMeta> id, out TMeta result)
     {
         if (id < (uint)Count) return GetHandleAndMeta(id, out result);
         Unsafe.SkipInit(out result);
@@ -87,7 +87,7 @@ internal sealed class GfxStore<TMeta> : IGfxResourceStore where TMeta : unmanage
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public GfxId<TMeta> Add(in TMeta meta, GfxHandle handle)
+    public GfxId<TMeta> Add(in TMeta meta, NativeHandle handle)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(handle.IsValid(), false, nameof(handle));
         ArgumentOutOfRangeException.ThrowIfZero(handle.Value, nameof(handle));
@@ -101,14 +101,14 @@ internal sealed class GfxStore<TMeta> : IGfxResourceStore where TMeta : unmanage
         return id;
     }
 
-    public GfxHandle Remove(GfxId id)
+    public NativeHandle Remove(GfxId id)
     {
         if (!id.IsValid() || id.Kind != GraphicsKind) Throwers.InvalidOperation($"Invalid handle {id}");
         return Remove(new GfxId<TMeta>(id), out _);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public GfxHandle Remove(GfxId<TMeta> id, out TMeta oldMeta)
+    public NativeHandle Remove(GfxId<TMeta> id, out TMeta oldMeta)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id, 0);
         var index = id - 1;
@@ -125,7 +125,7 @@ internal sealed class GfxStore<TMeta> : IGfxResourceStore where TMeta : unmanage
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public GfxId<TMeta> Replace(GfxId<TMeta> id, in TMeta newMeta, GfxHandle newHandle)
+    public GfxId<TMeta> Replace(GfxId<TMeta> id, in TMeta newMeta, NativeHandle newHandle)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id.Id, 0, nameof(id));
         ArgumentOutOfRangeException.ThrowIfZero(newHandle.Value, nameof(newHandle));

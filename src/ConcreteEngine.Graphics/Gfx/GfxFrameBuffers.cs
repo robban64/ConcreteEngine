@@ -121,7 +121,7 @@ public sealed class GfxFrameBuffers
         GlFrameBuffers.ValidateComplete(fboHandle, attachments.ColorTexture.IsValid());
     }
 
-    private RenderBufferId CreateAttachRenderBuffer(GfxHandle fbo, Size2D size,
+    private RenderBufferId CreateAttachRenderBuffer(NativeHandle fbo, Size2D size,
         FrameBufferAttachmentSlot attachmentSlot, RenderBufferMsaa msaa, out RenderBufferMeta meta)
     {
         var samples = msaa.ToSamples();
@@ -131,7 +131,7 @@ public sealed class GfxFrameBuffers
         return GfxRegistry.RboStore.Add(in meta, rboHandle);
     }
 
-    private RenderBufferId RecreateAttachRenderBuffer(RenderBufferId rboId, GfxHandle fboHandle,
+    private RenderBufferId RecreateAttachRenderBuffer(RenderBufferId rboId, NativeHandle fboHandle,
         Size2D size, FrameBufferAttachmentSlot attachmentSlot, RenderBufferMsaa msaa, out RenderBufferMeta meta)
     {
         var rboHandle = GfxRegistry.RboStore.GetHandle(rboId);
@@ -144,7 +144,7 @@ public sealed class GfxFrameBuffers
         return GfxRegistry.RboStore.Replace(rboId, in meta, newRboHandle);
     }
 
-    private void AttachTexture(GfxHandle fbo, GfxHandle tex,
+    private void AttachTexture(NativeHandle fbo, NativeHandle tex,
         FrameBufferAttachmentSlot attachmentSlot)
     {
         ArgumentOutOfRangeException.ThrowIfEqual((int)attachmentSlot, (int)FrameBufferAttachmentSlot.DepthStencil,

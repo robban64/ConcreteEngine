@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor;
-using ConcreteEngine.Engine.Renderer;
+using ConcreteEngine.Engine.Render.Renderer;
 using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Engine.Gateway;

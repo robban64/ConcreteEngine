@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 

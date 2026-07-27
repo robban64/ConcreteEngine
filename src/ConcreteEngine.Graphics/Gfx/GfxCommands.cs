@@ -14,12 +14,11 @@ namespace ConcreteEngine.Graphics.Gfx;
 public sealed class GfxCommands
 {
     //States
-    private readonly GfxId<TextureMeta>[] _boundTextures = new GfxId<TextureMeta>[GfxLimits.TextureSlots];
+    private static InlineArray16<TextureId> _boundTextures;
 
-    private GfxId<FrameBufferMeta> _boundFboId;
-    private GfxId<ShaderMeta> _boundShaderId;
-
-    private  GfxId<MeshMeta> _boundMeshId;
+    private MeshId _boundMeshId;
+    private ShaderId _boundShaderId;
+    private FrameBufferId _boundFboId;
 
     private Size2D _outputSize;
     private Size2D _activeOutputSize;
@@ -45,7 +44,7 @@ public sealed class GfxCommands
         _lastDrawState = default;
     }
 
-    internal void EndFrame( )
+    internal void EndFrame()
     {
         _boundMeshId = default;
         GlStates.BindMesh(default);
@@ -53,7 +52,7 @@ public sealed class GfxCommands
         UseShader(default);
         BindFramebuffer(default);
 
-        Array.Clear(_boundTextures);
+        _boundTextures = default;
     }
 
     public void BeginScreenPass(GfxPassState passState)
@@ -234,12 +233,11 @@ public sealed class GfxCommands
         _boundFboId = id;
     }
 
-    public void BindTexture(GfxId<TextureMeta> texture, int slot)
+    public void BindTexture(TextureId texture, int slot)
     {
         Debug.Assert(slot >= 0 && slot <= GfxLimits.TextureSlots);
-        ref var boundTexture = ref _boundTextures[slot];
         if (_boundTextures[slot] == texture) return;
-        boundTexture = texture;
+        var boundTexture = _boundTextures[slot] = texture;
 
         if (boundTexture == 0)
         {
@@ -254,7 +252,7 @@ public sealed class GfxCommands
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindAllTextures()
     {
-        Array.Clear(_boundTextures);
+        _boundTextures = default;
         GlStates.UnbindAllTextures();
     }
 
@@ -275,7 +273,7 @@ public sealed class GfxCommands
         GlStates.UseShader(handle);
         _boundShaderId = id;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrawMesh(GfxId<MeshMeta> id, uint instanceCount = 0)
     {
@@ -295,8 +293,7 @@ public sealed class GfxCommands
             instanceCount = uint.Max(meta.InstanceCount, instanceCount);
             GlStates.DrawInstance(meta.Primitive, meta.ElementSize, meta.DrawCount, instanceCount);
         }
-        
+
         GfxMetrics.AddDrawCall(meta.DrawCount, instanceCount);
     }
-
 }

@@ -6,9 +6,10 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
-using ConcreteEngine.Engine.Renderer;
-using ConcreteEngine.Engine.Renderer.Passes;
-using ConcreteEngine.Engine.Renderer.Registry;
+using ConcreteEngine.Engine.Render.Buffers;
+using ConcreteEngine.Engine.Render.Passes;
+using ConcreteEngine.Engine.Render.Registry;
+using ConcreteEngine.Engine.Render.Renderer;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 

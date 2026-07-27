@@ -22,16 +22,3 @@ public enum ShadingModelMode : byte
     Lambert = 1,
     BlinnPhong = 2
 }
-
-[EnumExt]
-public enum TextureUsage : byte
-{
-    Albedo,
-    Normal,
-    Mask,
-    Specular,
-    Roughness,
-    Emissive,
-    Splatmap,
-    Heightmap,
-}

@@ -4,7 +4,8 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
-using ConcreteEngine.Engine.Renderer;
+using ConcreteEngine.Engine.Render.Buffers;
+using ConcreteEngine.Engine.Render.Renderer;
 
 namespace ConcreteEngine.Engine.Render;
 

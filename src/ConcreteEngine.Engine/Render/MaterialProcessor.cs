@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Engine.Renderer;
+using ConcreteEngine.Engine.Render.Buffers;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render;
 

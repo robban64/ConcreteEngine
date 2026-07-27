@@ -5,8 +5,6 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Core.Engine.Input;
-using ConcreteEngine.Engine.Renderer;
-using ConcreteEngine.Engine.Renderer.Core;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render;

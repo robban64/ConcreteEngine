@@ -8,9 +8,6 @@ using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Gateway;
 using ConcreteEngine.Engine.Render;
-using ConcreteEngine.Engine.Renderer;
-using ConcreteEngine.Engine.Renderer.Passes;
-using ConcreteEngine.Engine.Renderer.Registry;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 

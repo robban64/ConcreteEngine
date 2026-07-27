@@ -8,7 +8,6 @@ using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Internals;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Primitives;
-using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Graphics;
@@ -19,15 +18,6 @@ public sealed class GraphicsRuntime : IDisposable
     private static bool _isDisposed;
 
     private GfxResourceDisposer _disposer = null!;
-    private GfxResourceManager _resources = null!;
-
-    private GfxCommands _cmd = null!;
-    private GfxBuffers _buffers = null!;
-    private GfxMeshes _meshes = null!;
-    private GfxShaders _shaders = null!;
-    private GfxTextures _textures = null!;
-    private GfxFrameBuffers _frameBuffers = null!;
-    private GfxDraw _draw = null!;
 
     public GfxContext Gfx { get; private set; } = null!;
 
@@ -41,8 +31,8 @@ public sealed class GraphicsRuntime : IDisposable
         if (config is not GlStartupConfig glConfig)
             throw GraphicsException.UnsupportedFeature("Only OpenGL is supported");
 
-        _resources = new GfxResourceManager();
-        _disposer = new GfxResourceDisposer(_resources.BackendDispatcher);
+        GfxRegistry.CreateStores();
+        _disposer = new GfxResourceDisposer();
 
         var capabilities = InitializeDriver(glConfig);
 
@@ -56,26 +46,22 @@ public sealed class GraphicsRuntime : IDisposable
 
     private void InitializeGfx()
     {
-        var gfxCtxInternal = new GfxContextInternal( _resources, _disposer);
-
-        _buffers = new GfxBuffers();
-        _shaders = new GfxShaders(gfxCtxInternal);
-        _textures = new GfxTextures(gfxCtxInternal);
-        _meshes = new GfxMeshes(_buffers);
-        _frameBuffers = new GfxFrameBuffers(gfxCtxInternal, _textures);
-        _cmd = new GfxCommands();
-        _draw = new GfxDraw();
+        var buffers = new GfxBuffers();
+        var shaders = new GfxShaders(_disposer);
+        var textures = new GfxTextures(_disposer);
+        var meshes = new GfxMeshes(buffers);
+        var frameBuffers = new GfxFrameBuffers(_disposer, textures);
+        var cmd = new GfxCommands();
 
         Gfx = new GfxContext
         {
             Disposer = _disposer,
-            Buffers = _buffers,
-            Meshes = _meshes,
-            Shaders = _shaders,
-            Textures = _textures,
-            FrameBuffers = _frameBuffers,
-            Commands = _cmd,
-            Draw = _draw
+            Buffers = buffers,
+            Meshes = meshes,
+            Shaders = shaders,
+            Textures = textures,
+            FrameBuffers = frameBuffers,
+            Commands = cmd,
         };
     }
 
@@ -90,8 +76,8 @@ public sealed class GraphicsRuntime : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginFrame(Size2D outputSize)
     {
-        _cmd.BeginFrame(outputSize);
-        _draw.BeginFrame();
+        GfxMetrics.FrameMeta = default;
+        Gfx.Commands.BeginFrame(outputSize);
     }
 
     public void EndFrame()
@@ -99,10 +85,8 @@ public sealed class GraphicsRuntime : IDisposable
         if (_disposer.PendingCount > 0) 
             _disposer.DrainDisposeQueue();
         
-        ref var meta = ref GfxMetrics.FrameMeta;
-        _buffers.EndFrame(out meta.Buffer);
-        _draw.EndFrame(out meta.Frame);
-        _cmd.EndFrame();
+        Gfx.Buffers.EndFrame(out GfxMetrics.FrameMeta.Buffer);
+        Gfx.Commands.EndFrame();
     }
 
     public void Dispose()
@@ -110,7 +94,7 @@ public sealed class GraphicsRuntime : IDisposable
         if (_isDisposed) return;
         _isDisposed = true;
 
-        _resources.Dispose();
+        GfxRegistry.DisposeAllStores();
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

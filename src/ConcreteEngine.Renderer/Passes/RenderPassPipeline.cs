@@ -6,16 +6,16 @@ namespace ConcreteEngine.Renderer.Passes;
 
 internal sealed class RenderPassPipeline
 {
-    private readonly RenderFboRegistry _fboRegistry;
+    private readonly RenderRegistry _renderRegistry;
     private readonly List<RenderPassEntry> _entries = new(8);
 
     private RenderPassCtx _ctx = null!;
 
     private int _activePassIndex;
 
-    internal RenderPassPipeline(RenderFboRegistry fboRegistry)
+    internal RenderPassPipeline(RenderRegistry renderRegistry)
     {
-        _fboRegistry = fboRegistry;
+        _renderRegistry = renderRegistry;
     }
 
     public int PassCount => _entries.Count;
@@ -26,11 +26,11 @@ internal sealed class RenderPassPipeline
     }
 
 
-    public RenderPassEntry RegisterContinue<TTag>(FboVariant variant, PassId passId, PassOp op,
+    public RenderPassEntry RegisterContinue<TTarget>(FboVariant variant, PassId passId, PassOp op,
         RenderPassState initial)
-        where TTag : class
+        where TTarget : unmanaged, IRenderTarget
     {
-        var existingKey = PassTags<TTag>.PassKey(variant);
+        var existingKey = TargetRegistry<TTarget>.PassKey(variant);
 
         if (existingKey.Pass == passId) Throwers.InvalidArgument(nameof(passId));
 
@@ -48,10 +48,10 @@ internal sealed class RenderPassPipeline
     }
 
 
-    public RenderPassEntry Register<TTag>(FboVariant variant, PassId passId, PassOp op, RenderPassState initial)
-        where TTag : class
+    public RenderPassEntry Register<TTarget>(FboVariant variant, PassId passId, PassOp op, RenderPassState initial)
+        where TTarget : unmanaged, IRenderTarget
     {
-        var key = PassTags<TTag>.BindFboPassId(variant, passId);
+        var key = TargetRegistry<TTarget>.BindFboPassId(variant, passId);
 
         foreach (var e in _entries)
         {
@@ -89,7 +89,7 @@ internal sealed class RenderPassPipeline
 
         action = NextPassAction.Run;
 
-        if (_fboRegistry.TryGetRenderFbo(key, out var fbo))
+        if (_renderRegistry.TryGetRenderFbo(key, out var fbo))
             _ctx.AttachPass(fbo, passKey);
         else if (passEntry.PassOp == PassOp.Screen)
             _ctx.AttachScreenPass(passKey, RenderContext.Instance.OutputSize);

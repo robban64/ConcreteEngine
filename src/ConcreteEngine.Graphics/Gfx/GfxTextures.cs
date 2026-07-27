@@ -2,9 +2,7 @@ using System.Diagnostics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internals;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
-using ConcreteEngine.Graphics.Resources;
 using static ConcreteEngine.Graphics.Gfx.Internals.GfxTextureUtils;
 
 namespace ConcreteEngine.Graphics.Gfx;
@@ -20,9 +18,9 @@ public sealed class GfxTextures
 
     private readonly GfxResourceDisposer _disposer;
 
-    internal GfxTextures(GfxContextInternal context)
+    internal GfxTextures(GfxResourceDisposer disposer)
     {
-        _disposer = context.Disposer;
+        _disposer = disposer;
 
         Fallback.AlbedoId = CreateOnePixelTexture([255, 255, 255, 255], TexturePixelFormat.SrgbAlpha);
         Fallback.NormalId = CreateOnePixelTexture([128, 128, 255], TexturePixelFormat.Rgb);

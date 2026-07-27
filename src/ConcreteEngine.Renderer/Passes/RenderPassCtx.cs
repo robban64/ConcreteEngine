@@ -18,7 +18,6 @@ internal sealed class RenderPassCtx
     public readonly GfxCommands GfxCmd;
 
     private readonly GfxTextures _gfxTextures;
-    private readonly GfxDraw _gfxDraw;
 
     private readonly UniformUploader _uniformUploader;
 
@@ -28,7 +27,6 @@ internal sealed class RenderPassCtx
         _uniformUploader = uniformUploader;
         GfxCmd = gfx.Commands;
         _gfxTextures = gfx.Textures;
-        _gfxDraw = gfx.Draw;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -41,7 +39,8 @@ internal sealed class RenderPassCtx
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void AttachPass(RenderFbo fbo, PassTagKey tagKey)
     {
-        _target = new RenderTargetInfo(fbo.FboId, fbo.Size, fbo.Attachments, fbo.MultiSample);
+        var meta = GfxRegistry.GetMeta(fbo.FboId);
+        _target = new RenderTargetInfo(fbo.FboId, meta.Size, meta.Attachments, meta.MultiSample);
         CurrentPassKey = tagKey;
     }
 
@@ -49,19 +48,19 @@ internal sealed class RenderPassCtx
     public ReadOnlySpan<TextureId> GetPassSources() => PassQueue.GetPassSources();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SampleTo<TTag>(FboVariant variant, TexSlot texSlot) where TTag : class
+    public void SampleTo<TTarget>(FboVariant variant, TexSlot texSlot) where TTarget : unmanaged, IRenderTarget
     {
-        Debug.Assert(texSlot.Slot >= 0 && texSlot.Slot < RenderLimits.TextureSlots);
+        Debug.Assert(texSlot.Slot < RenderLimits.TextureSlots);
 
-        var passKey = PassTags<TTag>.PassKey(variant);
-        var key = new PassTextureSlotKey(passKey.TagIndex, passKey.Variant, passKey.Pass, (byte)texSlot.Slot);
+        var passKey = TargetRegistry<TTarget>.PassKey(variant);
+        var key = new PassTextureSlotKey(passKey.TagIndex, passKey.Variant, passKey.Pass, texSlot.Slot);
         PassQueue.SampleTo(key, texSlot.Texture);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void MutateStatePass<TTag>(FboVariant variant, in PassMutationState newState) where TTag : class
+    public void MutateStatePass<TTarget>(FboVariant variant, in PassMutationState newState) where TTarget : unmanaged, IRenderTarget
     {
-        var key = PassTags<TTag>.PassKey(variant);
+        var key = TargetRegistry<TTarget>.PassKey(variant);
         PassQueue.EnqueueMutation(key, in newState);
     }
 
@@ -97,7 +96,7 @@ internal sealed class RenderPassCtx
         for (var i = 0; i < sources.Length; i++)
             GfxCmd.BindTexture(sources[i], i);
 
-        _gfxDraw.BindDraw(GfxMeshes.FsqQuad);
+        GfxCmd.DrawMesh(GfxMeshes.FsqQuad);
     }
 
     public void SetOutputTexture(TextureId textureId)

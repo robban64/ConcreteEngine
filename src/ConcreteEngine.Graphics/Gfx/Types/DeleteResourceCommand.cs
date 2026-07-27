@@ -1,7 +1,4 @@
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Handles;
-
-namespace ConcreteEngine.Graphics.Resources;
+namespace ConcreteEngine.Graphics.Gfx;
 
 internal readonly struct DeleteResourceCommand(NativeHandle handle, ushort gfxId, GraphicsKind kind, bool replace)
     : IEquatable<DeleteResourceCommand>

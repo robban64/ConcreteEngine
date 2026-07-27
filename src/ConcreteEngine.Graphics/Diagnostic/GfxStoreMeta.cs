@@ -5,12 +5,10 @@ namespace ConcreteEngine.Graphics.Diagnostic;
 
 public struct GfxStoreMeta(
     in CollectionSample fk,
-    in CollectionSample bk,
     in GfxMetaInfo metaInfo,
     GraphicsKind kind)
 {
     public CollectionSample Fk = fk;
-    public CollectionSample Bk = bk;
     public GfxMetaInfo MetaInfo = metaInfo;
     public GraphicsKind Kind = kind;
 }

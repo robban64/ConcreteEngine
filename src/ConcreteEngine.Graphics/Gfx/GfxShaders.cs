@@ -1,8 +1,6 @@
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Graphics.Gfx.Internals;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
-using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -10,12 +8,12 @@ public sealed class GfxShaders
 {
     private readonly GfxResourceDisposer _disposer;
 
-    internal GfxShaders(GfxContextInternal context)
+    internal GfxShaders(GfxResourceDisposer disposer)
     {
-        _disposer = context.Disposer;
+        _disposer = disposer;
     }
 
-    public ShaderId CreateShader(NativeView<byte> vs, NativeView<byte> fs, out GfxUniformSampler[] samplerInfo)
+    public GfxId<ShaderMeta> CreateShader(NativeView<byte> vs, NativeView<byte> fs, out GfxUniformSampler[] samplerInfo)
     {
         var programRef = GlShaders.CreateShader(vs, fs);
 
@@ -27,7 +25,7 @@ public sealed class GfxShaders
         return GfxRegistry.ShaderStore.Add(in meta, programRef);
     }
 
-    public void RecreateShader(ShaderId shaderId, NativeView<byte> vs, NativeView<byte> fs,
+    public void RecreateShader(GfxId<ShaderMeta> shaderId, NativeView<byte> vs, NativeView<byte> fs,
         out GfxUniformSampler[] samplers)
     {
         ArgumentOutOfRangeException.ThrowIfZero(shaderId.Id, nameof(shaderId));

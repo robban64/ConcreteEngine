@@ -176,7 +176,7 @@ public sealed class DrawCommandBuffer : IDisposable
         for (var i = 0; i < pass.Length; i++)
         {
             var ticket = tickets[i];
-            cmd.DrawSpecialResolveMesh(commands[ticket], commands[ticket].Resolver, commands[ticket].ResolverSlot, ticket);
+            cmd.DrawSpecialResolveMesh(commands[ticket], ticket);
         }
     }
 

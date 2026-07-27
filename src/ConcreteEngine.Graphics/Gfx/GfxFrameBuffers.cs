@@ -3,9 +3,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internals;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
-using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -16,13 +14,13 @@ public sealed class GfxFrameBuffers
     private readonly GfxTextures _gfxTextures;
 
 
-    internal GfxFrameBuffers(GfxContextInternal context, GfxTextures gfxTextures)
+    internal GfxFrameBuffers(GfxResourceDisposer disposer, GfxTextures gfxTextures)
     {
-        _disposer = context.Disposer;
+        _disposer = disposer;
         _gfxTextures = gfxTextures;
     }
 
-    public FrameBufferId CreateFrameBuffer(in CreateFboInfo desc)
+    public GfxId<FrameBufferMeta> CreateFrameBuffer(in CreateFboInfo desc)
     {
         EnsureCreateFrameBuffer(in desc);
         var size = desc.Size;
@@ -81,7 +79,7 @@ public sealed class GfxFrameBuffers
         return fboId;
     }
 
-    public void RecreateFrameBuffer(FrameBufferId fboId, Size2D newSize)
+    public void RecreateFrameBuffer(GfxId<FrameBufferMeta> fboId, Size2D newSize)
     {
         ArgumentOutOfRangeException.ThrowIfZero(fboId.Id, nameof(fboId));
         var oldFboHandle = GfxRegistry.FboStore.GetHandleAndMeta(fboId, out var oldMeta);
@@ -121,7 +119,7 @@ public sealed class GfxFrameBuffers
         GlFrameBuffers.ValidateComplete(fboHandle, attachments.ColorTexture.IsValid());
     }
 
-    private RenderBufferId CreateAttachRenderBuffer(NativeHandle fbo, Size2D size,
+    private GfxId<RenderBufferMeta> CreateAttachRenderBuffer(NativeHandle fbo, Size2D size,
         FrameBufferAttachmentSlot attachmentSlot, RenderBufferMsaa msaa, out RenderBufferMeta meta)
     {
         var samples = msaa.ToSamples();
@@ -131,7 +129,7 @@ public sealed class GfxFrameBuffers
         return GfxRegistry.RboStore.Add(in meta, rboHandle);
     }
 
-    private RenderBufferId RecreateAttachRenderBuffer(RenderBufferId rboId, NativeHandle fboHandle,
+    private GfxId<RenderBufferMeta> RecreateAttachRenderBuffer(GfxId<RenderBufferMeta> rboId, NativeHandle fboHandle,
         Size2D size, FrameBufferAttachmentSlot attachmentSlot, RenderBufferMsaa msaa, out RenderBufferMeta meta)
     {
         var rboHandle = GfxRegistry.RboStore.GetHandle(rboId);

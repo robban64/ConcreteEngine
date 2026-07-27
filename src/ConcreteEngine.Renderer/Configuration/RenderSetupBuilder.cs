@@ -38,8 +38,8 @@ public sealed class RenderSetupBuilder
     }
 
 
-    public RenderSetupBuilder RegisterFbo<TTag>(FboVariant variant, RegisterFboEntry entry)
-        where TTag : class
+    public RenderSetupBuilder RegisterFbo<TTarget>(FboVariant variant, RegisterFboEntry entry)
+        where TTarget : unmanaged, IRenderTarget
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(variant.Value, 0, nameof(variant));
         ArgumentNullException.ThrowIfNull(entry);
@@ -48,7 +48,7 @@ public sealed class RenderSetupBuilder
         return this;
 
         void Action(FboVariant v, RegisterFboEntry e) =>
-            ProgramCtx.Registry.FboRegistry.Register<TTag>(v, e, Ctx.OutputSize);
+            ProgramCtx.Registry.Register<TTarget>(v, e, Ctx.OutputSize);
     }
 
     public void SetupPassPipeline(RenderPipelineVersion version)

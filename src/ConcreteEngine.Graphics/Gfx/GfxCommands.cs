@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Configuration;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internals;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
-using ConcreteEngine.Graphics.Resources;
 using static ConcreteEngine.Graphics.Gfx.GfxStateFlags;
 
 namespace ConcreteEngine.Graphics.Gfx;
@@ -14,10 +14,12 @@ namespace ConcreteEngine.Graphics.Gfx;
 public sealed class GfxCommands
 {
     //States
-    private readonly TextureId[] _boundTextures = new TextureId[GfxLimits.TextureSlots];
+    private readonly GfxId<TextureMeta>[] _boundTextures = new GfxId<TextureMeta>[GfxLimits.TextureSlots];
 
-    private FrameBufferId _boundFboId;
-    private ShaderId _boundShaderId;
+    private GfxId<FrameBufferMeta> _boundFboId;
+    private GfxId<ShaderMeta> _boundShaderId;
+
+    private  GfxId<MeshMeta> _boundMeshId;
 
     private Size2D _outputSize;
     private Size2D _activeOutputSize;
@@ -43,8 +45,11 @@ public sealed class GfxCommands
         _lastDrawState = default;
     }
 
-    internal void EndFrame()
+    internal void EndFrame( )
     {
+        _boundMeshId = default;
+        GlStates.BindMesh(default);
+
         UseShader(default);
         BindFramebuffer(default);
 
@@ -64,7 +69,7 @@ public sealed class GfxCommands
     }
 
 
-    public void BeginRenderPass(FrameBufferId fboId, GfxPassState passState)
+    public void BeginRenderPass(GfxId<FrameBufferMeta> fboId, GfxPassState passState)
     {
         ArgumentOutOfRangeException.ThrowIfZero(fboId.Id, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState("FBO is already bound.", fboId);
@@ -93,7 +98,7 @@ public sealed class GfxCommands
     }
 
 
-    public void BlitFramebuffer(FrameBufferId fromId, FrameBufferId toId, bool linear)
+    public void BlitFramebuffer(GfxId<FrameBufferMeta> fromId, GfxId<FrameBufferMeta> toId, bool linear)
     {
         Debug.Assert(fromId != default);
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
@@ -215,7 +220,7 @@ public sealed class GfxCommands
         GlStates.SetCullMode(cullMode);
     }
 
-    public void BindFramebuffer(FrameBufferId id)
+    public void BindFramebuffer(GfxId<FrameBufferMeta> id)
     {
         if (_boundFboId == id) return;
         if (id == default)
@@ -229,7 +234,7 @@ public sealed class GfxCommands
         _boundFboId = id;
     }
 
-    public void BindTexture(TextureId texture, int slot)
+    public void BindTexture(GfxId<TextureMeta> texture, int slot)
     {
         Debug.Assert(slot >= 0 && slot <= GfxLimits.TextureSlots);
         ref var boundTexture = ref _boundTextures[slot];
@@ -255,7 +260,7 @@ public sealed class GfxCommands
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UseShader(ShaderId id)
+    public void UseShader(GfxId<ShaderMeta> id)
     {
         if (_boundShaderId == id) return;
 
@@ -270,4 +275,28 @@ public sealed class GfxCommands
         GlStates.UseShader(handle);
         _boundShaderId = id;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawMesh(GfxId<MeshMeta> id, uint instanceCount = 0)
+    {
+        if (_boundMeshId != id)
+        {
+            _boundMeshId = id;
+            GlStates.BindMesh(GfxRegistry.MeshStore.GetHandle(id));
+        }
+
+        var meta = GfxRegistry.MeshStore.GetMeta(id);
+        if (meta.Kind <= DrawMeshKind.Elements)
+        {
+            GlStates.Draw(meta.Primitive, meta.ElementSize, meta.DrawCount);
+        }
+        else
+        {
+            instanceCount = uint.Max(meta.InstanceCount, instanceCount);
+            GlStates.DrawInstance(meta.Primitive, meta.ElementSize, meta.DrawCount, instanceCount);
+        }
+        
+        GfxMetrics.AddDrawCall(meta.DrawCount, instanceCount);
+    }
+
 }

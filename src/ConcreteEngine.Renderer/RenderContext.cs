@@ -15,9 +15,12 @@ internal sealed class RenderContext
     public static RenderContext Instance = null!;
     public static void Make(UniformUploaderCallbacks callbacks) => Instance = new RenderContext(callbacks);
 
-    public Size2D OutputSize;
     public TextureId OutputTexture;
-    public PassStateMode PassMode { get; private set; }
+    
+    public Size2D OutputSize;
+    public int ShadowMapDimension;
+    
+    public PassStateMode PassMode;
 
     public readonly UniformUploaderCallbacks UniformCallbacks;
 

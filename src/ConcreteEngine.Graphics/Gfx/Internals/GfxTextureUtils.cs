@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Graphics.Gfx.Internals;
 

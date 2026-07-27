@@ -1,11 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Graphics.Diagnostic;
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Handles;
 using static ConcreteEngine.Graphics.Configuration.GfxLimits;
 
-namespace ConcreteEngine.Graphics.Resources;
+namespace ConcreteEngine.Graphics.Gfx;
 
 // ReSharper disable StaticMemberInGenericType
 public static class GfxRegistry
@@ -29,6 +26,23 @@ public static class GfxRegistry
 
     internal static IGfxResourceStore GetStore(GraphicsKind kind) => GfxStores[(int)kind - 1];
     internal static ReadOnlySpan<IGfxResourceStore> GetStores() => GfxStores;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static NativeHandle GetHandle<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
+    {
+        return GetStore<TMeta>().GetHandle(id);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TMeta GetMeta<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
+    {
+        return GetStore<TMeta>().GetMeta(id);
+    }
+
+    public static void BindMetaChanged<TMeta>(Action<int> callback) where TMeta : unmanaged, IResourceMeta
+    {
+        GetStore<TMeta>().BindOnUpdateCallback(callback);
+    }
     
     internal static void CreateStores()
     {

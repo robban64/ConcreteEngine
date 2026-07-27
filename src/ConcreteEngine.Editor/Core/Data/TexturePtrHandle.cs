@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core.Data;

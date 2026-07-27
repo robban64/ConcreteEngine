@@ -1,10 +1,9 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Diagnostic;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
 
-namespace ConcreteEngine.Graphics.Resources;
+namespace ConcreteEngine.Graphics.Gfx;
 
 public interface IGfxResourceDisposer
 {
@@ -21,10 +20,8 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
     public int PendingCount => _disposeQueue.PendingCount;
 
-    private readonly ResourceBackendDispatcher _dispatcher;
-    internal GfxResourceDisposer(ResourceBackendDispatcher dispatcher)
+    internal GfxResourceDisposer()
     {
-        _dispatcher = dispatcher;
         _disposeQueue = new ResourceDisposeQueue();
     }
 
@@ -33,7 +30,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         int drainCount = 0;
         while (drainCount < DrainPerFrame && _disposeQueue.TryGetNext(DrainDelayTicks, out var cmd))
         {
-            GlDisposer.DeleteGlResource(_dispatcher, cmd);
+            GlDisposer.DeleteGlResource(cmd);
             drainCount++;
         }
     }

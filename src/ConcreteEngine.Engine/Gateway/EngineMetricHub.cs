@@ -9,7 +9,7 @@ using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Graphics.Diagnostic;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Gateway;
 

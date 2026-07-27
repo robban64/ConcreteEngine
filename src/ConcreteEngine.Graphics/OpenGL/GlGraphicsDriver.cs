@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Configuration;
-using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Core.Native;
 using Silk.NET.OpenGL;
 

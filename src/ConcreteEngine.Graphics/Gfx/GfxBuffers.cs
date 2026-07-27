@@ -5,18 +5,16 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internals;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
-using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxBuffers
 {
-    private static long _vboUploadSize;
-    private static long _iboUploadSize;
-    private static long _uboUploadSize;
+    private long _vboUploadSize;
+    private long _iboUploadSize;
+    private long _uboUploadSize;
 
     internal GfxBuffers() { }
 
@@ -24,14 +22,14 @@ public sealed class GfxBuffers
     internal void EndFrame(out GpuBufferMeta result)
     {
         result = new GpuBufferMeta(_vboUploadSize + _iboUploadSize, _uboUploadSize);
-
+        
         _vboUploadSize = 0;
         _iboUploadSize = 0;
         _uboUploadSize = 0;
     }
 
     //BufferStorage.Dynamic, BufferAccess.MapWrite
-    public VertexBufferId CreateVertexBuffer<T>(ReadOnlySpan<T> data, byte divisor, uint offset, BufferStorage storage,
+    public GfxId<VertexBufferMeta> CreateVertexBuffer<T>(ReadOnlySpan<T> data, byte divisor, uint offset, BufferStorage storage,
         BufferAccess access, int length = 0) where T : unmanaged
     {
         var stride = Unsafe.SizeOf<T>();
@@ -47,7 +45,7 @@ public sealed class GfxBuffers
         return GfxRegistry.VboStore.Add(meta, vboHandle);
     }
 
-    public IndexBufferId CreateIndexBuffer<T>(ReadOnlySpan<T> data, BufferStorage storage, BufferAccess access,
+    public GfxId<IndexBufferMeta> CreateIndexBuffer<T>(ReadOnlySpan<T> data, BufferStorage storage, BufferAccess access,
         int length = 0) where T : unmanaged
     {
         var stride = Unsafe.SizeOf<T>();
@@ -67,7 +65,7 @@ public sealed class GfxBuffers
     }
 
 
-    public void SetVertexBufferData<T>(VertexBufferId vboId, uint offset, ReadOnlySpan<T> data, BufferUsage usage)
+    public void SetVertexBufferData<T>(GfxId<VertexBufferMeta> vboId, uint offset, ReadOnlySpan<T> data, BufferUsage usage)
         where T : unmanaged
     {
         var vboHandle = GfxRegistry.VboStore.GetHandleAndMeta(vboId, out var meta);
@@ -82,7 +80,7 @@ public sealed class GfxBuffers
         GfxRegistry.VboStore.ReplaceMeta(vboId, in newMeta, out _);
     }
 
-    public void SetIndexBufferData<T>(IndexBufferId iboId, ReadOnlySpan<T> data, BufferUsage usage) where T : unmanaged
+    public void SetIndexBufferData<T>(GfxId<IndexBufferMeta> iboId, ReadOnlySpan<T> data, BufferUsage usage) where T : unmanaged
     {
         var iboHandle = GfxRegistry.IboStore.GetHandleAndMeta(iboId, out var meta);
 
@@ -97,7 +95,7 @@ public sealed class GfxBuffers
     }
     
 
-    public void SetVertexBufferCapacity(VertexBufferId vboId, int elements)
+    public void SetVertexBufferCapacity(GfxId<VertexBufferMeta> vboId, int elements)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(0, elements);
         var handle = GfxRegistry.VboStore.GetHandleAndMeta(vboId, out var meta);
@@ -109,7 +107,7 @@ public sealed class GfxBuffers
     }
 
 
-    public void UploadVertexBuffer<T>(VertexBufferId vboId, ReadOnlySpan<T> data, int offsetElements)
+    public void UploadVertexBuffer<T>(GfxId<VertexBufferMeta> vboId, ReadOnlySpan<T> data, int offsetElements)
         where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(offsetElements, data.Length);
@@ -121,7 +119,7 @@ public sealed class GfxBuffers
         _vboUploadSize += bytes.Length;
     }
 
-    public void UploadIndexBuffer<T>(IndexBufferId iboId, ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
+    public void UploadIndexBuffer<T>(GfxId<IndexBufferMeta> iboId, ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(offsetElements, data.Length);
         var iboHandle = GfxRegistry.IboStore.GetHandle(iboId);
@@ -132,7 +130,7 @@ public sealed class GfxBuffers
     }
 
     //BufferStorage.Dynamic, BufferAccess.MapWrite
-    public UniformBufferId CreateUniformBuffer<T>(
+    public GfxId<UniformBufferMeta> CreateUniformBuffer<T>(
         BufferStorage storage = BufferStorage.Dynamic,
         BufferAccess access = BufferAccess.MapWrite) where T : unmanaged, IUniform
     {
@@ -152,7 +150,7 @@ public sealed class GfxBuffers
         return GfxRegistry.UboStore.Add(meta, uboHandle);
     }
     
-    public void SetUniformBufferCount(UniformBufferId uboId, int count)
+    public void SetUniformBufferCount(GfxId<UniformBufferMeta> uboId, int count)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(count);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(uboId.Id);
@@ -167,7 +165,7 @@ public sealed class GfxBuffers
         GfxRegistry.UboStore.ReplaceMeta(uboId, in newMeta, out _);
         GlBuffers.ResizeBuffer(handle, capacity, BufferUsage.DynamicDraw);
     }
-    public void ClearUniformBufferData(UniformBufferId uboId)
+    public void ClearUniformBufferData(GfxId<UniformBufferMeta> uboId)
     {
         var handle = GfxRegistry.UboStore.GetHandleAndMeta(uboId, out var meta);
         GlBuffers.ResizeBuffer(handle, meta.Capacity, BufferUsage.DynamicDraw);

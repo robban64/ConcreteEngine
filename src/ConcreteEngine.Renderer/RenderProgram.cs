@@ -29,7 +29,7 @@ public sealed class RenderProgram : IDisposable
 
         UploadBuffers = new RenderUploadBuffers();
         _drawPipeline = new DrawCommandPipeline(UploadBuffers);
-        _passPipeline = new RenderPassPipeline(Registry.FboRegistry);
+        _passPipeline = new RenderPassPipeline(Registry);
 
         _programContext = new RenderProgramContext
         {
@@ -59,21 +59,22 @@ public sealed class RenderProgram : IDisposable
 
     public void ResizeScreenFrameBuffers(Size2D outputSize)
     {
+        var currentOutputSize = RenderContext.Instance.OutputSize;
         RenderContext.Instance.OutputSize = outputSize;
 
-        var fboRegistry = Registry.FboRegistry;
-
-        if (outputSize != fboRegistry.OutputSize)
-            fboRegistry.RecreateScreenDependentFbo(outputSize);
+        if (outputSize != currentOutputSize)
+            Registry.RecreateScreenDependentFbo(outputSize);
     }
 
 
     public void ResizeShadowFrameBuffers(int shadowSize)
     {
-        var fboRegistry = Registry.FboRegistry;
+        var currentShadowSize = RenderContext.Instance.ShadowMapDimension;
+        RenderContext.Instance.ShadowMapDimension = shadowSize;
 
-        if (shadowSize != fboRegistry.ShadowMapSize.Width)
-            fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.V0, new Size2D(shadowSize));
+        if (shadowSize != currentShadowSize)
+            Registry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.V0, new Size2D(shadowSize));
+
     }
 
     public void Render()
@@ -84,7 +85,7 @@ public sealed class RenderProgram : IDisposable
         {
             if (passAction == NextPassAction.Skip) continue;
             var passResult = _passPipeline.ApplyPass();
-
+            
             switch (passResult.Op)
             {
                 case PassOp.Draw:
@@ -98,10 +99,17 @@ public sealed class RenderProgram : IDisposable
             _passPipeline.ApplyAfterPass();
         }
 
+        if (++ticks > 144)
+        {
+            ticks = 0;
+            DrawCommandProcessor.avg.ResetAndPrint("Draw");
+        }
     }
 
+    private int ticks = 0;
 
     //
+    
     public RenderSetupBuilder StartBuilder(Size2D outputSize)
     {
         return new RenderSetupBuilder(_programContext, outputSize);
@@ -114,7 +122,7 @@ public sealed class RenderProgram : IDisposable
         var plan = builder.Build();
 
         // Registry setup
-        Registry.BeginRegistration(_programContext.Gfx.Buffers, plan.OutputSize);
+        Registry.BeginRegistration();
 
         // register FBO
         foreach (var it in plan.FboSetup)

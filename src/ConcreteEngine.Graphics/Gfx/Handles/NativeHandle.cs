@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace ConcreteEngine.Graphics.Handles;
+namespace ConcreteEngine.Graphics.Gfx;
 
 public readonly record struct NativeHandle(ulong Value)
 {

@@ -1,5 +1,6 @@
+using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 using static ConcreteEngine.Graphics.OpenGL.GlDriver;
 
@@ -7,7 +8,7 @@ namespace ConcreteEngine.Graphics.OpenGL;
 
 internal static class GlDisposer
 {
-    public static void DeleteGlResource(ResourceBackendDispatcher dispatcher, DeleteResourceCommand cmd)
+    public static void DeleteGlResource(DeleteResourceCommand cmd)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cmd.Handle.Value, nameof(cmd.Handle));
 
@@ -22,7 +23,7 @@ internal static class GlDisposer
             case GraphicsKind.RenderBuffer: DisposeRbo(cmd); break;
             default: throw new ArgumentOutOfRangeException(nameof(cmd));
         }
-        dispatcher.OnDelete(cmd);
+        GfxLog.LogBackend(cmd.Handle, cmd.GfxId, cmd.Kind.ToLogTopic(), LogAction.Destroy);
     }
 
     private static void DisposeTexture(DeleteResourceCommand cmd) => Gl.DeleteTexture(cmd.Handle);

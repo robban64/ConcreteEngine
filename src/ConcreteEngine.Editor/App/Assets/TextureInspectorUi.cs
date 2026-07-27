@@ -5,7 +5,6 @@ using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Resources;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Assets;
@@ -26,7 +25,7 @@ internal sealed class TextureInspectorUi(StateManager state)
 
         ImGui.SeparatorText("GPU Metadata"u8);
 
-        var meta = GfxResourceApi.GetMeta(texture.GfxId);
+        var meta = GfxRegistry.GetMeta(texture.GfxId);
         AppDraw.TextProperty("Kind:"u8, sw.Write(meta.Kind.ToText()));
         AppDraw.SameLineProperty();
         AppDraw.TextProperty("Format:"u8, sw.Write(meta.PixelFormat.ToText()));

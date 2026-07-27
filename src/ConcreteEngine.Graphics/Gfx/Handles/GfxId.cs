@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Gfx;
 
-namespace ConcreteEngine.Graphics.Handles;
+namespace ConcreteEngine.Graphics.Gfx;
 
 public readonly record struct GfxId<TMeta>(ushort Id) : IComparable<GfxId<TMeta>> where TMeta : unmanaged, IResourceMeta
 {
@@ -18,11 +17,4 @@ public readonly record struct GfxId<TMeta>(ushort Id) : IComparable<GfxId<TMeta>
     public static implicit operator ushort(GfxId<TMeta> id) => id.Id;
     public static explicit operator GfxId<TMeta>(int value) => new(value);
     public int CompareTo(GfxId<TMeta> other) => Id.CompareTo(other.Id);
-}
-
-internal readonly record struct GfxId(ushort Id, GraphicsKind Kind)
-{
-    public static implicit operator ushort(GfxId id) => id.Id;
-
-    public bool IsValid() => Id > 0 && Kind != GraphicsKind.Invalid;
 }

@@ -1,13 +1,22 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Handles;
-using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
 public static class GfxMetrics
 {
     public static GpuFrameMeta FrameMeta;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void AddDrawCall(uint tris, uint instances)
+    {
+        ref var it = ref FrameMeta.Frame;
+        it.Draws++;
+        it.Tris += tris;
+        it.Instances += instances;
+    }
+
 
     public static void DrainStoreMetrics(GfxStoreMeta[] data)
     {

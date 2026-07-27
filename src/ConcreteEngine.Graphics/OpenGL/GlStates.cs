@@ -2,8 +2,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Handles;
-using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 using static ConcreteEngine.Graphics.OpenGL.GlDriver;
 
@@ -161,47 +159,22 @@ internal static class GlStates
     public static void UnbindShader() => Gl.UseProgram(0);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void Draw(in MeshMeta meta)
+    public static unsafe void Draw(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount)
     {
-        var glPrimitive = meta.Primitive.ToGlEnum();
-        if(meta.ElementSize != DrawElementSize.None)
-            Gl.DrawElements(glPrimitive, meta.DrawCount, meta.ElementSize.ToGlEnum(), (void*)0);
+        var glPrimitive = primitive.ToGlEnum();
+        if(elementSize != DrawElementSize.None)
+            Gl.DrawElements(glPrimitive, drawCount, elementSize.ToGlEnum(), (void*)0);
         else
-            Gl.DrawArrays(glPrimitive, 0, meta.DrawCount);
+            Gl.DrawArrays(glPrimitive, 0, drawCount);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void DrawInstance(in MeshMeta meta, uint instances)
+    public static unsafe void DrawInstance(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount, uint instances)
     {
-        var glPrimitive = meta.Primitive.ToGlEnum();
-        if(meta.ElementSize != DrawElementSize.None)
-            Gl.DrawElementsInstanced(glPrimitive, meta.DrawCount, meta.ElementSize.ToGlEnum(), (void*)0, instances);
+        var glPrimitive = primitive.ToGlEnum();
+        if(elementSize != DrawElementSize.None)
+            Gl.DrawElementsInstanced(glPrimitive, drawCount, elementSize.ToGlEnum(), (void*)0, instances);
         else
-            Gl.DrawArraysInstanced(glPrimitive, 0, meta.DrawCount, instances);
-    }
-
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DrawArrays(DrawPrimitive primitive, uint count)
-    {
-        Gl.DrawArrays(primitive.ToGlEnum(), 0, count);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, uint count)
-    {
-        Gl.DrawElements(primitive.ToGlEnum(), count, elementSize.ToGlEnum(), (void*)0);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DrawInstanced(DrawPrimitive primitive, uint count, uint instances)
-    {
-        Gl.DrawArraysInstanced(primitive.ToGlEnum(), 0, count, instances);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void DrawElementsInstanced(DrawPrimitive primitive, DrawElementSize size, uint count, uint instances)
-    {
-        Gl.DrawElementsInstanced(primitive.ToGlEnum(), count, size.ToGlEnum(), (void*)0, instances);
+            Gl.DrawArraysInstanced(glPrimitive, 0, drawCount, instances);
     }
 }

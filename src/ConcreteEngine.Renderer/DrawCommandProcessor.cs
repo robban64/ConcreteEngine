@@ -14,7 +14,6 @@ namespace ConcreteEngine.Renderer;
 internal sealed class DrawCommandProcessor
 {
     private readonly GfxCommands _gfxCmd;
-    private readonly GfxDraw _gfxDraw;
     private readonly UniformUploader _buffers;
 
     private readonly TextureId _depthTexture;
@@ -27,10 +26,9 @@ internal sealed class DrawCommandProcessor
     {
         _buffers = buffers;
         _gfxCmd = gfx.Commands;
-        _gfxDraw = gfx.Draw;
 
-        var depthFbo = renderRegistry.FboRegistry.GetByKey(PassTags<ShadowPassTag>.FboKey(FboVariant.V0));
-        _depthTexture = depthFbo!.Attachments.DepthTexture;
+        var depthFbo = renderRegistry.GetByKey(TargetRegistry<ShadowPassTag>.FboKey(FboVariant.V0))!;
+        _depthTexture = GfxRegistry.GetMeta(depthFbo.FboId).Attachments.DepthTexture;
     }
 
 
@@ -62,18 +60,22 @@ internal sealed class DrawCommandProcessor
         }
 
         _buffers.BindDrawObject(submitIdx);
-        _gfxDraw.BindDraw(cmd.MeshId, cmd.InstanceCount);
+        avg.BeginSample();
+        _gfxCmd.DrawMesh(cmd.MeshId, cmd.InstanceCount);
+        avg.EndSample();
     }
 
-    public void DrawSpecialResolveMesh(DrawCommand cmd, DrawCommandResolver resolver, byte resolverSlot, int submitIdx)
+    public static AvgFrameTimer avg;
+
+    public void DrawSpecialResolveMesh(DrawCommand cmd, int submitIdx)
     {
         if (PassMode != PassStateMode.Depth)
         {
-            BindAndResolvedOverride(cmd, resolver, resolverSlot);
+            BindAndResolvedOverride(cmd, cmd.Resolver, cmd.ResolverSlot);
         }
 
         _buffers.BindDrawObject(submitIdx);
-        _gfxDraw.BindDraw(cmd.MeshId, cmd.InstanceCount);
+        _gfxCmd.DrawMesh(cmd.MeshId, cmd.InstanceCount);
     }
 
     private void BindMaterial(Id16<MaterialSlot> materialId)

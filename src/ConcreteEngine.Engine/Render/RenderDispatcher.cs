@@ -99,22 +99,21 @@ internal sealed class RenderDispatcher : IDisposable
             _commandBuffer.IndexRef(index) = new DrawCommandIndex(index, policy.Passes, policy.Queue, depthKey);
             ++index;
         }
-
-        return;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static ushort MakeDepthKey(RenderEntityId entity, Vector3 forward, Vector2 nearFar, float viewZ)
-        {
-            const float maxValueF = 65535f;
-
-            var worldPos = Ecs.RenderCore.GetModelMatrix(entity).Translation;
-            var d = Vector3.Dot(forward, worldPos) - viewZ;
-            if (d <= nearFar.X) return 0;
-            if (d >= nearFar.Y) return ushort.MaxValue;
-            var t = (d - nearFar.X) / (nearFar.Y - nearFar.X);
-            return (ushort)(t * maxValueF + 0.5f);
-        }
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ushort MakeDepthKey(RenderEntityId entity, Vector3 forward, Vector2 nearFar, float viewZ)
+    {
+        const float maxValueF = 65535f;
+
+        var worldPos = Ecs.RenderCore.GetModelMatrix(entity).Translation;
+        var d = Vector3.Dot(forward, worldPos) - viewZ;
+        if (d <= nearFar.X) return 0;
+        if (d >= nearFar.Y) return ushort.MaxValue;
+        var t = (d - nearFar.X) / (nearFar.Y - nearFar.X);
+        return (ushort)(t * maxValueF + 0.5f);
+    }
+
 
     private void SubmitCommands(ReadOnlySpan<RenderEntityId> visibleEntities)
     {
@@ -146,10 +145,9 @@ internal sealed class RenderDispatcher : IDisposable
 
     private void ProcessSelectionEffect()
     {
-        var store = Ecs.GetRenderStore<SelectionComponent>();
-        if (store.Count == 0) return;
+        if (Ecs.GetRenderStore<SelectionComponent>().Count == 0) return;
 
-        foreach (var query in store.VisibilityQuery())
+        foreach (var query in Ecs.GetRenderStore<SelectionComponent>().VisibilityQuery())
         {
             var slot = _effectBuffer.Submit(new EffectUniformParams(query.Component.HighlightColor));
             ref var source = ref Ecs.RenderCore.GetSource(query.Entity);
@@ -168,14 +166,18 @@ internal sealed class RenderDispatcher : IDisposable
 
         foreach (var it in terrainSystem.TerrainMesh.GetMeshChunks())
         {
-            if (!_frustum.IntersectsBox(mainTerrain.GetChunk(it.Slot).GetBounds())) continue;
+            var chunk = mainTerrain.GetChunk(it.Slot);
+            if (!_frustum.IntersectsBox(chunk.GetBounds())) continue;
+            
+            var depthKey = CameraManager.Instance.Camera.MakeDepthKey(chunk.GetBounds().Center);
+            
             var cmd = new DrawCommand(it.TerrainMeshId, terrainMat);
-            _commandBuffer.SubmitIdentity(cmd, PassMask.Default, DrawQueue.Terrain, 0);
+            _commandBuffer.SubmitIdentity(cmd, PassMask.Default, DrawQueue.Terrain, depthKey);
 
             if (it.FoliageCount > 0)
             {
                 cmd = new DrawCommand(it.FoliageMeshId, foliageMat, instanceCount: (uint)it.FoliageCount);
-                _commandBuffer.SubmitIdentity(cmd, PassMask.Default, DrawQueue.Transparent, 0);
+                _commandBuffer.SubmitIdentity(cmd, PassMask.Default, DrawQueue.Transparent, depthKey);
             }
         }
 
@@ -187,23 +189,13 @@ internal sealed class RenderDispatcher : IDisposable
 
     private void SubmitDebugBounds()
     {
-        var store = Ecs.GetRenderStore<DebugBoundsComponent>();
-        if (store.Count == 0) return;
+        if (Ecs.GetRenderStore<DebugBoundsComponent>().Count == 0) return;
 
         var materialId = AssetStore.Core.DebugBoundsMaterial.MaterialId;
 
         var index = _commandBuffer.Count;
-
-        foreach (var query in store.VisibilityQuery())
+        foreach (var query in Ecs.GetRenderStore<DebugBoundsComponent>().VisibilityQuery())
         {
-            var slot = _effectBuffer.Submit(new EffectUniformParams(query.Component.Color));
-
-            _commandBuffer.CommandRef(index) = new DrawCommand(GfxMeshes.Cube, materialId,
-                resolver: DrawCommandResolver.BoundingVolume,
-                resolverSlot: slot);
-            _commandBuffer.IndexRef(index) =
-                new DrawCommandIndex(index, PassMask.Effect, DrawQueue.Effect, 0);
-
             ref var bufferDst = ref _commandBuffer.TransformRef(index);
             ref readonly var worldBounds = ref Ecs.RenderCore.GetWorldBounds(query.Entity);
             MatrixMath.CreateModelMatrix(
@@ -213,6 +205,14 @@ internal sealed class RenderDispatcher : IDisposable
                 out bufferDst.Model
             );
             bufferDst.Normal = Matrix3X4.Identity;
+            
+            var depthKey = CameraManager.Instance.Camera.MakeDepthKey(bufferDst.Model.Translation);
+
+            var slot = _effectBuffer.Submit(new EffectUniformParams(query.Component.Color));
+
+            _commandBuffer.CommandRef(index) = new DrawCommand(GfxMeshes.Cube, materialId,
+                resolver: DrawCommandResolver.BoundingVolume, resolverSlot: slot);
+            _commandBuffer.IndexRef(index) = new DrawCommandIndex(index, PassMask.Effect, DrawQueue.Effect, depthKey);
 
             ++index;
         }

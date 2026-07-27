@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Registry;
@@ -40,10 +39,10 @@ internal sealed unsafe class UniformUploader
 
     internal void EnsureUboSizes(int drawCount, int materialCount)
     {
-        if (!GfxResourceApi.GetMeta(DrawObjectUniform.UboId).HasCapacity(drawCount))
+        if (!GfxRegistry.GetMeta(DrawObjectUniform.UboId).HasCapacity(drawCount))
             _gfxBuffers.SetUniformBufferCount(DrawObjectUniform.UboId, drawCount);
 
-        if (!GfxResourceApi.GetMeta(MaterialUniform.UboId).HasCapacity(drawCount))
+        if (!GfxRegistry.GetMeta(MaterialUniform.UboId).HasCapacity(drawCount))
             _gfxBuffers.SetUniformBufferCount(MaterialUniform.UboId, materialCount);
     }
 
@@ -80,7 +79,7 @@ internal sealed unsafe class UniformUploader
 
     internal void UploadAnimationData(NativeView<Matrix4x4> boneData)
     {
-        if (!GfxResourceApi.GetMeta(DrawAnimationUniform.UboId).HasCapacity(boneData.Length))
+        if (!GfxRegistry.GetMeta(DrawAnimationUniform.UboId).HasCapacity(boneData.Length))
             _gfxBuffers.SetUniformBufferCount(DrawAnimationUniform.UboId, boneData.Length);
 
         var view = new NativeView<DrawAnimationUniform>((DrawAnimationUniform*)boneData.Ptr, boneData.Length);

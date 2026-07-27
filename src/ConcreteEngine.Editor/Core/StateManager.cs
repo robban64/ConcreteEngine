@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Logging;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core;
@@ -45,7 +45,7 @@ internal sealed class StateManager(EventDispatcher eventDispatcher)
     public void GetOrSetTextureHandle(TextureId id, scoped ref TexturePtrHandle texHandle)
     {
         ArgumentOutOfRangeException.ThrowIfZero(id.Id, nameof(id));
-        var handle = GfxResourceApi.GetHandle(id);
+        var handle = GfxRegistry.GetHandle(id);
         if (texHandle.Handle == handle) return;
 
         if (!texHandle.TexturePtr.IsNull) texHandle.TexturePtr.Destroy();

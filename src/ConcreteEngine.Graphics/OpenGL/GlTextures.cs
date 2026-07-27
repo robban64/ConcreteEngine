@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Handles;
 using Silk.NET.OpenGL;
 using static ConcreteEngine.Graphics.OpenGL.GlDriver;
 

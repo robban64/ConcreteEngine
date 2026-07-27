@@ -1,31 +1,10 @@
-using ConcreteEngine.Graphics.Handles;
-
 namespace ConcreteEngine.Graphics.Gfx;
 
-public sealed class MeshLayout(
-    MeshId meshId,
-    int vboCount,
-    VertexAttributeDef[] attributes)
+public sealed class GfxMeshEntry(int vboCount, VertexAttributeDef[] attributes)
 {
-    public MeshId MeshId { get; } = meshId;
     public IndexBufferId IboId { get; internal set; }
-    public VertexBufferId[] VboIds { get; } = new VertexBufferId[vboCount];
-    public VertexAttributeDef[] Attributes { get; } = attributes;
-}
-
-public readonly struct VertexLayout(
-    byte slot,
-    int components,
-    int offset,
-    VertexFormat format = VertexFormat.Float,
-    bool normalized = false
-)
-{
-    public readonly int Components = components;
-    public readonly int Offset = offset;
-    public readonly byte Slot = slot;
-    public readonly VertexFormat Format = format;
-    public readonly bool Normalized = normalized;
+    public readonly VertexBufferId[] VboIds = new VertexBufferId[vboCount];
+    public readonly VertexAttributeDef[] Attributes = attributes;
 }
 
 public readonly struct VertexAttributeDef(

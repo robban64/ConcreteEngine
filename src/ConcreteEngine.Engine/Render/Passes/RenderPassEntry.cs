@@ -2,21 +2,19 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Engine.Render.Passes;
 
-internal delegate PassAction RenderPassOp(RenderPassCtx ctx, in RenderPassState state);
-
-internal delegate void RenderAfterPassOp(RenderPassCtx ctx, in RenderPassState state);
+internal delegate PassAction RenderPassOp(RenderPassContext ctx, in RenderPassState state);
+internal delegate void RenderAfterPassOp(RenderPassContext ctx, in RenderPassState state);
 
 internal sealed class RenderPassEntry
 {
-    private static PassAction NoOpPass(RenderPassCtx ctx, in RenderPassState state) => default;
-    private static void NoOpAfterPass(RenderPassCtx ctx, in RenderPassState state) { }
+    private static PassAction NoOpPass(RenderPassContext ctx, in RenderPassState state) => default;
 
-    public PassTagKey PassKey { get; private set; }
+    public PassTargetKey PassKey { get; private set; }
     public PassOp PassOp { get; private set; }
-    public PassTagKey? DependsOn { get; }
+    public PassTargetKey? DependsOn { get; }
 
     private RenderPassOp _applyPassDel = NoOpPass;
-    private RenderAfterPassOp _applyAfterPassDel = NoOpAfterPass;
+    private RenderAfterPassOp? _applyAfterPassDel;
 
     private RenderPassState _state;
 
@@ -24,8 +22,8 @@ internal sealed class RenderPassEntry
     private bool _hasPending;
 
 
-    internal RenderPassEntry(PassTagKey passKey, PassOp passOp, RenderPassState initial,
-        PassTagKey? dependsOn = null)
+    internal RenderPassEntry(PassTargetKey passKey, PassOp passOp, RenderPassState initial,
+        PassTargetKey? dependsOn = null)
     {
         PassKey = passKey;
         PassOp = passOp;
@@ -53,17 +51,14 @@ internal sealed class RenderPassEntry
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public PassAction ApplyPass(RenderPassCtx ctx)
+    public PassAction ApplyPass(RenderPassContext ctx)
     {
         ApplyPending();
         return _applyPassDel(ctx, in _state);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ApplyAfterPass(RenderPassCtx ctx)
-    {
-        _applyAfterPassDel(ctx, in _state);
-    }
+    public void ApplyAfterPass(RenderPassContext ctx) => _applyAfterPassDel?.Invoke(ctx, in _state);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ApplyPending()

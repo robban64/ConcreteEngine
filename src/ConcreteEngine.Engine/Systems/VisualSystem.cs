@@ -1,31 +1,31 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Core.Engine.Input;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Graphics.Gfx;
 
-namespace ConcreteEngine.Engine.Render;
+namespace ConcreteEngine.Engine.Systems;
 
-internal sealed unsafe class VisualUniformProcessor
+internal sealed unsafe class VisualSystem
 {
-    public static void Create(GfxBuffers gfx) => Instance = new VisualUniformProcessor(gfx);
-    public static VisualUniformProcessor Instance { get; private set; } = null!;
+    public static void Create(GfxBuffers gfx) => Instance = new VisualSystem(gfx);
+    public static VisualSystem Instance { get; private set; } = null!;
     private static CameraManager CameraManager => CameraManager.Instance;
     private static VisualManager VisualManager => VisualManager.Instance;
 
     private readonly GfxBuffers _gfx;
 
-    private VisualUniformProcessor(GfxBuffers gfx)
+    private VisualSystem(GfxBuffers gfx)
     {
         _gfx = gfx;
     }
 
     public void Upload()
     {
-        UploadEngineUniformRecord(EngineWindow.Viewport.Size, EngineInput.Mouse.ViewportPos);
+        UploadEngineUniformRecord();
 
         if (!VisualManager.AnyWasDirty) return;
 
@@ -41,7 +41,7 @@ internal sealed unsafe class VisualUniformProcessor
         VisualManager.Commit();
     }
 
-    public void UploadLight()
+    public void UploadPointLight()
     {
         LightUniform data = default;
         _gfx.UploadSingleUniform(&data, 0);
@@ -79,15 +79,12 @@ internal sealed unsafe class VisualUniformProcessor
     [SkipLocalsInit]
     public void UploadShadow()
     {
+        var size = VisualManager.Shadow.InvMapSize;
         var proj = VisualManager.Shadow.Projection;
         var vis = VisualManager.Shadow.Visuals;
 
-        var size = 1.0f / VisualManager.Shadow.ShadowMapSize;
-
-        var t = CameraManager.LightTransforms;
-
         ShadowUniform data;
-        data.LightViewProj = t.ViewMatrix * t.ProjectionMatrix;
+        data.LightViewProj = CameraManager.LightTransforms.ViewMatrix * CameraManager.LightTransforms.ProjectionMatrix;
         data.ShadowParams0 = new Vector4(size, size, proj.ConstBias, proj.SlopeBias);
         data.ShadowParams1 = new Vector4(vis.Strength, vis.PcfRadius, 0.03f, proj.Distance);
 
@@ -95,11 +92,12 @@ internal sealed unsafe class VisualUniformProcessor
     }
 
     [SkipLocalsInit]
-    private void UploadEngineUniformRecord(Size2D outputSize, Vector2 mouse)
+    private void UploadEngineUniformRecord()
     {
+        var mouse = CoordinateMath.ToUvCoords(EngineInput.Mouse.ViewportPos, EngineWindow.ViewportSize);
         var data = new EngineUniformRecord(
-            invResolution: new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height),
-            mouse: CoordinateMath.ToUvCoords(mouse, outputSize),
+            invResolution: EngineWindow.InvViewport,
+            mouse: mouse,
             deltaTime: EngineTime.DeltaTime,
             time: EngineTime.Time,
             random: EngineTime.FrameRng

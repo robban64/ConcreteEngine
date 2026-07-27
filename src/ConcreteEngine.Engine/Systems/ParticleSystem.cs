@@ -13,7 +13,7 @@ using ConcreteEngine.Core.Engine.Graphics.Particles;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
 
-namespace ConcreteEngine.Engine.Render;
+namespace ConcreteEngine.Engine.Systems;
 
 internal sealed class ParticleSystem : IDisposable
 {

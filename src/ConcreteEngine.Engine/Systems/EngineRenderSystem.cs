@@ -1,19 +1,16 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Render.Buffers;
 using ConcreteEngine.Engine.Render.Passes;
-using ConcreteEngine.Engine.Render.Registry;
-using ConcreteEngine.Engine.Render.Renderer;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 
-namespace ConcreteEngine.Engine.Render;
+namespace ConcreteEngine.Engine.Systems;
 
 public sealed class EngineRenderSystem : IDisposable
 {
@@ -26,7 +23,7 @@ public sealed class EngineRenderSystem : IDisposable
     private readonly ParticleSystem _particleSystem;
     private readonly AnimationSystem _animationSystem;
 
-    private readonly MaterialProcessor _materialProcessor;
+    private readonly MaterialSystem _materialSystem;
 
     private readonly RenderUploadBuffers _uploadBuffers;
     private readonly RenderRegistry _registry;
@@ -50,10 +47,9 @@ public sealed class EngineRenderSystem : IDisposable
         _animationSystem = new AnimationSystem(AnimationManager.Instance, _uploadBuffers.Skinning);
 
         _renderDispatcher = new RenderDispatcher(_cameraManager.Frustum, _uploadBuffers);
-        _materialProcessor = new MaterialProcessor(_uploadBuffers.Materials);
+        _materialSystem = new MaterialSystem(_uploadBuffers.Materials);
         
-        RenderContext.Make();
-        VisualUniformProcessor.Create(graphics.Gfx.Buffers);
+        VisualSystem.Create(graphics.Gfx.Buffers);
 
     }
 
@@ -64,13 +60,15 @@ public sealed class EngineRenderSystem : IDisposable
         RegisterCoreShaders(AssetManager.Assets);
         PassPipeline3D.RegisterFrameBuffers(_registry);
         PassPipeline3D.RegisterPassPipeline(_passPipeline);
+        
+        VisualSystem.Instance.UploadPointLight();
     }
 
     internal void AfterUpdate()
     {
         _visualManager.Ensure();
         _cameraManager.CommitUpdate(_visualManager);
-        _materialProcessor.Commit();
+        _materialSystem.Commit();
     }
 
     internal void OnSystemTick(bool screenResize)
@@ -89,7 +87,7 @@ public sealed class EngineRenderSystem : IDisposable
         {
             Logger.Log(LogScope.Engine, "Recreating shadow framebuffers");
             var size = new Size2D(_visualManager.Shadow.ShadowMapSize);
-            _registry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.V0, size);
+            _registry.RecreateFixedFrameBuffer<ShadowTarget>(FboVariant.V0, size);
         }
     }
 
@@ -101,7 +99,6 @@ public sealed class EngineRenderSystem : IDisposable
 
     internal void Render(float dt, float alpha)
     {
-        RenderContext.Instance.ResetPassMode();
         _passPipeline.Prepare();
         _drawPipeline.Prepare();
 
@@ -121,7 +118,7 @@ public sealed class EngineRenderSystem : IDisposable
         _drawPipeline.PrepareDrawBuffers();
 
         // upload buffers to gpu
-        VisualUniformProcessor.Instance.Upload();
+        VisualSystem.Instance.Upload();
         _drawPipeline.UploadUniforms();
 
         RenderPasses();

@@ -1,17 +1,15 @@
 namespace ConcreteEngine.Engine.Render.Passes;
 
-public interface IRenderTarget
-{
-    
-}
-public struct ScenePassTag : IRenderTarget;
+public interface IRenderTarget;
 
-public struct ShadowPassTag : IRenderTarget;
+public struct SceneTarget : IRenderTarget;
 
-public struct LightPassTag : IRenderTarget;
+public struct ShadowTarget : IRenderTarget;
 
-public struct PostPassTag : IRenderTarget;
+public struct LightTarget : IRenderTarget;
 
-public struct OutputPassTag : IRenderTarget;
+public struct PostFxTarget : IRenderTarget;
+
+public struct OutputTarget : IRenderTarget;
 
 public struct ScreenPassTag : IRenderTarget;

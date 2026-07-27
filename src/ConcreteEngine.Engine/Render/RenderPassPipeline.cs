@@ -1,27 +1,26 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Engine.Render.Registry;
+using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Graphics;
 
-namespace ConcreteEngine.Engine.Render.Passes;
+namespace ConcreteEngine.Engine.Render;
 
 internal sealed class RenderPassPipeline
 {
     private int _activePassIndex;
 
-    private readonly RenderPassCtx _ctx;
+    private readonly RenderPassContext _ctx;
     private readonly RenderRegistry _renderRegistry;
     private readonly List<RenderPassEntry> _entries = new(8);
 
     internal RenderPassPipeline(GfxContext gfx, RenderRegistry renderRegistry)
     {
         _renderRegistry = renderRegistry;
-        _ctx = new RenderPassCtx(gfx);
+        _ctx = new RenderPassContext(gfx);
     }
 
     public int PassCount => _entries.Count;
-
 
     public RenderPassEntry RegisterContinue<TTarget>(FboVariant variant, PassId passId, PassOp op,
         RenderPassState initial)
@@ -46,7 +45,7 @@ internal sealed class RenderPassPipeline
     public RenderPassEntry Register<TTarget>(FboVariant variant, PassId passId, PassOp op, RenderPassState initial)
         where TTarget : unmanaged, IRenderTarget
     {
-        var key = RenderRegistry.TargetRegistry<TTarget>.BindFboPassId(variant, passId);
+        var key = RenderRegistry.TargetRegistry<TTarget>.BindPassTarget(variant, passId);
         foreach (var e in _entries)
         {
             if (e.PassKey.Pass == passId || e.PassKey == key) Throwers.InvalidArgument("Duplicated passes");
@@ -60,6 +59,7 @@ internal sealed class RenderPassPipeline
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Prepare()
     {
+        RenderContext.ResetPassMode();
         _activePassIndex = 0;
         _ctx.Prepare();
     }
@@ -77,8 +77,8 @@ internal sealed class RenderPassPipeline
         var passKey = passEntry.PassKey;
 
         var key = passEntry.DependsOn is { } dependsOnKey
-            ? new FboTagKey(dependsOnKey.TagIndex, passKey.Variant)
-            : new FboTagKey(passKey.TagIndex, passKey.Variant);
+            ? new FboKey(dependsOnKey.TagIndex, passKey.Variant)
+            : new FboKey(passKey.TagIndex, passKey.Variant);
 
         action = NextPassAction.Run;
 

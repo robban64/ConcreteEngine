@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Graphics.Gfx;
 
-namespace ConcreteEngine.Engine.Render.Renderer;
+namespace ConcreteEngine.Engine.Render;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct MaterialMeta(

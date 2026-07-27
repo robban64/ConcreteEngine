@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 
-namespace ConcreteEngine.Engine.Render.Renderer;
+namespace ConcreteEngine.Engine.Render;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct DrawCommand(

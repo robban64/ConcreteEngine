@@ -12,12 +12,12 @@ public readonly record struct FboVariant(byte Value) : IComparable<FboVariant>
     public int CompareTo(FboVariant other) => Value.CompareTo(other.Value);
 }
 
-public readonly record struct FboTagKey(byte TagIndex, FboVariant Variant) : IComparable<FboTagKey>
+public readonly record struct FboKey(byte TagIndex, FboVariant Variant) : IComparable<FboKey>
 {
     public int Index() => TagIndex + Variant;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int CompareTo(FboTagKey other)
+    public int CompareTo(FboKey other)
     {
         var c = TagIndex.CompareTo(other.TagIndex);
         return c != 0 ? c : Variant.CompareTo(other.Variant);
@@ -30,14 +30,14 @@ public readonly record struct PassId(byte Value) : IComparable<PassId>
     public int CompareTo(PassId other) => Value.CompareTo(other.Value);
 }
 
-public readonly record struct PassTagKey(byte TagIndex, FboVariant Variant, PassId Pass);
+public readonly record struct PassTargetKey(byte TagIndex, FboVariant Variant, PassId Pass);
 
 public readonly record struct PassTextureSlotKey(byte TagIndex, FboVariant Variant, PassId Pass, byte TextureSlot);
 
-public sealed class PassTagKeyComp : IComparer<PassTagKey>
+public sealed class PassTagKeyComp : IComparer<PassTargetKey>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int Compare(PassTagKey a, PassTagKey b)
+    public int Compare(PassTargetKey a, PassTargetKey b)
     {
         var c = a.Pass.CompareTo(b.Pass);
         if (c != 0) return c;

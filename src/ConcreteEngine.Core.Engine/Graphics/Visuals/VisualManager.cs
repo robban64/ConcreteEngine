@@ -202,6 +202,7 @@ public sealed class EnvironmentSettings : VisualStateObject
 [Inspect]
 public sealed class ShadowSettings : VisualStateObject
 {
+    public float InvMapSize { get; private set; }
     public bool HasPendingShadowSize { get; internal set; }
 
     [InputCombo([1024, 2048, 4096, 8192], ["1024px", "2048px", "4096px", "8192px"], Label = "ShadowMap Size")]
@@ -217,6 +218,7 @@ public sealed class ShadowSettings : VisualStateObject
             Projection = VisualUtils.MakeSizedShadow(value, 20.0f);
             IsDirty = true;
             HasPendingShadowSize = true;
+            InvMapSize = 1.0f / value;
         }
     }
 

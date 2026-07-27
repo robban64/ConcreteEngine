@@ -3,11 +3,12 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Engine.Render.Buffers;
 using ConcreteEngine.Engine.Render.Passes;
+using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Utility;
 
-namespace ConcreteEngine.Engine.Render.Renderer;
+namespace ConcreteEngine.Engine.Render;
 
 internal sealed class DrawCommandPipeline
 {
@@ -45,21 +46,27 @@ internal sealed class DrawCommandPipeline
 
     }
 
-    internal void UploadUniforms()
+    internal unsafe void UploadUniforms()
     {
-        VisualUniformProcessor.Instance.UploadMainView();
+        VisualSystem.Instance.UploadMainView();
 
-        var materialPayload = _buffers.Materials.DrainBuffer();
-        if (materialPayload.Length > 0)
-            UploadMaterials(materialPayload);
+        var materials = _buffers.Materials.DrainBuffer();
+        if (materials.Length > 0)
+            _gfxBuffers.UploadUniform(materials, 0);
 
-        var transformPayload = _buffers.Commands.DrainTransformBuffer();
-        if (transformPayload.Length > 0)
-            UploadDrawTransforms(transformPayload);
+        var transforms = _buffers.Commands.DrainTransformBuffer();
+        if (transforms.Length > 0)
+            _gfxBuffers.UploadUniform(transforms, 0);
 
-        var animationPayload = _buffers.Skinning.DrainBuffer();
-        if (animationPayload.Length > 0)
-            UploadBones(animationPayload);
+        var boneData = _buffers.Skinning.DrainBuffer();
+        if (boneData.Length > 0)
+        {
+            if (!GfxRegistry.GetMeta(DrawAnimationUniform.UboId).HasCapacity(boneData.Length))
+                _gfxBuffers.SetUniformBufferCount(DrawAnimationUniform.UboId, boneData.Length);
+
+            var view = new NativeView<DrawAnimationUniform>((DrawAnimationUniform*)boneData.Ptr, boneData.Length);
+            _gfxBuffers.UploadUniform(view, 0);
+        }
     }
 
     private AvgFrameTimer avg;

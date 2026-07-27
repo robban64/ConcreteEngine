@@ -1,32 +1,31 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Engine.Render.Registry;
-using ConcreteEngine.Engine.Render.Renderer;
+using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render.Passes;
 
-internal sealed class RenderPassCtx
+internal sealed class RenderPassContext
 {
     private int _textureSlotHigh;
     private RenderTargetInfo _target;
-    public PassTagKey CurrentPassKey { get; private set; }
+    public PassTargetKey CurrentPassKey { get; private set; }
     
     public readonly GfxCommands Cmd;
     private readonly GfxTextures _gfxTextures;
 
     private readonly PriorityQueue<TextureId, PassTextureSlotKey> _sourceQueue;
-    private readonly PriorityQueue<PassMutationState, PassTagKey> _mutationQueue;
+    private readonly PriorityQueue<PassMutationState, PassTargetKey> _mutationQueue;
     private readonly TextureId[] _textureSlots;
 
-    internal RenderPassCtx(GfxContext gfx)
+    internal RenderPassContext(GfxContext gfx)
     {
         Cmd = gfx.Commands;
         _gfxTextures = gfx.Textures;
         _sourceQueue = new PriorityQueue<TextureId, PassTextureSlotKey>(4, new PassTextureSlotKeyComp());
-        _mutationQueue = new PriorityQueue<PassMutationState, PassTagKey>(4, new PassTagKeyComp());
+        _mutationQueue = new PriorityQueue<PassMutationState, PassTargetKey>(4, new PassTagKeyComp());
         _textureSlots = new TextureId[RenderLimits.TextureSlots];
     }
 
@@ -41,18 +40,18 @@ internal sealed class RenderPassCtx
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void AttachScreenPass(PassTagKey tagKey, Size2D outputSize)
+    internal void AttachScreenPass(PassTargetKey targetKey, Size2D outputSize)
     {
         _target = new RenderTargetInfo(default, outputSize, default, default);
-        CurrentPassKey = tagKey;
+        CurrentPassKey = targetKey;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void AttachPass(RenderFbo fbo, PassTagKey tagKey)
+    internal void AttachPass(RenderFbo fbo, PassTargetKey targetKey)
     {
         var meta = GfxRegistry.GetMeta(fbo.FboId);
         _target = new RenderTargetInfo(fbo.FboId, meta.Size, meta.Attachments, meta.MultiSample);
-        CurrentPassKey = tagKey;
+        CurrentPassKey = targetKey;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -104,15 +103,15 @@ internal sealed class RenderPassCtx
 
     public void ActivateDepthMode()
     {
-        RenderContext.Instance.SetDepthMode();
-        VisualUniformProcessor.Instance.UploadShadow();
-        VisualUniformProcessor.Instance.UploadLightView();
+        RenderContext.SetDepthMode();
+        VisualSystem.Instance.UploadShadow();
+        VisualSystem.Instance.UploadLightView();
     }
 
     public void RestoreMode()
     {
-        RenderContext.Instance.ResetPassMode();
-        VisualUniformProcessor.Instance.UploadMainView();
+        RenderContext.ResetPassMode();
+        VisualSystem.Instance.UploadMainView();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

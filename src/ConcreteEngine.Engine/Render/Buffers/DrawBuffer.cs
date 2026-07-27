@@ -6,12 +6,11 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Render.Passes;
-using ConcreteEngine.Engine.Render.Renderer;
-using static ConcreteEngine.Engine.Render.Renderer.RenderLimits;
+using static ConcreteEngine.Engine.Render.RenderLimits;
 
 namespace ConcreteEngine.Engine.Render.Buffers;
 
-public sealed class DrawCommandBuffer : IDisposable
+public sealed class DrawBuffer : IDisposable
 {
     private const int DefaultCommandBuffCapacity = 512;
     private const int DefaultTicketCapacity = 1024 * 4;
@@ -27,7 +26,7 @@ public sealed class DrawCommandBuffer : IDisposable
     private readonly Range32[] _passRanges;
 
 
-    internal DrawCommandBuffer()
+    internal DrawBuffer()
     {
         if (_allocated) throw new InvalidOperationException("Already allocated");
         _allocated = true;
@@ -199,7 +198,7 @@ public sealed class DrawCommandBuffer : IDisposable
         var newCap = CapacityUtils.CapacityGrowthToFit(_commands.Length, size);
 
         if (newCap > MaxCommandBuffCapacity)
-            Throwers.BufferOverflow(nameof(DrawCommandBuffer), newCap, MaxCommandBuffCapacity);
+            Throwers.BufferOverflow(nameof(DrawBuffer), newCap, MaxCommandBuffCapacity);
 
         _commands.Resize(newCap, true);
         _transforms.Resize(newCap, false);

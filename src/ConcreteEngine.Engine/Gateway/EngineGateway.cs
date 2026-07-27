@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor;
-using ConcreteEngine.Engine.Render.Renderer;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Engine.Gateway;
@@ -47,7 +47,7 @@ internal sealed class EngineGateway : IDisposable
     public void RenderEditor(float deltaTime)
     {
         if (!Enabled) return;
-        _editor.Render(deltaTime, RenderContext.Instance.OutputTexture);
+        _editor.Render(deltaTime, RenderContext.OutputTexture);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

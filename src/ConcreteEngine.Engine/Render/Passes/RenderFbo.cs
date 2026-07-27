@@ -1,16 +1,47 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Engine.Render.Renderer;
 
-namespace ConcreteEngine.Engine.Render.Registry;
+namespace ConcreteEngine.Engine.Render.Passes;
 
 public enum FboResizeMode : byte
 {
     Default, Fixed, Calculated
 }
-
 public delegate Size2D FboSizePolicyDel(Size2D outputSize, Vector2 ratio);
+
+public sealed class RenderFbo : IComparable<RenderFbo>
+{
+    public readonly FrameBufferId FboId;
+    public readonly FboKey Key;
+    public bool IsShadowFbo { get; internal set; }
+    public RenderFboSizePolicy SizePolicy { get; private set; }
+
+    internal RenderFbo(FrameBufferId fboId, FboKey key, RenderFboSizePolicy sizePolicy)
+    {
+        FboId = fboId;
+        Key = key;
+        SizePolicy = sizePolicy;
+    }
+
+    internal void ChangeSizePolicy(RenderFboSizePolicy sizePolicy)
+    {
+        ArgumentNullException.ThrowIfNull(sizePolicy);
+        SizePolicy = sizePolicy;
+    }
+
+    public bool IsFixedSize => SizePolicy.Mode == FboResizeMode.Fixed;
+
+    public Size2D CalculateNewSize(Size2D outputSize) => SizePolicy.Calculate(outputSize);
+
+
+    public int CompareTo(RenderFbo? other)
+    {
+        if (ReferenceEquals(this, other)) return 0;
+        return other is null ? 1 : Key.CompareTo(other.Key);
+    }
+}
+
 
 public sealed class RenderFboSizePolicy
 {

@@ -2,7 +2,7 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Engine.Scene.Modules;
 
-namespace ConcreteEngine.Engine;
+namespace ConcreteEngine.Engine.Systems;
 
 internal sealed class SceneSystem
 {

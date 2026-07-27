@@ -1,15 +1,13 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Render.Buffers;
 using ConcreteEngine.Engine.Render.Passes;
-using ConcreteEngine.Engine.Render.Registry;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 
-namespace ConcreteEngine.Engine.Render.Renderer;
+namespace ConcreteEngine.Engine.Render;
 
 internal sealed class DrawCommandProcessor
 {
@@ -21,9 +19,7 @@ internal sealed class DrawCommandProcessor
 
     private int _lastAnimationSlot;
     private Id16<Material> _lastMaterialId;
-
-    private static PassStateMode PassMode => RenderContext.Instance.PassMode;
-
+    
     internal DrawCommandProcessor(GfxContext gfx, RenderUploadBuffers buffers)
     {
         _gfxCmd = gfx.Commands;
@@ -33,19 +29,17 @@ internal sealed class DrawCommandProcessor
         _effectBuffer = buffers.Effects;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Prepare()
     {
         _lastAnimationSlot = 0;
         _lastMaterialId = default;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PrepareDrawPass()
     {
         _lastAnimationSlot = 0;
         _lastMaterialId = default;
-        if (PassMode != PassStateMode.Depth) return;
+        if (RenderContext.PassMode != PassStateMode.Depth) return;
 
         _gfxCmd.UseShader(RenderRegistry.DepthShader);
         _gfxCmd.UnbindAllTextures();
@@ -67,7 +61,7 @@ internal sealed class DrawCommandProcessor
 
     public void DrawSpecialResolveMesh(DrawCommand cmd, int submitIdx)
     {
-        if (PassMode != PassStateMode.Depth)
+        if (RenderContext.PassMode != PassStateMode.Depth)
         {
             BindAndResolvedOverride(cmd, cmd.Resolver, cmd.ResolverSlot);
         }
@@ -88,7 +82,7 @@ internal sealed class DrawCommandProcessor
             _gfxCmd.ApplyStateFunctions(materialMeta.DrawFunctions);
         }
 
-        if (PassMode == PassStateMode.Depth && textureBindings.Length > 0)
+        if (RenderContext.PassMode == PassStateMode.Depth && textureBindings.Length > 0)
         {
             BindDepthTextureSlots(textureBindings);
             return;
@@ -100,23 +94,17 @@ internal sealed class DrawCommandProcessor
     private void BindTextureSlots(ReadOnlySpan<TextureBinding> slots, sbyte shadowMapBinding)
     {
         if (shadowMapBinding >= 0)
-            _gfxCmd.BindTexture(RenderContext.Instance.DepthTexture, shadowMapBinding);
+            _gfxCmd.BindTexture(RenderContext.DepthTexture, shadowMapBinding);
 
-        foreach (var value in slots)
-        {
-            _gfxCmd.BindTexture(value.Texture, value.Slot);
-        }
+        foreach (var value in slots) _gfxCmd.BindTexture(value.Texture, value.Slot);
     }
 
     private void BindDepthTextureSlots(ReadOnlySpan<TextureBinding> slots)
     {
-        //_gfxCmd.BindTexture(GfxTextures.Fallback.AlphaMaskId, 1);
         foreach (var value in slots)
         {
-            if (value.SlotKind == TextureUsage.Albedo)
-                _gfxCmd.BindTexture(value.Texture, 0);
-            else if (value.SlotKind == TextureUsage.Mask)
-                _gfxCmd.BindTexture(value.Texture, 1);
+            if (value.SlotKind == TextureUsage.Albedo) _gfxCmd.BindTexture(value.Texture, 0);
+            else if (value.SlotKind == TextureUsage.Mask) _gfxCmd.BindTexture(value.Texture, 1);
         }
     }
 
@@ -124,10 +112,6 @@ internal sealed class DrawCommandProcessor
     // allow for more flexible state management later on
     private void BindAndResolvedOverride(DrawCommand cmd, DrawCommandResolver resolver, byte resolverSlot)
     {
-        const GfxStateFlags allowMaterialOverride = GfxStateFlags.Cull | GfxStateFlags.PolygonOffset |
-                                                    GfxStateFlags.Blend | GfxStateFlags.DepthWrite;
-
-        Debug.Assert(resolver is DrawCommandResolver.Highlight or DrawCommandResolver.BoundingVolume);
         ShaderId shader;
         var isAnimated = cmd.AnimationSlot > 0;
         switch (resolver)
@@ -152,8 +136,7 @@ internal sealed class DrawCommandProcessor
         }
     }
     
-    private ReadOnlySpan<TextureBinding> BindResolveMaterial(Id16<Material> materialId,
-        out MaterialMeta materialMeta)
+    private ReadOnlySpan<TextureBinding> BindResolveMaterial(Id16<Material> materialId, out MaterialMeta materialMeta)
     {
         if (_lastMaterialId != materialId)
         {

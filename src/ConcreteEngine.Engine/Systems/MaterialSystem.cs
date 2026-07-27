@@ -1,11 +1,10 @@
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Render.Buffers;
 using ConcreteEngine.Graphics.Gfx;
 
-namespace ConcreteEngine.Engine.Render;
+namespace ConcreteEngine.Engine.Systems;
 
-internal sealed class MaterialProcessor(MaterialBuffer materialBuffer)
+internal sealed class MaterialSystem(MaterialBuffer materialBuffer)
 {
     private readonly MaterialBuffer _materialBuffer = materialBuffer;
     private readonly AssetTypeStore _materialStore = AssetStore.GetTypeStore(AssetKind.Material);

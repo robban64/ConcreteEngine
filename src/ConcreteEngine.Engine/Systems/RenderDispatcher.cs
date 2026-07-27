@@ -4,19 +4,17 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Enviroment;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Render.Buffers;
-using ConcreteEngine.Engine.Render.Renderer;
 using ConcreteEngine.Graphics.Gfx;
-using Camera = ConcreteEngine.Core.Engine.Camera;
 
-namespace ConcreteEngine.Engine.Render;
+namespace ConcreteEngine.Engine.Systems;
 
 internal sealed class RenderDispatcher : IDisposable
 {
@@ -25,7 +23,7 @@ internal sealed class RenderDispatcher : IDisposable
     private NativeArray<RenderEntityId> _visibleEntities;
 
     private readonly CameraFrustum _frustum;
-    private readonly DrawCommandBuffer _commandBuffer;
+    private readonly DrawBuffer _drawBuffer;
     private readonly EffectBuffer _effectBuffer;
     
     internal RenderDispatcher(CameraFrustum frustum, RenderUploadBuffers uploadBuffers)
@@ -34,7 +32,7 @@ internal sealed class RenderDispatcher : IDisposable
         ArgumentNullException.ThrowIfNull(uploadBuffers);
         _frustum = frustum;
         _effectBuffer = uploadBuffers.Effects;
-        _commandBuffer = uploadBuffers.Commands;
+        _drawBuffer = uploadBuffers.Commands;
 
         _visibleEntities = NativeArray.Allocate<RenderEntityId>(Ecs.RenderCore.Capacity);
     }
@@ -60,7 +58,7 @@ internal sealed class RenderDispatcher : IDisposable
     {
         if(VisibleCount  == 0 ) return;
         var visibleSpan = new ReadOnlySpan<RenderEntityId>(_visibleEntities, VisibleCount);
-        animationSystem.Prepare(_commandBuffer, visibleSpan);
+        animationSystem.Prepare(_drawBuffer, visibleSpan);
     }
 
     private int CullEntities()
@@ -83,7 +81,7 @@ internal sealed class RenderDispatcher : IDisposable
     public unsafe void SubmitSystems(AnimationSystem animationSystem, TerrainSystem terrainSystem)
     {
         var visibleSpan = new ReadOnlySpan<RenderEntityId>(_visibleEntities, VisibleCount);
-        animationSystem.WriteCommandSlot(_commandBuffer, visibleSpan);
+        animationSystem.WriteCommandSlot(_drawBuffer, visibleSpan);
         SubmitEnvironment(terrainSystem);
     }
     
@@ -91,7 +89,7 @@ internal sealed class RenderDispatcher : IDisposable
     {
         var ecsCount = Ecs.RenderCore.Count;
         if ((uint)ecsCount > (uint)_visibleEntities.Length) _visibleEntities.Resize(ecsCount, true);
-        _commandBuffer.EnsureCapacity(ecsCount + 64);
+        _drawBuffer.EnsureCapacity(ecsCount + 64);
     }
 
     private void SubmitDrawPolicy(ReadOnlySpan<RenderEntityId> visibleEntities)
@@ -105,7 +103,7 @@ internal sealed class RenderDispatcher : IDisposable
         {
             var depthKey = MakeDepthKey(entity, forward, nearFar, viewZ);
             var policy = Ecs.RenderCore.GetDrawPolicy(entity);
-            _commandBuffer.IndexRef(index) = new DrawCommandIndex(index, policy.Passes, policy.Queue, depthKey);
+            _drawBuffer.IndexRef(index) = new DrawCommandIndex(index, policy.Passes, policy.Queue, depthKey);
             ++index;
         }
     }
@@ -118,7 +116,7 @@ internal sealed class RenderDispatcher : IDisposable
         {
             var entity = visibleEntities[i];
             ref readonly var source = ref Ecs.RenderCore.GetSource(entity);
-            ref var cmd = ref _commandBuffer.CommandRef(i);
+            ref var cmd = ref _drawBuffer.CommandRef(i);
             cmd.MeshId = source.Mesh;
             cmd.MaterialId = source.Material;
             cmd.Resolver = source.Resolver;
@@ -132,12 +130,12 @@ internal sealed class RenderDispatcher : IDisposable
         for (var i = 0; i < visibleEntities.Length; ++i)
         {
             var entity = visibleEntities[i];
-            ref var bufferData = ref _commandBuffer.TransformRef(i);
+            ref var bufferData = ref _drawBuffer.TransformRef(i);
             bufferData.Model = Ecs.RenderCore.GetModelMatrix(entity);
             bufferData.Normal = Ecs.RenderCore.GetNormalMatrix(entity);
         }
 
-        _commandBuffer.IncrementDrawCount(visibleEntities.Length);
+        _drawBuffer.IncrementDrawCount(visibleEntities.Length);
     }
 
     private void ProcessSelectionEffect()
@@ -169,16 +167,16 @@ internal sealed class RenderDispatcher : IDisposable
             var depthKey = CameraManager.Instance.Camera.MakeDepthKey(chunk.GetBounds().Center);
             
             var cmd = new DrawCommand(it.TerrainMeshId, terrainMat);
-            _commandBuffer.SubmitIdentity(cmd, PassMask.Default, DrawQueue.Terrain, depthKey);
+            _drawBuffer.SubmitIdentity(cmd, PassMask.Default, DrawQueue.Terrain, depthKey);
 
             if (it.FoliageCount > 0)
             {
                 cmd = new DrawCommand(it.FoliageMeshId, foliageMat, instanceCount: (uint)it.FoliageCount);
-                _commandBuffer.SubmitIdentity(cmd, PassMask.Default, DrawQueue.Transparent, depthKey);
+                _drawBuffer.SubmitIdentity(cmd, PassMask.Default, DrawQueue.Transparent, depthKey);
             }
         }
 
-        _commandBuffer.SubmitIdentity(
+        _drawBuffer.SubmitIdentity(
             new DrawCommand(Skybox.Current.MeshId, Skybox.Current.MaterialId),
             PassMask.Main, DrawQueue.Skybox, 0);
     }
@@ -190,10 +188,10 @@ internal sealed class RenderDispatcher : IDisposable
 
         var materialId = AssetStore.Core.DebugBoundsMaterial.MaterialId;
 
-        var index = _commandBuffer.Count;
+        var index = _drawBuffer.Count;
         foreach (var query in Ecs.GetRenderStore<DebugBoundsComponent>().VisibilityQuery())
         {
-            ref var bufferDst = ref _commandBuffer.TransformRef(index);
+            ref var bufferDst = ref _drawBuffer.TransformRef(index);
             ref readonly var worldBounds = ref Ecs.RenderCore.GetWorldBounds(query.Entity);
             MatrixMath.CreateModelMatrix(
                 worldBounds.Center,
@@ -207,14 +205,14 @@ internal sealed class RenderDispatcher : IDisposable
 
             var slot = _effectBuffer.Submit(new EffectUniformParams(query.Component.Color));
 
-            _commandBuffer.CommandRef(index) = new DrawCommand(GfxMeshes.Cube, materialId,
+            _drawBuffer.CommandRef(index) = new DrawCommand(GfxMeshes.Cube, materialId,
                 resolver: DrawCommandResolver.BoundingVolume, resolverSlot: slot);
-            _commandBuffer.IndexRef(index) = new DrawCommandIndex(index, PassMask.Effect, DrawQueue.Effect, depthKey);
+            _drawBuffer.IndexRef(index) = new DrawCommandIndex(index, PassMask.Effect, DrawQueue.Effect, depthKey);
 
             ++index;
         }
 
-        _commandBuffer.IncrementDrawCount(index);
+        _drawBuffer.IncrementDrawCount(index);
     }
 
     

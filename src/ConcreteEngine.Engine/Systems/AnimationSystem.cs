@@ -4,10 +4,10 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Render.Buffers;
-using ConcreteEngine.Engine.Render.Renderer;
 
-namespace ConcreteEngine.Engine.Render;
+namespace ConcreteEngine.Engine.Systems;
 
 internal sealed unsafe class AnimationSystem : IDisposable
 {
@@ -53,7 +53,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
         _frameCount = cursor;
     }
 
-    public void Prepare(DrawCommandBuffer cmd, ReadOnlySpan<RenderEntityId> visibleEntities)
+    public void Prepare(DrawBuffer cmd, ReadOnlySpan<RenderEntityId> visibleEntities)
     {
         var length = _frameCount;
         for (int i = 0; i < length; ++i)
@@ -82,7 +82,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
         return count;
     }
 
-    public void WriteCommandSlot(DrawCommandBuffer cmd, ReadOnlySpan<RenderEntityId> visibleEntities)
+    public void WriteCommandSlot(DrawBuffer cmd, ReadOnlySpan<RenderEntityId> visibleEntities)
     {
         var length = _frameCount;
         for (int i = 0; i < length; ++i)

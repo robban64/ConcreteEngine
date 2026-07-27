@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Extensions;
@@ -13,6 +14,7 @@ public static class EngineWindow
     public static bool IsDirty { get; private set; }
     public static Size2D WindowSize { get; private set; }
     public static Size2D OutputSize { get; private set; }
+    public static Vector2 InvViewport { get; private set; }
 
     private static ViewportRect _viewport, _nextViewport;
     private static Size2D _nextWindowSize, _nextOutputSize;
@@ -21,8 +23,9 @@ public static class EngineWindow
 
     public static nint PlatformWindowPtr => _platformWindow.Handle;
 
-    public static float AspectRatio => _viewport.Size.AspectRatio;
     public static Size2D ViewportSize => _viewport.Size;
+    public static float AspectRatio => ViewportSize.AspectRatio;
+    
     public static ref readonly ViewportRect Viewport
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -65,6 +68,7 @@ public static class EngineWindow
         _viewport = _nextViewport;
         WindowSize = _nextWindowSize;
         OutputSize = _nextOutputSize;
+        InvViewport = new Vector2(1.0f / _viewport.Size.Width, 1.0f / _viewport.Size.Height);
         Logger.Log(LogScope.Engine, $"ScreenResized: {WindowSize}");
 
         return true;

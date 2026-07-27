@@ -1,13 +1,13 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Editor.App.Inspectors;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Renderer.Core;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Assets;

@@ -20,7 +20,7 @@ public sealed class GfxFrameBuffers
         _gfxTextures = gfxTextures;
     }
 
-    public GfxId<FrameBufferMeta> CreateFrameBuffer(in CreateFboInfo desc)
+    public GfxId<FrameBufferMeta> CreateFrameBuffer(CreateFboInfo desc)
     {
         EnsureCreateFrameBuffer(in desc);
         var size = desc.Size;

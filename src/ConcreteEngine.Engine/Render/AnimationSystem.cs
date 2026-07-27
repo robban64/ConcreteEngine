@@ -4,8 +4,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
-using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Buffer;
+using ConcreteEngine.Engine.Renderer;
 
 namespace ConcreteEngine.Engine.Render;
 
@@ -53,6 +52,17 @@ internal sealed unsafe class AnimationSystem : IDisposable
         _frameCount = cursor;
     }
 
+    public void Prepare(DrawCommandBuffer cmd, ReadOnlySpan<RenderEntityId> visibleEntities)
+    {
+        var length = _frameCount;
+        for (int i = 0; i < length; ++i)
+        {
+            var entitySlot = _entitySlots[i];
+            var index = visibleEntities.BinarySearch(entitySlot.entity);
+            if (index >= 0) cmd.CommandRef(index).AnimationSlot = 0;
+        }
+
+    }
     private int FilterEntities(AnimationInstance animation, int cursor, ushort slot)
     {
         var count = 0;

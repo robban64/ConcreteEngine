@@ -4,9 +4,6 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Buffer;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Enviroment;
 
@@ -54,9 +51,9 @@ public sealed class Terrain
 
     public ReadOnlySpan<TerrainChunk> GetChunks() => _chunks;
 
-    public Id16<MaterialSlot> MaterialId => GroundMaterial?.MaterialId ?? AssetStore.Core.FallbackMaterial.MaterialId;
+    public Id16<Material> MaterialId => GroundMaterial?.MaterialId ?? AssetStore.Core.FallbackMaterial.MaterialId;
 
-    public Id16<MaterialSlot> FoliageMaterialId =>
+    public Id16<Material> FoliageMaterialId =>
         FoliageMaterial?.MaterialId ?? AssetStore.Core.FallbackMaterial.MaterialId;
 
     public void SetTexture(int slot, Texture texture)

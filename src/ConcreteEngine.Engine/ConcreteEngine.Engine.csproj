@@ -34,7 +34,6 @@
         </ProjectReference>
 
         <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj"/>
-        <ProjectReference Include="..\ConcreteEngine.Renderer\ConcreteEngine.Renderer.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

@@ -11,9 +11,8 @@ using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Enviroment;
+using ConcreteEngine.Engine.Renderer;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Buffer;
 using Camera = ConcreteEngine.Core.Engine.Camera;
 
 namespace ConcreteEngine.Engine.Render;
@@ -38,23 +37,32 @@ internal sealed class RenderDispatcher : IDisposable
 
         _visibleEntities = NativeArray.Allocate<RenderEntityId>(Ecs.RenderCore.Capacity);
     }
+    
+    public void Dispose() => _visibleEntities.Dispose();
 
     public unsafe void Execute()
     {
         Ensure();
-
-        if (VisibleCount == 0) return;
+        
+        var visibleCount = CullEntities();
+        if (visibleCount == 0) return;
         ProcessSelectionEffect();
 
-        var visibleSpan = new ReadOnlySpan<RenderEntityId>(_visibleEntities, VisibleCount);
+        var visibleSpan = new ReadOnlySpan<RenderEntityId>(_visibleEntities, visibleCount);
         SubmitDrawPolicy(visibleSpan);
         SubmitCommands(visibleSpan);
         SubmitTransforms(visibleSpan);
         SubmitDebugBounds();
     }
 
+    public unsafe void Prepare(AnimationSystem animationSystem)
+    {
+        if(VisibleCount  == 0 ) return;
+        var visibleSpan = new ReadOnlySpan<RenderEntityId>(_visibleEntities, VisibleCount);
+        animationSystem.Prepare(_commandBuffer, visibleSpan);
+    }
 
-    public void CullEntities()
+    private int CullEntities()
     {
         var length = Ecs.RenderCore.Count;
         if ((uint)length > (uint)_visibleEntities.Length)
@@ -68,7 +76,7 @@ internal sealed class RenderDispatcher : IDisposable
             visible &= query.Meta.ToggleVisibility(EntityVisibility.Culled, visible) == 0;
             if (visible) _visibleEntities[visibleCount++] = query.Entity;
         }
-        VisibleCount = visibleCount;
+        return VisibleCount = visibleCount;
     }
 
     public unsafe void SubmitSystems(AnimationSystem animationSystem, TerrainSystem terrainSystem)
@@ -101,18 +109,6 @@ internal sealed class RenderDispatcher : IDisposable
         }
     }
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ushort MakeDepthKey(RenderEntityId entity, Vector3 forward, Vector2 nearFar, float viewZ)
-    {
-        const float maxValueF = 65535f;
-
-        var worldPos = Ecs.RenderCore.GetModelMatrix(entity).Translation;
-        var d = Vector3.Dot(forward, worldPos) - viewZ;
-        if (d <= nearFar.X) return 0;
-        if (d >= nearFar.Y) return ushort.MaxValue;
-        var t = (d - nearFar.X) / (nearFar.Y - nearFar.X);
-        return (ushort)(t * maxValueF + 0.5f);
-    }
 
 
     private void SubmitCommands(ReadOnlySpan<RenderEntityId> visibleEntities)
@@ -220,5 +216,17 @@ internal sealed class RenderDispatcher : IDisposable
         _commandBuffer.IncrementDrawCount(index);
     }
 
-    public void Dispose() => _visibleEntities.Dispose();
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ushort MakeDepthKey(RenderEntityId entity, Vector3 forward, Vector2 nearFar, float viewZ)
+    {
+        const float maxValueF = 65535f;
+
+        var worldPos = Ecs.RenderCore.GetModelMatrix(entity).Translation;
+        var d = Vector3.Dot(forward, worldPos) - viewZ;
+        if (d <= nearFar.X) return 0;
+        if (d >= nearFar.Y) return ushort.MaxValue;
+        var t = (d - nearFar.X) / (nearFar.Y - nearFar.X);
+        return (ushort)(t * maxValueF + 0.5f);
+    }
 }

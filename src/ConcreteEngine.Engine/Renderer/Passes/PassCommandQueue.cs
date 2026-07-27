@@ -1,0 +1,68 @@
+using System.Runtime.CompilerServices;
+
+namespace ConcreteEngine.Engine.Renderer.Passes;
+
+internal sealed class PassCommandQueue
+{
+    private readonly PriorityQueue<TextureId, PassTextureSlotKey> _sourceQueue;
+    private readonly PriorityQueue<PassMutationState, PassTagKey> _mutationQueue;
+
+    private readonly TextureId[] _textureSlots = new TextureId[RenderLimits.TextureSlots];
+    private int _textureSlotHigh;
+
+    internal PassCommandQueue()
+    {
+        _sourceQueue = new PriorityQueue<TextureId, PassTextureSlotKey>(4, new PassTextureSlotKeyComp());
+        _mutationQueue = new PriorityQueue<PassMutationState, PassTagKey>(4, new PassTagKeyComp());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SampleTo(PassTextureSlotKey texKey, TextureId textureId)
+    {
+        _sourceQueue.Enqueue(textureId, texKey);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void EnqueueMutation(PassTagKey passKey, in PassMutationState newState)
+    {
+        _mutationQueue.Enqueue(newState, passKey);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DequeueMutationTo(RenderPassEntry entry)
+    {
+        while (_mutationQueue.TryPeek(out _, out var k) && k.TagIndex == entry.PassKey.TagIndex)
+        {
+            _mutationQueue.TryDequeue(out var state, out k);
+            entry.UpdateState(in state);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DequeuePassSources(RenderPassEntry entry)
+    {
+        var tagIndex = entry.PassKey.TagIndex;
+        var slots = _textureSlots.AsSpan();
+        slots.Clear();
+
+        _textureSlotHigh = 0;
+        while (_sourceQueue.TryPeek(out _, out var k) && k.TagIndex == tagIndex)
+        {
+            _sourceQueue.TryDequeue(out var id, out k);
+            _textureSlots[k.TextureSlot] = id;
+            _textureSlotHigh = int.Max(_textureSlotHigh, k.TextureSlot);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<TextureId> GetPassSources() => new(_textureSlots, 0, int.Max(_textureSlotHigh, 1));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void Prepare()
+    {
+        _sourceQueue.Clear();
+        _mutationQueue.Clear();
+        _textureSlots.AsSpan().Clear();
+        _textureSlotHigh = 0;
+    }
+}

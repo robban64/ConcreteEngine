@@ -1,18 +1,21 @@
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
+using ConcreteEngine.Engine.Renderer;
+using ConcreteEngine.Engine.Renderer.Passes;
+using ConcreteEngine.Engine.Renderer.Registry;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Renderer;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render;
 
 public sealed class EngineRenderSystem : IDisposable
 {
-    internal RenderProgram Program { get; }
-
     private readonly RenderDispatcher _renderDispatcher;
 
     private readonly CameraManager _cameraManager;
@@ -24,25 +27,43 @@ public sealed class EngineRenderSystem : IDisposable
 
     private readonly MaterialProcessor _materialProcessor;
 
+    private readonly RenderUploadBuffers _uploadBuffers;
+    private readonly RenderRegistry _registry;
+    private readonly RenderPassPipeline _passPipeline;
+    private readonly DrawCommandPipeline _drawPipeline;
+
+
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
         _cameraManager = CameraManager.Instance;
         _visualManager = VisualManager.Instance;
         _visualManager.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
 
-        Program = new RenderProgram(graphics, VisualUniformProcessor.MakeCallbacks());
-
+        _registry = new RenderRegistry(graphics.Gfx);
+        _uploadBuffers = new RenderUploadBuffers();
+        _drawPipeline = new DrawCommandPipeline(graphics.Gfx, _uploadBuffers);
+        _passPipeline = new RenderPassPipeline(graphics.Gfx,_registry);
+        
         _terrainSystem = new TerrainSystem(graphics.Gfx);
         _particleSystem = new ParticleSystem(graphics.Gfx);
-        _animationSystem = new AnimationSystem(AnimationManager.Instance, Program.UploadBuffers.Skinning);
+        _animationSystem = new AnimationSystem(AnimationManager.Instance, _uploadBuffers.Skinning);
 
-        _renderDispatcher = new RenderDispatcher(_cameraManager.Frustum, Program.UploadBuffers);
-        _materialProcessor = new MaterialProcessor(Program);
+        _renderDispatcher = new RenderDispatcher(_cameraManager.Frustum, _uploadBuffers);
+        _materialProcessor = new MaterialProcessor(_uploadBuffers.Materials);
+        
+        RenderContext.Make();
+        VisualUniformProcessor.Create(graphics.Gfx.Buffers);
+
     }
 
     public int VisibleCount => _renderDispatcher.VisibleCount;
 
-    internal void Initialize() { }
+    internal void Init()
+    {
+        RegisterCoreShaders(AssetManager.Assets);
+        PassPipeline3D.RegisterFrameBuffers(_registry);
+        PassPipeline3D.RegisterPassPipeline(_passPipeline);
+    }
 
     internal void AfterUpdate()
     {
@@ -59,14 +80,15 @@ public sealed class EngineRenderSystem : IDisposable
         if (screenResize)
         {
             Logger.Log(LogScope.Engine, "Recreating screen framebuffers");
-            Program.ResizeScreenFrameBuffers(EngineWindow.Viewport.Size);
+            _registry.RecreateScreenDependentFbo(EngineWindow.Viewport.Size);
             _cameraManager.Camera.SetAspectRatio(EngineWindow.AspectRatio);
         }
 
         if (_visualManager.CommitShadowSize())
         {
             Logger.Log(LogScope.Engine, "Recreating shadow framebuffers");
-            Program.ResizeShadowFrameBuffers(_visualManager.Shadow.ShadowMapSize);
+            var size = new Size2D(_visualManager.Shadow.ShadowMapSize);
+            _registry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.V0, size);
         }
     }
 
@@ -78,13 +100,15 @@ public sealed class EngineRenderSystem : IDisposable
 
     internal void Render(float dt, float alpha)
     {
-        Program.PrepareFrame();
+        RenderContext.Instance.ResetPassMode();
+        _passPipeline.Prepare();
+        _drawPipeline.Prepare();
 
         // frame update
         _cameraManager.CommitFrame(alpha);
 
         // process and upload draw commands
-        _renderDispatcher.CullEntities();
+        _renderDispatcher.Prepare(_animationSystem);
         _renderDispatcher.Execute();
         
         _particleSystem.Execute();
@@ -93,12 +117,34 @@ public sealed class EngineRenderSystem : IDisposable
         _renderDispatcher.SubmitSystems(_animationSystem, _terrainSystem);
 
         // prepare buffers
-        Program.CollectDrawBuffers();
+        _drawPipeline.PrepareDrawBuffers();
 
         // upload buffers to gpu
-        VisualUniformProcessor.Upload(Program.GetUploadContext());
+        VisualUniformProcessor.Instance.Upload();
+        _drawPipeline.UploadUniforms();
 
-        Program.Render();
+        RenderPasses();
+    }
+    
+    private void RenderPasses()
+    {
+        while (_passPipeline.NextPass(out var nextPassId, out var passAction))
+        {
+            if (passAction == NextPassAction.Skip) continue;
+            var passResult = _passPipeline.ApplyPass();
+            
+            switch (passResult.Op)
+            {
+                case PassOp.Draw:
+                    _drawPipeline.ExecuteDrawPass(nextPassId, true);
+                    break;
+                case PassOp.DrawEffect:
+                    _drawPipeline.ExecuteDrawPass(nextPassId, false);
+                    break;
+            }
+
+            _passPipeline.ApplyAfterPass();
+        }
     }
 
 
@@ -107,6 +153,17 @@ public sealed class EngineRenderSystem : IDisposable
         _renderDispatcher.Dispose();
         _particleSystem.Dispose();
         _animationSystem.Dispose();
-        Program.Dispose();
+        _uploadBuffers.Dispose();
     }
+    
+    private static void RegisterCoreShaders(AssetStore store)
+    {
+        RenderRegistry.DepthShader = store.GetByName<Shader>("Depth").GfxId;
+        RenderRegistry.ColorFilterShader = store.GetByName<Shader>("ColorFilter").GfxId;
+        RenderRegistry.CompositeShader = store.GetByName<Shader>("Composite").GfxId;
+        RenderRegistry.PresentShader = store.GetByName<Shader>("Present").GfxId;
+        RenderRegistry.HighlightShader = store.GetByName<Shader>("Highlight").GfxId;
+        RenderRegistry.BoundingBoxShader = store.GetByName<Shader>("BoundingBox").GfxId;
+    }
+
 }

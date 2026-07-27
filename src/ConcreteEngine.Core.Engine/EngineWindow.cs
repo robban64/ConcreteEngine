@@ -22,7 +22,7 @@ public static class EngineWindow
     public static nint PlatformWindowPtr => _platformWindow.Handle;
 
     public static float AspectRatio => _viewport.Size.AspectRatio;
-
+    public static Size2D ViewportSize => _viewport.Size;
     public static ref readonly ViewportRect Viewport
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

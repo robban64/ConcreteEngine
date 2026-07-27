@@ -1,13 +1,12 @@
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Buffer;
-using ConcreteEngine.Renderer.Core;
+using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Engine.Renderer;
 
 namespace ConcreteEngine.Engine.Render;
 
-internal sealed class MaterialProcessor(RenderProgram renderProgram)
+internal sealed class MaterialProcessor(MaterialBuffer materialBuffer)
 {
-    private readonly MaterialBuffer _materialBuffer = renderProgram.UploadBuffers.Materials;
+    private readonly MaterialBuffer _materialBuffer = materialBuffer;
     private readonly AssetTypeStore _materialStore = AssetStore.GetTypeStore(AssetKind.Material);
 
     internal void Commit()

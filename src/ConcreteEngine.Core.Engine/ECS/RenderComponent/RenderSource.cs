@@ -1,8 +1,6 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Buffer;
-using ConcreteEngine.Renderer.Core;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
@@ -14,12 +12,12 @@ public struct DrawPolicy(DrawQueue queue, PassMask passes)
 
 public struct RenderSource(
     MeshId mesh,
-    Id16<MaterialSlot> material,
+    Id16<Material> material,
     int meshIndex,
     EntitySourceKind kind)
 {
     public MeshId Mesh = mesh;
-    public Id16<MaterialSlot> Material = material;
+    public Id16<Material> Material = material;
     
     public byte MeshIndex = (byte)meshIndex;
     public EntitySourceKind Kind = kind;

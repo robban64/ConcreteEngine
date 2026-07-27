@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor;
+using ConcreteEngine.Engine.Renderer;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Renderer;
 
 namespace ConcreteEngine.Engine.Gateway;
 
@@ -12,12 +12,10 @@ internal sealed class EngineGateway : IDisposable
 
     public readonly EngineMetricHub Metrics;
 
-    private readonly RenderProgram _renderProgram;
     private EditorPortal _editor = null!;
 
-    internal EngineGateway(RenderProgram renderProgram)
+    internal EngineGateway()
     {
-        _renderProgram = renderProgram;
         Metrics = new EngineMetricHub();
     }
 
@@ -49,7 +47,7 @@ internal sealed class EngineGateway : IDisposable
     public void RenderEditor(float deltaTime)
     {
         if (!Enabled) return;
-        _editor.Render(deltaTime, _renderProgram.GetOutputTexture());
+        _editor.Render(deltaTime, RenderContext.Instance.OutputTexture);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

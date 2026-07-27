@@ -5,46 +5,53 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Core.Engine.Input;
-using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Core;
+using ConcreteEngine.Engine.Renderer;
+using ConcreteEngine.Engine.Renderer.Core;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render;
 
-public static unsafe class VisualUniformProcessor
+internal sealed unsafe class VisualUniformProcessor
 {
+    public static void Create(GfxBuffers gfx) => Instance = new VisualUniformProcessor(gfx);
+    public static VisualUniformProcessor Instance { get; private set; } = null!;
     private static CameraManager CameraManager => CameraManager.Instance;
     private static VisualManager VisualManager => VisualManager.Instance;
 
-    public static UniformUploaderCallbacks MakeCallbacks()
+    private readonly GfxBuffers _gfx;
+
+    private VisualUniformProcessor(GfxBuffers gfx)
     {
-        return new UniformUploaderCallbacks
-        {
-            UploadMainView = &UploadMainView, UploadLightView = &UploadLightView, UploadShadow = &UploadShadow
-        };
+        _gfx = gfx;
     }
 
-    public static void Upload(UniformUploadContext ctx)
+    public void Upload()
     {
-        var visuals = VisualManager;
-        UploadEngineUniformRecord(ctx, EngineWindow.Viewport.Size, EngineInput.Mouse.ViewportPos);
+        UploadEngineUniformRecord(EngineWindow.Viewport.Size, EngineInput.Mouse.ViewportPos);
 
-        if (!visuals.AnyWasDirty) return;
+        if (!VisualManager.AnyWasDirty) return;
 
-        if (visuals.Illumination.WasDirty)
-            UploadDirLight(in ctx);
+        if (VisualManager.Illumination.WasDirty)
+            UploadDirLight();
 
-        if (visuals.Illumination.WasDirty || visuals.Environment.WasDirty)
-            UploadFrameUniformRecord(in ctx);
+        if (VisualManager.Illumination.WasDirty || VisualManager.Environment.WasDirty)
+            UploadFrameUniformRecord();
 
-        if (visuals.PostEffect.WasDirty)
-            UploadPost(in ctx);
+        if (VisualManager.PostEffect.WasDirty)
+            UploadPost();
 
-        visuals.Commit();
+        VisualManager.Commit();
+    }
+
+    public void UploadLight()
+    {
+        LightUniform data = default;
+        _gfx.UploadSingleUniform(&data, 0);
     }
 
 
     [SkipLocalsInit]
-    public static void UploadMainView(in UniformUploadContext ctx)
+    public void UploadMainView()
     {
         var t = CameraManager.FrameTransforms;
         CameraUniform data;
@@ -54,11 +61,11 @@ public static unsafe class VisualUniformProcessor
         data.CameraPos = t.Translation;
         data.CameraUp = t.Up;
         data.CameraRight = t.Right;
-        ctx.UploadUniform(&data);
+        _gfx.UploadSingleUniform(&data, 0);
     }
 
     [SkipLocalsInit]
-    public static void UploadLightView(in UniformUploadContext ctx)
+    public void UploadLightView()
     {
         var t = CameraManager.LightTransforms;
         CameraUniform data;
@@ -68,11 +75,11 @@ public static unsafe class VisualUniformProcessor
         data.CameraPos = t.Translation;
         data.CameraUp = t.Up;
         data.CameraRight = t.Right;
-        ctx.UploadUniform(&data);
+        _gfx.UploadSingleUniform(&data, 0);
     }
 
     [SkipLocalsInit]
-    public static void UploadShadow(in UniformUploadContext ctx)
+    public void UploadShadow()
     {
         var proj = VisualManager.Shadow.Projection;
         var vis = VisualManager.Shadow.Visuals;
@@ -86,11 +93,11 @@ public static unsafe class VisualUniformProcessor
         data.ShadowParams0 = new Vector4(size, size, proj.ConstBias, proj.SlopeBias);
         data.ShadowParams1 = new Vector4(vis.Strength, vis.PcfRadius, 0.03f, proj.Distance);
 
-        ctx.UploadUniform(&data);
+        _gfx.UploadSingleUniform(&data, 0);
     }
 
     [SkipLocalsInit]
-    private static void UploadEngineUniformRecord(in UniformUploadContext ctx, Size2D outputSize, Vector2 mouse)
+    private void UploadEngineUniformRecord(Size2D outputSize, Vector2 mouse)
     {
         var data = new EngineUniformRecord(
             invResolution: new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height),
@@ -100,11 +107,11 @@ public static unsafe class VisualUniformProcessor
             random: EngineTime.FrameRng
         );
 
-        ctx.UploadUniform(&data);
+        _gfx.UploadSingleUniform(&data, 0);
     }
 
     [SkipLocalsInit]
-    private static void UploadFrameUniformRecord(in UniformUploadContext ctx)
+    private void UploadFrameUniformRecord()
     {
         var env = VisualManager.Environment;
         var fogHeight = env.FogHeight;
@@ -121,11 +128,11 @@ public static unsafe class VisualUniformProcessor
         data.FogParams0 = new Vector4(kExp2, kHeight, fogHeight.BaseHeight, fogHeight.Strength);
         data.FogParams1 = new Vector4(fogOptics.DistanceWeight, fogOptics.HeightWeight, fogOptics.MaxDistance, 0.0f);
 
-        ctx.UploadUniform(&data);
+        _gfx.UploadSingleUniform(&data, 0);
     }
 
     [SkipLocalsInit]
-    private static void UploadDirLight(in UniformUploadContext ctx)
+    private void UploadDirLight()
     {
         var it = VisualManager.Illumination;
 
@@ -134,11 +141,11 @@ public static unsafe class VisualUniformProcessor
         data.Diffuse = new Vector4(it.Diffuse, it.Intensity);
         data.Specular = new Vector4(it.Specular, 0.0f, 0.0f, 0.0f);
 
-        ctx.UploadUniform(&data);
+        _gfx.UploadSingleUniform(&data, 0);
     }
 
     [SkipLocalsInit]
-    private static void UploadPost(in UniformUploadContext ctx)
+    private void UploadPost()
     {
         var post = VisualManager.PostEffect;
         var bloom = post.Bloom;
@@ -150,6 +157,6 @@ public static unsafe class VisualUniformProcessor
         data.Bloom = new Vector4(bloom.Intensity, bloom.Threshold, bloom.Radius, 0f);
         data.Fx = Unsafe.BitCast<PostImageFxParams, Vector4>(post.ImageFx);
 
-        ctx.UploadUniform(&data);
+        _gfx.UploadSingleUniform(&data, 0);
     }
 }

@@ -3,10 +3,8 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Editor;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Buffer;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
@@ -26,7 +24,7 @@ public sealed class MaterialState
 {
     private static int _materialIdCounter;
 
-    public readonly Id16<MaterialSlot> MaterialId = new(++_materialIdCounter);
+    public readonly Id16<Material> MaterialId = new(++_materialIdCounter);
 
     private readonly Material _material;
     private MaterialShading _shading;

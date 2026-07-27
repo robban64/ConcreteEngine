@@ -2,14 +2,14 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Editor;
-using ConcreteEngine.Renderer.Core;
+using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
 [Inspect]
 public sealed class Material : AssetObject
 {
-    public Id16<MaterialSlot> MaterialId => State.MaterialId;
+    public Id16<Material> MaterialId => State.MaterialId;
     public MaterialProfileId ProfileId { get; private set; }
 
     [InspectInclude] public readonly MaterialState State;

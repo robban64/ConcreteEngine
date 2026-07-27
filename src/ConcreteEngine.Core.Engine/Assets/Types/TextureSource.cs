@@ -1,4 +1,4 @@
-using ConcreteEngine.Renderer.Core;
+using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 

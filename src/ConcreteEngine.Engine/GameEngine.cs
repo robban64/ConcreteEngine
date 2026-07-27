@@ -49,7 +49,7 @@ public sealed class GameEngine : IDisposable
 
         _commandBuses = new CommandBus(new EngineCommandContext(_assetSystem));
 
-        _gateway = new EngineGateway(_renderSystem.Program);
+        _gateway = new EngineGateway();
 
         _tickHub = new EngineTickHub(this);
 

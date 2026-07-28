@@ -1,4 +1,7 @@
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Enviroment;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
@@ -29,39 +32,48 @@ internal sealed class TerrainSystem
         MainTerrain.IsDirty = false;
         Allocate();
     }
-/*
-    public void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, CameraFrustum camera)
-    {
-        var material = MainTerrain.MaterialId;
-        var foliageMaterial = MainTerrain.FoliageMaterialId;
 
+    private void OnAllocateTerrain()
+    {
+        var terrainMat = MainTerrain.MaterialId;
         foreach (var it in TerrainMesh.GetMeshChunks())
         {
-            if (!camera.IntersectsBox(in MainTerrain.GetChunk(it.Slot).GetBounds())) continue;
-            var meta = new DrawCommandMeta(DrawCommandQueue.Terrain);
-            var cmd = new DrawCommand(it.TerrainMeshId, material);
-            commandBuffer.SubmitIdentity(cmd, meta);
+            var chunk = MainTerrain.GetChunk(it.Slot);
 
-            if (it.FoliageCount > 0)
-            {
-                meta = new DrawCommandMeta(DrawCommandQueue.Transparent);
-                cmd = new DrawCommand(it.FoliageMeshId, foliageMaterial, instanceCount: (uint)it.FoliageCount);
-                commandBuffer.SubmitIdentity(cmd, meta);
-            }
+            var source = new RenderSource(it.TerrainMeshId, terrainMat, 0, EntitySourceKind.Model);
+            var drawPolicy = new DrawPolicy(DrawQueue.Terrain, PassMask.Default);
+            var entity = Ecs.RenderCore.AddEntity(source, drawPolicy);
+            Ecs.RenderCore.GetWorldBounds(entity) = chunk.GetBounds();
         }
     }
-*/
+
+    private void OnAllocateFoliage()
+    {
+        var mat = MainTerrain.FoliageMaterialId;
+        foreach (var it in TerrainMesh.GetMeshChunks())
+        {
+            var chunk = MainTerrain.GetChunk(it.Slot);
+
+            //(uint)it.FoliageCount
+            var source = new RenderSource(it.FoliageMeshId, mat, 0, EntitySourceKind.Model);
+            var drawPolicy = new DrawPolicy(DrawQueue.Transparent, PassMask.Default);
+            var entity = Ecs.RenderCore.AddEntity(source, drawPolicy);
+            Ecs.RenderCore.GetWorldBounds(entity) = chunk.GetBounds();
+        }
+    }
     private void Allocate()
     {
         if (!TerrainMesh.TerrainIboId.IsValid() && MainTerrain.Heightmap?.TryGetPixelSpan(out var heightData) == true)
         {
             TerrainMesh.Allocate(MainTerrain.GetChunks(), heightData, MainTerrain.Dimension, MainTerrain.MaxHeight);
+            OnAllocateTerrain();
             Logger.Message("Terrain: allocated terrain");
         }
 
         if (!TerrainMesh.HasFoliage && MainTerrain.Splatmap?.TryGetPixelSpan(out var splatMapData) == true)
         {
             TerrainMesh.AllocateFoliage(MainTerrain, splatMapData);
+            OnAllocateFoliage();
             Logger.Message("Terrain: allocated foliage");
         }
 

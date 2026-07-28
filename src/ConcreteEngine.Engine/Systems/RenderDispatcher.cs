@@ -25,7 +25,7 @@ internal sealed class RenderDispatcher : IDisposable
     private readonly CameraFrustum _frustum;
     private readonly DrawBuffer _drawBuffer;
     private readonly EffectBuffer _effectBuffer;
-    
+
     internal RenderDispatcher(CameraFrustum frustum, RenderUploadBuffers uploadBuffers)
     {
         ArgumentNullException.ThrowIfNull(frustum);
@@ -36,13 +36,17 @@ internal sealed class RenderDispatcher : IDisposable
 
         _visibleEntities = NativeArray.Allocate<RenderEntityId>(Ecs.RenderCore.Capacity);
     }
-    
+
     public void Dispose() => _visibleEntities.Dispose();
+
+    public void Setup()
+    {
+    }
 
     public unsafe void Execute()
     {
         Ensure();
-        
+
         var visibleCount = CullEntities();
         if (visibleCount == 0) return;
         ProcessSelectionEffect();
@@ -56,7 +60,7 @@ internal sealed class RenderDispatcher : IDisposable
 
     public unsafe void Prepare(AnimationSystem animationSystem)
     {
-        if(VisibleCount  == 0 ) return;
+        if (VisibleCount == 0) return;
         var visibleSpan = new ReadOnlySpan<RenderEntityId>(_visibleEntities, VisibleCount);
         animationSystem.Prepare(_drawBuffer, visibleSpan);
     }
@@ -75,16 +79,16 @@ internal sealed class RenderDispatcher : IDisposable
             visible &= query.Meta.ToggleVisibility(EntityVisibility.Culled, visible) == 0;
             if (visible) _visibleEntities[visibleCount++] = query.Entity;
         }
+
         return VisibleCount = visibleCount;
     }
 
-    public unsafe void SubmitSystems(AnimationSystem animationSystem, TerrainSystem terrainSystem)
+    public unsafe void SubmitSystems(AnimationSystem animationSystem)
     {
         var visibleSpan = new ReadOnlySpan<RenderEntityId>(_visibleEntities, VisibleCount);
         animationSystem.WriteCommandSlot(_drawBuffer, visibleSpan);
-        SubmitEnvironment(terrainSystem);
     }
-    
+
     private void Ensure()
     {
         var ecsCount = Ecs.RenderCore.Count;
@@ -107,7 +111,6 @@ internal sealed class RenderDispatcher : IDisposable
             ++index;
         }
     }
-    
 
 
     private void SubmitCommands(ReadOnlySpan<RenderEntityId> visibleEntities)
@@ -152,35 +155,6 @@ internal sealed class RenderDispatcher : IDisposable
             Ecs.RenderCore.GetDrawPolicy(query.Entity).Passes = PassMask.Effect | PassMask.Depth;
         }
     }
-    
-    private void SubmitEnvironment(TerrainSystem terrainSystem)
-    {
-        var mainTerrain = terrainSystem.MainTerrain;
-        var terrainMat = mainTerrain.MaterialId;
-        var foliageMat = mainTerrain.FoliageMaterialId;
-
-        foreach (var it in terrainSystem.TerrainMesh.GetMeshChunks())
-        {
-            var chunk = mainTerrain.GetChunk(it.Slot);
-            if (!_frustum.IntersectsBox(chunk.GetBounds())) continue;
-            
-            var depthKey = CameraManager.Instance.Camera.MakeDepthKey(chunk.GetBounds().Center);
-            
-            var cmd = new DrawCommand(it.TerrainMeshId, terrainMat);
-            _drawBuffer.SubmitIdentity(cmd, PassMask.Default, DrawQueue.Terrain, depthKey);
-
-            if (it.FoliageCount > 0)
-            {
-                cmd = new DrawCommand(it.FoliageMeshId, foliageMat, instanceCount: (uint)it.FoliageCount);
-                _drawBuffer.SubmitIdentity(cmd, PassMask.Default, DrawQueue.Transparent, depthKey);
-            }
-        }
-
-        _drawBuffer.SubmitIdentity(
-            new DrawCommand(Skybox.Current.MeshId, Skybox.Current.MaterialId),
-            PassMask.Main, DrawQueue.Skybox, 0);
-    }
-
 
     private void SubmitDebugBounds()
     {
@@ -200,7 +174,7 @@ internal sealed class RenderDispatcher : IDisposable
                 out bufferDst.Model
             );
             bufferDst.Normal = Matrix3X4.Identity;
-            
+
             var depthKey = CameraManager.Instance.Camera.MakeDepthKey(bufferDst.Model.Translation);
 
             var slot = _effectBuffer.Submit(new EffectUniformParams(query.Component.Color));
@@ -215,7 +189,7 @@ internal sealed class RenderDispatcher : IDisposable
         _drawBuffer.IncrementDrawCount(index);
     }
 
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ushort MakeDepthKey(RenderEntityId entity, Vector3 forward, Vector2 nearFar, float viewZ)
     {

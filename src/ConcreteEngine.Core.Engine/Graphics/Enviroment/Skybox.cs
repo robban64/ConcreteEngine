@@ -1,5 +1,8 @@
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Enviroment;
@@ -10,6 +13,8 @@ public sealed class Skybox
     public MeshId MeshId { get; } = GfxMeshes.SkyboxCube;
     public Material? Material { get; private set; }
 
+    private RenderEntityId _entity;
+
     private Skybox() { }
 
     public Id16<Material> MaterialId => Material?.MaterialId ?? Id16<Material>.Empty;
@@ -18,6 +23,20 @@ public sealed class Skybox
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)material.ProfileId, (int)MaterialProfileId.Sky,
             nameof(material));
+        
         Material = material;
+
+        if(!_entity.IsValid())
+        {
+            _entity = Ecs.RenderCore.AddEntity(
+                new RenderSource(MeshId, material.MaterialId, 0, EntitySourceKind.Model),
+                new DrawPolicy(DrawQueue.Skybox, PassMask.Main));
+            Ecs.RenderCore.GetWorldBounds(_entity) = BoundingBox.Infinite;
+        }
+        else
+        {
+            Ecs.RenderCore.GetSource(_entity).Material = material.MaterialId;
+        }
+
     }
 }

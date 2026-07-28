@@ -62,6 +62,7 @@ public sealed class EngineRenderSystem : IDisposable
         PassPipeline3D.RegisterPassPipeline(_passPipeline);
         
         VisualSystem.Instance.UploadPointLight();
+        _renderDispatcher.Setup();
     }
 
     internal void AfterUpdate()
@@ -112,7 +113,7 @@ public sealed class EngineRenderSystem : IDisposable
         _particleSystem.Execute();
         _animationSystem.Execute(alpha);
 
-        _renderDispatcher.SubmitSystems(_animationSystem, _terrainSystem);
+        _renderDispatcher.SubmitSystems(_animationSystem);
 
         // prepare buffers
         _drawPipeline.PrepareDrawBuffers();

@@ -29,13 +29,13 @@ public sealed class GfxFrameBuffers
         var isMultisample = desc.Multisample != RenderBufferMsaa.None;
 
         FboAttachmentIds attachments = default;
-        if (desc.ColorTexture is { } colTex)
+        if (!desc.ColorTexture.IsEmpty())
         {
             var texKind = !isMultisample ? TextureKind.Texture2D : TextureKind.Multisample2D;
             var texProps = new CreateTextureProps(
-                0f, texKind, colTex.PixelFormat,
-                colTex.TexturePreset, TextureAnisotropy.Off,
-                DepthMode.Unset, colTex.ColorBorder, desc.Multisample
+                0f, texKind, desc.ColorTexture.PixelFormat,
+                desc.ColorTexture.TexturePreset, TextureAnisotropy.Off,
+                DepthMode.Unset, desc.ColorTexture.ColorBorder, desc.Multisample
             );
 
             var textureId = _gfxTextures.CreateTextureEmpty(size.ToSize3D(1), texProps);
@@ -44,12 +44,12 @@ public sealed class GfxFrameBuffers
             attachments = attachments with { ColorTexture = textureId };
         }
 
-        if (desc.DepthTexture is { } depTex)
+        if (!desc.DepthTexture.IsEmpty())
         {
             var texProps = new CreateTextureProps(
                 0f, TextureKind.Texture2D, TexturePixelFormat.Depth,
-                depTex.TexturePreset, TextureAnisotropy.Off,
-                depTex.CompareTextureFunc, depTex.BorderColor);
+                desc.DepthTexture.TexturePreset, TextureAnisotropy.Off,
+                desc.DepthTexture.CompareTextureFunc, desc.DepthTexture.BorderColor);
 
             var textureId = _gfxTextures.CreateTextureEmpty(size.ToSize3D(1), texProps);
             var texRef = GfxRegistry.TextureStore.GetHandle(textureId);
@@ -72,7 +72,7 @@ public sealed class GfxFrameBuffers
             attachments = attachments with { DepthRbo = rboId };
         }
 
-        GlFrameBuffers.ValidateComplete(fboHandle, desc.ColorTexture is not null);
+        GlFrameBuffers.ValidateComplete(fboHandle, !desc.ColorTexture.IsEmpty());
 
         var fboMeta = new FrameBufferMeta(size, attachments, desc.Multisample);
         var fboId = GfxRegistry.FboStore.Add(in fboMeta, fboHandle);
@@ -158,24 +158,24 @@ public sealed class GfxFrameBuffers
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.Size.Width, 1, nameof(desc.Size.Width));
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.Size.Height, 1, nameof(desc.Size.Height));
 
-        if (desc.ColorTexture is { } colorTexture)
+        if (!desc.ColorTexture.IsEmpty() )
         {
             if (desc.Size.Width > GfxLimits.MaxTextureSize || desc.Size.Height > GfxLimits.MaxTextureSize)
                 throw new GraphicsException($"Texture Size exceeds {GfxLimits.MaxTextureSize}");
 
-            if (colorTexture.PixelFormat is TexturePixelFormat.Depth or TexturePixelFormat.Unknown)
+            if (desc.ColorTexture.PixelFormat is TexturePixelFormat.Depth or TexturePixelFormat.Unknown)
                 throw new GraphicsException($"Invalid value for ColorTexture {nameof(desc)}");
 
-            if (desc.Multisample != RenderBufferMsaa.None && colorTexture.TexturePreset != TexturePreset.None)
+            if (desc.Multisample != RenderBufferMsaa.None && desc.ColorTexture.TexturePreset != TexturePreset.None)
                 throw new GraphicsException($"Multisample require None for {nameof(TexturePreset)}");
         }
 
-        if (desc.DepthTexture is { } depthTexture)
+        if (!desc.DepthTexture.IsEmpty())
         {
             if (desc.Size.Width > GfxLimits.MaxDepthTextureSize || desc.Size.Height > GfxLimits.MaxDepthTextureSize)
                 throw new GraphicsException($"DepthTexture Size exceeds {GfxLimits.MaxDepthTextureSize}");
 
-            if (depthTexture.PixelFormat is not TexturePixelFormat.Depth)
+            if (desc.DepthTexture.PixelFormat is not TexturePixelFormat.Depth)
                 throw new GraphicsException($"Invalid value for DepthTexture {nameof(desc)}");
         }
     }

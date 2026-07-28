@@ -2,14 +2,14 @@ using ConcreteEngine.Core.Common;
 
 namespace ConcreteEngine.Engine.Render.Buffers;
 
-public sealed class EffectBuffer
+public static class EffectBuffer
 {
-    private byte _effectCount;
-    private EffectUniformParams[] _effects = new EffectUniformParams[16];
+    private static byte _effectCount;
+    private static EffectUniformParams[] _effects = new EffectUniformParams[16];
 
-    public void Reset() => _effectCount = 0;
+    public static void Reset() => _effectCount = 0;
 
-    public byte Submit(EffectUniformParams effect)
+    public static byte Submit(EffectUniformParams effect)
     {
         var index = _effectCount++;
         if (index >= _effects.Length)
@@ -23,7 +23,7 @@ public sealed class EffectBuffer
         return index;
     }
 
-    public ref EffectUniformParams Get(byte slot)
+    public static ref EffectUniformParams Get(byte slot)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, _effects.Length);
         return ref _effects[slot];

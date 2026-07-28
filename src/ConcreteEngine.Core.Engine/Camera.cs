@@ -121,7 +121,7 @@ public sealed class Camera
         var isDirty = IsDirty;
         if (!isDirty) return false;
         IsDirty = false;
-        Version++;
+        ++Version;
         
         MatrixMath.CreateFixedSizeModelMatrix(
             in _viewTransform.Translation,
@@ -143,20 +143,5 @@ public sealed class Camera
         Transform.InverseProjectionViewMatrix = invProjection * modelMatrix;
 
         return isDirty;
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ushort MakeDepthKey(Vector3 worldPos)
-    {
-        const float maxValueF = 65535f;
-
-        var d = Vector3.Dot(Forward, worldPos) - ViewMatrix.M43;
-        var nearFar = NearFarPlane;
-        if (d <= nearFar.X) return 0;
-        if (d >= nearFar.Y) return ushort.MaxValue;
-
-        var t = (d - nearFar.X) / (nearFar.Y - nearFar.X);
-        return (ushort)(t * maxValueF + 0.5f);
     }
 }

@@ -144,7 +144,10 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
             return ref Ptr[index];
         }
     }
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly NativeView<T> AsView() => new(Ptr, 0, Length);
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeView<T> Slice(int offset, int length = 0)
     {

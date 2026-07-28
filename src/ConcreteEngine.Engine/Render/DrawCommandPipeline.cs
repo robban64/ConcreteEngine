@@ -1,6 +1,11 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.Render.Buffers;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Engine.Systems;
@@ -10,89 +15,193 @@ using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Engine.Render;
 
-internal sealed class DrawCommandPipeline
+internal sealed class DrawCommandPipeline : IDisposable
 {
-    private readonly DrawCommandProcessor _drawCmd;
-    private readonly RenderUploadBuffers _buffers;
+    private const int DefaultTicketCapacity = 1024 * 4;
+
+    private NativeArray<int> _drawTickets;
+    private readonly Range32[] _passRanges;
+
     private readonly GfxBuffers _gfxBuffers;
-    
-    public DrawCommandPipeline(GfxContext gfx, RenderUploadBuffers buffers) {
-        _buffers = buffers;
+    private readonly DrawCommandProcessor _drawCmd;
+    private readonly AnimationSystem _animationSystem;
+    private readonly MaterialSystem _materialSystem;
+
+    public DrawCommandPipeline(GfxContext gfx, AnimationSystem animationSystem, MaterialSystem materialSystem) {
+        _animationSystem = animationSystem;
+        _materialSystem = materialSystem;
         _gfxBuffers = gfx.Buffers;
-        _drawCmd = new DrawCommandProcessor(gfx, buffers);
+        _drawCmd = new DrawCommandProcessor(gfx, animationSystem, materialSystem);
+        
+        _drawTickets = NativeArray.Allocate<int>(DefaultTicketCapacity);
+        _passRanges = new Range32[RenderLimits.PassSlots];
     }
     
-    internal void Prepare()
+    public void BeginFrame()
     {
-        _buffers.Reset();
+        EffectBuffer.Reset();
         _drawCmd.Prepare();
     }
 
-    internal void PrepareDrawBuffers()
+    public void StageCommands(RenderDispatcher dispatcher)
     {
         // Sort command buffer and prepare passes
-        _buffers.Commands.ReadyDrawCommands();
+        ReadyDrawCommands(dispatcher.DrawIndices);
 
-        var drawCount = _buffers.Commands.Count + 32;
-        var materialCount = _buffers.Materials.Count + 4;
-        _ = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(drawCount);
-        _ = UniformBufferUtils.GetCapacityForEntities<MaterialUniform>(materialCount);
+        // Ensure ubo size
+        var drawCount = IntMath.AlignUp(dispatcher.VisibleCount, 64);
+        var materialCount = IntMath.AlignUp(_materialSystem.Count, 16);
+        var boneCount = IntMath.AlignUp(_animationSystem.BoneCount, 64);
 
         if (!GfxRegistry.GetMeta(DrawObjectUniform.UboId).HasCapacity(drawCount))
             _gfxBuffers.SetUniformBufferCount(DrawObjectUniform.UboId, drawCount);
 
         if (!GfxRegistry.GetMeta(MaterialUniform.UboId).HasCapacity(materialCount))
             _gfxBuffers.SetUniformBufferCount(MaterialUniform.UboId, materialCount);
+        
+        if (!GfxRegistry.GetMeta(DrawAnimationUniform.UboId).HasCapacity(boneCount))
+            _gfxBuffers.SetUniformBufferCount(DrawAnimationUniform.UboId, boneCount);
 
-    }
+        
+        // Upload
+        VisualSystem.Instance.Upload();
 
-    internal unsafe void UploadUniforms()
-    {
-        VisualSystem.Instance.UploadMainView();
+        var transforms = dispatcher.Transforms;
+        if (transforms.Length > 0) _gfxBuffers.UploadUniform(transforms, 0);
 
-        var materials = _buffers.Materials.DrainBuffer();
-        if (materials.Length > 0)
-            _gfxBuffers.UploadUniform(materials, 0);
+        var materials = _materialSystem.GetBufferView();
+        if (materials.Length > 0) _gfxBuffers.UploadUniform(materials, 0);
 
-        var transforms = _buffers.Commands.DrainTransformBuffer();
-        if (transforms.Length > 0)
-            _gfxBuffers.UploadUniform(transforms, 0);
+        var boneData = _animationSystem.GetBufferView();
+        if (boneData.Length > 0) _gfxBuffers.UploadUniform(boneData, 0);
 
-        var boneData = _buffers.Skinning.DrainBuffer();
-        if (boneData.Length > 0)
-        {
-            if (!GfxRegistry.GetMeta(DrawAnimationUniform.UboId).HasCapacity(boneData.Length))
-                _gfxBuffers.SetUniformBufferCount(DrawAnimationUniform.UboId, boneData.Length);
-
-            var view = new NativeView<DrawAnimationUniform>((DrawAnimationUniform*)boneData.Ptr, boneData.Length);
-            _gfxBuffers.UploadUniform(view, 0);
-        }
     }
 
     private AvgFrameTimer avg;
 
-    internal void ExecuteDrawPass(PassId passId, bool defaultDraw)
+    public void ExecuteDrawPass(PassId passId, bool defaultDraw, NativeView<RenderEntityId> entities)
     {
         _drawCmd.PrepareDrawPass();
         avg.BeginSample();
         if (defaultDraw)
-            _buffers.Commands.DispatchDrawPass(_drawCmd, passId);
+            DispatchDrawPass(_drawCmd, passId,entities);
         else
-            _buffers.Commands.DispatchResolveDrawPass(_drawCmd, passId);
+            DispatchResolveDrawPass(_drawCmd, passId,entities);
         
         if(avg.EndSample() > 144 * 4) avg.ResetAndPrint();
 
     }
-
-    private void UploadMaterials(NativeView<MaterialUniform> data) => _gfxBuffers.UploadUniform(data, 0);
-    private void UploadDrawTransforms(NativeView<DrawObjectUniform> data) => _gfxBuffers.UploadUniform(data, 0);
-    private unsafe void UploadBones(NativeView<Matrix4x4> boneData)
-    {
-        if (!GfxRegistry.GetMeta(DrawAnimationUniform.UboId).HasCapacity(boneData.Length))
-            _gfxBuffers.SetUniformBufferCount(DrawAnimationUniform.UboId, boneData.Length);
-
-        var view = new NativeView<DrawAnimationUniform>((DrawAnimationUniform*)boneData.Ptr, boneData.Length);
-        _gfxBuffers.UploadUniform(view, 0);
-    }
     
+    private unsafe void DispatchDrawPass(DrawCommandProcessor cmd, PassId passId, NativeView<RenderEntityId> entities)
+    {
+        var passRange = _passRanges[passId];
+        var ticket = _drawTickets + passRange.Offset;
+        var end = ticket + passRange.Length;
+        while (ticket < end)
+        {
+            var entity = entities[*ticket];
+            cmd.DrawMesh(Ecs.RenderCore.GetSource(entity), entity, *ticket);
+            ++ticket;
+        }
+    }
+
+    private unsafe void DispatchResolveDrawPass(DrawCommandProcessor cmd, PassId passId, NativeView<RenderEntityId> entities)
+    {
+        var pass = _passRanges[passId];
+        var tickets = _drawTickets + pass.Offset;
+        for (var i = 0; i < pass.Length; i++)
+        {
+            var ticket = tickets[i];
+            var entity = entities[ticket];
+            cmd.DrawSpecialResolveMesh(Ecs.RenderCore.GetSource(entity), entity, ticket);
+        }
+    }
+
+    private unsafe void ReadyDrawCommands(NativeView<DrawCommandIndex> indices)
+    {
+        if (indices.Length <= 1) return;
+
+        Array.Clear(_passRanges);
+
+        new Span<ulong>((ulong*)indices.Ptr, indices.Length).Sort();
+        //indices.AsSpan().Sort();
+
+        var heads = stackalloc int[RenderLimits.PassSlots * 2];
+
+        // Count pass tickets
+        CountTickets(indices, heads);
+
+        // Count pass ranges
+        var total = CountPasses(heads);
+
+        // Create draw tickets
+        if (_drawTickets.Length < total)
+        {
+            var newSize = CapacityUtils.CapacityGrowthToFit(_drawTickets.Length, total);
+            _drawTickets.Resize(newSize, true);
+        }
+
+        // fill tickets in sorted order
+        FillTickets(indices, heads + RenderLimits.PassSlots);
+    }
+
+    private unsafe void CountTickets(NativeView<DrawCommandIndex> indices, int* heads)
+    {
+        var drawIndex = indices.Ptr;
+        var drawIndexEnd = drawIndex + indices.Length;
+
+        while (drawIndex < drawIndexEnd)
+        {
+            var mask = (uint)drawIndex->Pass;
+            while (mask != 0)
+            {
+                var p = BitOperations.TrailingZeroCount(mask);
+                ++heads[p];
+                mask &= mask - 1;
+            }
+
+            ++drawIndex;
+        }
+    }
+
+    private unsafe int CountPasses(int* heads)
+    {
+        var total = 0;
+        for (var p = 0; p < RenderLimits.PassSlots; ++p)
+        {
+            var c = heads[p];
+            heads[RenderLimits.PassSlots + p] += total;
+            _passRanges[p] = new Range32(total, c);
+            total += c;
+        }
+
+
+        return total;
+    }
+
+    private unsafe void FillTickets(NativeView<DrawCommandIndex> indices, int* heads)
+    {
+        // fill tickets in sorted order
+        var drawTickets = _drawTickets;
+        
+        var drawIndex = indices.Ptr;
+        var drawIndexEnd = drawIndex + indices.Length;
+        while (drawIndex < drawIndexEnd)
+        {
+            var idx = drawIndex->Index;
+            var mask = (uint)drawIndex->Pass;
+            while (mask != 0)
+            {
+                var p = BitOperations.TrailingZeroCount(mask);
+                var w = heads[p]++;
+                drawTickets[w] = idx;
+                mask &= mask - 1;
+            }
+
+            ++drawIndex;
+        }
+    }
+
+
+    public void Dispose() => _drawTickets.Dispose();
 }

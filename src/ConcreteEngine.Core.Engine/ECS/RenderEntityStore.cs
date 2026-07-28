@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
@@ -62,7 +63,11 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
     public Span<T> GetComponentSpan() => _data.AsSpan(0, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int FindIndex(RenderEntityId entity) => SearchMethod.BinarySearch(GetEntitySpan(), entity);
+    private int FindIndex(RenderEntityId entity)
+    {
+        return MemoryMarshal.Cast<RenderEntityId, int>(GetEntitySpan()).IndexOf(entity.Id);
+        
+    }//SearchMethod.BinarySearch(GetEntitySpan(), entity);
 
     public bool Add(RenderEntityId entity, in T value)
     {

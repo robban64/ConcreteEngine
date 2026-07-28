@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
@@ -20,126 +21,93 @@ internal sealed class RenderDispatcher : IDisposable
 {
     public int VisibleCount { get; private set; }
 
-    private NativeArray<RenderEntityId> _visibleEntities;
-
     private readonly CameraFrustum _frustum;
-    private readonly DrawBuffer _drawBuffer;
-    private readonly EffectBuffer _effectBuffer;
 
-    internal RenderDispatcher(CameraFrustum frustum, RenderUploadBuffers uploadBuffers)
+    private NativeArray<RenderEntityId> _visibleEntities;
+    private NativeArray<DrawCommandIndex> _drawIndices;
+    private NativeArray<DrawObjectUniform> _transforms;
+
+    internal RenderDispatcher(CameraFrustum frustum)
     {
         ArgumentNullException.ThrowIfNull(frustum);
-        ArgumentNullException.ThrowIfNull(uploadBuffers);
         _frustum = frustum;
-        _effectBuffer = uploadBuffers.Effects;
-        _drawBuffer = uploadBuffers.Commands;
-
         _visibleEntities = NativeArray.Allocate<RenderEntityId>(Ecs.RenderCore.Capacity);
+        _drawIndices = NativeArray.Allocate<DrawCommandIndex>(Ecs.RenderCore.Capacity);
+        _transforms = NativeArray.Allocate<DrawObjectUniform>(Ecs.RenderCore.Capacity);
     }
+    
+    public NativeView<RenderEntityId> VisibleEntities => _visibleEntities.Slice(0, VisibleCount);
+    public NativeView<DrawCommandIndex> DrawIndices => _drawIndices.Slice(0, VisibleCount);
+    public NativeView<DrawObjectUniform> Transforms => _transforms.Slice(0, VisibleCount);
 
     public void Dispose() => _visibleEntities.Dispose();
+    
 
     public void Setup()
     {
     }
 
-    public unsafe void Execute()
+    public void Execute()
     {
         Ensure();
-
         var visibleCount = CullEntities();
         if (visibleCount == 0) return;
         ProcessSelectionEffect();
 
-        var visibleSpan = new ReadOnlySpan<RenderEntityId>(_visibleEntities, visibleCount);
-        SubmitDrawPolicy(visibleSpan);
-        SubmitCommands(visibleSpan);
-        SubmitTransforms(visibleSpan);
-        SubmitDebugBounds();
+        SubmitDrawPolicy();
+        SubmitTransforms();
+        //SubmitDebugBounds();
     }
 
-    public unsafe void Prepare(AnimationSystem animationSystem)
-    {
-        if (VisibleCount == 0) return;
-        var visibleSpan = new ReadOnlySpan<RenderEntityId>(_visibleEntities, VisibleCount);
-        animationSystem.Prepare(_drawBuffer, visibleSpan);
-    }
 
     private int CullEntities()
     {
-        var length = Ecs.RenderCore.Count;
-        if ((uint)length > (uint)_visibleEntities.Length)
-            Throwers.BufferOverflow(nameof(_visibleEntities));
+        var visibleEntities = _visibleEntities.AsView();
+        if ((uint)Ecs.RenderCore.Count > (uint)visibleEntities.Length)
+            Throwers.BufferOverflow(nameof(visibleEntities));
 
         var visibleCount = 0;
-        foreach (var query in Ecs.RenderCore)
+        foreach (var query in Ecs.RenderCore.BoundsQuery())
         {
-            var visible = _frustum.IntersectsBox(Ecs.RenderCore.GetWorldBounds(query.Entity));
-
+            var visible = _frustum.IntersectsBox(in query.Bounds);
             visible &= query.Meta.ToggleVisibility(EntityVisibility.Culled, visible) == 0;
-            if (visible) _visibleEntities[visibleCount++] = query.Entity;
+            if (visible) visibleEntities[visibleCount++] = query.Entity;
         }
 
         return VisibleCount = visibleCount;
     }
 
-    public unsafe void SubmitSystems(AnimationSystem animationSystem)
-    {
-        var visibleSpan = new ReadOnlySpan<RenderEntityId>(_visibleEntities, VisibleCount);
-        animationSystem.WriteCommandSlot(_drawBuffer, visibleSpan);
-    }
-
-    private void Ensure()
-    {
-        var ecsCount = Ecs.RenderCore.Count;
-        if ((uint)ecsCount > (uint)_visibleEntities.Length) _visibleEntities.Resize(ecsCount, true);
-        _drawBuffer.EnsureCapacity(ecsCount + 64);
-    }
-
-    private void SubmitDrawPolicy(ReadOnlySpan<RenderEntityId> visibleEntities)
+    private void SubmitDrawPolicy()
     {
         var forward = CameraManager.Instance.Camera.Forward;
         var viewZ = CameraManager.Instance.Camera.ViewMatrix.M43;
         var nearFar = CameraManager.Instance.Camera.NearFarPlane;
 
-        var index = 0;
-        foreach (var entity in visibleEntities)
+        var index = -1;
+        foreach (var it in IndexEnumerator())
         {
+            var entity = it.Item1;
             var depthKey = MakeDepthKey(entity, forward, nearFar, viewZ);
             var policy = Ecs.RenderCore.GetDrawPolicy(entity);
-            _drawBuffer.IndexRef(index) = new DrawCommandIndex(index, policy.Passes, policy.Queue, depthKey);
-            ++index;
+            it.Item2 = new DrawCommandIndex(++index, policy.Passes, policy.Queue, depthKey);
         }
     }
 
-
-    private void SubmitCommands(ReadOnlySpan<RenderEntityId> visibleEntities)
+    private void SubmitTransforms()
     {
-        for (var i = 0; i < visibleEntities.Length; ++i)
+        foreach (var it in TransformEnumerator())
         {
-            var entity = visibleEntities[i];
-            ref readonly var source = ref Ecs.RenderCore.GetSource(entity);
-            ref var cmd = ref _drawBuffer.CommandRef(i);
-            cmd.MeshId = source.Mesh;
-            cmd.MaterialId = source.Material;
-            cmd.Resolver = source.Resolver;
-            cmd.ResolverSlot = source.ResolverSlot;
+            var entity = it.Item1;
+            it.Item2.Model = Ecs.RenderCore.GetModelMatrix(entity);
+            it.Item2.Normal = Ecs.RenderCore.GetNormalMatrix(entity);
         }
     }
+    
+    private unsafe PtrEnumerator<RenderEntityId, DrawCommandIndex> IndexEnumerator() =>
+        new(_visibleEntities, _drawIndices, VisibleCount);
 
-
-    private void SubmitTransforms(ReadOnlySpan<RenderEntityId> visibleEntities)
-    {
-        for (var i = 0; i < visibleEntities.Length; ++i)
-        {
-            var entity = visibleEntities[i];
-            ref var bufferData = ref _drawBuffer.TransformRef(i);
-            bufferData.Model = Ecs.RenderCore.GetModelMatrix(entity);
-            bufferData.Normal = Ecs.RenderCore.GetNormalMatrix(entity);
-        }
-
-        _drawBuffer.IncrementDrawCount(visibleEntities.Length);
-    }
+    private unsafe PtrEnumerator<RenderEntityId, DrawObjectUniform> TransformEnumerator() =>
+        new(_visibleEntities, _transforms, VisibleCount);
 
     private void ProcessSelectionEffect()
     {
@@ -147,7 +115,7 @@ internal sealed class RenderDispatcher : IDisposable
 
         foreach (var query in Ecs.GetRenderStore<SelectionComponent>().VisibilityQuery())
         {
-            var slot = _effectBuffer.Submit(new EffectUniformParams(query.Component.HighlightColor));
+            var slot = EffectBuffer.Submit(new EffectUniformParams(query.Component.HighlightColor));
             ref var source = ref Ecs.RenderCore.GetSource(query.Entity);
             source.Resolver = DrawCommandResolver.Highlight;
             source.ResolverSlot = slot;
@@ -155,14 +123,25 @@ internal sealed class RenderDispatcher : IDisposable
             Ecs.RenderCore.GetDrawPolicy(query.Entity).Passes = PassMask.Effect | PassMask.Depth;
         }
     }
-
+    
+    private void Ensure()
+    {
+        var ecsCapacity = Ecs.RenderCore.Capacity;
+        if ((uint)ecsCapacity > (uint)_visibleEntities.Length)
+        {
+            _drawIndices.Resize(ecsCapacity, true);
+            _visibleEntities.Resize(ecsCapacity, true);
+            _transforms.Resize(ecsCapacity, true);
+        }
+    }
+/*
     private void SubmitDebugBounds()
     {
         if (Ecs.GetRenderStore<DebugBoundsComponent>().Count == 0) return;
 
         var materialId = AssetStore.Core.DebugBoundsMaterial.MaterialId;
 
-        var index = _drawBuffer.Count;
+        var index = VisibleCount;
         foreach (var query in Ecs.GetRenderStore<DebugBoundsComponent>().VisibilityQuery())
         {
             ref var bufferDst = ref _drawBuffer.TransformRef(index);
@@ -188,10 +167,10 @@ internal sealed class RenderDispatcher : IDisposable
 
         _drawBuffer.IncrementDrawCount(index);
     }
-
+*/
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ushort MakeDepthKey(RenderEntityId entity, Vector3 forward, Vector2 nearFar, float viewZ)
+    private static ushort MakeDepthKey(RenderEntityId entity,  Vector3 forward, Vector2 nearFar, float viewZ)
     {
         const float maxValueF = 65535f;
 

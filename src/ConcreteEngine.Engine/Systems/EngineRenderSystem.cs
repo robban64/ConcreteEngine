@@ -25,7 +25,6 @@ public sealed class EngineRenderSystem : IDisposable
 
     private readonly MaterialSystem _materialSystem;
 
-    private readonly RenderUploadBuffers _uploadBuffers;
     private readonly RenderRegistry _registry;
     private readonly RenderPassPipeline _passPipeline;
     private readonly DrawCommandPipeline _drawPipeline;
@@ -37,17 +36,16 @@ public sealed class EngineRenderSystem : IDisposable
         _visualManager = VisualManager.Instance;
         _visualManager.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
 
-        _registry = new RenderRegistry(graphics.Gfx);
-        _uploadBuffers = new RenderUploadBuffers();
-        _drawPipeline = new DrawCommandPipeline(graphics.Gfx, _uploadBuffers);
-        _passPipeline = new RenderPassPipeline(graphics.Gfx,_registry);
-        
+        _materialSystem = new MaterialSystem();
         _terrainSystem = new TerrainSystem(graphics.Gfx);
         _particleSystem = new ParticleSystem(graphics.Gfx);
-        _animationSystem = new AnimationSystem(AnimationManager.Instance, _uploadBuffers.Skinning);
+        _animationSystem = new AnimationSystem(AnimationManager.Instance);
 
-        _renderDispatcher = new RenderDispatcher(_cameraManager.Frustum, _uploadBuffers);
-        _materialSystem = new MaterialSystem(_uploadBuffers.Materials);
+        _registry = new RenderRegistry(graphics.Gfx);
+        _drawPipeline = new DrawCommandPipeline(graphics.Gfx, _animationSystem, _materialSystem);
+        _passPipeline = new RenderPassPipeline(graphics.Gfx,_registry);
+
+        _renderDispatcher = new RenderDispatcher(_cameraManager.Frustum);
         
         VisualSystem.Create(graphics.Gfx.Buffers);
 
@@ -100,27 +98,22 @@ public sealed class EngineRenderSystem : IDisposable
 
     internal void Render(float dt, float alpha)
     {
+        _animationSystem.ResetFrame();
+        
         _passPipeline.Prepare();
-        _drawPipeline.Prepare();
+        _drawPipeline.BeginFrame();
 
         // frame update
         _cameraManager.CommitFrame(alpha);
 
         // process and upload draw commands
-        _renderDispatcher.Prepare(_animationSystem);
         _renderDispatcher.Execute();
         
         _particleSystem.Execute();
         _animationSystem.Execute(alpha);
 
-        _renderDispatcher.SubmitSystems(_animationSystem);
-
         // prepare buffers
-        _drawPipeline.PrepareDrawBuffers();
-
-        // upload buffers to gpu
-        VisualSystem.Instance.Upload();
-        _drawPipeline.UploadUniforms();
+        _drawPipeline.StageCommands(_renderDispatcher);
 
         RenderPasses();
     }
@@ -131,14 +124,14 @@ public sealed class EngineRenderSystem : IDisposable
         {
             if (passAction == NextPassAction.Skip) continue;
             var passResult = _passPipeline.ApplyPass();
-            
+
             switch (passResult.Op)
             {
                 case PassOp.Draw:
-                    _drawPipeline.ExecuteDrawPass(nextPassId, true);
+                    _drawPipeline.ExecuteDrawPass(nextPassId, true, _renderDispatcher.VisibleEntities);
                     break;
                 case PassOp.DrawEffect:
-                    _drawPipeline.ExecuteDrawPass(nextPassId, false);
+                    _drawPipeline.ExecuteDrawPass(nextPassId, false, _renderDispatcher.VisibleEntities);
                     break;
             }
 
@@ -152,7 +145,7 @@ public sealed class EngineRenderSystem : IDisposable
         _renderDispatcher.Dispose();
         _particleSystem.Dispose();
         _animationSystem.Dispose();
-        _uploadBuffers.Dispose();
+        _materialSystem.Dispose();
     }
     
     private static void RegisterCoreShaders(AssetStore store)

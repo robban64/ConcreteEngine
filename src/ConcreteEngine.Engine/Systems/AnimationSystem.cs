@@ -1,33 +1,57 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Render.Buffers;
+using static ConcreteEngine.Engine.Render.RenderLimits;
 
 namespace ConcreteEngine.Engine.Systems;
 
 internal sealed unsafe class AnimationSystem : IDisposable
 {
-    private int _frameCount;
-    private (RenderEntityId entity, ushort slot)[] _entitySlots;
+    private const int DefaultCapacity = 64;
+    private const int DefaultBoneBufferCap = BoneCapacity * 64;
+
+    public int Count { get; private set; }
+    public int BoneCount { get; private set; }
 
     private NativeArray<Matrix4x4> _globals;
+    private NativeArray<Matrix4x4> _boneBuffer;
+    private Range32[] _slotRanges;
 
     private readonly AnimationManager _animations;
-    private readonly SkinningBuffer _skinningBuffer;
 
-    internal AnimationSystem(AnimationManager animations, SkinningBuffer skinningBuffer)
+    internal AnimationSystem(AnimationManager animations)
     {
-        _globals = NativeArray.AlignedAllocate<Matrix4x4>(RenderLimits.BoneCapacity, alignment: 16);
+        _globals = NativeArray.AlignedAllocate<Matrix4x4>(BoneCapacity, alignment: 16);
+        _boneBuffer = NativeArray.AlignedAllocate<Matrix4x4>(DefaultBoneBufferCap, alignment: 16);
+        _slotRanges = new Range32[DefaultCapacity];
+
         _animations = animations;
-        _skinningBuffer = skinningBuffer;
-        _entitySlots = new (RenderEntityId entity, ushort slot)[64];
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Range32 GetSlotRange(int slot) => _slotRanges[slot];
+    
+    public NativeView<DrawAnimationUniform> GetBufferView()
+    {
+        if (BoneCount == 0) return NativeView<DrawAnimationUniform>.MakeNull();
+        if ((uint)BoneCount >= (uint)_boneBuffer.Length) Throwers.InvalidOperation();
+        return new NativeView<DrawAnimationUniform>((DrawAnimationUniform*)_boneBuffer.Ptr, BoneCount);
     }
 
-    public void Dispose() => _globals.Dispose();
+    public void ResetFrame()
+    {
+        Count = 0;
+        BoneCount = 0;
+    }
 
     public void Simulate(float dt)
     {
@@ -36,64 +60,52 @@ internal sealed unsafe class AnimationSystem : IDisposable
 
     public void Execute(float alpha)
     {
-        _frameCount = 0;
-        var cursor = 0;
         ushort slot = 1;
         foreach (var animation in _animations)
         {
-            var count = FilterEntities(animation, cursor, slot);
+            var count = FilterEntities(animation, slot);
             if (count == 0) continue;
 
             var time = animation.Interpolate(alpha);
             WriteSkinned(animation.GetSkinningContext(), time);
+            
             ++slot;
-            cursor += count;
         }
-
-        _frameCount = cursor;
     }
 
-    public void Prepare(DrawBuffer cmd, ReadOnlySpan<RenderEntityId> visibleEntities)
+    public void Dispose()
     {
-        var length = _frameCount;
-        for (int i = 0; i < length; ++i)
-        {
-            var entitySlot = _entitySlots[i];
-            var index = visibleEntities.BinarySearch(entitySlot.entity);
-            if (index >= 0) cmd.CommandRef(index).AnimationSlot = 0;
-        }
-
+        _globals.Dispose();
+        _boneBuffer.Dispose();
     }
-    private int FilterEntities(AnimationInstance animation, int cursor, ushort slot)
+
+    private int FilterEntities(AnimationInstance animation, ushort slot)
     {
         var count = 0;
         foreach (var entity in animation.GetEntitySpan())
         {
             if (!Ecs.RenderCore.IsVisible(entity)) continue;
-            
-            var index = cursor + count;
-            if((uint)index >= (uint)_entitySlots.Length)
-                Array.Resize(ref _entitySlots, _entitySlots.Length * 2);
-            
-            _entitySlots[index] = (entity, slot);
+            Ecs.GetRenderStore<SkinningComponent>().Get(entity).AnimationSlot = slot;
             ++count;
         }
 
         return count;
     }
 
-    public void WriteCommandSlot(DrawBuffer cmd, ReadOnlySpan<RenderEntityId> visibleEntities)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private NativeView<Matrix4x4> WriteSlot(int bones)
     {
-        var length = _frameCount;
-        for (int i = 0; i < length; ++i)
-        {
-            var entitySlot = _entitySlots[i];
-            var index = visibleEntities.BinarySearch(entitySlot.entity);
-            if (index >= 0) cmd.CommandRef(index).AnimationSlot = entitySlot.slot;
-        }
+        var count = Count;
+        var range = new Range32(BoneCount, bones);
+        if (range.End > _boneBuffer.Length) EnsureBoneCapacity(range.End);
+        if (count >= _slotRanges.Length) EnsureSlotCapacity(count);
+        BoneCount += bones;
+        ++Count;
+        _slotRanges[count] = range;
+        return _boneBuffer.Slice(range);
     }
-
-
+    
+    
     private void WriteSkinned(SkinningContext ctx, float time)
     {
         var globals = _globals.Ptr;
@@ -118,7 +130,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
         }
 
         globals = _globals.Ptr;
-        var dst = _skinningBuffer.WriteSlot(length).Ptr;
+        var dst = WriteSlot(length).Ptr;
         MatrixMath.MultiplyAffine(ref *++dst, in ctx.GetInverseBindPose(0), in globals[0]);
         for (var i = 1; i < length; ++i, ++dst)
         {
@@ -127,8 +139,24 @@ internal sealed unsafe class AnimationSystem : IDisposable
             MatrixMath.MultiplyAffine(ref *dst, in ctx.GetInverseBindPose(i), in globals[i]);
         }
     }
+    
+    private void EnsureBoneCapacity(int length)
+    {
+        if (_boneBuffer.Length >= length + 1) return;
+        var newSize = CapacityUtils.CapacityGrowthToFit(_boneBuffer.Length, length + 1);
+        _boneBuffer.Resize(newSize, false);
+        Console.WriteLine("BoneBuffer buffer resize");
+    }
 
+    private void EnsureSlotCapacity(int length)
+    {
+        if (_slotRanges.Length >= length + 1) return;
+        var newSize = CapacityUtils.CapacityGrowthToFit(_slotRanges.Length, length + 1);
+        Array.Resize(ref _slotRanges, newSize);
+        Console.WriteLine("SlotRanges array resize");
+    }
 
+    //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector3 GetPosition(int posIndex, float posFactor, NativeView<Vector3> positions)
     {

@@ -11,7 +11,7 @@ public struct RenderEntityMeta
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool IsVisible() => Alive && Visibility == 0;
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityVisibility ToggleVisibility(EntityVisibility flag, bool isVisible)
     {

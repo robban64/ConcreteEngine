@@ -61,14 +61,12 @@ internal sealed class RenderPassContext
     public void SampleTo<TTarget>(FboVariant variant, TexSlot texSlot) where TTarget : unmanaged, IRenderTarget
     {
         Debug.Assert(texSlot.Slot < RenderLimits.TextureSlots);
-
         var passKey = RenderRegistry.TargetRegistry<TTarget>.PassKey(variant);
         var key = new PassTextureSlotKey(passKey.TagIndex, passKey.Variant, passKey.Pass, texSlot.Slot);
         _sourceQueue.Enqueue(texSlot.Texture, key);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void MutateStatePass<TTarget>(FboVariant variant, in PassMutationState newState)
+    public void MutateStatePass<TTarget>(FboVariant variant, in PassMutationState newState) 
         where TTarget : unmanaged, IRenderTarget
     {
         var key = RenderRegistry.TargetRegistry<TTarget>.PassKey(variant);
@@ -80,7 +78,7 @@ internal sealed class RenderPassContext
         while (_mutationQueue.TryPeek(out _, out var k) && k.TagIndex == entry.PassKey.TagIndex)
         {
             _mutationQueue.TryDequeue(out var state, out k);
-            entry.UpdateState(in state);
+            entry.UpdateState(state);
         }
     }
 
@@ -100,7 +98,6 @@ internal sealed class RenderPassContext
     }
 
     //
-
     public void ActivateDepthMode()
     {
         RenderContext.SetDepthMode();
@@ -128,8 +125,8 @@ internal sealed class RenderPassContext
     public void DrawFullscreenQuad(ShaderId shaderId, ReadOnlySpan<TextureId> sources)
     {
         Cmd.UseShader(shaderId);
-
-        for (var i = 0; i < sources.Length; i++)
+        
+        for (var i = 0; i < sources.Length; i++) 
             Cmd.BindTexture(sources[i], i);
 
         Cmd.DrawMesh(GfxMeshes.FsqQuad);

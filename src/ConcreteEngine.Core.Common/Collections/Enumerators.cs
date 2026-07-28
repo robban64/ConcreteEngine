@@ -60,6 +60,9 @@ public ref struct SparseObjectEnumerator<TId, TObj>(ReadOnlySpan<TId> idSpan, Re
     public readonly SparseObjectEnumerator<TId, TObj> GetEnumerator() => new(_idSpan, _objectSpan);
 }
 
+
+
+
 public ref struct RefEnumerator<T> where T : unmanaged
 {
     private readonly ref T _start;

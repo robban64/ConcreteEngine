@@ -22,39 +22,6 @@ internal sealed class RenderPassPipeline
 
     public int PassCount => _entries.Count;
 
-    public RenderPassEntry RegisterContinue<TTarget>(FboVariant variant, PassId passId, PassOp op,
-        RenderPassState initial)
-        where TTarget : unmanaged, IRenderTarget
-    {
-        var existingKey = RenderRegistry.TargetRegistry<TTarget>.PassKey(variant);
-        if (existingKey.Pass == passId) Throwers.InvalidArgument(nameof(passId));
-
-        var newKey = existingKey with { Pass = passId };
-
-        foreach (var e in _entries)
-        {
-            if (e.PassKey.Pass == passId || e.PassKey == newKey) Throwers.InvalidArgument("Duplicated passes");
-        }
-
-        var entry = new RenderPassEntry(newKey, op, initial);
-        _entries.Add(entry);
-        return entry;
-    }
-
-
-    public RenderPassEntry Register<TTarget>(FboVariant variant, PassId passId, PassOp op, RenderPassState initial)
-        where TTarget : unmanaged, IRenderTarget
-    {
-        var key = RenderRegistry.TargetRegistry<TTarget>.BindPassTarget(variant, passId);
-        foreach (var e in _entries)
-        {
-            if (e.PassKey.Pass == passId || e.PassKey == key) Throwers.InvalidArgument("Duplicated passes");
-        }
-
-        var entry = new RenderPassEntry(key, op, initial);
-        _entries.Add(entry);
-        return entry;
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Prepare()
@@ -107,5 +74,40 @@ internal sealed class RenderPassPipeline
     {
         _entries[_activePassIndex].ApplyAfterPass(_ctx);
         _activePassIndex++;
+    }
+    
+    
+    public RenderPassEntry RegisterContinue<TTarget>(FboVariant variant, PassId passId, PassOp op,
+        RenderPassState initial)
+        where TTarget : unmanaged, IRenderTarget
+    {
+        var existingKey = RenderRegistry.TargetRegistry<TTarget>.PassKey(variant);
+        if (existingKey.Pass == passId) Throwers.InvalidArgument(nameof(passId));
+
+        var newKey = existingKey with { Pass = passId };
+
+        foreach (var e in _entries)
+        {
+            if (e.PassKey.Pass == passId || e.PassKey == newKey) Throwers.InvalidArgument("Duplicated passes");
+        }
+
+        var entry = new RenderPassEntry(newKey, op, initial);
+        _entries.Add(entry);
+        return entry;
+    }
+
+
+    public RenderPassEntry Register<TTarget>(FboVariant variant, PassId passId, PassOp op, RenderPassState initial)
+        where TTarget : unmanaged, IRenderTarget
+    {
+        var key = RenderRegistry.TargetRegistry<TTarget>.BindPassTarget(variant, passId);
+        foreach (var e in _entries)
+        {
+            if (e.PassKey.Pass == passId || e.PassKey == key) Throwers.InvalidArgument("Duplicated passes");
+        }
+
+        var entry = new RenderPassEntry(key, op, initial);
+        _entries.Add(entry);
+        return entry;
     }
 }

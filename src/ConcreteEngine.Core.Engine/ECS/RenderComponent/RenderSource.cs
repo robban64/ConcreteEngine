@@ -16,6 +16,7 @@ public struct RenderSource(
     int meshIndex,
     EntitySourceKind kind)
 {
+    public uint InstanceCount;
     public MeshId Mesh = mesh;
     public Id16<Material> Material = material;
     

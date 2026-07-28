@@ -11,75 +11,6 @@ using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render;
 
-public sealed class RegisterFboEntry
-{
-    public FboVariant Variant;
-
-    public FboColorAttachment? ColorTexture { get; private set; }
-    public FboDepthAttachment? DepthTexture { get; private set; }
-    public bool ColorBuffer { get; private set; } = false;
-    public bool DepthStencilBuffer { get; private set; }
-    public RenderBufferMsaa Multisample { get; private set; } = RenderBufferMsaa.None;
-
-    public RenderFboSizePolicy? FboSizePolicy { get; private set; }
-
-    public RegisterFboEntry AttachColorTexture(FboColorAttachment desc,
-        RenderBufferMsaa multisample = RenderBufferMsaa.None)
-    {
-        Multisample = multisample;
-        ColorTexture = desc;
-        return this;
-    }
-
-    public RegisterFboEntry AttachDepthTexture(FboDepthAttachment desc)
-    {
-        DepthTexture = desc;
-        return this;
-    }
-
-    public RegisterFboEntry AttachDepthStencilBuffer()
-    {
-        DepthStencilBuffer = true;
-        return this;
-    }
-
-    public RegisterFboEntry UseCalculatedSize(FboSizePolicyDel del, Vector2 ratio)
-    {
-        FboSizePolicy = RenderFboSizePolicy.MakeCalculated(del, ratio);
-        return this;
-    }
-
-    public RegisterFboEntry UseFixedSize(Size2D fixedSize)
-    {
-        FboSizePolicy = RenderFboSizePolicy.MakeFixed(fixedSize);
-        return this;
-    }
-
-
-    internal CreateFboInfo Build(Size2D outputSize)
-    {
-        FboSizePolicy ??= RenderFboSizePolicy.MakeDefault();
-        var size = FboSizePolicy.Calculate(outputSize);
-
-        if (size.AnyZero()) throw new InvalidOperationException("Invalid size");
-
-        if (ColorTexture is { PixelFormat: TexturePixelFormat.Unknown or TexturePixelFormat.Depth } ct)
-            throw new InvalidOperationException($"Invalid PixelFormat for ColorTexture {ct.PixelFormat}");
-
-        if (DepthTexture is { PixelFormat: not TexturePixelFormat.Depth } dt)
-            throw new InvalidOperationException($"Invalid PixelFormat for ColorTexture {dt.PixelFormat}");
-
-
-        return new CreateFboInfo(
-            size: size,
-            colorTexture: ColorTexture,
-            depthTexture: DepthTexture,
-            colorBuffer: ColorBuffer,
-            depthStencilBuffer: DepthStencilBuffer,
-            multisample: Multisample
-        );
-    }
-}
 
 public sealed class RenderRegistry
 {
@@ -144,8 +75,6 @@ public sealed class RenderRegistry
         ArgumentOutOfRangeException.ThrowIfEqual(size, meta.Size);
         ArgumentOutOfRangeException.ThrowIfEqual(fbo.IsFixedSize, false);
 
-        fbo.ChangeSizePolicy(RenderFboSizePolicy.MakeFixed(size));
-
         try
         {
             _gfxFbo.RecreateFrameBuffer(fbo.FboId, size);
@@ -169,7 +98,7 @@ public sealed class RenderRegistry
             foreach (var fbo in GetFrameBuffers())
             {
                 if (fbo.IsFixedSize) continue;
-                _gfxFbo.RecreateFrameBuffer(fbo.FboId, fbo.CalculateNewSize(outputSize));
+                _gfxFbo.RecreateFrameBuffer(fbo.FboId, fbo.CalculateSize(outputSize));
             }
         }
         catch (Exception ex) when (Utils.ErrorUtils.IsUserOrDataError(ex))
@@ -179,20 +108,19 @@ public sealed class RenderRegistry
     }
 
 
-    internal void Register<TTarget>(FboVariant variant, Size2D outputSize, RegisterFboEntry entry)
+    internal void Register<TTarget>(FboVariant variant, CreateFboInfo entry, FboResizeMode resizeMode = FboResizeMode.Screen, Func<Size2D, Size2D>? calc = null)
         where TTarget : unmanaged, IRenderTarget
     {
         var isShadowFbo = typeof(TTarget) == typeof(ShadowTarget);
-        ValidateOutputSize(outputSize, isShadowFbo);
+        ValidateOutputSize(entry.Size, isShadowFbo);
         if (_fboCount > RenderLimits.FboSlots || _fboRegistry[_fboCount] != null!)
             Throwers.InvalidOperation(nameof(_fboCount));
 
-        var fboId = _gfxFbo.CreateFrameBuffer(entry.Build(outputSize));
-        var sizePolicy = entry.FboSizePolicy ?? RenderFboSizePolicy.MakeDefault();
-        var renderFbo = new RenderFbo(fboId, TargetRegistry<TTarget>.FboKey(variant), sizePolicy);
+        var fboId = _gfxFbo.CreateFrameBuffer(entry);
+        var renderFbo = new RenderFbo(fboId, TargetRegistry<TTarget>.FboKey(variant), resizeMode, calc);
         if (isShadowFbo)
         {
-            if (entry.FboSizePolicy!.Mode != FboResizeMode.Fixed)
+            if (resizeMode != FboResizeMode.Fixed)
                 Throwers.InvalidArgument("Shadow map require fixed size policy");
 
             renderFbo.IsShadowFbo = true;
@@ -255,7 +183,8 @@ public sealed class RenderRegistry
         public static FboKey FboKey(FboVariant variant) => new(_tagIndex, variant);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static PassTargetKey PassKey(FboVariant variant) => new(_tagIndex, variant, new PassId(_passIds[variant]));
+        public static PassTargetKey PassKey(FboVariant variant) =>
+            new(_tagIndex, variant, new PassId(_passIds[variant]));
 
         public static PassTargetKey BindPassTarget(FboVariant variant, PassId passId)
         {

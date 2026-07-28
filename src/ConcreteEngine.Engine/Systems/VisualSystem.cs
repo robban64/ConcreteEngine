@@ -26,6 +26,7 @@ internal sealed unsafe class VisualSystem
     public void Upload()
     {
         UploadEngineUniformRecord();
+        UploadMainView();
 
         if (!VisualManager.AnyWasDirty) return;
 

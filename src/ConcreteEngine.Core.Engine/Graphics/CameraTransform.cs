@@ -13,12 +13,13 @@ public sealed class CameraFrustum
     internal void Update(in Matrix4x4 viewProj) => _frustum.UpdateFrom(in viewProj);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IntersectsBox(BoundingBox box)
+    public bool IntersectsBox(in BoundingBox box)
     {
+        var bounds = box;
         ref var start = ref Unsafe.As<BoundingFrustum, Plane>(ref _frustum);
         for (int i = 0; i < 6; ++i)
         {
-            if (CollisionMethods.IsOutsidePlane(in box, in Unsafe.Add(ref start, i))) return false;
+            if (CollisionMethods.IsOutsidePlane(in bounds, in Unsafe.Add(ref start, i))) return false;
         }
 
         return true;

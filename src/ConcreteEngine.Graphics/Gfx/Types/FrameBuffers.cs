@@ -22,6 +22,8 @@ public readonly struct FboColorAttachment(
     public readonly GpuTextureBorder ColorBorder = colorBorder;
     public readonly TexturePixelFormat PixelFormat = pixelFormat;
     public readonly TexturePreset TexturePreset = texturePreset;
+    
+    public bool IsEmpty() => PixelFormat == 0 && TexturePreset == 0;
 
     public static FboColorAttachment Off() =>
         new(TexturePixelFormat.SrgbAlpha, TexturePreset.None, GpuTextureBorder.Off);
@@ -47,4 +49,7 @@ public readonly struct FboDepthAttachment(
     public readonly TexturePixelFormat PixelFormat = pixelFormat;
     public readonly TexturePreset TexturePreset = texturePreset;
     public readonly DepthMode CompareTextureFunc = compareTextureFunc;
+    
+    public bool IsEmpty() => PixelFormat == 0 && TexturePreset == 0;
+
 }

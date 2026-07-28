@@ -60,18 +60,6 @@ public static class CollisionMethods
                <= -plane.D;
     }
 
-/*
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsOutsidePlane(in BoundingBox box, in Plane plane)
-    {
-        var ext = box.Extent;
-        return Vector3.Dot(plane.Normal, box.Center) + plane.D +
-               ext.X * MathF.Abs(plane.Normal.X) +
-               ext.Y * MathF.Abs(plane.Normal.Y) +
-               ext.Z * MathF.Abs(plane.Normal.Z)
-               < 0f;
-    }
-*/
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3 IntersectPlanes(in Plane p1, in Plane p2, in Plane p3)
     {

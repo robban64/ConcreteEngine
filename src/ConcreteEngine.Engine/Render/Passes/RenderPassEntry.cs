@@ -2,19 +2,17 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Engine.Render.Passes;
 
-internal delegate PassAction RenderPassOp(RenderPassContext ctx, in RenderPassState state);
-internal delegate void RenderAfterPassOp(RenderPassContext ctx, in RenderPassState state);
 
 internal sealed class RenderPassEntry
 {
-    private static PassAction NoOpPass(RenderPassContext ctx, in RenderPassState state) => default;
+    private static PassAction NoOpPass(RenderPassContext ctx, RenderPassState state) => default;
 
     public PassTargetKey PassKey { get; private set; }
     public PassOp PassOp { get; private set; }
     public PassTargetKey? DependsOn { get; }
 
-    private RenderPassOp _applyPassDel = NoOpPass;
-    private RenderAfterPassOp? _applyAfterPassDel;
+    private Func<RenderPassContext, RenderPassState, PassAction> _applyPassDel = NoOpPass;
+    private Action<RenderPassContext, RenderPassState>? _applyAfterPassDel;
 
     private RenderPassState _state;
 
@@ -31,13 +29,13 @@ internal sealed class RenderPassEntry
         _state = initial;
     }
 
-    public RenderPassEntry OnPassBegin(RenderPassOp op)
+    public RenderPassEntry OnPassBegin(Func<RenderPassContext, RenderPassState, PassAction> op)
     {
         _applyPassDel = op;
         return this;
     }
 
-    public RenderPassEntry OnPassEnd(RenderAfterPassOp op)
+    public RenderPassEntry OnPassEnd(Action<RenderPassContext, RenderPassState> op)
     {
         _applyAfterPassDel = op;
         return this;
@@ -54,11 +52,11 @@ internal sealed class RenderPassEntry
     public PassAction ApplyPass(RenderPassContext ctx)
     {
         ApplyPending();
-        return _applyPassDel(ctx, in _state);
+        return _applyPassDel(ctx,  _state);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ApplyAfterPass(RenderPassContext ctx) => _applyAfterPassDel?.Invoke(ctx, in _state);
+    public void ApplyAfterPass(RenderPassContext ctx) => _applyAfterPassDel?.Invoke(ctx,  _state);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ApplyPending()

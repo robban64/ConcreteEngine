@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Graphics.Gfx;
@@ -34,21 +35,29 @@ public readonly struct CreateTextureProps(
     public readonly RenderBufferMsaa Samples = samples;
 }
 
-public readonly struct CreateFboInfo(
-    Size2D size,
-    FboColorAttachment? colorTexture,
-    FboDepthAttachment? depthTexture,
-    bool colorBuffer,
-    bool depthStencilBuffer,
-    RenderBufferMsaa multisample = RenderBufferMsaa.None
-)
+public struct CreateFboInfo(Size2D size)
 {
-    public readonly Size2D Size = size;
-    public readonly FboColorAttachment? ColorTexture = colorTexture;
-    public readonly FboDepthAttachment? DepthTexture = depthTexture;
-    public readonly bool ColorBuffer = colorBuffer;
-    public readonly bool DepthStencilBuffer = depthStencilBuffer;
-    public readonly RenderBufferMsaa Multisample = multisample;
+    public Size2D Size = size;
+    public FboColorAttachment ColorTexture;
+    public FboDepthAttachment DepthTexture;
+    public bool ColorBuffer;
+    public bool DepthStencilBuffer;
+    public RenderBufferMsaa Multisample = RenderBufferMsaa.None;
+
+    public readonly CreateFboInfo AttachColorTexture(FboColorAttachment attachment, RenderBufferMsaa multisample = 0)
+    {
+        return this with { ColorTexture = attachment, Multisample = multisample };
+    }
+
+    public readonly CreateFboInfo AttachDepthTexture(FboDepthAttachment attachment)
+    {
+        return this with { DepthTexture = attachment };
+    }
+
+    public CreateFboInfo AttachDepthStencilBuffer()
+    {
+        return this with { DepthStencilBuffer = true };
+    }
 }
 
 internal readonly struct CreateBufferInfo(uint size, BufferStorage storage, BufferAccess access)

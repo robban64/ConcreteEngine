@@ -91,5 +91,6 @@ public readonly unsafe struct NativeView<T>(T* ptr, int offset, int length)
     public override int GetHashCode() => HashCode.Combine((IntPtr)Ptr, Offset, Length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RefEnumerator<T> GetEnumerator() => new(ref *Ptr, Length);
+    public PtrEnumerator<T> GetEnumerator() => new(Ptr, Length);
+    
 }

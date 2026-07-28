@@ -1,17 +1,60 @@
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Render.Buffers;
 using ConcreteEngine.Graphics.Gfx;
+using static ConcreteEngine.Engine.Render.RenderLimits;
 
 namespace ConcreteEngine.Engine.Systems;
 
-internal sealed class MaterialSystem(MaterialBuffer materialBuffer)
+internal sealed class MaterialSystem : IDisposable
 {
-    private readonly MaterialBuffer _materialBuffer = materialBuffer;
+    private const int DefaultTextureSlotCapacity = DefaultMaterialBufferCapacity * 4;
+
+    public int Count { get; private set; }
+    private int _slotCount;
+
     private readonly AssetTypeStore _materialStore = AssetStore.GetTypeStore(AssetKind.Material);
+
+    private RangeU16[] _slotRanges = new RangeU16[DefaultMaterialBufferCapacity];
+    private MaterialMeta[] _metas = new MaterialMeta[DefaultMaterialBufferCapacity];
+
+    private NativeArray<TextureBinding> _textureSlots =
+        NativeArray.Allocate<TextureBinding>(DefaultTextureSlotCapacity);
+
+    private NativeArray<MaterialUniform> _buffer =
+        NativeArray.Allocate<MaterialUniform>(DefaultMaterialBufferCapacity);
+
+    
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal unsafe ReadOnlySpan<TextureBinding> GetMetaAndSlots(Id16<Material> materialId, out MaterialMeta meta)
+    {
+        var index = materialId.Index();
+        var range = _slotRanges[index];
+        
+        meta = _metas[index];
+        return new ReadOnlySpan<TextureBinding>(_textureSlots + range.Offset, range.Length);
+    }
+    
+    internal NativeView<MaterialUniform> GetBufferView()
+    {
+        Debug.Assert(_metas.Length == _buffer.Length);
+        if (Count == 0) return NativeView<MaterialUniform>.MakeNull();
+        return _buffer.Slice(0, Count);
+    }
+
 
     internal void Commit()
     {
         if (_materialStore.DirtyCount == 0) return;
+        Count = 0;
+        _slotCount = 0;
         Submit();
         _materialStore.ClearDirty();
     }
@@ -40,7 +83,7 @@ internal sealed class MaterialSystem(MaterialBuffer materialBuffer)
 
     private void SubmitUniform(MaterialState state, Shader shader)
     {
-        ref var uniform = ref _materialBuffer.Submit(
+        ref var uniform = ref Submit(
             state.MaterialId,
             shader.GfxId,
             state.DrawState,
@@ -60,6 +103,7 @@ internal sealed class MaterialSystem(MaterialBuffer materialBuffer)
         uniform.AlphaMaskToggle = state.HasAlphaMask ? 1 : 0;
         uniform.ShadowToggle = state.ReceiveShadows ? 1 : 0;
     }
+    
 
     private void FillSamplers(Material material)
     {
@@ -77,6 +121,112 @@ internal sealed class MaterialSystem(MaterialBuffer materialBuffer)
             slots[i] = new TextureBinding(textureId, source.Usage, (byte)i);
         }
 
-        _materialBuffer.SubmitBindings(material.MaterialId, slots);
+        SubmitBindings(material.MaterialId, slots);
+    }
+    
+    private void SubmitUniform2(MaterialState state, Shader shader)
+    {
+        var id = state.MaterialId;
+        EnsureCapacity(id.Value);
+        Count = int.Max(Count, id.Index());
+
+        _metas[id.Index()] = new MaterialMeta(shader.GfxId,
+            state.DrawState,
+            state.DrawFunctions,
+            state.ReceiveShadows ? shader.DefaultBindings.ShadowMapBinding : (sbyte)-1
+        );
+
+        ref var uniform = ref _buffer[id.Index()];
+        uniform.Color = state.Color;
+        uniform.SpecularColor = state.SpecularColor;
+        uniform.UvTransform = state.UvTransform;
+
+        uniform.Shininess = state.Shininess;
+        uniform.Roughness = state.Roughness;
+        uniform.Metallic = state.Metallic;
+        uniform.AlphaCutoff = state.IsTransparent ? (state.HasAlphaMask ? 0.5f : 0.1f) : 0f;
+
+        uniform.AlphaMaskToggle = state.HasAlphaMask ? 1 : 0;
+        uniform.ShadowToggle = state.ReceiveShadows ? 1 : 0;
+    }
+    
+    private void FillSamplers2(Material material)
+    {
+        var slotIdx = _slotCount;
+        var textureSources = material.GetSourceSpan();
+        for (var i = 0; i < textureSources.Length; i++)
+        {
+            var source = textureSources[i];
+            var textureId = source.FallbackTexture;
+            if (source.OverrideTexture > 0) textureId = source.OverrideTexture;
+            else if (source.AssetTexture.Id > 0)
+                textureId = AssetManager.Assets.Get<Texture>(source.AssetTexture).GfxId;
+
+            _textureSlots[slotIdx++] = new TextureBinding(textureId, source.Usage, (byte)i);
+        }
+        
+        _slotRanges[material.MaterialId.Index()] = new RangeU16(_slotCount, textureSources.Length);
+        _slotCount = slotIdx;
+    }
+    
+    private void SubmitBindings(Id16<Material> id, ReadOnlySpan<TextureBinding> slots)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(slots.Length, TextureSlots);
+        EnsureTextureSlotCapacity(slots.Length);
+
+        var slotIdx = _slotCount;
+        for (var i = 0; i < slots.Length; i++, slotIdx++)
+            _textureSlots[slotIdx] = slots[i];
+        
+        _slotRanges[id.Index()] = new RangeU16(_slotCount, slots.Length);
+        _slotCount = slotIdx;
+    }
+
+    private ref MaterialUniform Submit(
+        Id16<Material> id,
+        ShaderId shaderId,
+        GfxDrawState drawState,
+        GfxDrawFunctions drawFunctions,
+        sbyte shadowMapBinding)
+    {
+         EnsureCapacity(id.Value);
+
+        _metas[id.Index()] = new MaterialMeta(shaderId, drawState, drawFunctions, shadowMapBinding);
+
+        Count = int.Max(Count, id.Index());
+        return ref _buffer[id.Index()];
+    }
+
+
+    
+    private void EnsureCapacity(int amount)
+    {
+        if (_metas.Length > amount) return;
+        var newCap = CapacityUtils.CapacityGrowthToFit(_metas.Length, amount);
+
+        if (newCap > MaxMaterialBufferCapacity)
+            Throwers.BufferOverflow(nameof(MaterialSystem), newCap, MaxMaterialBufferCapacity);
+
+        Console.WriteLine($"{nameof(MaterialSystem)} TextureSlots resize");
+        Array.Resize(ref _metas, newCap);
+        Array.Resize(ref _slotRanges, newCap);
+        _buffer.Resize(newCap, true);
+    }
+
+    private void EnsureTextureSlotCapacity(int amount)
+    {
+        if (_textureSlots.Length > _slotCount + amount) return;
+        var newCap = CapacityUtils.CapacityGrowthToFit(_textureSlots.Length, amount);
+        if (newCap > MaxTextureSlotBuffCapacity)
+            Throwers.BufferOverflow(nameof(MaterialSystem), newCap, MaxMaterialBufferCapacity);
+
+        Console.WriteLine($"{nameof(MaterialSystem)} TextureSlots resize");
+        _textureSlots.Resize(newCap, true);
+    }
+
+    public void Dispose()
+    {
+        _buffer.Dispose();
+        _textureSlots.Dispose();
     }
 }

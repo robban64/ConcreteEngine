@@ -1,9 +1,12 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Render.Buffers;
 using ConcreteEngine.Engine.Render.Passes;
+using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 
@@ -11,22 +14,20 @@ namespace ConcreteEngine.Engine.Render;
 
 internal sealed class DrawCommandProcessor
 {
-    private readonly GfxCommands _gfxCmd;
-    private readonly GfxBuffers _gfxBuffers;
-    private readonly MaterialBuffer _materialBuffer;
-    private readonly SkinningBuffer _skinningBuffer;
-    private readonly EffectBuffer _effectBuffer;
-
     private int _lastAnimationSlot;
     private Id16<Material> _lastMaterialId;
-    
-    internal DrawCommandProcessor(GfxContext gfx, RenderUploadBuffers buffers)
+
+    private readonly GfxCommands _gfxCmd;
+    private readonly GfxBuffers _gfxBuffers;
+    private readonly AnimationSystem _animationSystem;
+    private readonly MaterialSystem _materialSystem;
+
+    internal DrawCommandProcessor(GfxContext gfx, AnimationSystem animationSystem, MaterialSystem materialSystem)
     {
+        _animationSystem = animationSystem;
+        _materialSystem = materialSystem;
         _gfxCmd = gfx.Commands;
         _gfxBuffers = gfx.Buffers;
-        _materialBuffer = buffers.Materials;
-        _skinningBuffer = buffers.Skinning;
-        _effectBuffer = buffers.Effects;
     }
 
     public void Prepare()
@@ -45,36 +46,42 @@ internal sealed class DrawCommandProcessor
         _gfxCmd.UnbindAllTextures();
     }
 
-    public void DrawMesh(DrawCommand cmd, int submitIdx)
+    public void DrawMesh(RenderSource cmd, RenderEntityId entity, int submitIdx)
     {
-         BindMaterial(cmd.MaterialId);
+         BindMaterial(cmd.Material);
 
-        if (cmd.AnimationSlot > 0 && cmd.AnimationSlot != _lastAnimationSlot)
+        if (cmd.Kind == EntitySourceKind.AnimatedModel)
         {
-            _lastAnimationSlot = cmd.AnimationSlot;
-            BindAnimation(cmd.AnimationSlot - 1);
+            var slot = Ecs.GetRenderStore<SkinningComponent>().Get(entity).AnimationSlot;
+            if (slot != _lastAnimationSlot)
+            {
+                _lastAnimationSlot = slot;
+                BindAnimation(slot - 1);
+            }
         }
 
         BindDrawObject(submitIdx);
-        _gfxCmd.DrawMesh(cmd.MeshId, cmd.InstanceCount);
+        _gfxCmd.DrawMesh(cmd.Mesh, cmd.InstanceCount);
     }
 
-    public void DrawSpecialResolveMesh(DrawCommand cmd, int submitIdx)
+    public void DrawSpecialResolveMesh(RenderSource cmd, RenderEntityId entity, int submitIdx)
     {
         if (RenderContext.PassMode != PassStateMode.Depth)
         {
-            BindAndResolvedOverride(cmd, cmd.Resolver, cmd.ResolverSlot);
+            BindAndResolvedOverride(cmd, entity, cmd.Resolver, cmd.ResolverSlot);
         }
 
         BindDrawObject(submitIdx);
-        _gfxCmd.DrawMesh(cmd.MeshId, cmd.InstanceCount);
+        _gfxCmd.DrawMesh(cmd.Mesh, cmd.InstanceCount);
     }
 
     private void BindMaterial(Id16<Material> materialId)
     {
         if (_lastMaterialId == materialId) return;
+        _lastMaterialId = materialId;
         
-        var textureBindings = BindResolveMaterial(materialId, out var materialMeta);
+        _gfxBuffers.BindUniformBufferRange<MaterialUniform>(materialId.Index(), 1);
+        var textureBindings = _materialSystem.GetMetaAndSlots(materialId, out var materialMeta);
 
         if (!materialMeta.DrawState.IsEmpty())
         {
@@ -82,7 +89,7 @@ internal sealed class DrawCommandProcessor
             _gfxCmd.ApplyStateFunctions(materialMeta.DrawFunctions);
         }
 
-        if (RenderContext.PassMode == PassStateMode.Depth && textureBindings.Length > 0)
+        if (RenderContext.PassMode == PassStateMode.Depth)
         {
             BindDepthTextureSlots(textureBindings);
             return;
@@ -110,10 +117,10 @@ internal sealed class DrawCommandProcessor
 
 
     // allow for more flexible state management later on
-    private void BindAndResolvedOverride(DrawCommand cmd, DrawCommandResolver resolver, byte resolverSlot)
+    private void BindAndResolvedOverride(RenderSource cmd, RenderEntityId entity, DrawCommandResolver resolver, byte resolverSlot)
     {
         ShaderId shader;
-        var isAnimated = cmd.AnimationSlot > 0;
+        var isAnimated = cmd.Kind == EntitySourceKind.AnimatedModel;
         switch (resolver)
         {
             case DrawCommandResolver.Highlight: shader = RenderRegistry.HighlightShader; break;
@@ -125,10 +132,18 @@ internal sealed class DrawCommandProcessor
             default: Throwers.Unreachable(nameof(resolver)); return;
         }
 
-        if (isAnimated) BindAnimation(cmd.AnimationSlot - 1);
+        if (isAnimated)
+        {
+            var slot = Ecs.GetRenderStore<SkinningComponent>().Get(entity).AnimationSlot;
+            if (slot != _lastAnimationSlot)
+            {
+                _lastAnimationSlot = slot;
+                BindAnimation(slot - 1);
+            }
+        }
         _gfxCmd.UseShader(shader);
         UploadEditorEffectUniform(resolverSlot, isAnimated);
-        var texSlots = BindResolveMaterial(cmd.MaterialId, out var materialMeta);
+        var texSlots = BindResolveMaterial(cmd.Material, out var materialMeta);
         foreach (var slot in texSlots)
         {
             if (slot.SlotKind == TextureUsage.Albedo) _gfxCmd.BindTexture(slot.Texture, 0);
@@ -142,7 +157,7 @@ internal sealed class DrawCommandProcessor
         {
             _lastMaterialId = materialId;
             _gfxBuffers.BindUniformBufferRange<MaterialUniform>(materialId.Index(), 1);
-            return _materialBuffer.GetMetaAndSlots(materialId, out materialMeta);
+            return _materialSystem.GetMetaAndSlots(materialId, out materialMeta);
         }
 
         materialMeta = default;
@@ -159,13 +174,13 @@ internal sealed class DrawCommandProcessor
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void BindAnimation(int slot)
     {
-        var range = _skinningBuffer.GetSlotRange(slot);
+        var range = _animationSystem.GetSlotRange(slot);
         _gfxBuffers.BindUniformBufferRange<DrawAnimationUniform>(range.Offset , range.Length);
     }
 
     private unsafe void UploadEditorEffectUniform(byte slot, bool isAnimated)
     {
-        ref readonly var effect = ref _effectBuffer.Get(slot);
+        ref readonly var effect = ref EffectBuffer.Get(slot);
         var data = new EditorEffectsUniform(isAnimated, effect.Color);
         _gfxBuffers.UploadSingleUniform(&data, 0);
     }

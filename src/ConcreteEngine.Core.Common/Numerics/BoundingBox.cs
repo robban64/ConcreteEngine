@@ -14,7 +14,7 @@ public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
     public static BoundingBox One => new(-Vector3.One, Vector3.One);
     public static BoundingBox Infinite => new(new Vector3(float.MaxValue), new Vector3(float.MinValue));
 
-    public readonly bool IsIdentity => Min == Vector3.Zero && Max == Vector3.Zero;
+    public readonly bool IsZero => this == default;
 
     public readonly Vector3 Center
     {

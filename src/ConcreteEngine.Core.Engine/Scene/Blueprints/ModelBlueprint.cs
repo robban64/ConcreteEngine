@@ -54,13 +54,12 @@ public sealed class ModelInstance : RenderBlueprintInstance
     internal override void OnCreate()
     {
         var meshes = Model.GetMeshes();
-        var sourceKind = IsAnimated ? EntitySourceKind.Model : EntitySourceKind.AnimatedModel;
         for (int i = 0; i < meshes.Length; i++)
         {
             var mesh = Model.GetMesh(i);
             var mat = Blueprint.GetMaterial(i);
             var policy = new DrawPolicy(mat.State.DrawQueue, mat.State.Passes);
-            var source = new RenderSource(mesh.MeshId, mat.MaterialId, mesh.Info.MeshIndex, sourceKind);
+            var source = new RenderSource(mesh.MeshId, mat.MaterialId, mesh.Info.MeshIndex, EntitySourceKind.Model);
 
             var entity = Ecs.RenderCore.AddEntity(source, policy);
             Ecs.SceneLink.BindSceneHandle(entity, Owner.Id);

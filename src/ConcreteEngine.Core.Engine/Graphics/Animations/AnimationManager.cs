@@ -39,6 +39,7 @@ internal sealed class AnimationManager
 
 
         animation.AddEntity(entity);
+        Ecs.RenderCore.GetSource(entity).Kind = EntitySourceKind.AnimatedModel;
         Ecs.GetRenderStore<SkinningComponent>().Add(entity, new SkinningComponent(animation.Id));
     }
 

@@ -31,7 +31,6 @@ internal sealed class MaterialSystem : IDisposable
         NativeArray.Allocate<MaterialUniform>(DefaultMaterialBufferCapacity);
 
     
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal unsafe ReadOnlySpan<TextureBinding> GetMetaAndSlots(Id16<Material> materialId, out MaterialMeta meta)
     {
@@ -53,8 +52,6 @@ internal sealed class MaterialSystem : IDisposable
     internal void Commit()
     {
         if (_materialStore.DirtyCount == 0) return;
-        Count = 0;
-        _slotCount = 0;
         Submit();
         _materialStore.ClearDirty();
     }

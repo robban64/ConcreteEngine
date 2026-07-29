@@ -65,9 +65,9 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int FindIndex(RenderEntityId entity)
     {
+        //SearchMethod.BinarySearch(GetEntitySpan(), entity);
         return MemoryMarshal.Cast<RenderEntityId, int>(GetEntitySpan()).IndexOf(entity.Id);
-        
-    }//SearchMethod.BinarySearch(GetEntitySpan(), entity);
+    }
 
     public bool Add(RenderEntityId entity, in T value)
     {
@@ -164,7 +164,7 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly Enumerator GetEnumerator() => new(store);
+        public readonly Enumerator GetEnumerator() => this;
     }
     
     
@@ -197,7 +197,7 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly VisibilityEnumerator GetEnumerator() => new(store, core);
+        public readonly VisibilityEnumerator GetEnumerator() => this;
     }
 
 }

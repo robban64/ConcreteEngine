@@ -6,7 +6,6 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Engine.Render;
-using ConcreteEngine.Engine.Render.Buffers;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Graphics;
 
@@ -43,7 +42,7 @@ public sealed class EngineRenderSystem : IDisposable
 
         _registry = new RenderRegistry(graphics.Gfx);
         _drawPipeline = new DrawCommandPipeline(graphics.Gfx, _animationSystem, _materialSystem);
-        _passPipeline = new RenderPassPipeline(graphics.Gfx,_registry);
+        _passPipeline = new RenderPassPipeline(graphics.Gfx, _drawPipeline.DrawCmd,_registry);
 
         _renderDispatcher = new RenderDispatcher(_cameraManager.Frustum);
         
@@ -96,12 +95,11 @@ public sealed class EngineRenderSystem : IDisposable
         _particleSystem.Simulate(dt);
     }
 
-    internal void Render(float dt, float alpha)
+    public void Render(float alpha)
     {
         _animationSystem.ResetFrame();
-        
-        _passPipeline.Prepare();
-        _drawPipeline.BeginFrame();
+        _passPipeline.ResetFrame();
+        _drawPipeline.ResetFrame();
 
         // frame update
         _cameraManager.CommitFrame(alpha);
@@ -115,25 +113,19 @@ public sealed class EngineRenderSystem : IDisposable
         // prepare buffers
         _drawPipeline.StageCommands(_renderDispatcher);
 
-        RenderPasses();
+        Execute();
     }
     
-    private void RenderPasses()
+    public void Execute()
     {
         while (_passPipeline.NextPass(out var nextPassId, out var passAction))
         {
             if (passAction == NextPassAction.Skip) continue;
+            
             var passResult = _passPipeline.ApplyPass();
 
-            switch (passResult.Op)
-            {
-                case PassOp.Draw:
-                    _drawPipeline.ExecuteDrawPass(nextPassId, true, _renderDispatcher.VisibleEntities);
-                    break;
-                case PassOp.DrawEffect:
-                    _drawPipeline.ExecuteDrawPass(nextPassId, false, _renderDispatcher.VisibleEntities);
-                    break;
-            }
+            if(passResult.Op is PassOp.Draw)
+                _drawPipeline.ExecuteDrawPass(nextPassId, _renderDispatcher.VisibleEntities);
 
             _passPipeline.ApplyAfterPass();
         }

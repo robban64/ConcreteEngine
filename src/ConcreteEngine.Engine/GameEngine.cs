@@ -9,7 +9,6 @@ using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Gateway;
-using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -107,7 +106,7 @@ public sealed class GameEngine : IDisposable
     private void Draw(float dt)
     {
         _graphics.BeginFrame(EngineWindow.Viewport.Size);
-        _renderSystem.Render(dt, EngineTime.GameAlpha);
+        _renderSystem.Render(EngineTime.GameAlpha);
         _graphics.EndFrame();
 
         _gateway.RenderEditor(dt);

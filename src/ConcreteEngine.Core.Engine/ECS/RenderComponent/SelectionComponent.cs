@@ -1,15 +1,15 @@
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
-public struct SelectionComponent(ColorRgba highlightColor, PassMask originalPasses)
-    : IRenderComponent<SelectionComponent>
+public struct SelectionComponent(ColorRgba highlightColor) : IRenderComponent<SelectionComponent>
 {
-    public static ColorRgba DefaultHighlight => new(46, 163, 242);
+    public static SelectionComponent DefaultHighlight => new(new ColorRgba(46, 163, 242));
 
     public ColorRgba HighlightColor = highlightColor;
-    public PassMask OriginalPasses = originalPasses;
 
 /*
     public float ScrollSpeed = 0.1f;

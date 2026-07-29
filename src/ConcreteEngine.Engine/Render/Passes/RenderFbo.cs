@@ -1,9 +1,5 @@
-using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx;
-using static ConcreteEngine.Engine.Render.RenderLimits;
 
 namespace ConcreteEngine.Engine.Render.Passes;
 

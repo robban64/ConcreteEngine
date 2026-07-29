@@ -19,17 +19,7 @@ public struct RenderSource(
     public uint InstanceCount;
     public MeshId Mesh = mesh;
     public Id16<Material> Material = material;
-    
+
     public byte MeshIndex = (byte)meshIndex;
     public EntitySourceKind Kind = kind;
-
-    // maybe rework this
-    public DrawCommandResolver Resolver;
-    public byte ResolverSlot;
-
-    internal void SetResolve(DrawCommandResolver resolver, byte resolverSlot)
-    {
-        Resolver = resolver;
-        ResolverSlot = resolverSlot;
-    }
 }

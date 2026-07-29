@@ -1,4 +1,3 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
@@ -64,8 +63,7 @@ public sealed class RenderRegistry
     {
         if (variant < 0 || variant > RenderLimits.MaxFboVariants) Throwers.InvalidArgument(nameof(variant));
 
-        var key = TargetRegistry<TTarget>.FboKey(variant);
-        var fbo = GetByKey(key);
+        var fbo = GetByKey(new FboKey (TargetRegistry<TTarget>.TagIndex, variant));
         if (fbo == null) Throwers.NotFoundBy(nameof(variant), variant.Value);
 
         var meta = GfxRegistry.GetMeta(fbo.FboId);
@@ -175,16 +173,16 @@ public sealed class RenderRegistry
     public static class TargetRegistry<TTarget> where TTarget : unmanaged, IRenderTarget
     {
         private static bool _isBound;
-        private static byte _tagIndex;
+        public static byte TagIndex { get; private set; }
 
         private static InlineArray4<byte> _passIds;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static FboKey FboKey(FboVariant variant) => new(_tagIndex, variant);
+        public static FboKey FboKey(FboVariant variant) => new(TagIndex, variant);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PassTargetKey PassKey(FboVariant variant) =>
-            new(_tagIndex, variant, new PassId(_passIds[variant]));
+            new(TagIndex, variant, new PassId(_passIds[variant]));
 
         public static PassTargetKey BindPassTarget(FboVariant variant, PassId passId)
         {
@@ -205,7 +203,7 @@ public sealed class RenderRegistry
             if (_isBound)
                 throw new InvalidOperationException($"PassTag already registered. {typeof(TTarget).Name}");
 
-            _tagIndex = _targetCounter++;
+            TagIndex = _targetCounter++;
             _isBound = true;
         }
     }

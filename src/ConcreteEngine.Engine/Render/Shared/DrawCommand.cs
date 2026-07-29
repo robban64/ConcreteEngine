@@ -1,27 +1,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Engine.Render;
-
-[StructLayout(LayoutKind.Sequential)]
-public struct DrawCommand(
-    MeshId meshId,
-    Id16<Material> materialId,
-    uint instanceCount = 0,
-    ushort animationSlot = 0,
-    DrawCommandResolver resolver = DrawCommandResolver.None,
-    byte resolverSlot = 0)
-{
-    public uint InstanceCount = instanceCount;
-    public MeshId MeshId = meshId;
-    public Id16<Material> MaterialId = materialId;
-    public ushort AnimationSlot = animationSlot;
-    public DrawCommandResolver Resolver = resolver;
-    public byte ResolverSlot = resolverSlot;
-}
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawCommandIndex : IComparable<DrawCommandIndex>

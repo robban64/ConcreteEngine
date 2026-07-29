@@ -7,6 +7,7 @@ using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internals;
 using ConcreteEngine.Graphics.OpenGL;
+using static ConcreteEngine.Graphics.Gfx.GfxRegistry;
 using static ConcreteEngine.Graphics.Gfx.GfxStateFlags;
 
 namespace ConcreteEngine.Graphics.Gfx;
@@ -73,7 +74,7 @@ public sealed class GfxCommands
         ArgumentOutOfRangeException.ThrowIfZero(fboId.Id, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState("FBO is already bound.", fboId);
 
-        var size = GfxRegistry.FboStore.GetMeta(fboId).Size;
+        var size = FboStore.GetMeta(fboId).Size;
 
         BindFramebuffer(fboId);
         SetViewport(size);
@@ -102,8 +103,8 @@ public sealed class GfxCommands
         Debug.Assert(fromId != default);
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
 
-        var fromHandle = GfxRegistry.FboStore.GetHandleAndMeta(fromId, out var fromMeta);
-        var toHandle = GfxRegistry.FboStore.TryGet(toId, out _);
+        var fromHandle = FboStore.GetHandleAndMeta(fromId, out var fromMeta);
+        var toHandle = FboStore.TryGet(toId, out _);
 
         if (!toHandle.IsValid())
         {
@@ -229,15 +230,16 @@ public sealed class GfxCommands
             return;
         }
 
-        GlStates.BindFrameBuffer(GfxRegistry.FboStore.GetHandle(id));
+        GlStates.BindFrameBuffer(FboStore.GetHandle(id));
         _boundFboId = id;
     }
 
     public void BindTexture(TextureId texture, int slot)
     {
         Debug.Assert(slot >= 0 && slot <= GfxLimits.TextureSlots);
-        if (_boundTextures[slot] == texture) return;
-        var boundTexture = _boundTextures[slot] = texture;
+        ref var boundTexture = ref _boundTextures[slot];
+        if (boundTexture == texture) return;
+        boundTexture = texture;
 
         if (boundTexture == 0)
         {
@@ -245,8 +247,7 @@ public sealed class GfxCommands
             return;
         }
 
-        var handle = GfxRegistry.TextureStore.GetHandle(boundTexture);
-        GlStates.BindTexture(handle, slot);
+        GlStates.BindTexture(TextureStore.GetHandle(boundTexture), slot);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -269,7 +270,7 @@ public sealed class GfxCommands
             return;
         }
 
-        var handle = GfxRegistry.ShaderStore.GetHandle(id);
+        var handle = ShaderStore.GetHandle(id);
         GlStates.UseShader(handle);
         _boundShaderId = id;
     }
@@ -280,10 +281,10 @@ public sealed class GfxCommands
         if (_boundMeshId != id)
         {
             _boundMeshId = id;
-            GlStates.BindMesh(GfxRegistry.MeshStore.GetHandle(id));
+            GlStates.BindMesh(MeshStore.GetHandle(id));
         }
 
-        var meta = GfxRegistry.MeshStore.GetMeta(id);
+        var meta = MeshStore.GetMeta(id);
         if (meta.Kind <= DrawMeshKind.Elements)
         {
             GlStates.Draw(meta.Primitive, meta.ElementSize, meta.DrawCount);

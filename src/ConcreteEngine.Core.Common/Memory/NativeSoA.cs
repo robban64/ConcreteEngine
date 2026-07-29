@@ -6,9 +6,10 @@ using System.Runtime.InteropServices;
 // ReSharper disable OutParameterValueIsAlwaysDiscarded.Local
 public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where T2 : unmanaged
 {
-    public int Length;
     private T1* _ptr1;
     private T2* _ptr2;
+    
+    public int Length;
 
     public NativeSoA(int length)
     {
@@ -24,9 +25,18 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
 
     public readonly bool IsNull => _ptr1 == null;
     
-    public readonly NativeView<T1> View1 => new(_ptr1, 0, Length);
-    public readonly NativeView<T2> View2 => new(_ptr2, 0, Length);
-    
+    public readonly NativeView<T1> View1
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(_ptr1, 0, Length);
+    }
+
+    public readonly NativeView<T2> View2
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(_ptr2, 0, Length);
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ref T1 At1(int index) => ref _ptr1[index];
@@ -73,10 +83,11 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
 
 public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
 {
-    public int Length;
     private T1* _ptr1;
     private T2* _ptr2;
     private T3* _ptr3;
+    
+    public int Length;
 
     public NativeSoA(int length)
     {
@@ -92,10 +103,23 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
 
     public readonly bool IsNull => _ptr1 == null;
 
-    public readonly NativeView<T1> View1 => new(_ptr1, 0, Length);
-    public readonly NativeView<T2> View2 => new(_ptr2, 0, Length);
-    public readonly NativeView<T3> View3 => new(_ptr3, 0, Length);
-    
+    public readonly NativeView<T1> View1
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(_ptr1, 0, Length);
+    }
+
+    public readonly NativeView<T2> View2
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(_ptr2, 0, Length);
+    }
+    public readonly NativeView<T3> View3
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(_ptr3, 0, Length);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ref T1 At1(int index) => ref _ptr1[index];
 

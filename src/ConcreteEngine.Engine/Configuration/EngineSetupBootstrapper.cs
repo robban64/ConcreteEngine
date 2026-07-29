@@ -1,16 +1,10 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Gateway;
-using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Configuration;
 
@@ -101,7 +95,7 @@ internal static class EngineSetupBootstrapper
     private static bool OnWarmup(EngineSetupCtx ctx)
     {
         ctx.Graphics.BeginFrame(EngineWindow.Viewport.Size);
-        ctx.Renderer.Render(0, 0);
+        ctx.Renderer.Render(0);
         ctx.Graphics.EndFrame();
         ctx.EngineGateway.RenderEditor(0);
 

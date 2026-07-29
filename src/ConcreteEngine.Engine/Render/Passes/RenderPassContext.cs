@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -10,47 +9,52 @@ namespace ConcreteEngine.Engine.Render.Passes;
 internal sealed class RenderPassContext
 {
     private int _textureSlotHigh;
-    private RenderTargetInfo _target;
+    
+    public FrameBufferId FboId { get; private set; }
     public PassTargetKey CurrentPassKey { get; private set; }
     
     public readonly GfxCommands Cmd;
+    public readonly GfxBuffers Buffers;
     private readonly GfxTextures _gfxTextures;
+    public readonly DrawCommandProcessor DrawCmd;
 
     private readonly PriorityQueue<TextureId, PassTextureSlotKey> _sourceQueue;
     private readonly PriorityQueue<PassMutationState, PassTargetKey> _mutationQueue;
     private readonly TextureId[] _textureSlots;
 
-    internal RenderPassContext(GfxContext gfx)
+    internal RenderPassContext(GfxContext gfx, DrawCommandProcessor drawCmd)
     {
+        DrawCmd = drawCmd;
         Cmd = gfx.Commands;
+        Buffers = gfx.Buffers;
         _gfxTextures = gfx.Textures;
         _sourceQueue = new PriorityQueue<TextureId, PassTextureSlotKey>(4, new PassTextureSlotKeyComp());
         _mutationQueue = new PriorityQueue<PassMutationState, PassTargetKey>(4, new PassTagKeyComp());
         _textureSlots = new TextureId[RenderLimits.TextureSlots];
     }
 
-    public ref readonly RenderTargetInfo Target => ref _target;
+    public ref readonly FrameBufferMeta Target => ref GfxRegistry.GetMeta(FboId);
 
-    internal void Prepare()
+    internal void Reset()
     {
+        FboId = default;
+        _textureSlotHigh = 0;
         _sourceQueue.Clear();
         _mutationQueue.Clear();
-        _textureSlots.AsSpan().Clear();
-        _textureSlotHigh = 0;
+        Array.Clear(_textureSlots);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void AttachScreenPass(PassTargetKey targetKey, Size2D outputSize)
+    internal void AttachScreenPass(PassTargetKey targetKey)
     {
-        _target = new RenderTargetInfo(default, outputSize, default, default);
+        FboId = default;
         CurrentPassKey = targetKey;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void AttachPass(RenderFbo fbo, PassTargetKey targetKey)
+    internal void AttachPass(FrameBufferId fboId, PassTargetKey targetKey)
     {
-        var meta = GfxRegistry.GetMeta(fbo.FboId);
-        _target = new RenderTargetInfo(fbo.FboId, meta.Size, meta.Attachments, meta.MultiSample);
+        FboId = fboId;
         CurrentPassKey = targetKey;
     }
 
@@ -85,14 +89,14 @@ internal sealed class RenderPassContext
     public void DequeuePassSources(RenderPassEntry entry)
     {
         var tagIndex = entry.PassKey.TagIndex;
-        var slots = _textureSlots.AsSpan();
-        slots.Clear();
-
+        
         _textureSlotHigh = 0;
+        Array.Clear(_textureSlots);
+
         while (_sourceQueue.TryPeek(out _, out var k) && k.TagIndex == tagIndex)
         {
             _sourceQueue.TryDequeue(out var id, out k);
-            slots[k.TextureSlot] = id;
+            _textureSlots[k.TextureSlot] = id;
             _textureSlotHigh = int.Max(_textureSlotHigh, k.TextureSlot);
         }
     }
@@ -131,4 +135,5 @@ internal sealed class RenderPassContext
 
         Cmd.DrawMesh(GfxMeshes.FsqQuad);
     }
+
 }

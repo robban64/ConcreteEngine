@@ -1,17 +1,14 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Engine.Render.Buffers;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Engine.Render;
 
@@ -22,8 +19,8 @@ internal sealed class DrawCommandPipeline : IDisposable
     private NativeArray<int> _drawTickets;
     private readonly Range32[] _passRanges;
 
+    public readonly DrawCommandProcessor DrawCmd;
     private readonly GfxBuffers _gfxBuffers;
-    private readonly DrawCommandProcessor _drawCmd;
     private readonly AnimationSystem _animationSystem;
     private readonly MaterialSystem _materialSystem;
 
@@ -31,16 +28,15 @@ internal sealed class DrawCommandPipeline : IDisposable
         _animationSystem = animationSystem;
         _materialSystem = materialSystem;
         _gfxBuffers = gfx.Buffers;
-        _drawCmd = new DrawCommandProcessor(gfx, animationSystem, materialSystem);
+        DrawCmd = new DrawCommandProcessor(gfx, animationSystem, materialSystem);
         
         _drawTickets = NativeArray.Allocate<int>(DefaultTicketCapacity);
         _passRanges = new Range32[RenderLimits.PassSlots];
     }
     
-    public void BeginFrame()
+    public void ResetFrame()
     {
-        EffectBuffer.Reset();
-        _drawCmd.Prepare();
+        DrawCmd.ResetFrame();
     }
 
     public void StageCommands(RenderDispatcher dispatcher)
@@ -61,7 +57,6 @@ internal sealed class DrawCommandPipeline : IDisposable
         
         if (!GfxRegistry.GetMeta(DrawAnimationUniform.UboId).HasCapacity(boneCount))
             _gfxBuffers.SetUniformBufferCount(DrawAnimationUniform.UboId, boneCount);
-
         
         // Upload
         VisualSystem.Instance.Upload();
@@ -79,44 +74,27 @@ internal sealed class DrawCommandPipeline : IDisposable
 
     private AvgFrameTimer avg;
 
-    public void ExecuteDrawPass(PassId passId, bool defaultDraw, NativeView<RenderEntityId> entities)
+    public unsafe void ExecuteDrawPass(PassId passId, NativeView<RenderEntityId> entities)
     {
-        _drawCmd.PrepareDrawPass();
-        avg.BeginSample();
-        if (defaultDraw)
-            DispatchDrawPass(_drawCmd, passId,entities);
-        else
-            DispatchResolveDrawPass(_drawCmd, passId,entities);
+        DrawCmd.PrepareDrawPass();
         
-        if(avg.EndSample() > 144 * 4) avg.ResetAndPrint();
-
-    }
-    
-    private unsafe void DispatchDrawPass(DrawCommandProcessor cmd, PassId passId, NativeView<RenderEntityId> entities)
-    {
+        avg.BeginSample();
+        
         var passRange = _passRanges[passId];
         var ticket = _drawTickets + passRange.Offset;
         var end = ticket + passRange.Length;
         while (ticket < end)
         {
-            var entity = entities[*ticket];
-            cmd.DrawMesh(Ecs.RenderCore.GetSource(entity), entity, *ticket);
+            var index = *ticket;
+            var entity = entities[index];
+            DrawCmd.DrawSource(Ecs.RenderCore.GetSource(entity), entity, index);
             ++ticket;
         }
-    }
 
-    private unsafe void DispatchResolveDrawPass(DrawCommandProcessor cmd, PassId passId, NativeView<RenderEntityId> entities)
-    {
-        var pass = _passRanges[passId];
-        var tickets = _drawTickets + pass.Offset;
-        for (var i = 0; i < pass.Length; i++)
-        {
-            var ticket = tickets[i];
-            var entity = entities[ticket];
-            cmd.DrawSpecialResolveMesh(Ecs.RenderCore.GetSource(entity), entity, ticket);
-        }
-    }
+        if(avg.EndSample() > 144 * 4) avg.ResetAndPrint();
 
+    }
+    
     private unsafe void ReadyDrawCommands(NativeView<DrawCommandIndex> indices)
     {
         if (indices.Length <= 1) return;

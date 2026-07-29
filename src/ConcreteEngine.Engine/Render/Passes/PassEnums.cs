@@ -10,10 +10,10 @@ public enum PassStateMode : byte
 public enum PassOp : byte
 {
     Draw = 0,
-    DrawEffect = 1,
-    Resolve = 2,
-    Fsq = 3,
-    Screen = 4
+    Resolve = 1,
+    Fsq = 2,
+    Screen = 3,
+    Continue = 4
 }
 
 internal enum NextPassAction : byte

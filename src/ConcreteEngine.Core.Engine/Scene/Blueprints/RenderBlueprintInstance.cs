@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -60,22 +61,15 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
 
     public void ToggleSelection(bool isSelected)
     {
-        var selectionStore = Ecs.GetRenderStore<SelectionComponent>();
-
-        foreach (var entity in GetRenderEntities())
+        if (isSelected)
         {
-            if (isSelected)
-            {
-                var passes = Ecs.RenderCore.GetDrawPolicy(entity).Passes;
-                selectionStore.Add(entity, new SelectionComponent(SelectionComponent.DefaultHighlight, passes));
-            }
-            else
-            {
-                var passes = selectionStore.Get(entity).OriginalPasses;
-                Ecs.RenderCore.GetSource(entity).SetResolve(0, 0);
-                Ecs.RenderCore.GetDrawPolicy(entity).Passes = passes;
-                selectionStore.Remove(entity);
-            }
+            foreach (var entity in GetRenderEntities())
+                Ecs.GetRenderStore<SelectionComponent>().Add(entity, SelectionComponent.DefaultHighlight);
+        }
+        else
+        {
+            foreach (var entity in GetRenderEntities())
+                Ecs.GetRenderStore<SelectionComponent>().Remove(entity);
         }
     }
 

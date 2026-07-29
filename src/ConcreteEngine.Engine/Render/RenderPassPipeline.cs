@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Graphics;
 
@@ -14,21 +13,19 @@ internal sealed class RenderPassPipeline
     private readonly RenderRegistry _renderRegistry;
     private readonly List<RenderPassEntry> _entries = new(8);
 
-    internal RenderPassPipeline(GfxContext gfx, RenderRegistry renderRegistry)
+    internal RenderPassPipeline(GfxContext gfx, DrawCommandProcessor cmd, RenderRegistry renderRegistry)
     {
         _renderRegistry = renderRegistry;
-        _ctx = new RenderPassContext(gfx);
+        _ctx = new RenderPassContext(gfx, cmd);
     }
 
     public int PassCount => _entries.Count;
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Prepare()
+    internal void ResetFrame()
     {
         RenderContext.ResetPassMode();
         _activePassIndex = 0;
-        _ctx.Prepare();
+        _ctx.Reset();
     }
 
     internal bool NextPass(out PassId passId, out NextPassAction action)
@@ -50,9 +47,9 @@ internal sealed class RenderPassPipeline
         action = NextPassAction.Run;
 
         if (_renderRegistry.TryGetRenderFbo(key, out var fbo))
-            _ctx.AttachPass(fbo, passKey);
+            _ctx.AttachPass(fbo.FboId, passKey);
         else if (passEntry.PassOp == PassOp.Screen)
-            _ctx.AttachScreenPass(passKey, EngineWindow.ViewportSize);
+            _ctx.AttachScreenPass(passKey);
         else
             action = NextPassAction.Skip;
 
@@ -64,19 +61,12 @@ internal sealed class RenderPassPipeline
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal PassAction ApplyPass()
-    {
-        return _entries[_activePassIndex].ApplyPass(_ctx);
-    }
+    internal PassAction ApplyPass() => _entries[_activePassIndex].ApplyPass(_ctx);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void ApplyAfterPass()
-    {
-        _entries[_activePassIndex].ApplyAfterPass(_ctx);
-        _activePassIndex++;
-    }
-    
-    
+    internal void ApplyAfterPass() => _entries[_activePassIndex++].ApplyAfterPass(_ctx);
+
+
     public RenderPassEntry RegisterContinue<TTarget>(FboVariant variant, PassId passId, PassOp op,
         RenderPassState initial)
         where TTarget : unmanaged, IRenderTarget

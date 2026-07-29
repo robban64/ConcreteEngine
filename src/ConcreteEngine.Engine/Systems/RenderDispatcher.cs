@@ -2,18 +2,10 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Engine.Graphics.Enviroment;
 using ConcreteEngine.Engine.Render;
-using ConcreteEngine.Engine.Render.Buffers;
-using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Systems;
 
@@ -40,6 +32,11 @@ internal sealed class RenderDispatcher : IDisposable
     public NativeView<DrawCommandIndex> DrawIndices => _drawIndices.Slice(0, VisibleCount);
     public NativeView<DrawObjectUniform> Transforms => _transforms.Slice(0, VisibleCount);
 
+    private unsafe PtrEnumerator<RenderEntityId, DrawCommandIndex> IndexEnumerator() =>
+        new(_visibleEntities, _drawIndices, VisibleCount);
+    private unsafe PtrEnumerator<RenderEntityId, DrawObjectUniform> TransformEnumerator() =>
+        new(_visibleEntities, _transforms, VisibleCount);
+
     public void Dispose() => _visibleEntities.Dispose();
     
 
@@ -52,7 +49,7 @@ internal sealed class RenderDispatcher : IDisposable
         Ensure();
         var visibleCount = CullEntities();
         if (visibleCount == 0) return;
-        ProcessSelectionEffect();
+        //ProcessSelectionEffect();
 
         SubmitDrawPolicy();
         SubmitTransforms();
@@ -103,27 +100,6 @@ internal sealed class RenderDispatcher : IDisposable
         }
     }
     
-    private unsafe PtrEnumerator<RenderEntityId, DrawCommandIndex> IndexEnumerator() =>
-        new(_visibleEntities, _drawIndices, VisibleCount);
-
-    private unsafe PtrEnumerator<RenderEntityId, DrawObjectUniform> TransformEnumerator() =>
-        new(_visibleEntities, _transforms, VisibleCount);
-
-    private void ProcessSelectionEffect()
-    {
-        if (Ecs.GetRenderStore<SelectionComponent>().Count == 0) return;
-
-        foreach (var query in Ecs.GetRenderStore<SelectionComponent>().VisibilityQuery())
-        {
-            var slot = EffectBuffer.Submit(new EffectUniformParams(query.Component.HighlightColor));
-            ref var source = ref Ecs.RenderCore.GetSource(query.Entity);
-            source.Resolver = DrawCommandResolver.Highlight;
-            source.ResolverSlot = slot;
-
-            Ecs.RenderCore.GetDrawPolicy(query.Entity).Passes = PassMask.Effect | PassMask.Depth;
-        }
-    }
-    
     private void Ensure()
     {
         var ecsCapacity = Ecs.RenderCore.Capacity;
@@ -135,6 +111,21 @@ internal sealed class RenderDispatcher : IDisposable
         }
     }
 /*
+ 
+  private void ProcessSelectionEffect()
+      {
+          if (Ecs.GetRenderStore<SelectionComponent>().Count == 0) return;
+
+          foreach (var query in Ecs.GetRenderStore<SelectionComponent>().VisibilityQuery())
+          {
+              var slot = EffectBuffer.Submit(new EffectUniformParams(query.Component.HighlightColor));
+              ref var source = ref Ecs.RenderCore.GetSource(query.Entity);
+              source.Resolver = DrawCommandResolver.Highlight;
+              source.ResolverSlot = slot;
+
+              Ecs.RenderCore.GetDrawPolicy(query.Entity).Passes = PassMask.Effect | PassMask.Depth;
+          }
+      }
     private void SubmitDebugBounds()
     {
         if (Ecs.GetRenderStore<DebugBoundsComponent>().Count == 0) return;

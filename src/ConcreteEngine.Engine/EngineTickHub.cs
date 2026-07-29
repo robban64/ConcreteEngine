@@ -16,7 +16,6 @@ internal sealed class EngineTickHub
     private FrameAccumulator _diagnosticTicker;
     private FrameAccumulator _systemTicker;
 
-
     internal EngineTickHub(GameEngine engine)
     {
         ArgumentNullException.ThrowIfNull(engine);

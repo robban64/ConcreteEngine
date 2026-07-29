@@ -34,9 +34,9 @@ public static class GfxRegistry
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TMeta GetMeta<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
+    public static ref readonly TMeta GetMeta<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
     {
-        return GetStore<TMeta>().GetMeta(id);
+        return ref GetStore<TMeta>().GetMeta(id);
     }
 
     public static void BindMetaChanged<TMeta>(Action<int> callback) where TMeta : unmanaged, IResourceMeta

@@ -9,7 +9,6 @@ using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Engine.Render;
-using ConcreteEngine.Engine.Render.Buffers;
 using static ConcreteEngine.Engine.Render.RenderLimits;
 
 namespace ConcreteEngine.Engine.Systems;

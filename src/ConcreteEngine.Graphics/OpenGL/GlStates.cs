@@ -124,11 +124,6 @@ internal static class GlStates
         Gl.FrontFace(front);
     }
 
-    public static void BindAllTextures(ReadOnlySpan<uint> textures)
-    {
-        Gl.BindTextures(0, textures);
-    }
-
     public static void UnbindAllTextures()
     {
         Gl.BindTextures(0, stackalloc uint[GfxLimits.TextureSlots]);

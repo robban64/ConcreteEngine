@@ -24,6 +24,13 @@ public static unsafe class NativeArray
         var ptr = AllocMemory(capacity, Unsafe.SizeOf<T>(), 0, zeroed);
         return new NativeArray<T>((T*)ptr, capacity, 0);
     }
+    
+    public static T* AllocatePointer<T>(int capacity, bool zeroed = true) where T : unmanaged
+    {
+        var ptr = AllocMemory(capacity, Unsafe.SizeOf<T>(), 0, zeroed);
+        return (T*)ptr;
+    }
+
 
     public static NativeArray<T> AlignedAllocate<T>(int capacity, int alignment = 16, bool zeroed = true)
         where T : unmanaged
@@ -50,21 +57,8 @@ public static unsafe class NativeArray
             : NativeMemory.Alloc((nuint)length, (nuint)stride);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining), StackTraceHidden]
-    private static void Validate(int capacity, int stride, int alignment)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 4);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(stride);
-        if (alignment != 0)
-        {
-            ArgumentOutOfRangeException.ThrowIfLessThan(alignment, 16);
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 64);
-            ArgumentOutOfRangeException.ThrowIfNotEqual(IntMath.IsPowerOfTwo(alignment), true, nameof(alignment));
-        }
-    }
-
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void* Resize(void* ptr, int length, int newLength, int stride, int alignment,
+    public static void* Resize(void* ptr, int length, int newLength, int stride, int alignment,
         bool zeroed)
     {
         var capacity = (nuint)length * (nuint)stride;
@@ -88,6 +82,11 @@ public static unsafe class NativeArray
         return ptr;
     }
 
+    public static T* Resize<T>(T* ptr, int length, int newLength, int alignment, bool zeroed) where T : unmanaged
+    {
+        return (T*)Resize(ptr, length, newLength, Unsafe.SizeOf<T>(), alignment, zeroed);
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void DisposeArray(void* ptr, int alignment)
     {
@@ -100,6 +99,20 @@ public static unsafe class NativeArray
         Console.WriteLine($"Disposed {nameof(NativeArray)}: {capacity} bytes");
 #endif
 */
+    }
+    
+    
+    [MethodImpl(MethodImplOptions.NoInlining), StackTraceHidden]
+    private static void Validate(int capacity, int stride, int alignment)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 4);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(stride);
+        if (alignment != 0)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(alignment, 16);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 64);
+            ArgumentOutOfRangeException.ThrowIfNotEqual(IntMath.IsPowerOfTwo(alignment), true, nameof(alignment));
+        }
     }
 }
 

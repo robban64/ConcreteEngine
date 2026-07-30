@@ -1,8 +1,8 @@
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Enviroment;
+using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
 
@@ -42,8 +42,8 @@ internal sealed class TerrainSystem
 
             var source = new RenderSource(it.TerrainMeshId, terrainMat, 0, EntitySourceKind.Model);
             var drawPolicy = new DrawPolicy(DrawQueue.Terrain, PassMask.Default);
-            var entity = Ecs.RenderCore.AddEntity(source, drawPolicy);
-            Ecs.RenderCore.GetWorldBounds(entity) = chunk.GetBounds();
+            var entity = RenderEcs.Core.AddEntity(source, drawPolicy);
+            RenderEcs.Core.GetWorldBounds(entity) = chunk.GetBounds();
         }
     }
 
@@ -57,8 +57,8 @@ internal sealed class TerrainSystem
             //(uint)it.FoliageCount
             var source = new RenderSource(it.FoliageMeshId, mat, 0, EntitySourceKind.Model);
             var drawPolicy = new DrawPolicy(DrawQueue.Transparent, PassMask.Default);
-            var entity = Ecs.RenderCore.AddEntity(source, drawPolicy);
-            Ecs.RenderCore.GetWorldBounds(entity) = chunk.GetBounds();
+            var entity = RenderEcs.Core.AddEntity(source, drawPolicy);
+            RenderEcs.Core.GetWorldBounds(entity) = chunk.GetBounds();
         }
     }
     private void Allocate()

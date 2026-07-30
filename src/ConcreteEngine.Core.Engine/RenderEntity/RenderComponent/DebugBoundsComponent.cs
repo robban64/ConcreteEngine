@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
 
-namespace ConcreteEngine.Core.Engine.ECS.RenderComponent;
+namespace ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 
 public struct DebugBoundsComponent(ColorRgba color) : IRenderComponent<DebugBoundsComponent>
 {

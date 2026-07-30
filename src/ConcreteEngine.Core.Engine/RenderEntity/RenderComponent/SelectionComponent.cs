@@ -1,9 +1,6 @@
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Graphics;
 
-namespace ConcreteEngine.Core.Engine.ECS.RenderComponent;
+namespace ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 
 public struct SelectionComponent(ColorRgba highlightColor) : IRenderComponent<SelectionComponent>
 {

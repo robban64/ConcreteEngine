@@ -2,7 +2,8 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics;
@@ -58,7 +59,7 @@ internal sealed class DrawCommandProcessor
 
     public void BindAnimation(RenderEntityId entity)
     {
-        var slot = Ecs.GetRenderStore<SkinningComponent>().Get(entity).AnimationSlot;
+        var slot = RenderEcs.GetRenderStore<SkinningComponent>().Get(entity).AnimationSlot;
         if (slot != _lastAnimationSlot)
         {
             _lastAnimationSlot = slot;
@@ -174,7 +175,7 @@ internal sealed class DrawCommandProcessor
 
         if (isAnimated)
         {
-            var slot = Ecs.GetRenderStore<SkinningComponent>().Get(entity).AnimationSlot;
+            var slot = RenderEcs.GetRenderStore<SkinningComponent>().Get(entity).AnimationSlot;
             if (slot != _lastAnimationSlot)
             {
                 _lastAnimationSlot = slot;

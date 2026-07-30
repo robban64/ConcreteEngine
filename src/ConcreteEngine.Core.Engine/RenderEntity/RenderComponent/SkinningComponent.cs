@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 
-namespace ConcreteEngine.Core.Engine.ECS.RenderComponent;
+namespace ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 
 public struct SkinningComponent(Id16<AnimationInstance> animationId) : IRenderComponent<SkinningComponent>
 {

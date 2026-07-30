@@ -1,13 +1,10 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.ECS.Integration;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
-namespace ConcreteEngine.Core.Engine.ECS;
+namespace ConcreteEngine.Core.Engine.RenderEntity;
 
 public interface IRenderEntityStore;
 
@@ -90,9 +87,12 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
 
         _entities[index] = entity;
         _data[index] = value;
-        
-        foreach (var listener in CollectionsMarshal.AsSpan(_listeners))
-            listener.ComponentAdded(entity.Id, ref _data[index]);
+
+        if (_listeners.Count > 0)
+        {
+            foreach (var listener in CollectionsMarshal.AsSpan(_listeners))
+                listener.ComponentAdded(entity, ref _data[index]);
+        }
 
         _isDirty = true;
         return true;
@@ -122,8 +122,11 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
             foreach (var entity in CollectionsMarshal.AsSpan(_removedEntities))
             {
                 var index = FindIndexLinear(entity);
-                foreach (var listener in CollectionsMarshal.AsSpan(_listeners))
-                    listener.ComponentRemoved(entity.Id, ref _data[index]);
+                if (_listeners.Count > 0)
+                {
+                    foreach (var listener in CollectionsMarshal.AsSpan(_listeners))
+                        listener.ComponentRemoved(entity, ref _data[index]);
+                }
 
                 var count = --Count;
                 _entities[index] = _entities[count];
@@ -144,7 +147,7 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
     public Enumerator GetEnumerator() => new(this);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public VisibilityEnumerator VisibilityQuery() => new(this, Ecs.RenderCore);
+    public VisibilityEnumerator VisibilityQuery() => new(this, RenderEcs.Core);
 
     public void EnsureCapacity(int amount)
     {

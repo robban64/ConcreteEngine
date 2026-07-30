@@ -9,7 +9,7 @@ namespace ConcreteEngine.Core.Engine.ECS;
 public sealed class GameEntityCore : EcsStore
 {
     private GameEntityId[] _entities;
-    private readonly List<IEntityListener> _listeners = new(64);
+    private readonly List<IGameEntityListener> _listeners = new(64);
 
     internal GameEntityCore(int capacity)
     {
@@ -31,8 +31,8 @@ public sealed class GameEntityCore : EcsStore
     {
         var index = AllocateNext();
         var entity = _entities[index] = new GameEntityId(index + 1);
-        foreach (var it in _listeners)
-            it.EntityAdded(entity.Id, this);
+        foreach (var it in _listeners) 
+            it.EntityAdded(entity, this);
 
         return entity;
     }
@@ -48,7 +48,7 @@ public sealed class GameEntityCore : EcsStore
         if (existing != entity) throw new InvalidOperationException();
 
         foreach (var it in _listeners)
-            it.EntityRemoved(entity.Id, this);
+            it.EntityRemoved(entity, this);
 
         existing = default;
         FreeEntity(index);
@@ -68,8 +68,8 @@ public sealed class GameEntityCore : EcsStore
         Stores<T>.Store.Remove(entity);
     }
 
-    public void BindListener(IEntityListener listener) => _listeners.Add(listener);
-    public void UnbindListener(IEntityListener listener) => _listeners.Remove(listener);
+    public void BindListener(IGameEntityListener listener) => _listeners.Add(listener);
+    public void UnbindListener(IGameEntityListener listener) => _listeners.Remove(listener);
 
     protected override void Resize(int newSize)
     {

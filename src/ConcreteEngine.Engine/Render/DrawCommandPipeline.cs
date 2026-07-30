@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics;
@@ -87,7 +88,7 @@ internal sealed class DrawCommandPipeline : IDisposable
         {
             var index = *ticket;
             var entity = entities[index];
-            DrawCmd.DrawSource(Ecs.RenderCore.GetSource(entity), entity, index);
+            DrawCmd.DrawSource(RenderEcs.Core.GetSource(entity), entity, index);
             ++ticket;
         }
 

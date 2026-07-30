@@ -1,8 +1,9 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
+using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Graphics.Gfx;
 
@@ -153,9 +154,9 @@ internal static class PassPipeline3D
         ctx.MutateStatePass<SceneTarget>(FboVariant.V1, PassMutationState.MutateTarget(ctx.FboId));
         return new PassAction(PassOp.Continue);
         ctx.Cmd.UseShader(RenderRegistry.HighlightShader);
-        foreach (var query in Ecs.GetRenderStore<SelectionComponent>().VisibilityQuery())
+        foreach (var query in RenderEcs.GetRenderStore<SelectionComponent>().VisibilityQuery())
         {
-            var source = Ecs.RenderCore.GetSource(query.Entity);
+            var source = RenderEcs.Core.GetSource(query.Entity);
 
             var isAnimated = source.Kind == EntitySourceKind.AnimatedModel;
             if (isAnimated) ctx.DrawCmd.BindAnimation(query.Entity);

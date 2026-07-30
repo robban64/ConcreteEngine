@@ -6,8 +6,9 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
+using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Engine.Render;
 using static ConcreteEngine.Engine.Render.RenderLimits;
 
@@ -83,8 +84,8 @@ internal sealed unsafe class AnimationSystem : IDisposable
         var count = 0;
         foreach (var entity in animation.GetEntitySpan())
         {
-            if (!Ecs.RenderCore.IsVisible(entity)) continue;
-            Ecs.GetRenderStore<SkinningComponent>().Get(entity).AnimationSlot = slot;
+            if (!RenderEcs.Core.IsVisible(entity)) continue;
+            RenderEcs.GetRenderStore<SkinningComponent>().Get(entity).AnimationSlot = slot;
             ++count;
         }
 

@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Graphics.Diagnostic;
@@ -61,8 +62,8 @@ internal sealed class EngineMetricHub
         var sceneMeta = new SceneMeta(
             SceneManager.SceneStore.ActiveCount,
             0,
-            Ecs.Game.ActiveCount,
-            Ecs.Render.ActiveCount
+            0,
+            RenderEcs.ActiveCount
         );
 
         _metricSystem.PushMeta(in frameMeta, in sceneMeta, in GfxMetrics.FrameMeta);

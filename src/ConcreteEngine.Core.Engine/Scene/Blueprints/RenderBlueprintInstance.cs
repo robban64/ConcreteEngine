@@ -3,8 +3,9 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -47,16 +48,16 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
     {
         foreach (var entity in GetRenderEntities())
         {
-            var materialId = Ecs.RenderCore.GetSource(entity).Material;
+            var materialId = RenderEcs.Core.GetSource(entity).Material;
             if (materialId > 0 && materialId != material.MaterialId) continue;
-            Ecs.RenderCore.GetDrawPolicy(entity) = new DrawPolicy(material.DrawQueue, material.Passes);
+            RenderEcs.Core.GetDrawPolicy(entity) = new DrawPolicy(material.DrawQueue, material.Passes);
         }
     }
 
     public void ToggleVisibility(bool visible)
     {
         foreach (var entity in GetRenderEntities())
-            Ecs.RenderCore.ToggleVisibility(entity, EntityVisibility.ForceHidden, visible);
+            RenderEcs.Core.ToggleVisibility(entity, EntityVisibility.ForceHidden, visible);
     }
 
     public void ToggleSelection(bool isSelected)
@@ -64,20 +65,20 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
         if (isSelected)
         {
             foreach (var entity in GetRenderEntities())
-                Ecs.GetRenderStore<SelectionComponent>().Add(entity, SelectionComponent.DefaultHighlight);
+                RenderEcs.GetRenderStore<SelectionComponent>().Add(entity, SelectionComponent.DefaultHighlight);
         }
         else
         {
             foreach (var entity in GetRenderEntities())
-                Ecs.GetRenderStore<SelectionComponent>().Remove(entity);
+                RenderEcs.GetRenderStore<SelectionComponent>().Remove(entity);
         }
         
-        Ecs.GetRenderStore<SelectionComponent>().Commit();
+        RenderEcs.GetRenderStore<SelectionComponent>().Commit();
     }
 
     public void ToggleDebugBounds(bool isSelected)
     {
-        var debugStore = Ecs.Render.Stores<DebugBoundsComponent>.Store;
+        var debugStore = RenderEcs.GetRenderStore<DebugBoundsComponent>();
         var span = GetRenderEntities();
         for (var i = 0; i < span.Length; i++)
         {
@@ -86,6 +87,6 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
             if (isSelected) debugStore.Add(entity, new DebugBoundsComponent(color));
             else debugStore.Remove(entity);
         }
-        Ecs.GetRenderStore<SelectionComponent>().Commit();
+        RenderEcs.GetRenderStore<SelectionComponent>().Commit();
     }
 }

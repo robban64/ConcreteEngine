@@ -3,8 +3,9 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
+using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -61,8 +62,8 @@ public sealed class ModelInstance : RenderBlueprintInstance
             var policy = new DrawPolicy(mat.State.DrawQueue, mat.State.Passes);
             var source = new RenderSource(mesh.MeshId, mat.MaterialId, mesh.Info.MeshIndex, EntitySourceKind.Model);
 
-            var entity = Ecs.RenderCore.AddEntity(source, policy);
-            Ecs.SceneLink.BindSceneHandle(entity, Owner.Id);
+            var entity = RenderEcs.Core.AddEntity(source, policy);
+            RenderEcs.SceneLink.BindSceneHandle(entity, Owner.Id);
             RenderEntityIds.Add(entity);
         }
 
@@ -71,7 +72,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
             foreach (var entity in GetRenderEntities())
                 AnimationManager.Instance.AttachEntity(rig, entity);
             
-            Ecs.GetRenderStore<SkinningComponent>().Commit();
+            RenderEcs.GetRenderStore<SkinningComponent>().Commit();
         }
     }
 
@@ -80,21 +81,21 @@ public sealed class ModelInstance : RenderBlueprintInstance
         var globalBounds = BoundingBox.Infinite;
         foreach (var entity in GetRenderEntities())
         {
-            var meshIndex = Ecs.RenderCore.GetSource(entity).MeshIndex;
+            var meshIndex = RenderEcs.Core.GetSource(entity).MeshIndex;
 
             //MatrixMath.CreateModelMatrix(in Ecs.Render.Core.GetLocalTransform(entity), out var worldMatrix);
             //MatrixMath.MultiplyAffine(ref worldMatrix, in rootMatrix);
 
-            ref var finalMatrix = ref Ecs.RenderCore.GetModelMatrix(entity);
+            ref var finalMatrix = ref RenderEcs.Core.GetModelMatrix(entity);
             if (IsAnimated)
                 finalMatrix = rootMatrix;
             else
                 MatrixMath.MultiplyAffine(ref finalMatrix, in Model.GetMesh(meshIndex).Transform, in rootMatrix);
 
-            MatrixMath.CreateNormalMatrix(ref Ecs.RenderCore.GetNormalMatrix(entity), in finalMatrix);
+            MatrixMath.CreateNormalMatrix(ref RenderEcs.Core.GetNormalMatrix(entity), in finalMatrix);
 
             ref readonly var localBounds = ref Model.GetMesh(meshIndex).Bounds;
-            ref var worldBounds = ref Ecs.RenderCore.GetWorldBounds(entity);
+            ref var worldBounds = ref RenderEcs.Core.GetWorldBounds(entity);
             BoundingBox.GetWorldBounds(in localBounds, in finalMatrix, out worldBounds);
             BoundingBox.Merge(in globalBounds, in worldBounds, out WorldBounds);
         }

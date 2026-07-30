@@ -8,8 +8,9 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics.Particles;
+using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
 
@@ -65,7 +66,7 @@ internal sealed class ParticleSystem : IDisposable
         if (_particleManager.EmitterCount == 0) return;
 
         _processedEmitters.Clear();
-        foreach (var it in Ecs.GetRenderStore<ParticleComponent>().VisibilityQuery())
+        foreach (var it in RenderEcs.GetRenderStore<ParticleComponent>().VisibilityQuery())
         {
             if (_processedEmitters.Contains(it.Component.EmitterId)) continue;
             var emitter = _particleManager.Get(it.Component.EmitterId);

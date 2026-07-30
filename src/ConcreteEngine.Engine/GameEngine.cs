@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Input;
+using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
@@ -41,7 +42,7 @@ public sealed class GameEngine : IDisposable
         var gpuCapabilities = _graphics.Initialize(gfxBundle.Config, out var version);
         EngineSettings.Current.LoadGraphicsSettings(version, gpuCapabilities);
 
-        Ecs.Init();
+        RenderEcs.Init();
 
         _assetSystem = new AssetSystem(gfxBundle.Graphics.Gfx);
         _renderSystem = new EngineRenderSystem(gfxBundle.Graphics);
@@ -158,7 +159,7 @@ public sealed class GameEngine : IDisposable
         _gateway.Dispose();
         _sceneSystem.Shutdown();
         _renderSystem.Dispose();
-        Ecs.RenderCore.Dispose();
+        RenderEcs.Core.Dispose();
         _assetSystem.Shutdown();
 
         EngineInput.Detach();

@@ -68,7 +68,7 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
         _data[index] = value;
         ref var data = ref _data[index];
         foreach (var it in _listeners)
-            it.ComponentAdded(entity.Id, ref data);
+            it.ComponentAdded(entity, ref data);
 
         return true;
     }
@@ -83,7 +83,7 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
 
         ref var data = ref _data[index];
         foreach (var it in _listeners)
-            it.ComponentRemoved(entity.Id, ref data);
+            it.ComponentRemoved(entity, ref data);
 
         _entities[index] = default;
         data = default;

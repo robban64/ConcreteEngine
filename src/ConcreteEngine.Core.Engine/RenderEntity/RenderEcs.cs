@@ -1,0 +1,47 @@
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
+
+namespace ConcreteEngine.Core.Engine.RenderEntity;
+
+public static class RenderEcs
+{
+    private const int DefaultRenderCap = 1024;
+
+    public static readonly RenderEntityCore Core = new(DefaultRenderCap);
+    public static EntitySceneLink SceneLink { get; private set; } = null!;
+
+    private static readonly List<IRenderEntityStore> All = new(8);
+
+    public static int EntityCount => Core.Count;
+    public static int ActiveCount => Core.ActiveCount;
+    public static int StoreCount => All.Count;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RenderEntityStore<T> GetRenderStore<T>() where T : unmanaged, IRenderComponent<T> =>
+        Stores<T>.Store;
+
+    internal static void Init()
+    {
+        if (SceneLink != null!) throw new InvalidOperationException("ECS already initialized");
+        Stores<SkinningComponent>.CreateStore(16);
+        Stores<ParticleComponent>.CreateStore(16);
+        Stores<SelectionComponent>.CreateStore(16);
+        Stores<DebugBoundsComponent>.CreateStore(16);
+        SceneLink = new EntitySceneLink(Core);
+    }
+
+    public static class Stores<T> where T : unmanaged, IRenderComponent<T>
+    {
+        public static RenderEntityStore<T> Store = null!;
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static void CreateStore(int cap)
+        {
+            if (Store != null) throw new InvalidOperationException("Ecs.Render - Store already created");
+            var store = new RenderEntityStore<T>(cap);
+            All.Add(store);
+            Store = store;
+        }
+    }
+
+}

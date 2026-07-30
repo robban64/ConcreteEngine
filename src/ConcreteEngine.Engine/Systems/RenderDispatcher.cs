@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Engine.Render;
 
 namespace ConcreteEngine.Engine.Systems;
@@ -23,9 +24,9 @@ internal sealed class RenderDispatcher : IDisposable
     {
         ArgumentNullException.ThrowIfNull(frustum);
         _frustum = frustum;
-        _visibleEntities = NativeArray.Allocate<RenderEntityId>(Ecs.RenderCore.Capacity);
-        _drawIndices = NativeArray.Allocate<DrawCommandIndex>(Ecs.RenderCore.Capacity);
-        _transforms = NativeArray.Allocate<DrawObjectUniform>(Ecs.RenderCore.Capacity);
+        _visibleEntities = NativeArray.Allocate<RenderEntityId>(RenderEcs.Core.Capacity);
+        _drawIndices = NativeArray.Allocate<DrawCommandIndex>(RenderEcs.Core.Capacity);
+        _transforms = NativeArray.Allocate<DrawObjectUniform>(RenderEcs.Core.Capacity);
     }
     
     public NativeView<RenderEntityId> VisibleEntities => _visibleEntities.Slice(0, VisibleCount);
@@ -60,11 +61,11 @@ internal sealed class RenderDispatcher : IDisposable
     private int CullEntities()
     {
         var visibleEntities = _visibleEntities.AsView();
-        if ((uint)Ecs.RenderCore.Count > (uint)visibleEntities.Length)
+        if ((uint)RenderEcs.Core.Count > (uint)visibleEntities.Length)
             Throwers.BufferOverflow(nameof(visibleEntities));
 
         var visibleCount = 0;
-        foreach (var query in Ecs.RenderCore.BoundsQuery())
+        foreach (var query in RenderEcs.Core.BoundsQuery())
         {
             var visible = _frustum.IntersectsBox(in query.Bounds);
             visible &= query.Meta.ToggleVisibility(EntityVisibility.Culled, visible) == 0;
@@ -85,7 +86,7 @@ internal sealed class RenderDispatcher : IDisposable
         {
             var entity = it.Item1;
             var depthKey = MakeDepthKey(entity, forward, nearFar, viewZ);
-            var policy = Ecs.RenderCore.GetDrawPolicy(entity);
+            var policy = RenderEcs.Core.GetDrawPolicy(entity);
             it.Item2 = new DrawCommandIndex(++index, policy.Passes, policy.Queue, depthKey);
         }
     }
@@ -95,14 +96,14 @@ internal sealed class RenderDispatcher : IDisposable
         foreach (var it in TransformEnumerator())
         {
             var entity = it.Item1;
-            it.Item2.Model = Ecs.RenderCore.GetModelMatrix(entity);
-            it.Item2.Normal = Ecs.RenderCore.GetNormalMatrix(entity);
+            it.Item2.Model = RenderEcs.Core.GetModelMatrix(entity);
+            it.Item2.Normal = RenderEcs.Core.GetNormalMatrix(entity);
         }
     }
     
     private void Ensure()
     {
-        var ecsCapacity = Ecs.RenderCore.Capacity;
+        var ecsCapacity = RenderEcs.Core.Capacity;
         if ((uint)ecsCapacity > (uint)_visibleEntities.Length)
         {
             _drawIndices.Resize(ecsCapacity, true);
@@ -114,29 +115,29 @@ internal sealed class RenderDispatcher : IDisposable
  
   private void ProcessSelectionEffect()
       {
-          if (Ecs.GetRenderStore<SelectionComponent>().Count == 0) return;
+          if (RenderEcs.GetRenderStore<SelectionComponent>().Count == 0) return;
 
-          foreach (var query in Ecs.GetRenderStore<SelectionComponent>().VisibilityQuery())
+          foreach (var query in RenderEcs.GetRenderStore<SelectionComponent>().VisibilityQuery())
           {
               var slot = EffectBuffer.Submit(new EffectUniformParams(query.Component.HighlightColor));
-              ref var source = ref Ecs.RenderCore.GetSource(query.Entity);
+              ref var source = ref RenderEcs.Core.GetSource(query.Entity);
               source.Resolver = DrawCommandResolver.Highlight;
               source.ResolverSlot = slot;
 
-              Ecs.RenderCore.GetDrawPolicy(query.Entity).Passes = PassMask.Effect | PassMask.Depth;
+              RenderEcs.Core.GetDrawPolicy(query.Entity).Passes = PassMask.Effect | PassMask.Depth;
           }
       }
     private void SubmitDebugBounds()
     {
-        if (Ecs.GetRenderStore<DebugBoundsComponent>().Count == 0) return;
+        if (RenderEcs.GetRenderStore<DebugBoundsComponent>().Count == 0) return;
 
         var materialId = AssetStore.Core.DebugBoundsMaterial.MaterialId;
 
         var index = VisibleCount;
-        foreach (var query in Ecs.GetRenderStore<DebugBoundsComponent>().VisibilityQuery())
+        foreach (var query in RenderEcs.GetRenderStore<DebugBoundsComponent>().VisibilityQuery())
         {
             ref var bufferDst = ref _drawBuffer.TransformRef(index);
-            ref readonly var worldBounds = ref Ecs.RenderCore.GetWorldBounds(query.Entity);
+            ref readonly var worldBounds = ref RenderEcs.Core.GetWorldBounds(query.Entity);
             MatrixMath.CreateModelMatrix(
                 worldBounds.Center,
                 worldBounds.Extent,
@@ -165,7 +166,7 @@ internal sealed class RenderDispatcher : IDisposable
     {
         const float maxValueF = 65535f;
 
-        var worldPos = Ecs.RenderCore.GetModelMatrix(entity).Translation;
+        var worldPos = RenderEcs.Core.GetModelMatrix(entity).Translation;
         var d = Vector3.Dot(forward, worldPos) - viewZ;
         if (d <= nearFar.X) return 0;
         if (d >= nearFar.Y) return ushort.MaxValue;

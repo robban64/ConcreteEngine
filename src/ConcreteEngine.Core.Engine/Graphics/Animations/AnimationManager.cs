@@ -3,7 +3,8 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Animations;
 
@@ -39,8 +40,8 @@ internal sealed class AnimationManager
 
 
         animation.AddEntity(entity);
-        Ecs.RenderCore.GetSource(entity).Kind = EntitySourceKind.AnimatedModel;
-        Ecs.GetRenderStore<SkinningComponent>().Add(entity, new SkinningComponent(animation.Id));
+        RenderEcs.Core.GetSource(entity).Kind = EntitySourceKind.AnimatedModel;
+        RenderEcs.GetRenderStore<SkinningComponent>().Add(entity, new SkinningComponent(animation.Id));
     }
 
     private bool TryGetFirstByRig(ModelRig rig, out AnimationInstance animation)

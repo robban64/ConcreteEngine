@@ -2,9 +2,10 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Particles;
+using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -40,13 +41,13 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         var policy = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
         var source = new RenderSource(default, matId, 0, EntitySourceKind.Particle);
 
-        var entity = Ecs.RenderCore.AddEntity(source, policy);
+        var entity = RenderEcs.Core.AddEntity(source, policy);
         var particle = new ParticleComponent(Emitter.Id);
-        Ecs.GetRenderStore<ParticleComponent>().Add(entity, in particle);
-        Ecs.SceneLink.BindSceneHandle(entity, Owner.Id);
+        RenderEcs.GetRenderStore<ParticleComponent>().Add(entity, in particle);
+        RenderEcs.SceneLink.BindSceneHandle(entity, Owner.Id);
         RenderEntityIds.Add(entity);
         
-        Ecs.GetRenderStore<ParticleComponent>().Commit();
+        RenderEcs.GetRenderStore<ParticleComponent>().Commit();
 
     }
 
@@ -54,8 +55,8 @@ public sealed class ParticleInstance : RenderBlueprintInstance
     {
         if (RenderEntityIds.Count == 0) return;
         var entity = RenderEntityIds[0];
-        Ecs.RenderCore.GetSource(entity).Mesh = Emitter.BoundMesh;
-        Ecs.RenderCore.GetDrawPolicy(entity) = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
+        RenderEcs.Core.GetSource(entity).Mesh = Emitter.BoundMesh;
+        RenderEcs.Core.GetDrawPolicy(entity) = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
 
     }
 
@@ -65,8 +66,8 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         var entity = RenderEntityIds[0];
         
         BoundingBox.GetWorldBounds(in Emitter.LocalBounds(), in rootMatrix, out WorldBounds);
-        Ecs.RenderCore.GetModelMatrix(entity) = rootMatrix;
-        Ecs.RenderCore.GetWorldBounds(entity) = WorldBounds;
+        RenderEcs.Core.GetModelMatrix(entity) = rootMatrix;
+        RenderEcs.Core.GetWorldBounds(entity) = WorldBounds;
     }
 
     public void OnAssetChanged(AssetObject asset) { }

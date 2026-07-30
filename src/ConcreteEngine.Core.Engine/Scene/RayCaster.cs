@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Enviroment;
+using ConcreteEngine.Core.Engine.RenderEntity;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -30,7 +31,7 @@ public sealed class RayCaster
         bounds = default;
 
         RenderEntityId closestEntity = default;
-        foreach (var query in Ecs.RenderCore.VisibilityQuery())
+        foreach (var query in RenderEcs.Core.VisibilityQuery())
         {
             //ref readonly var matrix = ref ecs.GetMatrix(entity);
             //BoundingBox.GetWorldBounds(in box, in matrix, out var worldBounds);
@@ -44,7 +45,7 @@ public sealed class RayCaster
 
         if (!closestEntity.IsValid()) return null;
 
-        return _sceneStore.Get(Ecs.SceneLink.GetSceneHandleBy(closestEntity));
+        return _sceneStore.Get(RenderEcs.SceneLink.GetSceneHandleBy(closestEntity));
     }
 
     public Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)

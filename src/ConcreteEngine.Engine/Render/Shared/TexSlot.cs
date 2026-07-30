@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Render.Passes;
+namespace ConcreteEngine.Engine.Render;
 
 internal readonly struct TexSlot(TextureId texture, byte slot)
 {

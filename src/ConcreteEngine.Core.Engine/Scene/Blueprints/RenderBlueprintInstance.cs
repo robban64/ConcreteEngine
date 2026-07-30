@@ -71,6 +71,8 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
             foreach (var entity in GetRenderEntities())
                 Ecs.GetRenderStore<SelectionComponent>().Remove(entity);
         }
+        
+        Ecs.GetRenderStore<SelectionComponent>().Commit();
     }
 
     public void ToggleDebugBounds(bool isSelected)
@@ -84,5 +86,6 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
             if (isSelected) debugStore.Add(entity, new DebugBoundsComponent(color));
             else debugStore.Remove(entity);
         }
+        Ecs.GetRenderStore<SelectionComponent>().Commit();
     }
 }

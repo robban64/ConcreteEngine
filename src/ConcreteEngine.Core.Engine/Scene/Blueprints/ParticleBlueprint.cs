@@ -45,6 +45,9 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         Ecs.GetRenderStore<ParticleComponent>().Add(entity, in particle);
         Ecs.SceneLink.BindSceneHandle(entity, Owner.Id);
         RenderEntityIds.Add(entity);
+        
+        Ecs.GetRenderStore<ParticleComponent>().Commit();
+
     }
 
     protected override void OnCommit()

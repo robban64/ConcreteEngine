@@ -11,38 +11,61 @@ namespace ConcreteEngine.Core.Engine.RenderEntity;
 public sealed unsafe partial class RenderEntityCore
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public QueryEnumerator<BoundingBox> BoundsQuery(EntityVisibility skipFlag = EntityVisibility.ForceHidden) => new(_meta, _bounds, Count, skipFlag);
+    public QueryEnumerator<BoundingBox> CullQuery(EntityStatus skipFlag = EntityStatus.ForceHidden) =>
+        new(_meta, _bounds, Count, skipFlag);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public VisibleCoreEnumerator VisibilityQuery() => new(this, _meta, Count);
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public SparseQueryEnumerator<DrawPolicy, Matrix4x4> DepthPolicyQuery(NativeView<RenderEntityId> entities) =>
+        new(entities, _policies, _models, entities.Length);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public SparseQueryEnumerator<Matrix4x4, Matrix3X4> MatrixQuery(NativeView<RenderEntityId> entities) =>
+        new(entities, _models, _normals, entities.Length);
+
     //
+    public readonly ref struct QueryItem<T1>(RenderEntityId entity, ref T1 item1) where T1 : unmanaged
+    {
+        public readonly RenderEntityId Entity = entity;
+        public readonly ref T1 Item1 = ref item1;
+    }
+
+    public readonly ref struct QueryItem<T1, T2>(RenderEntityId entity, ref T1 item1, ref T2 item2)
+        where T1 : unmanaged where T2 : unmanaged
+    {
+        public readonly RenderEntityId Entity = entity;
+        public readonly ref T1 Item1 = ref item1;
+        public readonly ref T2 Item2 = ref item2;
+    }
+
     public ref struct QueryEnumerator<T> where T : unmanaged
     {
         private T* _p1;
-        private RenderEntityMeta* _entities;
-        private readonly RenderEntityMeta* _end;
+        private EntityStatus* _current;
+        private readonly EntityStatus* _end;
         private int _entity;
-        private readonly EntityVisibility _skipFlag;
+        private readonly EntityStatus _skipStatus;
 
-        public QueryEnumerator(RenderEntityMeta* entities, T* p1, int length, EntityVisibility skipFlag )
+        public QueryEnumerator(EntityStatus* current, T* p1, int length, EntityStatus skipStatus)
         {
-            _skipFlag = skipFlag;
+            _skipStatus = skipStatus;
             _entity = 0;
-            _entities = entities - 1;
+            _current = current - 1;
             _p1 = p1 - 1;
-            _end = entities + length;
+            _end = current + length;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-            while (++_entities < _end)
+            while (++_current < _end)
             {
                 ++_p1;
                 ++_entity;
-                if (_entities->Alive && _entities->Visibility != _skipFlag) return true;
+                if (*_current != 0 && *_current != _skipStatus) return true;
             }
 
             return false;
@@ -51,29 +74,84 @@ public sealed unsafe partial class RenderEntityCore
         public readonly QueryItem Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(new RenderEntityId(_entity), ref *_entities, ref *_p1);
+            get => new(new RenderEntityId(_entity), ref *_current, ref *_p1);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly QueryEnumerator<T> GetEnumerator() => this;
 
-        public readonly ref struct QueryItem(RenderEntityId entity, ref RenderEntityMeta meta, ref T p1)
+        public readonly ref struct QueryItem(RenderEntityId entity, ref EntityStatus status, ref T p1)
         {
             public readonly RenderEntityId Entity = entity;
-            public readonly ref RenderEntityMeta Meta = ref meta;
+            public readonly ref EntityStatus Status = ref status;
             public readonly ref T Item = ref p1;
         }
     }
 
-    //
-    public unsafe ref struct VisibleCoreEnumerator
+    public ref struct SparseQueryEnumerator<T> where T : unmanaged
     {
-        private RenderEntityMeta* _current;
-        private RenderEntityMeta* _end;
+        private readonly T* _p1;
+        private RenderEntityId* _current;
+        private readonly RenderEntityId* _end;
+
+        public SparseQueryEnumerator(RenderEntityId* current, T* p1, int length)
+        {
+            _p1 = p1;
+            _current = current - 1;
+            _end = current + length;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext() => ++_current < _end;
+
+        public readonly QueryItem<T> Current
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(*_current, ref _p1[_current->Index()]);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly SparseQueryEnumerator<T> GetEnumerator() => this;
+    }
+
+    public ref struct SparseQueryEnumerator<T1, T2> where T1 : unmanaged where T2 : unmanaged
+    {
+        private readonly T1* _p1;
+        private readonly T2* _p2;
+
+        private RenderEntityId* _current;
+        private readonly RenderEntityId* _end;
+
+        public SparseQueryEnumerator(RenderEntityId* current, T1* p1, T2* p2, int length)
+        {
+            _p1 = p1;
+            _p2 = p2;
+            _current = current - 1;
+            _end = current + length;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext() => ++_current < _end;
+
+        public readonly QueryItem<T1, T2> Current
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(*_current, ref _p1[_current->Index()], ref _p2[_current->Index()]);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly SparseQueryEnumerator<T1, T2> GetEnumerator() => this;
+    }
+
+    //
+    public ref struct VisibleCoreEnumerator
+    {
+        private EntityStatus* _current;
+        private readonly EntityStatus* _end;
         private int _entityId;
         private readonly RenderEntityCore _core;
 
-        public VisibleCoreEnumerator(RenderEntityCore core, RenderEntityMeta* entities, int count)
+        public VisibleCoreEnumerator(RenderEntityCore core, EntityStatus* entities, int count)
         {
             _current = entities - 1;
             _entityId = 0;
@@ -87,7 +165,7 @@ public sealed unsafe partial class RenderEntityCore
             ++_entityId;
             while (++_current < _end)
             {
-                if (_current->IsVisible()) return true;
+                if (*_current >= EntityStatus.Normal) return true;
             }
 
             return false;
@@ -102,10 +180,10 @@ public sealed unsafe partial class RenderEntityCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly VisibleCoreEnumerator GetEnumerator() => this;
 
-        public readonly ref struct Item(RenderEntityId entity, ref RenderEntityMeta meta, RenderEntityCore core)
+        public readonly ref struct Item(RenderEntityId entity, ref EntityStatus meta, RenderEntityCore core)
         {
             public readonly RenderEntityId Entity = entity;
-            public readonly ref RenderEntityMeta Meta = ref meta;
+            public readonly ref EntityStatus Status = ref meta;
 
             public ref RenderSource Source
             {

@@ -9,58 +9,6 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 
 namespace ConcreteEngine.Core.Engine.RenderEntity;
 
-public unsafe struct RenderCoreStorage
-{
-    private RenderEntityMeta* _meta;
-    private RenderSource* _sources;
-    private DrawPolicy* _policies;
-
-    private BoundingBox* _bounds;
-    private Matrix4x4* _models;
-    private Matrix3X4* _normals;
-   
-   public void Allocate(int initialCapacity)
-   {
-       ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
-       _meta = NativeArray.AllocatePointer<RenderEntityMeta>(initialCapacity);
-       _sources = NativeArray.AllocatePointer<RenderSource>(initialCapacity);
-       _policies = NativeArray.AllocatePointer<DrawPolicy>(initialCapacity);
-       _bounds = NativeArray.AllocatePointer<BoundingBox>(initialCapacity);
-       _models = NativeArray.AllocatePointer<Matrix4x4>(initialCapacity);
-       _normals = NativeArray.AllocatePointer<Matrix3X4>(initialCapacity);
-   }
-
-
-   public void Resize(int capacity, int newSize)
-   {
-       _meta = NativeArray.Resize(_meta, capacity, newSize, 0, true);
-       _sources = NativeArray.Resize(_sources, capacity, newSize, 0, true);
-       _policies = NativeArray.Resize(_policies, capacity, newSize, 0, true);
-       _bounds = NativeArray.Resize(_bounds, capacity, newSize, 0, false);
-       _models = NativeArray.Resize(_models, capacity, newSize, 0, false);
-       _normals = NativeArray.Resize(_normals, capacity, newSize, 0, false);
-   }
-
-   public void Dispose()
-   {
-       NativeArray.DisposeArray(_meta, 0);
-       NativeArray.DisposeArray(_sources, 0);
-       NativeArray.DisposeArray(_policies, 0);
-       NativeArray.DisposeArray(_bounds, 0);
-       NativeArray.DisposeArray(_models, 0);
-       NativeArray.DisposeArray(_normals, 0);
-       _meta = null;
-       _sources = null;
-       _policies = null;
-       _bounds = null;
-       _models = null;
-       _normals = null;
-   }
-
-
-}
-
-
 public sealed unsafe partial class RenderEntityCore : IDisposable
 {
     public int Count { get; private set; }
@@ -83,22 +31,22 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
     public bool IsAlive(RenderEntityId e)
     {
         var index = e.Index();
-        return (uint)index < (uint)Capacity && _meta[index].Alive;
+        return (uint)index < (uint)Capacity && _meta[index] != 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsVisible(RenderEntityId e)
     {
         var index = e.Index();
-        return (uint)index < (uint)Capacity && _meta[index].IsVisible();
+        return (uint)index < (uint)Capacity && _meta[index] >= EntityStatus.Normal;
     }
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public EntityVisibility ToggleVisibility(RenderEntityId entity, EntityVisibility flag)
+    public void SetStatus(RenderEntityId entity, EntityStatus status)
     {
         if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
-        return _meta[entity.Index()].Visibility = flag;
+        _meta[entity.Index()] = status;
     }
 
     public RenderEntityId AddEntity(RenderSource source, DrawPolicy policy)
@@ -114,9 +62,8 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
         
         var entity = new RenderEntityId(index + 1);
 
-        if (_meta[index].Alive) Throwers.InvalidOperation("Entity already exists");
-        _meta[index].Alive = true;
-        _meta[index].Visibility = EntityVisibility.Visible;
+        if (_meta[index] != 0) Throwers.InvalidOperation("Entity already exists");
+        _meta[index] = EntityStatus.Normal;
         _sources[index] = source;
         _policies[index] = policy;
         ClearEntitySpatial(entity);

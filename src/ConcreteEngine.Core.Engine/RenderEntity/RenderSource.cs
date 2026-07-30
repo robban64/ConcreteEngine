@@ -18,7 +18,7 @@ public struct RenderSource(
     int meshIndex,
     EntitySourceKind kind)
 {
-    public uint InstanceCount;
+    //public uint InstanceCount;
     public MeshId Mesh = mesh;
     public Id16<Material> Material = material;
 
@@ -26,13 +26,3 @@ public struct RenderSource(
     public EntitySourceKind Kind = kind;
 }
 
-[StructLayout(LayoutKind.Sequential)]
-public struct RenderEntityMeta
-{
-    public bool Alive;
-    public EntityVisibility Visibility;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool IsVisible() => Alive && Visibility == 0;
-    
-}

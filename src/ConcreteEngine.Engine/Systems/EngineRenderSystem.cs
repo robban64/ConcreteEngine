@@ -14,7 +14,7 @@ namespace ConcreteEngine.Engine.Systems;
 
 public sealed class EngineRenderSystem : IDisposable
 {
-    private readonly RenderDispatcher _renderDispatcher;
+    private readonly RenderResolver _renderResolver;
 
     private readonly CameraManager _cameraManager;
     private readonly VisualManager _visualManager;
@@ -45,13 +45,13 @@ public sealed class EngineRenderSystem : IDisposable
         _drawPipeline = new DrawCommandPipeline(graphics.Gfx, _animationSystem, _materialSystem);
         _passPipeline = new RenderPassPipeline(graphics.Gfx, _drawPipeline.DrawCmd,_registry);
 
-        _renderDispatcher = new RenderDispatcher(_cameraManager.Frustum);
+        _renderResolver = new RenderResolver(_cameraManager.Frustum);
         
         VisualSystem.Create(graphics.Gfx.Buffers);
 
     }
 
-    public int VisibleCount => _renderDispatcher.VisibleCount;
+    public int VisibleCount => _renderResolver.VisibleCount;
 
     internal void Init()
     {
@@ -60,7 +60,7 @@ public sealed class EngineRenderSystem : IDisposable
         PassPipeline3D.RegisterPassPipeline(_passPipeline);
         
         VisualSystem.Instance.UploadPointLight();
-        _renderDispatcher.Setup();
+        _renderResolver.Setup();
     }
 
     internal void AfterUpdate()
@@ -106,13 +106,13 @@ public sealed class EngineRenderSystem : IDisposable
         _cameraManager.CommitFrame(alpha);
 
         // process and upload draw commands
-        _renderDispatcher.Execute();
+        _renderResolver.Execute();
         
         _particleSystem.Execute();
         _animationSystem.Execute(alpha);
 
         // prepare buffers
-        _drawPipeline.StageCommands(_renderDispatcher);
+        _drawPipeline.StageCommands(_renderResolver);
 
         Execute();
     }
@@ -126,7 +126,7 @@ public sealed class EngineRenderSystem : IDisposable
             var passResult = _passPipeline.ApplyPass();
 
             if(passResult.Op is PassOp.Draw)
-                _drawPipeline.ExecuteDrawPass(nextPassId, _renderDispatcher.VisibleEntities);
+                _drawPipeline.ExecuteDrawPass(nextPassId, _renderResolver.VisibleEntities);
 
             _passPipeline.ApplyAfterPass();
         }
@@ -135,7 +135,7 @@ public sealed class EngineRenderSystem : IDisposable
 
     public void Dispose()
     {
-        _renderDispatcher.Dispose();
+        _renderResolver.Dispose();
         _particleSystem.Dispose();
         _animationSystem.Dispose();
         _materialSystem.Dispose();

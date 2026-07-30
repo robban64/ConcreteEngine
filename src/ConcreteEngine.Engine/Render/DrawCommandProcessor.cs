@@ -54,7 +54,7 @@ internal sealed class DrawCommandProcessor
 
         _gfxBuffers.BindUniformBufferRange<DrawObjectUniform>(submitIdx, 1);
 
-        _gfxCmd.DrawMesh(source.Mesh, source.InstanceCount);
+        _gfxCmd.DrawMesh(source.Mesh);
     }
 
     public void BindAnimation(RenderEntityId entity)

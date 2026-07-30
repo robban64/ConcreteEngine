@@ -12,7 +12,7 @@ namespace ConcreteEngine.Core.Engine.RenderEntity;
 
 public sealed unsafe partial class RenderEntityCore
 {
-    private RenderEntityMeta* _meta;
+    private EntityStatus* _meta;
     private RenderSource* _sources;
     private DrawPolicy* _policies;
 
@@ -22,7 +22,7 @@ public sealed unsafe partial class RenderEntityCore
     
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref RenderEntityMeta GetMeta(RenderEntityId e) => ref _meta[e.Index()];
+    public ref EntityStatus GetMeta(RenderEntityId e) => ref _meta[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref RenderSource GetSource(RenderEntityId e) => ref _sources[e.Index()];
@@ -46,7 +46,7 @@ public sealed unsafe partial class RenderEntityCore
     {
         if(_meta != null || Capacity != 0) Throwers.InvalidOperation("Already allocated");
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 32);
-        _meta = NativeArray.AllocatePointer<RenderEntityMeta>(capacity);
+        _meta = (EntityStatus*)NativeArray.AllocatePointer<byte>(capacity);
         _sources = NativeArray.AllocatePointer<RenderSource>(capacity);
         _policies = NativeArray.AllocatePointer<DrawPolicy>(capacity);
         _bounds = NativeArray.AllocatePointer<BoundingBox>(capacity);

@@ -8,11 +8,10 @@ public enum EntitySourceKind : byte
     Particle
 }
 
-
-public enum EntityVisibility : byte
+public enum EntityStatus : byte
 {
-    Visible = 0,
-    AlwaysVisible = 1,
-    ForceHidden = 2,
-    Culled = 3,
+    Unset = 0,
+    ForceHidden = 1,
+    Normal = 2,
+    AlwaysVisible = 3,
 }

@@ -40,13 +40,13 @@ internal sealed class DrawCommandPipeline : IDisposable
         DrawCmd.ResetFrame();
     }
 
-    public void StageCommands(RenderDispatcher dispatcher)
+    public void StageCommands(RenderResolver resolver)
     {
         // Sort command buffer and prepare passes
-        ReadyDrawCommands(dispatcher.DrawIndices);
+        ReadyDrawCommands(resolver.DrawIndices);
 
         // Ensure ubo size
-        var drawCount = IntMath.AlignUp(dispatcher.VisibleCount, 64);
+        var drawCount = IntMath.AlignUp(resolver.VisibleCount, 64);
         var materialCount = IntMath.AlignUp(_materialSystem.Count, 16);
         var boneCount = IntMath.AlignUp(_animationSystem.BoneCount, 64);
 
@@ -62,7 +62,7 @@ internal sealed class DrawCommandPipeline : IDisposable
         // Upload
         VisualSystem.Instance.Upload();
 
-        var transforms = dispatcher.Transforms;
+        var transforms = resolver.Transforms;
         if (transforms.Length > 0) _gfxBuffers.UploadUniform(transforms, 0);
 
         var materials = _materialSystem.GetBufferView();

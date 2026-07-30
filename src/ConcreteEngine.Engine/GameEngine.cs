@@ -159,7 +159,7 @@ public sealed class GameEngine : IDisposable
         _gateway.Dispose();
         _sceneSystem.Shutdown();
         _renderSystem.Dispose();
-        RenderEcs.Core.Dispose();
+        RenderEcs.Dispose();
         _assetSystem.Shutdown();
 
         EngineInput.Detach();

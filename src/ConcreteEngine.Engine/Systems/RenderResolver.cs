@@ -11,7 +11,7 @@ using ConcreteEngine.Engine.Render;
 
 namespace ConcreteEngine.Engine.Systems;
 
-internal sealed class RenderDispatcher : IDisposable
+internal sealed class RenderResolver : IDisposable
 {
     public int VisibleCount { get; private set; }
 
@@ -21,7 +21,7 @@ internal sealed class RenderDispatcher : IDisposable
     private NativeArray<DrawCommandIndex> _drawIndices;
     private NativeArray<DrawObjectUniform> _transforms;
 
-    internal RenderDispatcher(CameraFrustum frustum)
+    internal RenderResolver(CameraFrustum frustum)
     {
         ArgumentNullException.ThrowIfNull(frustum);
         _frustum = frustum;
@@ -34,32 +34,29 @@ internal sealed class RenderDispatcher : IDisposable
     public NativeView<DrawCommandIndex> DrawIndices => _drawIndices.Slice(0, VisibleCount);
     public NativeView<DrawObjectUniform> Transforms => _transforms.Slice(0, VisibleCount);
 
-    private unsafe PtrEnumerator<RenderEntityId, DrawCommandIndex> IndexEnumerator() =>
-        new(_visibleEntities, _drawIndices, VisibleCount);
+        
+    public void Dispose()
+    {
+        _visibleEntities.Dispose();
+        _drawIndices.Dispose();
+        _transforms.Dispose();
+    }
 
-    private unsafe PtrEnumerator<RenderEntityId, DrawObjectUniform> TransformEnumerator() =>
-        new(_visibleEntities, _transforms, VisibleCount);
-
-    public void Dispose() => _visibleEntities.Dispose();
-
-
+    
     public void Setup() { }
 
-    private static AvgFrameTimer avg;
 
     public void Execute()
     {
         Ensure();
-        avg.BeginSample();
         var visibleCount = CullEntities();
-        if (avg.EndSample() > 144) avg.ResetAndPrint("Cull");
         if (visibleCount == 0) return;
         //ProcessSelectionEffect();
-
         SubmitDrawPolicy();
         SubmitTransforms();
         //SubmitDebugBounds();
     }
+
 
 
     private int CullEntities()
@@ -69,48 +66,42 @@ internal sealed class RenderDispatcher : IDisposable
             Throwers.BufferOverflow(nameof(visibleEntities));
 
         var visibleCount = 0;
-        foreach (var query in RenderEcs.Core.BoundsQuery())
+        foreach (var query in RenderEcs.Core.CullQuery())
         {
-            var visible = query.Meta.Visibility == EntityVisibility.AlwaysVisible ||
+            var visible = query.Status == EntityStatus.AlwaysVisible ||
                           _frustum.IntersectsBox(in query.Item);
-            
-            if (visible)
-            {
-                query.Meta.Visibility = EntityVisibility.Visible;
-                visibleEntities[visibleCount++] = query.Entity;
-            }
-            else
-            {
-                query.Meta.Visibility = EntityVisibility.Culled;
-            }
+
+            if (visible) visibleEntities[visibleCount++] = query.Entity;
         }
 
         return VisibleCount = visibleCount;
     }
 
-    private void SubmitDrawPolicy()
+    private unsafe void SubmitDrawPolicy()
     {
         var forward = CameraManager.Instance.Camera.Forward;
         var viewZ = CameraManager.Instance.Camera.ViewMatrix.M43;
         var nearFar = CameraManager.Instance.Camera.NearFarPlane;
 
+        var indices = _drawIndices.Ptr;
+
         var index = -1;
-        foreach (var it in IndexEnumerator())
+        foreach (var it in RenderEcs.Core.DepthPolicyQuery(VisibleEntities))
         {
-            var entity = it.Item1;
-            var depthKey = MakeDepthKey(entity, forward, nearFar, viewZ);
-            var policy = RenderEcs.Core.GetDrawPolicy(entity);
-            it.Item2 = new DrawCommandIndex(++index, policy.Passes, policy.Queue, depthKey);
+            var depthKey = MakeDepthKey( forward, it.Item2.Translation, nearFar, viewZ);
+            *indices = new DrawCommandIndex(++index, it.Item1.Passes, it.Item1.Queue, depthKey);
+            ++indices;
         }
     }
 
-    private void SubmitTransforms()
+    private unsafe void SubmitTransforms()
     {
-        foreach (var it in TransformEnumerator())
+        var transforms = _transforms.Ptr;
+        foreach (var query in RenderEcs.Core.MatrixQuery(VisibleEntities))
         {
-            var entity = it.Item1;
-            it.Item2.Model = RenderEcs.Core.GetModelMatrix(entity);
-            it.Item2.Normal = RenderEcs.Core.GetNormalMatrix(entity);
+            transforms->Model = query.Item1;
+            transforms->Normal = query.Item2;
+            ++transforms;
         }
     }
 
@@ -124,6 +115,8 @@ internal sealed class RenderDispatcher : IDisposable
             _transforms.Resize(ecsCapacity, true);
         }
     }
+
+
 /*
 
   private void ProcessSelectionEffect()
@@ -175,11 +168,10 @@ internal sealed class RenderDispatcher : IDisposable
 */
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ushort MakeDepthKey(RenderEntityId entity, Vector3 forward, Vector2 nearFar, float viewZ)
+    private static ushort MakeDepthKey( Vector3 forward, Vector3 worldPos, Vector2 nearFar, float viewZ)
     {
         const float maxValueF = 65535f;
 
-        var worldPos = RenderEcs.Core.GetModelMatrix(entity).Translation;
         var d = Vector3.Dot(forward, worldPos) - viewZ;
         if (d <= nearFar.X) return 0;
         if (d >= nearFar.Y) return ushort.MaxValue;

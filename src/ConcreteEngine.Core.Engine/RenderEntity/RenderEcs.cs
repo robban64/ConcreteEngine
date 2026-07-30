@@ -30,6 +30,12 @@ public static class RenderEcs
         SceneLink = new EntitySceneLink(Core);
     }
 
+    public static void Dispose()
+    {
+        foreach (var store in All) store.Dispose();
+        Core.Dispose();
+    }
+
     public static class Stores<T> where T : unmanaged, IRenderComponent<T>
     {
         public static RenderEntityStore<T> Store = null!;

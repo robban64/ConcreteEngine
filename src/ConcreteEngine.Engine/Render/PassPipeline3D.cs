@@ -171,7 +171,7 @@ internal static class PassPipeline3D
                 else if (slot.SlotKind == TextureUsage.Mask) ctx.Cmd.BindTexture(slot.Texture, 1);
             }
 
-            ctx.Cmd.DrawMesh(source.Mesh, source.InstanceCount);
+            //ctx.Cmd.DrawMesh(source.Mesh, source.InstanceCount);
         }
 
         return new PassAction(PassOp.Continue);

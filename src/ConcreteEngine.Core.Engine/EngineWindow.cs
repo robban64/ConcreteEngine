@@ -2,7 +2,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Extensions;
-using ConcreteEngine.Core.Common.Visuals;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;

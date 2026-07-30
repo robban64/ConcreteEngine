@@ -26,7 +26,7 @@ public ref struct ActiveObjectEnumerator<T>(ReadOnlySpan<T?> span) where T : cla
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ActiveObjectEnumerator<T> GetEnumerator() => new(_span);
+    public readonly ActiveObjectEnumerator<T> GetEnumerator() => this;
 }
 
 public ref struct SparseObjectEnumerator<TId, TObj>(ReadOnlySpan<TId> idSpan, ReadOnlySpan<TObj?> objectSpan)
@@ -57,11 +57,8 @@ public ref struct SparseObjectEnumerator<TId, TObj>(ReadOnlySpan<TId> idSpan, Re
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly SparseObjectEnumerator<TId, TObj> GetEnumerator() => new(_idSpan, _objectSpan);
+    public readonly SparseObjectEnumerator<TId, TObj> GetEnumerator() => this;
 }
-
-
-
 
 public ref struct RefEnumerator<T> where T : unmanaged
 {
@@ -85,7 +82,7 @@ public ref struct RefEnumerator<T> where T : unmanaged
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly RefEnumerator<T> GetEnumerator() => new(ref _start, _length);
+    public readonly RefEnumerator<T> GetEnumerator() => this;
 }
 
 public ref struct ZipRefEnumerator<T1, T2> where T1 : unmanaged where T2 : unmanaged
@@ -106,12 +103,12 @@ public ref struct ZipRefEnumerator<T1, T2> where T1 : unmanaged where T2 : unman
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < _length;
 
-    public readonly TuplePtr<T1, T2> Current
+    public readonly TupleRef<T1, T2> Current
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new(ref Unsafe.Add(ref _start1, _i), ref Unsafe.Add(ref _start2, _i));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ZipRefEnumerator<T1, T2> GetEnumerator() => new(ref _start1, ref _start2, _length);
+    public readonly ZipRefEnumerator<T1, T2> GetEnumerator() => this;
 }

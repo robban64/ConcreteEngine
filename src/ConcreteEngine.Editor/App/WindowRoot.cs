@@ -1,6 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Visuals;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.App.Theme;
 using Hexa.NET.ImGui;

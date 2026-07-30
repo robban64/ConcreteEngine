@@ -148,7 +148,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         var spawnParam = _emitterParams;
 
         var rng = _rng;
-        foreach (ref var p in _particles.Slice(0, ParticleCount).AsSpan())
+        foreach (ref var p in _particles.Slice(0, ParticleCount))
         {
             var life = p.Life;
             if (life <= 0f)

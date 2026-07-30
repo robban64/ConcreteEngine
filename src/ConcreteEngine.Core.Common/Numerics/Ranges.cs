@@ -6,6 +6,7 @@ public interface IRange
 {
     int Offset { get; }
     int Length { get; }
+    int End { get; }
 }
 
 public readonly record struct RangeU16(ushort Offset16, ushort Length16) : IRange

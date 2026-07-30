@@ -39,11 +39,11 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
     public ref T GetByIndex(int i) => ref _data[i];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ValuePtr<T> TryGet(GameEntityId entity)
+    public ValueRef<T> TryGet(GameEntityId entity)
     {
         var id = FindIndex(entity);
-        if ((uint)id >= _data.Length) return ValuePtr<T>.Null;
-        return new ValuePtr<T>(ref _data[id]);
+        if ((uint)id >= _data.Length) return ValueRef<T>.Null;
+        return new ValueRef<T>(ref _data[id]);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

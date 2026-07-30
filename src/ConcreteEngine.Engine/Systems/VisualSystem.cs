@@ -56,7 +56,7 @@ internal sealed unsafe class VisualSystem
         CameraUniform data;
         data.ViewMat = t.ViewMatrix;
         data.ProjMat = t.ProjectionMatrix;
-        data.ProjViewMat = t.ViewMatrix * t.ProjectionMatrix;
+        data.ProjViewMat = t.ProjectionViewMatrix;
         data.CameraPos = t.Translation;
         data.CameraUp = t.Up;
         data.CameraRight = t.Right;
@@ -70,7 +70,7 @@ internal sealed unsafe class VisualSystem
         CameraUniform data;
         data.ViewMat = t.ViewMatrix;
         data.ProjMat = t.ProjectionMatrix;
-        data.ProjViewMat = t.ViewMatrix * t.ProjectionMatrix;
+        data.ProjViewMat = t.ProjectionViewMatrix;
         data.CameraPos = t.Translation;
         data.CameraUp = t.Up;
         data.CameraRight = t.Right;

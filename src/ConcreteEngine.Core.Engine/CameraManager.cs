@@ -45,21 +45,10 @@ public sealed class CameraManager
 
     internal void CommitFrame(float alpha)
     {
-        Camera.Interpolate(alpha, out var viewTransform);
-        FrameTransforms.Translation = viewTransform.Translation;
-
-        ref var viewMatrix = ref FrameTransforms.ViewMatrix;
-        MatrixMath.CreateFixedSizeModelMatrix(
-            in viewTransform.Translation,
-            RotationMath.YawPitchToQuaternion(viewTransform.Orientation),
-            out viewMatrix);
-
-        Matrix4x4.Invert(viewMatrix, out viewMatrix);
-
-        ref var projMatrix = ref FrameTransforms.ProjectionMatrix;
-        projMatrix = Camera.ProjectionMatrix;
-
-        Frustum.Update(viewMatrix * projMatrix);
+        Camera.Interpolate(alpha, out var translation, out var orientation);
+        FrameTransforms.UpdateViewMatrix(translation, orientation);
+        FrameTransforms.ProjectionMatrix = Camera.ProjectionMatrix;
+        Frustum.Update(FrameTransforms.ProjectionViewMatrix);
     }
 
     [SkipLocalsInit]

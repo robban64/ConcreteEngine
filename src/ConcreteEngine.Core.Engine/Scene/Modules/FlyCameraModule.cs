@@ -73,6 +73,6 @@ public sealed class FlyCameraModule : GameModule
         _targetOrientation = target;
 
         float t = 1.0f - MathF.Exp(-25 * fixedDt);
-        _camera.Orientation = YawPitch.Lerp(_camera.Orientation, _targetOrientation, t);
+        _camera.Orientation = YawPitch.LerpFixed(_camera.Orientation, _targetOrientation, t);
     }
 }

@@ -8,7 +8,7 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
 {
     private T1* _ptr1;
     private T2* _ptr2;
-    
+
     public int Length;
 
     public NativeSoA(int length)
@@ -24,7 +24,7 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
     }
 
     public readonly bool IsNull => _ptr1 == null;
-    
+
     public readonly NativeView<T1> View1
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -52,7 +52,7 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly PtrEnumerator<T1,T2> GetEnumerator() => new(_ptr1, _ptr2, Length);
+    public readonly PtrEnumerator<T1, T2> GetEnumerator() => new(_ptr1, _ptr2, Length);
 
     public void Resize(int length, bool zeroed)
     {
@@ -86,7 +86,7 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
     private T1* _ptr1;
     private T2* _ptr2;
     private T3* _ptr3;
-    
+
     public int Length;
 
     public NativeSoA(int length)
@@ -114,6 +114,7 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new(_ptr2, 0, Length);
     }
+
     public readonly NativeView<T3> View3
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -148,6 +149,10 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
         _ptr2 = (T2*)(array.Ptr + sizeT1);
         _ptr3 = (T3*)((byte*)_ptr2 + sizeT2);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly PtrEnumerator<T1, T2, T3> GetEnumerator() => new(_ptr1, _ptr2, _ptr3, Length);
+
 
     public void Dispose()
     {

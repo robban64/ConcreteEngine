@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Common.Visuals;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Core.Engine.Graphics;
 
@@ -29,7 +28,8 @@ public sealed class Camera
 
     internal readonly CameraTransform Transform;
 
-    private ViewTransform _viewTransform, _prevViewTransform;
+    private Vector3 _translation, _lastTranslation;
+    public YawPitch _orientation, _lastOrientation;
 
     public Camera(Size2D viewport)
     {
@@ -50,11 +50,11 @@ public sealed class Camera
     [InputNumber(Segment = "Transform")]
     public Vector3 Translation
     {
-        get => _viewTransform.Translation;
+        get => _translation;
         set
         {
-            if (VectorMath.DistanceNearlyEqual(in value, in _viewTransform.Translation, DirtyThreshold)) return;
-            _viewTransform.Translation = value;
+            if (VectorMath.DistanceNearlyEqual(in value, in _translation, DirtyThreshold)) return;
+            _translation = value;
             IsDirty = true;
         }
     }
@@ -62,11 +62,11 @@ public sealed class Camera
     [InputNumber(Segment = "Transform", Converter = typeof(Vector2))]
     public YawPitch Orientation
     {
-        get => _viewTransform.Orientation;
+        get => _orientation;
         set
         {
-            if (YawPitch.NearlyEqual(value, _viewTransform.Orientation)) return;
-            _viewTransform.Orientation = value;
+            if (YawPitch.NearlyEqual(value, _orientation)) return;
+            _orientation = value;
             IsDirty = true;
         }
     }
@@ -108,12 +108,17 @@ public sealed class Camera
     //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void BeginUpdate() => _prevViewTransform = _viewTransform;
+    internal void BeginUpdate()
+    {
+        _lastTranslation = _translation;
+        _lastOrientation =  _orientation;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Interpolate(float alpha, out ViewTransform transform)
+    internal void Interpolate(float alpha, out Vector3 translation, out YawPitch orientation)
     {
-        transform = ViewTransform.Lerp(in _prevViewTransform, in _viewTransform, alpha);
+        translation = Vector3.Lerp(_lastTranslation,_translation, alpha);
+        orientation = YawPitch.LerpFixed(_lastOrientation, _orientation, alpha);
     }
 
     internal bool Ensure()
@@ -124,8 +129,8 @@ public sealed class Camera
         ++Version;
         
         MatrixMath.CreateFixedSizeModelMatrix(
-            in _viewTransform.Translation,
-            RotationMath.YawPitchToQuaternion(_viewTransform.Orientation),
+            in _translation,
+            RotationMath.YawPitchToQuaternion(_orientation),
             out var modelMatrix);
 
         ref var viewMatrix = ref Transform.ViewMatrix;

@@ -32,6 +32,25 @@ public sealed class CameraTransformSnapshot
     public Matrix4x4 ViewMatrix;
     public Matrix4x4 ProjectionMatrix;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UpdateViewMatrix( Vector3 translation, YawPitch orientation)
+    {
+        Translation = translation;
+        
+        ref var viewMatrix = ref ViewMatrix;
+        MatrixMath.CreateFixedSizeModelMatrix(in translation,
+            RotationMath.YawPitchToQuaternion(orientation),
+            out viewMatrix);
+
+        Matrix4x4.Invert(viewMatrix, out viewMatrix);
+    }
+
+    public Matrix4x4 ProjectionViewMatrix
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ViewMatrix * ProjectionMatrix;
+    }
+
     public Vector3 Right
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

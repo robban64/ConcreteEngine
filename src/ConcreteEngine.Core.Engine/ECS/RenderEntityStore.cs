@@ -49,11 +49,11 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ValuePtr<T> TryGet(RenderEntityId entity)
+    public ValueRef<T> TryGet(RenderEntityId entity)
     {
         var index = FindIndex(entity);
-        if ((uint)index >= (uint)_entities.Length) return ValuePtr<T>.Null;
-        return new ValuePtr<T>(ref _data[index]);
+        if ((uint)index >= (uint)_entities.Length) return ValueRef<T>.Null;
+        return new ValueRef<T>(ref _data[index]);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

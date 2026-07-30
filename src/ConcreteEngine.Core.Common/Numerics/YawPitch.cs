@@ -19,10 +19,8 @@ public record struct YawPitch(float Yaw, float Pitch)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator YawPitch(Vector2 v) => new(v.X, v.Y);
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WithClampedPitch() => Pitch = float.Clamp(Pitch, -PitchLimit, PitchLimit);
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static YawPitch operator +(YawPitch a, YawPitch b) => new(a.Yaw + b.Yaw, a.Pitch + b.Pitch);
@@ -54,10 +52,10 @@ public record struct YawPitch(float Yaw, float Pitch)
         if (yawDelta > 180f) yawDelta -= 360f;
         if (yawDelta < -180f) yawDelta += 360f;
 
-        float yaw = a.Yaw + yawDelta * t;
-        float pitch = float.Lerp(a.Pitch, b.Pitch, t);
-
-        return new YawPitch(yaw, pitch);
+        YawPitch result;
+        result.Yaw = a.Yaw + yawDelta * t;
+        result.Pitch = float.Lerp(a.Pitch, b.Pitch, t);
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,7 +1,6 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
 
-namespace ConcreteEngine.Core.Common.Visuals;
+namespace ConcreteEngine.Core.Common.Numerics;
 
 public record struct ViewportRect(Int2 Position, Size2D Size)
 {

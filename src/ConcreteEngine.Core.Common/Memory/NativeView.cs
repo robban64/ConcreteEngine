@@ -2,25 +2,33 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly unsafe struct NativeView<T>(T* ptr, int offset, int length)
-    : IEquatable<NativeView<T>> where T : unmanaged
+public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T : unmanaged
 {
-    public readonly T* Ptr = ptr;
-    public readonly int Offset = offset;
-    public readonly int Length = length;
+    public static NativeView<T> MakeNull() => new(null, 0, 0);
+
+    public readonly T* Ptr;
+    public readonly int Offset;
+    public readonly int Length;
 
     public NativeView(T* ptr, int length) : this(ptr, 0, length) { }
+
+    public NativeView(T* ptr, int offset, int length)
+    {
+        Ptr = ptr;
+        Offset = offset;
+        Length = length;
+    }
 
     public int End => Offset + Length;
     public bool IsNull => Ptr == null;
 
     public int SizeInBytes => Length * Unsafe.SizeOf<T>();
     public int OffsetInBytes => Length * Unsafe.SizeOf<T>();
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator NativeView<T>(NativeArray<T> array) => new(array.Ptr, array.Length);
@@ -47,29 +55,48 @@ public readonly unsafe struct NativeView<T>(T* ptr, int offset, int length)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<T> Slice(int offset, int length)
     {
-        Debug.Assert((uint)offset + (uint)length <= (uint)Length);
+        Debug.Assert((uint)offset + (uint)length < (uint)Length);
         return new NativeView<T>(Ptr + offset, Offset + offset, length);
     }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<T> SliceFrom(int offset)
     {
-        Debug.Assert((uint)offset <= (uint)Length);
+        Debug.Assert((uint)offset < (uint)Length);
         return new NativeView<T>(Ptr + offset, offset, Length - offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<T> Slice(RangeU16 range) => Slice(range.Offset16, range.Length16);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<T> Slice(Range32 range) => Slice(range.Offset, range.Length);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<T> AsSpan(int offset = 0)
     {
-        Debug.Assert((uint)offset <= (uint)Length);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset, (uint)Length);
         return new Span<T>(Ptr + offset, Length - offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<T> AsSpan(int offset, int length)
     {
-        Debug.Assert((uint)offset + (uint)length <= (uint)Length);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset + (uint)length, (uint)Length);
         return new Span<T>(Ptr + offset, length);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<T> AsReadOnlySpan(int offset = 0)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset, (uint)Length);
+        return new ReadOnlySpan<T>(Ptr + offset, Length - offset);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<T> AsReadOnlySpan(int offset, int length)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset + (uint)length, (uint)Length);
+        return new ReadOnlySpan<T>(Ptr + offset, length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

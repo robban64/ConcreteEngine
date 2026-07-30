@@ -7,12 +7,12 @@ namespace ConcreteEngine.Core.Common.Numerics;
 public struct Transform(in Vector3 translation, in Vector3 scale, in Quaternion rotation)
 {
     public Transform(in Vector3 translation) : this(in translation, Vector3.One, Quaternion.Identity) { }
-
+    
     public Vector3 Translation = translation;
     public Quaternion Rotation = rotation;
     public Vector3 Scale = scale;
 
-    public static readonly Transform Identity = new(Vector3.Zero, Vector3.One, Quaternion.Identity);
+    public static Transform Identity => new(Vector3.Zero, Vector3.One, Quaternion.Identity);
 
     public static void FromMatrix(in Matrix4x4 matrix, out Transform transform)
     {

@@ -56,8 +56,8 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
 
     public void ToggleVisibility(bool visible)
     {
-        foreach (var entity in GetRenderEntities())
-            RenderEcs.Core.ToggleVisibility(entity, EntityVisibility.ForceHidden, visible);
+        var flag = visible ? EntityVisibility.Visible : EntityVisibility.ForceHidden;
+        foreach (var entity in GetRenderEntities()) RenderEcs.Core.ToggleVisibility(entity, flag);
     }
 
     public void ToggleSelection(bool isSelected)

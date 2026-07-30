@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
@@ -28,27 +29,30 @@ internal sealed class RenderDispatcher : IDisposable
         _drawIndices = NativeArray.Allocate<DrawCommandIndex>(RenderEcs.Core.Capacity);
         _transforms = NativeArray.Allocate<DrawObjectUniform>(RenderEcs.Core.Capacity);
     }
-    
+
     public NativeView<RenderEntityId> VisibleEntities => _visibleEntities.Slice(0, VisibleCount);
     public NativeView<DrawCommandIndex> DrawIndices => _drawIndices.Slice(0, VisibleCount);
     public NativeView<DrawObjectUniform> Transforms => _transforms.Slice(0, VisibleCount);
 
     private unsafe PtrEnumerator<RenderEntityId, DrawCommandIndex> IndexEnumerator() =>
         new(_visibleEntities, _drawIndices, VisibleCount);
+
     private unsafe PtrEnumerator<RenderEntityId, DrawObjectUniform> TransformEnumerator() =>
         new(_visibleEntities, _transforms, VisibleCount);
 
     public void Dispose() => _visibleEntities.Dispose();
-    
 
-    public void Setup()
-    {
-    }
+
+    public void Setup() { }
+
+    private static AvgFrameTimer avg;
 
     public void Execute()
     {
         Ensure();
+        avg.BeginSample();
         var visibleCount = CullEntities();
+        if (avg.EndSample() > 144) avg.ResetAndPrint("Cull");
         if (visibleCount == 0) return;
         //ProcessSelectionEffect();
 
@@ -67,9 +71,18 @@ internal sealed class RenderDispatcher : IDisposable
         var visibleCount = 0;
         foreach (var query in RenderEcs.Core.BoundsQuery())
         {
-            var visible = _frustum.IntersectsBox(in query.Bounds);
-            visible &= query.Meta.ToggleVisibility(EntityVisibility.Culled, visible) == 0;
-            if (visible) visibleEntities[visibleCount++] = query.Entity;
+            var visible = query.Meta.Visibility == EntityVisibility.AlwaysVisible ||
+                          _frustum.IntersectsBox(in query.Item);
+            
+            if (visible)
+            {
+                query.Meta.Visibility = EntityVisibility.Visible;
+                visibleEntities[visibleCount++] = query.Entity;
+            }
+            else
+            {
+                query.Meta.Visibility = EntityVisibility.Culled;
+            }
         }
 
         return VisibleCount = visibleCount;
@@ -100,7 +113,7 @@ internal sealed class RenderDispatcher : IDisposable
             it.Item2.Normal = RenderEcs.Core.GetNormalMatrix(entity);
         }
     }
-    
+
     private void Ensure()
     {
         var ecsCapacity = RenderEcs.Core.Capacity;
@@ -112,7 +125,7 @@ internal sealed class RenderDispatcher : IDisposable
         }
     }
 /*
- 
+
   private void ProcessSelectionEffect()
       {
           if (RenderEcs.GetRenderStore<SelectionComponent>().Count == 0) return;
@@ -162,7 +175,7 @@ internal sealed class RenderDispatcher : IDisposable
 */
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ushort MakeDepthKey(RenderEntityId entity,  Vector3 forward, Vector2 nearFar, float viewZ)
+    private static ushort MakeDepthKey(RenderEntityId entity, Vector3 forward, Vector2 nearFar, float viewZ)
     {
         const float maxValueF = 65535f;
 

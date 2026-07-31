@@ -127,7 +127,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
         var bounds = meshes[0].Bounds;
         for (var i = 1; i < meshes.Length; i++)
-            BoundingBox.Merge(in bounds, in meshes[i].Bounds, out bounds);
+            bounds.Expand(in meshes[i].Bounds);
 
         meshCtx.ModelBounds = bounds;
     }

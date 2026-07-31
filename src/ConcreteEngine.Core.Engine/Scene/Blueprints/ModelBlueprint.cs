@@ -101,8 +101,10 @@ public sealed class ModelInstance : RenderBlueprintInstance
             ref readonly var localBounds = ref Model.GetMesh(meshIndex).Bounds;
             ref var worldBounds = ref RenderEcs.Core.GetWorldBounds(entity);
             BoundingBox.GetWorldBounds(in localBounds, in finalMatrix, out worldBounds);
-            BoundingBox.Merge(in globalBounds, in worldBounds, out WorldBounds);
+            globalBounds.Expand(in worldBounds);
         }
+
+        WorldBounds = globalBounds;
 
     }
 }

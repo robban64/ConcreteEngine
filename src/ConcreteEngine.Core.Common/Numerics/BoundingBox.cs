@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace ConcreteEngine.Core.Common.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
-public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
+public record struct BoundingBox(Vector3 Min, Vector3 Max)
 {
     public Vector3 Min = Min;
     public Vector3 Max = Max;
@@ -35,12 +35,18 @@ public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
         Max = Vector3.Max(Max, point);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Expand(in BoundingBox other)
+    {
+        Min = Vector3.Min(Min, other.Min);
+        Max = Vector3.Max(Max, other.Max);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly void FillCorners(Span<Vector3> corners)
     {
-        ref readonly var min = ref Min;
-        ref readonly var max = ref Max;
+        var min = Min;
+        var max = Max;
 
         corners[0] = new Vector3(min.X, min.Y, min.Z);
         corners[1] = new Vector3(max.X, min.Y, min.Z);
@@ -55,9 +61,12 @@ public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Merge(in BoundingBox boxA, in BoundingBox boxB, out BoundingBox result) =>
-        result = new BoundingBox(Vector3.Min(boxA.Min, boxB.Min), Vector3.Max(boxA.Max, boxB.Max));
-
+    public static void Merge(in BoundingBox boxA, in BoundingBox boxB, out BoundingBox result)
+    {
+        var min = Vector3.Min(boxA.Min, boxB.Min);
+        var max = Vector3.Max(boxA.Max, boxB.Max);
+        result = new BoundingBox(min, max);
+    }
 
     public static void FromAxisBox(in BoundingAxisBox axisBox, out BoundingBox result) =>
         result = new BoundingBox(axisBox.Min, axisBox.Max);

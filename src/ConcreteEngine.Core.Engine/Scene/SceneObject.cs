@@ -155,7 +155,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         foreach (var instance in GetInstances())
         {
             instance.ApplyTransform(in rootMatrix);
-            BoundingBox.Merge(in worldBounds, in instance.GetWorldBounds(), out worldBounds);
+            worldBounds.Expand(in instance.GetWorldBounds());
         }
 
         Transform.SetBounds(worldBounds);

@@ -72,7 +72,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
             foreach (var entity in GetRenderEntities())
                 AnimationManager.Instance.AttachEntity(rig, entity);
             
-            RenderEcs.GetRenderStore<SkinningComponent>().Commit();
+            RenderEcs.Store<SkinningLink>().Commit();
         }
     }
 

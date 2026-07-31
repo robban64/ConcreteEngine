@@ -42,12 +42,12 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         var source = new RenderSource(default, matId, 0, EntitySourceKind.Particle);
 
         var entity = RenderEcs.Core.AddEntity(source, policy);
-        var particle = new ParticleComponent(Emitter.Id);
-        RenderEcs.GetRenderStore<ParticleComponent>().Add(entity, in particle);
+        var particle = new EmitterLink(Emitter.Id);
+        RenderEcs.Store<EmitterLink>().Add(entity, in particle);
         RenderEcs.SceneLink.BindSceneHandle(entity, Owner.Id);
         RenderEntityIds.Add(entity);
         
-        RenderEcs.GetRenderStore<ParticleComponent>().Commit();
+        RenderEcs.Store<EmitterLink>().Commit();
 
     }
 

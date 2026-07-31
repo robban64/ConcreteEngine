@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Engine.Systems;
@@ -40,13 +39,13 @@ internal sealed class DrawCommandPipeline : IDisposable
         DrawCmd.ResetFrame();
     }
 
-    public void StageCommands(RenderResolver resolver)
+    public void StageCommands(RenderEcsSystem ecsSystem)
     {
         // Sort command buffer and prepare passes
-        ReadyDrawCommands(resolver.DrawIndices);
+        ReadyDrawCommands(ecsSystem.DrawIndices);
 
         // Ensure ubo size
-        var drawCount = IntMath.AlignUp(resolver.VisibleCount, 64);
+        var drawCount = IntMath.AlignUp(ecsSystem.VisibleCount, 64);
         var materialCount = IntMath.AlignUp(_materialSystem.Count, 16);
         var boneCount = IntMath.AlignUp(_animationSystem.BoneCount, 64);
 
@@ -62,7 +61,7 @@ internal sealed class DrawCommandPipeline : IDisposable
         // Upload
         VisualSystem.Instance.Upload();
 
-        var transforms = resolver.Transforms;
+        var transforms = ecsSystem.Transforms;
         if (transforms.Length > 0) _gfxBuffers.UploadUniform(transforms, 0);
 
         var materials = _materialSystem.GetBufferView();

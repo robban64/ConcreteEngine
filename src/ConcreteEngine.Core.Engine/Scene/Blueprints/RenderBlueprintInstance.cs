@@ -65,20 +65,20 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
         if (isSelected)
         {
             foreach (var entity in GetRenderEntities())
-                RenderEcs.GetRenderStore<SelectionComponent>().Add(entity, SelectionComponent.DefaultHighlight);
+                RenderEcs.Store<SelectionComponent>().Add(entity, SelectionComponent.DefaultHighlight);
         }
         else
         {
             foreach (var entity in GetRenderEntities())
-                RenderEcs.GetRenderStore<SelectionComponent>().Remove(entity);
+                RenderEcs.Store<SelectionComponent>().Remove(entity);
         }
         
-        RenderEcs.GetRenderStore<SelectionComponent>().Commit();
+        RenderEcs.Store<SelectionComponent>().Commit();
     }
 
     public void ToggleDebugBounds(bool isSelected)
     {
-        var debugStore = RenderEcs.GetRenderStore<DebugBoundsComponent>();
+        var debugStore = RenderEcs.Store<DebugBoundsComponent>();
         var span = GetRenderEntities();
         for (var i = 0; i < span.Length; i++)
         {
@@ -87,6 +87,6 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
             if (isSelected) debugStore.Add(entity, new DebugBoundsComponent(color));
             else debugStore.Remove(entity);
         }
-        RenderEcs.GetRenderStore<SelectionComponent>().Commit();
+        RenderEcs.Store<SelectionComponent>().Commit();
     }
 }

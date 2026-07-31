@@ -41,7 +41,7 @@ internal sealed class AnimationManager
 
         animation.AddEntity(entity);
         RenderEcs.Core.GetSource(entity).Kind = EntitySourceKind.AnimatedModel;
-        RenderEcs.GetRenderStore<SkinningComponent>().Add(entity, new SkinningComponent(animation.Id));
+        RenderEcs.Store<SkinningLink>().Add(entity, new SkinningLink(animation.Id));
     }
 
     private bool TryGetFirstByRig(ModelRig rig, out AnimationInstance animation)

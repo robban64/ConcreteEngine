@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
@@ -153,8 +152,9 @@ internal static class PassPipeline3D
         ctx.ContinueFromRenderPass(ctx.FboId, state.PassState.StateFlags);
         ctx.MutateStatePass<SceneTarget>(FboVariant.V1, PassMutationState.MutateTarget(ctx.FboId));
         return new PassAction(PassOp.Continue);
+        /*
         ctx.Cmd.UseShader(RenderRegistry.HighlightShader);
-        foreach (var query in RenderEcs.GetRenderStore<SelectionComponent>().VisibilityQuery())
+        foreach (var query in RenderEcs.Store<SelectionComponent>().VisibilityQuery())
         {
             var source = RenderEcs.Core.GetSource(query.Entity);
 
@@ -175,5 +175,6 @@ internal static class PassPipeline3D
         }
 
         return new PassAction(PassOp.Continue);
+        */
     }
 }

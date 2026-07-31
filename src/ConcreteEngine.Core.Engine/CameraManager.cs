@@ -32,13 +32,13 @@ public sealed class CameraManager
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void BeginUpdate() => Camera.BeginUpdate();
 
-    internal void CommitUpdate(VisualManager visuals)
+    internal void CommitUpdate()
     {
-        var shadow = visuals.Shadow;
+        var shadow = VisualManager.Instance.Shadow;
         if (!Camera.Ensure() && !shadow.WasDirty) return;
 
         var shadowProj = shadow.Projection;
-        var lightDir = visuals.Illumination.Direction;
+        var lightDir = VisualManager.Instance.Illumination.Direction;
         UpdateLightView(shadow.ShadowMapSize, shadowProj.Distance, shadowProj.ZPad, lightDir);
     }
 

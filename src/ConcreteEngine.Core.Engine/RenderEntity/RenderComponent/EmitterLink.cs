@@ -5,8 +5,7 @@ using ConcreteEngine.Core.Engine.Graphics.Particles;
 namespace ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ParticleComponent(Id16<ParticleEmitter> emitterId)
-    : IRenderComponent<ParticleComponent>
+public struct EmitterLink(Id16<ParticleEmitter> emitterId) : IRenderComponent<EmitterLink>
 {
     public Id16<ParticleEmitter> EmitterId = emitterId;
 }

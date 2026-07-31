@@ -27,7 +27,7 @@ internal sealed class UtilityCommandHandler() : ConsoleCommandHandler("utility")
     private static void OnStructSizesCmd()
     {
         LogService.PushMessage(StructStr<RenderSource>());
-        LogService.PushMessage(StructStr<SkinningComponent>());
+        LogService.PushMessage(StructStr<SkinningLink>());
 
         LogService.PushMessage(StructStr<GpuFrameMeta>());
         LogService.PushMessage(StructStr<GpuBufferMeta>());

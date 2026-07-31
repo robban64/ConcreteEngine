@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.RenderEntity;
@@ -16,15 +17,12 @@ public static class RenderEcs
     public static int ActiveCount => Core.ActiveCount;
     public static int StoreCount => All.Count;
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static RenderEntityStore<T> GetRenderStore<T>() where T : unmanaged, IRenderComponent<T> =>
-        Stores<T>.Store;
 
     internal static void Init()
     {
         if (SceneLink != null!) throw new InvalidOperationException("ECS already initialized");
-        Stores<SkinningComponent>.CreateStore(16);
-        Stores<ParticleComponent>.CreateStore(16);
+        Stores<SkinningLink>.CreateStore(16);
+        Stores<EmitterLink>.CreateStore(16);
         Stores<SelectionComponent>.CreateStore(16);
         Stores<DebugBoundsComponent>.CreateStore(16);
         SceneLink = new EntitySceneLink(Core);
@@ -36,14 +34,18 @@ public static class RenderEcs
         Core.Dispose();
     }
 
-    public static class Stores<T> where T : unmanaged, IRenderComponent<T>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RenderEntityStore<T> Store<T>() where T : unmanaged, IRenderComponent<T> =>
+        Stores<T>.Store;
+
+    private static class Stores<T> where T : unmanaged, IRenderComponent<T>
     {
         public static RenderEntityStore<T> Store = null!;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void CreateStore(int cap)
         {
-            if (Store != null) throw new InvalidOperationException("Ecs.Render - Store already created");
+            if (Store != null!) Throwers.InvalidOperation("Ecs.Render - Store already created");
             var store = new RenderEntityStore<T>(cap);
             All.Add(store);
             Store = store;

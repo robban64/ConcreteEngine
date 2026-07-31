@@ -7,7 +7,6 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics.Particles;
 using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
@@ -61,12 +60,12 @@ internal sealed class ParticleSystem : IDisposable
         _particleMesh.Dispose();
     }
 
-    internal void Simulate(float simDt)
+    internal void Simulate(NativeView<RenderEntityId> entities, float simDt)
     {
         if (_particleManager.EmitterCount == 0) return;
 
         _processedEmitters.Clear();
-        foreach (var it in RenderEcs.GetRenderStore<ParticleComponent>().VisibilityQuery())
+        foreach (var it in RenderEcs.Store<EmitterLink>().SparseQuery(entities))
         {
             if (_processedEmitters.Contains(it.Component.EmitterId)) continue;
             var emitter = _particleManager.Get(it.Component.EmitterId);
@@ -88,7 +87,6 @@ internal sealed class ParticleSystem : IDisposable
             ProcessEmitter(particles, in emitter.GetParticleParams(), timeOffset);
             _particleMesh.UploadGpuData(emitter.Slot, particles.Length);
         }
-
     }
 
     [SkipLocalsInit]
@@ -108,17 +106,20 @@ internal sealed class ParticleSystem : IDisposable
             lut[i] = (size, color);
         }
 
-        var src = particles.Ptr;
-        var dst = _particleMesh.GetBufferPtr(particles.Length);
-        for (int i = 0; i < particles.Length; ++i, ++src, ++dst)
+        foreach (var it in ParticleEnumerator(particles))
         {
-            var t = src->InvLife;
-            byte idx = (byte)(t * 255f + 0.5f);
+            var t = it.Item1.InvLife;
+            var idx = (byte)(t * 255f + 0.5f);
 
-            var pos = src->Position + src->Velocity * timeOffset;
-            *dst = new ParticleGpuInstance(new Vector4(pos, lut[idx].Size), lut[idx].Color);
+            var pos = it.Item1.Position + it.Item1.Velocity * timeOffset;
+            it.Item2 = new ParticleGpuInstance(new Vector4(pos, lut[idx].Size), lut[idx].Color);
         }
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private unsafe PtrEnumerator<ParticleState, ParticleGpuInstance> ParticleEnumerator(
+        NativeView<ParticleState> particles) =>
+        new(particles.Ptr, _particleMesh.GetBufferPtr(particles.Length), particles.Length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ColorRgba LerpSse(ColorRgba a, ColorRgba b, byte t)

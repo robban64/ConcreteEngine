@@ -2,16 +2,14 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Engine.Render;
 
 namespace ConcreteEngine.Engine.Systems;
 
-internal sealed class RenderResolver : IDisposable
+internal sealed class RenderEcsSystem : IDisposable
 {
     public int VisibleCount { get; private set; }
 
@@ -21,7 +19,7 @@ internal sealed class RenderResolver : IDisposable
     private NativeArray<DrawCommandIndex> _drawIndices;
     private NativeArray<DrawObjectUniform> _transforms;
 
-    internal RenderResolver(CameraFrustum frustum)
+    internal RenderEcsSystem(CameraFrustum frustum)
     {
         ArgumentNullException.ThrowIfNull(frustum);
         _frustum = frustum;

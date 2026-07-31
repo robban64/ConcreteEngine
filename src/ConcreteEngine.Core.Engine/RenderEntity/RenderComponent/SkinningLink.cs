@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Engine.Graphics.Animations;
 
 namespace ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 
-public struct SkinningComponent(Id16<AnimationInstance> animationId) : IRenderComponent<SkinningComponent>
+public struct SkinningLink(Id16<AnimationInstance> animationId) : IRenderComponent<SkinningLink>
 {
     public readonly Id16<AnimationInstance> AnimationId = animationId;
     public ushort AnimationSlot;

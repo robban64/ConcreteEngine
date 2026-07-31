@@ -12,7 +12,7 @@ namespace ConcreteEngine.Core.Engine.RenderEntity;
 
 public sealed unsafe partial class RenderEntityCore
 {
-    private EntityStatus* _meta;
+    private EntityHeader* _headers;
     private RenderSource* _sources;
     private DrawPolicy* _policies;
 
@@ -22,7 +22,7 @@ public sealed unsafe partial class RenderEntityCore
     
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref EntityStatus GetMeta(RenderEntityId e) => ref _meta[e.Index()];
+    public ref EntityHeader GetMeta(RenderEntityId e) => ref _headers[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref RenderSource GetSource(RenderEntityId e) => ref _sources[e.Index()];
@@ -44,9 +44,9 @@ public sealed unsafe partial class RenderEntityCore
     //
     private void Allocate(int capacity)
     {
-        if(_meta != null || Capacity != 0) Throwers.InvalidOperation("Already allocated");
+        if(_headers != null || Capacity != 0) Throwers.InvalidOperation("Already allocated");
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 32);
-        _meta = (EntityStatus*)NativeArray.AllocatePointer<byte>(capacity);
+        _headers = (EntityHeader*)NativeArray.AllocatePointer<byte>(capacity);
         _sources = NativeArray.AllocatePointer<RenderSource>(capacity);
         _policies = NativeArray.AllocatePointer<DrawPolicy>(capacity);
         _bounds = NativeArray.AllocatePointer<BoundingBox>(capacity);
@@ -58,7 +58,7 @@ public sealed unsafe partial class RenderEntityCore
 
     private void ClearEntityHeader(RenderEntityId e)
     {
-        _meta[e.Index()] = default;
+        _headers[e.Index()] = default;
         _sources[e.Index()]= default;
         _policies[e.Index()] = default;
     }
@@ -78,7 +78,7 @@ public sealed unsafe partial class RenderEntityCore
         var newSize = CapacityUtils.CapacityGrowthToFit(Capacity, required);
         Logger.Log(LogScope.Ecs, "RenderEcs resized", LogLevel.Warn);
 
-        _meta = NativeArray.Resize(_meta, Capacity, newSize, 0, true);
+        _headers = NativeArray.Resize(_headers, Capacity, newSize, 0, true);
         _sources = NativeArray.Resize(_sources, Capacity, newSize, 0, true);
         _policies = NativeArray.Resize(_policies, Capacity, newSize, 0, true);
 
@@ -93,13 +93,13 @@ public sealed unsafe partial class RenderEntityCore
 
     public void Dispose()
     {
-        NativeArray.DisposeArray(_meta, 0);
+        NativeArray.DisposeArray(_headers, 0);
         NativeArray.DisposeArray(_sources, 0);
         NativeArray.DisposeArray(_policies, 0);
         NativeArray.DisposeArray(_bounds, 0);
         NativeArray.DisposeArray(_models, 0);
         NativeArray.DisposeArray(_normals, 0);
-        _meta = null;
+        _headers = null;
         _sources = null;
         _policies = null;
         _bounds = null;

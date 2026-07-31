@@ -52,9 +52,25 @@ internal sealed class DrawCommandProcessor
             BindAnimation(entity);
 
         _gfxBuffers.BindUniformBufferRange<DrawObjectUniform>(submitIdx, 1);
-
         _gfxCmd.DrawMesh(source.Mesh);
     }
+
+    public unsafe void DrawResolved(RenderSource source, RenderEntityId entity, int submitIdx)
+    {
+        var component = RenderEcs.Store<SelectionComponent>().Get(entity);
+        var data = new EditorEffectsUniform(source.Kind == EntitySourceKind.AnimatedModel, component.HighlightColor);
+        _gfxBuffers.UploadSingleUniform(&data, 0);
+        
+        ApplyMaterial(source.Material, RenderRegistry.HighlightShader);
+
+        if (source.Kind == EntitySourceKind.AnimatedModel)
+            BindAnimation(entity);
+
+        _gfxBuffers.BindUniformBufferRange<DrawObjectUniform>(submitIdx, 1);
+        _gfxCmd.DrawMesh(source.Mesh);
+    }
+
+    public void BindDrawTransform(int submitIdx) => _gfxBuffers.BindUniformBufferRange<DrawObjectUniform>(submitIdx, 1);
 
     public void BindAnimation(RenderEntityId entity)
     {
@@ -81,7 +97,7 @@ internal sealed class DrawCommandProcessor
         return textureBindings;
     }
 
-    private void ApplyMaterial(Id16<Material> materialId)
+    private void ApplyMaterial(Id16<Material> materialId, ShaderId shader = default)
     {
         if (_lastMaterialId == materialId) return;
         _lastMaterialId = materialId;
@@ -101,7 +117,7 @@ internal sealed class DrawCommandProcessor
             return;
         }
 
-        _gfxCmd.UseShader(materialMeta.ShaderId);
+        _gfxCmd.UseShader(shader == 0 ? materialMeta.ShaderId : shader);
         BindTextureSlots(textureBindings, materialMeta.ShadowMapBinding);
     }
 
@@ -121,20 +137,6 @@ internal sealed class DrawCommandProcessor
             else if (value.SlotKind == TextureUsage.Mask) _gfxCmd.BindTexture(value.Texture, 1);
         }
     }
-    
-    private NativeView<TextureBinding> BindResolveMaterial(Id16<Material> materialId, out MaterialMeta materialMeta)
-    {
-        if (_lastMaterialId != materialId)
-        {
-            _lastMaterialId = materialId;
-            _gfxBuffers.BindUniformBufferRange<MaterialUniform>(materialId.Index(), 1);
-            return _materialSystem.GetMetaAndSlots(materialId, out materialMeta);
-        }
-
-        materialMeta = default;
-        return NativeView<TextureBinding>.MakeNull();
-    }
-    
     
     
 /*

@@ -79,16 +79,14 @@ internal sealed class DrawCommandPipeline : IDisposable
         DrawCmd.PrepareDrawPass();
         
         avg.BeginSample();
-        
-        var passRange = _passRanges[passId];
-        var ticket = _drawTickets + passRange.Offset;
-        var end = ticket + passRange.Length;
-        while (ticket < end)
+
+        var view = _drawTickets.Slice(_passRanges[passId]);
+        foreach ( var ticket in view)
         {
-            var index = *ticket;
-            var entity = entities[index];
-            DrawCmd.DrawSource(RenderEcs.Core.GetSource(entity), entity, index);
-            ++ticket;
+            var entity = entities[ticket];
+            ref readonly var source = ref RenderEcs.Core.GetSource(entity);
+            if(!source.SkipDraw) 
+                DrawCmd.DrawSource(source, entity, ticket);
         }
 
         if(avg.EndSample() > 144 * 4) avg.ResetAndPrint();

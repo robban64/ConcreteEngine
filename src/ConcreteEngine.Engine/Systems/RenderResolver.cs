@@ -13,6 +13,8 @@ internal sealed class RenderEcsSystem : IDisposable
 {
     public int VisibleCount { get; private set; }
 
+    public static RenderEcsSystem Instance { get; private set; } = null!;
+
     private readonly CameraFrustum _frustum;
 
     private NativeArray<RenderEntityId> _visibleEntities;
@@ -26,6 +28,7 @@ internal sealed class RenderEcsSystem : IDisposable
         _visibleEntities = NativeArray.Allocate<RenderEntityId>(RenderEcs.Core.Capacity);
         _drawIndices = NativeArray.Allocate<DrawCommandIndex>(RenderEcs.Core.Capacity);
         _transforms = NativeArray.Allocate<DrawObjectUniform>(RenderEcs.Core.Capacity);
+        Instance = this;
     }
 
     public NativeView<RenderEntityId> VisibleEntities => _visibleEntities.Slice(0, VisibleCount);
@@ -66,10 +69,11 @@ internal sealed class RenderEcsSystem : IDisposable
         var visibleCount = 0;
         foreach (var query in RenderEcs.Core.CullQuery())
         {
-            var visible = query.Status == EntityStatus.AlwaysVisible ||
-                          _frustum.IntersectsBox(in query.Item);
-
+            var visible = query.Item1.Status == EntityStatus.AlwaysVisible ||
+                          _frustum.IntersectsBox(in query.Item2);
+            
             if (visible) visibleEntities[visibleCount++] = query.Entity;
+            query.Item1.Visible = visible;
         }
 
         return VisibleCount = visibleCount;

@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine.ECS;
 
 namespace ConcreteEngine.Core.Engine.RenderEntity;
 
@@ -10,6 +11,9 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Enumerator GetEnumerator() => new(this);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public VisibilityQueryEnumerator VisibilityQuery() => new(_entities, _components, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SparseQueryEnumerator SparseQuery(NativeView<RenderEntityId> entities) => new(entities);
@@ -54,6 +58,41 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Enumerator GetEnumerator() => this;
     }
+    
+    public ref struct VisibilityQueryEnumerator
+    {
+        private RenderEntityId* _entity;
+        private T* _component;
+        private readonly RenderEntityId* _end;
+
+        public VisibilityQueryEnumerator(RenderEntityId* entities, T* component, int length)
+        {
+            _entity = entities - 1;
+            _component = component - 1;
+            _end = entities + length;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext()
+        {
+            while (++_entity < _end)
+            {
+                ++_component;
+                if(RenderEcs.Core.IsVisible(*_entity)) return true;
+            }
+
+            return false;
+        }
+
+        public readonly RenderQueryItem Current
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(*_entity, ref *_component);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly VisibilityQueryEnumerator GetEnumerator() => this;
+    }
 
 
     public ref struct SparseQueryEnumerator
@@ -94,6 +133,8 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly SparseQueryEnumerator GetEnumerator() => this;
     }
+
+
 
 
     public ref struct JoinQueryEnumerator

@@ -65,12 +65,18 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
         if (isSelected)
         {
             foreach (var entity in GetRenderEntities())
+            {
                 RenderEcs.Store<SelectionComponent>().Add(entity, SelectionComponent.DefaultHighlight);
+                RenderEcs.Core.GetSource(entity).SkipDraw = true;
+            }
         }
         else
         {
             foreach (var entity in GetRenderEntities())
+            {
                 RenderEcs.Store<SelectionComponent>().Remove(entity);
+                RenderEcs.Core.GetSource(entity).SkipDraw = false;
+            }
         }
         
         RenderEcs.Store<SelectionComponent>().Commit();

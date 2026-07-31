@@ -1,9 +1,11 @@
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Engine.Render.Passes;
+using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render;
@@ -62,12 +64,14 @@ internal static class PassPipeline3D
 
         // Pass 2: draw scene effects
         passPipeline.RegisterContinue<SceneTarget>(FboVariant.V0, new PassId(2), PassOp.Continue,
-            RenderPassState.MakeSceneEffect()).OnPassBegin(static (ctx, state) =>
+            RenderPassState.MakeSceneEffect()).OnPassBegin(PassSceneTargetContinue);
+            
+            /*.OnPassBegin(static (ctx, state) =>
         {
             //ctx.ContinueFromRenderPass(ctx.FboId, state.PassState.StateFlags);
             ctx.MutateStatePass<SceneTarget>(FboVariant.V1, PassMutationState.MutateTarget(ctx.FboId));
             return new PassAction(PassOp.Continue);
-        });
+        });*/
 
         // Pass 3: resolve to scene FBO to post FBO
         passPipeline.Register<SceneTarget>(FboVariant.V1, new PassId(3), PassOp.Resolve,
@@ -132,27 +136,13 @@ internal static class PassPipeline3D
 
                 return PassAction.ResolveTargetResult();
             });
-
-        /*
-        passPipeline.Register<ScreenPassTag>(FboVariant.Default, new PassId(6), PassOpKind.Screen,
-                   RenderPassState.MakeScreen(defaults.PresentShader))
-               .OnPassBegin(static (ctx, state) =>
-               {
-                   var sources = ctx.GetPassSources();
-
-                   ctx.BeginScreenPass(state.ClearColor, state.PassState);
-                   ctx.DrawFullscreenQuad(state.ShaderId, sources);
-                   return PassAction.ScreenPassResult();
-               });
-    */
     }
 
     private static unsafe PassAction PassSceneTargetContinue(RenderPassContext ctx, RenderPassState state)
     {
         ctx.ContinueFromRenderPass(ctx.FboId, state.PassState.StateFlags);
         ctx.MutateStatePass<SceneTarget>(FboVariant.V1, PassMutationState.MutateTarget(ctx.FboId));
-        return new PassAction(PassOp.Continue);
-        /*
+        
         ctx.Cmd.UseShader(RenderRegistry.HighlightShader);
         foreach (var query in RenderEcs.Store<SelectionComponent>().VisibilityQuery())
         {
@@ -170,11 +160,15 @@ internal static class PassPipeline3D
                 if (slot.SlotKind == TextureUsage.Albedo) ctx.Cmd.BindTexture(slot.Texture, 0);
                 else if (slot.SlotKind == TextureUsage.Mask) ctx.Cmd.BindTexture(slot.Texture, 1);
             }
-
-            //ctx.Cmd.DrawMesh(source.Mesh, source.InstanceCount);
+            
+            var drawSlot = SearchMethod.BinarySearch(RenderEcsSystem.Instance.VisibleEntities.AsReadOnlySpan(), query.Entity);
+            if(drawSlot < 0) continue;
+            
+            ctx.DrawCmd.BindDrawTransform(drawSlot);
+            ctx.Cmd.DrawMesh(source.Mesh);
         }
 
         return new PassAction(PassOp.Continue);
-        */
+        
     }
 }

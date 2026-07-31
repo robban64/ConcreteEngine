@@ -12,10 +12,10 @@ public sealed unsafe partial class RenderEntityCore
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public QueryEnumerator<BoundingBox> CullQuery(EntityStatus skipFlag = EntityStatus.ForceHidden) =>
-        new(_meta, _bounds, Count, skipFlag);
+        new(_headers, _bounds, Count, skipFlag);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public VisibleCoreEnumerator VisibilityQuery() => new(this, _meta, Count);
+    public VisibleCoreEnumerator VisibilityQuery() => new(this, _headers, Count);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -44,12 +44,12 @@ public sealed unsafe partial class RenderEntityCore
     public ref struct QueryEnumerator<T> where T : unmanaged
     {
         private T* _p1;
-        private EntityStatus* _current;
-        private readonly EntityStatus* _end;
+        private EntityHeader* _current;
+        private readonly EntityHeader* _end;
         private int _entity;
         private readonly EntityStatus _skipStatus;
 
-        public QueryEnumerator(EntityStatus* current, T* p1, int length, EntityStatus skipStatus)
+        public QueryEnumerator(EntityHeader* current, T* p1, int length, EntityStatus skipStatus)
         {
             _skipStatus = skipStatus;
             _entity = 0;
@@ -65,13 +65,13 @@ public sealed unsafe partial class RenderEntityCore
             {
                 ++_p1;
                 ++_entity;
-                if (*_current != 0 && *_current != _skipStatus) return true;
+                if (_current->Status != 0 && _current->Status != _skipStatus) return true;
             }
 
             return false;
         }
 
-        public readonly QueryItem Current
+        public readonly QueryItem<EntityHeader, T> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => new(new RenderEntityId(_entity), ref *_current, ref *_p1);
@@ -80,12 +80,6 @@ public sealed unsafe partial class RenderEntityCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly QueryEnumerator<T> GetEnumerator() => this;
 
-        public readonly ref struct QueryItem(RenderEntityId entity, ref EntityStatus status, ref T p1)
-        {
-            public readonly RenderEntityId Entity = entity;
-            public readonly ref EntityStatus Status = ref status;
-            public readonly ref T Item = ref p1;
-        }
     }
 
     public ref struct SparseQueryEnumerator<T> where T : unmanaged
@@ -142,16 +136,16 @@ public sealed unsafe partial class RenderEntityCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly SparseQueryEnumerator<T1, T2> GetEnumerator() => this;
     }
-
+    
     //
     public ref struct VisibleCoreEnumerator
     {
-        private EntityStatus* _current;
-        private readonly EntityStatus* _end;
+        private EntityHeader* _current;
+        private readonly EntityHeader* _end;
         private int _entityId;
         private readonly RenderEntityCore _core;
 
-        public VisibleCoreEnumerator(RenderEntityCore core, EntityStatus* entities, int count)
+        public VisibleCoreEnumerator(RenderEntityCore core, EntityHeader* entities, int count)
         {
             _current = entities - 1;
             _entityId = 0;
@@ -165,7 +159,7 @@ public sealed unsafe partial class RenderEntityCore
             ++_entityId;
             while (++_current < _end)
             {
-                if (*_current >= EntityStatus.Normal) return true;
+                if (_current->Status >= EntityStatus.Normal) return true;
             }
 
             return false;
@@ -180,10 +174,10 @@ public sealed unsafe partial class RenderEntityCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly VisibleCoreEnumerator GetEnumerator() => this;
 
-        public readonly ref struct Item(RenderEntityId entity, ref EntityStatus meta, RenderEntityCore core)
+        public readonly ref struct Item(RenderEntityId entity, ref EntityHeader meta, RenderEntityCore core)
         {
             public readonly RenderEntityId Entity = entity;
-            public readonly ref EntityStatus Status = ref meta;
+            public readonly ref EntityHeader Status = ref meta;
 
             public ref RenderSource Source
             {

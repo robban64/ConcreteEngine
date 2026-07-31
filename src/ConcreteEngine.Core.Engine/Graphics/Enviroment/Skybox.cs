@@ -39,7 +39,7 @@ public sealed class Skybox
             RenderEcs.Core.GetSource(_entity).Material = material.MaterialId;
         }
         
-        RenderEcs.Core.GetMeta(_entity) = EntityStatus.AlwaysVisible;
+        RenderEcs.Core.GetMeta(_entity).Status = EntityStatus.AlwaysVisible;
 
     }
 }

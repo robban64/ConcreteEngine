@@ -8,6 +8,12 @@ public enum EntitySourceKind : byte
     Particle
 }
 
+public enum EntityDrawResolve : byte
+{
+    Normal,
+    SelectionEffect,
+}
+
 public enum EntityStatus : byte
 {
     Unset = 0,

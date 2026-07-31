@@ -6,12 +6,13 @@ namespace ConcreteEngine.Graphics.Diagnostic;
 
 public static class GfxMetrics
 {
-    public static GpuFrameMeta FrameMeta;
+    public static GpuBufferMeta FrameBufferMeta;
+    public static RenderFrameMeta FrameMeta;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void AddDrawCall(uint tris, uint instances)
     {
-        ref var it = ref FrameMeta.Frame;
+        ref var it = ref FrameMeta;
         it.Draws++;
         it.Tris += tris;
         it.Instances += instances;

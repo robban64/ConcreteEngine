@@ -28,8 +28,6 @@ internal sealed class UtilityCommandHandler() : ConsoleCommandHandler("utility")
     {
         LogService.PushMessage(StructStr<RenderSource>());
         LogService.PushMessage(StructStr<SkinningLink>());
-
-        LogService.PushMessage(StructStr<GpuFrameMeta>());
         LogService.PushMessage(StructStr<GpuBufferMeta>());
         LogService.PushMessage(StructStr<FrameMetric>());
         return;

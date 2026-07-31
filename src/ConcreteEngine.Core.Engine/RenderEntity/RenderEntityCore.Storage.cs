@@ -40,6 +40,8 @@ public sealed unsafe partial class RenderEntityCore
     public ref Matrix3X4 GetNormalMatrix(RenderEntityId e) => ref _normals[e.Index()];
 
     //
+
+    public NativeView<RenderSource> GetSourceView() => new(_sources, 0, Count);
     
     //
     private void Allocate(int capacity)
@@ -87,6 +89,7 @@ public sealed unsafe partial class RenderEntityCore
         _normals = NativeArray.Resize(_normals, Capacity, newSize, 0, false);
 
         Capacity = newSize;
+        RenderEcs.OnResize(newSize);
         foreach (var callback in _resizeCallbacks) callback(newSize);
     }
 

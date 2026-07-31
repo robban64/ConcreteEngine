@@ -24,28 +24,48 @@ internal sealed class DrawCommandPipeline : IDisposable
     private readonly AnimationSystem _animationSystem;
     private readonly MaterialSystem _materialSystem;
 
-    public DrawCommandPipeline(GfxContext gfx, AnimationSystem animationSystem, MaterialSystem materialSystem) {
+    public DrawCommandPipeline(GfxContext gfx, AnimationSystem animationSystem, MaterialSystem materialSystem)
+    {
         _animationSystem = animationSystem;
         _materialSystem = materialSystem;
         _gfxBuffers = gfx.Buffers;
         DrawCmd = new DrawCommandProcessor(gfx, animationSystem, materialSystem);
-        
+
         _drawTickets = NativeArray.Allocate<int>(DefaultTicketCapacity);
         _passRanges = new Range32[RenderLimits.PassSlots];
     }
-    
-    public void ResetFrame()
+
+    public void ResetFrame() => DrawCmd.ResetFrame();
+
+    public void StageCommands(RenderResolver resolver)
     {
-        DrawCmd.ResetFrame();
+        ReadyDrawCommands(resolver.DrawIndices);
+        UploadBuffers(resolver.Transforms);
     }
 
-    public void StageCommands(RenderEcsSystem ecsSystem)
+    public Range32 PrepareDrawPass(PassId passId)
     {
-        // Sort command buffer and prepare passes
-        ReadyDrawCommands(ecsSystem.DrawIndices);
+        DrawCmd.PrepareDrawPass();
+        return _passRanges[passId];
+    }
 
+    public unsafe void ExecuteDrawPass(Range32 passRange)
+    {
+        var entities = RenderEcs.Frame.VisibleEntities.Ptr;
+        var sources = RenderEcs.Core.GetSourceView().Ptr;
+        foreach (var ticket in _drawTickets.Slice(passRange))
+        {
+            var entity = entities[ticket];
+            var source = sources[entity.Index()];
+            if ((source.DrawFlags & DrawEntityFlags.Skip) != 0) continue;
+            DrawCmd.DrawSource(source, entity, ticket);
+        }
+    }
+
+    private void UploadBuffers(NativeView<DrawObjectUniform> transforms)
+    {
         // Ensure ubo size
-        var drawCount = IntMath.AlignUp(ecsSystem.VisibleCount, 64);
+        var drawCount = IntMath.AlignUp(RenderEcs.VisibleCount, 64);
         var materialCount = IntMath.AlignUp(_materialSystem.Count, 16);
         var boneCount = IntMath.AlignUp(_animationSystem.BoneCount, 64);
 
@@ -54,14 +74,13 @@ internal sealed class DrawCommandPipeline : IDisposable
 
         if (!GfxRegistry.GetMeta(MaterialUniform.UboId).HasCapacity(materialCount))
             _gfxBuffers.SetUniformBufferCount(MaterialUniform.UboId, materialCount);
-        
+
         if (!GfxRegistry.GetMeta(DrawAnimationUniform.UboId).HasCapacity(boneCount))
             _gfxBuffers.SetUniformBufferCount(DrawAnimationUniform.UboId, boneCount);
-        
+
         // Upload
         VisualSystem.Instance.Upload();
 
-        var transforms = ecsSystem.Transforms;
         if (transforms.Length > 0) _gfxBuffers.UploadUniform(transforms, 0);
 
         var materials = _materialSystem.GetBufferView();
@@ -69,30 +88,8 @@ internal sealed class DrawCommandPipeline : IDisposable
 
         var boneData = _animationSystem.GetBufferView();
         if (boneData.Length > 0) _gfxBuffers.UploadUniform(boneData, 0);
-
     }
 
-    private AvgFrameTimer avg;
-
-    public unsafe void ExecuteDrawPass(PassId passId, NativeView<RenderEntityId> entities)
-    {
-        DrawCmd.PrepareDrawPass();
-        
-        avg.BeginSample();
-
-        var view = _drawTickets.Slice(_passRanges[passId]);
-        foreach ( var ticket in view)
-        {
-            var entity = entities[ticket];
-            ref readonly var source = ref RenderEcs.Core.GetSource(entity);
-            if(!source.SkipDraw) 
-                DrawCmd.DrawSource(source, entity, ticket);
-        }
-
-        if(avg.EndSample() > 144 * 4) avg.ResetAndPrint();
-
-    }
-    
     private unsafe void ReadyDrawCommands(NativeView<DrawCommandIndex> indices)
     {
         if (indices.Length <= 1) return;
@@ -159,7 +156,7 @@ internal sealed class DrawCommandPipeline : IDisposable
     {
         // fill tickets in sorted order
         var drawTickets = _drawTickets;
-        
+
         var drawIndex = indices.Ptr;
         var drawIndexEnd = drawIndex + indices.Length;
         while (drawIndex < drawIndexEnd)

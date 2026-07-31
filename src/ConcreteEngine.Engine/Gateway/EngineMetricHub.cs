@@ -65,7 +65,7 @@ internal sealed class EngineMetricHub
             RenderEcs.ActiveCount
         );
 
-        _metricSystem.PushMeta(in frameMeta, in sceneMeta, in GfxMetrics.FrameMeta);
+        _metricSystem.PushMeta(in frameMeta, in sceneMeta);
         _metricSystem.TickDiagnostic();
     }
 

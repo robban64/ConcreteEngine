@@ -40,7 +40,7 @@ internal sealed class AnimationManager
 
 
         animation.AddEntity(entity);
-        RenderEcs.Core.GetSource(entity).Kind = EntitySourceKind.AnimatedModel;
+        RenderEcs.Core.ToggleDrawFlag(entity, DrawEntityFlags.Skinned, true);
         RenderEcs.Store<SkinningLink>().Add(entity, new SkinningLink(animation.Id));
     }
 

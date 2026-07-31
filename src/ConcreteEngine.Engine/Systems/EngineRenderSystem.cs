@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
@@ -13,7 +14,7 @@ namespace ConcreteEngine.Engine.Systems;
 
 public sealed class EngineRenderSystem : IDisposable
 {
-    private readonly RenderEcsSystem _renderEcsSystem;
+    private readonly RenderResolver _resolver;
 
     private readonly MaterialSystem _materialSystem;
     private readonly TerrainSystem _terrainSystem;
@@ -39,13 +40,11 @@ public sealed class EngineRenderSystem : IDisposable
         _drawPipeline = new DrawCommandPipeline(graphics.Gfx, _animationSystem, _materialSystem);
         _passPipeline = new RenderPassPipeline(graphics.Gfx, _drawPipeline.DrawCmd,_registry);
 
-        _renderEcsSystem = new RenderEcsSystem(CameraManager.Instance.Frustum);
+        _resolver = new RenderResolver(CameraManager.Instance.Frustum);
         
         VisualSystem.Create(graphics.Gfx.Buffers);
 
     }
-
-    public int VisibleCount => _renderEcsSystem.VisibleCount;
 
     internal void Init()
     {
@@ -54,7 +53,7 @@ public sealed class EngineRenderSystem : IDisposable
         PassPipeline3D.RegisterPassPipeline(_passPipeline);
         
         VisualSystem.Instance.UploadPointLight();
-        _renderEcsSystem.Setup();
+        _resolver.Setup();
     }
 
     internal void AfterUpdate()
@@ -87,10 +86,10 @@ public sealed class EngineRenderSystem : IDisposable
     internal void OnSimulate(float dt)
     {
         _animationSystem.Simulate(dt);
-        _particleSystem.Simulate(_renderEcsSystem.VisibleEntities,dt);
+        _particleSystem.Simulate(dt);
     }
 
-    public void Render(float alpha)
+    public void PrepareRenderer(float alpha)
     {
         _animationSystem.ResetFrame();
         _passPipeline.ResetFrame();
@@ -100,18 +99,17 @@ public sealed class EngineRenderSystem : IDisposable
         CameraManager.Instance.CommitFrame(alpha);
 
         // process and upload draw commands
-        _renderEcsSystem.Execute();
+        _resolver.Execute();
         
         _particleSystem.Execute();
         _animationSystem.Execute(alpha);
 
         // prepare buffers
-        _drawPipeline.StageCommands(_renderEcsSystem);
-
-        Execute();
+        _drawPipeline.StageCommands(_resolver);
     }
-    
-    public void Execute()
+
+    private AvgFrameTimer avg;
+    public void ExecuteRenderPipeline()
     {
         while (_passPipeline.NextPass(out var nextPassId, out var passAction))
         {
@@ -119,17 +117,23 @@ public sealed class EngineRenderSystem : IDisposable
             
             var passResult = _passPipeline.ApplyPass();
 
-            if(passResult.Op is PassOp.Draw)
-                _drawPipeline.ExecuteDrawPass(nextPassId, _renderEcsSystem.VisibleEntities);
+            if (passResult.Op is PassOp.Draw)
+            {
+                avg.BeginSample();
+                var passRange = _drawPipeline.PrepareDrawPass(nextPassId);
+                _drawPipeline.ExecuteDrawPass(passRange);
+                if (avg.EndSample() > 144 * 4) avg.ResetAndPrint();
+            }
 
             _passPipeline.ApplyAfterPass();
         }
+
     }
 
 
     public void Dispose()
     {
-        _renderEcsSystem.Dispose();
+        _resolver.Dispose();
         _particleSystem.Dispose();
         _animationSystem.Dispose();
         _materialSystem.Dispose();

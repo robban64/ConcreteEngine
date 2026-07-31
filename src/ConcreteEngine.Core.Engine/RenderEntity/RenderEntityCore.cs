@@ -48,6 +48,15 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
         if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
         _headers[entity.Index()].Status = status;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ToggleDrawFlag(RenderEntityId entity, DrawEntityFlags flag, bool enabled)
+    {
+        if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
+        if (enabled) GetSource(entity).DrawFlags |= flag;
+        else GetSource(entity).DrawFlags &= ~flag;
+    }
+
 
     public RenderEntityId AddEntity(RenderSource source, DrawPolicy policy)
     {
@@ -88,9 +97,9 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
     [StackTraceHidden]
     private static void ValidateSource(RenderSource source)
     {
-        if (source.Kind == EntitySourceKind.Particle) return;
+        return;
+        //if (source.Kind == EntitySourceKind.Particle) return;
         ArgumentOutOfRangeException.ThrowIfZero(source.Mesh.Id, nameof(source.Mesh));
         ArgumentOutOfRangeException.ThrowIfZero(source.Material.Value, nameof(source.Material));
-        ArgumentOutOfRangeException.ThrowIfEqual((int)source.Kind, (int)EntitySourceKind.Unknown, nameof(source.Kind));
     }
 }

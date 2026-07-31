@@ -60,12 +60,12 @@ internal sealed class ParticleSystem : IDisposable
         _particleMesh.Dispose();
     }
 
-    internal void Simulate(NativeView<RenderEntityId> entities, float simDt)
+    internal void Simulate(float simDt)
     {
         if (_particleManager.EmitterCount == 0) return;
 
         _processedEmitters.Clear();
-        foreach (var it in RenderEcs.Store<EmitterLink>().SparseQuery(entities))
+        foreach (var it in RenderEcs.Store<EmitterLink>().SparseQuery(RenderEcs.Frame.VisibleEntities))
         {
             if (_processedEmitters.Contains(it.Component.EmitterId)) continue;
             var emitter = _particleManager.Get(it.Component.EmitterId);

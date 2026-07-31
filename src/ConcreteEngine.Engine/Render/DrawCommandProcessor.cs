@@ -44,35 +44,28 @@ internal sealed class DrawCommandProcessor
         _gfxCmd.UnbindAllTextures();
     }
 
-    public void DrawSource(RenderSource source, RenderEntityId entity, int submitIdx)
+    public void DrawSource(RenderSource source, RenderEntityId entity, int submitIndex)
     {
-        ApplyMaterial(source.Material);
+        BindMaterial(source.Material);
+        if ((source.DrawFlags & DrawEntityFlags.Skinned) != 0)
+            BindSkinningSlot(entity);
 
-        if (source.Kind == EntitySourceKind.AnimatedModel)
-            BindAnimation(entity);
-
-        _gfxBuffers.BindUniformBufferRange<DrawObjectUniform>(submitIdx, 1);
-        _gfxCmd.DrawMesh(source.Mesh);
-    }
-
-    public unsafe void DrawResolved(RenderSource source, RenderEntityId entity, int submitIdx)
-    {
-        var component = RenderEcs.Store<SelectionComponent>().Get(entity);
-        var data = new EditorEffectsUniform(source.Kind == EntitySourceKind.AnimatedModel, component.HighlightColor);
-        _gfxBuffers.UploadSingleUniform(&data, 0);
+        _gfxBuffers.BindUniformBufferRange<DrawObjectUniform>(submitIndex, 1);
         
-        ApplyMaterial(source.Material, RenderRegistry.HighlightShader);
-
-        if (source.Kind == EntitySourceKind.AnimatedModel)
-            BindAnimation(entity);
-
-        _gfxBuffers.BindUniformBufferRange<DrawObjectUniform>(submitIdx, 1);
-        _gfxCmd.DrawMesh(source.Mesh);
+        if((source.DrawFlags & DrawEntityFlags.Instanced) == 0)
+        {
+            _gfxCmd.DrawMesh(source.Mesh);
+        }
+        else
+        {
+            var instances = RenderEcs.Store<DrawInstancedComponent>().Get(entity).Instances;
+            _gfxCmd.DrawMeshInstanced(source.Mesh, instances);
+        }
     }
 
     public void BindDrawTransform(int submitIdx) => _gfxBuffers.BindUniformBufferRange<DrawObjectUniform>(submitIdx, 1);
 
-    public void BindAnimation(RenderEntityId entity)
+    public void BindSkinningSlot(RenderEntityId entity)
     {
         var slot = RenderEcs.Store<SkinningLink>().Get(entity).AnimationSlot;
         if (slot != _lastAnimationSlot)
@@ -96,8 +89,8 @@ internal sealed class DrawCommandProcessor
 
         return textureBindings;
     }
-
-    private void ApplyMaterial(Id16<Material> materialId, ShaderId shader = default)
+   
+    private void BindMaterial(Id16<Material> materialId)
     {
         if (_lastMaterialId == materialId) return;
         _lastMaterialId = materialId;
@@ -105,23 +98,41 @@ internal sealed class DrawCommandProcessor
         _gfxBuffers.BindUniformBufferRange<MaterialUniform>(materialId.Index(), 1);
         var textureBindings = _materialSystem.GetMetaAndSlots(materialId, out var materialMeta);
 
-        if (!materialMeta.DrawState.IsEmpty())
+        _gfxCmd.ApplyState(materialMeta.DrawState);
+        _gfxCmd.ApplyStateFunctions(materialMeta.DrawFunctions);
+        
+        if (RenderContext.PassMode == PassStateMode.Main)
         {
-            _gfxCmd.ApplyState(materialMeta.DrawState);
-            _gfxCmd.ApplyStateFunctions(materialMeta.DrawFunctions);
+            _gfxCmd.UseShader(materialMeta.ShaderId);
+            BindTextureSlots(textureBindings, materialMeta.ShadowMapBinding);
         }
-
-        if (RenderContext.PassMode == PassStateMode.Depth)
+        else
         {
             BindDepthTextureSlots(textureBindings);
-            return;
         }
 
-        _gfxCmd.UseShader(shader == 0 ? materialMeta.ShaderId : shader);
-        BindTextureSlots(textureBindings, materialMeta.ShadowMapBinding);
     }
 
-    private void BindTextureSlots(NativeView<TextureBinding> slots, sbyte shadowMapBinding)
+    public void BindTextureSlots(NativeView<TextureBinding> slots, sbyte shadowMapBinding)
+    {
+        if (RenderContext.PassMode == PassStateMode.Main)
+        {
+            if (shadowMapBinding >= 0)
+                _gfxCmd.BindTexture(RenderContext.DepthTexture, shadowMapBinding);
+
+            foreach (var value in slots) _gfxCmd.BindTexture(value.Texture, value.Slot);
+        }
+        else
+        {
+            foreach (var value in slots)
+            {
+                if (value.SlotKind == TextureUsage.Albedo) _gfxCmd.BindTexture(value.Texture, 0);
+                else if (value.SlotKind == TextureUsage.Mask) _gfxCmd.BindTexture(value.Texture, 1);
+            }
+        }
+    }
+
+    private void BindTextureSlots2(NativeView<TextureBinding> slots, sbyte shadowMapBinding)
     {
         if (shadowMapBinding >= 0)
             _gfxCmd.BindTexture(RenderContext.DepthTexture, shadowMapBinding);

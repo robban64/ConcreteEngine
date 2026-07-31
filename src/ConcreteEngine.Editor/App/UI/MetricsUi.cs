@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Metrics;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Utility;
 using Hexa.NET.ImGui;
 
@@ -75,24 +76,22 @@ internal static class MetricsUi
         var sw = ScratchBuffer.Writer();
 
         // Frame Info
-        ref readonly var frameMeta = ref Metrics.FrameMeta;
         ImGui.SeparatorText("Frame Info"u8);
-        MetricText(sw, "Frame:", frameMeta.FrameId);
+        MetricText(sw, "Frame:", Metrics.FrameMeta.FrameId);
 
         ImGui.TextUnformatted("FPS:"u8);
         ImGui.SameLine();
-        AppDraw.Text(sw.Append(frameMeta.Fps, "F2").AppendAscii(' ', '(')
-            .Append(frameMeta.Alpha, "F2").AppendAscii('m','s',')').End());
+        AppDraw.Text(sw.Append(Metrics.FrameMeta.Fps, "F2").AppendAscii(' ', '(')
+            .Append(Metrics.FrameMeta.Alpha, "F2").AppendAscii('m','s',')').End());
 
         // Render Frame 
-        ref readonly var gpu = ref Metrics.GpuFrameMeta;
         ImGui.SeparatorText("Render Info"u8);
-        MetricText(sw, "Draws:", gpu.Frame.Draws);
-        MetricText(sw, "Tris:", gpu.Frame.Tris);
+        MetricText(sw, "Draws:", GfxMetrics.FrameMeta.Draws);
+        MetricText(sw, "Tris:", GfxMetrics.FrameMeta.Tris);
         ImGui.Spacing();
-        MetricText(sw, "VBO Uploaded:", gpu.Buffer.MeshBufferBytes, space: 0);
-        MetricText(sw, "UBO Uploaded:", gpu.Buffer.UniformBufferBytes, space: 0);
-
+        MetricText(sw, "VBO Uploaded:", GfxMetrics.FrameBufferMeta.MeshBufferBytes, space: 0);
+        MetricText(sw, "UBO Uploaded:", GfxMetrics.FrameBufferMeta.UniformBufferBytes, space: 0);
+        
         // Frame Metric
         ref readonly var frameMetric = ref Metrics.Metric;
         ImGui.SeparatorText("Frame Metric"u8);
@@ -236,8 +235,6 @@ internal static class MetricsUi
             }
         }
     }
-
-
 
     private static void MetricText(
         NativeSpanWriter sw,

@@ -9,6 +9,7 @@ public static class RenderEcs
     private const int DefaultRenderCap = 1024;
 
     public static readonly RenderEntityCore Core = new(DefaultRenderCap);
+    public static readonly FrameEntityStore Frame = new(DefaultRenderCap);
     public static EntitySceneLink SceneLink { get; private set; } = null!;
 
     private static readonly List<IRenderEntityStore> All = new(8);
@@ -16,11 +17,18 @@ public static class RenderEcs
     public static int EntityCount => Core.Count;
     public static int ActiveCount => Core.ActiveCount;
     public static int StoreCount => All.Count;
-    
+    public static int VisibleCount => Frame.VisibleCount;
 
+    internal static void OnResize(int newSize)
+    {
+        Frame.Resize(newSize);
+        SceneLink.Resize(newSize);
+    }
+    
     internal static void Init()
     {
         if (SceneLink != null!) throw new InvalidOperationException("ECS already initialized");
+        Stores<DrawInstancedComponent>.CreateStore(32);
         Stores<SkinningLink>.CreateStore(16);
         Stores<EmitterLink>.CreateStore(16);
         Stores<SelectionComponent>.CreateStore(16);
@@ -31,6 +39,7 @@ public static class RenderEcs
     public static void Dispose()
     {
         foreach (var store in All) store.Dispose();
+        Frame.Dispose();
         Core.Dispose();
     }
 

@@ -6,6 +6,12 @@ public sealed class EntitySceneLink
 {
     private SceneObjectId[] _renderToSceneId;
 
+    internal void Resize(int newSize)
+    {
+        if(newSize <= _renderToSceneId.Length) return;
+        Array.Resize(ref _renderToSceneId, newSize);
+    }
+
     public EntitySceneLink(RenderEntityCore renderEcs)
     {
         _renderToSceneId = new SceneObjectId[renderEcs.Capacity];

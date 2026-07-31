@@ -2,6 +2,7 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Enviroment;
 using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
 
@@ -39,10 +40,11 @@ internal sealed class TerrainSystem
         {
             var chunk = MainTerrain.GetChunk(it.Slot);
 
-            var source = new RenderSource(it.TerrainMeshId, terrainMat, 0, EntitySourceKind.Model);
+            var source = new RenderSource(it.TerrainMeshId, terrainMat);
             var drawPolicy = new DrawPolicy(DrawQueue.Terrain, PassMask.Default);
             var entity = RenderEcs.Core.AddEntity(source, drawPolicy);
             RenderEcs.Core.GetWorldBounds(entity) = chunk.GetBounds();
+
         }
     }
 
@@ -53,11 +55,14 @@ internal sealed class TerrainSystem
         {
             var chunk = MainTerrain.GetChunk(it.Slot);
 
-            //(uint)it.FoliageCount
-            var source = new RenderSource(it.FoliageMeshId, mat, 0, EntitySourceKind.Model);
+            var source = new RenderSource(it.FoliageMeshId, mat, flags: DrawEntityFlags.Instanced);
             var drawPolicy = new DrawPolicy(DrawQueue.Transparent, PassMask.Default);
             var entity = RenderEcs.Core.AddEntity(source, drawPolicy);
             RenderEcs.Core.GetWorldBounds(entity) = chunk.GetBounds();
+            
+            var component = new DrawInstancedComponent {  Instances = (uint)it.FoliageCount};
+            RenderEcs.Store<DrawInstancedComponent>().Add(entity, component);
+
         }
     }
     private void Allocate()

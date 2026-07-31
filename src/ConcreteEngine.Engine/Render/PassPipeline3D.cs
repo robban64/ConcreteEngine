@@ -148,10 +148,9 @@ internal static class PassPipeline3D
         {
             var source = RenderEcs.Core.GetSource(query.Entity);
 
-            var isAnimated = source.Kind == EntitySourceKind.AnimatedModel;
-            if (isAnimated) ctx.DrawCmd.BindAnimation(query.Entity);
+            if (source.IsSkinned()) ctx.DrawCmd.BindSkinningSlot(query.Entity);
 
-            var data = new EditorEffectsUniform(isAnimated, query.Component.HighlightColor);
+            var data = new EditorEffectsUniform(source.IsSkinned(), query.Component.HighlightColor);
             ctx.Buffers.UploadSingleUniform(&data, 0);
 
             var textureBindings = ctx.DrawCmd.BindMaterialState(source.Material);
@@ -161,7 +160,7 @@ internal static class PassPipeline3D
                 else if (slot.SlotKind == TextureUsage.Mask) ctx.Cmd.BindTexture(slot.Texture, 1);
             }
             
-            var drawSlot = SearchMethod.BinarySearch(RenderEcsSystem.Instance.VisibleEntities.AsReadOnlySpan(), query.Entity);
+            var drawSlot = SearchMethod.BinarySearch(RenderEcs.Frame.VisibleSpan, query.Entity);
             if(drawSlot < 0) continue;
             
             ctx.DrawCmd.BindDrawTransform(drawSlot);

@@ -85,7 +85,7 @@ public sealed class GraphicsRuntime : IDisposable
         if (_disposer.PendingCount > 0) 
             _disposer.DrainDisposeQueue();
         
-        Gfx.Buffers.EndFrame(out GfxMetrics.FrameMeta.Buffer);
+        Gfx.Buffers.EndFrame(out GfxMetrics.FrameBufferMeta);
         Gfx.Commands.EndFrame();
     }
 

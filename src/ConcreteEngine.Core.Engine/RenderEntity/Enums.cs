@@ -2,17 +2,21 @@ namespace ConcreteEngine.Core.Engine.RenderEntity;
 
 public enum EntitySourceKind : byte
 {
-    Unknown,
-    Model,
-    AnimatedModel,
-    Particle
+    Model = 0,
+    AnimatedModel = 1,
+    Particle = 2,
+    Foliage = 3
 }
 
-public enum EntityDrawResolve : byte
+[Flags]
+public enum DrawEntityFlags : byte
 {
-    Normal,
-    SelectionEffect,
+    None = 0,
+    Skinned = 1 << 0,
+    Instanced = 1 << 1,
+    Skip = 1 << 2
 }
+
 
 public enum EntityStatus : byte
 {

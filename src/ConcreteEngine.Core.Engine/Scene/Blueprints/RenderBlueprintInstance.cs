@@ -67,7 +67,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
             foreach (var entity in GetRenderEntities())
             {
                 RenderEcs.Store<SelectionComponent>().Add(entity, SelectionComponent.DefaultHighlight);
-                RenderEcs.Core.GetSource(entity).SkipDraw = true;
+                RenderEcs.Core.ToggleDrawFlag(entity, DrawEntityFlags.Skip, true);
             }
         }
         else
@@ -75,7 +75,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
             foreach (var entity in GetRenderEntities())
             {
                 RenderEcs.Store<SelectionComponent>().Remove(entity);
-                RenderEcs.Core.GetSource(entity).SkipDraw = false;
+                RenderEcs.Core.ToggleDrawFlag(entity, DrawEntityFlags.Skip, false);
             }
         }
         

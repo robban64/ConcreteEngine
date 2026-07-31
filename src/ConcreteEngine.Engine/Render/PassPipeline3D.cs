@@ -1,6 +1,11 @@
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
@@ -64,14 +69,18 @@ internal static class PassPipeline3D
 
         // Pass 2: draw scene effects
         passPipeline.RegisterContinue<SceneTarget>(FboVariant.V0, new PassId(2), PassOp.Continue,
-            RenderPassState.MakeSceneEffect()).OnPassBegin(PassSceneTargetContinue);
-            
-            /*.OnPassBegin(static (ctx, state) =>
+            RenderPassState.MakeSceneEffect()).OnPassBegin(static (ctx, state) =>
         {
-            //ctx.ContinueFromRenderPass(ctx.FboId, state.PassState.StateFlags);
+            ctx.ContinueFromRenderPass(ctx.FboId, state.PassState.StateFlags);
             ctx.MutateStatePass<SceneTarget>(FboVariant.V1, PassMutationState.MutateTarget(ctx.FboId));
+
+            if (RenderEcs.Store<SelectionComponent>().Count > 0)
+                SelectionRenderer(ctx);
+
+            if (RenderEcs.Store<DebugBoundsComponent>().Count > 0)
+                DebugBoundsRenderer(ctx);
             return new PassAction(PassOp.Continue);
-        });*/
+        });
 
         // Pass 3: resolve to scene FBO to post FBO
         passPipeline.Register<SceneTarget>(FboVariant.V1, new PassId(3), PassOp.Resolve,
@@ -86,7 +95,7 @@ internal static class PassPipeline3D
                 ctx.SampleTo<PostFxTarget>(FboVariant.V0, TexSlot.Slot0(texId));
 
                 ctx.Cmd.EndRenderPass();
-                ctx.GenerateMips(texId);
+                ctx.Cmd.GenerateMipMaps(texId);
             });
 
         // Post A
@@ -138,36 +147,56 @@ internal static class PassPipeline3D
             });
     }
 
-    private static unsafe PassAction PassSceneTargetContinue(RenderPassContext ctx, RenderPassState state)
+    private static unsafe void SelectionRenderer(RenderPassContext ctx)
     {
-        ctx.ContinueFromRenderPass(ctx.FboId, state.PassState.StateFlags);
-        ctx.MutateStatePass<SceneTarget>(FboVariant.V1, PassMutationState.MutateTarget(ctx.FboId));
+        DrawObjectUniform* uniform = stackalloc DrawObjectUniform[1];
+        EditorEffectsUniform* effect = stackalloc EditorEffectsUniform[1];
         
         ctx.Cmd.UseShader(RenderRegistry.HighlightShader);
         foreach (var query in RenderEcs.Store<SelectionComponent>().VisibilityQuery())
         {
             var source = RenderEcs.Core.GetSource(query.Entity);
 
+            *effect = new EditorEffectsUniform(source.IsSkinned(), query.Component.HighlightColor);
+
+            uniform->Model = RenderEcs.Core.GetModelMatrix(query.Entity);
+            uniform->Normal = Matrix3X4.Identity;
+
+            ctx.Buffers.UploadSingleUniform(effect, 0);
+            ctx.Buffers.UploadSingleUniform(uniform, 0);
+            ctx.Buffers.BindUniformBufferRange<DrawObjectUniform>(0, 1);
+
             if (source.IsSkinned()) ctx.DrawCmd.BindSkinningSlot(query.Entity);
 
-            var data = new EditorEffectsUniform(source.IsSkinned(), query.Component.HighlightColor);
-            ctx.Buffers.UploadSingleUniform(&data, 0);
+            if (ctx.DrawCmd.TryApplyMaterialState(source.Material, out var textureBindings))
+                ctx.DrawCmd.BindDepthTextureSlots(textureBindings);
 
-            var textureBindings = ctx.DrawCmd.BindMaterialState(source.Material);
-            foreach (var slot in textureBindings)
-            {
-                if (slot.SlotKind == TextureUsage.Albedo) ctx.Cmd.BindTexture(slot.Texture, 0);
-                else if (slot.SlotKind == TextureUsage.Mask) ctx.Cmd.BindTexture(slot.Texture, 1);
-            }
-            
-            var drawSlot = SearchMethod.BinarySearch(RenderEcs.Frame.VisibleSpan, query.Entity);
-            if(drawSlot < 0) continue;
-            
-            ctx.DrawCmd.BindDrawTransform(drawSlot);
             ctx.Cmd.DrawMesh(source.Mesh);
         }
+    }
 
-        return new PassAction(PassOp.Continue);
-        
+    private static unsafe void DebugBoundsRenderer(RenderPassContext ctx)
+    {
+        DrawObjectUniform* uniform = stackalloc DrawObjectUniform[1];
+        EditorEffectsUniform* effect = stackalloc EditorEffectsUniform[1];
+
+        var materialId = AssetStore.Core.DebugBoundsMaterial.MaterialId;
+        ctx.Cmd.UseShader(RenderRegistry.BoundingBoxShader);
+        foreach (var query in RenderEcs.Store<DebugBoundsComponent>().VisibilityQuery())
+        {
+            var isSkinned = RenderEcs.Core.GetSource(query.Entity).IsSkinned();
+            *effect = new EditorEffectsUniform(isSkinned, query.Component.Color);
+
+            ref readonly var wb = ref RenderEcs.Core.GetWorldBounds(query.Entity);
+            MatrixMath.CreateModelMatrix(wb.Center, wb.Extent, Quaternion.Identity, out uniform->Model);
+            uniform->Normal = Matrix3X4.Identity;
+            
+            ctx.Buffers.UploadSingleUniform(effect, 0);
+            ctx.Buffers.UploadSingleUniform(uniform, 0);
+            ctx.Buffers.BindUniformBufferRange<DrawObjectUniform>(0, 1);
+
+            ctx.DrawCmd.TryApplyMaterialState(materialId, out _);
+            ctx.Cmd.DrawMesh(GfxMeshes.Cube);
+        }
     }
 }

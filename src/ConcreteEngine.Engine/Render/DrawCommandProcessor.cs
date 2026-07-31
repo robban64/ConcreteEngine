@@ -46,13 +46,14 @@ internal sealed class DrawCommandProcessor
 
     public void DrawSource(RenderSource source, RenderEntityId entity, int submitIndex)
     {
-        BindMaterial(source.Material);
-        if ((source.DrawFlags & DrawEntityFlags.Skinned) != 0)
-            BindSkinningSlot(entity);
-
         _gfxBuffers.BindUniformBufferRange<DrawObjectUniform>(submitIndex, 1);
+
+        BindMaterial(source.Material);
         
-        if((source.DrawFlags & DrawEntityFlags.Instanced) == 0)
+        if ((source.DrawFlags & EntityDrawFlags.Skinned) != 0)
+            BindSkinningSlot(entity);
+        
+        if((source.DrawFlags & EntityDrawFlags.Instanced) == 0)
         {
             _gfxCmd.DrawMesh(source.Mesh);
         }
@@ -62,8 +63,6 @@ internal sealed class DrawCommandProcessor
             _gfxCmd.DrawMeshInstanced(source.Mesh, instances);
         }
     }
-
-    public void BindDrawTransform(int submitIdx) => _gfxBuffers.BindUniformBufferRange<DrawObjectUniform>(submitIdx, 1);
 
     public void BindSkinningSlot(RenderEntityId entity)
     {
@@ -76,19 +75,6 @@ internal sealed class DrawCommandProcessor
         }
     }
 
-    public NativeView<TextureBinding> BindMaterialState(Id16<Material> materialId)
-    {
-        _gfxBuffers.BindUniformBufferRange<MaterialUniform>(materialId.Index(), 1);
-        var textureBindings = _materialSystem.GetMetaAndSlots(materialId, out var materialMeta);
-
-        if (!materialMeta.DrawState.IsEmpty())
-        {
-            _gfxCmd.ApplyState(materialMeta.DrawState);
-            _gfxCmd.ApplyStateFunctions(materialMeta.DrawFunctions);
-        }
-
-        return textureBindings;
-    }
    
     private void BindMaterial(Id16<Material> materialId)
     {
@@ -112,6 +98,25 @@ internal sealed class DrawCommandProcessor
         }
 
     }
+    
+    public bool TryApplyMaterialState(Id16<Material> materialId, out NativeView<TextureBinding> bindings)
+    {
+        if (_lastMaterialId == materialId)
+        {
+            bindings = default;
+            return false;
+        }
+        _lastMaterialId = materialId;
+
+        _gfxBuffers.BindUniformBufferRange<MaterialUniform>(materialId.Index(), 1);
+        bindings = _materialSystem.GetMetaAndSlots(materialId, out var materialMeta);
+        
+        _gfxCmd.ApplyState(materialMeta.DrawState);
+        _gfxCmd.ApplyStateFunctions(materialMeta.DrawFunctions);
+
+        return true;
+    }
+
 
     public void BindTextureSlots(NativeView<TextureBinding> slots, sbyte shadowMapBinding)
     {
@@ -132,15 +137,7 @@ internal sealed class DrawCommandProcessor
         }
     }
 
-    private void BindTextureSlots2(NativeView<TextureBinding> slots, sbyte shadowMapBinding)
-    {
-        if (shadowMapBinding >= 0)
-            _gfxCmd.BindTexture(RenderContext.DepthTexture, shadowMapBinding);
-
-        foreach (var value in slots) _gfxCmd.BindTexture(value.Texture, value.Slot);
-    }
-
-    private void BindDepthTextureSlots(NativeView<TextureBinding> slots)
+    public void BindDepthTextureSlots(NativeView<TextureBinding> slots)
     {
         foreach (var value in slots)
         {

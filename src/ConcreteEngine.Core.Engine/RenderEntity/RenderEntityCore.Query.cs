@@ -14,16 +14,14 @@ public sealed unsafe partial class RenderEntityCore
     public QueryEnumerator<BoundingBox> CullQuery(EntityStatus skipFlag = EntityStatus.ForceHidden) =>
         new(_headers, _bounds, Count, skipFlag);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public VisibleCoreEnumerator VisibilityQuery() => new(this, _headers, Count);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SparseQueryEnumerator<DrawPolicy, Matrix4x4> DepthPolicyQuery(NativeView<RenderEntityId> entities) =>
+    public SparseQueryEnumerator<DrawPolicy, Matrix4x4> ModelPolicyQuery(NativeView<RenderEntityId> entities) =>
         new(entities, _policies, _models, entities.Length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SparseQueryEnumerator<Matrix4x4, Matrix3X4> MatrixQuery(NativeView<RenderEntityId> entities) =>
+    public SparseQueryEnumerator<Matrix4x4, Matrix3X4> TransformQuery(NativeView<RenderEntityId> entities) =>
         new(entities, _models, _normals, entities.Length);
 
     //
@@ -79,7 +77,6 @@ public sealed unsafe partial class RenderEntityCore
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly QueryEnumerator<T> GetEnumerator() => this;
-
     }
 
     public ref struct SparseQueryEnumerator<T> where T : unmanaged
@@ -94,6 +91,15 @@ public sealed unsafe partial class RenderEntityCore
             _current = current - 1;
             _end = current + length;
         }
+        public SparseQueryEnumerator(NativeView<RenderEntityId> entities, NativeView<T> p1)
+        {
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(entities.Length, p1.Length);
+
+            _p1 = p1;
+            _current = entities - 1;
+            _end = entities + entities.Length;
+        }
+
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext() => ++_current < _end;
@@ -116,12 +122,23 @@ public sealed unsafe partial class RenderEntityCore
         private RenderEntityId* _current;
         private readonly RenderEntityId* _end;
 
-        public SparseQueryEnumerator(RenderEntityId* current, T1* p1, T2* p2, int length)
+        public SparseQueryEnumerator(NativeView<RenderEntityId> entities, NativeView<T1> p1, NativeView<T2> p2)
+        {
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(entities.Length, p1.Length);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(entities.Length, p2.Length);
+
+            _p1 = p1;
+            _p2 = p2;
+            _current = entities - 1;
+            _end = entities + entities.Length;
+        }
+
+        public SparseQueryEnumerator(RenderEntityId* entities, T1* p1, T2* p2, int length)
         {
             _p1 = p1;
             _p2 = p2;
-            _current = current - 1;
-            _end = current + length;
+            _current = entities - 1;
+            _end = entities + length;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -136,66 +153,5 @@ public sealed unsafe partial class RenderEntityCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly SparseQueryEnumerator<T1, T2> GetEnumerator() => this;
     }
-    
-    //
-    public ref struct VisibleCoreEnumerator
-    {
-        private EntityHeader* _current;
-        private readonly EntityHeader* _end;
-        private int _entityId;
-        private readonly RenderEntityCore _core;
 
-        public VisibleCoreEnumerator(RenderEntityCore core, EntityHeader* entities, int count)
-        {
-            _current = entities - 1;
-            _entityId = 0;
-            _end = entities + count;
-            _core = core;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext()
-        {
-            ++_entityId;
-            while (++_current < _end)
-            {
-                if (_current->Status >= EntityStatus.Normal) return true;
-            }
-
-            return false;
-        }
-
-        public readonly Item Current
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(new RenderEntityId(_entityId), ref *_current, _core);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly VisibleCoreEnumerator GetEnumerator() => this;
-
-        public readonly ref struct Item(RenderEntityId entity, ref EntityHeader meta, RenderEntityCore core)
-        {
-            public readonly RenderEntityId Entity = entity;
-            public readonly ref EntityHeader Status = ref meta;
-
-            public ref RenderSource Source
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => ref core.GetSource(Entity);
-            }
-
-            public ref Matrix4x4 Model
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => ref core.GetModelMatrix(Entity);
-            }
-
-            public ref BoundingBox Bounds
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => ref core.GetWorldBounds(Entity);
-            }
-        }
-    }
 }

@@ -7,7 +7,7 @@ namespace ConcreteEngine.Core.Common.Memory;
 
 public static unsafe class NativeArray
 {
-    public static NativeArray<T> From<T>(T* ptr, int length, int alignment = 0) where T : unmanaged
+    public static NativeArray<T> CreateFrom<T>(T* ptr, int length, int alignment = 0) where T : unmanaged
     {
         Validate(length, Unsafe.SizeOf<T>(), alignment);
         return new NativeArray<T>(ptr, length, alignment);
@@ -25,18 +25,17 @@ public static unsafe class NativeArray
         return new NativeArray<T>((T*)ptr, capacity, 0);
     }
     
-    public static T* AllocatePointer<T>(int capacity, bool zeroed = true) where T : unmanaged
-    {
-        var ptr = AllocMemory(capacity, Unsafe.SizeOf<T>(), 0, zeroed);
-        return (T*)ptr;
-    }
-
-
     public static NativeArray<T> AlignedAllocate<T>(int capacity, int alignment = 16, bool zeroed = true)
         where T : unmanaged
     {
         var ptr = AllocMemory(capacity, Unsafe.SizeOf<T>(), alignment, zeroed);
         return new NativeArray<T>((T*)ptr, capacity, alignment);
+    }
+    
+    public static T* AllocatePointer<T>(int capacity, bool zeroed = true) where T : unmanaged
+    {
+        var ptr = AllocMemory(capacity, Unsafe.SizeOf<T>(), 0, zeroed);
+        return (T*)ptr;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

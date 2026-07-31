@@ -67,7 +67,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
             foreach (var entity in GetRenderEntities())
             {
                 RenderEcs.Store<SelectionComponent>().Add(entity, SelectionComponent.DefaultHighlight);
-                RenderEcs.Core.ToggleDrawFlag(entity, DrawEntityFlags.Skip, true);
+                RenderEcs.Core.SetStatus(entity, EntityStatus.ForceHidden);
             }
         }
         else
@@ -75,7 +75,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
             foreach (var entity in GetRenderEntities())
             {
                 RenderEcs.Store<SelectionComponent>().Remove(entity);
-                RenderEcs.Core.ToggleDrawFlag(entity, DrawEntityFlags.Skip, false);
+                RenderEcs.Core.SetStatus(entity, EntityStatus.Normal);
             }
         }
         
@@ -93,6 +93,6 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
             if (isSelected) debugStore.Add(entity, new DebugBoundsComponent(color));
             else debugStore.Remove(entity);
         }
-        RenderEcs.Store<SelectionComponent>().Commit();
+        debugStore.Commit();
     }
 }

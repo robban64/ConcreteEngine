@@ -18,19 +18,19 @@ public struct DrawPolicy(DrawQueue queue, PassMask passes)
     public PassMask Passes = passes;
 }
 
-public struct RenderSource(MeshId mesh, Id16<Material> material, int meshIndex = 0, DrawEntityFlags flags = 0)
+public struct RenderSource(MeshId mesh, Id16<Material> material, int meshIndex = 0, EntityDrawFlags flags = 0)
 {
     //public uint InstanceCount;
     public MeshId Mesh = mesh;
     public Id16<Material> Material = material;
 
     public byte MeshIndex = (byte)meshIndex;
-    public DrawEntityFlags DrawFlags = flags;
+    public EntityDrawFlags DrawFlags = flags;
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool IsSkinned() => (DrawFlags & DrawEntityFlags.Skinned) != 0;
+    public readonly bool IsSkinned() => (DrawFlags & EntityDrawFlags.Skinned) != 0;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool IsInstanced() => (DrawFlags & DrawEntityFlags.Instanced) != 0;
+    public readonly bool IsInstanced() => (DrawFlags & EntityDrawFlags.Instanced) != 0;
 
 }
 

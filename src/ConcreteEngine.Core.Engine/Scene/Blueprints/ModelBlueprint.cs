@@ -63,7 +63,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
             var source = new RenderSource(mesh.MeshId, mat.MaterialId, mesh.Info.MeshIndex);
 
             var entity = RenderEcs.Core.AddEntity(source, policy);
-            RenderEcs.SceneLink.BindSceneHandle(entity, Owner.Id);
+            SceneManager.Instance.BindSceneHandle(entity, Owner.Id);
             RenderEntityIds.Add(entity);
         }
 
@@ -71,7 +71,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
         {
             foreach (var entity in GetRenderEntities())
             {
-                RenderEcs.Core.ToggleDrawFlag(entity, DrawEntityFlags.Skinned, true);
+                RenderEcs.Core.ToggleDrawFlag(entity, EntityDrawFlags.Skinned, true);
                 AnimationManager.Instance.AttachEntity(rig, entity);
 
             }

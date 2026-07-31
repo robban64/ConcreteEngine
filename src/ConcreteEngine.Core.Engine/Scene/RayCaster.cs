@@ -31,21 +31,21 @@ public sealed class RayCaster
         bounds = default;
 
         RenderEntityId closestEntity = default;
-        foreach (var query in RenderEcs.Core.VisibilityQuery())
+        foreach (var query in RenderEcs.MakeVisibleQuery(RenderEcs.Core.GetWorldBoundView()))
         {
-            //ref readonly var matrix = ref ecs.GetMatrix(entity);
-            //BoundingBox.GetWorldBounds(in box, in matrix, out var worldBounds);
-            if (CollisionMethods.RayIntersectsBox(in ray, in query.Bounds, out var dist) && dist < distance)
+            if(!SceneManager.Instance.IsLinkedEntity(query.Entity)) continue;
+            if (CollisionMethods.RayIntersectsBox(in ray, in query.Item1, out var dist) && dist < distance)
             {
                 distance = dist;
-                bounds = query.Bounds;
+                bounds = query.Item1;
                 closestEntity = query.Entity;
             }
+
         }
 
         if (!closestEntity.IsValid()) return null;
 
-        return _sceneStore.Get(RenderEcs.SceneLink.GetSceneHandleBy(closestEntity));
+        return _sceneStore.Get(SceneManager.Instance.GetByLinkedEntity(closestEntity));
     }
 
     public Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)

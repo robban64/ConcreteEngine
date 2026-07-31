@@ -179,13 +179,6 @@ public sealed class GfxTextures
         GlTextures.UploadTexture3D_Data(texHandle, data, meta.PixelFormat, size.ToSize3D(1), faceIndex);
     }
 
-    public void GenerateMipMaps(TextureId textureId)
-    {
-        var texHandle = GfxRegistry.TextureStore.GetHandleAndMeta(textureId, out var meta);
-        Debug.Assert(meta.MipLevels > 1);
-        GlTextures.GenerateMipMaps(texHandle);
-    }
-
     private void ApplyTextureProperties(NativeHandle texHandle, in TextureMeta meta, bool wrapR)
     {
         if (meta.Preset != TexturePreset.None)

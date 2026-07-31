@@ -15,7 +15,6 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
     public int Capacity { get; private set; }
 
     private readonly Stack<int> _free = [];
-    private readonly List<Action<int>> _resizeCallbacks = [];
 
     internal RenderEntityCore(int initialCapacity)
     {
@@ -24,8 +23,6 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
 
     public int ActiveCount => Count - _free.Count;
 
-    public void AddResizeCallback(Action<int> callback) => _resizeCallbacks.Add(callback);
-    public void RemoveResizeCallback(Action<int> callback) => _resizeCallbacks.Remove(callback);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsAlive(RenderEntityId e)
@@ -50,7 +47,7 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ToggleDrawFlag(RenderEntityId entity, DrawEntityFlags flag, bool enabled)
+    public void ToggleDrawFlag(RenderEntityId entity, EntityDrawFlags flag, bool enabled)
     {
         if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
         if (enabled) GetSource(entity).DrawFlags |= flag;

@@ -8,8 +8,6 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 
 namespace ConcreteEngine.Core.Engine.RenderEntity;
 
-
-
 public sealed unsafe partial class RenderEntityCore
 {
     private EntityHeader* _headers;
@@ -19,7 +17,7 @@ public sealed unsafe partial class RenderEntityCore
     private BoundingBox* _bounds;
     private Matrix4x4* _models;
     private Matrix3X4* _normals;
-    
+
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref EntityHeader GetMeta(RenderEntityId e) => ref _headers[e.Index()];
@@ -41,12 +39,26 @@ public sealed unsafe partial class RenderEntityCore
 
     //
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<RenderSource> GetSourceView() => new(_sources, 0, Count);
-    
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<DrawPolicy> GetDrawPolicyView() => new(_policies, 0, Count);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<BoundingBox> GetWorldBoundView() => new(_bounds, 0, Count);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<Matrix4x4> GetModelMatrixView() => new(_models, 0, Count);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<Matrix3X4> GetNormalMatrixView() => new(_normals, 0, Count);
+
+
     //
     private void Allocate(int capacity)
     {
-        if(_headers != null || Capacity != 0) Throwers.InvalidOperation("Already allocated");
+        if (_headers != null || Capacity != 0) Throwers.InvalidOperation("Already allocated");
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 32);
         _headers = (EntityHeader*)NativeArray.AllocatePointer<byte>(capacity);
         _sources = NativeArray.AllocatePointer<RenderSource>(capacity);
@@ -54,24 +66,24 @@ public sealed unsafe partial class RenderEntityCore
         _bounds = NativeArray.AllocatePointer<BoundingBox>(capacity);
         _models = NativeArray.AllocatePointer<Matrix4x4>(capacity);
         _normals = NativeArray.AllocatePointer<Matrix3X4>(capacity);
-        
+
         Capacity = capacity;
     }
 
     private void ClearEntityHeader(RenderEntityId e)
     {
         _headers[e.Index()] = default;
-        _sources[e.Index()]= default;
+        _sources[e.Index()] = default;
         _policies[e.Index()] = default;
     }
 
     private void ClearEntitySpatial(RenderEntityId e)
     {
         _models[e.Index()] = Matrix4x4.Identity;
-        _normals[e.Index()]= Matrix3X4.Identity;
+        _normals[e.Index()] = Matrix3X4.Identity;
         _bounds[e.Index()] = BoundingBox.One;
     }
-    
+
     private void EnsureCapacity(int amount)
     {
         var required = Count + amount;
@@ -90,7 +102,6 @@ public sealed unsafe partial class RenderEntityCore
 
         Capacity = newSize;
         RenderEcs.OnResize(newSize);
-        foreach (var callback in _resizeCallbacks) callback(newSize);
     }
 
 
@@ -108,7 +119,7 @@ public sealed unsafe partial class RenderEntityCore
         _bounds = null;
         _models = null;
         _normals = null;
-        
+
         Count = 0;
         Capacity = 0;
     }

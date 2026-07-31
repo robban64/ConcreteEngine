@@ -15,19 +15,17 @@ internal sealed class RenderPassContext
     
     public readonly GfxCommands Cmd;
     public readonly GfxBuffers Buffers;
-    private readonly GfxTextures _gfxTextures;
     public readonly DrawCommandProcessor DrawCmd;
 
+    private readonly TextureId[] _textureSlots;
     private readonly PriorityQueue<TextureId, PassTextureSlotKey> _sourceQueue;
     private readonly PriorityQueue<PassMutationState, PassTargetKey> _mutationQueue;
-    private readonly TextureId[] _textureSlots;
 
     internal RenderPassContext(GfxContext gfx, DrawCommandProcessor drawCmd)
     {
         DrawCmd = drawCmd;
         Cmd = gfx.Commands;
         Buffers = gfx.Buffers;
-        _gfxTextures = gfx.Textures;
         _sourceQueue = new PriorityQueue<TextureId, PassTextureSlotKey>(4, new PassTextureSlotKeyComp());
         _mutationQueue = new PriorityQueue<PassMutationState, PassTargetKey>(4, new PassTagKeyComp());
         _textureSlots = new TextureId[RenderLimits.TextureSlots];
@@ -122,8 +120,6 @@ internal sealed class RenderPassContext
         Cmd.ApplyPassState(passFlags);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void GenerateMips(TextureId textureId) => _gfxTextures.GenerateMipMaps(textureId);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrawFullscreenQuad(ShaderId shaderId, ReadOnlySpan<TextureId> sources)

@@ -114,6 +114,12 @@ public sealed class GfxCommands
 
         GlFrameBuffers.Blit(fromHandle, toHandle, fromMeta.Size, fromMeta.Size, linear);
     }
+    public void GenerateMipMaps(TextureId textureId)
+    {
+        var texHandle = TextureStore.GetHandleAndMeta(textureId, out var meta);
+        Debug.Assert(meta.MipLevels > 1);
+        GlTextures.GenerateMipMaps(texHandle);
+    }
 
 
     public void Clear(ColorRgba clearColor, ClearBufferFlag clearFlag)

@@ -11,10 +11,11 @@ public interface IRenderEntityStore : IDisposable;
 
 public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore where T : unmanaged, IRenderComponent<T>
 {
+    public static RenderEntityStore<T> Instance { get; internal set; } = null!;
+    
+    public bool IsDirty { get; private set; }
     public int Count { get; private set; }
     public int Capacity { get; private set; }
-
-    private bool _isDirty;
 
     private T* _components;
     private RenderEntityId* _entities;
@@ -36,8 +37,11 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
         SearchMethod.BinarySearch(new ReadOnlySpan<RenderEntityId>(_entities, Count), entity);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int FindIndexLinear(RenderEntityId entity) =>
-        EntitiesView().Reinterpret<int>().AsReadOnlySpan().IndexOf(entity.Id);
+    private int FindIndexLinear(RenderEntityId entity)
+    {
+        var view = EntitiesView().Reinterpret<int>();
+        return view.AsReadOnlySpan().IndexOf(entity.Id);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(RenderEntityId entity) => FindIndexLinear(entity) >= 0;
@@ -85,7 +89,6 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<T> ComponentSpan() => new(_components, Count);
 
-
     public bool Add(RenderEntityId entity, in T value)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
@@ -102,7 +105,7 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
                 listener.ComponentAdded(entity, ref _components[index]);
         }
 
-        _isDirty = true;
+        IsDirty = true;
         return true;
     }
 
@@ -111,14 +114,14 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
         if (!Has(entity)) return false;
         _removedEntities.Add(entity);
-        _isDirty = true;
+        IsDirty = true;
         return true;
     }
 
     public void Commit()
     {
-        if (!_isDirty) return;
-        _isDirty = false;
+        if (!IsDirty) return;
+        IsDirty = false;
 
         if (_removedEntities.Count > 0) CommitRemoved();
 

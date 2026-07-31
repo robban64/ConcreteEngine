@@ -27,7 +27,7 @@ internal static unsafe class TextureImporter
         size = new Size2D(x, y);
         var sizeInBytes = x * y * 4;
 
-        return NativeArray.From(imageData, sizeInBytes);
+        return NativeArray.CreateFrom(imageData, sizeInBytes);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -46,7 +46,7 @@ internal static unsafe class TextureImporter
 
         size = new Size2D(x, y);
 
-        return NativeArray.From(imageData, sizeInBytes);
+        return NativeArray.CreateFrom(imageData, sizeInBytes);
     }
 
     //

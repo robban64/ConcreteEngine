@@ -57,7 +57,6 @@ internal sealed class DrawCommandPipeline : IDisposable
         {
             var entity = entities[ticket];
             var source = sources[entity.Index()];
-            if ((source.DrawFlags & DrawEntityFlags.Skip) != 0) continue;
             DrawCmd.DrawSource(source, entity, ticket);
         }
     }

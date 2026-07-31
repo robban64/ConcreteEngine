@@ -31,7 +31,7 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
     public int OffsetInBytes => Length * Unsafe.SizeOf<T>();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator NativeView<T>(NativeArray<T> array) => new(array.Ptr, array.Length);
+    public static implicit operator NativeView<T>(NativeArray<T> array) => new(array.Ptr, 0, array.Length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator T*(NativeView<T> array) => array.Ptr;

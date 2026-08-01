@@ -29,8 +29,8 @@ internal sealed unsafe class AnimationSystem : IDisposable
 
     internal AnimationSystem(AnimationManager animations)
     {
-        _globals = NativeArray.AlignedAllocate<Matrix4x4>(BoneCapacity, alignment: 16);
-        _boneBuffer = NativeArray.AlignedAllocate<Matrix4x4>(DefaultBoneBufferCap, alignment: 16);
+        _globals = NativeArray.AlignedAllocate<Matrix4x4>(BoneCapacity, alignment: 16, false);
+        _boneBuffer = NativeArray.AlignedAllocate<Matrix4x4>(DefaultBoneBufferCap, alignment: 16, false);
         _slotRanges = new Range32[DefaultCapacity];
 
         _animations = animations;

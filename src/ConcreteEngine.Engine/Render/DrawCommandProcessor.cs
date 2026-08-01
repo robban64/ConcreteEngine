@@ -75,7 +75,6 @@ internal sealed class DrawCommandProcessor
         }
     }
 
-   
     private void BindMaterial(Id16<Material> materialId)
     {
         if (_lastMaterialId == materialId) return;
@@ -120,21 +119,11 @@ internal sealed class DrawCommandProcessor
 
     public void BindTextureSlots(NativeView<TextureBinding> slots, sbyte shadowMapBinding)
     {
-        if (RenderContext.PassMode == PassStateMode.Main)
-        {
-            if (shadowMapBinding >= 0)
-                _gfxCmd.BindTexture(RenderContext.DepthTexture, shadowMapBinding);
+        if (shadowMapBinding >= 0)
+            _gfxCmd.BindTexture(RenderContext.DepthTexture, shadowMapBinding);
 
-            foreach (var value in slots) _gfxCmd.BindTexture(value.Texture, value.Slot);
-        }
-        else
-        {
-            foreach (var value in slots)
-            {
-                if (value.SlotKind == TextureUsage.Albedo) _gfxCmd.BindTexture(value.Texture, 0);
-                else if (value.SlotKind == TextureUsage.Mask) _gfxCmd.BindTexture(value.Texture, 1);
-            }
-        }
+        foreach (var value in slots) _gfxCmd.BindTexture(value.Texture, value.Slot);
+
     }
 
     public void BindDepthTextureSlots(NativeView<TextureBinding> slots)

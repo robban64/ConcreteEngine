@@ -1,20 +1,19 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text.Json.Serialization;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
 public record struct BoundingBox(Vector3 Min, Vector3 Max)
 {
-    public Vector3 Min = Min;
-    public Vector3 Max = Max;
+    [JsonInclude] public Vector3 Min = Min;
+    [JsonInclude] public Vector3 Max = Max;
 
     public static BoundingBox Zero => default;
     public static BoundingBox One => new(-Vector3.One, Vector3.One);
     public static BoundingBox Infinite => new(new Vector3(float.MaxValue), new Vector3(float.MinValue));
-
-    public readonly bool IsZero => this == default;
 
     public readonly Vector3 Center
     {

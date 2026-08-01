@@ -157,21 +157,19 @@ internal static class GlStates
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void Draw(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount)
     {
-        var glPrimitive = primitive.ToGlEnum();
         if(elementSize != DrawElementSize.None)
-            Gl.DrawElements(glPrimitive, drawCount, elementSize.ToGlEnum(), (void*)0);
+            Gl.DrawElements(primitive.ToGlEnum(), drawCount, elementSize.ToGlEnum(), (void*)0);
         else
-            Gl.DrawArrays(glPrimitive, 0, drawCount);
+            Gl.DrawArrays(primitive.ToGlEnum(), 0, drawCount);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void DrawInstance(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount, uint instances)
     {
-        var glPrimitive = primitive.ToGlEnum();
         if(elementSize != DrawElementSize.None)
-            Gl.DrawElementsInstanced(glPrimitive, drawCount, elementSize.ToGlEnum(), (void*)0, instances);
+            Gl.DrawElementsInstanced(primitive.ToGlEnum(), drawCount, elementSize.ToGlEnum(), (void*)0, instances);
         else
-            Gl.DrawArraysInstanced(glPrimitive, 0, drawCount, instances);
+            Gl.DrawArraysInstanced(primitive.ToGlEnum(), 0, drawCount, instances);
     }
     
     

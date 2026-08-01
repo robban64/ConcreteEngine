@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Graphics.Gfx;
 
@@ -32,7 +31,7 @@ public sealed class Skybox
                 new RenderSource(MeshId, material.MaterialId),
                 new DrawPolicy(DrawQueue.Skybox, PassMask.Main));
             
-            RenderEcs.Core.GetWorldBounds(_entity) = BoundingBox.Infinite;
+            RenderEcs.Core.GetWorldBounds(_entity) = BoundingBox.Zero;
         }
         else
         {

@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Engine.RenderEntity;
 
-namespace ConcreteEngine.Core.Engine.ECS.GameComponent;
+namespace ConcreteEngine.Core.Engine.GameEntity.GameComponent;
 
 public struct RenderLink(RenderEntityId renderEntityId) : IGameComponent<RenderLink>
 {

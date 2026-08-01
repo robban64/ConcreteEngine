@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 
-namespace ConcreteEngine.Editor.Core.Data;
+namespace ConcreteEngine.Editor.Data;
 
 internal static unsafe class ScratchBuffer
 {
@@ -20,7 +20,7 @@ internal static unsafe class ScratchBuffer
     public static void Create()
     {
         if (!_buffer.IsNull) throw new InvalidOperationException("Buffer is already created");
-        _buffer = NativeArray.Allocate<byte>(512);
+        _buffer = NativeArray.Allocate<byte>(512, false);
     }
 
     public static void Dispose()

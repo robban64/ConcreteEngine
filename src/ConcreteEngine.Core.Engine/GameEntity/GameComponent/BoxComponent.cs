@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
 
-namespace ConcreteEngine.Core.Engine.ECS.GameComponent;
+namespace ConcreteEngine.Core.Engine.GameEntity.GameComponent;
 
 public struct BoxComponent(in BoundingBox bounds) : IGameComponent<BoxComponent>
 {

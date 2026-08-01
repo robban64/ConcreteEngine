@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Internals;
 using ConcreteEngine.Graphics.OpenGL;
@@ -58,8 +59,7 @@ public sealed class GfxMeshes
         return meshId;
     }
 
-
-    public GfxId<VertexBufferMeta> CreateAttachVertexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateVboArgs args)
+    public VertexBufferId CreateAttachVertexBuffer<T>(MeshId meshId, NativeView<T> data, CreateVboArgs args)
         where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfZero(meshId.Id);
@@ -69,7 +69,7 @@ public sealed class GfxMeshes
         return vbo;
     }
 
-    public GfxId<IndexBufferMeta> CreateAttachIndexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateIboArgs args)
+    public IndexBufferId CreateAttachIndexBuffer<T>(MeshId meshId, NativeView<T> data, CreateIboArgs args)
         where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfZero(meshId.Id);
@@ -79,15 +79,17 @@ public sealed class GfxMeshes
     }
 
 
-    public void AttachVertexBuffer(MeshId meshId, GfxId<VertexBufferMeta> vboId, int binding)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void AttachVertexBuffer(MeshId meshId, VertexBufferId vboId, int binding)
     {
         var meshView = GfxRegistry.MeshStore.GetHandleAndMeta(meshId, out var meta);
         var vboRef = GfxRegistry.VboStore.GetHandleAndMeta(vboId, out var vboMeta);
         GlMeshes.AttachVertexBuffer(meshView, binding, vboRef, in vboMeta);
         _meshAttributes[meshId.Index()].VboIds[binding] = vboId;
     }
-
-    public void AttachIndexBuffer(MeshId meshId, GfxId<IndexBufferMeta> iboId)
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void AttachIndexBuffer(MeshId meshId, IndexBufferId iboId)
     {
         var meshRef = GfxRegistry.MeshStore.GetHandleAndMeta(meshId, out var meta);
         var iboRef = GfxRegistry.IboStore.GetHandleAndMeta(iboId, out var iboMeta);

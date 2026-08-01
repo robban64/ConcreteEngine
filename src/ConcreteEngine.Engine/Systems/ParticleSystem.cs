@@ -112,12 +112,12 @@ internal sealed class ParticleSystem : IDisposable
             var idx = (byte)(t * 255f + 0.5f);
 
             var pos = it.Item1.Position + it.Item1.Velocity * timeOffset;
-            it.Item2 = new ParticleGpuInstance(new Vector4(pos, lut[idx].Size), lut[idx].Color);
+            it.Item2 = new ParticleVertex(new Vector4(pos, lut[idx].Size), lut[idx].Color);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private unsafe PtrEnumerator<ParticleState, ParticleGpuInstance> ParticleEnumerator(
+    private unsafe PtrEnumerator<ParticleState, ParticleVertex> ParticleEnumerator(
         NativeView<ParticleState> particles) =>
         new(particles.Ptr, _particleMesh.GetBufferPtr(particles.Length), particles.Length);
 

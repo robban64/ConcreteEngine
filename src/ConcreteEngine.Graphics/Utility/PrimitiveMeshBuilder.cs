@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Primitives;
 
@@ -8,9 +9,9 @@ namespace ConcreteEngine.Graphics.Utility;
 [SuppressMessage("ReSharper", "UseCollectionExpression")]
 internal static class PrimitiveMeshBuilder
 {
-    public static MeshId GenerateFsqQuad(GfxMeshes meshes)
+    public static unsafe MeshId GenerateFsqQuad(GfxMeshes meshes)
     {
-        ReadOnlySpan<Vertex2D> vertices = stackalloc[]
+        Vertex2D* vertexPtr = stackalloc[]
         {
             new Vertex2D(-1f, -1f, 0f, 0f),
             //
@@ -20,6 +21,7 @@ internal static class PrimitiveMeshBuilder
             //
             new Vertex2D(1f, 1f, 1f, 1f)
         };
+        var vertices = new NativeView<Vertex2D>(vertexPtr, 4);
 
         var props = new MeshDrawProperties(
             DrawPrimitive.TriangleStrip,
@@ -36,9 +38,9 @@ internal static class PrimitiveMeshBuilder
     }
 
 
-    public static MeshId GenerateSkyboxCube(GfxMeshes meshes)
+    public static unsafe MeshId GenerateSkyboxCube(GfxMeshes meshes)
     {
-        ReadOnlySpan<Vector3> vertices = stackalloc Vector3[]
+        var vertexPtr = stackalloc Vector3[36]
         {
             // +X
             new Vector3(1f, 1f, -1f), new Vector3(1f, -1f, -1f), new Vector3(1f, -1f, 1f),
@@ -65,6 +67,7 @@ internal static class PrimitiveMeshBuilder
             //
             new Vector3(1f, 1f, -1f), new Vector3(-1f, -1f, -1f), new Vector3(1f, -1f, -1f)
         };
+        var vertices = new NativeView<Vector3>(vertexPtr, 36);
         var props = new MeshDrawProperties(DrawPrimitive.Triangles, DrawMeshKind.Arrays, DrawElementSize.None, 36);
 
         var meshId = meshes.CreateEmptyMesh(in props, 1, [
@@ -74,9 +77,9 @@ internal static class PrimitiveMeshBuilder
         return meshId;
     }
 
-    public static MeshId GenerateCube(GfxMeshes meshes)
+    public static unsafe MeshId GenerateCube(GfxMeshes meshes)
     {
-        ReadOnlySpan<Vertex3D> vertices = stackalloc Vertex3D[]
+        Vertex3D* verticesPtr = stackalloc Vertex3D[24]
         {
             // Front (normal: 0, 0, 1)
             new Vertex3D(new Vector3(-1f, -1f, 1f), new Vector2(0f, 0f), new Vector3(0f, 0f, 1f)),
@@ -115,7 +118,7 @@ internal static class PrimitiveMeshBuilder
             new Vertex3D(new Vector3(-1f, 1f, -1f), new Vector2(0f, 1f), new Vector3(-1f, 0f, 0f))
         };
 
-        ReadOnlySpan<uint> indices = stackalloc uint[]
+        uint* indicesPtr = stackalloc uint[36]
         {
             //  Front
             0, 1, 2, 0, 2, 3,
@@ -130,6 +133,8 @@ internal static class PrimitiveMeshBuilder
             //  Left
             20, 21, 22, 20, 22, 23
         };
+        var vertices = new NativeView<Vertex3D>(verticesPtr, 24);
+        var indices = new NativeView<uint>(indicesPtr, 24);
 
         var props = MeshDrawProperties.MakeElemental(drawCount: indices.Length);
         var attribBuilder = new VertexAttributeMaker();
@@ -142,7 +147,7 @@ internal static class PrimitiveMeshBuilder
         return meshId;
     }
 
-    public static MeshId GenerateSphere(GfxMeshes meshes, float radius, int rings, int sectors)
+    public static unsafe MeshId GenerateSphere(GfxMeshes meshes, float radius, int rings, int sectors)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(rings, 2);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(sectors, 2);
@@ -155,9 +160,10 @@ internal static class PrimitiveMeshBuilder
         var vertexCount = rings * sectors;
         var indexCount = (rings - 1) * (sectors - 1) * 4;
 
-        Span<Vertex3D> vertices = stackalloc Vertex3D[vertexCount];
-        Span<uint> indices = stackalloc uint[indexCount];
-
+        Vertex3D* vertexPtr = stackalloc Vertex3D[vertexCount];
+        uint* indexPtr = stackalloc uint[indexCount];
+        var vertices = new NativeView<Vertex3D>(vertexPtr, vertexCount);
+        var indices = new NativeView<uint>(indexPtr, indexCount);
         for (var r = 0; r < rings; r++)
         {
             for (var s = 0; s < sectors; s++)

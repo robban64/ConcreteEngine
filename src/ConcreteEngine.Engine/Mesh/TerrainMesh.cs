@@ -24,7 +24,7 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
 
     private NativeSoA<Vector3, VertexShading> _vertexBuffer;
     private NativeArray<ushort> _indexBuffer = NativeArray<ushort>.MakeNull();
-    private NativeArray<FoliageGpuInstance> _foliageBuffer = NativeArray<FoliageGpuInstance>.MakeNull();
+    private NativeArray<FoliageVertex> _foliageBuffer = NativeArray<FoliageVertex>.MakeNull();
 
     internal ReadOnlySpan<TerrainChunkMesh> GetMeshChunks() => _meshChunks;
 
@@ -48,13 +48,13 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
         var vertexLength = IntMath.AlignUp(chunks.Length * VertexCapacity, 4096);
 
         _indexBuffer = NativeArray.Allocate<ushort>(IndexCount);
-        _vertexBuffer = new NativeSoA<Vector3, VertexShading>(vertexLength);
+        _vertexBuffer = new NativeSoA<Vector3, VertexShading>(vertexLength, false);
 
         FillIndexBuffer(_indexBuffer);
 
         var iboArgs = CreateIboArgs.MakeDefault();
         var terrainIboId = TerrainIboId =
-            gfx.Buffers.CreateIndexBuffer(_indexBuffer.AsSpan(), iboArgs.Storage, iboArgs.Access, iboArgs.Length);
+            gfx.Buffers.CreateIndexBuffer<ushort>(_indexBuffer, iboArgs.Storage, iboArgs.Access, iboArgs.Length);
 
         var gfxMeshes = gfx.Meshes;
         _meshChunks = new TerrainChunkMesh[4 * 4];
@@ -74,7 +74,7 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
 
         var chunks = terrain.GetChunks();
         var capacity = IntMath.AlignUp(chunks.Length * maxInstanceCount, 4096);
-        _foliageBuffer = NativeArray.Allocate<FoliageGpuInstance>(capacity);
+        _foliageBuffer = NativeArray.Allocate<FoliageVertex>(capacity);
 
         for (var i = 0; i < chunks.Length; i++)
         {

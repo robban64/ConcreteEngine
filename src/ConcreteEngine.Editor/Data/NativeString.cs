@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 
-namespace ConcreteEngine.Editor.Core.Data;
+namespace ConcreteEngine.Editor.Data;
 
 internal readonly unsafe struct NativeString : IEquatable<NativeString>
 {

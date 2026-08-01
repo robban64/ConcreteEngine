@@ -69,7 +69,7 @@ public sealed class GfxCommands
     }
 
 
-    public void BeginRenderPass(GfxId<FrameBufferMeta> fboId, GfxPassState passState)
+    public void BeginRenderPass(FrameBufferId fboId, GfxPassState passState)
     {
         ArgumentOutOfRangeException.ThrowIfZero(fboId.Id, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState("FBO is already bound.", fboId);
@@ -98,7 +98,7 @@ public sealed class GfxCommands
     }
 
 
-    public void BlitFramebuffer(GfxId<FrameBufferMeta> fromId, GfxId<FrameBufferMeta> toId, bool linear)
+    public void BlitFramebuffer(FrameBufferId fromId, FrameBufferId toId, bool linear)
     {
         Debug.Assert(fromId != default);
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
@@ -226,7 +226,7 @@ public sealed class GfxCommands
         GlStates.SetCullMode(cullMode);
     }
 
-    public void BindFramebuffer(GfxId<FrameBufferMeta> id)
+    public void BindFramebuffer(FrameBufferId id)
     {
         if (_boundFboId == id) return;
         if (id == default)
@@ -265,7 +265,7 @@ public sealed class GfxCommands
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UseShader(GfxId<ShaderMeta> id)
+    public void UseShader(ShaderId id)
     {
         if (_boundShaderId == id) return;
 

@@ -7,7 +7,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
 
-namespace ConcreteEngine.Editor.Core.Data;
+namespace ConcreteEngine.Editor.Data;
 
 internal sealed class StringArena : IDisposable
 {
@@ -30,8 +30,8 @@ internal sealed class StringArena : IDisposable
 
     private StringArena()
     {
-        _arena = new ArenaAllocator(CapacityUtils.PageSize * MaxBlocks);
-        _arena.AllocBlock(CapacityUtils.PageSize);
+        _arena = new ArenaAllocator(CapacityUtils.PageSize * MaxBlocks, 0, false);
+        _arena.AllocBlock(CapacityUtils.PageSize, true);
     }
 
 
@@ -75,7 +75,7 @@ internal sealed class StringArena : IDisposable
 
         if (_blockCount++ > MaxBlocks) Throwers.InvalidOperation("Too many blocks");
 
-        _arena.AllocBlock(CapacityUtils.PageSize);
+        _arena.AllocBlock(CapacityUtils.PageSize, true);
         Logger.Log(LogScope.Editor, $"StringArena - Allocated new block");
     }
 

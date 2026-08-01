@@ -31,7 +31,6 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
         Capacity = initialCapacity;
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int FindIndexSorted(RenderEntityId entity) =>
         SearchMethod.BinarySearch(new ReadOnlySpan<RenderEntityId>(_entities, Count), entity);

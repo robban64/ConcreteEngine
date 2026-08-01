@@ -18,7 +18,7 @@ namespace ConcreteEngine.Engine.Assets.ImporterAssimp;
 
 internal static unsafe class MaterialModelImporter
 {
-    public static void ProcessMaterials(Assimp assimp, AssimpScene* scene, ModelImportContext ctx)
+    public static void ProcessMaterials(AssimpScene* scene, ModelImportContext ctx)
     {
         var embeddedContext = ctx.EmbeddedContext;
         if (embeddedContext.MaterialCount == 0 && embeddedContext.TextureCount == 0) return;

@@ -10,7 +10,6 @@ using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render;
 
-
 public sealed class RenderRegistry
 {
     public static ShaderId DepthShader;
@@ -61,9 +60,16 @@ public sealed class RenderRegistry
     public void RecreateFixedFrameBuffer<TTarget>(FboVariant variant, Size2D size)
         where TTarget : unmanaged, IRenderTarget
     {
+       RecreateFixedFrameBuffer(TargetRegistry<TTarget>.TagIndex, variant, size);
+    }
+    
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void RecreateFixedFrameBuffer(byte tagIndex, FboVariant variant, Size2D size)
+    {
         if (variant < 0 || variant > RenderLimits.MaxFboVariants) Throwers.InvalidArgument(nameof(variant));
 
-        var fbo = GetByKey(new FboKey (TargetRegistry<TTarget>.TagIndex, variant));
+        var fbo = GetByKey(new FboKey (tagIndex, variant));
         if (fbo == null) Throwers.NotFoundBy(nameof(variant), variant.Value);
 
         var meta = GfxRegistry.GetMeta(fbo.FboId);
@@ -85,6 +91,7 @@ public sealed class RenderRegistry
         if (fbo.IsShadowFbo)
             RenderContext.DepthTexture = GfxRegistry.GetMeta(fbo.FboId).Attachments.DepthTexture;
     }
+
 
 
     public void RecreateScreenDependentFbo(Size2D outputSize)
@@ -127,7 +134,9 @@ public sealed class RenderRegistry
 
         _fboRegistry[_fboCount++] = renderFbo;
     }
-
+    
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ValidateOutputSize(Size2D outputSize, bool isShadowMap)
     {
         if (outputSize < RenderLimits.MinOutputSize) Throwers.InvalidArgument(nameof(outputSize));
@@ -187,10 +196,8 @@ public sealed class RenderRegistry
         public static PassTargetKey BindPassTarget(FboVariant variant, PassId passId)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(variant.Value, RenderLimits.MaxFboVariants);
-
-            if (!_isBound) throw new InvalidOperationException($"PassTag not registered. {typeof(TTarget).Name}");
-
-            if (_passIds[variant] != 0) throw new InvalidOperationException(nameof(variant));
+            if (!_isBound) Throwers.NotFound(nameof(TTarget),"PassTag not registered.");
+            if (_passIds[variant] != 0) Throwers.InvalidArgument(nameof(variant));
 
             _passIds[variant] = passId.Value;
             return PassKey(variant);
@@ -199,9 +206,7 @@ public sealed class RenderRegistry
         public static void RegisterTag()
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(_targetCounter, RenderLimits.FboSlots);
-
-            if (_isBound)
-                throw new InvalidOperationException($"PassTag already registered. {typeof(TTarget).Name}");
+            if (_isBound) Throwers.InvalidOperation("PassTag already registered.");
 
             TagIndex = _targetCounter++;
             _isBound = true;

@@ -37,6 +37,12 @@ public static unsafe class NativeArray
         var ptr = AllocMemory(capacity, Unsafe.SizeOf<T>(), 0, zeroed);
         return (T*)ptr;
     }
+    
+    public static T* Resize<T>(T* ptr, int length, int newLength, int alignment, bool zeroed) where T : unmanaged
+    {
+        return (T*)Resize(ptr, length, newLength, Unsafe.SizeOf<T>(), alignment, zeroed);
+    }
+
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void* AllocMemory(int length, int stride, int alignment, bool zeroed)
@@ -60,6 +66,7 @@ public static unsafe class NativeArray
     public static void* Resize(void* ptr, int length, int newLength, int stride, int alignment,
         bool zeroed)
     {
+        ArgumentNullException.ThrowIfNull(ptr);
         var capacity = (nuint)length * (nuint)stride;
         var newCapacity = (nuint)newLength * (nuint)stride;
 
@@ -79,11 +86,6 @@ public static unsafe class NativeArray
         Console.WriteLine($"Reallocate {nameof(NativeArray)}: {newCapacity} bytes");
 #endif
         return ptr;
-    }
-
-    public static T* Resize<T>(T* ptr, int length, int newLength, int alignment, bool zeroed) where T : unmanaged
-    {
-        return (T*)Resize(ptr, length, newLength, Unsafe.SizeOf<T>(), alignment, zeroed);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -169,6 +171,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     public readonly Span<T> AsSpan(int offset = 0)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset, (uint)Length);
+        if (IsNull) return default;
         return new Span<T>(Ptr + offset, Length - offset);
     }
 
@@ -176,6 +179,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     public readonly Span<T> AsSpan(int offset, int length)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset + (uint)length, (uint)Length);
+        if (IsNull) return default;
         return new Span<T>(Ptr + offset, length);
     }
     
@@ -183,6 +187,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     public readonly ReadOnlySpan<T> AsReadOnlySpan(int offset = 0)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset, (uint)Length);
+        if (IsNull) return default;
         return new ReadOnlySpan<T>(Ptr + offset, Length - offset);
     }
     
@@ -190,6 +195,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     public readonly ReadOnlySpan<T> AsReadOnlySpan(int offset, int length)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset + (uint)length, (uint)Length);
+        if (IsNull) return default;
         return new ReadOnlySpan<T>(Ptr + offset, length);
     }
     

@@ -1,9 +1,9 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.ECS.Integration;
+using ConcreteEngine.Core.Engine.GameEntity.Integration;
 
-namespace ConcreteEngine.Core.Engine.ECS;
+namespace ConcreteEngine.Core.Engine.GameEntity;
 
 public enum EcsStoreType : byte
 {

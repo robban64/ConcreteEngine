@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Editor;
+using ConcreteEngine.Core.Engine.RenderEntity;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -76,4 +77,19 @@ public sealed class SceneTransform(SceneObject sceneObject)
         _bounds = bounds;
         sceneObject.MarkDirty(SceneDirtyFlags.Transform);
     }
+    
+    internal void CommitTransform(ReadOnlySpan<RenderBlueprintInstance> instances)
+    {
+        var worldBounds = BoundingBox.Infinite;
+
+        GetTransformMatrix(out var rootMatrix);
+        foreach (var instance in instances)
+        {
+            instance.ApplyTransform(in rootMatrix);
+            worldBounds.Expand(in instance.GetWorldBounds());
+        }
+
+        SetBounds(worldBounds);
+    }
+
 }

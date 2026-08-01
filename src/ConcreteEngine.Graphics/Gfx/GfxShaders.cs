@@ -13,7 +13,7 @@ public sealed class GfxShaders
         _disposer = disposer;
     }
 
-    public GfxId<ShaderMeta> CreateShader(NativeView<byte> vs, NativeView<byte> fs, out GfxUniformSampler[] samplerInfo)
+    public ShaderId CreateShader(NativeView<byte> vs, NativeView<byte> fs, out GfxUniformSampler[] samplerInfo)
     {
         var programRef = GlShaders.CreateShader(vs, fs);
 
@@ -25,7 +25,7 @@ public sealed class GfxShaders
         return GfxRegistry.ShaderStore.Add(in meta, programRef);
     }
 
-    public void RecreateShader(GfxId<ShaderMeta> shaderId, NativeView<byte> vs, NativeView<byte> fs,
+    public void RecreateShader(ShaderId shaderId, NativeView<byte> vs, NativeView<byte> fs,
         out GfxUniformSampler[] samplers)
     {
         ArgumentOutOfRangeException.ThrowIfZero(shaderId.Id, nameof(shaderId));

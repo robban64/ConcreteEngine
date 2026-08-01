@@ -27,7 +27,7 @@ internal sealed class MaterialSystem : IDisposable
         NativeArray.Allocate<TextureBinding>(DefaultTextureSlotCapacity);
 
     private NativeArray<MaterialUniform> _buffer =
-        NativeArray.Allocate<MaterialUniform>(DefaultMaterialBufferCapacity);
+        NativeArray.Allocate<MaterialUniform>(DefaultMaterialBufferCapacity, false);
 
     
     internal void Commit()

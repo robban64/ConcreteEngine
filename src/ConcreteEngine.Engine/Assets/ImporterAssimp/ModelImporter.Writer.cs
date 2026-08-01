@@ -47,13 +47,7 @@ internal sealed unsafe partial class ModelImporter
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
 
         var meshEntry = ctx.Meshes[meshIndex];
-/*
-        var bounds = BoundingBox.Infinite;
-        for (int i = 0; i < count; i++)
-        {
-            bounds.FromPoint(aiMesh->MVertices[i]);
-        }
-*/
+        
         BoundingBox.FromPoints(new ReadOnlySpan<Vector3>(aiMesh->MVertices, count), out var bounds);
         meshEntry.SetBounds(in bounds);
 

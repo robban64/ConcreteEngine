@@ -100,7 +100,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         if (_context.IsAnimated)
             ProcessAnimations(_scene->MAnimations, _context);
 
-        MaterialModelImporter.ProcessMaterials(_assimp, _scene, _context);
+        MaterialModelImporter.ProcessMaterials( _scene, _context);
     }
 
 

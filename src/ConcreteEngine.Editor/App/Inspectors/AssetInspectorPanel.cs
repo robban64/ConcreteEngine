@@ -4,7 +4,7 @@ using ConcreteEngine.Editor.App.Assets;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.App.UI;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;

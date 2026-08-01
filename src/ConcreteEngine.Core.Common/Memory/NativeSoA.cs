@@ -11,12 +11,12 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
 
     public int Length;
 
-    public NativeSoA(int length)
+    public NativeSoA(int length, bool zeroed = true)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(length, 4);
 
         var capacity = GetSizeInBytes(length, out var sizeT1, out _);
-        var array = NativeArray.Allocate(capacity);
+        var array = NativeArray.Allocate(capacity, zeroed);
 
         Length = length;
         _ptr1 = (T1*)array.Ptr;
@@ -89,11 +89,11 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
 
     public int Length;
 
-    public NativeSoA(int length)
+    public NativeSoA(int length, bool zeroed = true)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(length, 4);
         var capacity = GetSizeInBytes(length, out var sizeT1, out var sizeT2, out _);
-        var bytes = NativeArray.Allocate(capacity);
+        var bytes = NativeArray.Allocate(capacity, zeroed);
 
         Length = length;
         _ptr1 = (T1*)bytes.Ptr;

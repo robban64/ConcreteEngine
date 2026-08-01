@@ -1,13 +1,10 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.App.Theme;
-using ConcreteEngine.Editor.Utils;
-using static ConcreteEngine.Editor.Utils.IconNames;
 using Palette = ConcreteEngine.Editor.App.Theme.Palette;
 
-namespace ConcreteEngine.Editor.Core.Data;
+namespace ConcreteEngine.Editor.Data;
 
 internal static class StyleMap
 {

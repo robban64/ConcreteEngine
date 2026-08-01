@@ -1,5 +1,5 @@
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.GameEntity;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 

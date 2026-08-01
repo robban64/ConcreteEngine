@@ -171,7 +171,6 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
 
         _memory.Resize(newCap, true);
         _entries = (Entry*)_memory.Ptr;
-        //TODO
     }
 
     private int AllocateNext()

@@ -21,8 +21,8 @@ internal sealed class RenderResolver : IDisposable
     {
         ArgumentNullException.ThrowIfNull(frustum);
         _frustum = frustum;
-        _drawIndices = NativeArray.Allocate<DrawCommandIndex>(RenderEcs.Core.Capacity);
-        _transforms = NativeArray.Allocate<DrawObjectUniform>(RenderEcs.Core.Capacity);
+        _drawIndices = NativeArray.Allocate<DrawCommandIndex>(RenderEcs.Core.Capacity, false);
+        _transforms = NativeArray.Allocate<DrawObjectUniform>(RenderEcs.Core.Capacity, false);
     }
 
     public NativeView<DrawCommandIndex> DrawIndices => _drawIndices.Slice(0, RenderEcs.Frame.VisibleCount);
@@ -44,10 +44,8 @@ internal sealed class RenderResolver : IDisposable
         Ensure();
         var visibleCount = CullEntities();
         if (visibleCount == 0) return;
-        //ProcessSelectionEffect();
         SubmitDrawPolicy();
         SubmitTransforms();
-        //SubmitDebugBounds();
     }
 
     private int CullEntities()

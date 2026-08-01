@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Engine.ECS.GameComponent;
+namespace ConcreteEngine.Core.Engine.GameEntity.GameComponent;
 
 public struct TagComponent : IGameComponent<TagComponent>
 {

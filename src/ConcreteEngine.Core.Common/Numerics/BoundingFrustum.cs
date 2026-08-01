@@ -92,6 +92,47 @@ public struct BoundingFrustum
         corners[6] = IntersectPlanes(FarPlane, BottomPlane, LeftPlane);
         corners[7] = IntersectPlanes(FarPlane, BottomPlane, RightPlane);
     }
+    
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void From(scoped ref BoundingFrustum frustum, Matrix4x4 viewProj)
+    {
+        frustum.LeftPlane = Plane.Normalize(Plane.Create(
+            viewProj.M14 + viewProj.M11,
+            viewProj.M24 + viewProj.M21,
+            viewProj.M34 + viewProj.M31,
+            viewProj.M44 + viewProj.M41));
+
+        frustum.RightPlane = Plane.Normalize(Plane.Create(
+            viewProj.M14 - viewProj.M11,
+            viewProj.M24 - viewProj.M21,
+            viewProj.M34 - viewProj.M31,
+            viewProj.M44 - viewProj.M41));
+
+        frustum.TopPlane = Plane.Normalize(Plane.Create(
+            viewProj.M14 - viewProj.M12,
+            viewProj.M24 - viewProj.M22,
+            viewProj.M34 - viewProj.M32,
+            viewProj.M44 - viewProj.M42));
+
+        frustum.BottomPlane = Plane.Normalize(Plane.Create(
+            viewProj.M14 + viewProj.M12,
+            viewProj.M24 + viewProj.M22,
+            viewProj.M34 + viewProj.M32,
+            viewProj.M44 + viewProj.M42));
+
+        frustum.NearPlane = Plane.Normalize(Plane.Create(
+            viewProj.M14 + viewProj.M13,
+            viewProj.M24 + viewProj.M23,
+            viewProj.M34 + viewProj.M33,
+            viewProj.M44 + viewProj.M43));
+
+        frustum.FarPlane = Plane.Normalize(Plane.Create(
+            viewProj.M14 - viewProj.M13,
+            viewProj.M24 - viewProj.M23,
+            viewProj.M34 - viewProj.M33,
+            viewProj.M44 - viewProj.M43));
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Plane PlaneFromPoints(Vector3 a, Vector3 b, Vector3 c)
@@ -102,10 +143,12 @@ public struct BoundingFrustum
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Plane NormalizePlane(float x, float y, float z, float d)
+    public static Plane NormalizePlane(float x, float y, float z, float d)
     {
         float lengthSq = x * x + y * y + z * z;
         float invLength = 1.0f / MathF.Sqrt(lengthSq);
         return new Plane(x * invLength, y * invLength, z * invLength, d * invLength);
     }
+    
+
 }

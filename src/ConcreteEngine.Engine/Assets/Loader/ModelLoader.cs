@@ -107,12 +107,12 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
         var iboArgs = CreateIboArgs.MakeDefault();
 
         var meshId = gfx.CreateEmptyMesh(in properties, 2, VertexAttributes.MainVertexAttributes);
-        gfx.CreateAttachVertexBuffer(meshId, data.Positions.AsReadOnlySpan(), CreateVboArgs.MakeDefault(0));
-        gfx.CreateAttachVertexBuffer(meshId, data.Vertices.AsReadOnlySpan(), CreateVboArgs.MakeDefault(1));
+        gfx.CreateAttachVertexBuffer(meshId, data.Positions, CreateVboArgs.MakeDefault(0));
+        gfx.CreateAttachVertexBuffer(meshId, data.Vertices, CreateVboArgs.MakeDefault(1));
         if (is16Bit)
-            gfx.CreateAttachIndexBuffer(meshId, data.Indices.Reinterpret<ushort>().AsReadOnlySpan(), iboArgs);
+            gfx.CreateAttachIndexBuffer(meshId, data.Indices.Reinterpret<ushort>(), iboArgs);
         else
-            gfx.CreateAttachIndexBuffer(meshId, data.Indices.Reinterpret<uint>().AsReadOnlySpan(), iboArgs);
+            gfx.CreateAttachIndexBuffer(meshId, data.Indices.Reinterpret<uint>(), iboArgs);
         return meshId;
     }
 
@@ -124,13 +124,13 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
         var iboArgs = CreateIboArgs.MakeDefault();
 
         var meshId = gfx.CreateEmptyMesh(in properties, 3, VertexAttributes.SkinnedAttributes);
-        gfx.CreateAttachVertexBuffer(meshId, data.Positions.AsReadOnlySpan(), CreateVboArgs.MakeDefault(0));
-        gfx.CreateAttachVertexBuffer(meshId, data.Vertices.AsReadOnlySpan(), CreateVboArgs.MakeDefault(1));
-        gfx.CreateAttachVertexBuffer(meshId, data.Skinning.AsReadOnlySpan(), CreateVboArgs.MakeDefault(2));
+        gfx.CreateAttachVertexBuffer(meshId, data.Positions, CreateVboArgs.MakeDefault(0));
+        gfx.CreateAttachVertexBuffer(meshId, data.Vertices, CreateVboArgs.MakeDefault(1));
+        gfx.CreateAttachVertexBuffer(meshId, data.Skinning, CreateVboArgs.MakeDefault(2));
         if (is16Bit)
-            gfx.CreateAttachIndexBuffer(meshId, data.Indices.Reinterpret<ushort>().AsReadOnlySpan(), iboArgs);
+            gfx.CreateAttachIndexBuffer(meshId, data.Indices.Reinterpret<ushort>(), iboArgs);
         else
-            gfx.CreateAttachIndexBuffer(meshId, data.Indices.Reinterpret<uint>().AsReadOnlySpan(), iboArgs);
+            gfx.CreateAttachIndexBuffer(meshId, data.Indices.Reinterpret<uint>(), iboArgs);
         return meshId;
     }
 }

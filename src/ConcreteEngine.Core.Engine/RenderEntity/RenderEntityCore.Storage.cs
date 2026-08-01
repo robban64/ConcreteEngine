@@ -63,9 +63,9 @@ public sealed unsafe partial class RenderEntityCore
         _headers = (EntityHeader*)NativeArray.AllocatePointer<byte>(capacity);
         _sources = NativeArray.AllocatePointer<RenderSource>(capacity);
         _policies = NativeArray.AllocatePointer<DrawPolicy>(capacity);
-        _bounds = NativeArray.AllocatePointer<BoundingBox>(capacity);
-        _models = NativeArray.AllocatePointer<Matrix4x4>(capacity);
-        _normals = NativeArray.AllocatePointer<Matrix3X4>(capacity);
+        _bounds = NativeArray.AllocatePointer<BoundingBox>(capacity, false);
+        _models = NativeArray.AllocatePointer<Matrix4x4>(capacity, false);
+        _normals = NativeArray.AllocatePointer<Matrix3X4>(capacity, false);
 
         Capacity = capacity;
     }

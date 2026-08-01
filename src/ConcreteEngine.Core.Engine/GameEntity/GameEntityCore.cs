@@ -1,10 +1,10 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.ECS.GameComponent;
-using ConcreteEngine.Core.Engine.ECS.Integration;
-using static ConcreteEngine.Core.Engine.ECS.Ecs.Game;
+using ConcreteEngine.Core.Engine.GameEntity.GameComponent;
+using ConcreteEngine.Core.Engine.GameEntity.Integration;
+using static ConcreteEngine.Core.Engine.GameEntity.Ecs.Game;
 
-namespace ConcreteEngine.Core.Engine.ECS;
+namespace ConcreteEngine.Core.Engine.GameEntity;
 
 public sealed class GameEntityCore : EcsStore
 {

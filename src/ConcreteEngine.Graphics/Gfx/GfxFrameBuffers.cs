@@ -20,7 +20,7 @@ public sealed class GfxFrameBuffers
         _gfxTextures = gfxTextures;
     }
 
-    public GfxId<FrameBufferMeta> CreateFrameBuffer(CreateFboInfo desc)
+    public FrameBufferId CreateFrameBuffer(CreateFboInfo desc)
     {
         EnsureCreateFrameBuffer(in desc);
         var size = desc.Size;
@@ -79,7 +79,7 @@ public sealed class GfxFrameBuffers
         return fboId;
     }
 
-    public void RecreateFrameBuffer(GfxId<FrameBufferMeta> fboId, Size2D newSize)
+    public void RecreateFrameBuffer(FrameBufferId fboId, Size2D newSize)
     {
         ArgumentOutOfRangeException.ThrowIfZero(fboId.Id, nameof(fboId));
         var oldFboHandle = GfxRegistry.FboStore.GetHandleAndMeta(fboId, out var oldMeta);

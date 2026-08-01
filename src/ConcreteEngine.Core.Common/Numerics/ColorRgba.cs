@@ -49,7 +49,7 @@ public struct ColorRgba(byte r, byte g, byte b, byte a = 255) : IEquatable<Color
     public override readonly string ToString() => $"#{R:X2}{G:X2}{B:X2}{A:X2}";
 
 
-    public static readonly ColorRgba White = new(255, 255, 255);
-    public static readonly ColorRgba Black = new(0, 0, 0);
-    public static readonly ColorRgba Transparent = new(0, 0, 0, 0);
+    public static ColorRgba White => new(255, 255, 255);
+    public static ColorRgba Black => new(0, 0, 0);
+    public static ColorRgba Transparent => new(0, 0, 0, 0);
 }

@@ -10,7 +10,10 @@ public sealed class CameraFrustum
     private BoundingFrustum _frustum;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Update(in Matrix4x4 viewProj) => _frustum.UpdateFrom(in viewProj);
+    internal void Update(CameraTransformSnapshot transform)
+    {
+         BoundingFrustum.From(ref _frustum, transform.ProjectionViewMatrix);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IntersectsBox(in BoundingBox box)
@@ -33,10 +36,10 @@ public sealed class CameraTransformSnapshot
     public Matrix4x4 ProjectionMatrix;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateViewMatrix( Vector3 translation, YawPitch orientation)
+    public void UpdateViewMatrix(Vector3 translation, YawPitch orientation)
     {
         Translation = translation;
-        
+
         ref var viewMatrix = ref ViewMatrix;
         MatrixMath.CreateFixedSizeModelMatrix(in translation,
             RotationMath.YawPitchToQuaternion(orientation),

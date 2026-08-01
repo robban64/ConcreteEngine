@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.App.Scene;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 

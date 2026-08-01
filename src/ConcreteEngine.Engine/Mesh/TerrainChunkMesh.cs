@@ -11,7 +11,7 @@ using ConcreteEngine.Graphics.Utility;
 namespace ConcreteEngine.Engine.Mesh;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct FoliageGpuInstance
+public struct FoliageVertex
 {
     public Half4 PositionSize;
     public ColorRgba Color;
@@ -42,15 +42,15 @@ internal sealed class TerrainChunkMesh(int slot)
         var props = MeshDrawProperties.MakeElemental(size: DrawElementSize.UnsignedShort, drawCount: drawCount);
 
         var meshId = gfx.CreateEmptyMesh(in props, 2, VertexAttributes.MainVertexAttributes);
-        gfx.CreateAttachVertexBuffer(meshId, vPos.AsReadOnlySpan(), CreateVboArgs.MakeDynamic(0));
-        gfx.CreateAttachVertexBuffer(meshId, vShading.AsReadOnlySpan(), CreateVboArgs.MakeDynamic(1));
+        gfx.CreateAttachVertexBuffer(meshId, vPos, CreateVboArgs.MakeDynamic(0));
+        gfx.CreateAttachVertexBuffer(meshId, vShading, CreateVboArgs.MakeDynamic(1));
 
         gfx.AttachIndexBuffer(meshId, terrainIboId);
 
         TerrainMeshId = meshId;
     }
 
-    internal unsafe void GenerateFoliageMesh(GfxMeshes gfxMeshes, NativeView<FoliageGpuInstance> foliage, int instanceCount)
+    internal unsafe void GenerateFoliageMesh(GfxMeshes gfxMeshes, NativeView<FoliageVertex> foliage, int instanceCount)
     {
         if (foliage.IsNull) Throwers.NullPointer(nameof(foliage));
         if (FoliageMeshId > 0) Throwers.InvalidOperation("Foliage mesh already generated");
@@ -58,7 +58,7 @@ internal sealed class TerrainChunkMesh(int slot)
         var normal = Vector3.UnitY;
         var tangent = Vector3.UnitX;
 
-        ReadOnlySpan<Vertex3D> vertices = stackalloc Vertex3D[]
+        var vertexPtr = stackalloc Vertex3D[8]
         {
             new Vertex3D(new Vector3(-0.5f, 0.0f, -0.5f), new Vector2(0f, 1f), normal, tangent),
             new Vertex3D(new Vector3(0.5f, 0.0f, 0.5f), new Vector2(1f, 1f), normal, tangent),
@@ -69,14 +69,16 @@ internal sealed class TerrainChunkMesh(int slot)
             new Vertex3D(new Vector3(-0.5f, 1.0f, 0.5f), new Vector2(0f, 0f), normal, tangent),
             new Vertex3D(new Vector3(0.5f, 1.0f, -0.5f), new Vector2(1f, 0f), normal, tangent)
         };
+        var vertices = new NativeView<Vertex3D>(vertexPtr, 8);
 
-        ReadOnlySpan<ushort> indices = stackalloc ushort[]
+        var indicesPtr = stackalloc ushort[12]
         {
             // Quad 1
             0, 1, 2, 2, 1, 3,
             // Quad 2
             4, 5, 6, 6, 5, 7
         };
+        var indices = new NativeView<ushort>(indicesPtr, 12);
 
         Span<VertexAttributeDef> attribs = stackalloc VertexAttributeDef[7];
         VertexAttributes.GetVertex3DAttributes().CopyTo(attribs);
@@ -97,7 +99,7 @@ internal sealed class TerrainChunkMesh(int slot)
         gfxMeshes.CreateAttachVertexBuffer(meshId, vertices, CreateVboArgs.MakeDefault(0));
 
         var args = CreateVboArgs.MakeInstance(1, 2, instanceCount);
-        FoliageInstanceVboId = gfxMeshes.CreateAttachVertexBuffer(meshId, foliage.AsReadOnlySpan(), args);
+        FoliageInstanceVboId = gfxMeshes.CreateAttachVertexBuffer(meshId, foliage, args);
 
         gfxMeshes.CreateAttachIndexBuffer(meshId, indices, CreateIboArgs.MakeDefault());
     }
@@ -106,7 +108,7 @@ internal sealed class TerrainChunkMesh(int slot)
     internal int GenerateFoliageBuffer(
         Terrain terrain,
         TerrainChunk chunk,
-        NativeView<FoliageGpuInstance> foliage,
+        NativeView<FoliageVertex> foliage,
         ReadOnlySpan<byte> heights,
         float density)
     {

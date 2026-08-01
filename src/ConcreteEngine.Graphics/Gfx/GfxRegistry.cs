@@ -66,7 +66,7 @@ public static class GfxRegistry
     {
         var index = (int)TMeta.ResourceKind - 1;
         if (GfxStores[index] != null!)
-            Throwers.InvalidOperation($"Store {nameof(TMeta)} already initialized");
+            Throwers.InvalidArgument(nameof(TMeta),"Store already initialized");
 
         GfxStores[index] = new GfxStore<TMeta>(GetCapacity(TMeta.ResourceKind));
     }

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Logging;
 
 namespace ConcreteEngine.Editor.App.CLI;

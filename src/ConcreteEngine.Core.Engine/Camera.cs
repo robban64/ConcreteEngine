@@ -29,7 +29,7 @@ public sealed class Camera
     internal readonly CameraTransform Transform;
 
     private Vector3 _translation, _lastTranslation;
-    public YawPitch _orientation, _lastOrientation;
+    private YawPitch _orientation, _lastOrientation;
 
     public Camera(Size2D viewport)
     {

@@ -1,6 +1,6 @@
-using ConcreteEngine.Core.Engine.ECS.GameComponent;
+using ConcreteEngine.Core.Engine.GameEntity.GameComponent;
 
-namespace ConcreteEngine.Core.Engine.ECS.Integration;
+namespace ConcreteEngine.Core.Engine.GameEntity.Integration;
 
 
 public interface IGameEntityListener

@@ -1,5 +1,5 @@
 using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Field;

@@ -3,12 +3,12 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Enviroment;
 using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.Scene;
 
-namespace ConcreteEngine.Core.Engine.Scene;
+namespace ConcreteEngine.Core.Engine;
 
 public sealed class RayCaster
 {
@@ -33,14 +33,13 @@ public sealed class RayCaster
         RenderEntityId closestEntity = default;
         foreach (var query in RenderEcs.MakeVisibleQuery(RenderEcs.Core.GetWorldBoundView()))
         {
-            if(!SceneManager.Instance.IsLinkedEntity(query.Entity)) continue;
+            if (!SceneManager.Instance.IsLinkedEntity(query.Entity)) continue;
             if (CollisionMethods.RayIntersectsBox(in ray, in query.Item1, out var dist) && dist < distance)
             {
                 distance = dist;
                 bounds = query.Item1;
                 closestEntity = query.Entity;
             }
-
         }
 
         if (!closestEntity.IsValid()) return null;
@@ -99,6 +98,6 @@ public sealed class RayCaster
         ref readonly var invProjViewMatrix = ref _camera.InverseProjectionViewMatrix;
         VectorMath.UnProject(new Vector3(ndc, -1.0f), in invProjViewMatrix, out var p1); // near
         VectorMath.UnProject(new Vector3(ndc, 1.0f), in invProjViewMatrix, out var p2); // far
-        Ray.FromTwoPoints(in p1, in p2, out ray);
+        Ray.FromTwoPoints(p1, p2, out ray);
     }
 }

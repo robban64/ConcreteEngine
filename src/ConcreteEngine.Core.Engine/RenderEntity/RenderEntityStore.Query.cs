@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.ECS;
 
 namespace ConcreteEngine.Core.Engine.RenderEntity;
 

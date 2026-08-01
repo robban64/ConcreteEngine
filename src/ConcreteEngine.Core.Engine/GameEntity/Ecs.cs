@@ -1,10 +1,7 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Engine.ECS.GameComponent;
-using ConcreteEngine.Core.Engine.ECS.Integration;
-using ConcreteEngine.Core.Engine.RenderEntity;
-using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
+using ConcreteEngine.Core.Engine.GameEntity.GameComponent;
 
-namespace ConcreteEngine.Core.Engine.ECS;
+namespace ConcreteEngine.Core.Engine.GameEntity;
 
 public static partial class Ecs
 {

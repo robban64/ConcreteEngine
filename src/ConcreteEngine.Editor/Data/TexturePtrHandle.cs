@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Core.Data;
+namespace ConcreteEngine.Editor.Data;
 
 internal struct TexturePtrHandle(ImTextureRefPtr texturePtr, NativeHandle handle)
 {

@@ -137,7 +137,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     {
         var flag = Dirty;
         if ((flag & SceneDirtyFlags.Visibility) != 0) CommitVisibility();
-        if ((flag & SceneDirtyFlags.Transform) != 0) CommitTransform();
+        if ((flag & SceneDirtyFlags.Transform) != 0) Transform.CommitTransform(GetInstances());
         if ((flag & SceneDirtyFlags.Instance) != 0) CommitInstances();
         Dirty = SceneDirtyFlags.None;
     }
@@ -146,19 +146,6 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     private void CommitVisibility()
     {
         foreach (var it in GetInstances()) it.ToggleVisibility(Visible);
-    }
-
-    private void CommitTransform()
-    {
-        Transform.GetTransformMatrix(out var rootMatrix);
-        var worldBounds = BoundingBox.Infinite;
-        foreach (var instance in GetInstances())
-        {
-            instance.ApplyTransform(in rootMatrix);
-            worldBounds.Expand(in instance.GetWorldBounds());
-        }
-
-        Transform.SetBounds(worldBounds);
     }
 
     private void CommitInstances()

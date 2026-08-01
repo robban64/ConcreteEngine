@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.App.Theme;
-using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.App.Scene;

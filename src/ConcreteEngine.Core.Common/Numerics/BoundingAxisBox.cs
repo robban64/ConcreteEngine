@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
-public record struct BoundingAxisBox(in Vector3 Center, in Vector3 Extent)
+public record struct BoundingAxisBox( Vector3 Center,  Vector3 Extent)
 {
     public Vector3 Center = Center;
     public Vector3 Extent = Extent;

@@ -68,7 +68,6 @@ internal sealed record InspectorMember(
     public string? Segment { get; init; }
     public InputField? Input { get; init; }
 
-    public string GetLabelLiteral() => Symbols.FormatLiteral(Label, true);
 }
 
 internal abstract record InputField(string Name);

@@ -14,17 +14,17 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
     private static int AllocSize => ShaderImporter.ShaderBlockSize * 8;
 
     private ShaderImporter? _shaderImporter;
-    private ArenaAllocator? _allocator;
+    private BumpAllocator? _allocator;
 
     private readonly Dictionary<string, IntPtr> _blocks = new(16);
 
-    private MemoryBlockPtr _vsBlock = null;
-    private MemoryBlockPtr _fsBlock = null;
+    private MemoryBlock _vsBlock = null;
+    private MemoryBlock _fsBlock = null;
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     protected override void OnActivate()
     {
-        _allocator = new ArenaAllocator(AllocSize, zeroed: false);
+        _allocator = new BumpAllocator(AllocSize, zeroed: false);
 
         _shaderImporter = new ShaderImporter();
         _shaderImporter.ImportAllDefinitions();
@@ -74,14 +74,14 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
 
         return;
 
-        static MemoryBlockPtr ImportShaderFile(ArenaAllocator arena, ShaderImporter importer, string filename)
+        static MemoryBlock ImportShaderFile(BumpAllocator allocator, ShaderImporter importer, string filename)
         {
             var path = Path.Join(EnginePath.ShaderCorePath, filename);
 
-            var allocBuilder = arena.MakeBuilder();
-            var span = importer.ImportShader(path, allocBuilder.Data, out _);
-            allocBuilder.AllocSlice(span.Length);
-            return arena.CommitBuilder(allocBuilder);
+            var memory = allocator.AllocCommitBlock();
+            var span = importer.ImportShader(path, memory.Data, out _);
+            memory.AllocSlice(span.Length);
+            return allocator.CommitBlock();
         }
     }
 
@@ -91,8 +91,8 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
         if (_allocator == null) throw new InvalidOperationException("Allocator is null");
         if (_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
 
-        var vsPtr = (MemoryBlockPtr)_blocks[record.VertexShader];
-        var fsPtr = (MemoryBlockPtr)_blocks[record.FragmentShader];
+        var vsPtr = (MemoryBlock)_blocks[record.VertexShader];
+        var fsPtr = (MemoryBlock)_blocks[record.FragmentShader];
 
         if (vsPtr.IsNull || vsPtr.Length <= 0) throw new InvalidOperationException("Vertex Shader pointer is null");
         if (fsPtr.IsNull || fsPtr.Length <= 0) throw new InvalidOperationException("Fragment Shader pointer is null");

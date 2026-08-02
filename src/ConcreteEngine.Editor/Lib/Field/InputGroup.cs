@@ -27,7 +27,7 @@ internal sealed unsafe class InputGroup : InputField
         ArgumentOutOfRangeException.ThrowIfLessThan(count, 2);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(count, 16);
 
-        _values = StringArena.Instance.AllocRaw(sizeof(int) * count).Reinterpret<InputNumeric1>();
+        _values = StringArena.Instance.AllocBytes(sizeof(int) * count).Reinterpret<InputNumeric1>();
         _inputs = new InputEntry[count];
         _getter = getter;
         _setter = setter;

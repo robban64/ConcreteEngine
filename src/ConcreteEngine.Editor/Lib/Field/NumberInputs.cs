@@ -40,7 +40,7 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IIn
         Min = min;
         Max = max;
 
-        Value = (T*)StringArena.Instance.AllocRaw(Unsafe.SizeOf<T>()).Ptr;
+        Value = (T*)StringArena.Instance.AllocBytes(Unsafe.SizeOf<T>()).Ptr;
         if (T.Components == 1) LabelPlacement = LabelPlacement.Inline;
     }
 
@@ -95,7 +95,7 @@ internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IInpu
         Min = min;
         Max = max;
 
-        Value = (T*)StringArena.Instance.AllocRaw(Unsafe.SizeOf<T>()).Ptr;
+        Value = (T*)StringArena.Instance.AllocBytes(Unsafe.SizeOf<T>()).Ptr;
         if (T.Components == 1) LabelPlacement = LabelPlacement.Inline;
     }
 
@@ -140,7 +140,7 @@ internal sealed unsafe class ColorInput : InputField
         _setter = setter;
         HasAlpha = hasAlpha;
         LabelPlacement = LabelPlacement.Top;
-        Value = (Color4*)StringArena.Instance.AllocRaw(Unsafe.SizeOf<Color4>()).Ptr;
+        Value = (Color4*)StringArena.Instance.AllocBytes(Unsafe.SizeOf<Color4>()).Ptr;
     }
 
     public bool Draw()

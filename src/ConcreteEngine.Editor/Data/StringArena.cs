@@ -20,18 +20,18 @@ internal sealed class StringArena : IDisposable
     }
 
 
-    public static int Remaining => Instance._arena.Remaining;
+    public static int Remaining => Instance._allocator.Remaining;
 
     //
     private const int MaxBlocks = 4;
 
     private int _blockCount = 1;
-    private readonly ArenaAllocator _arena;
+    private readonly BumpAllocator _allocator;
 
     private StringArena()
     {
-        _arena = new ArenaAllocator(CapacityUtils.PageSize * MaxBlocks, 0, false);
-        _arena.AllocBlock(CapacityUtils.PageSize, true);
+        _allocator = new BumpAllocator(CapacityUtils.PageSize * MaxBlocks, 0, false);
+        _allocator.AllocBlock(CapacityUtils.PageSize, true);
     }
 
 
@@ -57,29 +57,29 @@ internal sealed class StringArena : IDisposable
         var sizeInBytes = Unsafe.SizeOf<NativeString.NativeStringHeader>() + capacity;
         Ensure(sizeInBytes);
 
-        var memory = _arena.Tail.GetAllocator().AllocSlice(sizeInBytes);
+        var memory = _allocator.Tail.AllocSlice(sizeInBytes);
         return NativeString.From(memory);
     }
 
-    public NativeView<byte> AllocRaw(int capacity)
+    public NativeView<byte> AllocBytes(int capacity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
         var sizeInBytes = IntMath.AlignUp(capacity, 4);
         Ensure(sizeInBytes);
-        return _arena.Tail.GetAllocator().AllocSlice(sizeInBytes);
+        return _allocator.Tail.AllocSlice(sizeInBytes);
     }
 
     private void Ensure(int sizeInBytes)
     {
-        if (sizeInBytes <= _arena.Tail.Remaining) return;
+        if (sizeInBytes <= _allocator.Tail.Remaining) return;
 
         if (_blockCount++ > MaxBlocks) Throwers.InvalidOperation("Too many blocks");
 
-        _arena.AllocBlock(CapacityUtils.PageSize, true);
+        _allocator.AllocBlock(CapacityUtils.PageSize, true);
         Logger.Log(LogScope.Editor, $"StringArena - Allocated new block");
     }
 
-    public void Dispose() => _arena.Dispose();
+    public void Dispose() => _allocator.Dispose();
 
     //
     public static NativeString AllocateString(int value) => Instance.AllocString(value);

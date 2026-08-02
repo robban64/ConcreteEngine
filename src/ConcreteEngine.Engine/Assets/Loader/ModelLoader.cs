@@ -79,8 +79,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
         var meshLength = context.MeshCount;
         if (meshLength == 0) throw new InvalidOperationException("Model import resulted in zero meshes");
 
-        var cursor = 0;
-        var allocator = new NativeAllocator(_importBuffer, ref cursor);
+        var allocator = new NativeAllocBuilder(_importBuffer);
         for (int i = 0; i < meshLength; i++)
         {
             var info = context.Meshes[i].Info;

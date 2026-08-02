@@ -18,6 +18,8 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
         public readonly int Capacity = capacity;
 
         public int Length = length;
+        public readonly int Remaining => Capacity - Length;
+
         // byte[capacity]
     }
     //
@@ -31,6 +33,7 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
 
     internal static NativeString From(NativeView<byte> view)
     {
+        ArgumentNullException.ThrowIfNull(view.Ptr);
         var ptr = (NativeStringHeader*)view.Ptr;
         *ptr = new NativeStringHeader(view.Length, 0);
         return new NativeString(ptr);
@@ -40,7 +43,7 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
     public bool IsNull => _ptr == null;
     public int Length => _ptr->Length;
     public int Capacity => _ptr->Capacity;
-    public int Remaining => _ptr->Capacity - _ptr->Length;
+    public int Remaining => _ptr->Remaining;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator byte*(NativeString str) => str.TextStart;
@@ -48,8 +51,8 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator NativeView<byte>(NativeString str) => str.Text;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<byte> AsSpan() => Text.AsSpan();
-
 
     public byte* TextStart
     {

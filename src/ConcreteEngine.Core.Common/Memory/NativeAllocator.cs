@@ -23,7 +23,6 @@ public readonly ref struct NativeAllocator(NativeView<byte> data, ref int cursor
         if ((uint)Cursor + (uint)length > (uint)Length)
             Throwers.BufferOverflow(nameof(Data), Cursor + length, Length);
 
-
         var start = Cursor;
         Cursor += length;
         return Data.Slice(start, length);

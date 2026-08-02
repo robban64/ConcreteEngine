@@ -12,20 +12,28 @@ public sealed class RenderFbo : IComparable<RenderFbo>
 {
     public readonly FrameBufferId FboId;
     public readonly FboKey Key;
-    public bool IsShadowFbo { get; internal set; }
+    public readonly RenderTargetKind TargetKind;
 
     public readonly FboResizeMode ResizeMode;
     private readonly Func<Size2D, Size2D>? _calc;
 
-    internal RenderFbo(FrameBufferId fboId, FboKey key, FboResizeMode resizeMode, Func<Size2D, Size2D>? calc = null)
+    internal RenderFbo(FrameBufferId fboId, FboKey key, RenderTargetKind targetKind, FboResizeMode resizeMode,
+        Func<Size2D, Size2D>? calc = null)
     {
-    
+        if (targetKind == RenderTargetKind.Shadow && resizeMode != FboResizeMode.Fixed)
+        {
+            Throwers.InvalidArgument("Shadow map require fixed size policy");
+        }
+
         FboId = fboId;
         Key = key;
+        TargetKind = targetKind;
         ResizeMode = resizeMode;
         _calc = calc;
+
     }
 
+    public bool IsShadowFbo => TargetKind == RenderTargetKind.Shadow;
     public bool IsFixedSize => ResizeMode == FboResizeMode.Fixed;
 
     public Size2D CalculateSize(Size2D outputSize)
@@ -34,7 +42,6 @@ public sealed class RenderFbo : IComparable<RenderFbo>
         if (ResizeMode == FboResizeMode.Calculated) return _calc!(outputSize);
         return outputSize;
     }
-
 
     public int CompareTo(RenderFbo? other)
     {

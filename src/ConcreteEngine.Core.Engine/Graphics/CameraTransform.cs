@@ -10,9 +10,10 @@ public sealed class CameraFrustum
     private BoundingFrustum _frustum;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Update(CameraTransformSnapshot transform)
+    internal void Update(in Matrix4x4 projectionViewMatrix)
     {
-         BoundingFrustum.From(ref _frustum, transform.ProjectionViewMatrix);
+        var transposed = Matrix4x4.Transpose(projectionViewMatrix);
+        BoundingFrustum.From(in transposed, out _frustum);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -34,6 +35,7 @@ public sealed class CameraTransformSnapshot
     public Vector3 Translation;
     public Matrix4x4 ViewMatrix;
     public Matrix4x4 ProjectionMatrix;
+    public Matrix4x4 ProjectionViewMatrix;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateViewMatrix(Vector3 translation, YawPitch orientation)
@@ -41,17 +43,9 @@ public sealed class CameraTransformSnapshot
         Translation = translation;
 
         ref var viewMatrix = ref ViewMatrix;
-        MatrixMath.CreateFixedSizeModelMatrix(in translation,
-            RotationMath.YawPitchToQuaternion(orientation),
-            out viewMatrix);
-
+        var quaternion = RotationMath.YawPitchToQuaternion(orientation);
+        MatrixMath.CreateFixedSizeModelMatrix(in translation, in quaternion, out viewMatrix);
         Matrix4x4.Invert(viewMatrix, out viewMatrix);
-    }
-
-    public Matrix4x4 ProjectionViewMatrix
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ViewMatrix * ProjectionMatrix;
     }
 
     public Vector3 Right

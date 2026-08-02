@@ -90,23 +90,15 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
     public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool NearlyEqual(in Color4 a, in Color4 b, float eps = FloatMath.DefaultEpsilon)
+    public static bool NearlyEqual(Color4 a, Color4 b, float eps = FloatMath.DefaultEpsilon)
     {
-        return VectorMath.NearlyEqual(
-            Unsafe.As<Color4, Vector4>(ref Unsafe.AsRef(in a)),
-            Unsafe.As<Color4, Vector4>(ref Unsafe.AsRef(in b)),
-            eps
-        );
+        return VectorMath.NearlyEqual(Unsafe.As<Color4, Vector4>(ref a), Unsafe.As<Color4, Vector4>(ref b), eps);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Color4 Lerp(in Color4 a, in Color4 b, float t)
+    public static Color4 Lerp(Color4 a, Color4 b, float t)
     {
-        return (Color4)Vector4.Lerp(
-            Unsafe.As<Color4, Vector4>(ref Unsafe.AsRef(in a)),
-            Unsafe.As<Color4, Vector4>(ref Unsafe.AsRef(in b)),
-            t
-        );
+        return (Color4)Vector4.Lerp(Unsafe.As<Color4, Vector4>(ref a), Unsafe.As<Color4, Vector4>(ref b), t);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

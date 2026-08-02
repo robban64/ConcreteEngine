@@ -1,45 +1,16 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Engine.Render.Passes;
-using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render;
 
-internal static class PassPipeline3D
+internal static partial class PassPipeline
 {
-    public static void RegisterFrameBuffers(RenderRegistry registry)
-    {
-        var outputSize = EngineWindow.Viewport.Size;
-        var shadowSize = new Size2D(VisualManager.Instance.Shadow.ShadowMapSize);
-        registry.Register<ShadowTarget>(FboVariant.V0, new CreateFboInfo(shadowSize)
-            .AttachDepthTexture(FboDepthAttachment.Default()), FboResizeMode.Fixed);
-
-        registry.Register<SceneTarget>(FboVariant.V0, new CreateFboInfo(outputSize)
-            .AttachColorTexture(FboColorAttachment.Off(), RenderBufferMsaa.X4).AttachDepthStencilBuffer());
-
-        registry.Register<SceneTarget>(FboVariant.V1, new CreateFboInfo(outputSize)
-            .AttachColorTexture(FboColorAttachment.DefaultMip()).AttachDepthStencilBuffer());
-
-        registry.Register<PostFxTarget>(FboVariant.V0, new CreateFboInfo(outputSize)
-            .AttachColorTexture(FboColorAttachment.Default()));
-
-        registry.Register<PostFxTarget>(FboVariant.V1, new CreateFboInfo(outputSize)
-            .AttachColorTexture(FboColorAttachment.Default()));
-
-        registry.Register<OutputTarget>(FboVariant.V0, new CreateFboInfo(outputSize)
-            .AttachColorTexture(FboColorAttachment.Default()));
-    }
-
+  
     public static void RegisterPassPipeline(RenderPassPipeline passPipeline)
     {
         // Shadow
@@ -147,56 +118,27 @@ internal static class PassPipeline3D
             });
     }
 
-    private static unsafe void SelectionRenderer(RenderPassContext ctx)
+    public static void RegisterFrameBuffers(RenderRegistry registry)
     {
-        DrawObjectUniform* uniform = stackalloc DrawObjectUniform[1];
-        EditorEffectsUniform* effect = stackalloc EditorEffectsUniform[1];
-        
-        ctx.Cmd.UseShader(RenderRegistry.HighlightShader);
-        foreach (var query in RenderEcs.Store<SelectionComponent>().VisibilityQuery())
-        {
-            var source = RenderEcs.Core.GetSource(query.Entity);
+        var outputSize = EngineWindow.Viewport.Size;
+        var shadowSize = new Size2D(VisualManager.Instance.Shadow.ShadowMapSize);
+        registry.Register<ShadowTarget>(FboVariant.V0, new CreateFboInfo(shadowSize)
+            .AttachDepthTexture(FboDepthAttachment.Default()), FboResizeMode.Fixed);
 
-            *effect = new EditorEffectsUniform(source.IsSkinned(), query.Component.HighlightColor);
+        registry.Register<SceneTarget>(FboVariant.V0, new CreateFboInfo(outputSize)
+            .AttachColorTexture(FboColorAttachment.Off(), RenderBufferMsaa.X4).AttachDepthStencilBuffer());
 
-            uniform->Model = RenderEcs.Core.GetModelMatrix(query.Entity);
-            uniform->Normal = Matrix3X4.Identity;
+        registry.Register<SceneTarget>(FboVariant.V1, new CreateFboInfo(outputSize)
+            .AttachColorTexture(FboColorAttachment.DefaultMip()).AttachDepthStencilBuffer());
 
-            ctx.Buffers.UploadSingleUniform(effect, 0);
-            ctx.Buffers.UploadSingleUniform(uniform, 0);
-            ctx.Buffers.BindUniformBufferRange<DrawObjectUniform>(0, 1);
+        registry.Register<PostFxTarget>(FboVariant.V0, new CreateFboInfo(outputSize)
+            .AttachColorTexture(FboColorAttachment.Default()));
 
-            if (source.IsSkinned()) ctx.DrawCmd.BindSkinningSlot(query.Entity);
+        registry.Register<PostFxTarget>(FboVariant.V1, new CreateFboInfo(outputSize)
+            .AttachColorTexture(FboColorAttachment.Default()));
 
-            if (ctx.DrawCmd.TryApplyMaterialState(source.Material, out var textureBindings))
-                ctx.DrawCmd.BindDepthTextureSlots(textureBindings);
-
-            ctx.Cmd.DrawMesh(source.Mesh);
-        }
+        registry.Register<OutputTarget>(FboVariant.V0, new CreateFboInfo(outputSize)
+            .AttachColorTexture(FboColorAttachment.Default()));
     }
 
-    private static unsafe void DebugBoundsRenderer(RenderPassContext ctx)
-    {
-        DrawObjectUniform* uniform = stackalloc DrawObjectUniform[1];
-        EditorEffectsUniform* effect = stackalloc EditorEffectsUniform[1];
-
-        var materialId = AssetStore.Core.DebugBoundsMaterial.MaterialId;
-        ctx.Cmd.UseShader(RenderRegistry.BoundingBoxShader);
-        foreach (var query in RenderEcs.Store<DebugBoundsComponent>().VisibilityQuery())
-        {
-            var isSkinned = RenderEcs.Core.GetSource(query.Entity).IsSkinned();
-            *effect = new EditorEffectsUniform(isSkinned, query.Component.Color);
-
-            ref readonly var wb = ref RenderEcs.Core.GetWorldBounds(query.Entity);
-            MatrixMath.CreateModelMatrix(wb.Center, wb.Extent, Quaternion.Identity, out uniform->Model);
-            uniform->Normal = Matrix3X4.Identity;
-            
-            ctx.Buffers.UploadSingleUniform(effect, 0);
-            ctx.Buffers.UploadSingleUniform(uniform, 0);
-            ctx.Buffers.BindUniformBufferRange<DrawObjectUniform>(0, 1);
-
-            ctx.DrawCmd.TryApplyMaterialState(materialId, out _);
-            ctx.Cmd.DrawMesh(GfxMeshes.Cube);
-        }
-    }
 }

@@ -72,6 +72,6 @@ internal sealed class EditorCamera
         _targetOrientation = target;
 
         float t = 1.0f - MathF.Exp(-25 * fixedDt);
-        Camera.Orientation = YawPitch.LerpFixed(Camera.Orientation, _targetOrientation, t);
+        Camera.Orientation = YawPitch.Lerp(Camera.Orientation, _targetOrientation, t);
     }
 }

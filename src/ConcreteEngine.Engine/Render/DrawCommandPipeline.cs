@@ -16,10 +16,11 @@ internal sealed class DrawCommandPipeline : IDisposable
 {
     private const int DefaultTicketCapacity = 1024 * 4;
 
+    public readonly DrawCommandProcessor DrawCmd;
+
     private NativeArray<int> _drawTickets;
     private readonly Range32[] _passRanges;
 
-    public readonly DrawCommandProcessor DrawCmd;
     private readonly GfxBuffers _gfxBuffers;
     private readonly AnimationSystem _animationSystem;
     private readonly MaterialSystem _materialSystem;

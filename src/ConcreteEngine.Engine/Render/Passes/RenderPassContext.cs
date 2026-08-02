@@ -102,14 +102,14 @@ internal sealed class RenderPassContext
     //
     public void ActivateDepthMode()
     {
-        RenderContext.SetDepthMode();
+        RenderContext.SetDepthTargetKind();
         VisualSystem.Instance.UploadShadow();
         VisualSystem.Instance.UploadLightView();
     }
 
     public void RestoreMode()
     {
-        RenderContext.ResetPassMode();
+        RenderContext.ResetTargetKind();
         VisualSystem.Instance.UploadMainView();
     }
 

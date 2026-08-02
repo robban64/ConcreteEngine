@@ -118,7 +118,7 @@ public sealed class Camera
     internal void Interpolate(float alpha, out Vector3 translation, out YawPitch orientation)
     {
         translation = Vector3.Lerp(_lastTranslation,_translation, alpha);
-        orientation = YawPitch.LerpFixed(_lastOrientation, _orientation, alpha);
+        orientation = YawPitch.Lerp(_lastOrientation, _orientation, alpha);
     }
 
     internal bool Ensure()
@@ -127,11 +127,9 @@ public sealed class Camera
         if (!isDirty) return false;
         IsDirty = false;
         ++Version;
-        
-        MatrixMath.CreateFixedSizeModelMatrix(
-            in _translation,
-            RotationMath.YawPitchToQuaternion(_orientation),
-            out var modelMatrix);
+
+        var quaternion = RotationMath.YawPitchToQuaternion(_orientation);
+        MatrixMath.CreateFixedSizeModelMatrix(_translation, in quaternion, out var modelMatrix);
 
         ref var viewMatrix = ref Transform.ViewMatrix;
         Matrix4x4.Invert(modelMatrix, out viewMatrix);

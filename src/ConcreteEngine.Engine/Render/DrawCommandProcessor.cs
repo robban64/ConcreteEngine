@@ -38,10 +38,11 @@ internal sealed class DrawCommandProcessor
     {
         _lastAnimationSlot = 0;
         _lastMaterialId = default;
-        if (RenderContext.PassMode != PassStateMode.Depth) return;
-
-        _gfxCmd.UseShader(RenderRegistry.DepthShader);
-        _gfxCmd.UnbindAllTextures();
+        if (RenderContext.RenderMode == RenderTargetKind.Shadow)
+        {
+            _gfxCmd.UseShader(RenderRegistry.DepthShader);
+            _gfxCmd.UnbindAllTextures();
+        }
     }
 
     public void DrawSource(RenderSource source, RenderEntityId entity, int submitIndex)
@@ -86,7 +87,7 @@ internal sealed class DrawCommandProcessor
         _gfxCmd.ApplyState(materialMeta.DrawState);
         _gfxCmd.ApplyStateFunctions(materialMeta.DrawFunctions);
         
-        if (RenderContext.PassMode == PassStateMode.Main)
+        if (RenderContext.RenderMode == RenderTargetKind.Scene)
         {
             _gfxCmd.UseShader(materialMeta.ShaderId);
             BindTextureSlots(textureBindings, materialMeta.ShadowMapBinding);

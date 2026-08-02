@@ -47,9 +47,13 @@ public sealed class CameraManager
     internal void CommitFrame(float alpha)
     {
         Camera.Interpolate(alpha, out var translation, out var orientation);
-        FrameTransforms.UpdateViewMatrix(translation, orientation);
-        FrameTransforms.ProjectionMatrix = Camera.ProjectionMatrix;
-        Frustum.Update(FrameTransforms);
+        
+        var frameTransforms = FrameTransforms;
+        frameTransforms.UpdateViewMatrix(translation, orientation);
+        frameTransforms.ProjectionMatrix = Camera.ProjectionMatrix;
+        frameTransforms.ProjectionViewMatrix = frameTransforms.ViewMatrix * frameTransforms.ProjectionMatrix;
+
+        Frustum.Update(in frameTransforms.ProjectionViewMatrix);
     }
 
     [SkipLocalsInit]
@@ -100,6 +104,8 @@ public sealed class CameraManager
         var farLs = -minZ + shadowZPad;
 
         LightTransforms.ProjectionMatrix = Matrix4x4.CreateOrthographic(diameter, diameter, nearLs, farLs);
+        LightTransforms.ProjectionViewMatrix = viewMatrix * LightTransforms.ProjectionMatrix;
+
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

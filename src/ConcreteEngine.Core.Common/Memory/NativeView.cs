@@ -26,6 +26,7 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
 
     public int End => Offset + Length;
     public bool IsNull => Ptr == null;
+    public bool IsNullOrEmpty => Ptr == null || Length == 0;
 
     public int SizeInBytes => Length * Unsafe.SizeOf<T>();
     public int OffsetInBytes => Length * Unsafe.SizeOf<T>();
@@ -56,7 +57,7 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
     public NativeView<T> Slice(int offset, int length)
     {
         Debug.Assert((uint)offset + (uint)length < (uint)Length);
-        return new NativeView<T>(Ptr + offset, Offset + offset, length);
+        return new NativeView<T>(Ptr + offset, offset, length);
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<T> SliceFrom(int offset)
@@ -64,18 +65,12 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
         Debug.Assert((uint)offset < (uint)Length);
         return new NativeView<T>(Ptr + offset, offset, Length - offset);
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<T> Slice(RangeU16 range) => Slice(range.Offset16, range.Length16);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<T> Slice(Range32 range) => Slice(range.Offset, range.Length);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<T> AsSpan(int offset = 0)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset, (uint)Length);
-        if (IsNull) return default;
+        if (IsNullOrEmpty) return default;
         return new Span<T>(Ptr + offset, Length - offset);
     }
 
@@ -83,7 +78,7 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
     public Span<T> AsSpan(int offset, int length)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset + (uint)length, (uint)Length);
-        if (IsNull) return default;
+        if (IsNullOrEmpty) return default;
         return new Span<T>(Ptr + offset, length);
     }
     
@@ -91,7 +86,7 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
     public ReadOnlySpan<T> AsReadOnlySpan(int offset = 0)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset, (uint)Length);
-        if (IsNull) return default;
+        if (IsNullOrEmpty) return default;
         return new ReadOnlySpan<T>(Ptr + offset, Length - offset);
     }
     
@@ -99,12 +94,16 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
     public ReadOnlySpan<T> AsReadOnlySpan(int offset, int length)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset + (uint)length, (uint)Length);
-        if (IsNull) return default;
+        if (IsNullOrEmpty) return default;
         return new ReadOnlySpan<T>(Ptr + offset, length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Clear() => NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
+    public void Clear()
+    {
+        if(IsNullOrEmpty) Throwers.NullPointer(nameof(Ptr));
+        NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<U> Reinterpret<U>() where U : unmanaged

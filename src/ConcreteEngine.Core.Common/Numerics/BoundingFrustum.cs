@@ -14,62 +14,7 @@ public struct BoundingFrustum
     public Plane BottomPlane;
     public Plane NearPlane;
     public Plane FarPlane;
-
-    public BoundingFrustum(in Matrix4x4 viewProj)
-    {
-        UpdateFrom(in viewProj);
-    }
-
-    public BoundingFrustum(ReadOnlySpan<Vector3> corners)
-    {
-        LeftPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[2], corners[4]));
-        RightPlane = Plane.Normalize(PlaneFromPoints(corners[1], corners[5], corners[3]));
-        TopPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[4], corners[1]));
-        BottomPlane = Plane.Normalize(PlaneFromPoints(corners[2], corners[3], corners[6]));
-        NearPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[1], corners[2]));
-        FarPlane = Plane.Normalize(PlaneFromPoints(corners[4], corners[6], corners[5]));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateFrom(in Matrix4x4 viewProj)
-    {
-        LeftPlane = NormalizePlane(
-            viewProj.M14 + viewProj.M11,
-            viewProj.M24 + viewProj.M21,
-            viewProj.M34 + viewProj.M31,
-            viewProj.M44 + viewProj.M41);
-
-        RightPlane = NormalizePlane(
-            viewProj.M14 - viewProj.M11,
-            viewProj.M24 - viewProj.M21,
-            viewProj.M34 - viewProj.M31,
-            viewProj.M44 - viewProj.M41);
-
-        TopPlane = NormalizePlane(
-            viewProj.M14 - viewProj.M12,
-            viewProj.M24 - viewProj.M22,
-            viewProj.M34 - viewProj.M32,
-            viewProj.M44 - viewProj.M42);
-
-        BottomPlane = NormalizePlane(
-            viewProj.M14 + viewProj.M12,
-            viewProj.M24 + viewProj.M22,
-            viewProj.M34 + viewProj.M32,
-            viewProj.M44 + viewProj.M42);
-
-        NearPlane = NormalizePlane(
-            viewProj.M14 + viewProj.M13,
-            viewProj.M24 + viewProj.M23,
-            viewProj.M34 + viewProj.M33,
-            viewProj.M44 + viewProj.M43);
-
-        FarPlane = NormalizePlane(
-            viewProj.M14 - viewProj.M13,
-            viewProj.M24 - viewProj.M23,
-            viewProj.M34 - viewProj.M33,
-            viewProj.M44 - viewProj.M43);
-    }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool IntersectsBox(in BoundingBox box)
     {
@@ -95,44 +40,32 @@ public struct BoundingFrustum
     
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void From(scoped ref BoundingFrustum frustum, Matrix4x4 viewProj)
+    public static void From(in Matrix4x4 transposedViewProjection, out BoundingFrustum frustum)
     {
-        frustum.LeftPlane = Plane.Normalize(Plane.Create(
-            viewProj.M14 + viewProj.M11,
-            viewProj.M24 + viewProj.M21,
-            viewProj.M34 + viewProj.M31,
-            viewProj.M44 + viewProj.M41));
+        ref Vector4 cols = ref Unsafe.As<Matrix4x4, Vector4>(ref Unsafe.AsRef(in transposedViewProjection));
+        Vector4 col1 = Unsafe.Add(ref cols, 0);
+        Vector4 col2 = Unsafe.Add(ref cols, 1);
+        Vector4 col3 = Unsafe.Add(ref cols, 2);
+        Vector4 col4 = Unsafe.Add(ref cols, 3);
 
-        frustum.RightPlane = Plane.Normalize(Plane.Create(
-            viewProj.M14 - viewProj.M11,
-            viewProj.M24 - viewProj.M21,
-            viewProj.M34 - viewProj.M31,
-            viewProj.M44 - viewProj.M41));
-
-        frustum.TopPlane = Plane.Normalize(Plane.Create(
-            viewProj.M14 - viewProj.M12,
-            viewProj.M24 - viewProj.M22,
-            viewProj.M34 - viewProj.M32,
-            viewProj.M44 - viewProj.M42));
-
-        frustum.BottomPlane = Plane.Normalize(Plane.Create(
-            viewProj.M14 + viewProj.M12,
-            viewProj.M24 + viewProj.M22,
-            viewProj.M34 + viewProj.M32,
-            viewProj.M44 + viewProj.M42));
-
-        frustum.NearPlane = Plane.Normalize(Plane.Create(
-            viewProj.M14 + viewProj.M13,
-            viewProj.M24 + viewProj.M23,
-            viewProj.M34 + viewProj.M33,
-            viewProj.M44 + viewProj.M43));
-
-        frustum.FarPlane = Plane.Normalize(Plane.Create(
-            viewProj.M14 - viewProj.M13,
-            viewProj.M24 - viewProj.M23,
-            viewProj.M34 - viewProj.M33,
-            viewProj.M44 - viewProj.M43));
+        frustum.LeftPlane = NormalizePlane(col4 + col1);
+        frustum.RightPlane = NormalizePlane(col4 - col1);
+        frustum.TopPlane = NormalizePlane(col4 - col2);
+        frustum.BottomPlane = NormalizePlane(col4 + col2);
+        frustum.NearPlane = NormalizePlane(col4 + col3);
+        frustum.FarPlane = NormalizePlane(col4 - col3);
     }
+    
+    public static void FromCorners(ReadOnlySpan<Vector3> corners, out BoundingFrustum frustum)
+    {
+        frustum.LeftPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[2], corners[4]));
+        frustum.RightPlane = Plane.Normalize(PlaneFromPoints(corners[1], corners[5], corners[3]));
+        frustum.TopPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[4], corners[1]));
+        frustum.BottomPlane = Plane.Normalize(PlaneFromPoints(corners[2], corners[3], corners[6]));
+        frustum.NearPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[1], corners[2]));
+        frustum. FarPlane = Plane.Normalize(PlaneFromPoints(corners[4], corners[6], corners[5]));
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Plane PlaneFromPoints(Vector3 a, Vector3 b, Vector3 c)
@@ -149,6 +82,15 @@ public struct BoundingFrustum
         float invLength = 1.0f / MathF.Sqrt(lengthSq);
         return new Plane(x * invLength, y * invLength, z * invLength, d * invLength);
     }
-    
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Plane NormalizePlane(Vector4 p)
+    {
+        float lengthSq = p.LengthSquared();
+        float invLength = 1f / MathF.Sqrt(lengthSq);
+        Vector4 normalized = p * invLength;
+        return Unsafe.As<Vector4, Plane>(ref normalized);
+    }
+
 
 }

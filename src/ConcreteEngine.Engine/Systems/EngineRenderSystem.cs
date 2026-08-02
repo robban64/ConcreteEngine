@@ -49,8 +49,8 @@ public sealed class EngineRenderSystem : IDisposable
     internal void Init()
     {
         RegisterCoreShaders(AssetManager.Assets);
-        PassPipeline3D.RegisterFrameBuffers(_registry);
-        PassPipeline3D.RegisterPassPipeline(_passPipeline);
+        PassPipeline.RegisterFrameBuffers(_registry);
+        PassPipeline.RegisterPassPipeline(_passPipeline);
         
         VisualSystem.Instance.UploadPointLight();
         _resolver.Setup();
@@ -108,7 +108,6 @@ public sealed class EngineRenderSystem : IDisposable
         _drawPipeline.StageCommands(_resolver);
     }
 
-    private AvgFrameTimer avg;
     public void ExecuteRenderPipeline()
     {
         while (_passPipeline.NextPass(out var nextPassId, out var passAction))
@@ -119,10 +118,10 @@ public sealed class EngineRenderSystem : IDisposable
 
             if (passResult.Op is PassOp.Draw)
             {
-                avg.BeginSample();
+                //avg.BeginSample();
                 var passRange = _drawPipeline.PrepareDrawPass(nextPassId);
                 _drawPipeline.ExecuteDrawPass(passRange);
-                if (avg.EndSample() > 144 * 4) avg.ResetAndPrint();
+                //if (avg.EndSample() > 144 * 4) avg.ResetAndPrint();
             }
 
             _passPipeline.ApplyAfterPass();

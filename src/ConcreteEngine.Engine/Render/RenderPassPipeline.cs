@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Graphics;
 
@@ -23,10 +24,11 @@ internal sealed class RenderPassPipeline
 
     internal void ResetFrame()
     {
-        RenderContext.ResetPassMode();
+        RenderContext.ResetTargetKind();
         _activePassIndex = 0;
         _ctx.Reset();
     }
+
 
     internal bool NextPass(out PassId passId, out NextPassAction action)
     {

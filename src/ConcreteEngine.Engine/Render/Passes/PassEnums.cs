@@ -1,10 +1,11 @@
 namespace ConcreteEngine.Engine.Render.Passes;
 
-public enum PassStateMode : byte
+public enum RenderTargetKind : byte
 {
-    Main,
-    Depth,
-    Post
+    Scene = 0,
+    Shadow = 1,
+    Light = 2,
+    Screen = 2
 }
 
 public enum PassOp : byte

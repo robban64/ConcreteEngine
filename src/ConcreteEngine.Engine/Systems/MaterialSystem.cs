@@ -143,8 +143,6 @@ internal sealed class MaterialSystem : IDisposable
         return ref _buffer[id.Index()];
     }
 
-
-    
     private void EnsureCapacity(int amount)
     {
         if (_metas.Length > amount) return;

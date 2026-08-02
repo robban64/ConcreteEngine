@@ -13,21 +13,22 @@ namespace ConcreteEngine.Engine.Systems;
 
 internal sealed class MaterialSystem : IDisposable
 {
-    private const int DefaultTextureSlotCapacity = DefaultMaterialBufferCapacity * 4;
+    public const int MaterialBufferCapacity = 512;
+    private const int TextureSlotCapacity = MaterialBufferCapacity * 4;
 
     public int Count { get; private set; }
     private int _slotCount;
 
     private readonly AssetTypeStore _materialStore = AssetStore.GetTypeStore(AssetKind.Material);
 
-    private RangeU16[] _slotRanges = new RangeU16[DefaultMaterialBufferCapacity];
-    private MaterialMeta[] _metas = new MaterialMeta[DefaultMaterialBufferCapacity];
+    private RangeU16[] _slotRanges = new RangeU16[MaterialBufferCapacity];
+    private MaterialMeta[] _metas = new MaterialMeta[MaterialBufferCapacity];
 
     private NativeArray<TextureBinding> _textureSlots =
-        NativeArray.Allocate<TextureBinding>(DefaultTextureSlotCapacity);
+        NativeArray.Allocate<TextureBinding>(TextureSlotCapacity);
 
     private NativeArray<MaterialUniform> _buffer =
-        NativeArray.Allocate<MaterialUniform>(DefaultMaterialBufferCapacity, false);
+        NativeArray.Allocate<MaterialUniform>(MaterialBufferCapacity, false);
 
     
     internal void Commit()

@@ -54,7 +54,7 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly PtrEnumerator<T1, T2> GetEnumerator() => new(_ptr1, _ptr2, Length);
 
-    public void Resize(int length, bool zeroed)
+    public void ReAlloc(int length, bool zeroed)
     {
         int sizeT1 = length * Unsafe.SizeOf<T1>(), sizeT2 = length * Unsafe.SizeOf<T2>();
 
@@ -138,7 +138,7 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
         _ptr3[index] = t3;
     }
 
-    public void Resize(int length, bool zeroed)
+    public void ReAlloc(int length, bool zeroed)
     {
         var capacity = GetSizeInBytes(length, out var sizeT1, out var sizeT2, out _);
         var array = new NativeArray<byte>((byte*)_ptr1, capacity, 0);

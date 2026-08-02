@@ -17,7 +17,6 @@ public static class RenderLimits
 
     public const int MaxFboVariants = 4;
 
-    public const int DefaultMaterialBufferCapacity = 512;
 
     public const int MaxMaterialCount = 1024;
     public const int MaxMaterialBufferCapacity = 2048;

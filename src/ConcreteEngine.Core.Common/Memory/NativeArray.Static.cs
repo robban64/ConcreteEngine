@@ -11,6 +11,8 @@ public static unsafe class NativeArray
     public static ulong AllocSizeInBytes { get; private set; }
     public static int AllocCount { get; private set; }
     
+    public static float AllocSizeInMb => AllocSizeInBytes > 0 ? AllocSizeInBytes / 1024.0f / 1024.0f : 0;
+    
     public static NativeArray<byte> Allocate(int capacity, bool zeroed = true) 
     {
         var ptr = AllocMemory(capacity, 1, 0, zeroed);
@@ -50,6 +52,28 @@ public static unsafe class NativeArray
         return array;
     }
     
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void* AllocMemory(int length, int stride, int alignment, bool zeroed)
+    {
+        Validate(length, stride, alignment);
+
+        var bytes = (nuint)length * (nuint)stride;
+        AllocSizeInBytes += bytes;
+        ++AllocCount;
+
+        if (alignment > 0)
+        {
+            var ptr = NativeMemory.AlignedAlloc(bytes, (nuint)alignment);
+            if (zeroed) NativeMemory.Clear(ptr, bytes);
+            return ptr;
+        }
+
+        return zeroed
+            ? NativeMemory.AllocZeroed((nuint)length, (nuint)stride)
+            : NativeMemory.Alloc((nuint)length, (nuint)stride);
+    }
+    
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void* ReAlloc(void* ptr, int length, int newLength, int stride, int alignment,
         bool zeroed)
@@ -87,6 +111,9 @@ public static unsafe class NativeArray
         if (alignment > 0) NativeMemory.AlignedFree(ptr);
         else NativeMemory.Free(ptr);
         
+        if(AllocSizeInBytes - (ulong)sizeInBytes > AllocSizeInBytes) 
+            Throwers.InvalidOperation(nameof(AllocSizeInBytes));
+        
         AllocSizeInBytes -= (ulong)sizeInBytes;
         --AllocCount;
 
@@ -98,26 +125,6 @@ public static unsafe class NativeArray
     }
     
     
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void* AllocMemory(int length, int stride, int alignment, bool zeroed)
-    {
-        Validate(length, stride, alignment);
-
-        var bytes = (nuint)length * (nuint)stride;
-        AllocSizeInBytes += bytes;
-        ++AllocCount;
-
-        if (alignment > 0)
-        {
-            var ptr = NativeMemory.AlignedAlloc(bytes, (nuint)alignment);
-            if (zeroed) NativeMemory.Clear(ptr, bytes);
-            return ptr;
-        }
-
-        return zeroed
-            ? NativeMemory.AllocZeroed((nuint)length, (nuint)stride)
-            : NativeMemory.Alloc((nuint)length, (nuint)stride);
-    }
     
     [MethodImpl(MethodImplOptions.NoInlining), StackTraceHidden]
     private static void Validate(int capacity, int stride, int alignment)

@@ -35,14 +35,13 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
 
     public ConsoleWindow(StateManager state) : base(state)
     {
-        _textInput =
-            new TextInput("cli", 64, ConsoleSystem.ExecuteCommand)
-                {
-                    Hint = "$", Trim = true, Lowercase = true, ClearAfter = true
-                }
-                .WithHistory()
-                .ToggleFlag(ImGuiInputTextFlags.CharsNoBlank, false)
-                .ToggleFlag(ImGuiInputTextFlags.EnterReturnsTrue, true);
+        _textInput = new TextInput("cli", 64, ConsoleSystem.ExecuteCommand)
+            {
+                Hint = "$", Trim = true, Lowercase = true, ClearAfter = true
+            }
+            .WithHistory()
+            .ToggleFlag(ImGuiInputTextFlags.CharsNoBlank, false)
+            .ToggleFlag(ImGuiInputTextFlags.EnterReturnsTrue, true);
     }
 
 
@@ -56,14 +55,23 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         if (LogService.Instance.NewLogs > 0)
             _scrollTopBottomStepper.SetIntervalTicks(4);
 
-        var m = MetricSystem.Instance;
-        //ImGui.GetIO().Framerate
         var sw = _title.OverWriter;
-        sw.Append("Console"u8).PadRight(4);
-        sw.Append((byte)'[').Append(m.Metric.AvgMs, "F4").AppendAscii('m', 's').Append((byte)']');
+        sw.Append("CLI: "u8);
+        sw.AppendAscii('[').Append(ImGuiSystem.Io.Framerate, "F0").AppendAscii('H', 'Z', ']');
         sw.PadRight(4);
-        sw.Append((byte)'[').Append(m.Metric.AllocMbPerSec, "F4").Append("MB/s").Append((byte)']');
-        sw.End();
+
+        sw.AppendAscii('[').Append(MetricSystem.Instance.Metric.AvgMs, "F4").AppendAscii('m', 's', ']');
+        sw.PadRight(4);
+
+        sw.Append("GC: "u8);
+        sw.AppendAscii('[').Append(MetricSystem.Instance.Metric.AllocMbPerSec, "F4").Append("MB/s"u8).AppendAscii(']');
+        sw.PadRight(4);
+
+        sw.Append("Native: "u8);
+        sw.AppendAscii('[').Append(NativeArray.AllocSizeInMb, "F2").AppendAscii('M', 'B', ']');
+
+        var length = sw.End().Length;
+        _title.SetLength(length);
     }
 
 
@@ -77,16 +85,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         // log
         var innerWindow = ImGui.BeginChild("logs"u8, new Vector2(0, -InputHeight), ImGuiChildFlags.None, InnerFlags);
         if (innerWindow && LogService.Instance.LogCount > 0)
-        {
-            foreach (var range in AppDraw.Clipper(LogService.Instance.LogCount, RowHeight, out _))
-                DrawVisibleLogs(LogService.Instance, range.Offset, range.Length);
-
-            if (_scrollTopBottomStepper.Tick())
-            {
-                ImGui.SetScrollHereY(1.0f);
-                _scrollTopBottomStepper.SetIntervalTicks(0);
-            }
-        }
+            DrawLogInnerWindow();
 
         ImGui.EndChild();
 
@@ -101,24 +100,36 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         ImGui.PopStyleColor(1);
     }
 
-    private static void DrawVisibleLogs(LogService service, int start, int length)
+    private void DrawLogInnerWindow()
     {
-        var cursor = UiDrawCursor.Make();
-        var logs = service.GetLogs(start, length);
-        for (var i = 0; i < logs.Length; i++)
-        {
-            var it = logs[i];
-            if (i > 0) cursor.NewLine();
+        var logService = LogService.Instance;
 
-            var text = service.GetLogText(it.Handle);
-            if (it.Scope > LogScope.Command)
-                DrawLog(text, it.Scope, it.Level, ref cursor);
-            else
-                cursor.Text(text.SliceFrom(LogEntry.TimestampOffset));
+        foreach (var range in AppDraw.Clipper(logService.LogCount, RowHeight, out _))
+        {
+            var cursor = UiDrawCursor.Make();
+            var logs = logService.GetLogs(range.Offset, range.Length);
+            for (var i = 0; i < logs.Length; i++)
+            {
+                var it = logs[i];
+                if (i > 0) cursor.NewLine();
+
+                var text = logService.GetLogText(it.Handle);
+                if (it.Scope > LogScope.Command)
+                    DrawLog(text, it.Scope, it.Level, ref cursor);
+                else
+                    cursor.Text(text.SliceFrom(LogEntry.TimestampOffset));
+            }
+
+            cursor.Sync();
         }
 
-        cursor.Sync();
+        if (_scrollTopBottomStepper.Tick())
+        {
+            ImGui.SetScrollHereY(1.0f);
+            _scrollTopBottomStepper.SetIntervalTicks(0);
+        }
     }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DrawLog(NativeView<byte> text, LogScope scope, LogLevel level, scoped ref UiDrawCursor cursor)

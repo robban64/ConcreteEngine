@@ -115,7 +115,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         var newCapacity = int.Max(MinCapacity, IntMath.AlignUp(PendingParticleCount, 128));
         if (newCapacity > _particles.Length)
         {
-            _particles.Resize(newCapacity, true);
+            _particles.ReAlloc(newCapacity, true);
             Logger.Log(LogScope.Engine, "ParticleEmitter: resized", LogLevel.Warn);
         }
 

@@ -90,16 +90,16 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     public readonly void Clear() => NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void Resize(int newLength, bool zeroed)
+    public void ReAlloc(int newLength, bool zeroed)
     {
-        Ptr = (T*)NativeArray.Resize(Ptr, Length, newLength, Unsafe.SizeOf<T>(), Alignment, zeroed);
+        Ptr = (T*)NativeArray.ReAlloc(Ptr, Length, newLength, Unsafe.SizeOf<T>(), Alignment, zeroed);
         Length = newLength;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void Dispose()
     {
-        if (Ptr != null) NativeArray.DisposeArray(Ptr, Alignment);
+        if (Ptr != null) NativeArray.DisposeArray(Ptr, SizeInBytes, Alignment);
         Ptr = null;
         Length = 0;
     }

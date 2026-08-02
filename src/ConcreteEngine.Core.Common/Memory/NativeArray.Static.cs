@@ -8,11 +8,8 @@ namespace ConcreteEngine.Core.Common.Memory;
 
 public static unsafe class NativeArray
 {
-    public static NativeArray<T> CreateFrom<T>(T* ptr, int length, int alignment = 0) where T : unmanaged
-    {
-        Validate(length, Unsafe.SizeOf<T>(), alignment);
-        return new NativeArray<T>(ptr, length, alignment);
-    }
+    public static ulong AllocSizeInBytes { get; private set; }
+    public static int AllocCount { get; private set; }
     
     public static NativeArray<byte> Allocate(int capacity, bool zeroed = true) 
     {
@@ -38,19 +35,29 @@ public static unsafe class NativeArray
         return (T*)ptr;
     }
     
-    public static T* Resize<T>(T* ptr, int length, int newLength, int alignment, bool zeroed) where T : unmanaged
+    public static T* ReAlloc<T>(T* ptr, int length, int newLength, int alignment, bool zeroed) where T : unmanaged
     {
-        return (T*)Resize(ptr, length, newLength, Unsafe.SizeOf<T>(), alignment, zeroed);
+        return (T*)ReAlloc(ptr, length, newLength, Unsafe.SizeOf<T>(), alignment, zeroed);
     }
     
-
+     
+    public static NativeArray<T> CreateFrom<T>(T* ptr, int length, int alignment = 0) where T : unmanaged
+    {
+        Validate(length, Unsafe.SizeOf<T>(), alignment);
+        var array = new NativeArray<T>(ptr, length, alignment);
+        AllocSizeInBytes += (ulong)array.SizeInBytes;
+        ++AllocCount;
+        return array;
+    }
+    
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void* Resize(void* ptr, int length, int newLength, int stride, int alignment,
+    public static void* ReAlloc(void* ptr, int length, int newLength, int stride, int alignment,
         bool zeroed)
     {
         ArgumentNullException.ThrowIfNull(ptr);
         var capacity = (nuint)length * (nuint)stride;
         var newCapacity = (nuint)newLength * (nuint)stride;
+        var deltaBytes = newCapacity - capacity;
 
         Validate((int)newCapacity, stride, alignment);
 
@@ -60,9 +67,10 @@ public static unsafe class NativeArray
 
         if (zeroed && newCapacity > capacity)
         {
-            var clearBytes = newCapacity - capacity;
-            NativeMemory.Clear((byte*)ptr + capacity, clearBytes);
+            NativeMemory.Clear((byte*)ptr + capacity, deltaBytes);
         }
+
+        AllocSizeInBytes += deltaBytes;
 
 #if DEBUG
         Console.WriteLine($"Reallocate {nameof(NativeArray)}: {newCapacity} bytes");
@@ -71,12 +79,17 @@ public static unsafe class NativeArray
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void DisposeArray(void* ptr, int alignment)
+    public static void DisposeArray(void* ptr, int sizeInBytes, int alignment)
     {
         if (ptr == null) return;
-
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sizeInBytes);
+        
         if (alignment > 0) NativeMemory.AlignedFree(ptr);
         else NativeMemory.Free(ptr);
+        
+        AllocSizeInBytes -= (ulong)sizeInBytes;
+        --AllocCount;
+
 /*
 #if DEBUG
         Console.WriteLine($"Disposed {nameof(NativeArray)}: {capacity} bytes");
@@ -90,9 +103,12 @@ public static unsafe class NativeArray
     {
         Validate(length, stride, alignment);
 
+        var bytes = (nuint)length * (nuint)stride;
+        AllocSizeInBytes += bytes;
+        ++AllocCount;
+
         if (alignment > 0)
         {
-            var bytes = (nuint)length * (nuint)stride;
             var ptr = NativeMemory.AlignedAlloc(bytes, (nuint)alignment);
             if (zeroed) NativeMemory.Clear(ptr, bytes);
             return ptr;

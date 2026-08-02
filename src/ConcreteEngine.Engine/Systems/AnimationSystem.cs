@@ -143,7 +143,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
     {
         if (_boneBuffer.Length >= length + 1) return;
         var newSize = CapacityUtils.CapacityGrowthToFit(_boneBuffer.Length, length + 1);
-        _boneBuffer.Resize(newSize, false);
+        _boneBuffer.ReAlloc(newSize, false);
         Console.WriteLine("BoneBuffer buffer resize");
     }
 

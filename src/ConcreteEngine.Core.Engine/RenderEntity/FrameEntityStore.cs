@@ -47,7 +47,7 @@ public sealed class FrameEntityStore : IDisposable
     internal void Resize(int newSize)
     {
         if(newSize <= _visibleEntities.Length) return;
-        _visibleEntities.Resize(newSize, true);
+        _visibleEntities.ReAlloc(newSize, true);
     }
     
 

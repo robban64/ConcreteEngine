@@ -154,7 +154,7 @@ internal sealed class MaterialSystem : IDisposable
         Console.WriteLine($"{nameof(MaterialSystem)} TextureSlots resize");
         Array.Resize(ref _metas, newCap);
         Array.Resize(ref _slotRanges, newCap);
-        _buffer.Resize(newCap, true);
+        _buffer.ReAlloc(newCap, true);
     }
 
     private void EnsureTextureSlotCapacity(int amount)
@@ -165,7 +165,7 @@ internal sealed class MaterialSystem : IDisposable
             Throwers.BufferOverflow(nameof(MaterialSystem), newCap, MaxMaterialBufferCapacity);
 
         Console.WriteLine($"{nameof(MaterialSystem)} TextureSlots resize");
-        _textureSlots.Resize(newCap, true);
+        _textureSlots.ReAlloc(newCap, true);
     }
 
     public void Dispose()

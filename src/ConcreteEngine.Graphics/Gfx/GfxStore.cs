@@ -169,7 +169,7 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
         GfxLog.Event(new LogEvent(0, 0, newCap, 0, 0, 0, LogTopic.ArrayBuffer, LogScope.Gfx, LogAction.Resize,
             LogLevel.Warn));
 
-        _memory.Resize(newCap, true);
+        _memory.ReAlloc(newCap, true);
         _entries = (Entry*)_memory.Ptr;
     }
 

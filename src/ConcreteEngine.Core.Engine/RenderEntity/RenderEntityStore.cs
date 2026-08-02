@@ -159,8 +159,8 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
         if (Capacity >= length) return;
 
         var newSize = CapacityUtils.CapacityGrowthToFit(Capacity, length);
-        _entities = NativeArray.Resize(_entities, Capacity, newSize, 0, true);
-        _components = NativeArray.Resize(_components, Capacity, newSize, 0, true);
+        _entities = NativeArray.ReAlloc(_entities, Capacity, newSize, 0, true);
+        _components = NativeArray.ReAlloc(_components, Capacity, newSize, 0, true);
 
         Logger.Log(LogScope.Ecs, $"{typeof(T)}: resized {newSize}", LogLevel.Warn);
 
@@ -169,8 +169,8 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
 
     public void Dispose()
     {
-        NativeArray.DisposeArray(_entities, 0);
-        NativeArray.DisposeArray(_components, 0);
+        NativeArray.DisposeArray(_entities, Capacity * Unsafe.SizeOf<RenderEntityId>(), 0);
+        NativeArray.DisposeArray(_components, Capacity * Unsafe.SizeOf<T>(), 0);
         _entities = null;
         _components = null;
         Count = 0;

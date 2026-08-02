@@ -59,7 +59,7 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
         int sizeT1 = length * Unsafe.SizeOf<T1>(), sizeT2 = length * Unsafe.SizeOf<T2>();
 
         var array = new NativeArray<byte>((byte*)_ptr1, sizeT1 + sizeT2, 0);
-        array.Resize(sizeT1 + sizeT2, zeroed);
+        array.ReAlloc(sizeT1 + sizeT2, zeroed);
 
         Length = length;
         _ptr1 = (T1*)array.Ptr;
@@ -68,7 +68,7 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
 
     public void Dispose()
     {
-        NativeArray.DisposeArray(_ptr1, 0);
+        NativeArray.DisposeArray(_ptr1, GetSizeInBytes(Length, out _, out _), 0);
         _ptr1 = null;
         _ptr2 = null;
     }
@@ -142,7 +142,7 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
     {
         var capacity = GetSizeInBytes(length, out var sizeT1, out var sizeT2, out _);
         var array = new NativeArray<byte>((byte*)_ptr1, capacity, 0);
-        array.Resize(sizeT1 + sizeT2, zeroed);
+        array.ReAlloc(sizeT1 + sizeT2, zeroed);
 
         Length = length;
         _ptr1 = (T1*)array.Ptr;
@@ -156,7 +156,7 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
 
     public void Dispose()
     {
-        NativeArray.DisposeArray(_ptr1, 0);
+        NativeArray.DisposeArray(_ptr1, GetSizeInBytes(Length, out _, out _, out _), 0);
         _ptr1 = null;
         _ptr2 = null;
         _ptr3 = null;

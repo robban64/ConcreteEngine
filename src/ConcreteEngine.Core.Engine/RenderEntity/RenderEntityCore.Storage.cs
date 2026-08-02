@@ -92,13 +92,13 @@ public sealed unsafe partial class RenderEntityCore
         var newSize = CapacityUtils.CapacityGrowthToFit(Capacity, required);
         Logger.Log(LogScope.Ecs, "RenderEcs resized", LogLevel.Warn);
 
-        _headers = NativeArray.Resize(_headers, Capacity, newSize, 0, true);
-        _sources = NativeArray.Resize(_sources, Capacity, newSize, 0, true);
-        _policies = NativeArray.Resize(_policies, Capacity, newSize, 0, true);
+        _headers = NativeArray.ReAlloc(_headers, Capacity, newSize, 0, true);
+        _sources = NativeArray.ReAlloc(_sources, Capacity, newSize, 0, true);
+        _policies = NativeArray.ReAlloc(_policies, Capacity, newSize, 0, true);
 
-        _bounds = NativeArray.Resize(_bounds, Capacity, newSize, 0, false);
-        _models = NativeArray.Resize(_models, Capacity, newSize, 0, false);
-        _normals = NativeArray.Resize(_normals, Capacity, newSize, 0, false);
+        _bounds = NativeArray.ReAlloc(_bounds, Capacity, newSize, 0, false);
+        _models = NativeArray.ReAlloc(_models, Capacity, newSize, 0, false);
+        _normals = NativeArray.ReAlloc(_normals, Capacity, newSize, 0, false);
 
         Capacity = newSize;
         RenderEcs.OnResize(newSize);
@@ -107,12 +107,12 @@ public sealed unsafe partial class RenderEntityCore
 
     public void Dispose()
     {
-        NativeArray.DisposeArray(_headers, 0);
-        NativeArray.DisposeArray(_sources, 0);
-        NativeArray.DisposeArray(_policies, 0);
-        NativeArray.DisposeArray(_bounds, 0);
-        NativeArray.DisposeArray(_models, 0);
-        NativeArray.DisposeArray(_normals, 0);
+        NativeArray.DisposeArray(_headers, Capacity * Unsafe.SizeOf<EntityHeader>(), 0);
+        NativeArray.DisposeArray(_sources, Capacity * Unsafe.SizeOf<RenderSource>(), 0);
+        NativeArray.DisposeArray(_policies, Capacity * Unsafe.SizeOf<DrawPolicy>(), 0);
+        NativeArray.DisposeArray(_bounds, Capacity * Unsafe.SizeOf<BoundingBox>(), 0);
+        NativeArray.DisposeArray(_models, Capacity * Unsafe.SizeOf<Matrix4x4>(), 0);
+        NativeArray.DisposeArray(_normals, Capacity * Unsafe.SizeOf<Matrix3X4>(), 0);
         _headers = null;
         _sources = null;
         _policies = null;

@@ -98,8 +98,8 @@ internal sealed class RenderResolver : IDisposable
     {
         if (RenderEcs.Core.Capacity != _drawIndices.Length)
         {
-            _drawIndices.Resize(RenderEcs.Core.Capacity, true);
-            _transforms.Resize(RenderEcs.Core.Capacity, true);
+            _drawIndices.ReAlloc(RenderEcs.Core.Capacity, true);
+            _transforms.ReAlloc(RenderEcs.Core.Capacity, true);
             Console.WriteLine("Resized draw resolver");
         }
     }

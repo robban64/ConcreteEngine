@@ -111,7 +111,7 @@ internal sealed class DrawCommandPipeline : IDisposable
         if (_drawTickets.Length < total)
         {
             var newSize = CapacityUtils.CapacityGrowthToFit(_drawTickets.Length, total);
-            _drawTickets.Resize(newSize, true);
+            _drawTickets.ReAlloc(newSize, true);
         }
 
         // fill tickets in sorted order

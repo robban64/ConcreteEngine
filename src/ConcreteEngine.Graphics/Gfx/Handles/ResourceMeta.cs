@@ -22,13 +22,13 @@ public readonly struct TextureMeta(
     TextureAnisotropy anisotropy,
     TexturePixelFormat pixelFormat,
     DepthMode compareTextureFunc,
-    GpuTextureBorder borderColor) : IResourceMeta
+    TextureBorder borderColor) : IResourceMeta
 {
     public int Width { get; init; } = width;
     public int Height { get; init; } = height;
     public ushort Depth { get; init; } = depth;
     public Half Lod { get; init; } = lod;
-    public GpuTextureBorder BorderColor { get; init; } = borderColor;
+    public TextureBorder BorderColor { get; init; } = borderColor;
     public byte MipLevels { get; init; } = mipLevels;
     public byte Samples { get; init; } = samples;
     public TexturePreset Preset { get; init; } = preset;

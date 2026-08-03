@@ -24,13 +24,11 @@ public sealed class MaterialProfile
     private const MaterialShading DefaultToggle = MaterialShading.Shadows;
 
     public Shader Shader { get; private set; } = null!;
+    public required MaterialStateRecord StateValues { get; init; }
 
     public readonly string ShaderName;
     public readonly DrawQueue DrawQueue;
-
     public readonly MaterialShading Shading;
-
-    public required MaterialStateRecord StateValues { get; init; }
 
     public GfxDrawState DrawState = GfxDrawState.Set(
         GfxDrawFlags.DepthTest | GfxDrawFlags.DepthWrite | GfxDrawFlags.Cull,

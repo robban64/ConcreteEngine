@@ -16,36 +16,36 @@ public struct FboAttachmentIds(
 public readonly struct FboColorAttachment(
     TexturePixelFormat pixelFormat,
     TexturePreset texturePreset,
-    GpuTextureBorder colorBorder
+    TextureBorder colorBorder
 )
 {
-    public readonly GpuTextureBorder ColorBorder = colorBorder;
+    public readonly TextureBorder ColorBorder = colorBorder;
     public readonly TexturePixelFormat PixelFormat = pixelFormat;
     public readonly TexturePreset TexturePreset = texturePreset;
     
     public bool IsEmpty() => PixelFormat == 0 && TexturePreset == 0;
 
     public static FboColorAttachment Off() =>
-        new(TexturePixelFormat.SrgbAlpha, TexturePreset.None, GpuTextureBorder.Off);
+        new(TexturePixelFormat.SrgbAlpha, TexturePreset.None, TextureBorder.Off);
 
     public static FboColorAttachment Default() =>
-        new(TexturePixelFormat.SrgbAlpha, TexturePreset.LinearClamp, GpuTextureBorder.Off);
+        new(TexturePixelFormat.SrgbAlpha, TexturePreset.LinearClamp, TextureBorder.Off);
 
     public static FboColorAttachment DefaultMip() =>
-        new(TexturePixelFormat.SrgbAlpha, TexturePreset.LinearMipmapClamp, GpuTextureBorder.Off);
+        new(TexturePixelFormat.SrgbAlpha, TexturePreset.LinearMipmapClamp, TextureBorder.Off);
 }
 
 public readonly struct FboDepthAttachment(
     TexturePixelFormat pixelFormat,
     TexturePreset texturePreset,
     DepthMode compareTextureFunc,
-    GpuTextureBorder borderColor
+    TextureBorder borderColor
 )
 {
     public static FboDepthAttachment Default() =>
-        new(TexturePixelFormat.Depth, TexturePreset.LinearClampBorder, DepthMode.Lequal, GpuTextureBorder.On);
+        new(TexturePixelFormat.Depth, TexturePreset.LinearClampBorder, DepthMode.Lequal, TextureBorder.On);
 
-    public readonly GpuTextureBorder BorderColor = borderColor;
+    public readonly TextureBorder BorderColor = borderColor;
     public readonly TexturePixelFormat PixelFormat = pixelFormat;
     public readonly TexturePreset TexturePreset = texturePreset;
     public readonly DepthMode CompareTextureFunc = compareTextureFunc;

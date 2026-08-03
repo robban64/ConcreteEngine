@@ -19,11 +19,11 @@ public readonly struct CreateTextureProps(
     TexturePreset preset,
     TextureAnisotropy anisotropy,
     DepthMode compareTextureFunc = DepthMode.Unset,
-    GpuTextureBorder borderColor = default,
+    TextureBorder borderColor = default,
     RenderBufferMsaa samples = RenderBufferMsaa.None
 )
 {
-    public readonly GpuTextureBorder BorderColor = borderColor;
+    public readonly TextureBorder BorderColor = borderColor;
 
     public readonly Half Lod = (Half)lod;
     public readonly TextureKind Kind = kind;

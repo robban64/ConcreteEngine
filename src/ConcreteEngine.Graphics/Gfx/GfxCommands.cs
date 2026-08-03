@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Configuration;
@@ -239,6 +240,30 @@ public sealed class GfxCommands
         GlStates.BindFrameBuffer(FboStore.GetHandle(id));
         _boundFboId = id;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void BindTextures(ReadOnlySpan<TextureBinding> bindings)
+    {
+        foreach (var binding in bindings)
+        {
+            if(binding.Texture == _boundTextures[binding.Slot]) continue;
+            _boundTextures[binding.Slot] = binding.Texture;
+            var textureHandle = TextureStore.GetHandle(binding.Texture);
+            var samplerHandle = GfxTextures.GetSamplerHandle(binding.Profile);
+            GlStates.BindTextureSampler(textureHandle, samplerHandle, binding.Slot);
+        }
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void BindTexture(TextureId texture, SamplerProfile sampler, int slot)
+    {
+        if(texture == _boundTextures[slot]) return;
+        _boundTextures[slot] = texture;
+        var textureHandle = TextureStore.GetHandle(texture);
+        var samplerHandle = GfxTextures.GetSamplerHandle(sampler);
+        GlStates.BindTextureSampler(textureHandle, samplerHandle, slot);
+    }
+
 
     public void BindTexture(TextureId texture, int slot)
     {

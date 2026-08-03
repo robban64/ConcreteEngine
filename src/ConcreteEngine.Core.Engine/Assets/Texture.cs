@@ -23,6 +23,7 @@ public struct TextureProperties(
 public sealed class Texture : AssetObject
 {
     public readonly TextureId GfxId;
+    public SamplerProfile Profile { get; }
 
     [InspectInclude] public readonly GpuTextureState GpuState;
 
@@ -35,9 +36,10 @@ public sealed class Texture : AssetObject
     public override AssetKind Kind => AssetKind.Texture;
 
 
-    public Texture(string name, AssetId id, Guid gid, TextureId gfxId, Size2D size, TextureProperties props) :
+    public Texture(string name, AssetId id, Guid gid, TextureId gfxId, Size2D size, SamplerProfile profile, TextureProperties props) :
         base(name, id, gid)
     {
+        Profile = profile;
         GfxId = gfxId;
         Size = size;
         GpuState = new GpuTextureState(this, props);

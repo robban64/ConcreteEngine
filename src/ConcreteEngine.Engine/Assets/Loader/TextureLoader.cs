@@ -104,12 +104,17 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
 
         var textureId = gfx.CreateTexture2D(embedded.Dimensions, in props, entry.GetPixelData());
 
+        var sampler = SamplerProfile.TrilinearClamp;
+        if(anisotropy != AnisotropyLevel.Off)
+            sampler = SamplerProfile.AnisotropicClamp;
+
         var texture = new Texture(
             embedded.Name,
             assetId,
             embedded.GId,
             textureId,
             embedded.Dimensions,
+            sampler,
             new TextureProperties(
                 lod: 0,
                 kind: TextureKind.Texture2D,
@@ -128,12 +133,19 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
     private static Texture CreateTexture(AssetId id, TextureId textureId, Size2D size, TextureRecord record,
         TextureUsage usage = TextureUsage.Albedo)
     {
+        var sampler = SamplerProfile.TrilinearClamp;
+        if (usage == TextureUsage.Normal)
+            sampler = SamplerProfile.TrilinearWrap;
+        if(record.Anisotropy != AnisotropyLevel.Off)
+            sampler = SamplerProfile.AnisotropicClamp;
+        
         return new Texture(
             record.Name,
             id,
             record.Id,
             textureId,
             size,
+            sampler,
             new TextureProperties(
                 lod: record.LodBias,
                 kind: record.TextureKind,

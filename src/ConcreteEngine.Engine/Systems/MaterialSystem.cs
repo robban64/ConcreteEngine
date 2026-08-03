@@ -106,11 +106,17 @@ internal sealed class MaterialSystem : IDisposable
         {
             var source = textureSources[i];
             var textureId = source.FallbackTexture;
+            var sampler = SamplerProfile.LinearWrap;
             if (source.OverrideTexture > 0) textureId = source.OverrideTexture;
             else if (source.AssetTexture.Id > 0)
-                textureId = AssetManager.Assets.Get<Texture>(source.AssetTexture).GfxId;
+            {
+                var texture = AssetManager.Assets.Get<Texture>(source.AssetTexture);
+                textureId = texture.GfxId;
+                sampler = texture.Profile;
 
-            slots[i] = new TextureBinding(textureId, source.Usage, (byte)i);
+            }
+
+            slots[i] = new TextureBinding(textureId, source.Usage, (byte)i, sampler);
         }
 
         SubmitBindings(material.MaterialId, slots);

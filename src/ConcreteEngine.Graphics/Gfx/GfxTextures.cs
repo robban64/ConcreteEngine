@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internals;
@@ -15,6 +16,11 @@ public sealed class GfxTextures
         public static TextureId NormalId { get; internal set; }
         public static TextureId AlphaMaskId { get; internal set; }
     }
+    
+    private static readonly NativeHandle[] Samplers = new NativeHandle[9];
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static NativeHandle GetSamplerHandle(SamplerProfile profile) => Samplers[(int)profile];
 
     private readonly GfxResourceDisposer _disposer;
 
@@ -22,12 +28,33 @@ public sealed class GfxTextures
     {
         _disposer = disposer;
 
+        CreateSampler(SamplerProfile.PointClamp, TexturePreset.NearestClamp);
+        CreateSampler(SamplerProfile.PointWrap, TexturePreset.NearestRepeat);
+
+        CreateSampler(SamplerProfile.LinearClamp, TexturePreset.LinearClamp);
+        CreateSampler(SamplerProfile.LinearWrap, TexturePreset.LinearRepeat);
+
+        CreateSampler(SamplerProfile.TrilinearClamp, TexturePreset.LinearMipmapClamp);
+        CreateSampler(SamplerProfile.TrilinearWrap, TexturePreset.LinearMipmapRepeat);
+
+        CreateSampler(SamplerProfile.AnisotropicClamp, TexturePreset.LinearMipmapClamp, TextureAnisotropy.X8);
+        CreateSampler(SamplerProfile.AnisotropicWrap, TexturePreset.LinearMipmapRepeat, TextureAnisotropy.X8);
+        CreateSampler(SamplerProfile.ShadowCompare, TexturePreset.NearestClampBorder, depthMode: DepthMode.Lequal);
+
+
         Fallback.AlbedoId = CreateOnePixelTexture([255, 255, 255, 255], TexturePixelFormat.SrgbAlpha);
         Fallback.NormalId = CreateOnePixelTexture([128, 128, 255], TexturePixelFormat.Rgb);
         Fallback.AlphaMaskId = CreateOnePixelTexture([255], TexturePixelFormat.Red, TexturePreset.NearestClamp);
     }
 
-    private void CreateSampler(TextureKind kind, TexturePreset preset, TextureAnisotropy anisotropy, GpuTextureBorder border, float lod)
+    private void CreateSampler(
+        SamplerProfile profile,
+        TexturePreset preset,
+        TextureAnisotropy anisotropy = TextureAnisotropy.Off,
+        TextureKind kind = TextureKind.Texture2D,
+        TextureBorder border = default,
+        DepthMode depthMode = DepthMode.Unset,
+        float lod = 0)
     {
         var sampler = GlTextures.CreateSampler();
         if (preset != TexturePreset.None)
@@ -37,10 +64,15 @@ public sealed class GfxTextures
             GlTextures.SetSamplerBorder(sampler, border);
 
         if (anisotropy != TextureAnisotropy.Off)
-            GlTextures.SetSamplerAnisotropy(sampler , anisotropy.ToAnisotropy());
+            GlTextures.SetSamplerAnisotropy(sampler, anisotropy.ToAnisotropy());
 
         if (lod != 0)
-            GlTextures.SetSamplerLodBias(sampler , lod);
+            GlTextures.SetSamplerLodBias(sampler, lod);
+
+        if (depthMode != DepthMode.Unset)
+            GlTextures.SetSamplerCompareTextureFunc(sampler, depthMode);
+
+        Samplers[(int)profile] = sampler;
     }
 
     private TextureId CreateOnePixelTexture(byte[] pixelData, TexturePixelFormat format,

@@ -38,10 +38,12 @@ internal sealed class DrawCommandProcessor
     {
         _lastAnimationSlot = 0;
         _lastMaterialId = default;
+
         if (RenderContext.RenderMode == RenderTargetKind.Shadow)
         {
             _gfxCmd.UseShader(RenderRegistry.DepthShader);
             _gfxCmd.UnbindAllTextures();
+            _gfxCmd.BindTexture(RenderContext.DepthTexture, SamplerProfile.ShadowCompare, RenderContext.ShadowSamplerSlot);
         }
     }
 
@@ -90,11 +92,11 @@ internal sealed class DrawCommandProcessor
         if (RenderContext.RenderMode == RenderTargetKind.Scene)
         {
             _gfxCmd.UseShader(materialMeta.ShaderId);
-            BindTextureSlots(textureBindings, materialMeta.ShadowMapBinding);
+            _gfxCmd.BindTextures(textureBindings.AsReadOnlySpan());
         }
         else
         {
-            BindDepthTextureSlots(textureBindings);
+            BindAlbedoMaskSlots(textureBindings);
         }
 
     }
@@ -118,21 +120,17 @@ internal sealed class DrawCommandProcessor
     }
 
 
-    public void BindTextureSlots(NativeView<TextureBinding> slots, sbyte shadowMapBinding)
+    public void BindTextureSlots(ReadOnlySpan<TextureBinding> slots, sbyte shadowMapBinding)
     {
-        if (shadowMapBinding >= 0)
-            _gfxCmd.BindTexture(RenderContext.DepthTexture, shadowMapBinding);
-
-        foreach (var value in slots) _gfxCmd.BindTexture(value.Texture, value.Slot);
-
+        _gfxCmd.BindTextures(slots);
     }
 
-    public void BindDepthTextureSlots(NativeView<TextureBinding> slots)
+    public void BindAlbedoMaskSlots(NativeView<TextureBinding> slots)
     {
         foreach (var value in slots)
         {
-            if (value.SlotKind == TextureUsage.Albedo) _gfxCmd.BindTexture(value.Texture, 0);
-            else if (value.SlotKind == TextureUsage.Mask) _gfxCmd.BindTexture(value.Texture, 1);
+            if (value.SlotKind is TextureUsage.Albedo or TextureUsage.Mask)
+                _gfxCmd.BindTexture(value.Texture, value.Slot);
         }
     }
     

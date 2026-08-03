@@ -33,7 +33,7 @@ internal static partial class PassPipeline
             if (source.IsSkinned()) ctx.DrawCmd.BindSkinningSlot(query.Entity);
 
             if (ctx.DrawCmd.TryApplyMaterialState(source.Material, out var textureBindings))
-                ctx.DrawCmd.BindDepthTextureSlots(textureBindings);
+                ctx.DrawCmd.BindAlbedoMaskSlots(textureBindings);
 
             ctx.Cmd.DrawMesh(source.Mesh);
         }

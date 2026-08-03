@@ -133,6 +133,13 @@ internal static class GlStates
     public static void BindTexture(NativeHandle textureHandle, int slot) => Gl.BindTextureUnit((uint)slot, textureHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void BindTextureSampler(NativeHandle textureHandle, NativeHandle samplerHandle, int slot)
+    {
+        Gl.BindTextureUnit((uint)slot, textureHandle);
+        Gl.BindSampler((uint)slot, samplerHandle);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void UnbindTextureSlot(int slot) => Gl.BindTextureUnit((uint)slot, 0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

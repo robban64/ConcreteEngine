@@ -4,6 +4,8 @@ namespace ConcreteEngine.Engine.Render;
 
 internal static class RenderContext
 {
+    public const int ShadowSamplerSlot = 3;
+
     public static TextureId OutputTexture;
     public static TextureId DepthTexture;
     

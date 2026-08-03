@@ -90,12 +90,12 @@ internal static class GlTextures
 
     public static void GenerateMipMaps(NativeHandle handle) => Gl.GenerateTextureMipmap(handle);
 
-    public static void SetBorder(NativeHandle handle, GpuTextureBorder b)
+    public static void SetBorder(NativeHandle handle, TextureBorder b)
     {
         Span<int> border = stackalloc int[] { b.R, b.G, b.B, b.A };
         Gl.TextureParameterI(handle, GLEnum.TextureBorderColor, border);
     }
-    public static void SetSamplerBorder(NativeHandle handle, GpuTextureBorder b)
+    public static void SetSamplerBorder(NativeHandle handle, TextureBorder b)
     {
         Span<int> border = stackalloc int[] { b.R, b.G, b.B, b.A };
         Gl.SamplerParameterI(handle, GLEnum.TextureBorderColor, border);
@@ -109,6 +109,15 @@ internal static class GlTextures
         var depthFunc = (int)depthMode.ToGlEnum();
         Gl.TextureParameterI(handle, GLEnum.TextureCompareMode, in compareMode);
         Gl.TextureParameterI(handle, GLEnum.TextureCompareFunc, in depthFunc);
+    }
+    public static void SetSamplerCompareTextureFunc(NativeHandle handle, DepthMode depthMode)
+    {
+        if (depthMode == DepthMode.Unset) return;
+
+        var compareMode = (int)GLEnum.CompareRefToTexture;
+        var depthFunc = (int)depthMode.ToGlEnum();
+        Gl.SamplerParameterI(handle, GLEnum.TextureCompareMode, in compareMode);
+        Gl.SamplerParameterI(handle, GLEnum.TextureCompareFunc, in depthFunc);
     }
 
     public static void SetTexturePreset(NativeHandle handle, TexturePreset preset, bool wrapR)

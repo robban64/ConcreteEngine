@@ -32,13 +32,12 @@ public sealed class GfxFrameBuffers
         if (!desc.ColorTexture.IsEmpty())
         {
             var texKind = !isMultisample ? TextureKind.Texture2D : TextureKind.Multisample2D;
-            var texProps = new CreateTextureProps(
-                0f, texKind, desc.ColorTexture.PixelFormat,
-                desc.ColorTexture.TexturePreset, TextureAnisotropy.Off,
-                DepthMode.Unset, desc.ColorTexture.ColorBorder, desc.Multisample
-            );
 
-            var textureId = _gfxTextures.CreateTextureEmpty(size.ToSize3D(1), texProps);
+            var textureId = _gfxTextures.CreateTextureEmpty(size: size.ToSize3D(1),
+                kind: texKind,
+                format: desc.ColorTexture.PixelFormat,
+                samples: desc.Multisample,
+                border: desc.ColorTexture.ColorBorder);
             var texRef = GfxRegistry.TextureStore.GetHandle(textureId);
             AttachTexture(fboHandle, texRef, FrameBufferAttachmentSlot.Color);
             attachments = attachments with { ColorTexture = textureId };
@@ -46,12 +45,11 @@ public sealed class GfxFrameBuffers
 
         if (!desc.DepthTexture.IsEmpty())
         {
-            var texProps = new CreateTextureProps(
-                0f, TextureKind.Texture2D, TexturePixelFormat.Depth,
-                desc.DepthTexture.TexturePreset, TextureAnisotropy.Off,
-                desc.DepthTexture.CompareTextureFunc, desc.DepthTexture.BorderColor);
+            var textureId = _gfxTextures.CreateTextureEmpty(size: size.ToSize3D(1),
+                kind: TextureKind.Texture2D,
+                format: TexturePixelFormat.Depth,
+                border: desc.ColorTexture.ColorBorder);
 
-            var textureId = _gfxTextures.CreateTextureEmpty(size.ToSize3D(1), texProps);
             var texRef = GfxRegistry.TextureStore.GetHandle(textureId);
             AttachTexture(fboHandle, texRef, FrameBufferAttachmentSlot.Depth);
             attachments = attachments with { DepthTexture = textureId };

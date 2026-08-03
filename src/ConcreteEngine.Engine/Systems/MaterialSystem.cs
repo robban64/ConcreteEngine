@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Graphics.Gfx;
@@ -21,7 +22,6 @@ internal sealed class MaterialSystem : IDisposable
 
     private readonly AssetTypeStore _materialStore = AssetStore.GetTypeStore(AssetKind.Material);
 
-    private RangeU16[] _slotRanges = new RangeU16[MaterialBufferCapacity];
     private MaterialMeta[] _metas = new MaterialMeta[MaterialBufferCapacity];
 
     private NativeArray<TextureBinding> _textureSlots =
@@ -30,7 +30,7 @@ internal sealed class MaterialSystem : IDisposable
     private NativeArray<MaterialUniform> _buffer =
         NativeArray.Allocate<MaterialUniform>(MaterialBufferCapacity, false);
 
-    
+
     internal void Commit()
     {
         if (_materialStore.DirtyCount == 0) return;
@@ -38,14 +38,15 @@ internal sealed class MaterialSystem : IDisposable
         _materialStore.ClearDirty();
     }
 
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal NativeView<TextureBinding> GetMetaAndSlots(Id16<Material> materialId, out MaterialMeta meta)
     {
         meta = _metas[materialId.Index()];
-        return _textureSlots.Slice(_slotRanges[materialId.Index()]);
+        return _textureSlots.Slice(meta.BindingRange);
     }
-    
-    internal NativeView<MaterialUniform> GetBufferView()
+
+    internal NativeView<MaterialUniform> GetUniforms()
     {
         Debug.Assert(_metas.Length == _buffer.Length);
         if (Count == 0) return NativeView<MaterialUniform>.MakeNull();
@@ -54,35 +55,59 @@ internal sealed class MaterialSystem : IDisposable
 
     private void Submit()
     {
-        Shader lastShader = null!;
+        ShaderId lastShader = default;
         var lastProfile = MaterialProfileId.None;
         foreach (var id in _materialStore.GetDirtySpan())
         {
-            var material = AssetManager.Assets.GetUnsafe<Material>(id);
+            var material = (Material)AssetManager.Assets.GetUnsafe(id);
             var flag = material.Commit();
             if ((flag & AssetDirtyFlag.State) == 0 && (flag & AssetDirtyFlag.Structure) == 0) continue;
 
-            if (lastShader == null! || material.ProfileId != lastProfile)
+            if (lastShader == default || material.ProfileId != lastProfile)
             {
                 lastProfile = material.ProfileId;
-                lastShader = material.BoundShader;
+                lastShader = material.BoundShader.GfxId;
             }
 
-            FillSamplers(material);
-            SubmitUniform(material.State, lastShader);
+            SubmitMaterial(material, lastShader);
+            SubmitUniform(material.State);
         }
     }
 
-    private void SubmitUniform(MaterialState state, Shader shader)
+    private void SubmitMaterial(Material material, ShaderId shaderId)
     {
-        ref var uniform = ref Submit(
-            state.MaterialId,
-            shader.GfxId,
-            state.DrawState,
-            state.DrawFunctions,
-            state.ReceiveShadows ? shader.DefaultBindings.ShadowMapBinding : (sbyte)-1
-        );
+        var id = material.MaterialId;
+        var textureSources = material.GetSourceSpan();
 
+        EnsureCapacity(id.Value);
+        EnsureTextureSlotCapacity(textureSources.Length);
+
+        var range = new RangeU16(_slotCount, textureSources.Length);
+        _metas[id.Index()] = new MaterialMeta(shaderId, range, material.State.DrawState, material.State.DrawFunctions);
+
+        for (var i = 0; i < textureSources.Length; i++)
+        {
+            var source = textureSources[i];
+            var textureId = source.FallbackTexture;
+            var profile = SamplerProfile.LinearWrap;
+            if (source.OverrideTexture > 0) textureId = source.OverrideTexture;
+            else if (source.AssetTexture.Id > 0)
+            {
+                var texture = AssetManager.Assets.Get<Texture>(source.AssetTexture);
+                textureId = texture.GfxId;
+                profile = texture.Profile;
+            }
+
+            _textureSlots[range.Offset + i] = new TextureBinding(textureId, source.Usage, (byte)i, profile);
+        }
+
+        _slotCount += range.Length;
+        Count = int.Max(Count, id.Index());
+    }
+
+    private void SubmitUniform(MaterialState state)
+    {
+        ref var uniform = ref _buffer[state.MaterialId.Index()];
         uniform.Color = state.Color;
         uniform.SpecularColor = state.SpecularColor;
         uniform.UvTransform = state.UvTransform;
@@ -95,60 +120,7 @@ internal sealed class MaterialSystem : IDisposable
         uniform.AlphaMaskToggle = state.HasAlphaMask ? 1 : 0;
         uniform.ShadowToggle = state.ReceiveShadows ? 1 : 0;
     }
-    
 
-    private void FillSamplers(Material material)
-    {
-        var textureSources = material.GetSourceSpan();
-        Span<TextureBinding> slots = stackalloc TextureBinding[textureSources.Length];
-
-        for (var i = 0; i < textureSources.Length; i++)
-        {
-            var source = textureSources[i];
-            var textureId = source.FallbackTexture;
-            var sampler = SamplerProfile.LinearWrap;
-            if (source.OverrideTexture > 0) textureId = source.OverrideTexture;
-            else if (source.AssetTexture.Id > 0)
-            {
-                var texture = AssetManager.Assets.Get<Texture>(source.AssetTexture);
-                textureId = texture.GfxId;
-                sampler = texture.Profile;
-
-            }
-
-            slots[i] = new TextureBinding(textureId, source.Usage, (byte)i, sampler);
-        }
-
-        SubmitBindings(material.MaterialId, slots);
-    }
-    
-    private void SubmitBindings(Id16<Material> id, Span<TextureBinding> slots)
-    {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(slots.Length, TextureSlots);
-        EnsureTextureSlotCapacity(slots.Length);
-
-        var slotIdx = _slotCount;
-        for (var i = 0; i < slots.Length; i++, slotIdx++)
-            _textureSlots[slotIdx] = slots[i];
-        
-        _slotRanges[id.Index()] = new RangeU16(_slotCount, slots.Length);
-        _slotCount = slotIdx;
-    }
-
-    private ref MaterialUniform Submit(
-        Id16<Material> id,
-        ShaderId shaderId,
-        GfxDrawState drawState,
-        GfxDrawFunctions drawFunctions,
-        sbyte shadowMapBinding)
-    {
-         EnsureCapacity(id.Value);
-
-        _metas[id.Index()] = new MaterialMeta(shaderId, drawState, drawFunctions, shadowMapBinding);
-
-        Count = int.Max(Count, id.Index());
-        return ref _buffer[id.Index()];
-    }
 
     private void EnsureCapacity(int amount)
     {
@@ -160,7 +132,6 @@ internal sealed class MaterialSystem : IDisposable
 
         Console.WriteLine($"{nameof(MaterialSystem)} TextureSlots resize");
         Array.Resize(ref _metas, newCap);
-        Array.Resize(ref _slotRanges, newCap);
         _buffer.ReAlloc(newCap, true);
     }
 

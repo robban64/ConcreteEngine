@@ -14,7 +14,6 @@ internal sealed partial class TextureInspector : Inspector<TextureInspector>
 
     public unsafe void Draw()
     {
-        AppDraw.Section("Gpu State"u8, &DrawGpuState);
     }
 }
 

@@ -83,10 +83,10 @@ internal sealed class DrawCommandPipeline : IDisposable
 
         if (transforms.Length > 0) _gfxBuffers.UploadUniform(transforms, 0);
 
-        var materials = _materialSystem.GetBufferView();
+        var materials = _materialSystem.GetUniforms();
         if (materials.Length > 0) _gfxBuffers.UploadUniform(materials, 0);
 
-        var boneData = _animationSystem.GetBufferView();
+        var boneData = _animationSystem.GetUniforms();
         if (boneData.Length > 0) _gfxBuffers.UploadUniform(boneData, 0);
     }
 

@@ -12,29 +12,6 @@ internal readonly struct GpuTextureProps(TexturePixelFormat format, uint levels,
         new(format, (uint)levels, (uint)samples);
 }
 
-public readonly struct CreateTextureProps(
-    float lod,
-    TextureKind kind,
-    TexturePixelFormat format,
-    TexturePreset preset,
-    TextureAnisotropy anisotropy,
-    DepthMode compareTextureFunc = DepthMode.Unset,
-    TextureBorder borderColor = default,
-    RenderBufferMsaa samples = RenderBufferMsaa.None
-)
-{
-    public readonly TextureBorder BorderColor = borderColor;
-
-    public readonly Half Lod = (Half)lod;
-    public readonly TextureKind Kind = kind;
-    public readonly TexturePixelFormat Format = format;
-
-    public readonly TexturePreset Preset = preset;
-    public readonly TextureAnisotropy Anisotropy = anisotropy;
-    public readonly DepthMode CompareTextureFunc = compareTextureFunc;
-    public readonly RenderBufferMsaa Samples = samples;
-}
-
 public struct CreateFboInfo(Size2D size)
 {
     public Size2D Size = size;

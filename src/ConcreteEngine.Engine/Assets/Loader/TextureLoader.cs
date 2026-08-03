@@ -45,10 +45,9 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
         try
         {
             textureData = TextureImporter.LoadTexture(record, filePath, out var size);
-            var props = TextureImporter.CreateTextureProps(record);
 
-            var textureId = gfx.CreateTexture2D(size, in props, textureData.AsSpan());
-            var texture = CreateTexture(ctx.Id, textureId, size, record);
+            var textureId = gfx.CreateTexture2D(textureData.AsReadOnlySpan(), size, record.PixelFormat);
+            var texture = CreateTextureObject(ctx.Id, textureId, size, record);
 
             if (record.InMemory) texture.SetPixelData(new TextureData(texture.GId, in textureData));
 
@@ -70,8 +69,8 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private Texture LoadCubeMap(TextureRecord record, ImportContext ctx)
     {
-        TextureId textureId = default;
         Size2D size = default;
+        TextureId textureId = default;
         for (var i = 0; i < 6; i++)
         {
             var filePath = ctx.GetFile(i + 1).RelativePath;
@@ -79,15 +78,14 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
             using var data = TextureImporter.LoadTexture(record, filePath, out var faceSize);
             if (textureId == default)
             {
-                var props = TextureImporter.CreateTextureProps(record);
-                textureId = gfx.CreateCubeMap(faceSize, in props);
+                textureId = gfx.CreateCubeMap(faceSize, record.PixelFormat);
                 size = faceSize;
             }
 
             gfx.UploadCubeMapFace(textureId, data.AsSpan(), size, i);
         }
 
-        return CreateTexture(ctx.Id, textureId, size, record);
+        return CreateTextureObject(ctx.Id, textureId, size, record);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -99,29 +97,21 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
             throw new InvalidOperationException($"Embedded texture '{embedded.Name}' not found");
 
         var anisotropy = embedded.SlotKind == TextureUsage.Albedo ? AnisotropyLevel.Default : AnisotropyLevel.Off;
-        var props = new CreateTextureProps(0, TextureKind.Texture2D, embedded.PixelFormat, embedded.Preset,
-            TextureImporter.GetAnisotropy(anisotropy));
-
-        var textureId = gfx.CreateTexture2D(embedded.Dimensions, in props, entry.GetPixelData());
+        var textureId = gfx.CreateTexture2D(entry.GetPixelData(), embedded.Dimensions, embedded.PixelFormat);
 
         var sampler = SamplerProfile.TrilinearClamp;
-        if(anisotropy != AnisotropyLevel.Off)
+        if (anisotropy != AnisotropyLevel.Off)
             sampler = SamplerProfile.AnisotropicClamp;
 
         var texture = new Texture(
-            embedded.Name,
-            assetId,
-            embedded.GId,
-            textureId,
-            embedded.Dimensions,
-            sampler,
-            new TextureProperties(
-                lod: 0,
-                kind: TextureKind.Texture2D,
-                preset: embedded.Preset,
-                anisotropy: anisotropy,
-                pixelFormat: embedded.PixelFormat
-            )
+            name: embedded.Name,
+            id: assetId,
+            gid: embedded.GId,
+            gfxId: textureId,
+            size: embedded.Dimensions,
+            profile: sampler,
+            textureKind: TextureKind.Texture2D,
+            pixelFormat: embedded.PixelFormat
         ) { Usage = embedded.SlotKind };
 
         _embeddedTextures.Remove(embedded.GId);
@@ -130,29 +120,29 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
         return texture;
     }
 
-    private static Texture CreateTexture(AssetId id, TextureId textureId, Size2D size, TextureRecord record,
+    private static Texture CreateTextureObject(AssetId id, TextureId textureId, Size2D size, TextureRecord record,
         TextureUsage usage = TextureUsage.Albedo)
     {
-        var sampler = SamplerProfile.TrilinearClamp;
-        if (usage == TextureUsage.Normal)
-            sampler = SamplerProfile.TrilinearWrap;
-        if(record.Anisotropy != AnisotropyLevel.Off)
-            sampler = SamplerProfile.AnisotropicClamp;
+        var profile = SamplerProfile.TrilinearWrap;
+        if (record.Profile is { } recordProfile) profile = recordProfile;
         
+        if (record.Anisotropy != AnisotropyLevel.Off)
+        {
+            if (profile == SamplerProfile.TrilinearClamp)
+                profile = SamplerProfile.AnisotropicClamp;
+            else if (profile == SamplerProfile.TrilinearWrap)
+                profile = SamplerProfile.AnisotropicWrap;
+        }
+
         return new Texture(
-            record.Name,
-            id,
-            record.Id,
-            textureId,
-            size,
-            sampler,
-            new TextureProperties(
-                lod: record.LodBias,
-                kind: record.TextureKind,
-                preset: record.Preset,
-                anisotropy: record.Anisotropy,
-                pixelFormat: record.PixelFormat
-            )
+            name: record.Name,
+            id: id,
+            gid: record.Id,
+            gfxId: textureId,
+            size: size,
+            profile: profile,
+            textureKind: record.TextureKind,
+            pixelFormat: record.PixelFormat
         ) { Usage = usage };
     }
 }

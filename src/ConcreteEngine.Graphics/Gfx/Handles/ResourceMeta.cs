@@ -14,28 +14,20 @@ public readonly struct TextureMeta(
     int width,
     int height,
     ushort depth,
-    Half lod,
     byte mipLevels,
     byte samples,
-    TexturePreset preset,
     TextureKind kind,
-    TextureAnisotropy anisotropy,
     TexturePixelFormat pixelFormat,
-    DepthMode compareTextureFunc,
     TextureBorder borderColor) : IResourceMeta
 {
     public int Width { get; init; } = width;
     public int Height { get; init; } = height;
     public ushort Depth { get; init; } = depth;
-    public Half Lod { get; init; } = lod;
     public TextureBorder BorderColor { get; init; } = borderColor;
     public byte MipLevels { get; init; } = mipLevels;
     public byte Samples { get; init; } = samples;
-    public TexturePreset Preset { get; init; } = preset;
     public TextureKind Kind { get; init; } = kind;
-    public TextureAnisotropy Anisotropy { get; init; } = anisotropy;
     public TexturePixelFormat PixelFormat { get; init; } = pixelFormat;
-    public DepthMode CompareTextureFunc { get; init; } = compareTextureFunc;
 
     public bool IsMipMapped => MipLevels > 1;
     public bool IsMsaa => Kind == TextureKind.Multisample2D && Samples > 0;

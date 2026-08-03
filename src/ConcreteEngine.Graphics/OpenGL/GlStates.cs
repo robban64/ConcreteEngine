@@ -124,19 +124,24 @@ internal static class GlStates
         Gl.FrontFace(front);
     }
 
-    public static void UnbindAllTextures()
+    public static unsafe void UnbindAllTextures()
     {
-        Gl.BindTextures(0, stackalloc uint[GfxLimits.TextureSlots]);
+        Span<uint> handles = stackalloc uint[GfxLimits.TextureSlots];
+        Gl.BindTextures(0, handles);
+        Gl.BindSamplers(0, handles);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void BindTexture(NativeHandle textureHandle, int slot) => Gl.BindTextureUnit((uint)slot, textureHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void BindSampler(NativeHandle samplerHandle, int slot) => Gl.BindSampler((uint)slot, samplerHandle);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void BindTextureSampler(NativeHandle textureHandle, NativeHandle samplerHandle, int slot)
     {
-        Gl.BindTextureUnit((uint)slot, textureHandle);
         Gl.BindSampler((uint)slot, samplerHandle);
+        Gl.BindTextureUnit((uint)slot, textureHandle);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -156,7 +161,7 @@ internal static class GlStates
     public static void UnbindMesh() => Gl.BindVertexArray(0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void UseShader(NativeHandle shanderHandle) => Gl.UseProgram(shanderHandle);
+    public static void UseShader(NativeHandle shaderHandle) => Gl.UseProgram(shaderHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void UnbindShader() => Gl.UseProgram(0);

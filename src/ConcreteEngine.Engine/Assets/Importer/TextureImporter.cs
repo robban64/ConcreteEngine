@@ -50,13 +50,6 @@ internal static unsafe class TextureImporter
     }
 
     //
-
-    public static CreateTextureProps CreateTextureProps(TextureRecord record)
-    {
-        return new CreateTextureProps(record.LodBias, record.TextureKind, record.PixelFormat, record.Preset,
-            GetAnisotropy(record.Anisotropy));
-    }
-
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static TextureAnisotropy GetAnisotropy(AnisotropyLevel format)
     {

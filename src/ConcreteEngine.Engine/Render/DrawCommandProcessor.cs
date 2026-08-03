@@ -43,8 +43,9 @@ internal sealed class DrawCommandProcessor
         {
             _gfxCmd.UseShader(RenderRegistry.DepthShader);
             _gfxCmd.UnbindAllTextures();
-            _gfxCmd.BindTexture(RenderContext.DepthTexture, SamplerProfile.ShadowCompare, RenderContext.ShadowSamplerSlot);
         }
+        
+        _gfxCmd.BindTexture(RenderContext.DepthTexture, SamplerProfile.ShadowCompare, RenderContext.ShadowSamplerSlot);
     }
 
     public void DrawSource(RenderSource source, RenderEntityId entity, int submitIndex)
@@ -119,11 +120,6 @@ internal sealed class DrawCommandProcessor
         return true;
     }
 
-
-    public void BindTextureSlots(ReadOnlySpan<TextureBinding> slots, sbyte shadowMapBinding)
-    {
-        _gfxCmd.BindTextures(slots);
-    }
 
     public void BindAlbedoMaskSlots(NativeView<TextureBinding> slots)
     {

@@ -18,6 +18,7 @@ internal static class GlTextures
         Gl.CreateSamplers(1, out uint samplerId);
         return new NativeHandle(samplerId);
     }
+
     public static void TextureStorage2D(NativeHandle handle, Size2D size, GpuTextureProps desc)
     {
         (uint width, uint height) = size.ToUnsigned();
@@ -80,6 +81,7 @@ internal static class GlTextures
     {
         Gl.TextureParameter(handle, GLEnum.TextureMaxAnisotropy, anisotropy);
     }
+
     public static void SetSamplerLodBias(NativeHandle handle, float lodBias) =>
         Gl.SamplerParameter(handle, GLEnum.TextureLodBias, lodBias);
 
@@ -95,6 +97,7 @@ internal static class GlTextures
         Span<int> border = stackalloc int[] { b.R, b.G, b.B, b.A };
         Gl.TextureParameterI(handle, GLEnum.TextureBorderColor, border);
     }
+
     public static void SetSamplerBorder(NativeHandle handle, TextureBorder b)
     {
         Span<int> border = stackalloc int[] { b.R, b.G, b.B, b.A };
@@ -110,6 +113,7 @@ internal static class GlTextures
         Gl.TextureParameterI(handle, GLEnum.TextureCompareMode, in compareMode);
         Gl.TextureParameterI(handle, GLEnum.TextureCompareFunc, in depthFunc);
     }
+
     public static void SetSamplerCompareTextureFunc(NativeHandle handle, DepthMode depthMode)
     {
         if (depthMode == DepthMode.Unset) return;
@@ -196,69 +200,70 @@ internal static class GlTextures
             Gl.TextureParameterI(handle, pName, ref intParam);
         }
     }
-      public static void SetSamplerPreset(NativeHandle samplerHandle, TexturePreset preset, bool wrapR)
+
+    public static void SetSamplerPreset(NativeHandle samplerHandle, TexturePreset preset, bool wrapR)
     {
         switch (preset)
         {
             case TexturePreset.NearestClamp:
             case TexturePreset.NearestClampBorder:
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureMinFilter, (int)GLEnum.Nearest);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureMagFilter, (int)GLEnum.Nearest);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureMinFilter, (int)GLEnum.Nearest);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureMagFilter, (int)GLEnum.Nearest);
                 var nparam = preset == TexturePreset.NearestClamp ? GLEnum.ClampToEdge : GLEnum.ClampToBorder;
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapS, (int)nparam);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapT, (int)nparam);
-                if (wrapR) Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapR, (int)nparam);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapS, (int)nparam);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapT, (int)nparam);
+                if (wrapR) Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapR, (int)nparam);
                 break;
 
             case TexturePreset.NearestRepeat:
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureMinFilter, (int)GLEnum.Nearest);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureMagFilter, (int)GLEnum.Nearest);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapS, (int)GLEnum.Repeat);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapT, (int)GLEnum.Repeat);
-                if (wrapR) Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapR, (int)GLEnum.Repeat);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureMinFilter, (int)GLEnum.Nearest);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureMagFilter, (int)GLEnum.Nearest);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapS, (int)GLEnum.Repeat);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapT, (int)GLEnum.Repeat);
+                if (wrapR) Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapR, (int)GLEnum.Repeat);
                 break;
 
             case TexturePreset.LinearClamp:
             case TexturePreset.LinearClampBorder:
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureMinFilter,(int) GLEnum.Linear);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
                 var param = preset == TexturePreset.LinearClamp ? GLEnum.ClampToEdge : GLEnum.ClampToBorder;
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapS, (int)param);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapT, (int)param);
-                if (wrapR) Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapR, (int)param);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapS, (int)param);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapT, (int)param);
+                if (wrapR) Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapR, (int)param);
                 break;
 
             case TexturePreset.LinearRepeat:
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureMinFilter, (int)GLEnum.Linear);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureMagFilter, (int)GLEnum.Linear);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapS, (int)GLEnum.Repeat);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapT, (int)GLEnum.Repeat);
-                if (wrapR) Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapR, (int)GLEnum.Repeat);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapS, (int)GLEnum.Repeat);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapT, (int)GLEnum.Repeat);
+                if (wrapR) Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapR, (int)GLEnum.Repeat);
                 break;
 
             case TexturePreset.LinearMipmapClamp:
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureMinFilter, (int)GLEnum.LinearMipmapLinear);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureMagFilter,(int) GLEnum.Linear);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
-                if (wrapR) Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapR,(int) GLEnum.ClampToEdge);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureMinFilter, (int)GLEnum.LinearMipmapLinear);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
+                if (wrapR) Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapR, (int)GLEnum.ClampToEdge);
                 break;
 
             case TexturePreset.LinearMipmapRepeat:
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureMinFilter, (int)GLEnum.LinearMipmapLinear);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureMagFilter, (int)GLEnum.Linear);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapS, (int)GLEnum.Repeat);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapT, (int)GLEnum.Repeat);
-                if (wrapR) Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapR, (int)GLEnum.Repeat);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureMinFilter, (int)GLEnum.LinearMipmapLinear);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapS, (int)GLEnum.Repeat);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapT, (int)GLEnum.Repeat);
+                if (wrapR) Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapR, (int)GLEnum.Repeat);
 
                 break;
 
             case TexturePreset.PremultipliedUi:
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureMinFilter, (int)GLEnum.Linear);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureMagFilter, (int)GLEnum.Linear);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
-                Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
-                if (wrapR) Gl.SamplerParameter(samplerHandle,GLEnum.TextureWrapR, (int)GLEnum.ClampToEdge);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
+                Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
+                if (wrapR) Gl.SamplerParameter(samplerHandle, GLEnum.TextureWrapR, (int)GLEnum.ClampToEdge);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(preset), preset, null);

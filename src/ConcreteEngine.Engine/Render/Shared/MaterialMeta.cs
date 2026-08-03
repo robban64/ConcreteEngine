@@ -1,17 +1,14 @@
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct MaterialMeta(
-    ShaderId shaderId,
-    GfxDrawState drawState,
-    GfxDrawFunctions drawFunctions,
-    sbyte shadowMapBinding)
+public struct MaterialMeta(ShaderId shaderId, RangeU16 bindingRange, GfxDrawState drawState, GfxDrawFunctions drawFunctions)
 {
-    public readonly GfxDrawState DrawState = drawState;
-    public readonly GfxDrawFunctions DrawFunctions = drawFunctions;
-    public readonly ShaderId ShaderId = shaderId;
-    public readonly sbyte ShadowMapBinding = shadowMapBinding;
+    public GfxDrawState DrawState = drawState;
+    public GfxDrawFunctions DrawFunctions = drawFunctions;
+    public RangeU16 BindingRange = bindingRange;
+    public ShaderId ShaderId = shaderId;
 }

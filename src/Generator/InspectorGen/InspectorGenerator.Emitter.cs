@@ -1,6 +1,8 @@
+using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Text;
-using Generator.Misc;
+
+// ReSharper disable UseCollectionExpression
+// ReSharper disable UnusedMember.Local
 
 namespace Generator.InspectorGen;
 
@@ -8,7 +10,7 @@ internal static class InspectorGeneratorEmitter
 {
     internal readonly record struct AccessPath(string Owner, string Value, bool UsesStructCopy);
 
-    internal readonly record struct EmitSegment(string? Name, EquatableArray<InspectorMember> Members)
+    internal readonly record struct EmitSegment(string? Name, ImmutableArray<InspectorMember> Members)
     {
         public bool IsDefault => string.IsNullOrEmpty(Name);
     }
@@ -30,14 +32,14 @@ internal static class InspectorGeneratorEmitter
     public static string Emit(InspectModel model)
     {
         var sb = new SourceBuilder(4096 * 2);
-        var groupSegments = model.Groups.Where(static x => x.Members.Length > 0)
-            .Select(static x => (x, BuildSegments(x))).ToArray();
-        
+        var groupSegments = new (InspectorGroup Group, ImmutableArray<EmitSegment> Segments)[model.Groups.Length];
+        for (var i = 0; i < groupSegments.Length; i++)
+            groupSegments[i] = (model.Groups[i], BuildSegments(model.Groups[i]));
+
         GenerateHeaders(sb, model.InspectorNs);
 
         sb.Builder.AppendLine($"internal sealed partial class {model.InspectorName}");
         sb.OpenBrace();
-
 
         // Groups
         foreach (var (group, segments) in groupSegments.AsSpan())
@@ -49,20 +51,20 @@ internal static class InspectorGeneratorEmitter
                 continue;
             }
 
-            EmitInputFields(sb, group, segments);
+            EmitInputFields(sb, group, segments.AsSpan());
             sb.AppendLine();
         }
 
         foreach (var (group, segments) in groupSegments.AsSpan())
         {
-            EmitDrawFunc(sb, group, segments);
+            EmitDrawFunc(sb, group, segments.AsSpan());
         }
 
         sb.CloseBrace(); // class
         return sb.ToString();
     }
 
-    private static void EmitInputFields(SourceBuilder sb, InspectorGroup group,  ReadOnlySpan<EmitSegment> segments)
+    private static void EmitInputFields(SourceBuilder sb, InspectorGroup group, ReadOnlySpan<EmitSegment> segments)
     {
         foreach (var segment in segments)
         {
@@ -70,11 +72,11 @@ internal static class InspectorGeneratorEmitter
             foreach (var member in segment.Members.AsSpan())
             {
                 EmitInputField(sb, member, group);
-
             }
         }
     }
-    private static void EmitDrawFunc(SourceBuilder sb, InspectorGroup group,  ReadOnlySpan<EmitSegment> segments)
+
+    private static void EmitDrawFunc(SourceBuilder sb, InspectorGroup group, ReadOnlySpan<EmitSegment> segments)
     {
         var isRoot = group.IsRoot;
         foreach (var segment in segments)
@@ -88,7 +90,7 @@ internal static class InspectorGeneratorEmitter
             else sb.Append(group.Name, "_", segment.Name!); //DrawGroup_Segment
             sb.EndLine("()");
             sb.OpenBrace();
-            
+
             if (group.IsInputGroup)
             {
                 sb.BeginLine().Builder.AppendLine($"Instance.{group.Name}.Draw();");
@@ -96,13 +98,16 @@ internal static class InspectorGeneratorEmitter
             else
             {
                 foreach (var member in segment.Members.AsSpan())
-                    sb.BeginLine().Builder.AppendLine($"Instance.{member.Input!.Name}.Draw();");
+                {
+                    if (member.Input is null) continue;
+                    sb.BeginLine().Builder.AppendLine($"Instance.{member.Input.Name}.Draw();");
+                }
             }
 
             sb.CloseBrace();
         }
     }
-    
+
     private static void EmitInputField(SourceBuilder sb, InspectorMember member, InspectorGroup group)
     {
         var access = CreateAccessPath(member, group);
@@ -315,9 +320,11 @@ internal static class InspectorGeneratorEmitter
         {
             result[i] = CreateAccessPath(members[i], group);
         }
+
         return result;
     }
-    private static EmitSegment[] BuildSegments(InspectorGroup group)
+
+    private static ImmutableArray<EmitSegment> BuildSegments(InspectorGroup group)
     {
         var dict = new Dictionary<string, List<InspectorMember>>(StringComparer.Ordinal);
 
@@ -331,11 +338,11 @@ internal static class InspectorGeneratorEmitter
 
         var segments = new List<EmitSegment>(dict.Count);
         if (dict.Remove("", out var defaultMembers))
-            segments.Add(new EmitSegment(null, defaultMembers.ToEquatableArray()));
+            segments.Add(new EmitSegment(null, defaultMembers.ToImmutableArray()));
 
         foreach (var pair in dict)
-            segments.Add(new EmitSegment(pair.Key, pair.Value.ToEquatableArray()));
+            segments.Add(new EmitSegment(pair.Key, pair.Value.ToImmutableArray()));
 
-        return segments.ToArray();
+        return segments.ToImmutableArray();
     }
 }

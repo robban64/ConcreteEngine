@@ -75,22 +75,21 @@ internal static class GfxTextureUtils
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ValidateTextureDescriptor(Size3D size, CreateTextureProps props)
+    public static void ValidateTextureDescriptor(Size3D size, TextureKind kind, TexturePixelFormat format, RenderBufferMsaa samples, int levels)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(props.Format, TexturePixelFormat.Unknown);
+        ArgumentOutOfRangeException.ThrowIfEqual(format, TexturePixelFormat.Unknown);
 
-        ValidateTextureKindSize(props.Kind, size);
+        ValidateTextureKindSize(kind, size);
 
         // MSAA
-        bool isMsaa = props.Kind == TextureKind.Multisample2D;
-        if (isMsaa && props.Samples == RenderBufferMsaa.None)
+        bool isMsaa = kind == TextureKind.Multisample2D;
+        if (isMsaa && samples == RenderBufferMsaa.None)
             throw new GraphicsException("Multisample2D must have MSAA != None");
-        if (!isMsaa && props.Samples != RenderBufferMsaa.None)
+        if (!isMsaa && samples != RenderBufferMsaa.None)
             throw new GraphicsException("Non-multisample textures must have MSAA=None");
-
-        var hasMips = GetMipValues(size, props.Preset, out var levels);
-
-        if (isMsaa && levels != 1)
+        
+/*
+         if (isMsaa && levels != 1)
             throw new GraphicsException("Multisample textures cannot have mipmaps");
 
         if (!hasMips)
@@ -100,6 +99,7 @@ internal static class GfxTextureUtils
             if ((float)props.Lod != 0f)
                 throw new GraphicsException("LodBias requires mipmaps");
         }
+*/
     }
 
     private static void ValidateTextureKindSize(TextureKind kind, Size3D size)

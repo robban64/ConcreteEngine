@@ -42,6 +42,8 @@ internal sealed class TextureRecord : AssetRecord
     public float LodBias { get; init; }
     public bool InMemory { get; init; }
 
+    public SamplerProfile? Profile { get; init; } = null;
+
     public TexturePreset Preset { get; init; } = TexturePreset.LinearClamp;
     public TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
     public TexturePixelFormat PixelFormat { get; init; } = TexturePixelFormat.SrgbAlpha;

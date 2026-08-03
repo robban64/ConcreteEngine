@@ -18,18 +18,16 @@ internal sealed class TextureInspectorUi(StateManager state)
         var sw = ScratchBuffer.Writer();
 
         ImGui.SeparatorText("Texture Info"u8);
-
-        AppDraw.TextProperty("Dimension:"u8, sw.Write(texture.Size));
-
-        AppDraw.TextProperty("InMemory:"u8, texture.HasPixelData ? "Yes"u8 : "No"u8);
+        AppDraw.TextProperty("Kind: "u8, sw.Write(texture.Kind.ToText()));
+        AppDraw.TextProperty("Profile: "u8, sw.Write(SamplerProfileExt.Names[(int)texture.Profile]));
+        AppDraw.TextProperty("Dimension: "u8, sw.Write(texture.Size));
+        AppDraw.TextProperty("InMemory:  "u8, texture.HasPixelData ? "Yes"u8 : "No"u8);
 
         ImGui.SeparatorText("GPU Metadata"u8);
 
         var meta = GfxRegistry.GetMeta(texture.GfxId);
-        AppDraw.TextProperty("Kind:"u8, sw.Write(meta.Kind.ToText()));
-        AppDraw.SameLineProperty();
-        AppDraw.TextProperty("Format:"u8, sw.Write(meta.PixelFormat.ToText()));
-        AppDraw.TextProperty("Mips:"u8, sw.Write(meta.MipLevels));
+        AppDraw.TextProperty("Format: "u8, sw.Write(meta.PixelFormat.ToText()));
+        AppDraw.TextProperty("Mips: "u8, sw.Write(meta.MipLevels));
 
         _inspector.Draw();
 

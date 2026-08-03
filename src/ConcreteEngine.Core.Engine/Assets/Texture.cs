@@ -20,14 +20,23 @@ public struct TextureProperties(
 }
 
 [Inspect]
-public sealed class Texture : AssetObject
+public sealed class Texture(
+    string name,
+    AssetId id,
+    Guid gid,
+    TextureId gfxId,
+    Size2D size,
+    SamplerProfile profile,
+    TextureKind textureKind,
+    TexturePixelFormat pixelFormat)
+    : AssetObject(name, id, gid)
 {
-    public readonly TextureId GfxId;
-    public SamplerProfile Profile { get; }
+    public TextureId GfxId { get; } = gfxId;
+    public SamplerProfile Profile { get; } = profile;
+    public TextureKind TextureKind { get; } = textureKind;
+    public TexturePixelFormat PixelFormat { get; } = pixelFormat;
 
-    [InspectInclude] public readonly GpuTextureState GpuState;
-
-    public readonly Size2D Size;
+    public Size2D Size { get; } = size;
 
     private TextureData? _textureData;
 
@@ -35,15 +44,6 @@ public sealed class Texture : AssetObject
     public override AssetCategory Category => AssetCategory.Graphic;
     public override AssetKind Kind => AssetKind.Texture;
 
-
-    public Texture(string name, AssetId id, Guid gid, TextureId gfxId, Size2D size, SamplerProfile profile, TextureProperties props) :
-        base(name, id, gid)
-    {
-        Profile = profile;
-        GfxId = gfxId;
-        Size = size;
-        GpuState = new GpuTextureState(this, props);
-    }
 
     public bool HasPixelData => _textureData is not null;
 

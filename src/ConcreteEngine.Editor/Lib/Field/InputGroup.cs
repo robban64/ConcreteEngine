@@ -33,6 +33,10 @@ internal sealed unsafe class InputGroup : InputField
         _setter = setter;
     }
 
+    public Span<InputNumeric1> Values => _values.AsSpan();
+    public Span<int> IntValues => _values.Reinterpret<int>().AsSpan();
+    public Span<float> FloatValuesß => _values.Reinterpret<float>().AsSpan();
+
     public bool Draw()
     {
         if (_count != _inputs.Length) Throwers.InvalidOperation(nameof(_count));

@@ -24,7 +24,7 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
     [MethodImpl(MethodImplOptions.NoInlining)]
     protected override void OnActivate()
     {
-        _allocator = new BumpAllocator(AllocSize, zeroed: false);
+        _allocator = new BumpAllocator(AllocSize, blockSize:ShaderImporter.ShaderBlockSize, zeroed: false);
 
         _shaderImporter = new ShaderImporter();
         _shaderImporter.ImportAllDefinitions();

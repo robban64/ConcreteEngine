@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Memory;
@@ -10,18 +11,23 @@ public sealed unsafe class BumpAllocator : IDisposable
 
     public int Cursor { get; private set; }
     public int Capacity { get; }
+    public int BlockSize { get; }
 
     public MemoryBlock Tail { get; private set; }
     public MemoryBlock Head { get; private set; }
 
     public int Remaining => Capacity - Cursor;
 
-    public BumpAllocator(int capacity, int alignment = 0, bool zeroed = true)
+    public BumpAllocator(int capacity, int blockSize = CapacityUtils.PageSize, int alignment = 0, bool zeroed = true)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 1024);
         if (IntMath.AlignUp(capacity, 64) != IntMath.AlignDown(capacity, 64))
-            throw new ArgumentOutOfRangeException(nameof(capacity));
+            Throwers.InvalidArgument(nameof(capacity));
+        
+        if(blockSize < 0 || (blockSize != 0 && !IntMath.IsPowerOfTwo(blockSize)))
+            Throwers.InvalidArgument(nameof(blockSize));
 
+        BlockSize = blockSize;
         if (alignment == 0)
             _buffer = NativeArray.Allocate<byte>(capacity, zeroed);
         else

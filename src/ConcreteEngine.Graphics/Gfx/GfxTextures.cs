@@ -27,6 +27,22 @@ public sealed class GfxTextures
         Fallback.AlphaMaskId = CreateOnePixelTexture([255], TexturePixelFormat.Red, TexturePreset.NearestClamp);
     }
 
+    private void CreateSampler(TextureKind kind, TexturePreset preset, TextureAnisotropy anisotropy, GpuTextureBorder border, float lod)
+    {
+        var sampler = GlTextures.CreateSampler();
+        if (preset != TexturePreset.None)
+            GlTextures.SetSamplerPreset(sampler, preset, SupportsWrapR(kind));
+
+        if (border.Enabled)
+            GlTextures.SetSamplerBorder(sampler, border);
+
+        if (anisotropy != TextureAnisotropy.Off)
+            GlTextures.SetSamplerAnisotropy(sampler , anisotropy.ToAnisotropy());
+
+        if (lod != 0)
+            GlTextures.SetSamplerLodBias(sampler , lod);
+    }
+
     private TextureId CreateOnePixelTexture(byte[] pixelData, TexturePixelFormat format,
         TexturePreset preset = TexturePreset.NearestRepeat)
     {

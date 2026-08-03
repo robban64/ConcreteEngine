@@ -42,13 +42,38 @@ internal static class ValueLogParser
         sw.Append(" Gen=").Append(log.Gen);
         sw.AppendAscii(' ', '{', ' ');
 
-        if (p0 is not null) sw.Append(p0).Append(eq).Append($"{log.Param0,-2}").AppendAscii(';', ' ');
-        if (p1 is not null) sw.Append(p1).Append(eq).Append($"{log.Param1,-2}").AppendAscii(';', ' ');
-        if (fp is not null) sw.Append(fp).Append(eq).Append($"{log.FParam0,-2}").AppendAscii(';', ' ');
-        if (gen is not null) sw.Append(gen).Append(eq).Append($"{log.Gen,2}").AppendAscii(';', ' ');
-        if (flags is not null) sw.Append(flags).Append(eq).Append(log.Flags).AppendAscii(';', ' ');
+        if (p0 is not null)
+        {
+            sw.Append(p0).Append(eq);
+            sw.Append($"{log.Param0,-2}");
+        }
 
-        sw.AppendAscii(' ','}');
+        if (p1 is not null)
+        {
+            sw.Append(p1).Append(eq);
+            sw.Append($"{log.Param1,-2}");
+        }
+
+        if (fp is not null)
+        {
+            sw.Append(fp).Append(eq);
+            sw.Append($"{log.FParam0,-2}");
+        }
+
+        if (gen is not null)
+        {
+            sw.Append(gen).Append(eq);
+            sw.Append($"{log.Gen,2}");
+        }
+
+        if (flags is not null)
+        {
+            sw.Append(flags).Append(eq);
+            sw.Append(log.Flags);
+        }
+
+        sw.AppendAscii(';', ' ');
+        sw.AppendAscii(' ', '}');
         return sw.EndSpan();
     }
 }

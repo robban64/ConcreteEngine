@@ -1,5 +1,7 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
 
@@ -71,6 +73,11 @@ internal struct InputNumeric2 : IInputNumeric<InputNumeric2>
 
     public static byte Components => 2;
 
+    public static implicit operator InputNumeric2(Int2 v) => new() {I1 = v.X, I2 = v.Y};
+    public static implicit operator InputNumeric2(Vector2 v) => new() {F1 = v.X, F2 = v.Y};
+    public static explicit operator Int2(InputNumeric2 v) => new(v.I1,v.I2);
+    public static explicit operator Vector2(InputNumeric2 v) => new(v.F1,v.F2);
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool DrawFloatInput(byte* str, InputNumeric2* v, String8Utf8 fmt) =>
@@ -109,6 +116,11 @@ internal struct InputNumeric3 : IInputNumeric<InputNumeric3>
     [FieldOffset(08)] public float F3;
 
     public static byte Components => 3;
+
+    public static implicit operator InputNumeric3(Int3 v) => new() {I1 = v.X, I2 = v.Y, F3 = v.Z};
+    public static implicit operator InputNumeric3(Vector3 v) => new() {F1 = v.X, F2 = v.Y, F3 = v.Z};
+    public static explicit operator Int3(InputNumeric3 v) => new(v.I1,v.I2,v.I3);
+    public static explicit operator Vector3(InputNumeric3 v) => new(v.F1,v.F2,v.F3);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -150,6 +162,11 @@ internal struct InputNumeric4 : IInputNumeric<InputNumeric4>
     [FieldOffset(12)] public float F4;
 
     public static byte Components => 4;
+
+    public static implicit operator InputNumeric4(Int4 v) => new() {I1 = v.X, I2 = v.Y, F3 = v.Z, F4 = v.W};
+    public static implicit operator InputNumeric4(Vector4 v) => new() {F1 = v.X, F2 = v.Y, F3 = v.Z, F4 = v.W};
+    public static explicit operator Int4(InputNumeric4 v) => new(v.I1,v.I2,v.I3, v.I4);
+    public static explicit operator Vector4(InputNumeric4 v) => new(v.F1,v.F2,v.F3, v.F4);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

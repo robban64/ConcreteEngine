@@ -48,11 +48,9 @@ public unsafe ref partial struct NativeSpanWriter
         return ref this;
     }
 
-    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref NativeSpanWriter Append(scoped ref DefaultInterpolatedStringHandler handler)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Append([InterpolatedStringHandlerArgument("")] ref NativeSpanWriterHandler handler)
     {
-        if (Validate(handler.Text.Length)) _cursor += Encoding.UTF8.GetBytes(handler.Text, RemainingSpan());
-        return ref this;
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -127,7 +127,7 @@ internal sealed class RenderPassContext
         Cmd.UseShader(shaderId);
         
         for (var i = 0; i < sources.Length; i++) 
-            Cmd.BindTexture(sources[i], i);
+            Cmd.BindTexture(sources[i], SamplerProfile.PointClamp, i);
 
         Cmd.DrawMesh(GfxMeshes.FsqQuad);
     }

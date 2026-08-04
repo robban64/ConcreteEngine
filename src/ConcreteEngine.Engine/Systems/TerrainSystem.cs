@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Systems;
 
@@ -86,7 +87,7 @@ internal sealed class TerrainSystem
             if (MainTerrain.GroundAlbedoTextures.IsDirty)
             {
                 var textureId = MainTerrain.GroundAlbedoTextures.Compile(_gfx.Textures);
-                material.SetSourceSlot(0, AssetId.Empty, textureId);
+                material.SetSourceSlot(0, textureId, SamplerProfile.AnisotropicWrap);
                 Logger.Message("Ground albedo texture changed");
             }
         }
@@ -94,7 +95,7 @@ internal sealed class TerrainSystem
         if (MainTerrain.FoliageTextures.IsDirty && MainTerrain.FoliageMaterial is { } foliageMaterial)
         {
             var textureId = MainTerrain.FoliageTextures.Compile(_gfx.Textures);
-            foliageMaterial.SetSourceSlot(0, AssetId.Empty, textureId);
+            foliageMaterial.SetSourceSlot(0, textureId, SamplerProfile.AnisotropicClamp);
             Logger.Message("Foliage texture changed");
         }
     }

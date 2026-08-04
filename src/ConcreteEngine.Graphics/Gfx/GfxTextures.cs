@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internals;
@@ -57,10 +58,10 @@ public sealed class GfxTextures
         DepthMode depthMode = DepthMode.Unset,
         float lod = 0)
     {
+        if(preset == TexturePreset.None) Throwers.InvalidArgument(nameof(preset));
+        
         var sampler = GlTextures.CreateSampler();
-        GlStates.BindSampler(sampler, 0);
-        if (preset != TexturePreset.None)
-            GlTextures.SetSamplerPreset(sampler, preset, SupportsWrapR(kind));
+        GlTextures.SetSamplerPreset(sampler, preset, SupportsWrapR(kind));
 
         if (border.Enabled)
             GlTextures.SetSamplerBorder(sampler, border);

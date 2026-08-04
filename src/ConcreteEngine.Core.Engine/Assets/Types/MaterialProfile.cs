@@ -84,7 +84,7 @@ public sealed class MaterialProfile
         for (int i = 0; i < sources.Length; i++)
         {
             var usage = _slots[i];
-            sources[i] = new TextureSource(default, _slots[i], GetFallbackTexture(usage));
+            sources[i] = new TextureSource(default, 0, _slots[i], GetFallbackTexture(usage));
         }
     }
 

@@ -89,7 +89,7 @@ internal sealed class MaterialSystem : IDisposable
         {
             var source = textureSources[i];
             var textureId = source.FallbackTexture;
-            var profile = SamplerProfile.LinearWrap;
+            var profile = source.Profile;
             if (source.OverrideTexture > 0) textureId = source.OverrideTexture;
             else if (source.AssetTexture.Id > 0)
             {

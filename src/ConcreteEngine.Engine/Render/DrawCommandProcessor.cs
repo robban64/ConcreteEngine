@@ -126,7 +126,7 @@ internal sealed class DrawCommandProcessor
         foreach (var value in slots)
         {
             if (value.SlotKind is TextureUsage.Albedo or TextureUsage.Mask)
-                _gfxCmd.BindTexture(value.Texture, value.Slot);
+                _gfxCmd.BindTexture(value.Texture, value.Profile, value.Slot);
         }
     }
     

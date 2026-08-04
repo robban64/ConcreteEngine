@@ -244,21 +244,23 @@ public sealed class GfxCommands
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindTextures(ReadOnlySpan<TextureBinding> bindings)
     {
-        foreach (var binding in bindings)
-        {
-            if(binding.Texture == _boundTextures[binding.Slot]) continue;
-            _boundTextures[binding.Slot] = binding.Texture;
-            var textureHandle = TextureStore.GetHandle(binding.Texture);
-            var samplerHandle = GfxTextures.GetSamplerHandle(binding.Profile);
-            GlStates.BindTextureSampler(textureHandle, samplerHandle, binding.Slot);
-        }
+        foreach (var binding in bindings) BindTexture(binding.Texture, binding.Profile, binding.Slot);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindTexture(TextureId texture, SamplerProfile sampler, int slot)
     {
-        if(texture == _boundTextures[slot]) return;
-        _boundTextures[slot] = texture;
+        Debug.Assert(slot >= 0 && slot <= GfxLimits.TextureSlots);
+        ref var boundTexture = ref _boundTextures[slot];
+        if (boundTexture == texture) return;
+        boundTexture = texture;
+
+        if (boundTexture == 0)
+        {
+            GlStates.UnbindTextureSlot(slot);
+            return;
+        }
+
         var textureHandle = TextureStore.GetHandle(texture);
         var samplerHandle = GfxTextures.GetSamplerHandle(sampler);
         GlStates.BindTextureSampler(textureHandle, samplerHandle, slot);

@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 
@@ -30,7 +31,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             var name = record.ProfileSlots.Length > i ? record.ProfileSlots[i] : null;
             if (name == null) continue;
             if (_store.TryGetByName<Texture>(name, out var tex))
-                mat.SetSourceSlot(i, tex.Id);
+                mat.SetSourceSlot(i, tex);
         }
 
         return mat;
@@ -46,12 +47,12 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         var mat = new Material(embedded.Name, assetId, embedded.GId, profile, embedded.State);
 
         var slot = 0;
-        foreach (var textureGId in embedded.Textures)
+        foreach (var textureGId in CollectionsMarshal.AsSpan(embedded.Textures))
         {
             if (!_store.TryGetByGuid<Texture>(textureGId, out var texture))
                 throw new InvalidOperationException($"Embedded texture [{textureGId}] not found");
 
-            mat.SetSourceSlot(slot++, texture.Id);
+            mat.SetSourceSlot(slot++, texture);
             if (slot == 3) break;
         }
 

@@ -113,7 +113,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         ImGui.SameLine();
 
         if (slotTexture.Id.IsValid() && ImGui.Button("X"u8, new Vector2(rowHeight, rowHeight)))
-            material.SetTextureSlot(slot, null);
+            material.ClearSourceSlot(slot);
 
         if (ImGui.IsItemHovered())
         {
@@ -149,7 +149,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         {
             var droppedId = *(AssetId*)payload.Data;
             if (droppedId.Id > 0 && AssetManager.Assets.TryGet<Texture>(droppedId, out var droppedTex))
-                material.SetTextureSlot(slot, droppedTex);
+                material.SetSourceSlot(slot, droppedTex);
         }
 
         ImGui.EndDragDropTarget();

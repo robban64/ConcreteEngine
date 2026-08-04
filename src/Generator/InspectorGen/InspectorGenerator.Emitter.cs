@@ -8,12 +8,14 @@ namespace Generator.InspectorGen;
 
 internal static class InspectorGeneratorEmitter
 {
-    internal readonly record struct AccessPath(string Owner, string Value, bool UsesStructCopy);
+    private readonly record struct AccessPath(string Owner, string Value, bool UsesStructCopy);
 
-    internal readonly record struct EmitSegment(string? Name, ImmutableArray<InspectorMember> Members)
+    private readonly record struct EmitSegment(string? Name, InspectorMember[] Members)
     {
         public bool IsDefault => string.IsNullOrEmpty(Name);
     }
+
+    private readonly record struct EmitGroup(InspectorGroup Group, EmitSegment[] Segments);
 
     private static void GenerateHeaders(SourceBuilder sb, string ns)
     {
@@ -32,60 +34,46 @@ internal static class InspectorGeneratorEmitter
     public static string Emit(InspectModel model)
     {
         var sb = new SourceBuilder(4096 * 2);
-        var groupSegments = new (InspectorGroup Group, ImmutableArray<EmitSegment> Segments)[model.Groups.Length];
+        var groupSegments = new EmitGroup[model.Groups.Length];
         for (var i = 0; i < groupSegments.Length; i++)
-            groupSegments[i] = (model.Groups[i], BuildSegments(model.Groups[i]));
+        {
+            var group = model.Groups[i];
+            BuildAccessPaths(group);
+            groupSegments[i] = new EmitGroup(group, BuildSegments(group));
+        }
 
         GenerateHeaders(sb, model.InspectorNs);
 
         sb.Builder.AppendLine($"internal sealed partial class {model.InspectorName}");
         sb.OpenBrace();
 
-        // Groups
-        foreach (var (group, segments) in groupSegments.AsSpan())
+        // Fields
+        foreach (var it in groupSegments.AsSpan())
         {
-            sb.AppendLine("// ", group.Name);
-            if (group.IsInputGroup)
-            {
-                EmitInputGroup(sb, group);
-                continue;
-            }
-
-            EmitInputFields(sb, group, segments.AsSpan());
-            sb.AppendLine();
+            EmitInputFields(sb, it);
         }
 
-        foreach (var (group, segments) in groupSegments.AsSpan())
+        // Functions
+        foreach (var it in groupSegments.AsSpan())
         {
-            EmitDrawFunc(sb, group, segments.AsSpan());
+            EmitDrawFunc(sb, it);
         }
 
         sb.CloseBrace(); // class
         return sb.ToString();
     }
 
-    private static void EmitInputFields(SourceBuilder sb, InspectorGroup group, ReadOnlySpan<EmitSegment> segments)
-    {
-        foreach (var segment in segments)
-        {
-            if (!segment.IsDefault) sb.AppendLine().AppendLine("// ", segment.Name!);
-            foreach (var member in segment.Members.AsSpan())
-            {
-                EmitInputField(sb, member, group);
-            }
-        }
-    }
 
-    private static void EmitDrawFunc(SourceBuilder sb, InspectorGroup group, ReadOnlySpan<EmitSegment> segments)
+    private static void EmitDrawFunc(SourceBuilder sb,  EmitGroup emitGroup)
     {
-        var isRoot = group.IsRoot;
-        foreach (var segment in segments)
+        var group = emitGroup.Group;
+        foreach (ref readonly var segment in emitGroup.Segments.AsSpan())
         {
             if (segment.Members.Length == 0) continue;
 
             sb.AppendLine();
             sb.BeginLine("public static void Draw");
-            if (isRoot) sb.Append(segment.IsDefault ? "Root" : segment.Name!); // DrawRoot, DrawSegment
+            if (group.IsRoot) sb.Append(segment.IsDefault ? "Root" : segment.Name!); // DrawRoot, DrawSegment
             else if (segment.IsDefault) sb.Append(group.Name); // DrawGroup
             else sb.Append(group.Name, "_", segment.Name!); //DrawGroup_Segment
             sb.EndLine("()");
@@ -93,34 +81,76 @@ internal static class InspectorGeneratorEmitter
 
             if (group.IsInputGroup)
             {
+                sb.BeginLine().Builder.AppendLine($"var value = Target.{group.AccessPath};");
+                sb.BeginLine().Builder.AppendLine($"var dst = Instance.{group.Name}.Values;");
+
+                var span = group.Members.AsSpan();
+                for (var i = 0; i < span.Length; i++)
+                    sb.BeginLine().Builder.AppendLine($"dst[{i}] = value.{span[i].Name};");
+
+                sb.AppendLine().AppendLine("// Draw");
                 sb.BeginLine().Builder.AppendLine($"Instance.{group.Name}.Draw();");
             }
             else
             {
+                sb.AppendLine("Fetch();").AppendLine().AppendLine("// Draw");
                 foreach (var member in segment.Members.AsSpan())
                 {
                     if (member.Input is null) continue;
                     sb.BeginLine().Builder.AppendLine($"Instance.{member.Input.Name}.Draw();");
                 }
+
+                sb.AppendLine("return;").AppendLine();
+                sb.AppendLine("static void Fetch()");
+                sb.OpenBrace();
+                foreach (var member in segment.Members.AsSpan())
+                {
+                    if (member.Input is not { } input) continue;
+                    var access = CreateAccessPath(member, group);
+                    sb.BeginLine().Builder.Append($"Instance.{input.Name}.Value = ");
+                    member.Input.AppendGetter(member, access.Value, sb);
+                    sb.EndLine(";");
+                }
+
+                sb.CloseBrace();
             }
 
             sb.CloseBrace();
         }
     }
 
-    private static void EmitInputField(SourceBuilder sb, InspectorMember member, InspectorGroup group)
+    private static void EmitInputFields(SourceBuilder sb, EmitGroup emitGroup)
     {
-        var access = CreateAccessPath(member, group);
-        sb.BeginLine("private readonly ");
-        switch (member.Input)
+        var group = emitGroup.Group;
+        sb.AppendLine("// ", group.Name);
+
+        if (group.IsInputGroup)
         {
-            case NumberInput: EmitInput(sb, member, access); break;
-            case ColorInput: EmitColor(sb, member, access); break;
-            case ComboInput: EmitCombo(sb, member, access); break;
-            case CheckboxInput: EmitCheckbox(sb, member, access); break;
-            default: throw new UnreachableException(nameof(member.Input));
+            EmitInputGroup(sb, group);
+            return;
         }
+
+        foreach (ref readonly var segment in emitGroup.Segments.AsSpan())
+        {
+            if (!segment.IsDefault) sb.AppendLine().AppendLine("// ", segment.Name!);
+            foreach (var member in segment.Members.AsSpan())
+            {
+                var access = CreateAccessPath(member, group);
+                sb.BeginLine("private readonly ");
+                switch (member.Input)
+                {
+                    case NumberInput: EmitInput(sb, member, access); break;
+                    case ColorInput: EmitColor(sb, member, access); break;
+                    case ComboInput: EmitCombo(sb, member, access); break;
+                    case CheckboxInput: EmitCheckbox(sb, member, access); break;
+                    default: throw new UnreachableException(nameof(member.Input));
+                }
+            }
+        }
+
+        sb.AppendLine();
     }
+
 
     private static void EmitInputGroup(SourceBuilder sb, InspectorGroup group)
     {
@@ -131,23 +161,14 @@ internal static class InspectorGeneratorEmitter
 
         sb.PushIndent();
 
-        // getter
-        sb.AppendLine("static dst =>");
-        sb.OpenBrace();
-        sb.BeginLine().Builder.AppendLine($"var value = Target.{group.AccessPath};");
-
-        var span = group.Members.AsSpan();
-        for (var i = 0; i < span.Length; i++)
-            sb.BeginLine().Builder.AppendLine($"dst[{i}] = value.{span[i].Name};");
-
-        sb.CloseBrace(",");
-
         // setter
         sb.AppendLine("static src =>");
         sb.OpenBrace();
 
         sb.AppendLine("Target.", group.AccessPath, " = new()");
         sb.OpenBrace();
+
+        var span = group.Members.AsSpan();
         for (var i = 0; i < span.Length; i++)
         {
             var member = span[i];
@@ -164,10 +185,9 @@ internal static class InspectorGeneratorEmitter
         {
             var member = span[i];
             var input = (NumberInput)member.Input!;
-            sb.BeginLine(input.IsFloat ? ".WithFloatInput(" : ".WithIntInput(");
-            sb.AppendLiteral(member.Label).Append(", ");
-            sb.Append(input.ToStyleString()).Append(", ");
-            sb.Append(input.Speed).Append(", ");
+            sb.BeginLine(input.IsFloat ? ".WithFloatInput(" : ".WithIntInput(").AppendLiteral(member.Label)
+                .Append(", ");
+            sb.Append(input.ToStyleString()).Append(", ").Append(input.Speed).Append(", ");
             if (input.IsFloat)
             {
                 sb.Append(input.Min).Append(", ").Append(input.Max);
@@ -199,12 +219,10 @@ internal static class InspectorGeneratorEmitter
         if (member.Info.TypeInfo.IsPrimitive())
         {
             var cast = isFloat ? "(float)" : "(int)";
-            sb.AppendLine("static () => ", access.Value, ", ");
             AppendSetter(sb, member, in access, $"{cast}v", endLine: ", ");
         }
         else
         {
-            sb.AppendLine("static () => ", NumberInput.BitCast(member.TypeName, input.NumberType, access.Value), ",");
             AppendSetter(sb, member, in access, NumberInput.BitCast(input.NumberType, member.TypeName, "v"), ", ");
         }
 
@@ -229,19 +247,15 @@ internal static class InspectorGeneratorEmitter
     private static void EmitColor(SourceBuilder sb, InspectorMember member, AccessPath access)
     {
         var input = (ColorInput)member.Input!;
-        string castTo = "", castFrom = "", typeName = member.TypeName;
+        string castTo = "", typeName = member.TypeName;
         if (typeName.EndsWith("Vector3") || typeName.EndsWith("Vector4") || typeName.EndsWith("ColorRgba"))
-        {
             castTo = $"({member.TypeName})";
-            castFrom = "(Color4)";
-        }
 
         sb.Builder.Append($"ColorInput {input.Name} = new(");
         sb.AppendLiteral(member.Label).EndLine(", ");
         sb.PushIndent();
 
-        //getter & setter
-        sb.AppendLine("static () => ", castFrom, access.Value, ", ");
+        // setter
         AppendSetter(sb, member, in access, $"{castTo}v", endLine: ", ");
 
         sb.AppendLine(input.HasAlpha.AsBoolString());
@@ -252,21 +266,14 @@ internal static class InspectorGeneratorEmitter
     private static void EmitCombo(SourceBuilder sb, InspectorMember member, AccessPath access)
     {
         var input = (ComboInput)member.Input!;
-        string castTo = "", castFrom = "";
-        if (member.TypeName != "int")
-        {
-            castTo = $"({member.TypeName})";
-            castFrom = "(int)";
-        }
+        var castTo = member.TypeName == "int" ? "" : $"({member.TypeName})";
 
         sb.Builder.Append($"ComboInput {input.Name} = ComboInput.Create(");
         sb.AppendLiteral(member.Label).EndLine(", ");
         sb.PushIndent();
-        sb.AppendLine(input.Values, ", ");
-        sb.AppendLine(input.Names, ", ");
+        sb.AppendLine(input.Values, ", ").AppendLine(input.Names, ", ");
 
-        //getter & setter
-        sb.AppendLine("static () => ", castFrom, access.Value, ", ");
+        //setter
         AppendSetter(sb, member, in access, $"{castTo}v", endLine: ", ");
 
         sb.BeginLine().Append(input.StartAt).EndLine();
@@ -282,7 +289,6 @@ internal static class InspectorGeneratorEmitter
         sb.AppendLiteral(member.Label).EndLine(", ");
 
         sb.PushIndent();
-        sb.AppendLine("static () => ", access.Value, ", ");
         AppendSetter(sb, member, in access, "v", endLine: ");");
         sb.PopIndent();
         sb.AppendLine();
@@ -324,7 +330,7 @@ internal static class InspectorGeneratorEmitter
         return result;
     }
 
-    private static ImmutableArray<EmitSegment> BuildSegments(InspectorGroup group)
+    private static EmitSegment[] BuildSegments(InspectorGroup group)
     {
         var dict = new Dictionary<string, List<InspectorMember>>(StringComparer.Ordinal);
 
@@ -338,11 +344,11 @@ internal static class InspectorGeneratorEmitter
 
         var segments = new List<EmitSegment>(dict.Count);
         if (dict.Remove("", out var defaultMembers))
-            segments.Add(new EmitSegment(null, defaultMembers.ToImmutableArray()));
+            segments.Add(new EmitSegment(null, defaultMembers.ToArray()));
 
         foreach (var pair in dict)
-            segments.Add(new EmitSegment(pair.Key, pair.Value.ToImmutableArray()));
+            segments.Add(new EmitSegment(pair.Key, pair.Value.ToArray()));
 
-        return segments.ToImmutableArray();
+        return segments.ToArray();
     }
 }

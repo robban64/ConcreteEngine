@@ -17,11 +17,10 @@ internal sealed unsafe class InputGroup : InputField
     private readonly InputEntry[] _inputs;
     private readonly NativeView<InputNumeric1> _values;
 
-    private readonly Action<Span<InputNumeric1>> _getter;
     private readonly Action<Span<InputNumeric1>> _setter;
 
 
-    public InputGroup(string label, int count, Action<Span<InputNumeric1>> getter, Action<Span<InputNumeric1>> setter)
+    public InputGroup(string label, int count, Action<Span<InputNumeric1>> setter)
         : base(label, InputKind.Group)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(count, 2);
@@ -29,18 +28,16 @@ internal sealed unsafe class InputGroup : InputField
 
         _values = StringArena.Instance.AllocBytes(sizeof(int) * count).Reinterpret<InputNumeric1>();
         _inputs = new InputEntry[count];
-        _getter = getter;
         _setter = setter;
     }
 
     public Span<InputNumeric1> Values => _values.AsSpan();
     public Span<int> IntValues => _values.Reinterpret<int>().AsSpan();
-    public Span<float> FloatValuesß => _values.Reinterpret<float>().AsSpan();
+    public Span<float> FloatValues => _values.Reinterpret<float>().AsSpan();
 
     public bool Draw()
     {
         if (_count != _inputs.Length) Throwers.InvalidOperation(nameof(_count));
-        if (_stepper.Tick()) _getter(_values.AsSpan());
 
         ImGui.PushID(StringId);
 

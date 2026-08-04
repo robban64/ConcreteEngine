@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text;
 using Generator.Misc;
 
@@ -106,7 +107,7 @@ internal ref struct SourceBuilder
     [UnscopedRef]
     public readonly ref readonly SourceBuilder Append(float v)
     {
-        _sb.Append($"{v}f");
+        _sb.Append(v.ToString(CultureInfo.InvariantCulture)).Append('f');
         return ref this;
     }
     

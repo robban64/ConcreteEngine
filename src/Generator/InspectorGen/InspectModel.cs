@@ -100,10 +100,22 @@ internal sealed record NumberInput(
 
     public override void AppendGetter(InspectorMember member, string accessPath, SourceBuilder sb)
     {
-        if (member.Info.TypeInfo.IsPrimitive() || NumberType.StartsWith("Vector") || NumberType.StartsWith("Int"))
+        if (member.Info.TypeInfo.IsPrimitive() || CanCast(member.TypeName))
             sb.Append(accessPath);
         else
             sb.Builder.Append($"Unsafe.BitCast<{member.TypeName}, {NumberType}>({accessPath})");
+    }
+
+    private static bool CanCast(string typeName)
+    {
+        if (typeName[^1] == '2')
+            return typeName.EndsWith("Vector2") || typeName.EndsWith("Int2");
+        if (typeName[^1] == '3')
+            return typeName.EndsWith("Vector3") || typeName.EndsWith("Int3");
+        if (typeName[^1] == '4')
+            return typeName.EndsWith("Vector4") || typeName.EndsWith("Int4");
+
+        return false;
     }
 }
 

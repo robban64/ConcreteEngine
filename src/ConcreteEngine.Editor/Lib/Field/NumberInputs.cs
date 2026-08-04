@@ -17,15 +17,11 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IIn
 
     private readonly String8Utf8 _format;
 
-    private readonly Func<T> _getter;
     private readonly Action<T> _setter;
-
-    private FrameStepper _stepper = new(4);
 
     public FloatInput(
         string label,
         InputStyle style,
-        Func<T> getter,
         Action<T> setter,
         float speed = 1f,
         float min = 0,
@@ -33,7 +29,6 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IIn
         string format = "%.2f") : base(label, InputKind.Float)
     {
         Style = style;
-        _getter = getter;
         _setter = setter;
         _format = format;
         Speed = speed;
@@ -45,11 +40,9 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IIn
     }
 
     public ref T Value => ref *_value;
-    
+
     public bool Draw()
     {
-        if (_stepper.Tick()) *_value = _getter();
-
         DrawLabel();
         var changed = Style switch
         {
@@ -76,22 +69,17 @@ internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IInpu
     public int Min, Max;
     public float Speed;
 
-    private readonly Func<T> _getter;
     private readonly Action<T> _setter;
-
-    private FrameStepper _stepper = new(4);
 
     public IntInput(
         string label,
         InputStyle style,
-        Func<T> getter,
         Action<T> setter,
         float speed = 1f,
         int min = 0,
         int max = 0) : base(label, InputKind.Int)
     {
         Style = style;
-        _getter = getter;
         _setter = setter;
         Speed = speed;
         Min = min;
@@ -100,12 +88,11 @@ internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IInpu
         _value = (T*)StringArena.Instance.AllocBytes(Unsafe.SizeOf<T>()).Ptr;
         if (T.Components == 1) LabelPlacement = LabelPlacement.Inline;
     }
+
     public ref T Value => ref *_value;
 
     public bool Draw()
     {
-        if (_stepper.Tick()) *_value = _getter();
-
         DrawLabel();
         var changed = Style switch
         {
@@ -114,48 +101,6 @@ internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IInpu
             InputStyle.Drag => T.DrawIntDrag(StringId, _value, Speed, Min, Max),
             _ => false
         };
-
-        if (changed && ShouldTrigger())
-        {
-            _setter(*_value);
-            return true;
-        }
-
-        return false;
-    }
-}
-
-internal sealed unsafe class ColorInput : InputField
-{
-    public bool HasAlpha;
-
-    private readonly Color4* _value;
-
-    private readonly Func<Color4> _getter;
-    private readonly Action<Color4> _setter;
-
-    private FrameStepper _stepper = new(4);
-
-    public ColorInput(string label, Func<Color4> getter, Action<Color4> setter, bool hasAlpha = true)
-        : base(label, InputKind.Color)
-    {
-        _getter = getter;
-        _setter = setter;
-        HasAlpha = hasAlpha;
-        LabelPlacement = LabelPlacement.Top;
-        _value = (Color4*)StringArena.Instance.AllocBytes(Unsafe.SizeOf<Color4>()).Ptr;
-    }
-    
-    public ref Color4 Value => ref *_value;
-
-    public bool Draw()
-    {
-        if (_stepper.Tick()) *_value = _getter();
-
-        DrawLabel();
-        var changed = HasAlpha
-            ? ImGui.ColorEdit4(StringId, &_value->R)
-            : ImGui.ColorEdit3(StringId, &_value->R);
 
         if (changed && ShouldTrigger())
         {

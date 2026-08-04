@@ -25,25 +25,21 @@ internal sealed partial class MaterialInspector : Inspector<MaterialInspector>
     private readonly ComboInput BlendCombo = ComboInput.Create("Blend Mode",
         BlendModeExt.Values,
         BlendModeExt.Names,
-        static () => (int)Target.State.DrawFunctions.Blend,
         static v => Target.State.DrawFunctions = Target.State.DrawFunctions with { Blend = (BlendMode)v });
 
     private readonly ComboInput CullCombo = ComboInput.Create("Cull Mode",
         CullModeExt.Values,
         CullModeExt.Names,
-        static () => (int)Target.State.DrawFunctions.Cull,
         static v => Target.State.DrawFunctions = Target.State.DrawFunctions with { Cull = (CullMode)v });
 
     private readonly ComboInput DepthCombo = ComboInput.Create("Depth Mode",
         DepthModeExt.Values,
         DepthModeExt.Names,
-        static () => (int)Target.State.DrawFunctions.Depth,
         static v => Target.State.DrawFunctions = Target.State.DrawFunctions with { Depth = (DepthMode)v });
 
     private readonly ComboInput PolygonCombo = ComboInput.Create("Polygon Offset",
         PolygonOffsetLevelExt.Values,
         PolygonOffsetLevelExt.Names,
-        static () => (int)Target.State.DrawFunctions.PolygonOffset,
         static v => Target.State.DrawFunctions = Target.State.DrawFunctions with
         {
             PolygonOffset = (PolygonOffsetLevel)v
@@ -61,6 +57,12 @@ internal sealed partial class MaterialInspector : Inspector<MaterialInspector>
 
     private static void DrawPipelineCombos()
     {
+        var drawFunc = Target.State.DrawFunctions;
+        Instance.BlendCombo.Value = (int)drawFunc.Blend;
+        Instance.CullCombo.Value = (int)drawFunc.Cull;
+        Instance.DepthCombo.Value = (int)drawFunc.Depth;
+        Instance.PolygonCombo.Value = (int)drawFunc.PolygonOffset;
+        
         Instance.BlendCombo.Draw();
         Instance.CullCombo.Draw();
         Instance.DepthCombo.Draw();

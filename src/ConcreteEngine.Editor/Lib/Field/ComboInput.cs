@@ -6,7 +6,6 @@ namespace ConcreteEngine.Editor.Lib.Field;
 
 internal sealed unsafe class ComboInput : InputField
 {
-    private int _value;
     private int _lastValue = int.MinValue;
     private int _index = -1;
 
@@ -15,11 +14,8 @@ internal sealed unsafe class ComboInput : InputField
     private readonly int[] _values;
     private readonly string[] _names;
 
-    private readonly Func<int> _getter;
     private readonly Action<int> _setter;
-
-    private FrameStepper _stepper = new(8);
-
+    
     public int StartAt
     {
         get;
@@ -35,7 +31,6 @@ internal sealed unsafe class ComboInput : InputField
     public ComboInput(string label,
         ReadOnlySpan<int> values,
         ReadOnlySpan<string> names,
-        Func<int> getter,
         Action<int> setter) : base(label, InputKind.Combo)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(values.Length, 1);
@@ -45,26 +40,25 @@ internal sealed unsafe class ComboInput : InputField
         values.CopyTo(_values.AsSpan());
         _names = names.ToArray();
 
-        _getter = getter;
         _setter = setter;
 
         LabelPlacement = LabelPlacement.None;
         _displayText = StringArena.AllocateString(32);
     }
 
+    public int Value { get; set; }
+
     public void SetItemName(int index, string newName) => _names[index] = newName;
 
     public bool Draw()
     {
-        if (_stepper.Tick()) _value = _getter();
-
-        if (_lastValue != _value) OnChanged();
+        if (_lastValue != Value) OnChanged();
 
         DrawLabel();
         var open = ImGui.BeginCombo(StringId, _displayText);
         if (open && DrawInner() && ShouldTrigger())
         {
-            _setter(_value);
+            _setter(Value);
             return true;
         }
 
@@ -73,8 +67,8 @@ internal sealed unsafe class ComboInput : InputField
 
     private void OnChanged()
     {
-        _index = _values.IndexOf(_value);
-        _lastValue = _value;
+        _index = _values.IndexOf(Value);
+        _lastValue = Value;
 
         var name = (uint)_index < (uint)_names.Length && _index >= StartAt ? _names[_index] : Placeholder;
         _displayText.Set(name);
@@ -93,7 +87,7 @@ internal sealed unsafe class ComboInput : InputField
             if (ImGui.Selectable(sw.Append((byte)'-').Append(i).End(), isSelected))
             {
                 _index = i;
-                _value = _values[i];
+                Value = _values[i];
                 changed = true;
             }
 
@@ -107,18 +101,16 @@ internal sealed unsafe class ComboInput : InputField
     public static ComboInput Create(string label,
         ReadOnlySpan<int> values,
         ReadOnlySpan<string> names,
-        Func<int> getter,
         Action<int> setter,
         int startAt = 0,
         string placeHolder = "")
     {
-        return new ComboInput(label, values, names, getter, setter) { StartAt = startAt, Placeholder = placeHolder };
+        return new ComboInput(label, values, names, setter) { StartAt = startAt, Placeholder = placeHolder };
     }
 
     public static ComboInput Create(string label,
         ReadOnlySpan<byte> values,
         ReadOnlySpan<string> names,
-        Func<int> getter,
         Action<int> setter,
         int startAt = 0,
         string placeHolder = "")
@@ -126,13 +118,12 @@ internal sealed unsafe class ComboInput : InputField
         ArgumentOutOfRangeException.ThrowIfGreaterThan(values.Length, 64);
         Span<int> ints = stackalloc int[values.Length];
         for (int i = 0; i < values.Length; i++) ints[i] = values[i];
-        return new ComboInput(label, ints, names, getter, setter) { StartAt = startAt, Placeholder = placeHolder };
+        return new ComboInput(label, ints, names, setter) { StartAt = startAt, Placeholder = placeHolder };
     }
 
     public static ComboInput Create(string label,
         ReadOnlySpan<ushort> values,
         ReadOnlySpan<string> names,
-        Func<int> getter,
         Action<int> setter,
         int startAt = 0,
         string placeHolder = "")
@@ -140,6 +131,6 @@ internal sealed unsafe class ComboInput : InputField
         ArgumentOutOfRangeException.ThrowIfGreaterThan(values.Length, 64);
         Span<int> ints = stackalloc int[values.Length];
         for (int i = 0; i < values.Length; i++) ints[i] = values[i];
-        return new ComboInput(label, ints, names, getter, setter) { StartAt = startAt, Placeholder = placeHolder };
+        return new ComboInput(label, ints, names, setter) { StartAt = startAt, Placeholder = placeHolder };
     }
 }

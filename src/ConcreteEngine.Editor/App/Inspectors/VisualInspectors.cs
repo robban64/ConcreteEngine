@@ -17,19 +17,19 @@ internal sealed partial class DirectionalLightInspector : Inspector<DirectionalL
 }
 
 [EditorInspector(typeof(ShadowSettings))]
-internal sealed partial class ShadowSettingsInspector : Inspector<ShadowSettingsInspector>
+internal sealed unsafe partial class ShadowSettingsInspector : Inspector<ShadowSettingsInspector>
 {
     private static ShadowSettings Target => VisualManager.Instance.Shadow;
 
     public void Draw()
     {
-        AppDraw.Section(Projection);
-        AppDraw.Section(Visuals);
+        AppDraw.Section("Projection"u8, &DrawProjection);
+        AppDraw.Section("Visuals"u8, &DrawVisuals);
     }
 }
 
 [EditorInspector(typeof(EnvironmentSettings))]
-internal sealed partial class EnvironmentSettingsInspector : Inspector<EnvironmentSettingsInspector>
+internal sealed  unsafe partial class EnvironmentSettingsInspector : Inspector<EnvironmentSettingsInspector>
 {
     private static EnvironmentSettings Target => VisualManager.Instance.Environment;
 
@@ -41,22 +41,22 @@ internal sealed partial class EnvironmentSettingsInspector : Inspector<Environme
 
     private static void DrawFogSection()
     {
-        AppDraw.Section(Instance.FogOptics);
-        Instance.FogColor.Draw();
-        AppDraw.Section(Instance.FogHeight);
+        AppDraw.Section("FogOptics"u8, &DrawFogOptics);
+        DrawFog();
+        AppDraw.Section("FogHeight"u8, &DrawFogHeight);
     }
 }
 
 [EditorInspector(typeof(PostEffectSettings))]
-internal sealed partial class PostEffectSettingsInspector : Inspector<PostEffectSettingsInspector>
+internal sealed unsafe partial class PostEffectSettingsInspector : Inspector<PostEffectSettingsInspector>
 {
     private static PostEffectSettings Target => VisualManager.Instance.PostEffect;
 
     public void Draw()
     {
-        AppDraw.Section(Grade);
-        AppDraw.Section(WhiteBalance);
-        AppDraw.Section(Bloom);
-        AppDraw.Section(ImageFx);
+        AppDraw.Section("Grade"u8, &DrawGrade);
+        AppDraw.Section("WhiteBalance"u8, &DrawWhiteBalance);
+        AppDraw.Section("Bloom"u8, &DrawBloom);
+        AppDraw.Section("ImageFx"u8, &DrawImageFx);
     }
 }

@@ -32,8 +32,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
     public SceneWindow(StateManager state) : base(state)
     {
         _browser = new SceneBrowser();
-        _kindCombo = ComboInput.Create("scene-combo", SceneObjectKindExt.Values, SceneObjectKindExt.Names,
-            () => (int)_selectedKind, v => OnCategoryChange((SceneObjectKind)v));
+        _kindCombo = ComboInput.Create("scene-combo", SceneObjectKindExt.Values, SceneObjectKindExt.Names, v => OnCategoryChange((SceneObjectKind)v));
 
         _kindCombo.LabelPlacement = LabelPlacement.None;
         _kindCombo.SetItemName(0, "All");
@@ -68,6 +67,7 @@ internal sealed unsafe class SceneWindow : EditorWindow
 
     protected override void OnDraw()
     {
+        _kindCombo.Value = (int)_selectedKind;
         ImGui.SeparatorText(_title);
 
         // search

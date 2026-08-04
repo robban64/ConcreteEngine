@@ -20,30 +20,24 @@ public enum InputTrigger : byte
 
 internal sealed unsafe class CheckboxInput : InputField
 {
-    private bool _value;
-
-    private readonly Func<bool> _getter;
+    public bool Value;
     private readonly Action<bool> _setter;
-
-    private FrameStepper _stepper = new(12);
-
-    public CheckboxInput(string label, Func<bool> getter, Action<bool> setter) : base(label, InputKind.Bool)
+    
+    public CheckboxInput(string label, Action<bool> setter) : base(label, InputKind.Bool)
     {
-        _getter = getter;
         _setter = setter;
     }
 
     public bool Draw()
     {
-        if (_stepper.Tick()) _value = _getter();
-        var value = _value;
+        var value = Value;
 
         DrawLabel();
         var changed = ImGui.Checkbox(StringId, &value);
         if (changed)
         {
             _setter(value);
-            _value = value;
+            Value = value;
         }
 
         return changed;

@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Graphics;
 

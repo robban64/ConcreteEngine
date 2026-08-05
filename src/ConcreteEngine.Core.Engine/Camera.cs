@@ -59,7 +59,7 @@ public sealed class Camera
         }
     }
 
-    [InputNumber(Segment = "Transform", Converter = typeof(Vector2))]
+    [InputNumber(Segment = "Transform", IsFloat = true, Components = 2)]
     public YawPitch Orientation
     {
         get => _orientation;

@@ -44,8 +44,9 @@ internal sealed class DrawCommandProcessor
             _gfxCmd.UseShader(RenderRegistry.DepthShader);
             _gfxCmd.UnbindAllTextures();
         }
-        
-        _gfxCmd.BindTexture(RenderContext.DepthTexture, SamplerProfile.ShadowCompare, RenderContext.ShadowSamplerSlot);
+
+        _gfxCmd.BindTextureAndSampler(RenderContext.DepthTexture, SamplerProfile.ShadowCompare,
+            RenderContext.ShadowSamplerSlot);
     }
 
     public void DrawSource(RenderSource source, RenderEntityId entity, int submitIndex)
@@ -53,11 +54,11 @@ internal sealed class DrawCommandProcessor
         _gfxBuffers.BindUniformBufferRange<DrawObjectUniform>(submitIndex, 1);
 
         BindMaterial(source.Material);
-        
+
         if ((source.DrawFlags & EntityDrawFlags.Skinned) != 0)
             BindSkinningSlot(entity);
-        
-        if((source.DrawFlags & EntityDrawFlags.Instanced) == 0)
+
+        if ((source.DrawFlags & EntityDrawFlags.Instanced) == 0)
         {
             _gfxCmd.DrawMesh(source.Mesh);
         }
@@ -89,19 +90,19 @@ internal sealed class DrawCommandProcessor
 
         _gfxCmd.ApplyState(materialMeta.DrawState);
         _gfxCmd.ApplyStateFunctions(materialMeta.DrawFunctions);
-        
+
         if (RenderContext.RenderMode == RenderTargetKind.Scene)
         {
             _gfxCmd.UseShader(materialMeta.ShaderId);
-            _gfxCmd.BindTextures(textureBindings.AsReadOnlySpan());
+            foreach (var it in textureBindings)
+                _gfxCmd.BindTextureAndSampler(it.Texture, it.Profile, it.Slot);
         }
         else
         {
             BindAlbedoMaskSlots(textureBindings);
         }
-
     }
-    
+
     public bool TryApplyMaterialState(Id16<Material> materialId, out NativeView<TextureBinding> bindings)
     {
         if (_lastMaterialId == materialId)
@@ -109,11 +110,12 @@ internal sealed class DrawCommandProcessor
             bindings = default;
             return false;
         }
+
         _lastMaterialId = materialId;
 
         _gfxBuffers.BindUniformBufferRange<MaterialUniform>(materialId.Index(), 1);
         bindings = _materialSystem.GetMetaAndSlots(materialId, out var materialMeta);
-        
+
         _gfxCmd.ApplyState(materialMeta.DrawState);
         _gfxCmd.ApplyStateFunctions(materialMeta.DrawFunctions);
 
@@ -126,11 +128,11 @@ internal sealed class DrawCommandProcessor
         foreach (var value in slots)
         {
             if (value.SlotKind is TextureUsage.Albedo or TextureUsage.Mask)
-                _gfxCmd.BindTexture(value.Texture, value.Profile, value.Slot);
+                _gfxCmd.BindTextureAndSampler(value.Texture, value.Profile, value.Slot);
         }
     }
-    
-    
+
+
 /*
     public void DrawSpecialResolveMesh(RenderSource cmd, RenderEntityId entity, int submitIdx)
     {
@@ -186,5 +188,4 @@ internal sealed class DrawCommandProcessor
         }
     }
 */
- 
 }

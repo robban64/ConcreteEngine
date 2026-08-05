@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Graphics.Gfx;
@@ -20,15 +19,21 @@ internal sealed class MaterialSystem : IDisposable
     public int Count { get; private set; }
     private int _slotCount;
 
-    private readonly AssetTypeStore _materialStore = AssetStore.GetTypeStore(AssetKind.Material);
+    private readonly AssetTypeStore _materialStore;
 
-    private MaterialMeta[] _metas = new MaterialMeta[MaterialBufferCapacity];
+    private MaterialMeta[] _metas;
 
-    private NativeArray<TextureBinding> _textureSlots =
-        NativeArray.Allocate<TextureBinding>(TextureSlotCapacity);
+    private NativeArray<TextureBinding> _textureSlots;
 
-    private NativeArray<MaterialUniform> _buffer =
-        NativeArray.Allocate<MaterialUniform>(MaterialBufferCapacity, false);
+    private NativeArray<MaterialUniform> _buffer;
+
+    public MaterialSystem()
+    {
+        _metas = new MaterialMeta[MaterialBufferCapacity];
+        _materialStore = AssetStore.GetTypeStore(AssetKind.Material);
+        _textureSlots = NativeArray.Allocate<TextureBinding>(TextureSlotCapacity);
+        _buffer = NativeArray.Allocate<MaterialUniform>(MaterialBufferCapacity, false);
+    }
 
 
     internal void Commit()
@@ -42,8 +47,9 @@ internal sealed class MaterialSystem : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal NativeView<TextureBinding> GetMetaAndSlots(Id16<Material> materialId, out MaterialMeta meta)
     {
-        meta = _metas[materialId.Index()];
-        return _textureSlots.Slice(meta.BindingRange);
+        ref var m = ref _metas[materialId.Index()];
+        meta = m;
+        return _textureSlots.Slice(m.BindingRange);
     }
 
     internal NativeView<MaterialUniform> GetUniforms()

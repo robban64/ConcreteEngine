@@ -12,13 +12,11 @@ namespace ConcreteEngine.Editor.Lib.Field;
 internal sealed unsafe class InputGroup : InputField
 {
     private int _count;
-    private FrameStepper _stepper = new(8);
 
     private readonly InputEntry[] _inputs;
+    
     private readonly NativeView<InputNumeric1> _values;
-
     private readonly Action<Span<InputNumeric1>> _setter;
-
 
     public InputGroup(string label, int count, Action<Span<InputNumeric1>> setter)
         : base(label, InputKind.Group)

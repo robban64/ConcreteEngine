@@ -27,11 +27,15 @@ public sealed class InputGroupAttribute : InspectInputAttribute { }
 public sealed class InputNumberAttribute(InputStyle style = InputStyle.Input) : InspectInputAttribute
 {
     public InputStyle Style { get; } = style;
-    public Type? Converter { get; init; }
     public string? Format { get; init; }
     public float Min { get; init; }
     public float Max { get; init; }
     public float Speed { get; init; }
+    
+    public bool IsFloat { get; init; }
+    public bool IsInt { get; init; } = false;
+
+    public int Components { get; init; } = 0;
 }
 
 public sealed class InputColorAttribute : InspectInputAttribute

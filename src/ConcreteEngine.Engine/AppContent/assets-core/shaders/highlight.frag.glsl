@@ -6,7 +6,7 @@ in vec3 FragPos;
 out vec4 FragColor;
 
 layout(binding = 0) uniform sampler2D uTexture;
-layout(binding = 2) uniform sampler2D uAlpha;
+layout(binding = 4) uniform sampler2D uAlpha;
 
 @import ubo:EngineUniform
 @import ubo:MaterialUniform

@@ -54,7 +54,7 @@ public sealed class GfxCommands
 
         UseShader(default);
         BindFramebuffer(default);
-
+        UnbindAllTextures();
         _boundTextures = default;
         _boundSamplers = default;
     }
@@ -244,15 +244,14 @@ public sealed class GfxCommands
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindTextureAndSampler(TextureId texture, SamplerProfile sampler, int slot)
+    public void BindTextureAndSampler(TextureId texture, SamplerProfile sampler, byte slot)
     {
-        Debug.Assert(slot >= 0 && slot <= GfxLimits.TextureSlots);
         BindSampler(sampler, slot);
         BindTextureSlot(texture, slot);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindTextureSlot(TextureId texture, int slot)
+    public void BindTextureSlot(TextureId texture, byte slot)
     {
         if (_boundTextures[slot] == texture) return;
         _boundTextures[slot] = texture;
@@ -261,7 +260,7 @@ public sealed class GfxCommands
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindSampler(SamplerProfile sampler, int slot)
+    public void BindSampler(SamplerProfile sampler, byte slot)
     {
         if (_boundSamplers[slot] == sampler) return;
         _boundSamplers[slot] = sampler;

@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Graphics.Gfx;
 
-namespace ConcreteEngine.Core.Engine.Graphics.Enviroment;
+namespace ConcreteEngine.Core.Engine.Graphics.Terrains;
 
 public sealed class Skybox
 {

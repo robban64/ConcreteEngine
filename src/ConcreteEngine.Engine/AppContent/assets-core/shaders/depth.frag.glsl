@@ -5,7 +5,7 @@ in vec2 TexCoord;
 @import ubo:MaterialUniform
 
 layout(binding = 0) uniform sampler2D uTexture;
-layout(binding = 1) uniform sampler2D uAlpha;
+layout(binding = 4) uniform sampler2D uAlpha;
 
 void main()
 {

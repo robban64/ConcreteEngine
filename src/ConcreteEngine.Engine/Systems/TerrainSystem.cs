@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Engine.Graphics.Enviroment;
+using ConcreteEngine.Core.Engine.Graphics.Terrains;
 using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Engine.Mesh;

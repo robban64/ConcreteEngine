@@ -47,8 +47,7 @@ internal sealed class DrawCommandProcessor
             GfxCmd.UnbindAllTextures();
         }
 
-        GfxCmd.BindTextureAndSampler(RenderContext.DepthTexture, SamplerProfile.ShadowCompare,
-            RenderContext.ShadowSamplerSlot);
+        GfxCmd.BindTextureAndSampler(RenderContext.DepthTexture, SamplerProfile.ShadowCompare, (byte)SamplerSlot.ShadowMap0);
     }
 
 
@@ -57,7 +56,7 @@ internal sealed class DrawCommandProcessor
         GfxCmd.UseShader(shaderId);
         
         for (var i = 0; i < sources.Length; i++) 
-            GfxCmd.BindTextureAndSampler(sources[i], SamplerProfile.PointClamp, i);
+            GfxCmd.BindTextureAndSampler(sources[i], SamplerProfile.PointClamp, (byte)i);
 
         GfxCmd.DrawMesh(GfxMeshes.FsqQuad);
     }

@@ -2,22 +2,6 @@ using ConcreteEngine.Core.Common.Attributes;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-
-
-
-[EnumExt]
-public enum TextureUsage : byte
-{
-    Albedo,
-    Normal,
-    Mask,
-    Specular,
-    Roughness,
-    Emissive,
-    Splatmap,
-    Heightmap,
-}
-
 public enum TextureFilter : byte
 {
     Nearest = 0,

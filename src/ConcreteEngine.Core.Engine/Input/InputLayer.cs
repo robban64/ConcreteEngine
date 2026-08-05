@@ -16,13 +16,13 @@ public sealed class InputLayer
 
     // Keyboard API
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsKeyDown(Key key) => Enabled && Keyboard.HasKey(key, out var state) && state.IsHeld;
+    public bool IsKeyDown(Key key) => Enabled && Keyboard.TryGet(key, out var state) && state.IsHeld;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsKeyPressed(Key key) => Enabled && Keyboard.HasKey(key, out var state) && state.Pressed;
+    public bool IsKeyPressed(Key key) => Enabled && Keyboard.TryGet(key, out var state) && state.Pressed;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsKeyUp(Key key) => Enabled && Keyboard.HasKey(key, out var state) && state.Up;
+    public bool IsKeyUp(Key key) => Enabled && Keyboard.TryGet(key, out var state) && state.Up;
 
     // Mouse API
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

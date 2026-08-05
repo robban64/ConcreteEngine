@@ -1,7 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine.Graphics.Enviroment;
+using ConcreteEngine.Core.Engine.Graphics.Terrains;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Primitives;

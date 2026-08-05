@@ -26,7 +26,7 @@ internal sealed class LightingPanel
             ImGui.EndTabItem();
         }
 
-        if (ImGui.BeginTabItem("Enviroment"u8))
+        if (ImGui.BeginTabItem("Environment"u8))
         {
             _environmentSettingsInspector.Draw();
             ImGui.EndTabItem();

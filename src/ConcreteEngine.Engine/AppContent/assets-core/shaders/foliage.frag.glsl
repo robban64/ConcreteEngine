@@ -17,7 +17,7 @@ out vec4 FragColor;
 @import ubo:MaterialUniform
 
 layout(binding = 0) uniform sampler2DArray uTexture;
-layout(binding = 3) uniform sampler2DShadow uShadowMap;
+layout(binding = 9) uniform sampler2DShadow uShadowMap;
 
 const vec2 offsets[4] = vec2[](
 vec2(-0.5, -0.5),

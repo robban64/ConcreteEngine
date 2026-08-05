@@ -24,8 +24,8 @@ out vec4 FragColor;
 
 layout(binding = 0) uniform sampler2D uTexture;
 layout(binding = 1) uniform sampler2D uNormal;
-layout(binding = 2) uniform sampler2D uAlpha;
-layout(binding = 3) uniform sampler2DShadow uShadowMap;
+layout(binding = 4) uniform sampler2D uAlpha;
+layout(binding = 9) uniform sampler2DShadow uShadowMap;
 
 const vec2 offsets[4] = vec2[](
 vec2(-0.5, -0.5),

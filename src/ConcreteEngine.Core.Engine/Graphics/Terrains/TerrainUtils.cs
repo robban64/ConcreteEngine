@@ -2,7 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 
-namespace ConcreteEngine.Core.Engine.Graphics.Enviroment;
+namespace ConcreteEngine.Core.Engine.Graphics.Terrains;
 
 public static class TerrainUtils
 {

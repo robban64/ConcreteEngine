@@ -100,7 +100,7 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
         var textureId = gfx.CreateTexture2D(entry.GetPixelData(), embedded.Dimensions, embedded.PixelFormat);
 
         
-        var anisotropy = embedded.SlotKind == TextureUsage.Albedo
+        var anisotropy = embedded.SlotKind == SamplerSlot.Diffuse
             ? EngineSettings.Current.Graphics.MaxAnisotropy
             : TextureAnisotropy.Off;
 

@@ -11,7 +11,7 @@ public readonly record struct TextureSource(
     TextureId TextureId,
     TextureId FallbackTexture,
     SamplerProfile Profile,
-    TextureUsage Usage
+    SamplerSlot Slot
 )
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -44,13 +44,12 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         var rowHeight = ImGui.GetFrameHeight();
         var offset = ImGui.GetContentRegionAvail().X * 0.33f + GuiTheme.ItemSpacing.X;
 
-        var usageNames = TextureUsageExt.Names;
         var bindings = asset.GetSourceSpan();
         for (var i = 0; i < bindings.Length; i++)
         {
             var binding = bindings[i];
             ImGui.PushID(i);
-            AppDraw.Text(usageNames[(int)binding.Usage]);
+            AppDraw.Text(SamplerSlotExt.Names[(int)binding.Slot]);
             ImGui.SameLine(offset);
             if (binding.AssetId.IsValid())
                 DrawAssetSlot(asset, i, AssetManager.Assets.Get<Texture>(binding.AssetId), rowHeight);

@@ -38,8 +38,7 @@ internal sealed class EmbeddedSceneTexture(string name, string embeddedName, int
 
     public Size2D Dimensions;
 
-    public TextureUsage SlotKind = TextureUsage.Albedo;
-    public TexturePreset Preset = TexturePreset.LinearMipmapRepeat;
+    public SamplerSlot SlotKind = SamplerSlot.Diffuse;
     public TexturePixelFormat PixelFormat = TexturePixelFormat.Unknown;
 
 

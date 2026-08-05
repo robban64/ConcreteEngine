@@ -4,6 +4,7 @@ namespace ConcreteEngine.Core.Engine.Input;
 
 public record struct InputButtonState
 {
+    public int Button;
     public bool Down;
     public bool Up;
     public bool WasDown;

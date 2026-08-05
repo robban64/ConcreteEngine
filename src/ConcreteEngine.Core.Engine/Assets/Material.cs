@@ -65,7 +65,7 @@ public sealed class Material : AssetObject
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
         ref var source = ref _textureSources[slot];
         source = source with { AssetId = texture.Id, TextureId = texture.GfxId, Profile = texture.Profile };
-        if (source.Usage == TextureUsage.Mask) State.HasAlphaMask = true;
+        if (source.Slot == SamplerSlot.AlphaMask) State.HasAlphaMask = true;
         MarkDirty(AssetDirtyFlag.State);
     }
 
@@ -74,7 +74,7 @@ public sealed class Material : AssetObject
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
         ref var source = ref _textureSources[slot];
         source = source with { AssetId = default, TextureId = textureId, Profile = profile };
-        if (source.Usage == TextureUsage.Mask) State.HasAlphaMask = true;
+        if (source.Slot == SamplerSlot.AlphaMask) State.HasAlphaMask = true;
         MarkDirty(AssetDirtyFlag.State);
     }
 

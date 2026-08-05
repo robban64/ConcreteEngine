@@ -145,13 +145,13 @@ internal static unsafe class MaterialModelImporter
         }
 
         if (material.Textures.Contains(texture.GId)) return;
-        if (!MatUtils.ToSystemEnums(type, out var kind, out var format))
+        if (!MatUtils.ToSystemEnums(type, out var slot, out var format))
         {
-            kind = TextureUsage.Albedo;
+            slot = SamplerSlot.Diffuse;
             format = TexturePixelFormat.SrgbAlpha;
         }
 
-        texture.SlotKind = kind;
+        texture.SlotKind = slot;
         texture.PixelFormat = format;
         material.Textures.Add(texture.GId);
     }
@@ -189,25 +189,25 @@ internal static unsafe class MaterialModelImporter
 file static unsafe class MatUtils
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static bool ToSystemEnums(TextureType type, out TextureUsage kind, out TexturePixelFormat format)
+    public static bool ToSystemEnums(TextureType type, out SamplerSlot kind, out TexturePixelFormat format)
     {
         switch (type)
         {
             case TextureType.Diffuse:
-                kind = TextureUsage.Albedo;
+                kind = SamplerSlot.Diffuse;
                 format = TexturePixelFormat.SrgbAlpha;
                 return true;
             case TextureType.Normals:
-                kind = TextureUsage.Normal;
+                kind = SamplerSlot.Normal;
+                format = TexturePixelFormat.Rgba;
+                return true;
+            case TextureType.Specular:
+                kind = SamplerSlot.Specular;
                 format = TexturePixelFormat.Rgba;
                 return true;
             case TextureType.Opacity:
-                kind = TextureUsage.Mask;
+                kind = SamplerSlot.AlphaMask;
                 format = TexturePixelFormat.Red;
-                return true;
-            case TextureType.GltfMetallicRoughness:
-                kind = TextureUsage.Roughness;
-                format = TexturePixelFormat.Rgba;
                 return true;
             default:
                 kind = 0;

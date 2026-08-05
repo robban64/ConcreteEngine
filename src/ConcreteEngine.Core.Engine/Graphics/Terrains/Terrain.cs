@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
 
-namespace ConcreteEngine.Core.Engine.Graphics.Enviroment;
+namespace ConcreteEngine.Core.Engine.Graphics.Terrains;
 
 public sealed class QuadNode
 {

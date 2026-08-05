@@ -5,20 +5,6 @@ using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-public struct TextureProperties(
-    float lod,
-    TextureKind kind = TextureKind.Texture2D,
-    TexturePreset preset = TexturePreset.LinearClamp,
-    AnisotropyLevel anisotropy = AnisotropyLevel.Off,
-    TexturePixelFormat pixelFormat = TexturePixelFormat.SrgbAlpha)
-{
-    public float Lod = lod;
-    public TextureKind Kind = kind;
-    public TexturePreset Preset = preset;
-    public AnisotropyLevel Anisotropy = anisotropy;
-    public TexturePixelFormat PixelFormat = pixelFormat;
-}
-
 [Inspect]
 public sealed class Texture(
     string name,
@@ -61,14 +47,4 @@ public sealed class Texture(
         _textureData = textureData;
     }
 
-    public TextureUsage Usage
-    {
-        get;
-        set
-        {
-            if (field == value) return;
-            field = value;
-            MarkDirty(AssetDirtyFlag.Metadata);
-        }
-    }
 }

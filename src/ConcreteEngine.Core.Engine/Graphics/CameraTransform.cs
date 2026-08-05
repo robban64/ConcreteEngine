@@ -19,6 +19,24 @@ public sealed class CameraFrustum
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IntersectsBox(in BoundingBox box)
     {
+        Vector4 center4 = new Vector4(box.Center, 1f);
+        Vector4 extent4 = new Vector4(box.Extent, 0f);
+
+        ref Vector4 planes = ref Unsafe.As<BoundingFrustum, Vector4>(ref _frustum);
+
+        if (CollisionMethods.IsOutsidePlane(center4, extent4, ref Unsafe.Add(ref planes, 0))) return false;
+        if (CollisionMethods.IsOutsidePlane(center4, extent4, ref Unsafe.Add(ref planes, 1))) return false;
+        if (CollisionMethods.IsOutsidePlane(center4, extent4, ref Unsafe.Add(ref planes, 2))) return false;
+        if (CollisionMethods.IsOutsidePlane(center4, extent4, ref Unsafe.Add(ref planes, 3))) return false;
+        if (CollisionMethods.IsOutsidePlane(center4, extent4, ref Unsafe.Add(ref planes, 4))) return false;
+        if (CollisionMethods.IsOutsidePlane(center4, extent4, ref Unsafe.Add(ref planes, 5))) return false;
+
+        return true;
+    }
+/*
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IntersectsBox(in BoundingBox box)
+    {
         var bounds = box;
         ref var start = ref Unsafe.As<BoundingFrustum, Plane>(ref _frustum);
         for (int i = 0; i < 6; ++i)
@@ -28,6 +46,7 @@ public sealed class CameraFrustum
 
         return true;
     }
+*/
 }
 
 public sealed class CameraTransformSnapshot

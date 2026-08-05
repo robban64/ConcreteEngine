@@ -10,7 +10,7 @@ namespace ConcreteEngine.Engine.Render;
 
 internal static partial class PassPipeline
 {
-  
+
     public static void RegisterPassPipeline(RenderPassPipeline passPipeline)
     {
         // Shadow
@@ -42,7 +42,9 @@ internal static partial class PassPipeline
         passPipeline.RegisterContinue<SceneTarget>(FboVariant.V0, new PassId(2), PassOp.Continue,
             RenderPassState.MakeSceneEffect()).OnPassBegin(static (ctx, state) =>
         {
-            ctx.ContinueFromRenderPass(ctx.FboId, state.PassState.StateFlags);
+            ctx.Cmd.BindFramebuffer(ctx.FboId);
+            ctx.Cmd.ApplyPassState(state.PassState.StateFlags);
+
             ctx.MutateStatePass<SceneTarget>(FboVariant.V1, PassMutationState.MutateTarget(ctx.FboId));
 
             if (RenderEcs.Store<SelectionComponent>().Count > 0)
@@ -75,7 +77,7 @@ internal static partial class PassPipeline
             .OnPassBegin(static (ctx, state) =>
             {
                 ctx.Cmd.BeginRenderPass(ctx.FboId, state.PassState);
-                ctx.DrawFullscreenQuad(state.ShaderId, ctx.GetPassSources());
+                ctx.DrawCmdProcessor.DrawFullscreenQuad(state.ShaderId, ctx.GetPassSources());
                 ctx.Cmd.EndRenderPass();
 
                 var texId = ctx.Target.Attachments.ColorTexture;
@@ -90,7 +92,7 @@ internal static partial class PassPipeline
             .OnPassBegin(static (ctx, state) =>
             {
                 ctx.Cmd.BeginRenderPass(ctx.FboId, state.PassState);
-                ctx.DrawFullscreenQuad(state.ShaderId, ctx.GetPassSources());
+                ctx.DrawCmdProcessor.DrawFullscreenQuad(state.ShaderId, ctx.GetPassSources());
                 ctx.Cmd.EndRenderPass();
 
                 var texId = ctx.Target.Attachments.ColorTexture;
@@ -105,7 +107,7 @@ internal static partial class PassPipeline
             .OnPassBegin(static (ctx, state) =>
             {
                 ctx.Cmd.BeginRenderPass(ctx.FboId, state.PassState);
-                ctx.DrawFullscreenQuad(state.ShaderId, ctx.GetPassSources());
+                ctx.DrawCmdProcessor.DrawFullscreenQuad(state.ShaderId, ctx.GetPassSources());
                 ctx.Cmd.EndRenderPass();
 
                 ctx.Cmd.ApplyPassState(GfxStateFlags.ColorMask);

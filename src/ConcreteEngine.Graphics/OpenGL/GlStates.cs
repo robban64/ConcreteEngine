@@ -132,13 +132,13 @@ internal static class GlStates
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void BindTexture(NativeHandle textureHandle, int slot) => Gl.BindTextureUnit((uint)slot, textureHandle);
+    public static void BindTexture(NativeHandle<TextureMeta> textureHandle, int slot) => Gl.BindTextureUnit((uint)slot, textureHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void BindSampler(NativeHandle samplerHandle, int slot) => Gl.BindSampler((uint)slot, samplerHandle);
+    public static void BindSampler(NativeHandle<SamplerMeta> samplerHandle, int slot) => Gl.BindSampler((uint)slot, samplerHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void BindTextureSampler(NativeHandle textureHandle, NativeHandle samplerHandle, int slot)
+    public static void BindTextureSampler(NativeHandle<TextureMeta> textureHandle, NativeHandle<SamplerMeta> samplerHandle, int slot)
     {
         Gl.BindSampler((uint)slot, samplerHandle);
         Gl.BindTextureUnit((uint)slot, textureHandle);
@@ -148,20 +148,20 @@ internal static class GlStates
     public static void UnbindTextureSlot(int slot) => Gl.BindTextureUnit((uint)slot, 0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void BindFrameBuffer(NativeHandle fboHandle) =>
+    public static void BindFrameBuffer(NativeHandle<FrameBufferMeta> fboHandle) =>
         Gl.BindFramebuffer(FramebufferTarget.Framebuffer, fboHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void UnbindFrameBuffer() => Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void BindMesh(NativeHandle meshHandle) => Gl.BindVertexArray(meshHandle);
+    public static void BindMesh(NativeHandle<MeshMeta> meshHandle) => Gl.BindVertexArray(meshHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void UnbindMesh() => Gl.BindVertexArray(0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void UseShader(NativeHandle shaderHandle) => Gl.UseProgram(shaderHandle);
+    public static void UseShader(NativeHandle<ShaderMeta> handle) => Gl.UseProgram(handle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void UnbindShader() => Gl.UseProgram(0);

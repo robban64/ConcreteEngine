@@ -44,10 +44,8 @@ internal sealed class TextureRecord : AssetRecord
 
     public SamplerProfile? Profile { get; init; } = null;
 
-    public TexturePreset Preset { get; init; } = TexturePreset.LinearClamp;
     public TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
     public TexturePixelFormat PixelFormat { get; init; } = TexturePixelFormat.SrgbAlpha;
-    public AnisotropyLevel Anisotropy { get; init; } = AnisotropyLevel.Off;
 
     public required string[] TextureFiles { get; init; }
 

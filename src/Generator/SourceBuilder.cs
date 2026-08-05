@@ -5,6 +5,14 @@ using Generator.Misc;
 
 namespace Generator;
 
+public static class StringBuilderExtensions{
+    public static StringBuilder AppendLiteral(this StringBuilder sb, string str)
+    {
+        sb.Append($"\"{str}\"");
+        return sb;
+    }
+}
+
 internal ref struct SourceBuilder
 {
     private const string IndentUnit = "    ";

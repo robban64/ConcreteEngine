@@ -9,6 +9,20 @@ using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
+public sealed class ShaderData
+{
+    public string Name;
+    public MemoryBlock Memory;
+
+    public ShaderData(string name, MemoryBlock memory)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        if(memory.IsNull) throw new ArgumentNullException(nameof(memory));
+        Name = name;
+        Memory = memory;
+    }
+}
+
 internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shader, ShaderRecord>
 {
     private static int AllocSize => ShaderImporter.ShaderBlockSize * 8;
@@ -16,7 +30,7 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
     private ShaderImporter? _shaderImporter;
     private BumpAllocator? _allocator;
 
-    private readonly Dictionary<string, IntPtr> _blocks = new(16);
+    private readonly Dictionary<string, ShaderData> _data = new(16);
 
     private MemoryBlock _vsBlock = null;
     private MemoryBlock _fsBlock = null;
@@ -44,7 +58,7 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
 
         _vsBlock = null;
         _fsBlock = null;
-        _blocks.Clear();
+        _data.Clear();
 
         _allocator?.Dispose();
         _allocator = null;
@@ -59,16 +73,16 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
         {
             var shaderRecord = (ShaderRecord)record;
             string vsFile = shaderRecord.VertexShader, fsFile = shaderRecord.FragmentShader;
-            if (!_blocks.ContainsKey(vsFile))
+            if (!_data.ContainsKey(vsFile))
             {
                 var block = ImportShaderFile(allocator, importer, vsFile);
-                _blocks.Add(vsFile, (IntPtr)block);
+                _data.Add(vsFile, new ShaderData(vsFile, block));
             }
 
-            if (!_blocks.ContainsKey(fsFile))
+            if (!_data.ContainsKey(fsFile))
             {
                 var block = ImportShaderFile(allocator, importer, fsFile);
-                _blocks.Add(fsFile, (IntPtr)block);
+                _data.Add(fsFile, new ShaderData(vsFile, block));
             }
         }
 
@@ -91,8 +105,8 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
         if (_allocator == null) throw new InvalidOperationException("Allocator is null");
         if (_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
 
-        var vsPtr = (MemoryBlock)_blocks[record.VertexShader];
-        var fsPtr = (MemoryBlock)_blocks[record.FragmentShader];
+        var vsPtr = _data[record.VertexShader].Memory;
+        var fsPtr = _data[record.FragmentShader].Memory;
 
         if (vsPtr.IsNull || vsPtr.Length <= 0) throw new InvalidOperationException("Vertex Shader pointer is null");
         if (fsPtr.IsNull || fsPtr.Length <= 0) throw new InvalidOperationException("Fragment Shader pointer is null");

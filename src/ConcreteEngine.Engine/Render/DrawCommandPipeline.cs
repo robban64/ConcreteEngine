@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
@@ -35,6 +36,7 @@ internal sealed class DrawCommandPipeline : IDisposable
         _passRanges = new Range32[RenderLimits.PassSlots];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ResetFrame() => DrawCmd.ResetFrame();
 
     public void StageCommands(RenderResolver resolver)

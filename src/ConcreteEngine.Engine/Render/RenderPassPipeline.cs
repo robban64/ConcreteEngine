@@ -8,22 +8,24 @@ namespace ConcreteEngine.Engine.Render;
 internal sealed class RenderPassPipeline
 {
     private int _activePassIndex;
+    private int _passCount;
 
     private readonly RenderPassContext _ctx;
     private readonly RenderRegistry _renderRegistry;
-    private readonly List<RenderPassEntry> _entries = new(8);
+    private readonly RenderPassEntry[] _entries;
 
-    internal RenderPassPipeline(GfxContext gfx, DrawCommandProcessor cmd, RenderRegistry renderRegistry)
+    internal RenderPassPipeline(DrawCommandProcessor cmd, RenderRegistry renderRegistry)
     {
         _renderRegistry = renderRegistry;
-        _ctx = new RenderPassContext(gfx, cmd);
+        _ctx = new RenderPassContext(cmd);
+        _entries = new RenderPassEntry[16];
     }
 
-    public int PassCount => _entries.Count;
+    public int PassCount => _passCount;
 
     internal void ResetFrame()
     {
-        RenderContext.ResetTargetKind();
+        RenderContext.ResetContext();
         _activePassIndex = 0;
         _ctx.Reset();
     }
@@ -31,7 +33,7 @@ internal sealed class RenderPassPipeline
 
     internal bool NextPass(out PassId passId, out NextPassAction action)
     {
-        if ((uint)_activePassIndex >= (uint)_entries.Count)
+        if ((uint)_activePassIndex >= (uint)_passCount)
         {
             passId = default;
             action = default;
@@ -74,17 +76,7 @@ internal sealed class RenderPassPipeline
     {
         var existingKey = RenderRegistry.TargetRegistry<TTarget>.PassKey(variant);
         if (existingKey.Pass == passId) Throwers.InvalidArgument(nameof(passId));
-
-        var newKey = existingKey with { Pass = passId };
-
-        foreach (var e in _entries)
-        {
-            if (e.PassKey.Pass == passId || e.PassKey == newKey) Throwers.InvalidArgument("Duplicated passes");
-        }
-
-        var entry = new RenderPassEntry(newKey, op, initial);
-        _entries.Add(entry);
-        return entry;
+        return AddPassEntry(existingKey with { Pass = passId }, op, initial);
     }
 
 
@@ -92,13 +84,17 @@ internal sealed class RenderPassPipeline
         where TTarget : unmanaged, IRenderTarget
     {
         var key = RenderRegistry.TargetRegistry<TTarget>.BindPassTarget(variant, passId);
-        foreach (var e in _entries)
+        return AddPassEntry(key, op, initial);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private RenderPassEntry AddPassEntry(PassTargetKey key, PassOp op, RenderPassState initial)
+    {
+        foreach (var e in _entries.AsSpan(0, _passCount))
         {
-            if (e.PassKey.Pass == passId || e.PassKey == key) Throwers.InvalidArgument("Duplicated passes");
+            if (e.PassKey == key) Throwers.InvalidArgument("Duplicated passes");
         }
 
-        var entry = new RenderPassEntry(key, op, initial);
-        _entries.Add(entry);
-        return entry;
+        return _entries[_passCount++] = new RenderPassEntry(key, op, initial);
     }
 }

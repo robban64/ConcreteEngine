@@ -67,6 +67,7 @@ public struct BoundingFrustum
     }
 
 
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Plane PlaneFromPoints(Vector3 a, Vector3 b, Vector3 c)
     {

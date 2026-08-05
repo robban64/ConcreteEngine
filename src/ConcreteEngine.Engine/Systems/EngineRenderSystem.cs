@@ -37,7 +37,7 @@ public sealed class EngineRenderSystem : IDisposable
 
         _registry = new RenderRegistry(graphics.Gfx);
         _drawPipeline = new DrawCommandPipeline(graphics.Gfx, _animationSystem, _materialSystem);
-        _passPipeline = new RenderPassPipeline(graphics.Gfx, _drawPipeline.DrawCmd,_registry);
+        _passPipeline = new RenderPassPipeline(_drawPipeline.DrawCmd,_registry);
 
         _resolver = new RenderResolver(CameraManager.Instance.Frustum);
         

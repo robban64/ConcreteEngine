@@ -9,23 +9,42 @@ public interface IResourceMeta
     static abstract GraphicsKind ResourceKind { get; }
 }
 
+public struct SamplerMeta(
+    SamplerProfile profile,
+    float lod,
+    TexturePreset preset,
+    TextureAnisotropy anisotropy = TextureAnisotropy.Off,
+    TextureBorder border = TextureBorder.Off,
+    DepthMode depthMode = DepthMode.Unset)
+    : IResourceMeta
+{
+    public Half Lod = (Half)lod;
+    public SamplerProfile Profile = profile;
+    public TexturePreset Preset = preset;
+    public TextureAnisotropy Anisotropy = anisotropy;
+    public TextureBorder Border = border;
+    public DepthMode DepthMode = depthMode;
+
+    public static GraphicsKind ResourceKind => GraphicsKind.Texture;
+}
+
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct TextureMeta(
     int width,
     int height,
-    ushort depth,
-    byte mipLevels,
-    byte samples,
+    int depth,
+    int mipLevels,
+    int samples,
     TextureKind kind,
     TexturePixelFormat pixelFormat,
     TextureBorder borderColor) : IResourceMeta
 {
     public int Width { get; init; } = width;
     public int Height { get; init; } = height;
-    public ushort Depth { get; init; } = depth;
+    public ushort Depth { get; init; } = (ushort)depth;
     public TextureBorder BorderColor { get; init; } = borderColor;
-    public byte MipLevels { get; init; } = mipLevels;
-    public byte Samples { get; init; } = samples;
+    public byte MipLevels { get; init; } = (byte)mipLevels;
+    public byte Samples { get; init; } = (byte)samples;
     public TextureKind Kind { get; init; } = kind;
     public TexturePixelFormat PixelFormat { get; init; } = pixelFormat;
 
@@ -162,7 +181,7 @@ public readonly struct UniformBufferMeta(
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool HasCapacity(int elementCount) => elementCount * Stride <= Capacity;
-    
+
     public static UniformBufferMeta MakeResizeCopy(in UniformBufferMeta meta, int capacity) =>
         new(meta.Slot, meta.Stride, capacity, meta.Usage, meta.Storage, meta.Access);
 }

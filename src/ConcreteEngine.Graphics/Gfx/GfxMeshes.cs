@@ -39,8 +39,8 @@ public sealed class GfxMeshes
         ArgumentOutOfRangeException.ThrowIfZero(attrib.Length);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(attrib.Length, GfxLimits.MaxVertexAttribs);
 
-        var meshRef = GlMeshes.CreateVertexArray();
-        GlMeshes.AddVertexAttributes(meshRef, attrib);
+        var meshHandle = GlMeshes.CreateVertexArray();
+        GlMeshes.AddVertexAttributes(meshHandle, attrib);
 
         var meta = new MeshMeta
         {
@@ -51,7 +51,7 @@ public sealed class GfxMeshes
             InstanceCount = props.InstanceCount
         };
 
-        var meshId = GfxRegistry.MeshStore.Add(in meta, meshRef);
+        var meshId = GfxRegistry.MeshStore.Add(in meta, meshHandle);
         if(GfxRegistry.MeshStore.Capacity != _meshAttributes.Length) 
             Array.Resize(ref _meshAttributes, GfxRegistry.MeshStore.Capacity);
         
@@ -91,9 +91,9 @@ public sealed class GfxMeshes
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void AttachIndexBuffer(MeshId meshId, IndexBufferId iboId)
     {
-        var meshRef = GfxRegistry.MeshStore.GetHandleAndMeta(meshId, out var meta);
+        var meshHandle = GfxRegistry.MeshStore.GetHandleAndMeta(meshId, out var meta);
         var iboRef = GfxRegistry.IboStore.GetHandleAndMeta(iboId, out var iboMeta);
-        GlMeshes.AttachIndexBuffer(meshRef, iboRef);
+        GlMeshes.AttachIndexBuffer(meshHandle, iboRef);
 
         var elementSize = GfxEnumUtils.ToDrawElementSize(iboMeta.Stride);
         GfxRegistry.MeshStore.ReplaceMeta(meshId, meta with { ElementSize = elementSize }, out _);

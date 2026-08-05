@@ -254,20 +254,18 @@ public sealed class GfxCommands
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindTextureSlot(TextureId texture, int slot)
     {
-        ref var boundTexture = ref _boundTextures[slot];
-        if (boundTexture == texture) return;
-        boundTexture = texture;
-        var textureHandle = boundTexture > 0 ? TextureStore.GetHandle(boundTexture) : default;
+        if (_boundTextures[slot] == texture) return;
+        _boundTextures[slot] = texture;
+        var textureHandle = texture > 0 ? TextureStore.GetHandle(texture) : default;
         GlStates.BindTexture(textureHandle, slot);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindSampler(SamplerProfile sampler, int slot)
     {
-        ref var boundSampler = ref _boundSamplers[slot];
-        if (boundSampler == sampler) return;
-        boundSampler = sampler;
-        GlStates.BindSampler(GfxTextures.GetSamplerHandle(boundSampler), slot);
+        if (_boundSamplers[slot] == sampler) return;
+        _boundSamplers[slot] = sampler;
+        GlStates.BindSampler(GfxTextures.GetSamplerHandle(sampler), slot);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -293,6 +291,14 @@ public sealed class GfxCommands
         GlStates.UseShader(handle);
         _boundShaderId = id;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void BindUniformBufferRange<T>(int offset, int length) where T : unmanaged, IUniform
+    {
+        var id = UboStore.GetHandle(T.UboId);
+        GlBuffers.BindUniformBufferRange(id, T.Slot, offset * T.Stride, length * T.Stride);
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrawMesh(MeshId id)

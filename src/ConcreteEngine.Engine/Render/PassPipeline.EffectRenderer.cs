@@ -13,10 +13,13 @@ internal static partial class PassPipeline
 {
     private static unsafe void SelectionRenderer(RenderPassContext ctx)
     {
+        
         DrawObjectUniform* uniform = stackalloc DrawObjectUniform[1];
         EditorEffectsUniform* effect = stackalloc EditorEffectsUniform[1];
         
         ctx.Cmd.UseShader(RenderRegistry.HighlightShader);
+        RenderContext.OverrideShader = RenderRegistry.HighlightShader;
+
         foreach (var query in RenderEcs.Store<SelectionComponent>().VisibilityQuery())
         {
             var source = RenderEcs.Core.GetSource(query.Entity);
@@ -28,12 +31,11 @@ internal static partial class PassPipeline
 
             ctx.Buffers.UploadSingleUniform(effect, 0);
             ctx.Buffers.UploadSingleUniform(uniform, 0);
-            ctx.Buffers.BindUniformBufferRange<DrawObjectUniform>(0, 1);
+            ctx.Cmd.BindUniformBufferRange<DrawObjectUniform>(0, 1);
 
-            if (source.IsSkinned()) ctx.DrawCmd.BindSkinningSlot(query.Entity);
+            if (source.IsSkinned()) ctx.DrawCmdProcessor.BindSkinningSlot(query.Entity);
 
-            if (ctx.DrawCmd.TryApplyMaterialState(source.Material, out var textureBindings))
-                ctx.DrawCmd.BindAlbedoMaskSlots(textureBindings);
+            ctx.DrawCmdProcessor.BindMaterial(source.Material);
 
             ctx.Cmd.DrawMesh(source.Mesh);
         }
@@ -43,9 +45,11 @@ internal static partial class PassPipeline
     {
         DrawObjectUniform* uniform = stackalloc DrawObjectUniform[1];
         EditorEffectsUniform* effect = stackalloc EditorEffectsUniform[1];
+        RenderContext.OverrideShader = RenderRegistry.BoundingBoxShader;
 
         var materialId = AssetStore.Core.DebugBoundsMaterial.MaterialId;
         ctx.Cmd.UseShader(RenderRegistry.BoundingBoxShader);
+
         foreach (var query in RenderEcs.Store<DebugBoundsComponent>().VisibilityQuery())
         {
             var isSkinned = RenderEcs.Core.GetSource(query.Entity).IsSkinned();
@@ -57,9 +61,9 @@ internal static partial class PassPipeline
             
             ctx.Buffers.UploadSingleUniform(effect, 0);
             ctx.Buffers.UploadSingleUniform(uniform, 0);
-            ctx.Buffers.BindUniformBufferRange<DrawObjectUniform>(0, 1);
+            ctx.Cmd.BindUniformBufferRange<DrawObjectUniform>(0, 1);
 
-            ctx.DrawCmd.TryApplyMaterialState(materialId, out _);
+            ctx.DrawCmdProcessor.BindMaterial(materialId);
             ctx.Cmd.DrawMesh(GfxMeshes.Cube);
         }
     }

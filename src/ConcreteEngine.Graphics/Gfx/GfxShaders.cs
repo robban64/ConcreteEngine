@@ -33,7 +33,7 @@ public sealed class GfxShaders
         if (fs.IsNull || fs.Length == 0) throw new ArgumentOutOfRangeException(nameof(fs));
 
         GlBackendDriver.ToggleDebug(false);
-        NativeHandle oldHandle, newHandle;
+        NativeHandle<ShaderMeta> oldHandle, newHandle;
         int samplerCount = 0;
         try
         {

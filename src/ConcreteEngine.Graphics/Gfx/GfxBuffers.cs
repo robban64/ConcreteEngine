@@ -43,7 +43,7 @@ public sealed class GfxBuffers
         var payload = data.Length > 0 ? data.Reinterpret<byte>() : NativeView<byte>.MakeNull();
         var vboHandle = GlBuffers.CreateBuffer(payload.AsReadOnlySpan(), new CreateBufferInfo(size, storage, access));
 
-        return GfxRegistry.VboStore.Add(meta, vboHandle);
+        return GfxRegistry.VboStore.Add(meta, new NativeHandle<VertexBufferMeta>(vboHandle.Value));
     }
 
     public IndexBufferId CreateIndexBuffer<T>(NativeView<T> data, BufferStorage storage, BufferAccess access,
@@ -62,7 +62,7 @@ public sealed class GfxBuffers
         var iboHandle = GlBuffers.CreateBuffer(data.Reinterpret<byte>().AsReadOnlySpan(),
             new CreateBufferInfo(size, storage, access));
 
-        return GfxRegistry.IboStore.Add(meta, iboHandle);
+        return GfxRegistry.IboStore.Add(meta, new NativeHandle<IndexBufferMeta>(iboHandle.Value));
     }
 
 
@@ -197,13 +197,6 @@ public sealed class GfxBuffers
 
         GlBuffers.UploadBufferData(handle, (byte*)data.Ptr, offset, sizeInBytes);
         _uboUploadSize += sizeInBytes;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindUniformBufferRange<T>(int offset, int length) where T : unmanaged, IUniform
-    {
-        var id = GfxRegistry.UboStore.GetHandle(T.UboId);
-        GlBuffers.BindUniformBufferRange(id, T.Slot, offset * T.Stride, length * T.Stride);
     }
 
     private static (uint Offset, uint Size) ToSizeAndOffset<T>(int offsetElements, int count) where T : unmanaged

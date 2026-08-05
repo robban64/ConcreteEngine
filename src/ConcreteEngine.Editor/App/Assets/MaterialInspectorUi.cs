@@ -52,8 +52,8 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
             ImGui.PushID(i);
             AppDraw.Text(usageNames[(int)binding.Usage]);
             ImGui.SameLine(offset);
-            if (binding.AssetTexture.IsValid())
-                DrawAssetSlot(asset, i, AssetManager.Assets.Get<Texture>(binding.AssetTexture), rowHeight);
+            if (binding.AssetId.IsValid())
+                DrawAssetSlot(asset, i, AssetManager.Assets.Get<Texture>(binding.AssetId), rowHeight);
             else
                 DrawAssetSlotEmptyTexture(asset, i, rowHeight);
 

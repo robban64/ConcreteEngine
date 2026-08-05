@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.Importer;
 using ConcreteEngine.Graphics.Gfx;
@@ -96,11 +97,15 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
         if (!_embeddedTextures.TryGetValue(embedded.GId, out var entry))
             throw new InvalidOperationException($"Embedded texture '{embedded.Name}' not found");
 
-        var anisotropy = embedded.SlotKind == TextureUsage.Albedo ? AnisotropyLevel.Default : AnisotropyLevel.Off;
         var textureId = gfx.CreateTexture2D(entry.GetPixelData(), embedded.Dimensions, embedded.PixelFormat);
 
+        
+        var anisotropy = embedded.SlotKind == TextureUsage.Albedo
+            ? EngineSettings.Current.Graphics.MaxAnisotropy
+            : TextureAnisotropy.Off;
+
         var sampler = SamplerProfile.TrilinearClamp;
-        if (anisotropy != AnisotropyLevel.Off)
+        if (anisotropy != TextureAnisotropy.Off)
             sampler = SamplerProfile.AnisotropicClamp;
 
         var texture = new Texture(
@@ -112,7 +117,7 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
             profile: sampler,
             textureKind: TextureKind.Texture2D,
             pixelFormat: embedded.PixelFormat
-        ) { Usage = embedded.SlotKind };
+        );
 
         _embeddedTextures.Remove(embedded.GId);
         entry.Dispose();
@@ -120,19 +125,10 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
         return texture;
     }
 
-    private static Texture CreateTextureObject(AssetId id, TextureId textureId, Size2D size, TextureRecord record,
-        TextureUsage usage = TextureUsage.Albedo)
+    private static Texture CreateTextureObject(AssetId id, TextureId textureId, Size2D size, TextureRecord record)
     {
         var profile = SamplerProfile.TrilinearWrap;
         if (record.Profile is { } recordProfile) profile = recordProfile;
-        
-        if (record.Anisotropy != AnisotropyLevel.Off)
-        {
-            if (profile == SamplerProfile.TrilinearClamp)
-                profile = SamplerProfile.AnisotropicClamp;
-            else if (profile == SamplerProfile.TrilinearWrap)
-                profile = SamplerProfile.AnisotropicWrap;
-        }
 
         return new Texture(
             name: record.Name,
@@ -143,6 +139,6 @@ internal sealed class TextureLoader(GfxTextures gfx) : AssetTypeLoader<Texture, 
             profile: profile,
             textureKind: record.TextureKind,
             pixelFormat: record.PixelFormat
-        ) { Usage = usage };
+        );
     }
 }

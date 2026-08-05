@@ -9,29 +9,33 @@ namespace ConcreteEngine.Engine.Render.Passes;
 internal sealed class RenderPassContext
 {
     private int _textureSlotHigh;
-    
+
     public FrameBufferId FboId { get; private set; }
     public PassTargetKey CurrentPassKey { get; private set; }
-    
-    public readonly GfxCommands Cmd;
-    public readonly GfxBuffers Buffers;
-    public readonly DrawCommandProcessor DrawCmd;
+
+    public readonly DrawCommandProcessor DrawCmdProcessor;
 
     private readonly TextureId[] _textureSlots;
     private readonly PriorityQueue<TextureId, PassTextureSlotKey> _sourceQueue;
     private readonly PriorityQueue<PassMutationState, PassTargetKey> _mutationQueue;
 
-    internal RenderPassContext(GfxContext gfx, DrawCommandProcessor drawCmd)
+    internal RenderPassContext(DrawCommandProcessor drawCmdProcessor)
     {
-        DrawCmd = drawCmd;
-        Cmd = gfx.Commands;
-        Buffers = gfx.Buffers;
+        ArgumentNullException.ThrowIfNull(drawCmdProcessor);
+        DrawCmdProcessor = drawCmdProcessor;
         _sourceQueue = new PriorityQueue<TextureId, PassTextureSlotKey>(4, new PassTextureSlotKeyComp());
         _mutationQueue = new PriorityQueue<PassMutationState, PassTargetKey>(4, new PassTagKeyComp());
         _textureSlots = new TextureId[RenderLimits.TextureSlots];
     }
 
-    public ref readonly FrameBufferMeta Target => ref GfxRegistry.GetMeta(FboId);
+    public GfxCommands Cmd => DrawCmdProcessor.GfxCmd;
+    public GfxBuffers Buffers => DrawCmdProcessor.GfxBuffers;
+
+    public ref readonly FrameBufferMeta Target
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref GfxRegistry.GetMeta(FboId);
+    }
 
     internal void Reset()
     {
@@ -68,7 +72,7 @@ internal sealed class RenderPassContext
         _sourceQueue.Enqueue(texSlot.Texture, key);
     }
 
-    public void MutateStatePass<TTarget>(FboVariant variant, in PassMutationState newState) 
+    public void MutateStatePass<TTarget>(FboVariant variant, in PassMutationState newState)
         where TTarget : unmanaged, IRenderTarget
     {
         var key = RenderRegistry.TargetRegistry<TTarget>.PassKey(variant);
@@ -87,7 +91,7 @@ internal sealed class RenderPassContext
     public void DequeuePassSources(RenderPassEntry entry)
     {
         var tagIndex = entry.PassKey.TagIndex;
-        
+
         _textureSlotHigh = 0;
         Array.Clear(_textureSlots);
 
@@ -102,34 +106,14 @@ internal sealed class RenderPassContext
     //
     public void ActivateDepthMode()
     {
-        RenderContext.SetDepthTargetKind();
+        RenderContext.ApplyForDepthPass();
         VisualSystem.Instance.UploadShadow();
         VisualSystem.Instance.UploadLightView();
     }
 
     public void RestoreMode()
     {
-        RenderContext.ResetTargetKind();
+        RenderContext.ResetContext();
         VisualSystem.Instance.UploadMainView();
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ContinueFromRenderPass(FrameBufferId fboId, GfxStateFlags passFlags)
-    {
-        Cmd.BindFramebuffer(fboId);
-        Cmd.ApplyPassState(passFlags);
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawFullscreenQuad(ShaderId shaderId, ReadOnlySpan<TextureId> sources)
-    {
-        Cmd.UseShader(shaderId);
-        
-        for (var i = 0; i < sources.Length; i++) 
-            Cmd.BindTextureAndSampler(sources[i], SamplerProfile.PointClamp, i);
-
-        Cmd.DrawMesh(GfxMeshes.FsqQuad);
-    }
-
 }

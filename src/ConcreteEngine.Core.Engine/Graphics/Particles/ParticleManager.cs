@@ -13,7 +13,6 @@ internal sealed class ParticleManager : IDisposable
     private readonly SlotArray<ParticleEmitter> _emitters = new(8);
     private readonly List<Id16<ParticleEmitter>> _pendingEmitters = new(4);
 
-    private readonly Dictionary<string, Id16<ParticleEmitter>> _byName = new(4);
 
     private ParticleManager() { }
 
@@ -24,28 +23,37 @@ internal sealed class ParticleManager : IDisposable
     public ParticleEmitter CreateEmitter(
         string name,
         int particleCount,
-        in EmitterParams @params,
-        in ParticleParams visualParams
+        in EmitterParams emitterParam,
+        in ParticleParams particleParam
     )
     {
-        if (_byName.ContainsKey(name)) Throwers.InvalidArgument(nameof(name));
+        foreach (var it in _emitters.AsSpan())
+        {
+            if(it?.Name == name) Throwers.InvalidArgument(nameof(name));
+        }
 
         var emitterId = new Id16<ParticleEmitter>(_emitters.AllocateNextId() + 1);
 
         if (_emitters.Count > 0 && _emitters.GetOrNull(emitterId.Index()) != null)
             throw new InvalidOperationException($"Duplicated emitter id {emitterId}");
 
-        var emitter = new ParticleEmitter(name, emitterId, particleCount, in @params, in visualParams);
+        var emitter = new ParticleEmitter(name, emitterId, particleCount, in emitterParam, in particleParam);
         _pendingEmitters.Add(emitterId);
         _emitters.Set(emitter, emitterId.Index());
-        _byName.Add(emitter.Name, emitterId);
         return emitter;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGet(string name, [NotNullWhen(true)] out ParticleEmitter? emitter)
     {
-        if (_byName.TryGetValue(name, out var id) && _emitters.TryGet(id.Index(), out emitter)) return true;
+        foreach (var it in _emitters.AsSpan())
+        {
+            if (it?.Name == name)
+            {
+                emitter = it;
+                return true;
+            }
+        }
         emitter = null;
         return false;
     }
@@ -81,6 +89,5 @@ internal sealed class ParticleManager : IDisposable
     {
         foreach (var emitter in _emitters) emitter.Dispose();
         _emitters.Clear();
-        _byName.Clear();
     }
 }

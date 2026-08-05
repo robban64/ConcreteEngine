@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -6,17 +7,20 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 [StructLayout(LayoutKind.Auto)]
 public readonly record struct TextureSource(
-    AssetId AssetTexture,
-    SamplerProfile Profile,
-    TextureUsage Usage,
+    AssetId AssetId,
+    TextureId TextureId,
     TextureId FallbackTexture,
-    TextureId OverrideTexture = default
+    SamplerProfile Profile,
+    TextureUsage Usage
 )
 {
-    public bool IsBound() => AssetTexture.IsValid() || OverrideTexture.IsValid();
-
-    public TextureSource WithTexture(AssetId assetTexture, SamplerProfile profile, TextureId overrideTexture = default) =>
-        this with { AssetTexture = assetTexture, Profile = profile, OverrideTexture = overrideTexture };
-
-    public TextureSource WithAssetId(AssetId assetId) => this with { AssetTexture = assetId };
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsFallback() => !AssetId.IsValid();
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TextureId GetTextureOrFallback()
+    {
+        if (TextureId.IsValid()) return TextureId;
+        return FallbackTexture.IsValid() ? FallbackTexture : GfxTextures.Fallback.AlbedoId;
+    }
 }

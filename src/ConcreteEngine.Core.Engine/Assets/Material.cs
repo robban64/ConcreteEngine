@@ -60,17 +60,12 @@ public sealed class Material : AssetObject
     }
 
 
-    public void ClearSourceSlot(int slot)
-    {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
-        _textureSources[slot] = default;
-    }
     public void SetSourceSlot(int slot, Texture texture)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
         ref var source = ref _textureSources[slot];
-        source = source.WithTexture(texture.Id, texture.Profile);
-        if (source.Usage == TextureUsage.Mask) State.HasAlphaMask = source.IsBound();
+        source = source with { AssetId = texture.Id, TextureId = texture.GfxId, Profile = texture.Profile };
+        if (source.Usage == TextureUsage.Mask) State.HasAlphaMask = true;
         MarkDirty(AssetDirtyFlag.State);
     }
 
@@ -78,9 +73,15 @@ public sealed class Material : AssetObject
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
         ref var source = ref _textureSources[slot];
-        source = source.WithTexture(default, profile, textureId);
-        if (source.Usage == TextureUsage.Mask) State.HasAlphaMask = source.IsBound();
+        source = source with { AssetId = default, TextureId = textureId, Profile = profile };
+        if (source.Usage == TextureUsage.Mask) State.HasAlphaMask = true;
         MarkDirty(AssetDirtyFlag.State);
     }
 
+    public void ClearSourceSlot(int slot)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
+        _textureSources[slot] = default;
+        MarkDirty(AssetDirtyFlag.State);
+    }
 }

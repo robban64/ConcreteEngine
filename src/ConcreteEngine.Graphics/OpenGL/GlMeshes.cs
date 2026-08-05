@@ -6,31 +6,31 @@ namespace ConcreteEngine.Graphics.OpenGL;
 
 internal static class GlMeshes
 {
-    public static NativeHandle CreateVertexArray()
+    public static NativeHandle<MeshMeta> CreateVertexArray()
     {
         Gl.CreateVertexArrays(1, out uint vao);
-        return new NativeHandle(vao);
+        return new NativeHandle<MeshMeta>(vao);
     }
 
-    public static void AttachIndexBuffer(NativeHandle vao, NativeHandle ibo)
+    public static void AttachIndexBuffer(NativeHandle<MeshMeta> vao, NativeHandle<IndexBufferMeta> ibo)
     {
         Gl.VertexArrayElementBuffer(vao, ibo);
     }
 
-    public static void AttachVertexBuffer(NativeHandle vao, int binding, NativeHandle vbo, in VertexBufferMeta meta)
+    public static void AttachVertexBuffer(NativeHandle<MeshMeta> vao, int binding, NativeHandle<VertexBufferMeta> vbo, in VertexBufferMeta meta)
     {
         Gl.VertexArrayVertexBuffer(vao, (uint)binding, vbo, 0, (uint)meta.Stride);
         if (meta.Divisor != 0)
             Gl.VertexArrayBindingDivisor(vao, (uint)binding, meta.Divisor);
     }
 
-    public static void AddVertexAttributes(NativeHandle vao, ReadOnlySpan<VertexAttributeDef> attribs)
+    public static void AddVertexAttributes(NativeHandle<MeshMeta> vao, ReadOnlySpan<VertexAttributeDef> attribs)
     {
         foreach (var attrib in attribs)
             AddVertexAttribute(vao, attrib);
     }
 
-    private static void AddVertexAttribute(NativeHandle vao, VertexAttributeDef a)
+    private static void AddVertexAttribute(NativeHandle<MeshMeta> vao, VertexAttributeDef a)
     {
         var primitive = a.Format.ToGlEnum();
 

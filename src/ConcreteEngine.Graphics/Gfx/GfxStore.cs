@@ -28,7 +28,7 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
 
     private struct Entry
     {
-        public NativeHandle Handle;
+        public NativeHandle<TMeta> Handle;
         public TMeta Meta;
     }
 
@@ -62,20 +62,20 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
     public int Capacity => _memory.Length / Unsafe.SizeOf<Entry>();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeHandle GetHandle(GfxId<TMeta> id) => _entries[id.Index()].Handle;
+    public NativeHandle<TMeta> GetHandle(GfxId<TMeta> id) => _entries[id.Index()].Handle;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly TMeta GetMeta(GfxId<TMeta> id) => ref _entries[id.Index()].Meta;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeHandle GetHandleAndMeta(GfxId<TMeta> id, out TMeta meta)
+    public NativeHandle<TMeta> GetHandleAndMeta(GfxId<TMeta> id, out TMeta meta)
     {
         meta = _entries[id.Index()].Meta;
         return _entries[id.Index()].Handle;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeHandle TryGet(GfxId<TMeta> id, out TMeta result)
+    public NativeHandle<TMeta> TryGet(GfxId<TMeta> id, out TMeta result)
     {
         if (id < (uint)Count) return GetHandleAndMeta(id, out result);
         Unsafe.SkipInit(out result);
@@ -83,7 +83,7 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public GfxId<TMeta> Add(in TMeta meta, NativeHandle handle)
+    public GfxId<TMeta> Add(in TMeta meta, NativeHandle<TMeta> handle)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(handle.IsValid(), false, nameof(handle));
         ArgumentOutOfRangeException.ThrowIfZero(handle.Value, nameof(handle));
@@ -115,7 +115,7 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public GfxId<TMeta> Replace(GfxId<TMeta> id, in TMeta newMeta, NativeHandle newHandle)
+    public GfxId<TMeta> Replace(GfxId<TMeta> id, in TMeta newMeta, NativeHandle<TMeta> newHandle)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id.Id, 0, nameof(id));
         ArgumentOutOfRangeException.ThrowIfZero(newHandle.Value, nameof(newHandle));

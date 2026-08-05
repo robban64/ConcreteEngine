@@ -29,17 +29,23 @@ internal static unsafe class GlBuffers
         return new NativeHandle(buffer);
     }
 
-    public static NativeHandle CreateUniformBuffer(byte slot, CreateBufferInfo desc)
+    public static NativeHandle<UniformBufferMeta> CreateUniformBuffer(byte slot, CreateBufferInfo desc)
     {
         var handle = CreateBuffer(ReadOnlySpan<byte>.Empty, desc, nullData: true);
         Gl.BindBufferBase(BufferTargetARB.UniformBuffer, slot, handle);
-        return handle;
+        return new NativeHandle<UniformBufferMeta>(handle);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SetBufferData(NativeHandle uboHandle, ReadOnlySpan<byte> data, int size, BufferUsage usage)
+    public static void SetBufferData(NativeHandle handle, ReadOnlySpan<byte> data, int size, BufferUsage usage)
     {
-        Gl.NamedBufferData(uboHandle, (nuint)size, data, usage.ToGlEnum());
+        Gl.NamedBufferData(handle, (nuint)size, data, usage.ToGlEnum());
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ResizeBuffer(NativeHandle handle, int size, BufferUsage usage)
+    {
+        Gl.NamedBufferData(handle, (nuint)size, (void*)0, usage.ToGlEnum());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -55,16 +61,8 @@ internal static unsafe class GlBuffers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ResizeBuffer(NativeHandle handle, int size, BufferUsage usage)
-
+    public static void BindUniformBufferRange(NativeHandle<UniformBufferMeta> handle, uint slot, int offset, int size)
     {
-        Gl.NamedBufferData(handle, (nuint)size, (void*)0, usage.ToGlEnum());
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void BindUniformBufferRange(NativeHandle uboHandle, uint slot, int offset, int size)
-    {
-        Gl.BindBufferRange(BufferTargetARB.UniformBuffer, slot, uboHandle, offset, (nuint)size);
+        Gl.BindBufferRange(BufferTargetARB.UniformBuffer, slot, handle, offset, (nuint)size);
     }
 }

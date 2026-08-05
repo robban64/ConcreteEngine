@@ -6,15 +6,17 @@ public readonly record struct GfxId<TMeta>(ushort Id) : IComparable<GfxId<TMeta>
 {
     public GfxId(int id) : this((ushort)id) { }
 
-    public readonly ushort Id = Id;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal int Index() => Id - 1;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsValid() => Id > 0;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator ushort(GfxId<TMeta> id) => id.Id;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator GfxId<TMeta>(int value) => new(value);
+
     public int CompareTo(GfxId<TMeta> other) => Id.CompareTo(other.Id);
 }

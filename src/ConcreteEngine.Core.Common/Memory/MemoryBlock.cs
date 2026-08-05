@@ -42,7 +42,6 @@ public readonly unsafe struct MemoryBlock : IEquatable<MemoryBlock>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetNext(out MemoryBlock block)
     {
-        if(Ptr == null) Throwers.NullPointer(nameof(Ptr));
         block = Next;
         return block != null;
     }

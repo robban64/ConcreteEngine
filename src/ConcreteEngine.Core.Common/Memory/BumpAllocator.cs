@@ -112,10 +112,10 @@ public sealed unsafe class BumpAllocator : IDisposable
 
     public void Dispose()
     {
-        _buffer.Dispose();
         Head = null;
         Tail = null;
         Cursor = 0;
+        _buffer.Dispose();
         _buffer.Ptr = null;
     }
 }

@@ -96,7 +96,7 @@ public sealed class EnumExtGenerator : IIncrementalGenerator
 
         //
         sb.BeginLine();
-        sb.Builder.Append($"public static readonly int Count = {count};");
+        sb.Builder.Append($"public static int Count => {count};");
         sb.EndLine("\n");
 
         sb.BeginLine();

@@ -38,8 +38,8 @@ public sealed class GfxFrameBuffers
                 format: desc.ColorTexture.PixelFormat,
                 samples: desc.Multisample,
                 border: desc.ColorTexture.ColorBorder);
-            var texRef = GfxRegistry.TextureStore.GetHandle(textureId);
-            AttachTexture(fboHandle, texRef, FrameBufferAttachmentSlot.Color);
+            var texHandle = GfxRegistry.TextureStore.GetHandle(textureId);
+            AttachTexture(fboHandle, texHandle, FrameBufferAttachmentSlot.Color);
             attachments = attachments with { ColorTexture = textureId };
         }
 
@@ -50,8 +50,8 @@ public sealed class GfxFrameBuffers
                 format: TexturePixelFormat.Depth,
                 border: desc.ColorTexture.ColorBorder);
 
-            var texRef = GfxRegistry.TextureStore.GetHandle(textureId);
-            AttachTexture(fboHandle, texRef, FrameBufferAttachmentSlot.Depth);
+            var texHandle = GfxRegistry.TextureStore.GetHandle(textureId);
+            AttachTexture(fboHandle, texHandle, FrameBufferAttachmentSlot.Depth);
             attachments = attachments with { DepthTexture = textureId };
         }
 
@@ -90,16 +90,16 @@ public sealed class GfxFrameBuffers
         var attachments = newMeta.Attachments;
         if (attachments.ColorTexture.IsValid())
         {
-            var texRef = _gfxTextures.ReplaceTexture(attachments.ColorTexture, newSize.ToSize3D(1));
+            var texHandle = _gfxTextures.ReplaceTexture(attachments.ColorTexture, newSize.ToSize3D(1));
             _gfxTextures.ApplyProperties(attachments.ColorTexture);
-            AttachTexture(fboHandle, texRef, FrameBufferAttachmentSlot.Color);
+            AttachTexture(fboHandle, texHandle, FrameBufferAttachmentSlot.Color);
         }
 
         if (attachments.DepthTexture.IsValid())
         {
-            var texRef = _gfxTextures.ReplaceTexture(attachments.DepthTexture, newSize.ToSize3D(1));
+            var texHandle = _gfxTextures.ReplaceTexture(attachments.DepthTexture, newSize.ToSize3D(1));
             _gfxTextures.ApplyProperties(attachments.DepthTexture);
-            AttachTexture(fboHandle, texRef, FrameBufferAttachmentSlot.Depth);
+            AttachTexture(fboHandle, texHandle, FrameBufferAttachmentSlot.Depth);
         }
 
         if (attachments.ColorRbo.IsValid())
@@ -117,7 +117,7 @@ public sealed class GfxFrameBuffers
         GlFrameBuffers.ValidateComplete(fboHandle, attachments.ColorTexture.IsValid());
     }
 
-    private GfxId<RenderBufferMeta> CreateAttachRenderBuffer(NativeHandle fbo, Size2D size,
+    private RenderBufferId CreateAttachRenderBuffer(NativeHandle<FrameBufferMeta> fbo, Size2D size,
         FrameBufferAttachmentSlot attachmentSlot, RenderBufferMsaa msaa, out RenderBufferMeta meta)
     {
         var samples = msaa.ToSamples();
@@ -127,9 +127,11 @@ public sealed class GfxFrameBuffers
         return GfxRegistry.RboStore.Add(in meta, rboHandle);
     }
 
-    private GfxId<RenderBufferMeta> RecreateAttachRenderBuffer(GfxId<RenderBufferMeta> rboId, NativeHandle fboHandle,
+    private RenderBufferId RecreateAttachRenderBuffer(RenderBufferId rboId, NativeHandle<FrameBufferMeta> fboHandle,
         Size2D size, FrameBufferAttachmentSlot attachmentSlot, RenderBufferMsaa msaa, out RenderBufferMeta meta)
     {
+        ArgumentOutOfRangeException.ThrowIfZero(rboId.Id, nameof(rboId));
+
         var rboHandle = GfxRegistry.RboStore.GetHandle(rboId);
         _disposer.EnqueueReplace(rboId, rboHandle);
 
@@ -140,8 +142,7 @@ public sealed class GfxFrameBuffers
         return GfxRegistry.RboStore.Replace(rboId, in meta, newRboHandle);
     }
 
-    private void AttachTexture(NativeHandle fbo, NativeHandle tex,
-        FrameBufferAttachmentSlot attachmentSlot)
+    private void AttachTexture(NativeHandle<FrameBufferMeta> fbo, NativeHandle<TextureMeta> tex, FrameBufferAttachmentSlot attachmentSlot)
     {
         ArgumentOutOfRangeException.ThrowIfEqual((int)attachmentSlot, (int)FrameBufferAttachmentSlot.DepthStencil,
             nameof(attachmentSlot));

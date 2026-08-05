@@ -41,10 +41,14 @@ public sealed class MaterialProfile
     private readonly TextureUsage[] _slots;
 
     public MaterialProfile(string shaderName, DrawQueue drawQueue, params TextureUsage[] slots)
-        : this(shaderName, drawQueue, DefaultToggle, slots) { }
+        : this(shaderName, drawQueue, DefaultToggle, slots)
+    {
+    }
 
     public MaterialProfile(string shaderName, params TextureUsage[] slots)
-        : this(shaderName, DrawQueue.Opaque, DefaultToggle, slots) { }
+        : this(shaderName, DrawQueue.Opaque, DefaultToggle, slots)
+    {
+    }
 
     public MaterialProfile(string shader, DrawQueue queue, MaterialShading shading, params TextureUsage[] slots)
     {
@@ -84,16 +88,11 @@ public sealed class MaterialProfile
         for (int i = 0; i < sources.Length; i++)
         {
             var usage = _slots[i];
-            sources[i] = new TextureSource(default, 0, _slots[i], GetFallbackTexture(usage));
+            var fallback = GetFallbackTexture(usage);
+            sources[i] = new TextureSource(default, default, fallback, SamplerProfile.TrilinearWrap, _slots[i]);
         }
     }
 
-    public void ValidateSources(ReadOnlySpan<TextureSource> sources)
-    {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(sources.Length, _slots.Length, nameof(sources));
-        for (int i = 0; i < _slots.Length; i++)
-            ArgumentOutOfRangeException.ThrowIfNotEqual((int)sources[i].Usage, (int)_slots[i], nameof(sources));
-    }
 
     // --
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

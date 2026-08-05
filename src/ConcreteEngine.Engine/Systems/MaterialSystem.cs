@@ -94,17 +94,8 @@ internal sealed class MaterialSystem : IDisposable
         for (var i = 0; i < textureSources.Length; i++)
         {
             var source = textureSources[i];
-            var textureId = source.FallbackTexture;
-            var profile = source.Profile;
-            if (source.OverrideTexture > 0) textureId = source.OverrideTexture;
-            else if (source.AssetTexture.Id > 0)
-            {
-                var texture = AssetManager.Assets.Get<Texture>(source.AssetTexture);
-                textureId = texture.GfxId;
-                profile = texture.Profile;
-            }
-
-            _textureSlots[range.Offset + i] = new TextureBinding(textureId, source.Usage, (byte)i, profile);
+            var textureId = source.GetTextureOrFallback();
+            _textureSlots[range.Offset + i] = new TextureBinding(textureId, (SamplerSlot)i, source.Profile);
         }
 
         _slotCount += range.Length;

@@ -18,7 +18,6 @@ public sealed class GraphicsRuntime : IDisposable
     private static bool _isDisposed;
 
     private GfxResourceDisposer _disposer = null!;
-
     public GfxContext Gfx { get; private set; } = null!;
 
     public GraphicsRuntime() { }

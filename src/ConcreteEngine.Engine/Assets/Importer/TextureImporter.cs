@@ -50,20 +50,6 @@ internal static unsafe class TextureImporter
     }
 
     //
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static TextureAnisotropy GetAnisotropy(AnisotropyLevel format)
-    {
-        return format switch
-        {
-            AnisotropyLevel.Default => EngineSettings.Current.Graphics.MaxAnisotropy,
-            AnisotropyLevel.Off => TextureAnisotropy.Off,
-            AnisotropyLevel.X2 => TextureAnisotropy.X2,
-            AnisotropyLevel.X4 => TextureAnisotropy.X4,
-            AnisotropyLevel.X8 => TextureAnisotropy.X8,
-            AnisotropyLevel.X16 => TextureAnisotropy.X16,
-            _ => throw new ArgumentOutOfRangeException()
-        };
-    }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static ColorComponents GetColorComponent(TexturePixelFormat format)

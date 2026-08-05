@@ -35,8 +35,7 @@ public sealed class Shader : AssetObject
     public const string RoughnessName = "uRoughness";
     public const string AlphaName = "uAlpha";
     public const string LightMapName = "uLightMap";
-
-
+    
     public readonly ShaderId GfxId;
     public GfxUniformSampler[] Samplers { get; private set; } = [];
 
@@ -65,24 +64,12 @@ public sealed class Shader : AssetObject
             var samplerBinding = (sbyte)sampler.Binding;
             switch (sampler.Name)
             {
-                case AlbedoName:
-                    bindings.AlbedoBinding = samplerBinding;
-                    continue;
-                case NormalName:
-                    bindings.NormalBinding = samplerBinding;
-                    continue;
-                case SpecularName:
-                    bindings.SpecularBinding = samplerBinding;
-                    continue;
-                case RoughnessName:
-                    bindings.RoughnessBinding = samplerBinding;
-                    continue;
-                case AlphaName:
-                    bindings.AlphaBinding = samplerBinding;
-                    continue;
-                case LightMapName:
-                    bindings.LightMapBinding = samplerBinding;
-                    continue;
+                case AlbedoName: bindings.AlbedoBinding = samplerBinding; continue;
+                case NormalName: bindings.NormalBinding = samplerBinding; continue;
+                case SpecularName: bindings.SpecularBinding = samplerBinding; continue;
+                case RoughnessName: bindings.RoughnessBinding = samplerBinding; continue;
+                case AlphaName: bindings.AlphaBinding = samplerBinding; continue;
+                case LightMapName: bindings.LightMapBinding = samplerBinding; continue;
             }
 
             if (sampler.UniformType == GfxUniformType.SamplerCube)

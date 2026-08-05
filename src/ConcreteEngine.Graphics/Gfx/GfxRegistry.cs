@@ -28,7 +28,7 @@ public static class GfxRegistry
     internal static ReadOnlySpan<IGfxResourceStore> GetStores() => GfxStores;
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static NativeHandle GetHandle<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
+    public static NativeHandle<TMeta> GetHandle<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
     {
         return GetStore<TMeta>().GetHandle(id);
     }

@@ -57,8 +57,6 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
 
     public RenderEntityId AddEntity(RenderSource source, DrawPolicy policy)
     {
-        ValidateSource(source);
-
         var index = SlotHelper.NextSlot(_free, Count);
         if (index < 0)
         {
@@ -90,13 +88,4 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
         Count = SlotHelper.FreeSlot(_free, entity.Index(), Count);
     }
 
-
-    [StackTraceHidden]
-    private static void ValidateSource(RenderSource source)
-    {
-        return;
-        //if (source.Kind == EntitySourceKind.Particle) return;
-        ArgumentOutOfRangeException.ThrowIfZero(source.Mesh.Id, nameof(source.Mesh));
-        ArgumentOutOfRangeException.ThrowIfZero(source.Material.Value, nameof(source.Material));
-    }
 }

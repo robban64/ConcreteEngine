@@ -256,17 +256,17 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     private void DrawFiles()
     {
         if (_assetBrowser.FilteredCount == 0 || _assetBrowser.FileCount == 0) return;
-
-        var count = _assetBrowser.FilteredCount;
+        var filteredCount = _assetBrowser.FilteredCount;
 
         int columnCount = (int)(ImGui.GetContentRegionAvail().X / GridCellSize);
         columnCount = int.Max(columnCount, 1);
-        var rowCount = (int)float.Ceiling(count / (float)columnCount);
+        var rowCount = (int)float.Ceiling(filteredCount / (float)columnCount);
 
         foreach (var range in AppDraw.Clipper(rowCount, GridCellSize, out _))
         {
             var start = range.Offset * columnCount;
-            var length = start + range.Length;
+            var length = range.Length * columnCount;
+            if(start + length >= filteredCount) length = filteredCount - start;
             DrawFilesInner(start, length, columnCount, _selectedFile);
         }
     }

@@ -42,7 +42,7 @@ internal sealed unsafe class TextInput : InputField
         _inputCallback = OnInputCallback;
         LabelPlacement = LabelPlacement.None;
         Text = StringArena.AllocateString(capacity);
-        Text.Reset();
+        Text.Clear();
     }
 
     public TextInput(string label, int capacity, Action<Span<byte>> callback) : this(label, capacity) =>

@@ -60,22 +60,38 @@ public sealed class Material : AssetObject
     }
 
 
-    public void SetSourceSlot(int slot, Texture texture)
+    public void SetSourceSlotByIndex(Texture texture, int index)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
-        ref var source = ref _textureSources[slot];
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_textureSources.Length);
+        ref var source = ref _textureSources[index];
         source = source with { AssetId = texture.Id, TextureId = texture.GfxId, Profile = texture.Profile };
         if (source.Slot == SamplerSlot.AlphaMask) State.HasAlphaMask = true;
         MarkDirty(AssetDirtyFlag.State);
     }
 
-    public void SetSourceSlot(int slot, TextureId textureId, SamplerProfile profile)
+    public void SetSourceSlot(Texture texture, SamplerSlot slot)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
-        ref var source = ref _textureSources[slot];
+        ref var source = ref GetTextureSource(slot);
+        source = source with { AssetId = texture.Id, TextureId = texture.GfxId, Profile = texture.Profile };
+        if (source.Slot == SamplerSlot.AlphaMask) State.HasAlphaMask = true;
+        MarkDirty(AssetDirtyFlag.State);
+    }
+
+    public void SetSourceSlot(TextureId textureId, SamplerSlot slot, SamplerProfile profile)
+    {
+        ref var source = ref GetTextureSource(slot);
         source = source with { AssetId = default, TextureId = textureId, Profile = profile };
         if (source.Slot == SamplerSlot.AlphaMask) State.HasAlphaMask = true;
         MarkDirty(AssetDirtyFlag.State);
+    }
+
+    private ref TextureSource GetTextureSource(SamplerSlot slot)
+    {
+        foreach (ref var textureSource in _textureSources.AsSpan())
+        {
+            if(textureSource.Slot == slot) return ref textureSource;
+        }
+        throw new ArgumentException(nameof(slot));
     }
 
     public void ClearSourceSlot(int slot)

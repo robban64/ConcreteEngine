@@ -144,16 +144,10 @@ internal static unsafe class MaterialModelImporter
                 $"Property texture index {textureIndex} does not match {texture.TextureIndex}");
         }
 
-        if (material.Textures.Contains(texture.GId)) return;
-        if (!MatUtils.ToSystemEnums(type, out var slot, out var format))
-        {
-            slot = SamplerSlot.Diffuse;
-            format = TexturePixelFormat.SrgbAlpha;
-        }
+        if (material.Textures.Contains(texture)) return;
+        if (MatUtils.ToSystemEnums(type, out texture.SlotKind, out texture.PixelFormat))
+            material.Textures.Add(texture);
 
-        texture.SlotKind = slot;
-        texture.PixelFormat = format;
-        material.Textures.Add(texture.GId);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -179,10 +173,8 @@ internal static unsafe class MaterialModelImporter
         if (sizeInBytes < 4) Throwers.InvalidOperation(nameof(sizeInBytes));
 
         var ptr = (byte*)aiTex->PcData;
-        //texture.PixelDataBlock =
         context.RegisterTexture(texture, ptr, sizeInBytes);
         return sizeInBytes;
-        //return TextureImporter.ImportUnmanagedTexture(ptr, sizeInBytes, width, height, format, out size);
     }
 }
 
@@ -208,6 +200,14 @@ file static unsafe class MatUtils
             case TextureType.Opacity:
                 kind = SamplerSlot.AlphaMask;
                 format = TexturePixelFormat.Red;
+                return true;
+            case TextureType.Emissive:
+                kind = SamplerSlot.Emissive;
+                format = TexturePixelFormat.Rgba;
+                return true;
+            case TextureType.Metalness or TextureType.GltfMetallicRoughness:
+                kind = SamplerSlot.DetailMap;
+                format = TexturePixelFormat.Rgba;
                 return true;
             default:
                 kind = 0;

@@ -24,13 +24,14 @@ internal sealed class EmbeddedSceneMaterial(string name, int materialIndex, bool
 
     public readonly MaterialStateRecord State = new();
 
-    public readonly List<Guid> Textures = new(4);
+    public readonly List<EmbeddedSceneTexture> Textures = new(4);
 }
 
 internal sealed class EmbeddedSceneTexture(string name, string embeddedName, int textureIndex) : IEmbeddedAsset
 {
-    public Guid GId { get; } = Guid.NewGuid();
     public AssetKind Kind => AssetKind.Texture;
+
+    public Guid GId { get; } = Guid.NewGuid();
     public string EmbeddedName { get; } = embeddedName;
     public string Name { get; } = name;
 
@@ -41,6 +42,8 @@ internal sealed class EmbeddedSceneTexture(string name, string embeddedName, int
     public SamplerSlot SlotKind = SamplerSlot.Diffuse;
     public TexturePixelFormat PixelFormat = TexturePixelFormat.Unknown;
 
-
-    //public bool Discard;
+    public bool IsValid() =>
+        Dimensions > 0 &&
+        PixelFormat > 0 &&
+        SlotKind is SamplerSlot.Diffuse or SamplerSlot.Normal or SamplerSlot.Specular or SamplerSlot.AlphaMask;
 }

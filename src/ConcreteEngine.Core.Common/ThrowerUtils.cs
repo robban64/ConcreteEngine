@@ -26,6 +26,10 @@ public static class Throwers
         throw new ArgumentException($"{message} not found", name);
 
     [DoesNotReturn]
+    public static void NotFound(int id, string name, string message) =>
+        throw new ArgumentException($"{message} [{id}] not found", name);
+
+    [DoesNotReturn]
     public static void Unreachable(string name) => throw new UnreachableException(name);
 
     [DoesNotReturn]

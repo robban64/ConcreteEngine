@@ -57,7 +57,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
 
         var sw = _title.OverWriter;
         sw.Append("CLI: "u8);
-        sw.AppendAscii('[').Append(ImGuiSystem.Io.Framerate, "F0").AppendAscii('H', 'Z', ']');
+        sw.AppendAscii('[').Append(ImGuiSystem.Io.Framerate, "F0").AppendAscii(']');
         sw.PadRight(4);
 
         sw.AppendAscii('[').Append(MetricSystem.Instance.Metric.AvgMs, "F4").AppendAscii('m', 's', ']');

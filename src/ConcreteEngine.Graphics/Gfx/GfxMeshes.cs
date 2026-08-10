@@ -91,6 +91,9 @@ public sealed class GfxMeshes
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void AttachIndexBuffer(MeshId meshId, IndexBufferId iboId)
     {
+        ArgumentOutOfRangeException.ThrowIfZero(meshId.Id);
+        ArgumentOutOfRangeException.ThrowIfZero(iboId.Id);
+
         var meshHandle = GfxRegistry.MeshStore.GetHandleAndMeta(meshId, out var meta);
         var iboRef = GfxRegistry.IboStore.GetHandleAndMeta(iboId, out var iboMeta);
         GlMeshes.AttachIndexBuffer(meshHandle, iboRef);

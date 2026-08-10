@@ -5,10 +5,11 @@ using ConcreteEngine.Graphics.Gfx;
 namespace ConcreteEngine.Engine.Render;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct MaterialMeta(ShaderId shaderId, RangeU16 bindingRange, GfxDrawState drawState, GfxDrawFunctions drawFunctions)
+public struct MaterialMeta(ShaderId shaderId, RangeU16 bindingRange, byte bindingCapacity, GfxDrawState drawState, GfxDrawFunctions drawFunctions)
 {
     public GfxDrawState DrawState = drawState;
     public GfxDrawFunctions DrawFunctions = drawFunctions;
     public RangeU16 BindingRange = bindingRange;
     public ShaderId ShaderId = shaderId;
+    public byte BindingCapacity = bindingCapacity;
 }

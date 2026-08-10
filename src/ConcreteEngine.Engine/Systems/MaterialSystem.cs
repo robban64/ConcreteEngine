@@ -22,17 +22,15 @@ internal sealed class MaterialSystem : IDisposable
     private readonly AssetTypeStore _materialStore;
 
     private MaterialMeta[] _metas;
-
     private NativeArray<TextureBinding> _textureSlots;
-
-    private NativeArray<MaterialUniform> _buffer;
-
+    private NativeArray<MaterialUniform> _uniforms;
+    
     public MaterialSystem()
     {
         _metas = new MaterialMeta[MaterialBufferCapacity];
         _materialStore = AssetStore.GetTypeStore(AssetKind.Material);
         _textureSlots = NativeArray.Allocate<TextureBinding>(TextureSlotCapacity);
-        _buffer = NativeArray.Allocate<MaterialUniform>(MaterialBufferCapacity, false);
+        _uniforms = NativeArray.Allocate<MaterialUniform>(MaterialBufferCapacity, false);
     }
 
 
@@ -54,9 +52,9 @@ internal sealed class MaterialSystem : IDisposable
 
     internal NativeView<MaterialUniform> GetUniforms()
     {
-        Debug.Assert(_metas.Length == _buffer.Length);
+        Debug.Assert(_metas.Length == _uniforms.Length);
         if (Count == 0) return NativeView<MaterialUniform>.MakeNull();
-        return _buffer.Slice(0, Count);
+        return _uniforms.Slice(0, Count);
     }
 
     private void Submit()
@@ -76,35 +74,45 @@ internal sealed class MaterialSystem : IDisposable
             }
 
             SubmitMaterial(material, lastShader);
-            SubmitUniform(material.State);
+            WriteUniform(material.State);
         }
     }
-
+    
     private void SubmitMaterial(Material material, ShaderId shaderId)
     {
-        var id = material.MaterialId;
-        var textureSources = material.GetSourceSpan();
+        var index = material.MaterialId.Index();
+        EnsureCapacity(index);
 
-        EnsureCapacity(id.Value);
-        EnsureTextureSlotCapacity(textureSources.Length);
+        var sources = material.GetSourceSpan();
 
-        var range = new RangeU16(_slotCount, textureSources.Length);
-        _metas[id.Index()] = new MaterialMeta(shaderId, range, material.State.DrawState, material.State.DrawFunctions);
-
-        for (var i = 0; i < textureSources.Length; i++)
+        ref var meta = ref _metas[index];
+        
+        var start = meta.BindingRange.Offset;
+        var capacity = int.Max(sources.Length, 6);
+        
+        if (capacity > meta.BindingCapacity)
         {
-            var source = textureSources[i];
-            var textureId = source.GetTextureOrFallback();
-            _textureSlots[range.Offset + i] = new TextureBinding(textureId, (SamplerSlot)i, source.Profile);
+            EnsureTextureSlotCapacity(capacity);
+            start = _slotCount;
+            _slotCount += capacity;
         }
 
-        _slotCount += range.Length;
-        Count = int.Max(Count, id.Index());
+        meta = new MaterialMeta(shaderId, new RangeU16(start, sources.Length), (byte)capacity,
+            material.State.DrawState, material.State.DrawFunctions);
+
+        for (var i = 0; i < sources.Length; i++)
+        {
+            var source = sources[i];
+            var textureId = source.GetTextureOrFallback();
+            _textureSlots[start + i] = new TextureBinding(textureId, source.Slot, source.Profile);
+        }
+
+        Count = int.Max(Count, index);
     }
 
-    private void SubmitUniform(MaterialState state)
+    private void WriteUniform(MaterialState state)
     {
-        ref var uniform = ref _buffer[state.MaterialId.Index()];
+        ref var uniform = ref _uniforms[state.MaterialId.Index()];
         uniform.Color = state.Color;
         uniform.SpecularColor = state.SpecularColor;
         uniform.UvTransform = state.UvTransform;
@@ -129,7 +137,7 @@ internal sealed class MaterialSystem : IDisposable
 
         Console.WriteLine($"{nameof(MaterialSystem)} TextureSlots resize");
         Array.Resize(ref _metas, newCap);
-        _buffer.ReAlloc(newCap, true);
+        _uniforms.ReAlloc(newCap, true);
     }
 
     private void EnsureTextureSlotCapacity(int amount)
@@ -145,7 +153,7 @@ internal sealed class MaterialSystem : IDisposable
 
     public void Dispose()
     {
-        _buffer.Dispose();
+        _uniforms.Dispose();
         _textureSlots.Dispose();
     }
 }

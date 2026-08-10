@@ -87,7 +87,7 @@ internal sealed class TerrainSystem
             if (MainTerrain.GroundAlbedoTextures.IsDirty)
             {
                 var textureId = MainTerrain.GroundAlbedoTextures.Compile(_gfx.Textures);
-                material.SetSourceSlot(0, textureId, SamplerProfile.AnisotropicWrap);
+                material.SetSourceSlot(textureId, SamplerSlot.Diffuse, SamplerProfile.AnisotropicWrap);
                 Logger.Message("Ground albedo texture changed");
             }
         }
@@ -95,7 +95,7 @@ internal sealed class TerrainSystem
         if (MainTerrain.FoliageTextures.IsDirty && MainTerrain.FoliageMaterial is { } foliageMaterial)
         {
             var textureId = MainTerrain.FoliageTextures.Compile(_gfx.Textures);
-            foliageMaterial.SetSourceSlot(0, textureId, SamplerProfile.AnisotropicClamp);
+            foliageMaterial.SetSourceSlot(textureId, SamplerSlot.Diffuse, SamplerProfile.AnisotropicClamp);
             Logger.Message("Foliage texture changed");
         }
     }

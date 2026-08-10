@@ -120,6 +120,8 @@ public sealed class GfxFrameBuffers
     private RenderBufferId CreateAttachRenderBuffer(NativeHandle<FrameBufferMeta> fbo, Size2D size,
         FrameBufferAttachmentSlot attachmentSlot, RenderBufferMsaa msaa, out RenderBufferMeta meta)
     {
+        ArgumentOutOfRangeException.ThrowIfZero(fbo.Value);
+
         var samples = msaa.ToSamples();
         var rboHandle = GlFrameBuffers.CreateRenderBuffer(attachmentSlot, size, samples);
         GlFrameBuffers.AttachRenderBuffer(fbo, rboHandle, attachmentSlot);
@@ -131,6 +133,7 @@ public sealed class GfxFrameBuffers
         Size2D size, FrameBufferAttachmentSlot attachmentSlot, RenderBufferMsaa msaa, out RenderBufferMeta meta)
     {
         ArgumentOutOfRangeException.ThrowIfZero(rboId.Id, nameof(rboId));
+        ArgumentOutOfRangeException.ThrowIfZero(fboHandle.Value);
 
         var rboHandle = GfxRegistry.RboStore.GetHandle(rboId);
         _disposer.EnqueueReplace(rboId, rboHandle);
@@ -142,12 +145,14 @@ public sealed class GfxFrameBuffers
         return GfxRegistry.RboStore.Replace(rboId, in meta, newRboHandle);
     }
 
-    private void AttachTexture(NativeHandle<FrameBufferMeta> fbo, NativeHandle<TextureMeta> tex, FrameBufferAttachmentSlot attachmentSlot)
+    private void AttachTexture(NativeHandle<FrameBufferMeta> fboHandle, NativeHandle<TextureMeta> texHandle, FrameBufferAttachmentSlot attachmentSlot)
     {
+        ArgumentOutOfRangeException.ThrowIfZero(fboHandle.Value);
+        ArgumentOutOfRangeException.ThrowIfZero(texHandle.Value);
         ArgumentOutOfRangeException.ThrowIfEqual((int)attachmentSlot, (int)FrameBufferAttachmentSlot.DepthStencil,
             nameof(attachmentSlot));
 
-        GlFrameBuffers.AttachTexture(fbo, tex, attachmentSlot);
+        GlFrameBuffers.AttachTexture(fboHandle, texHandle, attachmentSlot);
     }
 
 

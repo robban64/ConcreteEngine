@@ -12,30 +12,26 @@ namespace ConcreteEngine.Engine.Systems;
 internal sealed class RenderResolver : IDisposable
 {
     private readonly CameraFrustum _frustum;
-    private NativeArray<DrawObjectUniform> _transforms;
+    private NativeArray<TransformUniform> _transforms;
 
     internal RenderResolver(CameraFrustum frustum)
     {
         ArgumentNullException.ThrowIfNull(frustum);
         _frustum = frustum;
-        _transforms = NativeArray.Allocate<DrawObjectUniform>(RenderEcs.Core.Capacity, false);
+        _transforms = NativeArray.Allocate<TransformUniform>(RenderEcs.Core.Capacity, false);
     }
 
-    public NativeView<DrawObjectUniform> Transforms => _transforms.Slice(0, RenderEcs.Frame.VisibleCount);
-
-
-
+    public NativeView<TransformUniform> Transforms => _transforms.Slice(0, RenderEcs.Frame.VisibleCount);
 
     public void Setup() { }
-
 
     public void Execute()
     {
         avg.BeginSample();
         Ensure();
         var visibleCount = CullEntities();
+        RenderEcs.Frame.CommitFrame(visibleCount);
         if (visibleCount == 0) return;
-
         SubmitTransforms();
         avg.EndSample();
     }
@@ -63,11 +59,9 @@ internal sealed class RenderResolver : IDisposable
                 query.Item1.VisiblePassMask = mask;
 
                 var depthKey = FrustumMath.MakeDepthKey(forward, query.Item2.Center, nearFar, viewZ);
-                visibleEntities[index] = new DrawEntityCommand(index++, query.Entity, mask, it.Queue, (ushort)depthKey);
+                visibleEntities[index++] = new DrawEntityIndex(query.Entity, mask, it.Queue, (ushort)depthKey);
             }
         }
-
-        RenderEcs.Frame.CommitFrame(index);
         return index;
     }
 

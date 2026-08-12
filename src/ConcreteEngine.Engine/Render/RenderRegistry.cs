@@ -184,8 +184,8 @@ public sealed class RenderRegistry
         LightUniform.UboId = gfxBuffers.CreateUniformBuffer<LightUniform>();
         ShadowUniform.UboId = gfxBuffers.CreateUniformBuffer<ShadowUniform>();
         MaterialUniform.UboId = gfxBuffers.CreateUniformBuffer<MaterialUniform>();
-        DrawObjectUniform.UboId = gfxBuffers.CreateUniformBuffer<DrawObjectUniform>();
-        DrawAnimationUniform.UboId = gfxBuffers.CreateUniformBuffer<DrawAnimationUniform>();
+        TransformUniform.UboId = gfxBuffers.CreateUniformBuffer<TransformUniform>();
+        SkinningUniform.UboId = gfxBuffers.CreateUniformBuffer<SkinningUniform>();
         PostFxUniform.UboId = gfxBuffers.CreateUniformBuffer<PostFxUniform>();
         EditorEffectsUniform.UboId = gfxBuffers.CreateUniformBuffer<EditorEffectsUniform>();
     }

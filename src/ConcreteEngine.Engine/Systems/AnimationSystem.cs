@@ -39,11 +39,11 @@ internal sealed unsafe class AnimationSystem : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Range32 GetSlotRange(int slot) => _slotRanges[slot];
     
-    public NativeView<DrawAnimationUniform> GetUniforms()
+    public NativeView<SkinningUniform> GetUniforms()
     {
-        if (BoneCount == 0) return NativeView<DrawAnimationUniform>.MakeNull();
+        if (BoneCount == 0) return NativeView<SkinningUniform>.MakeNull();
         if ((uint)BoneCount >= (uint)_boneBuffer.Length) Throwers.InvalidOperation();
-        return new NativeView<DrawAnimationUniform>((DrawAnimationUniform*)_boneBuffer.Ptr, BoneCount);
+        return new NativeView<SkinningUniform>((SkinningUniform*)_boneBuffer.Ptr, BoneCount);
     }
 
     public void ResetFrame()

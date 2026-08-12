@@ -159,21 +159,19 @@ public struct MaterialUniform : IUniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct DrawObjectUniform : IUniform
+public struct TransformUniform : IUniform
 {
     public Matrix4x4 Model;
     public Matrix3X4 Normal;
-
     
     public static UniformBufferId UboId { get; set; }
 
     public static byte Slot => 7;
-    public static int Stride => Unsafe.SizeOf<DrawObjectUniform>();
+    public static int Stride => Unsafe.SizeOf<TransformUniform>();
 }
 
-//TODO remove
 [StructLayout(LayoutKind.Sequential)]
-public struct DrawAnimationUniform : IUniform
+public struct SkinningUniform : IUniform
 {
     public Matrix4x4 BoneMatrix;
     

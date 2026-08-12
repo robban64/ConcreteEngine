@@ -65,21 +65,21 @@ internal sealed class DrawCommandPipeline : IDisposable
         }
     }
 
-    private void UploadBuffers(NativeView<DrawObjectUniform> transforms)
+    private void UploadBuffers(NativeView<TransformUniform> transforms)
     {
         // Ensure ubo size
         var drawCount = IntMath.AlignUp(RenderEcs.VisibleCount, 64);
         var materialCount = IntMath.AlignUp(_materialSystem.Count, 16);
         var boneCount = IntMath.AlignUp(_animationSystem.BoneCount, 64);
 
-        if (!GfxRegistry.GetMeta(DrawObjectUniform.UboId).HasCapacity(drawCount))
-            _gfxBuffers.SetUniformBufferCount(DrawObjectUniform.UboId, drawCount);
+        if (!GfxRegistry.GetMeta(TransformUniform.UboId).HasCapacity(drawCount))
+            _gfxBuffers.SetUniformBufferCount(TransformUniform.UboId, drawCount);
 
         if (!GfxRegistry.GetMeta(MaterialUniform.UboId).HasCapacity(materialCount))
             _gfxBuffers.SetUniformBufferCount(MaterialUniform.UboId, materialCount);
 
-        if (!GfxRegistry.GetMeta(DrawAnimationUniform.UboId).HasCapacity(boneCount))
-            _gfxBuffers.SetUniformBufferCount(DrawAnimationUniform.UboId, boneCount);
+        if (!GfxRegistry.GetMeta(SkinningUniform.UboId).HasCapacity(boneCount))
+            _gfxBuffers.SetUniformBufferCount(SkinningUniform.UboId, boneCount);
 
         // Upload
         VisualSystem.Instance.Upload();
@@ -96,7 +96,6 @@ internal sealed class DrawCommandPipeline : IDisposable
     private unsafe void ReadyDrawCommands()
     {
         if (RenderEcs.Frame.VisibleCount <= 1) return;
-        RenderEcs.Frame.Sort();
 
         Array.Clear(_passRanges);
 
@@ -119,7 +118,7 @@ internal sealed class DrawCommandPipeline : IDisposable
         FillTickets(RenderEcs.Frame.VisibleEntities, heads + RenderLimits.PassSlots);
     }
 
-    private unsafe void CountTickets(NativeView<DrawEntityCommand> indices, int* heads)
+    private unsafe void CountTickets(NativeView<DrawEntityIndex> indices, int* heads)
     {
         var drawIndex = indices.Ptr;
         var drawIndexEnd = drawIndex + indices.Length;
@@ -153,11 +152,12 @@ internal sealed class DrawCommandPipeline : IDisposable
         return total;
     }
 
-    private unsafe void FillTickets(NativeView<DrawEntityCommand> indices, int* heads)
+    private unsafe void FillTickets(NativeView<DrawEntityIndex> indices, int* heads)
     {
         // fill tickets in sorted order
         var drawTickets = _drawTickets;
 
+        var submitIndex = 0;
         var drawIndex = indices.Ptr;
         var drawIndexEnd = drawIndex + indices.Length;
         while (drawIndex < drawIndexEnd)
@@ -167,11 +167,11 @@ internal sealed class DrawCommandPipeline : IDisposable
             {
                 var p = BitOperations.TrailingZeroCount(mask);
                 var w = heads[p]++;
-                drawTickets[w] = (drawIndex->Entity, drawIndex->SubmitIndex);
+                drawTickets[w] = (drawIndex->Entity, submitIndex);
                 mask &= mask - 1;
             }
-
             ++drawIndex;
+            ++submitIndex;
         }
     }
 

@@ -64,7 +64,7 @@ internal sealed class DrawCommandProcessor
 
     public void DrawSource(RenderSource source, RenderEntityId entity, int submitIndex)
     {
-        GfxCmd.BindUniformBufferRange<DrawObjectUniform>(submitIndex, 1);
+        GfxCmd.BindUniformBufferRange<TransformUniform>(submitIndex, 1);
 
         BindMaterial(source.Material);
 
@@ -89,7 +89,7 @@ internal sealed class DrawCommandProcessor
         {
             _lastAnimationSlot = slot;
             var range = _animationSystem.GetSlotRange(slot - 1);
-            GfxCmd.BindUniformBufferRange<DrawAnimationUniform>(range.Offset, range.Length);
+            GfxCmd.BindUniformBufferRange<SkinningUniform>(range.Offset, range.Length);
         }
     }
 

@@ -20,23 +20,21 @@ public readonly record struct RenderEntityId(int Id) : IComparable<RenderEntityI
 }
 
 [StructLayout(LayoutKind.Explicit)]
-public readonly struct DrawEntityCommand : IComparable<DrawEntityCommand>
+public readonly struct DrawEntityIndex : IComparable<DrawEntityIndex>
 {
     [FieldOffset(0)] private readonly ulong _sortKey;
 
     //
     [FieldOffset(0)] public readonly PassMask Mask;
-    [FieldOffset(1)] public readonly int SubmitIndex;
+    [FieldOffset(1)] public readonly RenderEntityId Entity;
     [FieldOffset(5)] private readonly ushort _depthKey;
     [FieldOffset(7)] private readonly DrawQueue _queue;
 
     //
-    [FieldOffset(8)] public readonly RenderEntityId Entity;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DrawEntityCommand(int index, RenderEntityId entity, PassMask mask, DrawQueue queue, ushort depthKey)
+    public DrawEntityIndex(RenderEntityId entity, PassMask mask, DrawQueue queue, ushort depthKey)
     {
-        SubmitIndex = index;
         Entity = entity;
         Mask = mask;
         _queue = queue;
@@ -44,7 +42,7 @@ public readonly struct DrawEntityCommand : IComparable<DrawEntityCommand>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator RenderEntityId(DrawEntityCommand e) => e.Entity;
+    public static implicit operator RenderEntityId(DrawEntityIndex e) => e.Entity;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -53,5 +51,5 @@ public readonly struct DrawEntityCommand : IComparable<DrawEntityCommand>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsValid() => Entity.Id > 0;
 
-    public int CompareTo(DrawEntityCommand other) => _sortKey.CompareTo(other._sortKey);
+    public int CompareTo(DrawEntityIndex other) => _sortKey.CompareTo(other._sortKey);
 }

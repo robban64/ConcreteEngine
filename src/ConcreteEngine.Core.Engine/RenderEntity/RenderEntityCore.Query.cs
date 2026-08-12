@@ -15,11 +15,11 @@ public sealed unsafe partial class RenderEntityCore
         new(_policies, _bounds, Count, skipFlag);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SparseQueryEnumerator<DrawPolicy, BoundingAxisBox> DrawPolicyQuery(NativeView<DrawEntityCommand> entities) =>
+    public SparseQueryEnumerator<DrawPolicy, BoundingAxisBox> DrawPolicyQuery(NativeView<DrawEntityIndex> entities) =>
         new(entities, _policies, _bounds, entities.Length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SparseQueryEnumerator<Matrix4x4, Matrix3X4> TransformQuery(NativeView<DrawEntityCommand> entities) =>
+    public SparseQueryEnumerator<Matrix4x4, Matrix3X4> TransformQuery(NativeView<DrawEntityIndex> entities) =>
         new(entities, _models, _normals, entities.Length);
 
     //
@@ -36,16 +36,16 @@ public sealed unsafe partial class RenderEntityCore
         public readonly ref T2 Item2 = ref item2;
     }
 
-    public readonly ref struct VisibleQueryItem<T1>(ref DrawEntityCommand entityCmd, ref T1 item1) where T1 : unmanaged
+    public readonly ref struct VisibleQueryItem<T1>(in DrawEntityIndex entityCmd, ref T1 item1) where T1 : unmanaged
     {
-        public readonly ref DrawEntityCommand EntityCmd = ref entityCmd;
+        public readonly ref readonly DrawEntityIndex EntityCmd = ref entityCmd;
         public readonly ref T1 Item1 = ref item1;
     }
 
-    public readonly ref struct VisibleQueryItem<T1, T2>(ref DrawEntityCommand entityCmd, ref T1 item1, ref T2 item2)
+    public readonly ref struct VisibleQueryItem<T1, T2>(in DrawEntityIndex entityCmd, ref T1 item1, ref T2 item2)
         where T1 : unmanaged where T2 : unmanaged
     {
-        public readonly ref DrawEntityCommand EntityCmd = ref entityCmd;
+        public readonly ref readonly DrawEntityIndex EntityCmd = ref entityCmd;
         public readonly ref T1 Item1 = ref item1;
         public readonly ref T2 Item2 = ref item2;
     }
@@ -93,16 +93,16 @@ public sealed unsafe partial class RenderEntityCore
     public ref struct SparseQueryEnumerator<T> where T : unmanaged
     {
         private readonly T* _p1;
-        private DrawEntityCommand* _current;
-        private readonly DrawEntityCommand* _end;
+        private DrawEntityIndex* _current;
+        private readonly DrawEntityIndex* _end;
 
-        public SparseQueryEnumerator(DrawEntityCommand* current, T* p1, int length)
+        public SparseQueryEnumerator(DrawEntityIndex* current, T* p1, int length)
         {
             _p1 = p1;
             _current = current - 1;
             _end = current + length;
         }
-        public SparseQueryEnumerator(NativeView<DrawEntityCommand> entities, NativeView<T> p1)
+        public SparseQueryEnumerator(NativeView<DrawEntityIndex> entities, NativeView<T> p1)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThan(entities.Length, p1.Length);
 
@@ -118,7 +118,7 @@ public sealed unsafe partial class RenderEntityCore
         public readonly VisibleQueryItem<T> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(ref *_current, ref _p1[_current->Index()]);
+            get => new(in *_current, ref _p1[_current->Index()]);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -130,10 +130,10 @@ public sealed unsafe partial class RenderEntityCore
         private readonly T1* _p1;
         private readonly T2* _p2;
 
-        private DrawEntityCommand* _current;
-        private readonly DrawEntityCommand* _end;
+        private DrawEntityIndex* _current;
+        private readonly DrawEntityIndex* _end;
 
-        public SparseQueryEnumerator(NativeView<DrawEntityCommand> entities, NativeView<T1> p1, NativeView<T2> p2)
+        public SparseQueryEnumerator(NativeView<DrawEntityIndex> entities, NativeView<T1> p1, NativeView<T2> p2)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThan(entities.Length, p1.Length);
             ArgumentOutOfRangeException.ThrowIfGreaterThan(entities.Length, p2.Length);
@@ -144,7 +144,7 @@ public sealed unsafe partial class RenderEntityCore
             _end = entities + entities.Length;
         }
 
-        public SparseQueryEnumerator(DrawEntityCommand* entities, T1* p1, T2* p2, int length)
+        public SparseQueryEnumerator(DrawEntityIndex* entities, T1* p1, T2* p2, int length)
         {
             _p1 = p1;
             _p2 = p2;
@@ -158,7 +158,7 @@ public sealed unsafe partial class RenderEntityCore
         public readonly VisibleQueryItem<T1, T2> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(ref *_current, ref _p1[_current->Index()], ref _p2[_current->Index()]);
+            get => new(in *_current, ref _p1[_current->Index()], ref _p2[_current->Index()]);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

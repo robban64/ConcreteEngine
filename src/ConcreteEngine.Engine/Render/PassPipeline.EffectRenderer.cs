@@ -14,7 +14,7 @@ internal static partial class PassPipeline
     private static unsafe void SelectionRenderer(RenderPassContext ctx)
     {
         
-        DrawObjectUniform* uniform = stackalloc DrawObjectUniform[1];
+        TransformUniform* uniform = stackalloc TransformUniform[1];
         EditorEffectsUniform* effect = stackalloc EditorEffectsUniform[1];
         
         ctx.Cmd.UseShader(RenderRegistry.HighlightShader);
@@ -31,7 +31,7 @@ internal static partial class PassPipeline
 
             ctx.Buffers.UploadSingleUniform(effect, 0);
             ctx.Buffers.UploadSingleUniform(uniform, 0);
-            ctx.Cmd.BindUniformBufferRange<DrawObjectUniform>(0, 1);
+            ctx.Cmd.BindUniformBufferRange<TransformUniform>(0, 1);
 
             if (source.IsSkinned()) ctx.DrawCmdProcessor.BindSkinningSlot(query.Entity);
 
@@ -43,7 +43,7 @@ internal static partial class PassPipeline
 
     private static unsafe void DebugBoundsRenderer(RenderPassContext ctx)
     {
-        DrawObjectUniform* uniform = stackalloc DrawObjectUniform[1];
+        TransformUniform* uniform = stackalloc TransformUniform[1];
         EditorEffectsUniform* effect = stackalloc EditorEffectsUniform[1];
         RenderContext.OverrideShader = RenderRegistry.BoundingBoxShader;
 
@@ -61,7 +61,7 @@ internal static partial class PassPipeline
             
             ctx.Buffers.UploadSingleUniform(effect, 0);
             ctx.Buffers.UploadSingleUniform(uniform, 0);
-            ctx.Cmd.BindUniformBufferRange<DrawObjectUniform>(0, 1);
+            ctx.Cmd.BindUniformBufferRange<TransformUniform>(0, 1);
 
             ctx.DrawCmdProcessor.BindMaterial(materialId);
             ctx.Cmd.DrawMesh(GfxMeshes.Cube);

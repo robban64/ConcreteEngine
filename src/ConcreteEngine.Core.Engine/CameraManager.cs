@@ -15,7 +15,6 @@ public sealed class CameraManager
     public readonly Camera Camera;
 
     internal readonly CameraFrustum Frustum;
-    internal readonly CameraFrustum LightFrustum;
     internal readonly CameraTransformSnapshot FrameTransforms;
     internal readonly CameraTransformSnapshot LightTransforms;
 
@@ -27,7 +26,6 @@ public sealed class CameraManager
 
         Camera = new Camera(EngineSettings.Current.Display.WindowSize);
         Frustum = new CameraFrustum();
-        LightFrustum = new CameraFrustum();
         FrameTransforms = new CameraTransformSnapshot();
         LightTransforms = new CameraTransformSnapshot();
     }
@@ -43,7 +41,7 @@ public sealed class CameraManager
         var shadowProj = shadow.Projection;
         var lightDir = VisualManager.Instance.Illumination.Direction;
         UpdateLightView(shadow.ShadowMapSize, shadowProj.Distance, shadowProj.ZPad, lightDir);
-        LightFrustum.Update(in LightTransforms.ProjectionViewMatrix);
+        Frustum.UpdateLight(in LightTransforms.ProjectionViewMatrix);
     }
 
 
@@ -56,7 +54,7 @@ public sealed class CameraManager
         frameTransforms.ProjectionMatrix = Camera.ProjectionMatrix;
         frameTransforms.ProjectionViewMatrix = frameTransforms.ViewMatrix * frameTransforms.ProjectionMatrix;
 
-        Frustum.Update(in frameTransforms.ProjectionViewMatrix);
+        Frustum.UpdateMain(in frameTransforms.ProjectionViewMatrix);
     }
 
     [SkipLocalsInit]

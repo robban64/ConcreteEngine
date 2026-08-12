@@ -28,22 +28,22 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
     public bool IsAlive(RenderEntityId e)
     {
         var index = e.Index();
-        return (uint)index < (uint)Capacity && _headers[index].Status != 0;
+        return (uint)index < (uint)Capacity && _policies[index].Status != 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsVisible(RenderEntityId e)
     {
         var index = e.Index();
-        return (uint)index < (uint)Capacity && _headers[index].Visible;
+        return (uint)index < (uint)Capacity && _policies[index].VisiblePassMask > 0;
     }
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetStatus(RenderEntityId entity, EntityStatus status)
+    public void SetStatus(RenderEntityId entity, EntityDrawStatus status)
     {
         if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
-        _headers[entity.Index()].Status = status;
+        _policies[entity.Index()].Status = status;
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -66,8 +66,7 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
         
         var entity = new RenderEntityId(index + 1);
 
-        if (_headers[index].Status != 0) Throwers.InvalidOperation("Entity already exists");
-        _headers[index] = new EntityHeader {Status = EntityStatus.Normal, Visible = true};
+        if (_policies[index].Status != 0) Throwers.InvalidOperation("Entity already exists");
         _sources[index] = source;
         _policies[index] = policy;
         ClearEntitySpatial(entity);

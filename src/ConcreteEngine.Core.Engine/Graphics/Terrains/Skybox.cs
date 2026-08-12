@@ -31,14 +31,14 @@ public sealed class Skybox
                 new RenderSource(MeshId, material.MaterialId),
                 new DrawPolicy(DrawQueue.Skybox, PassMask.Main));
             
-            RenderEcs.Core.GetWorldBounds(_entity) = BoundingBox.Zero;
+            RenderEcs.Core.GetWorldBounds(_entity) = default;
         }
         else
         {
             RenderEcs.Core.GetSource(_entity).Material = material.MaterialId;
         }
         
-        RenderEcs.Core.SetStatus(_entity, EntityStatus.AlwaysVisible);
+        RenderEcs.Core.SetStatus(_entity, EntityDrawStatus.AlwaysVisible);
 
     }
 }

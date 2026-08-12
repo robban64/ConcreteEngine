@@ -33,7 +33,7 @@ internal sealed  unsafe partial class EnvironmentSettingsInspector : Inspector<E
 {
     private static EnvironmentSettings Target => VisualManager.Instance.Environment;
 
-    public unsafe void Draw()
+    public void Draw()
     {
         AppDraw.CollapseSection("Ambient"u8, &DrawAmbient);
         AppDraw.CollapseSection("Fog"u8, &DrawFogSection);

@@ -6,16 +6,13 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.RenderEntity;
 
-public struct EntityHeader
+public struct DrawPolicy(DrawQueue queue, PassMask passes, EntityDrawStatus status = EntityDrawStatus.Normal)
 {
-    public bool Visible;
-    public EntityStatus Status;
-}
+    public EntityDrawStatus Status = status;
+    public PassMask VisiblePassMask = passes;
 
-public struct DrawPolicy(DrawQueue queue, PassMask passes)
-{
-    public DrawQueue Queue = queue;
-    public PassMask Passes = passes;
+    public readonly DrawQueue Queue = queue;
+    public readonly PassMask Passes = passes;
 }
 
 public struct RenderSource(MeshId mesh, Id16<Material> material, int meshIndex = 0, EntityDrawFlags flags = 0)

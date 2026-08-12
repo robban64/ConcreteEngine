@@ -10,17 +10,14 @@ namespace ConcreteEngine.Core.Engine.RenderEntity;
 
 public sealed unsafe partial class RenderEntityCore
 {
-    private EntityHeader* _headers;
     private RenderSource* _sources;
     private DrawPolicy* _policies;
 
-    private BoundingBox* _bounds;
+    private BoundingAxisBox* _bounds;
     private Matrix4x4* _models;
     private Matrix3X4* _normals;
 
     //
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref EntityHeader GetMeta(RenderEntityId e) => ref _headers[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref RenderSource GetSource(RenderEntityId e) => ref _sources[e.Index()];
@@ -29,7 +26,7 @@ public sealed unsafe partial class RenderEntityCore
     public ref DrawPolicy GetDrawPolicy(RenderEntityId e) => ref _policies[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoundingBox GetWorldBounds(RenderEntityId e) => ref _bounds[e.Index()];
+    public ref BoundingAxisBox GetWorldBounds(RenderEntityId e) => ref _bounds[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref Matrix4x4 GetModelMatrix(RenderEntityId e) => ref _models[e.Index()];
@@ -46,24 +43,24 @@ public sealed unsafe partial class RenderEntityCore
     public NativeView<DrawPolicy> GetDrawPolicyView() => new(_policies, 0, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<BoundingBox> GetWorldBoundView() => new(_bounds, 0, Count);
+    public NativeView<BoundingAxisBox> GetWorldBoundView() => new(_bounds, 0, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<Matrix4x4> GetModelMatrixView() => new(_models, 0, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<Matrix3X4> GetNormalMatrixView() => new(_normals, 0, Count);
-
+    //
+    
 
     //
     private void Allocate(int capacity)
     {
-        if (_headers != null || Capacity != 0) Throwers.InvalidOperation("Already allocated");
+        if (_sources != null || Capacity != 0) Throwers.InvalidOperation("Already allocated");
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 32);
-        _headers = (EntityHeader*)NativeArray.AllocatePointer<byte>(capacity);
         _sources = NativeArray.AllocatePointer<RenderSource>(capacity);
         _policies = NativeArray.AllocatePointer<DrawPolicy>(capacity);
-        _bounds = NativeArray.AllocatePointer<BoundingBox>(capacity, false);
+        _bounds = NativeArray.AllocatePointer<BoundingAxisBox>(capacity, false);
         _models = NativeArray.AllocatePointer<Matrix4x4>(capacity, false);
         _normals = NativeArray.AllocatePointer<Matrix3X4>(capacity, false);
 
@@ -72,7 +69,6 @@ public sealed unsafe partial class RenderEntityCore
 
     private void ClearEntityHeader(RenderEntityId e)
     {
-        _headers[e.Index()] = default;
         _sources[e.Index()] = default;
         _policies[e.Index()] = default;
     }
@@ -81,7 +77,7 @@ public sealed unsafe partial class RenderEntityCore
     {
         _models[e.Index()] = Matrix4x4.Identity;
         _normals[e.Index()] = Matrix3X4.Identity;
-        _bounds[e.Index()] = BoundingBox.One;
+        _bounds[e.Index()] = default;
     }
 
     private void EnsureCapacity(int amount)
@@ -92,7 +88,6 @@ public sealed unsafe partial class RenderEntityCore
         var newSize = CapacityUtils.CapacityGrowthToFit(Capacity, required);
         Logger.Log(LogScope.Ecs, "RenderEcs resized", LogLevel.Warn);
 
-        _headers = NativeArray.ReAlloc(_headers, Capacity, newSize, 0, true);
         _sources = NativeArray.ReAlloc(_sources, Capacity, newSize, 0, true);
         _policies = NativeArray.ReAlloc(_policies, Capacity, newSize, 0, true);
 
@@ -107,13 +102,11 @@ public sealed unsafe partial class RenderEntityCore
 
     public void Dispose()
     {
-        NativeArray.DisposeArray(_headers, Capacity * Unsafe.SizeOf<EntityHeader>(), 0);
         NativeArray.DisposeArray(_sources, Capacity * Unsafe.SizeOf<RenderSource>(), 0);
         NativeArray.DisposeArray(_policies, Capacity * Unsafe.SizeOf<DrawPolicy>(), 0);
         NativeArray.DisposeArray(_bounds, Capacity * Unsafe.SizeOf<BoundingBox>(), 0);
         NativeArray.DisposeArray(_models, Capacity * Unsafe.SizeOf<Matrix4x4>(), 0);
         NativeArray.DisposeArray(_normals, Capacity * Unsafe.SizeOf<Matrix3X4>(), 0);
-        _headers = null;
         _sources = null;
         _policies = null;
         _bounds = null;

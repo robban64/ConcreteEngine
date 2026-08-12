@@ -11,9 +11,8 @@ public record struct BoundingBox(Vector3 Min, Vector3 Max)
     [JsonInclude] public Vector3 Min = Min;
     [JsonInclude] public Vector3 Max = Max;
 
-    public static BoundingBox Zero => default;
-    public static BoundingBox One => new(-Vector3.One, Vector3.One);
-    public static BoundingBox Infinite => new(new Vector3(float.MaxValue), new Vector3(float.MinValue));
+    public static BoundingBox One { get; } = new(-Vector3.One, Vector3.One);
+    public static BoundingBox Infinite { get; } = new(new Vector3(float.MaxValue), new Vector3(float.MinValue));
 
     public readonly Vector3 Center
     {
@@ -28,6 +27,9 @@ public record struct BoundingBox(Vector3 Min, Vector3 Max)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly BoundingAxisBox ToAxisBox() => new(Center, Extent);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void FromPoint(Vector3 point)
     {
         Min = Vector3.Min(Min, point);
@@ -36,6 +38,13 @@ public record struct BoundingBox(Vector3 Min, Vector3 Max)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Expand(in BoundingBox other)
+    {
+        Min = Vector3.Min(Min, other.Min);
+        Max = Vector3.Max(Max, other.Max);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Expand(in BoundingAxisBox other)
     {
         Min = Vector3.Min(Min, other.Min);
         Max = Vector3.Max(Max, other.Max);
@@ -67,6 +76,7 @@ public record struct BoundingBox(Vector3 Min, Vector3 Max)
         result = new BoundingBox(min, max);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void FromAxisBox(in BoundingAxisBox axisBox, out BoundingBox result) =>
         result = new BoundingBox(axisBox.Min, axisBox.Max);
 
@@ -82,6 +92,17 @@ public record struct BoundingBox(Vector3 Min, Vector3 Max)
         }
 
         result = new BoundingBox(min, max);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsOutsidePlane(in BoundingBox box, in Plane plane)
+    {
+        var ext = box.Extent;
+        return Vector3.Dot(box.Center, plane.Normal)
+               + ext.X * MathF.Abs(plane.Normal.X)
+               + ext.Y * MathF.Abs(plane.Normal.Y)
+               + ext.Z * MathF.Abs(plane.Normal.Z)
+               <= -plane.D;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

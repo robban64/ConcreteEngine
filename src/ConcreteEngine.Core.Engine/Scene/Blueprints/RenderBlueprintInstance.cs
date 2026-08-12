@@ -15,14 +15,14 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
     protected readonly SceneObject Owner = owner;
     protected readonly List<RenderEntityId> RenderEntityIds = [];
 
-    protected BoundingBox WorldBounds;
+    protected BoundingAxisBox WorldBounds;
 
     public abstract RenderBlueprint GetBlueprint();
     public string DisplayName => GetBlueprint().DisplayName;
     public int EntityCount => RenderEntityIds.Count;
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(RenderEntityIds);
 
-    public ref readonly BoundingBox GetWorldBounds() => ref WorldBounds;
+    public ref readonly BoundingAxisBox GetWorldBounds() => ref WorldBounds;
 
     internal void MarkDirty(SceneDirtyFlags flag)
     {
@@ -55,7 +55,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
 
     public void ToggleVisibility(bool visible)
     {
-        var flag = visible ? EntityStatus.Normal : EntityStatus.ForceHidden;
+        var flag = visible ? EntityDrawStatus.Normal : EntityDrawStatus.ForceHidden;
         foreach (var entity in GetRenderEntities()) RenderEcs.Core.SetStatus(entity, flag);
     }
 
@@ -66,7 +66,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
             foreach (var entity in GetRenderEntities())
             {
                 RenderEcs.Store<SelectionComponent>().Add(entity, SelectionComponent.DefaultHighlight);
-                RenderEcs.Core.SetStatus(entity, EntityStatus.ForceHidden);
+                RenderEcs.Core.SetStatus(entity, EntityDrawStatus.ForceHidden);
             }
         }
         else
@@ -74,7 +74,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
             foreach (var entity in GetRenderEntities())
             {
                 RenderEcs.Store<SelectionComponent>().Remove(entity);
-                RenderEcs.Core.SetStatus(entity, EntityStatus.Normal);
+                RenderEcs.Core.SetStatus(entity, EntityDrawStatus.Normal);
             }
         }
         

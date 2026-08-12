@@ -12,7 +12,7 @@ internal sealed partial class TextureInspector : Inspector<TextureInspector>
 {
     public static Texture Target => (Texture)SelectionManager.Instance.SelectedAsset!;
 
-    public unsafe void Draw()
+    public void Draw()
     {
     }
 }

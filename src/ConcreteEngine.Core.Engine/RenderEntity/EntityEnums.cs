@@ -9,7 +9,7 @@ public enum EntityDrawFlags : byte
 }
 
 
-public enum EntityStatus : byte
+public enum EntityDrawStatus : byte
 {
     Unset = 0,
     ForceHidden = 1,

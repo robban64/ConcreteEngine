@@ -10,13 +10,13 @@ namespace ConcreteEngine.Core.Engine.Scene;
 public sealed class SceneTransform(SceneObject sceneObject)
 {
     private Transform _transform;
-    private BoundingBox _bounds;
+    private BoundingAxisBox _bounds;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly Transform GetTransform() => ref _transform;
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly BoundingBox GetBounds() => ref _bounds;
+    public ref readonly BoundingAxisBox GetBounds() => ref _bounds;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void GetTransformMatrix(out Matrix4x4 matrix) => MatrixMath.CreateModelMatrix(in _transform, out matrix);
@@ -72,7 +72,7 @@ public sealed class SceneTransform(SceneObject sceneObject)
         sceneObject.MarkDirty(SceneDirtyFlags.Transform);
     }
 
-    public void SetBounds(in BoundingBox bounds)
+    public void SetBounds(in BoundingAxisBox bounds)
     {
         _bounds = bounds;
         sceneObject.MarkDirty(SceneDirtyFlags.Transform);
@@ -89,7 +89,7 @@ public sealed class SceneTransform(SceneObject sceneObject)
             worldBounds.Expand(in instance.GetWorldBounds());
         }
 
-        SetBounds(worldBounds);
+        SetBounds(worldBounds.ToAxisBox());
     }
 
 }

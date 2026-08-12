@@ -6,15 +6,15 @@ namespace ConcreteEngine.Core.Common.Numerics.Maths;
 public static class FrustumMath
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ushort MakeDepthKey( Vector3 forward, Vector3 worldPos, Vector2 nearFar, float viewZ)
+    public static float MakeDepthKey(Vector3 forward, Vector3 worldPos, Vector2 nearFar, float viewZ)
     {
         const float maxValueF = 65535f;
 
         var d = Vector3.Dot(forward, worldPos) - viewZ;
         if (d <= nearFar.X) return 0;
-        if (d >= nearFar.Y) return ushort.MaxValue;
+        if (d >= nearFar.Y) return maxValueF;
         var t = (d - nearFar.X) / (nearFar.Y - nearFar.X);
-        return (ushort)(t * maxValueF + 0.5f);
+        return t * maxValueF + 0.5f;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

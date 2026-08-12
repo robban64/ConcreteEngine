@@ -105,6 +105,12 @@ public sealed class EngineRenderSystem : IDisposable
 
         // prepare buffers
         _drawPipeline.StageCommands(_resolver);
+
+        if (RenderResolver.avg.Ticks > 144)
+        {
+            RenderResolver.avg.ResetAndPrint("Cull");
+            DrawCommandPipeline.avg.ResetAndPrint("Stage");
+        }
     }
 
     public void ExecuteRenderPipeline()

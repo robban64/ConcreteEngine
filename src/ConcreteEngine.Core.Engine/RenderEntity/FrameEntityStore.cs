@@ -1,55 +1,62 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.RenderEntity;
 
+
 public sealed class FrameEntityStore : IDisposable
-{ 
+{
     public int VisibleCount { get; private set; }
 
-    private NativeArray<RenderEntityId> _visibleEntities;
-    
+    private NativeArray<DrawEntityCommand> _commands;
+
     internal FrameEntityStore(int capacity)
     {
-        _visibleEntities = NativeArray.Allocate<RenderEntityId>(capacity);
-    }
-    
-    public NativeView<RenderEntityId> VisibleEntities
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _visibleEntities.Slice(0, VisibleCount);
-    }
-    public ReadOnlySpan<RenderEntityId> VisibleSpan
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _visibleEntities.AsReadOnlySpan(0, VisibleCount);
+        _commands = NativeArray.Allocate<DrawEntityCommand>(capacity);
     }
 
-    internal NativeView<RenderEntityId> WriteVisibleEntities()
+    public NativeView<DrawEntityCommand> VisibleEntities
     {
-        if ((uint)RenderEcs.Core.Count > (uint)_visibleEntities.Length)
-            Throwers.BufferOverflow(nameof(_visibleEntities));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _commands.Slice(0, VisibleCount);
+    }
+
+    public ReadOnlySpan<DrawEntityCommand> VisibleSpan
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _commands.AsReadOnlySpan(0, VisibleCount);
+    }
+
+    internal NativeView<DrawEntityCommand> WriteVisibleEntities()
+    {
+        if ((uint)RenderEcs.Core.Count > (uint)_commands.Length)
+            Throwers.BufferOverflow(nameof(_commands));
 
         VisibleCount = 0;
-        return _visibleEntities.Slice(0, RenderEcs.Core.Count);
+        return _commands.Slice(0, RenderEcs.Core.Count);
     }
-    
+
+
     internal void CommitFrame(int visibleCount)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)visibleCount,  (uint)_visibleEntities.Length);
-        if(!_visibleEntities[visibleCount - 1].IsValid()) 
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)visibleCount, (uint)_commands.Length);
+        if (!_commands[visibleCount - 1].IsValid())
             Throwers.InvalidArgument(nameof(visibleCount));
-        
+
         VisibleCount = visibleCount;
     }
 
+    internal void Sort() => VisibleEntities.AsSpan().Sort();
+
     internal void Resize(int newSize)
     {
-        if(newSize <= _visibleEntities.Length) return;
-        _visibleEntities.ReAlloc(newSize, true);
+        if (newSize <= _commands.Length) return;
+        _commands.ReAlloc(newSize, true);
     }
-    
 
-    public void Dispose() => _visibleEntities.Dispose();
+
+    public void Dispose() => _commands.Dispose();
 }

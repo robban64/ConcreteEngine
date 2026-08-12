@@ -23,22 +23,20 @@ public sealed class RayCaster
         _camera = camera;
     }
 
-    public SceneObject? GetSceneObjectFromView(Vector2 screenCoords, out BoundingBox bounds, out float distance)
+    public SceneObject? GetSceneObjectFromView(Vector2 screenCoords, out float distance)
     {
         ScreenPointToRay(screenCoords, out var ray);
 
         distance = float.MaxValue;
-        bounds = default;
 
         RenderEntityId closestEntity = default;
         foreach (var query in RenderEcs.MakeVisibleQuery(RenderEcs.Core.GetWorldBoundView()))
         {
-            if (!SceneManager.Instance.IsLinkedEntity(query.Entity)) continue;
-            if (CollisionMethods.RayIntersectsBox(in ray, in query.Item1, out var dist) && dist < distance)
+            if (!SceneManager.Instance.IsLinkedEntity(query.EntityCmd)) continue;
+            if (CollisionMethods.RayIntersectsBox(in ray, query.Item1.Min, query.Item1.Max, out var dist) && dist < distance)
             {
                 distance = dist;
-                bounds = query.Item1;
-                closestEntity = query.Entity;
+                closestEntity = query.EntityCmd;
             }
         }
 

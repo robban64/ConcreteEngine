@@ -7,22 +7,71 @@ namespace ConcreteEngine.Core.Engine.Graphics;
 
 public sealed class CameraFrustum
 {
-    private BoundingFrustum _frustum;
+    private BoundingFrustum _mainFrustum;
+    private BoundingFrustum _lightFrustum;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Update(in Matrix4x4 projectionViewMatrix)
+    internal void UpdateMain(in Matrix4x4 projectionViewMatrix)
     {
         var transposed = Matrix4x4.Transpose(projectionViewMatrix);
-        BoundingFrustum.From(in transposed, out _frustum);
+        BoundingFrustum.From(in transposed, out _mainFrustum);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IntersectsBox(in BoundingBox box)
+    internal void UpdateLight(in Matrix4x4 projectionViewMatrix)
+    {
+        var transposed = Matrix4x4.Transpose(projectionViewMatrix);
+        BoundingFrustum.From(in transposed, out _lightFrustum);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public PassMask Intersects(PassMask passes, in BoundingAxisBox box)
+    {
+        var center = new Vector4(box.Center, 1f);
+        var extent = new Vector4(box.Extent, 0f);
+
+        var mask = PassMask.None;
+        if ((passes & PassMask.Main) != 0 && IntersectsMain(center, extent)) mask |= PassMask.Main;
+        if ((passes & PassMask.Depth) != 0 && IntersectsLight(center, extent)) mask |= PassMask.Depth;
+        return mask;
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool IntersectsMain(Vector4 center4, Vector4 extent4)
+    {
+        ref var planes = ref Unsafe.As<BoundingFrustum, Vector4>(ref _mainFrustum);
+        ref readonly var end = ref Unsafe.Add(ref planes, 5);
+        while (Unsafe.IsAddressLessThanOrEqualTo(ref planes, in end))
+        {
+            if (CollisionMethods.IsOutsidePlane(center4, extent4, ref planes)) return false;
+            planes = ref Unsafe.Add(ref planes, 1);
+        }
+
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool IntersectsLight(Vector4 center4, Vector4 extent4)
+    {
+        ref var planes = ref Unsafe.As<BoundingFrustum, Vector4>(ref _lightFrustum);
+        ref readonly var end = ref Unsafe.Add(ref planes, 5);
+        while (Unsafe.IsAddressLessThanOrEqualTo(ref planes, in end))
+        {
+            if (CollisionMethods.IsOutsidePlane(center4, extent4, ref planes)) return false;
+            planes = ref Unsafe.Add(ref planes, 1);
+        }
+
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IntersectsBoxOld(in BoundingAxisBox box)
     {
         Vector4 center4 = new Vector4(box.Center, 1f);
         Vector4 extent4 = new Vector4(box.Extent, 0f);
 
-        ref Vector4 planes = ref Unsafe.As<BoundingFrustum, Vector4>(ref _frustum);
+        ref Vector4 planes = ref Unsafe.As<BoundingFrustum, Vector4>(ref _mainFrustum);
 
         if (CollisionMethods.IsOutsidePlane(center4, extent4, ref Unsafe.Add(ref planes, 0))) return false;
         if (CollisionMethods.IsOutsidePlane(center4, extent4, ref Unsafe.Add(ref planes, 1))) return false;
@@ -33,20 +82,6 @@ public sealed class CameraFrustum
 
         return true;
     }
-/*
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IntersectsBox(in BoundingBox box)
-    {
-        var bounds = box;
-        ref var start = ref Unsafe.As<BoundingFrustum, Plane>(ref _frustum);
-        for (int i = 0; i < 6; ++i)
-        {
-            if (CollisionMethods.IsOutsidePlane(in bounds, in Unsafe.Add(ref start, i))) return false;
-        }
-
-        return true;
-    }
-*/
 }
 
 public sealed class CameraTransformSnapshot

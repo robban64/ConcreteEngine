@@ -15,16 +15,6 @@ public struct BoundingFrustum
     public Plane NearPlane;
     public Plane FarPlane;
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool IntersectsBox(in BoundingBox box)
-    {
-        return !IsOutsidePlane(in box, in LeftPlane) &&
-               !IsOutsidePlane(in box, in RightPlane) &&
-               !IsOutsidePlane(in box, in TopPlane) &&
-               !IsOutsidePlane(in box, in BottomPlane) &&
-               !IsOutsidePlane(in box, in NearPlane) &&
-               !IsOutsidePlane(in box, in FarPlane);
-    }
 
     public readonly void GetCorners(Span<Vector3> corners)
     {

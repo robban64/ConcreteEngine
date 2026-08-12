@@ -98,12 +98,12 @@ public sealed class ModelInstance : RenderBlueprintInstance
             MatrixMath.CreateNormalMatrix(ref RenderEcs.Core.GetNormalMatrix(entity), in finalMatrix);
 
             ref readonly var localBounds = ref Model.GetMesh(meshIndex).Bounds;
-            ref var worldBounds = ref RenderEcs.Core.GetWorldBounds(entity);
-            BoundingBox.GetWorldBounds(in localBounds, in finalMatrix, out worldBounds);
-            globalBounds.Expand(in worldBounds);
+            BoundingAxisBox.GetWorldBounds(in localBounds, in finalMatrix, out var entityBounds);
+            RenderEcs.Core.GetWorldBounds(entity) = entityBounds;
+            globalBounds.Expand(in entityBounds);
         }
 
-        WorldBounds = globalBounds;
+        WorldBounds = globalBounds.ToAxisBox();
 
     }
 }

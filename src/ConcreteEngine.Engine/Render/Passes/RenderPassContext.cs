@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Systems;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render.Passes;

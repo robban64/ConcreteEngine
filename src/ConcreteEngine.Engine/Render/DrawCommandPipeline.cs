@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Engine.Systems;
@@ -44,7 +45,7 @@ internal sealed class DrawCommandPipeline : IDisposable
     public void StageCommands(RenderResolver resolver)
     {
         avg.BeginSample();
-        ReadyDrawCommands();
+        ReadyDrawCommands(resolver.DrawIndices);
         avg.EndSample();
         UploadBuffers(resolver.Transforms);
     }
@@ -68,7 +69,7 @@ internal sealed class DrawCommandPipeline : IDisposable
     private void UploadBuffers(NativeView<TransformUniform> transforms)
     {
         // Ensure ubo size
-        var drawCount = IntMath.AlignUp(RenderEcs.VisibleCount, 64);
+        var drawCount = IntMath.AlignUp(transforms.Length, 64);
         var materialCount = IntMath.AlignUp(_materialSystem.Count, 16);
         var boneCount = IntMath.AlignUp(_animationSystem.BoneCount, 64);
 
@@ -93,16 +94,16 @@ internal sealed class DrawCommandPipeline : IDisposable
         if (boneData.Length > 0) _gfxBuffers.UploadUniform(boneData, 0);
     }
 
-    private unsafe void ReadyDrawCommands()
+    private unsafe void ReadyDrawCommands(NativeView<DrawEntityIndex> indices)
     {
-        if (RenderEcs.Frame.VisibleCount <= 1) return;
+        if (indices.Length <= 1) return;
 
         Array.Clear(_passRanges);
 
         var heads = stackalloc int[RenderLimits.PassSlots * 2];
 
         // Count pass tickets
-        CountTickets(RenderEcs.Frame.VisibleEntities, heads);
+        CountTickets(indices, heads);
 
         // Count pass ranges
         var total = CountPasses(heads);
@@ -115,14 +116,13 @@ internal sealed class DrawCommandPipeline : IDisposable
         }
 
         // fill tickets in sorted order
-        FillTickets(RenderEcs.Frame.VisibleEntities, heads + RenderLimits.PassSlots);
+        FillTickets(indices, heads + RenderLimits.PassSlots);
     }
 
     private unsafe void CountTickets(NativeView<DrawEntityIndex> indices, int* heads)
     {
         var drawIndex = indices.Ptr;
         var drawIndexEnd = drawIndex + indices.Length;
-
         while (drawIndex < drawIndexEnd)
         {
             var mask = (uint)drawIndex->Mask;
@@ -154,15 +154,14 @@ internal sealed class DrawCommandPipeline : IDisposable
 
     private unsafe void FillTickets(NativeView<DrawEntityIndex> indices, int* heads)
     {
-        // fill tickets in sorted order
-        var drawTickets = _drawTickets;
+        var drawTickets = _drawTickets.Ptr;
 
-        var submitIndex = 0;
         var drawIndex = indices.Ptr;
         var drawIndexEnd = drawIndex + indices.Length;
         while (drawIndex < drawIndexEnd)
         {
             var mask = (uint)drawIndex->Mask;
+            var submitIndex = (int)(drawIndex - indices);
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);
@@ -171,7 +170,6 @@ internal sealed class DrawCommandPipeline : IDisposable
                 mask &= mask - 1;
             }
             ++drawIndex;
-            ++submitIndex;
         }
     }
 

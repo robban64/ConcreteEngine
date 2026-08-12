@@ -1,51 +1,21 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Logging;
 
 namespace ConcreteEngine.Core.Engine.RenderEntity;
 
 public sealed unsafe partial class RenderEntityCore
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public QueryEnumerator<BoundingAxisBox> CullQuery(EntityDrawStatus skipFlag = EntityDrawStatus.ForceHidden) =>
-        new(_policies, _bounds, Count, skipFlag);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SparseQueryEnumerator<DrawPolicy, BoundingAxisBox> DrawPolicyQuery(NativeView<DrawEntityIndex> entities) =>
-        new(entities, _policies, _bounds, entities.Length);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SparseQueryEnumerator<Matrix4x4, Matrix3X4> TransformQuery(NativeView<DrawEntityIndex> entities) =>
-        new(entities, _models, _normals, entities.Length);
-
     //
     public readonly ref struct QueryItem<T1>(RenderEntityId entity, ref T1 item1) where T1 : unmanaged
     {
         public readonly RenderEntityId Entity = entity;
         public readonly ref T1 Item1 = ref item1;
     }
+
     public readonly ref struct QueryItem<T1, T2>(RenderEntityId entity, ref T1 item1, ref T2 item2)
         where T1 : unmanaged where T2 : unmanaged
     {
         public readonly RenderEntityId Entity = entity;
-        public readonly ref T1 Item1 = ref item1;
-        public readonly ref T2 Item2 = ref item2;
-    }
-
-    public readonly ref struct VisibleQueryItem<T1>(in DrawEntityIndex entityCmd, ref T1 item1) where T1 : unmanaged
-    {
-        public readonly ref readonly DrawEntityIndex EntityCmd = ref entityCmd;
-        public readonly ref T1 Item1 = ref item1;
-    }
-
-    public readonly ref struct VisibleQueryItem<T1, T2>(in DrawEntityIndex entityCmd, ref T1 item1, ref T2 item2)
-        where T1 : unmanaged where T2 : unmanaged
-    {
-        public readonly ref readonly DrawEntityIndex EntityCmd = ref entityCmd;
         public readonly ref T1 Item1 = ref item1;
         public readonly ref T2 Item2 = ref item2;
     }
@@ -58,13 +28,14 @@ public sealed unsafe partial class RenderEntityCore
         private int _entity;
         private readonly EntityDrawStatus _skipStatus;
 
-        public QueryEnumerator(DrawPolicy* current, T* p1, int length, EntityDrawStatus skipStatus)
+        public QueryEnumerator(NativeView<DrawPolicy> policies, NativeView<T> p1, EntityDrawStatus skipStatus)
         {
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(policies.Length, p1.Length);
             _skipStatus = skipStatus;
             _entity = 0;
-            _current = current - 1;
             _p1 = p1 - 1;
-            _end = current + length;
+            _current = policies.Ptr - 1;
+            _end = policies.Ptr + policies.Length;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -96,16 +67,9 @@ public sealed unsafe partial class RenderEntityCore
         private DrawEntityIndex* _current;
         private readonly DrawEntityIndex* _end;
 
-        public SparseQueryEnumerator(DrawEntityIndex* current, T* p1, int length)
-        {
-            _p1 = p1;
-            _current = current - 1;
-            _end = current + length;
-        }
         public SparseQueryEnumerator(NativeView<DrawEntityIndex> entities, NativeView<T> p1)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThan(entities.Length, p1.Length);
-
             _p1 = p1;
             _current = entities - 1;
             _end = entities + entities.Length;
@@ -115,10 +79,10 @@ public sealed unsafe partial class RenderEntityCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext() => ++_current < _end;
 
-        public readonly VisibleQueryItem<T> Current
+        public readonly QueryItem<T> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(in *_current, ref _p1[_current->Index()]);
+            get => new(*_current, ref _p1[_current->Index()]);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -144,25 +108,16 @@ public sealed unsafe partial class RenderEntityCore
             _end = entities + entities.Length;
         }
 
-        public SparseQueryEnumerator(DrawEntityIndex* entities, T1* p1, T2* p2, int length)
-        {
-            _p1 = p1;
-            _p2 = p2;
-            _current = entities - 1;
-            _end = entities + length;
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext() => ++_current < _end;
 
-        public readonly VisibleQueryItem<T1, T2> Current
+        public readonly QueryItem<T1, T2> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(in *_current, ref _p1[_current->Index()], ref _p2[_current->Index()]);
+            get => new(*_current, ref _p1[_current->Index()], ref _p2[_current->Index()]);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly SparseQueryEnumerator<T1, T2> GetEnumerator() => this;
     }
-
 }

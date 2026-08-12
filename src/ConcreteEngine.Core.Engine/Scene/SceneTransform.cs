@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Editor;
-using ConcreteEngine.Core.Engine.RenderEntity;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 

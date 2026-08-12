@@ -2,9 +2,9 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Core.Engine.Input;
-using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Systems;

@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
 
-namespace ConcreteEngine.Engine.Render;
+namespace ConcreteEngine.Core.Engine.Graphics;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct LightDataStruct(

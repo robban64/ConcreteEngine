@@ -50,9 +50,7 @@ public sealed class EngineRenderSystem : IDisposable
         RegisterCoreShaders(AssetManager.Assets);
         PassPipeline.RegisterFrameBuffers(_registry);
         PassPipeline.RegisterPassPipeline(_passPipeline);
-        
         VisualSystem.Instance.UploadPointLight();
-        _resolver.Setup();
     }
 
     internal void AfterUpdate()
@@ -98,8 +96,10 @@ public sealed class EngineRenderSystem : IDisposable
         CameraManager.Instance.CommitFrame(alpha);
 
         // process and upload draw commands
+        RenderResolver.avg.BeginSample();
         _resolver.Execute();
-        
+        RenderResolver.avg.EndSample();
+
         _particleSystem.Execute();
         _animationSystem.Execute(alpha);
 

@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.RenderEntity;
 
@@ -14,8 +15,7 @@ public sealed unsafe partial class RenderEntityCore
     private DrawPolicy* _policies;
 
     private BoundingAxisBox* _bounds;
-    private Matrix4x4* _models;
-    private Matrix3X4* _normals;
+    private TransformUniform* _transforms;
 
     //
 
@@ -29,11 +29,11 @@ public sealed unsafe partial class RenderEntityCore
     public ref BoundingAxisBox GetWorldBounds(RenderEntityId e) => ref _bounds[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix4x4 GetModelMatrix(RenderEntityId e) => ref _models[e.Index()];
+    public ref Matrix4x4 GetModelMatrix(RenderEntityId e) => ref _transforms[e.Index()].Model;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix3X4 GetNormalMatrix(RenderEntityId e) => ref _normals[e.Index()];
-
+    public ref Matrix3X4 GetNormalMatrix(RenderEntityId e) => ref _transforms[e.Index()].Normal;
+    
     //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -46,10 +46,8 @@ public sealed unsafe partial class RenderEntityCore
     public NativeView<BoundingAxisBox> GetWorldBoundView() => new(_bounds, 0, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<Matrix4x4> GetModelMatrixView() => new(_models, 0, Count);
+    public NativeView<TransformUniform> GetTransformView() => new(_transforms, 0, Count);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<Matrix3X4> GetNormalMatrixView() => new(_normals, 0, Count);
     //
     
 
@@ -61,8 +59,7 @@ public sealed unsafe partial class RenderEntityCore
         _sources = NativeArray.AllocatePointer<RenderSource>(capacity);
         _policies = NativeArray.AllocatePointer<DrawPolicy>(capacity);
         _bounds = NativeArray.AllocatePointer<BoundingAxisBox>(capacity, false);
-        _models = NativeArray.AllocatePointer<Matrix4x4>(capacity, false);
-        _normals = NativeArray.AllocatePointer<Matrix3X4>(capacity, false);
+        _transforms = NativeArray.AllocatePointer<TransformUniform>(capacity, false);
 
         Capacity = capacity;
     }
@@ -75,8 +72,8 @@ public sealed unsafe partial class RenderEntityCore
 
     private void ClearEntitySpatial(RenderEntityId e)
     {
-        _models[e.Index()] = Matrix4x4.Identity;
-        _normals[e.Index()] = Matrix3X4.Identity;
+        _transforms[e.Index()].Model = Matrix4x4.Identity;
+        _transforms[e.Index()].Normal = Matrix3X4.Identity;
         _bounds[e.Index()] = default;
     }
 
@@ -92,8 +89,7 @@ public sealed unsafe partial class RenderEntityCore
         _policies = NativeArray.ReAlloc(_policies, Capacity, newSize, 0, true);
 
         _bounds = NativeArray.ReAlloc(_bounds, Capacity, newSize, 0, false);
-        _models = NativeArray.ReAlloc(_models, Capacity, newSize, 0, false);
-        _normals = NativeArray.ReAlloc(_normals, Capacity, newSize, 0, false);
+        _transforms = NativeArray.ReAlloc(_transforms, Capacity, newSize, 0, false);
 
         Capacity = newSize;
         RenderEcs.OnResize(newSize);
@@ -105,13 +101,11 @@ public sealed unsafe partial class RenderEntityCore
         NativeArray.DisposeArray(_sources, Capacity * Unsafe.SizeOf<RenderSource>(), 0);
         NativeArray.DisposeArray(_policies, Capacity * Unsafe.SizeOf<DrawPolicy>(), 0);
         NativeArray.DisposeArray(_bounds, Capacity * Unsafe.SizeOf<BoundingBox>(), 0);
-        NativeArray.DisposeArray(_models, Capacity * Unsafe.SizeOf<Matrix4x4>(), 0);
-        NativeArray.DisposeArray(_normals, Capacity * Unsafe.SizeOf<Matrix3X4>(), 0);
+        NativeArray.DisposeArray(_transforms, Capacity * Unsafe.SizeOf<TransformUniform>(), 0);
         _sources = null;
         _policies = null;
         _bounds = null;
-        _models = null;
-        _normals = null;
+        _transforms = null;
 
         Count = 0;
         Capacity = 0;

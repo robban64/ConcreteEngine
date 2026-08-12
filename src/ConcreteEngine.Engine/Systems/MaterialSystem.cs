@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Graphics.Gfx;
 using static ConcreteEngine.Engine.Render.RenderLimits;

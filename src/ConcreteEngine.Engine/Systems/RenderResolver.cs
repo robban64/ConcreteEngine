@@ -1,53 +1,61 @@
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.RenderEntity;
-using ConcreteEngine.Engine.Render;
 
 namespace ConcreteEngine.Engine.Systems;
 
 internal sealed class RenderResolver : IDisposable
 {
+    public int VisibleCount { get; private set; }
+
     private readonly CameraFrustum _frustum;
+
+    private NativeArray<DrawEntityIndex> _indices;
     private NativeArray<TransformUniform> _transforms;
 
     internal RenderResolver(CameraFrustum frustum)
     {
         ArgumentNullException.ThrowIfNull(frustum);
         _frustum = frustum;
+        _indices = NativeArray.Allocate<DrawEntityIndex>(RenderEcs.Core.Capacity);
         _transforms = NativeArray.Allocate<TransformUniform>(RenderEcs.Core.Capacity, false);
     }
 
-    public NativeView<TransformUniform> Transforms => _transforms.Slice(0, RenderEcs.Frame.VisibleCount);
-
-    public void Setup() { }
+    public NativeView<DrawEntityIndex> DrawIndices => _indices.Slice(0, VisibleCount);
+    public NativeView<TransformUniform> Transforms => _transforms.Slice(0, VisibleCount);
 
     public void Execute()
     {
-        avg.BeginSample();
         Ensure();
+        
         var visibleCount = CullEntities();
-        RenderEcs.Frame.CommitFrame(visibleCount);
         if (visibleCount == 0) return;
+        if((uint)visibleCount > (uint)_indices.Length) 
+            Throwers.BufferOverflow(nameof(RenderResolver), visibleCount, _indices.Length);
+        Debug.Assert(_indices[VisibleCount - 1].IsValid());
+
+        DrawIndices.AsSpan().Sort();
         SubmitTransforms();
-        avg.EndSample();
     }
 
     public static AvgFrameTimer avg;
 
-
-    private int CullEntities()
+    private unsafe int CullEntities()
     {
         var forward = CameraManager.Instance.Camera.Forward;
         var viewZ = CameraManager.Instance.Camera.ViewMatrix.M43;
         var nearFar = CameraManager.Instance.Camera.NearFarPlane;
-
-        var index = 0;
-        var visibleEntities = RenderEcs.Frame.WriteVisibleEntities();
-        foreach (var query in RenderEcs.Core.CullQuery())
+        
+        var visibleEntities = _indices.Ptr;
+        foreach (var query in CullQuery())
         {
             var it = query.Item1;
             var mask = it.Status == EntityDrawStatus.AlwaysVisible
@@ -57,53 +65,39 @@ internal sealed class RenderResolver : IDisposable
             if (mask != 0)
             {
                 query.Item1.VisiblePassMask = mask;
-
                 var depthKey = FrustumMath.MakeDepthKey(forward, query.Item2.Center, nearFar, viewZ);
-                visibleEntities[index++] = new DrawEntityIndex(query.Entity, mask, it.Queue, (ushort)depthKey);
+                *visibleEntities++ = new DrawEntityIndex(query.Entity, mask, it.Queue, (ushort)depthKey);
             }
         }
-        return index;
+
+        return VisibleCount = (int)(visibleEntities - _indices);
     }
 
     private unsafe void SubmitTransforms()
     {
         var transforms = _transforms.Ptr;
-        foreach (var query in RenderEcs.Core.TransformQuery(RenderEcs.Frame.VisibleEntities))
+        foreach (var query in TransformQuery())
         {
-            transforms->Model = query.Item1;
-            transforms->Normal = query.Item2;
-            ++transforms;
+            *transforms++ = query.Item1;
         }
     }
 
     private void Ensure()
     {
-        if (RenderEcs.Core.Capacity != _transforms.Length)
-        {
-            _transforms.ReAlloc(RenderEcs.Core.Capacity, false);
-            Logger.Log(LogScope.Ecs, "Transform uniform buffer resized", LogLevel.Warn);
-        }
+        if (RenderEcs.Core.Capacity == _transforms.Length) return;
+
+        _indices.ReAlloc(RenderEcs.Core.Capacity, true);
+        _transforms.ReAlloc(RenderEcs.Core.Capacity, false);
+        Logger.Log(LogScope.Ecs, "Transform uniform buffer resized", LogLevel.Warn);
     }
-    
+
     public void Dispose() => _transforms.Dispose();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static RenderEntityCore.QueryEnumerator<BoundingAxisBox> CullQuery() =>
+        new(RenderEcs.Core.GetDrawPolicyView(), RenderEcs.Core.GetWorldBoundView(), EntityDrawStatus.ForceHidden);
 
-/*
-    private unsafe void SubmitDrawPolicy()
-    {
-        var forward = CameraManager.Instance.Camera.Forward;
-        var viewZ = CameraManager.Instance.Camera.ViewMatrix.M43;
-        var nearFar = CameraManager.Instance.Camera.NearFarPlane;
-
-        var indices = _drawIndices.Ptr;
-
-        var index = -1;
-        foreach (var it in RenderEcs.Core.DrawPolicyQuery(RenderEcs.Frame.VisibleEntities))
-        {
-            var depthKey = FrustumMath.MakeDepthKey(forward, it.Item2.Center, nearFar, viewZ);
-            *indices = new DrawCommandIndex(++index, it.Item1.VisibleMask, it.Item1.Queue, depthKey);
-            ++indices;
-        }
-    }
-*/
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private RenderEntityCore.SparseQueryEnumerator<TransformUniform> TransformQuery() =>
+        new(DrawIndices, RenderEcs.Core.GetTransformView());
 }

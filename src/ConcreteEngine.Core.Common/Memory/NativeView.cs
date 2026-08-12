@@ -38,10 +38,11 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
     public static implicit operator T*(NativeView<T> array) => array.Ptr;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T* operator +(NativeView<T> a, int b) => a.Ptr + b;
+    public static T* operator +(NativeView<T> a, nint b) => a.Ptr + b;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T* operator -(NativeView<T> a, int b) => a.Ptr - b;
+    public static T* operator -(NativeView<T> a, nint b) => a.Ptr - b;
+
 
     public ref T this[int index]
     {

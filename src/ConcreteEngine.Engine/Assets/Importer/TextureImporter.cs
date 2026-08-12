@@ -2,8 +2,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
-using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using StbImageSharp;
 

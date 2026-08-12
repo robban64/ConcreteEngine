@@ -1,15 +1,13 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Diagnostics.Logging;
 
 namespace ConcreteEngine.Core.Engine.RenderEntity;
 
 public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRenderComponent<T>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Enumerator GetEnumerator() => new(this);
+    public ComponentEnumerator GetEnumerator() => new(this);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public VisibilityQueryEnumerator VisibilityQuery() => new(_entities, _components, Count);
@@ -26,7 +24,7 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
         public readonly ref T Component = ref component;
     }
 
-    public ref struct Enumerator(RenderEntityStore<T> store)
+    public ref struct ComponentEnumerator(RenderEntityStore<T> store)
     {
         private int _i = -1;
         private RenderEntityId _currentEntity;
@@ -55,7 +53,7 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly Enumerator GetEnumerator() => this;
+        public readonly ComponentEnumerator GetEnumerator() => this;
     }
     
     public ref struct VisibilityQueryEnumerator

@@ -1,8 +1,6 @@
-using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Diagnostics.Time;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Core.Engine.Input;

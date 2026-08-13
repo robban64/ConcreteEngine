@@ -108,13 +108,25 @@ public sealed class EngineRenderSystem : IDisposable
         _drawPipeline.ReadyDrawCommands(_resolver.DrawIndices);
     }
 
+    private static AvgFrameTimer avg;
     public void ExecuteRenderPipeline()
     {
-        while (_passPipeline.NextPass(out var result))
+        while (true)
         {
-            if (result.NextAction == NextPassAction.Skip) continue;
+            avg.BeginSample();
+            if (!_passPipeline.NextPass(out var result))
+            {
+                avg.EndSample();
+                break;
+            }
+            if (result.NextAction == NextPassAction.Skip)
+            {
+                avg.EndSample();
+                continue;
+            }
 
             var passResult = _passPipeline.ApplyPass();
+            avg.EndSample();
             if (passResult.Op is PassOp.Draw)
             {
                 _drawPipeline.ExecuteDrawPass(result.Pass);
@@ -122,6 +134,8 @@ public sealed class EngineRenderSystem : IDisposable
 
             _passPipeline.ApplyAfterPass();
         }
+
+        if (avg.Ticks > 80 * 10) avg.ResetAndPrint();
     }
 
     public void Dispose()

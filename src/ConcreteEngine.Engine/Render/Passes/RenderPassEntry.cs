@@ -1,70 +1,63 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render.Passes;
 
-
-internal sealed class RenderPassEntry
+internal sealed class RenderPassEntry : IComparable<PassTargetKey>
 {
-    private static PassAction NoOpPass(RenderPassProgram ctx, RenderPassState state) => default;
+    private static PassAction NoOpPass(RenderPassProgram ctx, GfxPassState state) => default;
 
-    public PassTargetKey PassKey { get; private set; }
+    public PassTargetKey PassKey { get; }
     public PassOp PassOp { get; private set; }
-    public PassTargetKey? DependsOn { get; }
 
-    private Func<RenderPassProgram, RenderPassState, PassAction> _applyPassDel = NoOpPass;
-    private Action<RenderPassProgram, RenderPassState>? _applyAfterPassDel;
+    public RenderPassState State;
+    private GfxPassState _gfxPassState;
+    
+    private readonly TextureId[] _sources = new TextureId[8];
 
-    private RenderPassState _state;
+    private Func<RenderPassProgram, GfxPassState, PassAction> _applyPassDel = NoOpPass;
+    private Action<RenderPassProgram, GfxPassState>? _applyAfterPassDel;
 
-    private PassMutationState _pendingState;
-    private bool _hasPending;
-
-
-    internal RenderPassEntry(PassTargetKey passKey, PassOp passOp, RenderPassState initial,
-        PassTargetKey? dependsOn = null)
+    internal RenderPassEntry(PassTargetKey key, PassOp op, GfxPassState gfxState, ShaderId passShader, bool linearFilter)
     {
-        PassKey = passKey;
-        PassOp = passOp;
-        DependsOn = dependsOn;
-        _state = initial;
+        PassKey = key;
+        PassOp = op;
+        _gfxPassState = gfxState;
+        State.PassShader = passShader;
+        State.LinearFilter = linearFilter;
     }
 
-    public RenderPassEntry OnPassBegin(Func<RenderPassProgram, RenderPassState, PassAction> op)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<TextureId> GetSources() => _sources;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetSourceSlot(byte slot, TextureId id) => _sources[slot] = id;
+    
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public PassAction ApplyPass(RenderPassProgram ctx)
+    {
+        return _applyPassDel(ctx, _gfxPassState);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ApplyAfterPass(RenderPassProgram ctx)
+    {
+        _applyAfterPassDel?.Invoke(ctx, _gfxPassState);
+        Array.Clear(_sources);
+    }
+
+    public RenderPassEntry OnPassBegin(Func<RenderPassProgram, GfxPassState, PassAction> op)
     {
         _applyPassDel = op;
         return this;
     }
 
-    public RenderPassEntry OnPassEnd(Action<RenderPassProgram, RenderPassState> op)
+    public RenderPassEntry OnPassEnd(Action<RenderPassProgram, GfxPassState> op)
     {
         _applyAfterPassDel = op;
         return this;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateState(in PassMutationState replace)
-    {
-        _pendingState = replace;
-        _hasPending = true;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public PassAction ApplyPass(RenderPassProgram ctx)
-    {
-        ApplyPending();
-        return _applyPassDel(ctx,  _state);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ApplyAfterPass(RenderPassProgram ctx) => _applyAfterPassDel?.Invoke(ctx,  _state);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ApplyPending()
-    {
-        if (!_hasPending) return;
-
-        _state = _state.FromMutation(in _pendingState);
-        _pendingState = default;
-        _hasPending = false;
-    }
+    public int CompareTo(PassTargetKey other) => PassKey.CompareTo(other);
 }

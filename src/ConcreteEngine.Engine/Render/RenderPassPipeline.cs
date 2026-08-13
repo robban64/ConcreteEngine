@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Engine.Render.Passes;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render;
 
@@ -8,7 +9,7 @@ internal sealed class RenderPassPipeline
 {
     private int _activePassIndex;
     private int _passCount;
-    
+
     private readonly RenderPassEntry[] _entries;
     private readonly RenderPassProgram _program;
     private readonly RenderRegistry _renderRegistry;
@@ -16,8 +17,8 @@ internal sealed class RenderPassPipeline
     internal RenderPassPipeline(DrawCommandProcessor cmd, RenderRegistry renderRegistry)
     {
         _renderRegistry = renderRegistry;
-        _program = new RenderPassProgram(cmd);
         _entries = new RenderPassEntry[16];
+        _program = new RenderPassProgram(cmd, _entries);
     }
 
     internal void ResetFrame()
@@ -39,23 +40,17 @@ internal sealed class RenderPassPipeline
         var passEntry = _entries[_activePassIndex];
         var passKey = passEntry.PassKey;
 
-        var key = passEntry.DependsOn is { } dependsOnKey
-            ? new FboKey(dependsOnKey.TagIndex, passKey.Variant)
-            : new FboKey(passKey.TagIndex, passKey.Variant);
-
         var action = NextPassAction.Run;
 
-        if (_renderRegistry.TryGetRenderFbo(key, out var fbo))
-            _program.AttachPass(fbo.FboId, passKey);
+        if (_renderRegistry.TryGetRenderFbo(passKey, out var fbo))
+            _program.AttachPass(fbo.FboId, passKey, passEntry.State);
         else if (passEntry.PassOp == PassOp.Screen)
-            _program.AttachScreenPass(passKey);
+            _program.AttachScreenPass(passKey, passEntry.State);
         else
             action = NextPassAction.Skip;
 
-        _program.DequeueMutationTo(passEntry);
-        _program.DequeuePassSources(passEntry.PassKey);
 
-        result = (passEntry.PassKey.Pass, action);
+        result = (passKey.Pass, action);
         return true;
     }
 
@@ -65,30 +60,21 @@ internal sealed class RenderPassPipeline
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void ApplyAfterPass() => _entries[_activePassIndex++].ApplyAfterPass(_program);
 
-
-    public RenderPassEntry RegisterContinue<TTarget>(FboVariant variant, PassOp op, RenderPassState initial)
-        where TTarget : unmanaged, IRenderTarget
-    {
-        var existingKey = RenderRegistry.TargetRegistry<TTarget>.PassKey(variant);
-        return AddPassEntry(existingKey with { Pass = new PassId(_passCount) }, op, initial);
-    }
-
-
-    public RenderPassEntry Register<TTarget>(FboVariant variant, PassOp op, RenderPassState initial)
+    public RenderPassEntry Register<TTarget>(FboVariant variant, PassOp op, GfxPassState gfxState, ShaderId shaderId  = default, bool linearFilter = false)
         where TTarget : unmanaged, IRenderTarget
     {
         var key = RenderRegistry.TargetRegistry<TTarget>.BindPassTarget(variant, new PassId(_passCount));
-        return AddPassEntry(key, op, initial);
+        return AddPassEntry(key, op, gfxState, shaderId, linearFilter);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private RenderPassEntry AddPassEntry(PassTargetKey key, PassOp op, RenderPassState initial)
+    private RenderPassEntry AddPassEntry(PassTargetKey key, PassOp op, GfxPassState gfxState, ShaderId shaderId, bool linearFilter)
     {
         foreach (var e in _entries.AsSpan(0, _passCount))
         {
             if (e.PassKey == key) Throwers.InvalidArgument("Duplicated passes");
         }
 
-        return _entries[_passCount++] = new RenderPassEntry(key, op, initial);
+        return _entries[_passCount++] = new RenderPassEntry(key, op, gfxState, shaderId, linearFilter);
     }
 }

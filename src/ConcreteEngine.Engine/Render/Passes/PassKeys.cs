@@ -32,6 +32,9 @@ public readonly record struct PassId(byte Value) : IComparable<PassId>
 public readonly record struct PassTargetKey(byte TagIndex, FboVariant Variant, PassId Pass) : IComparable<PassTargetKey>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator FboKey(PassTargetKey id) => new(id.TagIndex, id.Variant);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(PassTargetKey other)
     {
         var c = Pass.CompareTo(other.Pass);
@@ -42,7 +45,7 @@ public readonly record struct PassTargetKey(byte TagIndex, FboVariant Variant, P
     }
 }
 
-public readonly record struct PassTextureSlotKey(byte TagIndex, FboVariant Variant, PassId Pass, byte TextureSlot)
+public readonly record struct PassTextureSlotKey(byte TagIndex, FboVariant Variant, PassId Pass, byte TextureSlot, TextureId Texture)
     : IComparable<PassTextureSlotKey>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

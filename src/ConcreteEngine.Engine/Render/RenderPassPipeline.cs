@@ -66,20 +66,18 @@ internal sealed class RenderPassPipeline
     internal void ApplyAfterPass() => _entries[_activePassIndex++].ApplyAfterPass(_program);
 
 
-    public RenderPassEntry RegisterContinue<TTarget>(FboVariant variant, PassId passId, PassOp op,
-        RenderPassState initial)
+    public RenderPassEntry RegisterContinue<TTarget>(FboVariant variant, PassOp op, RenderPassState initial)
         where TTarget : unmanaged, IRenderTarget
     {
         var existingKey = RenderRegistry.TargetRegistry<TTarget>.PassKey(variant);
-        if (existingKey.Pass == passId) Throwers.InvalidArgument(nameof(passId));
-        return AddPassEntry(existingKey with { Pass = passId }, op, initial);
+        return AddPassEntry(existingKey with { Pass = new PassId(_passCount) }, op, initial);
     }
 
 
-    public RenderPassEntry Register<TTarget>(FboVariant variant, PassId passId, PassOp op, RenderPassState initial)
+    public RenderPassEntry Register<TTarget>(FboVariant variant, PassOp op, RenderPassState initial)
         where TTarget : unmanaged, IRenderTarget
     {
-        var key = RenderRegistry.TargetRegistry<TTarget>.BindPassTarget(variant, passId);
+        var key = RenderRegistry.TargetRegistry<TTarget>.BindPassTarget(variant, new PassId(_passCount));
         return AddPassEntry(key, op, initial);
     }
 

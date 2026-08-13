@@ -14,7 +14,7 @@ internal static partial class PassPipeline
     public static void RegisterPassPipeline(RenderPassPipeline passPipeline)
     {
         // Shadow
-        passPipeline.Register<ShadowTarget>(FboVariant.V0, new PassId(0), PassOp.Draw, RenderPassState.MakeShadow())
+        passPipeline.Register<ShadowTarget>(FboVariant.V0, PassOp.Draw, RenderPassState.MakeShadow())
             .OnPassBegin(static (ctx, state) =>
             {
                 ctx.ActivateDepthMode(); // Note!
@@ -30,8 +30,7 @@ internal static partial class PassPipeline
 
         // Scene 
         // Pass 1: draw scene 
-
-        passPipeline.Register<SceneTarget>(FboVariant.V0, new PassId(1), PassOp.Draw, RenderPassState.MakeSceneMsaa())
+        passPipeline.Register<SceneTarget>(FboVariant.V0, PassOp.Draw, RenderPassState.MakeSceneMsaa())
             .OnPassBegin(static (ctx, state) =>
             {
                 ctx.Gfx.BeginRenderPass(ctx.FboId, state.PassState);
@@ -43,7 +42,7 @@ internal static partial class PassPipeline
                 ctx.MutateStatePass<SceneTarget>(FboVariant.V1, PassMutationState.MutateTarget(ctx.FboId));
                 var selectionCount = RenderEcs.Store<SelectionComponent>().Count;
                 var debugBoundsCount = RenderEcs.Store<DebugBoundsComponent>().Count;
-                if(selectionCount + debugBoundsCount == 0) return;
+                if (selectionCount + debugBoundsCount == 0) return;
 
                 ctx.Gfx.BindFramebuffer(ctx.FboId);
                 ctx.Gfx.ApplyPassState(Blend | Cull | Srgb | ColorMask | Ac2);
@@ -54,8 +53,7 @@ internal static partial class PassPipeline
 
 
         // Pass 3: resolve to scene FBO to post FBO
-        passPipeline.Register<SceneTarget>(FboVariant.V1, new PassId(2), PassOp.Resolve,
-                RenderPassState.MakeResolve())
+        passPipeline.Register<SceneTarget>(FboVariant.V1, PassOp.Resolve, RenderPassState.MakeResolve())
             .OnPassBegin(static (ctx, state) =>
             {
                 ctx.Gfx.BlitFramebuffer(state.TargetFboId, ctx.FboId, state.LinearFilter);
@@ -70,7 +68,7 @@ internal static partial class PassPipeline
             });
 
         // Post A
-        passPipeline.Register<PostFxTarget>(FboVariant.V0, new PassId(3), PassOp.Fsq,
+        passPipeline.Register<PostFxTarget>(FboVariant.V0, PassOp.Fsq,
                 RenderPassState.MakePostProcess(RenderRegistry.CompositeShader))
             .OnPassBegin(static (ctx, state) =>
             {
@@ -85,7 +83,7 @@ internal static partial class PassPipeline
             });
 
         // Post B
-        passPipeline.Register<PostFxTarget>(FboVariant.V1, new PassId(4), PassOp.Fsq,
+        passPipeline.Register<PostFxTarget>(FboVariant.V1, PassOp.Fsq,
                 RenderPassState.MakePostProcess(RenderRegistry.ColorFilterShader))
             .OnPassBegin(static (ctx, state) =>
             {
@@ -100,7 +98,7 @@ internal static partial class PassPipeline
             });
 
         // Screen
-        passPipeline.Register<OutputTarget>(FboVariant.V0, new PassId(5), PassOp.Screen,
+        passPipeline.Register<OutputTarget>(FboVariant.V0, PassOp.Screen,
                 RenderPassState.MakeScreen(RenderRegistry.PresentShader))
             .OnPassBegin(static (ctx, state) =>
             {

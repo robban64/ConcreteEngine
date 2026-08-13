@@ -12,12 +12,12 @@ namespace ConcreteEngine.Engine.Render;
 
 internal static partial class PassPipeline
 {
-    private static unsafe void SelectionRenderer(RenderPassContext ctx)
+    private static unsafe void SelectionRenderer(RenderPassProgram ctx)
     {
         TransformUniform* uniform = stackalloc TransformUniform[1];
         EditorEffectsUniform* effect = stackalloc EditorEffectsUniform[1];
 
-        ctx.Cmd.UseShader(RenderRegistry.HighlightShader);
+        ctx.Gfx.UseShader(RenderRegistry.HighlightShader);
         RenderContext.OverrideShader = RenderRegistry.HighlightShader;
 
         foreach (var query in RenderEcs.Store<SelectionComponent>().VisibilityQuery())
@@ -29,26 +29,26 @@ internal static partial class PassPipeline
             uniform->Model = RenderEcs.Core.GetModelMatrix(query.Entity);
             uniform->Normal = Matrix3X4.Identity;
 
-            ctx.Buffers.UploadSingleUniform(effect, 0);
-            ctx.Buffers.UploadSingleUniform(uniform, 0);
-            ctx.Cmd.BindUniformBufferRange<TransformUniform>(0, 1);
+            ctx.GfxBuffers.UploadSingleUniform(effect, 0);
+            ctx.GfxBuffers.UploadSingleUniform(uniform, 0);
+            ctx.Gfx.BindUniformBufferRange<TransformUniform>(0, 1);
 
-            if (source.IsSkinned()) ctx.DrawCmdProcessor.BindSkinningSlot(query.Entity);
+            if (source.IsSkinned()) ctx.DrawCmd.BindSkinningSlot(query.Entity);
 
-            ctx.DrawCmdProcessor.BindMaterial(source.Material);
+            ctx.DrawCmd.BindMaterial(source.Material);
 
-            ctx.Cmd.DrawMesh(source.Mesh);
+            ctx.Gfx.DrawMesh(source.Mesh);
         }
     }
 
-    private static unsafe void DebugBoundsRenderer(RenderPassContext ctx)
+    private static unsafe void DebugBoundsRenderer(RenderPassProgram ctx)
     {
         TransformUniform* uniform = stackalloc TransformUniform[1];
         EditorEffectsUniform* effect = stackalloc EditorEffectsUniform[1];
         RenderContext.OverrideShader = RenderRegistry.BoundingBoxShader;
 
         var materialId = AssetStore.Core.DebugBoundsMaterial.MaterialId;
-        ctx.Cmd.UseShader(RenderRegistry.BoundingBoxShader);
+        ctx.Gfx.UseShader(RenderRegistry.BoundingBoxShader);
 
         foreach (var query in RenderEcs.Store<DebugBoundsComponent>().VisibilityQuery())
         {
@@ -59,12 +59,12 @@ internal static partial class PassPipeline
             MatrixMath.CreateModelMatrix(wb.Center, wb.Extent, Quaternion.Identity, out uniform->Model);
             uniform->Normal = Matrix3X4.Identity;
 
-            ctx.Buffers.UploadSingleUniform(effect, 0);
-            ctx.Buffers.UploadSingleUniform(uniform, 0);
-            ctx.Cmd.BindUniformBufferRange<TransformUniform>(0, 1);
+            ctx.GfxBuffers.UploadSingleUniform(effect, 0);
+            ctx.GfxBuffers.UploadSingleUniform(uniform, 0);
+            ctx.Gfx.BindUniformBufferRange<TransformUniform>(0, 1);
 
-            ctx.DrawCmdProcessor.BindMaterial(materialId);
-            ctx.Cmd.DrawMesh(GfxMeshes.Cube);
+            ctx.DrawCmd.BindMaterial(materialId);
+            ctx.Gfx.DrawMesh(GfxMeshes.Cube);
         }
     }
 }

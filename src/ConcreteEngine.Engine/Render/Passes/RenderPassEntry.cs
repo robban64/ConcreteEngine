@@ -5,14 +5,14 @@ namespace ConcreteEngine.Engine.Render.Passes;
 
 internal sealed class RenderPassEntry
 {
-    private static PassAction NoOpPass(RenderPassContext ctx, RenderPassState state) => default;
+    private static PassAction NoOpPass(RenderPassProgram ctx, RenderPassState state) => default;
 
     public PassTargetKey PassKey { get; private set; }
     public PassOp PassOp { get; private set; }
     public PassTargetKey? DependsOn { get; }
 
-    private Func<RenderPassContext, RenderPassState, PassAction> _applyPassDel = NoOpPass;
-    private Action<RenderPassContext, RenderPassState>? _applyAfterPassDel;
+    private Func<RenderPassProgram, RenderPassState, PassAction> _applyPassDel = NoOpPass;
+    private Action<RenderPassProgram, RenderPassState>? _applyAfterPassDel;
 
     private RenderPassState _state;
 
@@ -29,13 +29,13 @@ internal sealed class RenderPassEntry
         _state = initial;
     }
 
-    public RenderPassEntry OnPassBegin(Func<RenderPassContext, RenderPassState, PassAction> op)
+    public RenderPassEntry OnPassBegin(Func<RenderPassProgram, RenderPassState, PassAction> op)
     {
         _applyPassDel = op;
         return this;
     }
 
-    public RenderPassEntry OnPassEnd(Action<RenderPassContext, RenderPassState> op)
+    public RenderPassEntry OnPassEnd(Action<RenderPassProgram, RenderPassState> op)
     {
         _applyAfterPassDel = op;
         return this;
@@ -49,14 +49,14 @@ internal sealed class RenderPassEntry
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public PassAction ApplyPass(RenderPassContext ctx)
+    public PassAction ApplyPass(RenderPassProgram ctx)
     {
         ApplyPending();
         return _applyPassDel(ctx,  _state);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ApplyAfterPass(RenderPassContext ctx) => _applyAfterPassDel?.Invoke(ctx,  _state);
+    public void ApplyAfterPass(RenderPassProgram ctx) => _applyAfterPassDel?.Invoke(ctx,  _state);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ApplyPending()

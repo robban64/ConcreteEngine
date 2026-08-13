@@ -5,30 +5,32 @@ using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render.Passes;
 
-internal sealed class RenderPassContext
+internal sealed class RenderPassProgram
 {
-    private int _textureSlotHigh;
-
     public FrameBufferId FboId { get; private set; }
     public PassTargetKey CurrentPassKey { get; private set; }
 
-    public readonly DrawCommandProcessor DrawCmdProcessor;
+    public readonly DrawCommandProcessor DrawCmd;
+
+    private int _sourceSlotHigh;
+    private int _sourceCount;
+    private int _mutationCount;
 
     private readonly TextureId[] _textureSlots;
-    private readonly PriorityQueue<TextureId, PassTextureSlotKey> _sourceQueue;
-    private readonly PriorityQueue<PassMutationState, PassTargetKey> _mutationQueue;
+    private readonly (TextureId Texture, PassTextureSlotKey Key)[] _sourceQueue;
+    private readonly (PassMutationState State, PassTargetKey Key)[] _mutationQueue;
 
-    internal RenderPassContext(DrawCommandProcessor drawCmdProcessor)
+    internal RenderPassProgram(DrawCommandProcessor drawCmd)
     {
-        ArgumentNullException.ThrowIfNull(drawCmdProcessor);
-        DrawCmdProcessor = drawCmdProcessor;
-        _sourceQueue = new PriorityQueue<TextureId, PassTextureSlotKey>(4, new PassTextureSlotKeyComp());
-        _mutationQueue = new PriorityQueue<PassMutationState, PassTargetKey>(4, new PassTagKeyComp());
+        ArgumentNullException.ThrowIfNull(drawCmd);
+        DrawCmd = drawCmd;
+        _sourceQueue = new (TextureId, PassTextureSlotKey)[8];
+        _mutationQueue = new (PassMutationState State, PassTargetKey Key)[8];
         _textureSlots = new TextureId[RenderLimits.TextureSlots];
     }
 
-    public GfxCommands Cmd => DrawCmdProcessor.GfxCmd;
-    public GfxBuffers Buffers => DrawCmdProcessor.GfxBuffers;
+    public GfxCommands Gfx => DrawCmd.GfxCmd;
+    public GfxBuffers GfxBuffers => DrawCmd.GfxBuffers;
 
     public ref readonly FrameBufferMeta Target
     {
@@ -39,9 +41,11 @@ internal sealed class RenderPassContext
     internal void Reset()
     {
         FboId = default;
-        _textureSlotHigh = 0;
-        _sourceQueue.Clear();
-        _mutationQueue.Clear();
+        _sourceSlotHigh = 0;
+        _sourceCount = 0;
+        _mutationCount = 0;
+        Array.Clear(_sourceQueue);
+        Array.Clear(_mutationQueue);
         Array.Clear(_textureSlots);
     }
 
@@ -60,7 +64,7 @@ internal sealed class RenderPassContext
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<TextureId> GetPassSources() => new(_textureSlots, 0, int.Max(_textureSlotHigh, 1));
+    public ReadOnlySpan<TextureId> GetPassSources() => new(_textureSlots, 0, int.Max(_sourceSlotHigh, 1));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SampleTo<TTarget>(FboVariant variant, byte slot, TextureId texture)
@@ -69,38 +73,53 @@ internal sealed class RenderPassContext
         Debug.Assert(slot < RenderLimits.TextureSlots);
         var passKey = RenderRegistry.TargetRegistry<TTarget>.PassKey(variant);
         var key = new PassTextureSlotKey(passKey.TagIndex, passKey.Variant, passKey.Pass, slot);
-        _sourceQueue.Enqueue(texture, key);
+        _sourceQueue[_sourceCount++] = (texture, key);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void MutateStatePass<TTarget>(FboVariant variant, in PassMutationState newState)
         where TTarget : unmanaged, IRenderTarget
     {
         var key = RenderRegistry.TargetRegistry<TTarget>.PassKey(variant);
-        _mutationQueue.Enqueue(newState, key);
+        _mutationQueue[_mutationCount++] = (newState, key);
     }
 
     public void DequeueMutationTo(RenderPassEntry entry)
     {
-        while (_mutationQueue.TryPeek(out _, out var k) && k.TagIndex == entry.PassKey.TagIndex)
+        var key = entry.PassKey.TagIndex;
+        var span = _mutationQueue.AsSpan(0, _mutationCount);
+        span.Sort();
+        foreach (ref readonly var it in span)
         {
-            _mutationQueue.TryDequeue(out var state, out k);
-            entry.UpdateState(state);
+            if (it.Key.TagIndex == key)
+            {
+                entry.UpdateState(in it.State);
+            }
         }
     }
 
-    public void DequeuePassSources(RenderPassEntry entry)
+    public void DequeuePassSources(PassTargetKey key)
     {
-        var tagIndex = entry.PassKey.TagIndex;
-
-        _textureSlotHigh = 0;
+        if(_sourceCount == 0) return;
+        
         Array.Clear(_textureSlots);
 
-        while (_sourceQueue.TryPeek(out _, out var k) && k.TagIndex == tagIndex)
+        var textureSlotHigh = 0;
+
+        var span = _sourceQueue.AsSpan(0, _sourceCount);
+        span.Sort();
+        
+        foreach (var it in span)
         {
-            _sourceQueue.TryDequeue(out var id, out k);
-            _textureSlots[k.TextureSlot] = id;
-            _textureSlotHigh = int.Max(_textureSlotHigh, k.TextureSlot);
+            if (it.Key.TagIndex == key.TagIndex)
+            {
+                _textureSlots[it.Key.TextureSlot] = it.Texture;
+                textureSlotHigh = int.Max(textureSlotHigh, it.Key.TextureSlot);
+            }
         }
+
+        _sourceSlotHigh = textureSlotHigh;
+
     }
 
     //

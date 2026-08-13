@@ -2,7 +2,7 @@ namespace ConcreteEngine.Engine.Render.Passes;
 
 public interface IRenderTarget
 {
-   static abstract RenderTargetKind TargetKind { get; }
+    static abstract RenderTargetKind TargetKind { get; }
 }
 
 public struct SceneTarget : IRenderTarget
@@ -26,11 +26,6 @@ public struct PostFxTarget : IRenderTarget
 }
 
 public struct OutputTarget : IRenderTarget
-{
-    public static RenderTargetKind TargetKind => RenderTargetKind.Screen;
-}
-
-public struct ScreenPassTag : IRenderTarget
 {
     public static RenderTargetKind TargetKind => RenderTargetKind.Screen;
 }

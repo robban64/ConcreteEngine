@@ -12,10 +12,9 @@ public struct PassMutationState
     private const byte HasFboBit = 1 << 2;
     private const byte HasShaderBit = 1 << 3;
 
+    public GfxPassState PassState;
     public FrameBufferId TargetFboId;
     public ShaderId ShaderId;
-    public GfxPassState PassState;
-
     private byte _mask;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

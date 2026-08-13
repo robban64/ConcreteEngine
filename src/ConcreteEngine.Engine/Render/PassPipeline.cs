@@ -5,12 +5,12 @@ using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Graphics.Gfx;
+using static ConcreteEngine.Graphics.Gfx.GfxStateFlags;
 
 namespace ConcreteEngine.Engine.Render;
 
 internal static partial class PassPipeline
 {
-
     public static void RegisterPassPipeline(RenderPassPipeline passPipeline)
     {
         // Shadow
@@ -19,66 +19,64 @@ internal static partial class PassPipeline
             {
                 ctx.ActivateDepthMode(); // Note!
 
-                ctx.Cmd.BeginRenderPass(ctx.FboId, state.PassState);
-                ctx.Cmd.ApplyStateFunctions(GfxDrawFunctions.MakeDepth());
+                ctx.Gfx.BeginRenderPass(ctx.FboId, state.PassState);
+                ctx.Gfx.ApplyStateFunctions(GfxDrawFunctions.MakeDepth());
                 return PassAction.DrawPassResult();
             }).OnPassEnd(static (ctx, _) =>
             {
-                ctx.Cmd.EndRenderPass();
+                ctx.Gfx.EndRenderPass();
                 ctx.RestoreMode();
             });
 
         // Scene 
         // Pass 1: draw scene 
+
         passPipeline.Register<SceneTarget>(FboVariant.V0, new PassId(1), PassOp.Draw, RenderPassState.MakeSceneMsaa())
             .OnPassBegin(static (ctx, state) =>
             {
-                ctx.Cmd.BeginRenderPass(ctx.FboId, state.PassState);
-                ctx.Cmd.ApplyStateFunctions(GfxDrawFunctions.MakeDefault());
+                ctx.Gfx.BeginRenderPass(ctx.FboId, state.PassState);
+                ctx.Gfx.ApplyStateFunctions(GfxDrawFunctions.MakeDefault());
                 return PassAction.DrawPassResult();
+            })
+            .OnPassEnd(static (ctx, _) =>
+            {
+                ctx.MutateStatePass<SceneTarget>(FboVariant.V1, PassMutationState.MutateTarget(ctx.FboId));
+                var selectionCount = RenderEcs.Store<SelectionComponent>().Count;
+                var debugBoundsCount = RenderEcs.Store<DebugBoundsComponent>().Count;
+                if(selectionCount + debugBoundsCount == 0) return;
+
+                ctx.Gfx.BindFramebuffer(ctx.FboId);
+                ctx.Gfx.ApplyPassState(Blend | Cull | Srgb | ColorMask | Ac2);
+
+                if (selectionCount > 0) SelectionRenderer(ctx);
+                if (debugBoundsCount > 0) DebugBoundsRenderer(ctx);
             });
 
-        // Pass 2: draw scene effects
-        passPipeline.RegisterContinue<SceneTarget>(FboVariant.V0, new PassId(2), PassOp.Continue,
-            RenderPassState.MakeSceneEffect()).OnPassBegin(static (ctx, state) =>
-        {
-            ctx.Cmd.BindFramebuffer(ctx.FboId);
-            ctx.Cmd.ApplyPassState(state.PassState.StateFlags);
-
-            ctx.MutateStatePass<SceneTarget>(FboVariant.V1, PassMutationState.MutateTarget(ctx.FboId));
-
-            if (RenderEcs.Store<SelectionComponent>().Count > 0)
-                SelectionRenderer(ctx);
-
-            if (RenderEcs.Store<DebugBoundsComponent>().Count > 0)
-                DebugBoundsRenderer(ctx);
-            return new PassAction(PassOp.Continue);
-        });
 
         // Pass 3: resolve to scene FBO to post FBO
-        passPipeline.Register<SceneTarget>(FboVariant.V1, new PassId(3), PassOp.Resolve,
+        passPipeline.Register<SceneTarget>(FboVariant.V1, new PassId(2), PassOp.Resolve,
                 RenderPassState.MakeResolve())
             .OnPassBegin(static (ctx, state) =>
             {
-                ctx.Cmd.BlitFramebuffer(state.TargetFboId, ctx.FboId, state.LinearFilter);
+                ctx.Gfx.BlitFramebuffer(state.TargetFboId, ctx.FboId, state.LinearFilter);
                 return PassAction.ResolveTargetResult();
             }).OnPassEnd(static (ctx, _) =>
             {
                 var texId = ctx.Target.Attachments.ColorTexture;
                 ctx.SampleTo<PostFxTarget>(FboVariant.V0, 0, texId);
 
-                ctx.Cmd.EndRenderPass();
-                ctx.Cmd.GenerateMipMaps(texId);
+                ctx.Gfx.EndRenderPass();
+                ctx.Gfx.GenerateMipMaps(texId);
             });
 
         // Post A
-        passPipeline.Register<PostFxTarget>(FboVariant.V0, new PassId(4), PassOp.Fsq,
+        passPipeline.Register<PostFxTarget>(FboVariant.V0, new PassId(3), PassOp.Fsq,
                 RenderPassState.MakePostProcess(RenderRegistry.CompositeShader))
             .OnPassBegin(static (ctx, state) =>
             {
-                ctx.Cmd.BeginRenderPass(ctx.FboId, state.PassState);
-                ctx.DrawCmdProcessor.DrawFullscreenQuad(state.ShaderId, ctx.GetPassSources());
-                ctx.Cmd.EndRenderPass();
+                ctx.Gfx.BeginRenderPass(ctx.FboId, state.PassState);
+                ctx.DrawCmd.DrawFullscreenQuad(state.ShaderId, ctx.GetPassSources());
+                ctx.Gfx.EndRenderPass();
 
                 var texId = ctx.Target.Attachments.ColorTexture;
                 ctx.SampleTo<PostFxTarget>(FboVariant.V1, 0, texId);
@@ -87,13 +85,13 @@ internal static partial class PassPipeline
             });
 
         // Post B
-        passPipeline.Register<PostFxTarget>(FboVariant.V1, new PassId(5), PassOp.Fsq,
+        passPipeline.Register<PostFxTarget>(FboVariant.V1, new PassId(4), PassOp.Fsq,
                 RenderPassState.MakePostProcess(RenderRegistry.ColorFilterShader))
             .OnPassBegin(static (ctx, state) =>
             {
-                ctx.Cmd.BeginRenderPass(ctx.FboId, state.PassState);
-                ctx.DrawCmdProcessor.DrawFullscreenQuad(state.ShaderId, ctx.GetPassSources());
-                ctx.Cmd.EndRenderPass();
+                ctx.Gfx.BeginRenderPass(ctx.FboId, state.PassState);
+                ctx.DrawCmd.DrawFullscreenQuad(state.ShaderId, ctx.GetPassSources());
+                ctx.Gfx.EndRenderPass();
 
                 var texId = ctx.Target.Attachments.ColorTexture;
                 ctx.SampleTo<OutputTarget>(FboVariant.V0, 0, texId);
@@ -102,16 +100,16 @@ internal static partial class PassPipeline
             });
 
         // Screen
-        passPipeline.Register<OutputTarget>(FboVariant.V0, new PassId(6), PassOp.Screen,
+        passPipeline.Register<OutputTarget>(FboVariant.V0, new PassId(5), PassOp.Screen,
                 RenderPassState.MakeScreen(RenderRegistry.PresentShader))
             .OnPassBegin(static (ctx, state) =>
             {
-                ctx.Cmd.BeginRenderPass(ctx.FboId, state.PassState);
-                ctx.DrawCmdProcessor.DrawFullscreenQuad(state.ShaderId, ctx.GetPassSources());
-                ctx.Cmd.EndRenderPass();
+                ctx.Gfx.BeginRenderPass(ctx.FboId, state.PassState);
+                ctx.DrawCmd.DrawFullscreenQuad(state.ShaderId, ctx.GetPassSources());
+                ctx.Gfx.EndRenderPass();
 
-                ctx.Cmd.ApplyPassState(GfxStateFlags.ColorMask);
-                ctx.Cmd.Clear(ColorRgba.Black, ClearBufferFlag.ColorAndDepth);
+                ctx.Gfx.ApplyPassState(ColorMask);
+                ctx.Gfx.Clear(ColorRgba.Black, ClearBufferFlag.ColorAndDepth);
 
                 var texId = ctx.Target.Attachments.ColorTexture;
                 RenderContext.OutputTexture = texId;
@@ -142,5 +140,4 @@ internal static partial class PassPipeline
         registry.Register<OutputTarget>(FboVariant.V0, new CreateFboInfo(outputSize)
             .AttachColorTexture(FboColorAttachment.Default()));
     }
-
 }

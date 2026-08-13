@@ -8,34 +8,31 @@ internal sealed class RenderPassPipeline
 {
     private int _activePassIndex;
     private int _passCount;
-
-    private readonly RenderPassContext _ctx;
-    private readonly RenderRegistry _renderRegistry;
+    
     private readonly RenderPassEntry[] _entries;
+    private readonly RenderPassProgram _program;
+    private readonly RenderRegistry _renderRegistry;
 
     internal RenderPassPipeline(DrawCommandProcessor cmd, RenderRegistry renderRegistry)
     {
         _renderRegistry = renderRegistry;
-        _ctx = new RenderPassContext(cmd);
+        _program = new RenderPassProgram(cmd);
         _entries = new RenderPassEntry[16];
     }
-
-    public int PassCount => _passCount;
 
     internal void ResetFrame()
     {
         RenderContext.ResetContext();
         _activePassIndex = 0;
-        _ctx.Reset();
+        _program.Reset();
     }
 
 
-    internal bool NextPass(out PassId passId, out NextPassAction action)
+    internal bool NextPass(out (PassId Pass, NextPassAction NextAction) result)
     {
         if ((uint)_activePassIndex >= (uint)_passCount)
         {
-            passId = default;
-            action = default;
+            result = default;
             return false;
         }
 
@@ -46,27 +43,27 @@ internal sealed class RenderPassPipeline
             ? new FboKey(dependsOnKey.TagIndex, passKey.Variant)
             : new FboKey(passKey.TagIndex, passKey.Variant);
 
-        action = NextPassAction.Run;
+        var action = NextPassAction.Run;
 
         if (_renderRegistry.TryGetRenderFbo(key, out var fbo))
-            _ctx.AttachPass(fbo.FboId, passKey);
+            _program.AttachPass(fbo.FboId, passKey);
         else if (passEntry.PassOp == PassOp.Screen)
-            _ctx.AttachScreenPass(passKey);
+            _program.AttachScreenPass(passKey);
         else
             action = NextPassAction.Skip;
 
-        _ctx.DequeueMutationTo(passEntry);
-        _ctx.DequeuePassSources(passEntry);
+        _program.DequeueMutationTo(passEntry);
+        _program.DequeuePassSources(passEntry.PassKey);
 
-        passId = passEntry.PassKey.Pass;
+        result = (passEntry.PassKey.Pass, action);
         return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal PassAction ApplyPass() => _entries[_activePassIndex].ApplyPass(_ctx);
+    internal PassAction ApplyPass() => _entries[_activePassIndex].ApplyPass(_program);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void ApplyAfterPass() => _entries[_activePassIndex++].ApplyAfterPass(_ctx);
+    internal void ApplyAfterPass() => _entries[_activePassIndex++].ApplyAfterPass(_program);
 
 
     public RenderPassEntry RegisterContinue<TTarget>(FboVariant variant, PassId passId, PassOp op,

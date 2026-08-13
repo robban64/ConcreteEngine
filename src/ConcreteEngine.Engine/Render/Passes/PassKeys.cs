@@ -14,8 +14,6 @@ public readonly record struct FboVariant(byte Value) : IComparable<FboVariant>
 
 public readonly record struct FboKey(byte TagIndex, FboVariant Variant) : IComparable<FboKey>
 {
-    public int Index() => TagIndex + Variant;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(FboKey other)
     {
@@ -30,35 +28,32 @@ public readonly record struct PassId(byte Value) : IComparable<PassId>
     public int CompareTo(PassId other) => Value.CompareTo(other.Value);
 }
 
-public readonly record struct PassTargetKey(byte TagIndex, FboVariant Variant, PassId Pass);
-
-public readonly record struct PassTextureSlotKey(byte TagIndex, FboVariant Variant, PassId Pass, byte TextureSlot);
-
-public sealed class PassTagKeyComp : IComparer<PassTargetKey>
+public readonly record struct PassTargetKey(byte TagIndex, FboVariant Variant, PassId Pass) : IComparable<PassTargetKey>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int Compare(PassTargetKey a, PassTargetKey b)
+    public int CompareTo(PassTargetKey other)
     {
-        var c = a.Pass.CompareTo(b.Pass);
+        var c = Pass.CompareTo(other.Pass);
         if (c != 0) return c;
 
-        c = a.TagIndex.CompareTo(b.TagIndex);
-        return c != 0 ? c : a.Variant.CompareTo(b.Variant);
+        c = TagIndex.CompareTo(other.TagIndex);
+        return c != 0 ? c : Variant.CompareTo(other.Variant);
     }
 }
 
-public sealed class PassTextureSlotKeyComp : IComparer<PassTextureSlotKey>
+public readonly record struct PassTextureSlotKey(byte TagIndex, FboVariant Variant, PassId Pass, byte TextureSlot)
+    : IComparable<PassTextureSlotKey>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int Compare(PassTextureSlotKey a, PassTextureSlotKey b)
+    public int CompareTo(PassTextureSlotKey other)
     {
-        var c = a.Pass.CompareTo(b.Pass);
+        var c = Pass.CompareTo(other.Pass);
         if (c != 0) return c;
 
-        c = a.TagIndex.CompareTo(b.TagIndex);
+        c = TagIndex.CompareTo(other.TagIndex);
         if (c != 0) return c;
 
-        c = a.Variant.CompareTo(b.Variant);
-        return c != 0 ? c : a.TextureSlot.CompareTo(b.TextureSlot);
+        c = Variant.CompareTo(other.Variant);
+        return c != 0 ? c : TextureSlot.CompareTo(other.TextureSlot);
     }
 }

@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
@@ -37,12 +39,11 @@ public sealed class EngineRenderSystem : IDisposable
 
         _registry = new RenderRegistry(graphics.Gfx);
         _drawPipeline = new DrawCommandPipeline(graphics.Gfx, _animationSystem, _materialSystem);
-        _passPipeline = new RenderPassPipeline(_drawPipeline.DrawCmd,_registry);
+        _passPipeline = new RenderPassPipeline(_drawPipeline.DrawCmd, _registry);
 
         _resolver = new RenderResolver(CameraManager.Instance.Frustum);
-        
-        VisualSystem.Create(graphics.Gfx.Buffers);
 
+        VisualSystem.Create(graphics.Gfx.Buffers);
     }
 
     internal void Init()
@@ -105,20 +106,18 @@ public sealed class EngineRenderSystem : IDisposable
         VisualSystem.Instance.UploadUniformBuffers(_resolver, _materialSystem, _animationSystem);
 
         _drawPipeline.ReadyDrawCommands(_resolver.DrawIndices);
-
     }
 
     public void ExecuteRenderPipeline()
     {
-        while (_passPipeline.NextPass(out var nextPassId, out var passAction))
+        while (_passPipeline.NextPass(out var result))
         {
-            if (passAction == NextPassAction.Skip) continue;
-            
-            var passResult = _passPipeline.ApplyPass();
+            if (result.NextAction == NextPassAction.Skip) continue;
 
+            var passResult = _passPipeline.ApplyPass();
             if (passResult.Op is PassOp.Draw)
             {
-                _drawPipeline.ExecuteDrawPass(nextPassId);
+                _drawPipeline.ExecuteDrawPass(result.Pass);
             }
 
             _passPipeline.ApplyAfterPass();
@@ -132,7 +131,7 @@ public sealed class EngineRenderSystem : IDisposable
         _animationSystem.Dispose();
         _materialSystem.Dispose();
     }
-    
+
     private static void RegisterCoreShaders(AssetStore store)
     {
         RenderRegistry.DepthShader = store.GetByName<Shader>("Depth").GfxId;
@@ -142,7 +141,4 @@ public sealed class EngineRenderSystem : IDisposable
         RenderRegistry.HighlightShader = store.GetByName<Shader>("Highlight").GfxId;
         RenderRegistry.BoundingBoxShader = store.GetByName<Shader>("BoundingBox").GfxId;
     }
-    
-
-
 }

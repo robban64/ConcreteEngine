@@ -3,14 +3,10 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render;
 
@@ -23,17 +19,9 @@ internal sealed class DrawCommandPipeline : IDisposable
     private NativeArray<(RenderEntityId Entity, int SubmitIndex)> _drawTickets;
     private readonly Range32[] _passRanges;
 
-    private readonly GfxBuffers _gfxBuffers;
-    private readonly AnimationSystem _animationSystem;
-    private readonly MaterialSystem _materialSystem;
-
     public DrawCommandPipeline(GfxContext gfx, AnimationSystem animationSystem, MaterialSystem materialSystem)
     {
-        _animationSystem = animationSystem;
-        _materialSystem = materialSystem;
-        _gfxBuffers = gfx.Buffers;
         DrawCmd = new DrawCommandProcessor(gfx, animationSystem, materialSystem);
-
         _drawTickets = NativeArray.Allocate<(RenderEntityId, int)>(DefaultTicketCapacity);
         _passRanges = new Range32[RenderLimits.PassSlots];
     }
@@ -41,62 +29,27 @@ internal sealed class DrawCommandPipeline : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ResetFrame() => DrawCmd.ResetFrame();
 
-    public static AvgFrameTimer avg;
-
-    public void StageCommands(RenderResolver resolver)
-    {
-        avg.BeginSample();
-        ReadyDrawCommands(resolver.DrawIndices);
-        avg.EndSample();
-        UploadBuffers(resolver.Transforms);
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Range32 PrepareDrawPass(PassId passId)
+    private Range32 PrepareDrawPass(PassId passId)
     {
         DrawCmd.PrepareDrawPass();
         return _passRanges[passId];
     }
 
-    public unsafe void ExecuteDrawPass(Range32 passRange)
+    public unsafe void ExecuteDrawPass(PassId passId)
     {
+        var passRange = PrepareDrawPass(passId);
         var sources = RenderEcs.Core.GetSourceView().Ptr;
-        foreach (var ticket in _drawTickets.Slice(passRange))
+        foreach (ref readonly var ticket in _drawTickets.Slice(passRange))
         {
             var source = sources[ticket.Entity.Index()];
             DrawCmd.DrawSource(source, ticket.Entity, ticket.SubmitIndex);
         }
     }
 
-    private void UploadBuffers(NativeView<TransformUniform> transforms)
-    {
-        // Ensure ubo size
-        var drawCount = IntMath.AlignUp(transforms.Length, 64);
-        var materialCount = IntMath.AlignUp(_materialSystem.Count, 16);
-        var boneCount = IntMath.AlignUp(_animationSystem.BoneCount, 64);
 
-        if (!GfxRegistry.GetMeta(TransformUniform.UboId).HasCapacity(drawCount))
-            _gfxBuffers.SetUniformBufferCount(TransformUniform.UboId, drawCount);
-
-        if (!GfxRegistry.GetMeta(MaterialUniform.UboId).HasCapacity(materialCount))
-            _gfxBuffers.SetUniformBufferCount(MaterialUniform.UboId, materialCount);
-
-        if (!GfxRegistry.GetMeta(SkinningUniform.UboId).HasCapacity(boneCount))
-            _gfxBuffers.SetUniformBufferCount(SkinningUniform.UboId, boneCount);
-
-        // Upload
-        VisualSystem.Instance.Upload();
-
-        if (transforms.Length > 0) _gfxBuffers.UploadUniform(transforms, 0);
-
-        var materials = _materialSystem.GetUniforms();
-        if (materials.Length > 0) _gfxBuffers.UploadUniform(materials, 0);
-
-        var boneData = _animationSystem.GetUniforms();
-        if (boneData.Length > 0) _gfxBuffers.UploadUniform(boneData, 0);
-    }
-
-    private unsafe void ReadyDrawCommands(NativeView<DrawEntityIndex> indices)
+    public unsafe void ReadyDrawCommands(NativeView<DrawEntityIndex> indices)
     {
         if (indices.Length <= 1) return;
 
@@ -121,7 +74,7 @@ internal sealed class DrawCommandPipeline : IDisposable
         FillTickets(indices, heads + RenderLimits.PassSlots);
     }
 
-    private unsafe void CountTickets(NativeView<DrawEntityIndex> indices, int* heads)
+    private static unsafe void CountTickets(NativeView<DrawEntityIndex> indices, int* heads)
     {
         var drawIndex = indices.Ptr;
         var drawIndexEnd = indices.EndPtr;

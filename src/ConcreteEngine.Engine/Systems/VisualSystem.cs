@@ -22,8 +22,34 @@ internal sealed unsafe class VisualSystem
     {
         _gfx = gfx;
     }
+    
+    public void UploadUniformBuffers(RenderResolver resolver, MaterialSystem materialSystem, AnimationSystem animationSystem)
+    {
+        // Ensure ubo size
+        var drawCount = IntMath.AlignUp(resolver.VisibleCount, 64);
+        var materialCount = IntMath.AlignUp(materialSystem.Count, 16);
+        var boneCount = IntMath.AlignUp(animationSystem.BoneCount, 64);
 
-    public void Upload()
+        if (!GfxRegistry.GetMeta(TransformUniform.UboId).HasCapacity(drawCount))
+            _gfx.SetUniformBufferCount(TransformUniform.UboId, drawCount);
+
+        if (!GfxRegistry.GetMeta(MaterialUniform.UboId).HasCapacity(materialCount))
+            _gfx.SetUniformBufferCount(MaterialUniform.UboId, materialCount);
+
+        if (!GfxRegistry.GetMeta(SkinningUniform.UboId).HasCapacity(boneCount))
+            _gfx.SetUniformBufferCount(SkinningUniform.UboId, boneCount);
+
+        var transforms = resolver.Transforms;
+        if (transforms.Length > 0) _gfx.UploadUniform(transforms, 0);
+
+        var materials = materialSystem.GetUniforms();
+        if (materials.Length > 0) _gfx.UploadUniform(materials, 0);
+        
+        var boneData = animationSystem.GetUniforms();
+        if (boneData.Length > 0) _gfx.UploadUniform(boneData, 0);
+    }
+
+    public void UploadUniforms()
     {
         UploadEngineUniformRecord();
         UploadMainView();

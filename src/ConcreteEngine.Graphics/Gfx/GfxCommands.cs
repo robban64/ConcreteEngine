@@ -1,12 +1,8 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Gfx.Internals;
 using ConcreteEngine.Graphics.OpenGL;
 using static ConcreteEngine.Graphics.Gfx.GfxRegistry;
 using static ConcreteEngine.Graphics.Gfx.GfxStateFlags;

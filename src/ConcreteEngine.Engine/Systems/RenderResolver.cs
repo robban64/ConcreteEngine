@@ -1,11 +1,9 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.RenderEntity;
@@ -44,14 +42,13 @@ internal sealed class RenderResolver : IDisposable
         SubmitTransforms();
     }
 
-    public static AvgFrameTimer avg;
 
     private unsafe int CullEntities()
     {
         var forward = CameraManager.Instance.Camera.Forward;
         var viewZ = CameraManager.Instance.Camera.ViewMatrix.M43;
         var nearFar = CameraManager.Instance.Camera.NearFarPlane;
-        
+
         var visibleEntities = _indices.Ptr;
         foreach (var query in CullQuery())
         {
@@ -77,7 +74,7 @@ internal sealed class RenderResolver : IDisposable
         var dst = _transforms.Ptr;
         var indices = indexView.Ptr;
         var indicesEnd = indexView.EndPtr;
-        
+
         var views = RenderEcs.Core.GetTransformView();
         while (indices < indicesEnd)
         {

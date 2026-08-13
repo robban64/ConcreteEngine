@@ -94,21 +94,18 @@ public sealed class EngineRenderSystem : IDisposable
 
         // frame update
         CameraManager.Instance.CommitFrame(alpha);
+        VisualSystem.Instance.UploadUniforms();
 
         // process and upload draw commands
         _resolver.Execute();
-
         _particleSystem.Execute();
         _animationSystem.Execute(alpha);
 
         // prepare buffers
-        _drawPipeline.StageCommands(_resolver);
+        VisualSystem.Instance.UploadUniformBuffers(_resolver, _materialSystem, _animationSystem);
 
-        if (DrawCommandPipeline.avg.Ticks > 144)
-        {
-            DrawCommandPipeline.avg.ResetAndPrint("Stage");
-            RenderResolver.avg.ResetAndPrint("animation");
-        }
+        _drawPipeline.ReadyDrawCommands(_resolver.DrawIndices);
+
     }
 
     public void ExecuteRenderPipeline()
@@ -121,15 +118,12 @@ public sealed class EngineRenderSystem : IDisposable
 
             if (passResult.Op is PassOp.Draw)
             {
-                var passRange = _drawPipeline.PrepareDrawPass(nextPassId);
-                _drawPipeline.ExecuteDrawPass(passRange);
+                _drawPipeline.ExecuteDrawPass(nextPassId);
             }
 
             _passPipeline.ApplyAfterPass();
         }
-
     }
-
 
     public void Dispose()
     {
@@ -148,5 +142,7 @@ public sealed class EngineRenderSystem : IDisposable
         RenderRegistry.HighlightShader = store.GetByName<Shader>("Highlight").GfxId;
         RenderRegistry.BoundingBoxShader = store.GetByName<Shader>("BoundingBox").GfxId;
     }
+    
+
 
 }

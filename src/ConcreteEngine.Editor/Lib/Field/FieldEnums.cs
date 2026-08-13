@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Diagnostics.Time;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Field;

@@ -1,7 +1,6 @@
 namespace ConcreteEngine.Core.Common.Memory;
 
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 // ReSharper disable OutParameterValueIsAlwaysDiscarded.Local
 public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where T2 : unmanaged

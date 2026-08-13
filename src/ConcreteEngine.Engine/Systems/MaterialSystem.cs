@@ -25,7 +25,7 @@ internal sealed class MaterialSystem : IDisposable
     private MaterialMeta[] _metas;
     private NativeArray<TextureBinding> _textureSlots;
     private NativeArray<MaterialUniform> _uniforms;
-    
+
     public MaterialSystem()
     {
         _metas = new MaterialMeta[MaterialBufferCapacity];
@@ -41,7 +41,6 @@ internal sealed class MaterialSystem : IDisposable
         Submit();
         _materialStore.ClearDirty();
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal NativeView<TextureBinding> GetMetaAndSlots(Id16<Material> materialId, out MaterialMeta meta)
@@ -78,7 +77,7 @@ internal sealed class MaterialSystem : IDisposable
             WriteUniform(material.State);
         }
     }
-    
+
     private void SubmitMaterial(Material material, ShaderId shaderId)
     {
         var index = material.MaterialId.Index();
@@ -87,10 +86,10 @@ internal sealed class MaterialSystem : IDisposable
         var sources = material.GetSourceSpan();
 
         ref var meta = ref _metas[index];
-        
+
         var start = meta.BindingRange.Offset;
         var capacity = int.Max(sources.Length, 6);
-        
+
         if (capacity > meta.BindingCapacity)
         {
             EnsureTextureSlotCapacity(capacity);

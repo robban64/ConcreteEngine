@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Particles;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.App.Theme;

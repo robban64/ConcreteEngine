@@ -1,7 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Editor.App.Inspectors;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;

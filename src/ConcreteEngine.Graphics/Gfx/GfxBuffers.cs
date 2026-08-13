@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Gfx.Internals;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Utility;
 

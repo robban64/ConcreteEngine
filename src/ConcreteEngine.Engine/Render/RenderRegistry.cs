@@ -8,28 +8,35 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 
-// ReSharper disable StaticMemberInGenericType
 
 namespace ConcreteEngine.Engine.Render;
 
-public sealed class RenderRegistry
+public sealed partial class RenderRegistry
 {
-    public static ShaderId DepthShader;
-    public static ShaderId CompositeShader;
-    public static ShaderId ColorFilterShader;
-    public static ShaderId PresentShader;
-    public static ShaderId HighlightShader;
-    public static ShaderId BoundingBoxShader;
+    internal static RenderRegistry Instance { get; private set; } = null!;
+
+    internal static void Create(GfxContext gfx)
+    {
+        if (Instance != null!) Throwers.InvalidOperation("Already created");
+        Instance = new RenderRegistry(gfx);
+    }
+
+
+    private int _fboCount;
+    private int _passCount;
+
+    private readonly RenderFbo[] _frameBuffers;
+    private readonly InlineArray4<byte>[] _slotByTagIndex;
+
+    private readonly RenderPassEntry[] _passEntries;
 
     private readonly GfxFrameBuffers _gfxFbo;
 
-    private int _fboCount;
-    private readonly RenderFbo[] _frameBuffers;
-    private readonly InlineArray4<byte>[] _slotByTagIndex;
-    
-    internal RenderRegistry(GfxContext gfx)
+
+    private RenderRegistry(GfxContext gfx)
     {
         _gfxFbo = gfx.FrameBuffers;
+        _passEntries = new RenderPassEntry[RenderLimits.FboSlots];
         _frameBuffers = new RenderFbo[RenderLimits.FboSlots];
         _slotByTagIndex = new InlineArray4<byte>[RenderLimits.FboSlots];
         for (int i = 0; i < RenderLimits.FboSlots; i++)
@@ -37,10 +44,11 @@ public sealed class RenderRegistry
             for (int j = 0; j < 4; j++) _slotByTagIndex[i][j] = byte.MaxValue;
         }
 
-        RegisterUbo(gfx.Buffers);
+        CreateUniformBuffers(gfx.Buffers);
         RegisterFbo();
     }
-    
+
+
     private ReadOnlySpan<RenderFbo> GetFrameBuffers() => new(_frameBuffers, 0, _fboCount);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -118,6 +126,27 @@ public sealed class RenderRegistry
         }
     }
 
+    internal RenderPassEntry RegisterPass<TTarget>(FboVariant variant, PassOp op, GfxPassState gfxState,
+        ShaderId shaderId = default, bool linearFilter = false)
+        where TTarget : unmanaged, IRenderTarget
+    {
+        var key = TargetRegistry<TTarget>.BindPassTarget(variant, new PassId(_passCount));
+        return AddPassEntry(key, op, gfxState, shaderId, linearFilter);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private RenderPassEntry AddPassEntry(PassTargetKey key, PassOp op, GfxPassState gfxState, ShaderId shaderId,
+        bool linearFilter)
+    {
+        foreach (var e in _passEntries.AsSpan(0, _passCount))
+        {
+            if (e.PassKey == key) Throwers.InvalidArgument("Duplicated passes");
+        }
+
+        var fboId = TryGetRenderFbo(key, out var fbo) ? fbo.FboId : default;
+        return _passEntries[_passCount++] = new RenderPassEntry(key, op, gfxState, fboId, shaderId, linearFilter);
+    }
+
 
     internal void Register<TTarget>(FboVariant variant,
         CreateFboInfo entry,
@@ -176,7 +205,7 @@ public sealed class RenderRegistry
         TargetRegistry<OutputTarget>.RegisterTag();
     }
 
-    private static void RegisterUbo(GfxBuffers gfxBuffers)
+    private static void CreateUniformBuffers(GfxBuffers gfxBuffers)
     {
         EngineUniformRecord.UboId = gfxBuffers.CreateUniformBuffer<EngineUniformRecord>();
         FrameUniform.UboId = gfxBuffers.CreateUniformBuffer<FrameUniform>();
@@ -189,41 +218,5 @@ public sealed class RenderRegistry
         SkinningUniform.UboId = gfxBuffers.CreateUniformBuffer<SkinningUniform>();
         PostFxUniform.UboId = gfxBuffers.CreateUniformBuffer<PostFxUniform>();
         EditorEffectsUniform.UboId = gfxBuffers.CreateUniformBuffer<EditorEffectsUniform>();
-    }
-
-
-    //
-    private static byte _targetCounter;
-
-    public static class TargetRegistry<TTarget> where TTarget : unmanaged, IRenderTarget
-    {
-        private static bool _isBound;
-        public static byte TagIndex { get; private set; }
-
-        private static InlineArray4<byte> _passIds;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static FboKey FboKey(FboVariant variant) => new(TagIndex, variant);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static PassTargetKey PassKey(FboVariant variant) =>
-            new(TagIndex, variant, new PassId(_passIds[variant]));
-
-        public static PassTargetKey BindPassTarget(FboVariant variant, PassId passId)
-        {
-            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(variant.Value, RenderLimits.MaxFboVariants);
-            if (!_isBound) Throwers.NotFound(nameof(TTarget), "PassTag not registered.");
-            if (_passIds[variant] != 0) Throwers.InvalidArgument(nameof(variant));
-            _passIds[variant] = passId.Value;
-            return PassKey(variant);
-        }
-
-        public static void RegisterTag()
-        {
-            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(_targetCounter, RenderLimits.FboSlots);
-            if (_isBound) Throwers.InvalidOperation("PassTag already registered.");
-            TagIndex = _targetCounter++;
-            _isBound = true;
-        }
     }
 }

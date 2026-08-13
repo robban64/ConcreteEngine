@@ -3,6 +3,16 @@ using ConcreteEngine.Engine.Render.Passes;
 
 namespace ConcreteEngine.Engine.Render;
 
+internal static class RenderStore
+{
+    public static ShaderId DepthShader;
+    public static ShaderId CompositeShader;
+    public static ShaderId ColorFilterShader;
+    public static ShaderId PresentShader;
+    public static ShaderId HighlightShader;
+    public static ShaderId BoundingBoxShader;
+}
+
 internal static class RenderContext
 {
     public const int ShadowSamplerSlot = 3;
@@ -21,7 +31,7 @@ internal static class RenderContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ApplyForDepthPass()
     {
-        OverrideShader = RenderRegistry.DepthShader;
+        OverrideShader = RenderStore.DepthShader;
         RenderMode = RenderTargetKind.Shadow;
     }
     
@@ -31,4 +41,5 @@ internal static class RenderContext
         OverrideShader = default;
         RenderMode = RenderTargetKind.Scene;
     }
+    
 }

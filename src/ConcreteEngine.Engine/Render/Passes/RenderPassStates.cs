@@ -1,10 +1,6 @@
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx;
-using static ConcreteEngine.Graphics.Gfx.GfxStateFlags;
-
 namespace ConcreteEngine.Engine.Render.Passes;
 
-public struct RenderPassState(
+public struct PassState(
     FrameBufferId target,
     ShaderId passShader = default,
     FrameBufferId resolveTarget = default,

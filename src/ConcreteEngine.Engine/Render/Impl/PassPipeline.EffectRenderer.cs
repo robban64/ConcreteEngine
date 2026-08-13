@@ -12,13 +12,13 @@ namespace ConcreteEngine.Engine.Render;
 
 internal static partial class PassPipeline
 {
-    private static unsafe void SelectionRenderer(RenderPassProgram ctx)
+    private static unsafe void SelectionRenderer(RenderPassContext ctx)
     {
         TransformUniform* uniform = stackalloc TransformUniform[1];
         EditorEffectsUniform* effect = stackalloc EditorEffectsUniform[1];
 
-        ctx.Gfx.UseShader(RenderRegistry.HighlightShader);
-        RenderContext.OverrideShader = RenderRegistry.HighlightShader;
+        ctx.Gfx.UseShader(RenderStore.HighlightShader);
+        RenderContext.OverrideShader = RenderStore.HighlightShader;
 
         foreach (var query in RenderEcs.Store<SelectionComponent>().VisibilityQuery())
         {
@@ -41,14 +41,14 @@ internal static partial class PassPipeline
         }
     }
 
-    private static unsafe void DebugBoundsRenderer(RenderPassProgram ctx)
+    private static unsafe void DebugBoundsRenderer(RenderPassContext ctx)
     {
         TransformUniform* uniform = stackalloc TransformUniform[1];
         EditorEffectsUniform* effect = stackalloc EditorEffectsUniform[1];
-        RenderContext.OverrideShader = RenderRegistry.BoundingBoxShader;
+        RenderContext.OverrideShader = RenderStore.BoundingBoxShader;
 
         var materialId = AssetStore.Core.DebugBoundsMaterial.MaterialId;
-        ctx.Gfx.UseShader(RenderRegistry.BoundingBoxShader);
+        ctx.Gfx.UseShader(RenderStore.BoundingBoxShader);
 
         foreach (var query in RenderEcs.Store<DebugBoundsComponent>().VisibilityQuery())
         {

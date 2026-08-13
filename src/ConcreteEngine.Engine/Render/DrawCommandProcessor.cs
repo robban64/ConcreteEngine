@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
@@ -42,24 +43,13 @@ internal sealed class DrawCommandProcessor
 
         if (RenderContext.RenderMode == RenderTargetKind.Shadow)
         {
-            GfxCmd.UseShader(RenderRegistry.DepthShader);
+            GfxCmd.UseShader(RenderStore.DepthShader);
             GfxCmd.UnbindAllTextures();
         }
 
-        GfxCmd.BindTextureAndSampler(RenderContext.DepthTexture, SamplerProfile.ShadowCompare, (byte)SamplerSlot.ShadowMap0);
+        GfxCmd.BindTextureAndSampler(RenderContext.DepthTexture, SamplerProfile.ShadowCompare,
+            (byte)SamplerSlot.ShadowMap0);
     }
-
-
-    public void DrawFullscreenQuad(ShaderId shaderId, ReadOnlySpan<TextureId> sources)
-    {
-        GfxCmd.UseShader(shaderId);
-        
-        for (var i = 0; i < sources.Length; i++) 
-            GfxCmd.BindTextureAndSampler(sources[i], SamplerProfile.PointClamp, (byte)i);
-
-        GfxCmd.DrawMesh(GfxMeshes.FsqQuad);
-    }
-
 
     public void DrawSource(RenderSource source, RenderEntityId entity, int submitIndex)
     {
@@ -110,5 +100,4 @@ internal sealed class DrawCommandProcessor
             GfxCmd.BindSampler(it.Profile, (byte)it.Slot);
         }
     }
-
 }

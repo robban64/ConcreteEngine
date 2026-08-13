@@ -69,7 +69,7 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGet(RenderEntityId entity, out ValueRef<T> value)
     {
-        var index = FindIndexLinear(entity);
+        var index = FindIndexSorted(entity);
         if ((uint)index < (uint)Count)
         {
             value = new ValueRef<T>(ref _components[index]);

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
@@ -22,9 +23,8 @@ public sealed class EngineRenderSystem : IDisposable
     private readonly ParticleSystem _particleSystem;
     private readonly AnimationSystem _animationSystem;
 
-    private readonly RenderRegistry _registry;
-    private readonly RenderPassPipeline _passPipeline;
     private readonly DrawCommandPipeline _drawPipeline;
+    private readonly DrawCommandProcessor _drawCmd;
 
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
@@ -32,14 +32,15 @@ public sealed class EngineRenderSystem : IDisposable
         _ = VisualManager.Instance;
         VisualManager.Instance.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
 
+        RenderRegistry.Create(graphics.Gfx);
         _materialSystem = new MaterialSystem();
         _terrainSystem = new TerrainSystem(graphics.Gfx);
         _particleSystem = new ParticleSystem(graphics.Gfx);
         _animationSystem = new AnimationSystem(AnimationManager.Instance);
 
-        _registry = new RenderRegistry(graphics.Gfx);
+
         _drawPipeline = new DrawCommandPipeline(graphics.Gfx, _animationSystem, _materialSystem);
-        _passPipeline = new RenderPassPipeline(_drawPipeline.DrawCmd, _registry);
+        _drawCmd = _drawPipeline.DrawCmd;
 
         _resolver = new RenderResolver(CameraManager.Instance.Frustum);
 
@@ -49,8 +50,8 @@ public sealed class EngineRenderSystem : IDisposable
     internal void Init()
     {
         RegisterCoreShaders(AssetManager.Assets);
-        PassPipeline.RegisterFrameBuffers(_registry);
-        PassPipeline.RegisterPassPipeline(_passPipeline);
+        PassPipeline.RegisterFrameBuffers();
+        PassPipeline.RegisterPassPipeline();
         VisualSystem.Instance.UploadPointLight();
     }
 
@@ -69,7 +70,7 @@ public sealed class EngineRenderSystem : IDisposable
         if (screenResize)
         {
             Logger.Log(LogScope.Engine, "Recreating screen framebuffers");
-            _registry.RecreateScreenDependentFbo(EngineWindow.Viewport.Size);
+            RenderRegistry.Instance.RecreateScreenDependentFbo(EngineWindow.Viewport.Size);
             CameraManager.Instance.Camera.SetAspectRatio(EngineWindow.AspectRatio);
         }
 
@@ -77,7 +78,7 @@ public sealed class EngineRenderSystem : IDisposable
         {
             Logger.Log(LogScope.Engine, "Recreating shadow framebuffers");
             var size = new Size2D(VisualManager.Instance.Shadow.ShadowMapSize);
-            _registry.RecreateFixedFrameBuffer<ShadowTarget>(FboVariant.V0, size);
+            RenderRegistry.Instance.RecreateFixedFrameBuffer<ShadowTarget>(FboVariant.V0, size);
         }
     }
 
@@ -89,8 +90,9 @@ public sealed class EngineRenderSystem : IDisposable
 
     public void PrepareRenderer(float alpha)
     {
+        RenderContext.ResetContext();
+
         _animationSystem.ResetFrame();
-        _passPipeline.ResetFrame();
         _drawPipeline.ResetFrame();
 
         // frame update
@@ -108,35 +110,21 @@ public sealed class EngineRenderSystem : IDisposable
         _drawPipeline.ReadyDrawCommands(_resolver.DrawIndices);
     }
 
-    private static AvgFrameTimer avg;
     public void ExecuteRenderPipeline()
     {
-        while (true)
+        var length = RenderRegistry.PassCount;
+        for (var i = 0; i < length; ++i)
         {
-            avg.BeginSample();
-            if (!_passPipeline.NextPass(out var result))
-            {
-                avg.EndSample();
-                break;
-            }
-            if (result.NextAction == NextPassAction.Skip)
-            {
-                avg.EndSample();
-                continue;
-            }
-
-            var passResult = _passPipeline.ApplyPass();
-            avg.EndSample();
+            var passResult = RenderRegistry.GetPassEntry(i).ApplyPass(_drawCmd);
             if (passResult.Op is PassOp.Draw)
             {
-                _drawPipeline.ExecuteDrawPass(result.Pass);
+                _drawPipeline.ExecuteDrawPass(new PassId(i));
             }
 
-            _passPipeline.ApplyAfterPass();
+            RenderRegistry.GetPassEntry(i).ApplyAfterPass(_drawCmd);
         }
-
-        if (avg.Ticks > 80 * 10) avg.ResetAndPrint();
     }
+
 
     public void Dispose()
     {
@@ -148,11 +136,11 @@ public sealed class EngineRenderSystem : IDisposable
 
     private static void RegisterCoreShaders(AssetStore store)
     {
-        RenderRegistry.DepthShader = store.GetByName<Shader>("Depth").GfxId;
-        RenderRegistry.ColorFilterShader = store.GetByName<Shader>("ColorFilter").GfxId;
-        RenderRegistry.CompositeShader = store.GetByName<Shader>("Composite").GfxId;
-        RenderRegistry.PresentShader = store.GetByName<Shader>("Present").GfxId;
-        RenderRegistry.HighlightShader = store.GetByName<Shader>("Highlight").GfxId;
-        RenderRegistry.BoundingBoxShader = store.GetByName<Shader>("BoundingBox").GfxId;
+        RenderStore.DepthShader = store.GetByName<Shader>("Depth").GfxId;
+        RenderStore.ColorFilterShader = store.GetByName<Shader>("ColorFilter").GfxId;
+        RenderStore.CompositeShader = store.GetByName<Shader>("Composite").GfxId;
+        RenderStore.PresentShader = store.GetByName<Shader>("Present").GfxId;
+        RenderStore.HighlightShader = store.GetByName<Shader>("Highlight").GfxId;
+        RenderStore.BoundingBoxShader = store.GetByName<Shader>("BoundingBox").GfxId;
     }
 }

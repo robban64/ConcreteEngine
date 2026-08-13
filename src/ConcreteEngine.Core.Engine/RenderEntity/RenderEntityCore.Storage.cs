@@ -11,14 +11,13 @@ namespace ConcreteEngine.Core.Engine.RenderEntity;
 
 public sealed unsafe partial class RenderEntityCore
 {
-    private RenderSource* _sources;
     private DrawPolicy* _policies;
+    private RenderSource* _sources;
 
     private BoundingAxisBox* _bounds;
     private TransformUniform* _transforms;
 
     //
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref RenderSource GetSource(RenderEntityId e) => ref _sources[e.Index()];
 
@@ -35,7 +34,6 @@ public sealed unsafe partial class RenderEntityCore
     public ref Matrix3X4 GetNormalMatrix(RenderEntityId e) => ref _transforms[e.Index()].Normal;
     
     //
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<RenderSource> GetSourceView() => new(_sources, 0, Count);
 
@@ -47,17 +45,15 @@ public sealed unsafe partial class RenderEntityCore
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<TransformUniform> GetTransformView() => new(_transforms, 0, Count);
-
     //
-    
 
     //
     private void Allocate(int capacity)
     {
-        if (_sources != null || Capacity != 0) Throwers.InvalidOperation("Already allocated");
+        if (_policies != null || Capacity != 0) Throwers.InvalidOperation("Already allocated");
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 32);
-        _sources = NativeArray.AllocatePointer<RenderSource>(capacity);
         _policies = NativeArray.AllocatePointer<DrawPolicy>(capacity);
+        _sources = NativeArray.AllocatePointer<RenderSource>(capacity);
         _bounds = NativeArray.AllocatePointer<BoundingAxisBox>(capacity, false);
         _transforms = NativeArray.AllocatePointer<TransformUniform>(capacity, false);
 

@@ -8,6 +8,7 @@ namespace ConcreteEngine.Core.Common.Memory;
 public static class NativeExtensions
 {
     public static NativeSpanWriter Writer(this NativeView<byte> viewPtr) => new(viewPtr);
+    public static NativeAllocBuilder Allocator(this NativeView<byte> viewPtr) => new(viewPtr);
 
     extension<T>(NativeView<T> it) where T : unmanaged
     {
@@ -32,13 +33,5 @@ public static class NativeExtensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NativeView<T> Slice(Range32 range) => it.Slice(range.Offset, range.Length);
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe NativeView<U> AsView<U>() where U : unmanaged
-        {
-            Debug.Assert(it.SizeInBytes % Unsafe.SizeOf<U>() == 0);
-            return new NativeView<U>((U*)it.Ptr, 0, it.SizeInBytes / Unsafe.SizeOf<U>());
-        }
-
     }
 }

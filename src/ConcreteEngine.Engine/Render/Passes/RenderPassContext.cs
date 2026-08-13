@@ -63,12 +63,13 @@ internal sealed class RenderPassContext
     public ReadOnlySpan<TextureId> GetPassSources() => new(_textureSlots, 0, int.Max(_textureSlotHigh, 1));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SampleTo<TTarget>(FboVariant variant, TexSlot texSlot) where TTarget : unmanaged, IRenderTarget
+    public void SampleTo<TTarget>(FboVariant variant, byte slot, TextureId texture)
+        where TTarget : unmanaged, IRenderTarget
     {
-        Debug.Assert(texSlot.Slot < RenderLimits.TextureSlots);
+        Debug.Assert(slot < RenderLimits.TextureSlots);
         var passKey = RenderRegistry.TargetRegistry<TTarget>.PassKey(variant);
-        var key = new PassTextureSlotKey(passKey.TagIndex, passKey.Variant, passKey.Pass, texSlot.Slot);
-        _sourceQueue.Enqueue(texSlot.Texture, key);
+        var key = new PassTextureSlotKey(passKey.TagIndex, passKey.Variant, passKey.Pass, slot);
+        _sourceQueue.Enqueue(texture, key);
     }
 
     public void MutateStatePass<TTarget>(FboVariant variant, in PassMutationState newState)
@@ -115,4 +116,5 @@ internal sealed class RenderPassContext
         RenderContext.ResetContext();
         VisualSystem.Instance.UploadMainView();
     }
+    
 }

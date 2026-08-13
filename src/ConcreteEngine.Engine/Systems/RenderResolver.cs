@@ -35,14 +35,12 @@ internal sealed class RenderResolver : IDisposable
     public void Execute()
     {
         Ensure();
-        
         var visibleCount = CullEntities();
         if (visibleCount == 0) return;
-        if((uint)visibleCount > (uint)_indices.Length) 
-            Throwers.BufferOverflow(nameof(RenderResolver), visibleCount, _indices.Length);
-        Debug.Assert(_indices[VisibleCount - 1].IsValid());
+        Debug.Assert((uint)visibleCount <= (uint)_indices.Length);
+        Debug.Assert(_indices[visibleCount - 1].IsValid());
 
-        DrawIndices.AsSpan().Sort();
+        DrawIndices.Reinterpret<ulong>().AsSpan().Sort();
         SubmitTransforms();
     }
 
@@ -75,10 +73,15 @@ internal sealed class RenderResolver : IDisposable
 
     private unsafe void SubmitTransforms()
     {
-        var transforms = _transforms.Ptr;
-        foreach (var query in TransformQuery())
+        var indexView = DrawIndices;
+        var dst = _transforms.Ptr;
+        var indices = indexView.Ptr;
+        var indicesEnd = indexView.EndPtr;
+        
+        var views = RenderEcs.Core.GetTransformView();
+        while (indices < indicesEnd)
         {
-            *transforms++ = query.Item1;
+            *dst++ = views[indices++->Entity.Index()];
         }
     }
 
@@ -91,13 +94,13 @@ internal sealed class RenderResolver : IDisposable
         Logger.Log(LogScope.Ecs, "Transform uniform buffer resized", LogLevel.Warn);
     }
 
-    public void Dispose() => _transforms.Dispose();
+    public void Dispose()
+    {
+        _indices.Dispose();
+        _transforms.Dispose();
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static RenderEntityCore.QueryEnumerator<BoundingAxisBox> CullQuery() =>
         new(RenderEcs.Core.GetDrawPolicyView(), RenderEcs.Core.GetWorldBoundView(), EntityDrawStatus.ForceHidden);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private RenderEntityCore.SparseQueryEnumerator<TransformUniform> TransformQuery() =>
-        new(DrawIndices, RenderEcs.Core.GetTransformView());
 }

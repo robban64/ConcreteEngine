@@ -24,12 +24,17 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
         Length = length;
     }
 
-    public int End => Offset + Length;
     public bool IsNull => Ptr == null;
     public bool IsNullOrEmpty => Ptr == null || Length == 0;
 
     public int SizeInBytes => Length * Unsafe.SizeOf<T>();
     public int OffsetInBytes => Length * Unsafe.SizeOf<T>();
+    
+    public T* EndPtr
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Ptr + Length;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator NativeView<T>(NativeArray<T> array) => new(array.Ptr, 0, array.Length);
@@ -42,7 +47,6 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T* operator -(NativeView<T> a, nint b) => a.Ptr - b;
-
 
     public ref T this[int index]
     {
@@ -68,35 +72,23 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<T> AsSpan(int offset = 0)
-    {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset, (uint)Length);
-        if (IsNullOrEmpty) return default;
-        return new Span<T>(Ptr + offset, Length - offset);
-    }
+    public Span<T> AsSpan() => IsNullOrEmpty ? default : new Span<T>(Ptr, Length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<T> AsSpan(int offset, int length)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset + (uint)length, (uint)Length);
-        if (IsNullOrEmpty) return default;
-        return new Span<T>(Ptr + offset, length);
+        return IsNullOrEmpty ? default : new Span<T>(Ptr + offset, length);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<T> AsReadOnlySpan(int offset = 0)
-    {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset, (uint)Length);
-        if (IsNullOrEmpty) return default;
-        return new ReadOnlySpan<T>(Ptr + offset, Length - offset);
-    }
-    
+    public ReadOnlySpan<T> AsReadOnlySpan() => IsNullOrEmpty ? default : new ReadOnlySpan<T>(Ptr, Length);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<T> AsReadOnlySpan(int offset, int length)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset + (uint)length, (uint)Length);
-        if (IsNullOrEmpty) return default;
-        return new ReadOnlySpan<T>(Ptr + offset, length);
+        return IsNullOrEmpty ? default : new ReadOnlySpan<T>(Ptr + offset, length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

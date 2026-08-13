@@ -59,10 +59,10 @@ internal sealed unsafe class AnimationSystem : IDisposable
 
     public void Execute(float alpha)
     {
-        ushort slot = 1;
+        int slot = 1;
         foreach (var animation in _animations)
         {
-            var count = FilterEntities(animation, slot);
+            var count = FilterEntities(slot, animation.GetEntitySpan());
             if (count == 0) continue;
 
             var time = animation.Interpolate(alpha);
@@ -78,28 +78,26 @@ internal sealed unsafe class AnimationSystem : IDisposable
         _boneBuffer.Dispose();
     }
 
-    private int FilterEntities(AnimationInstance animation, ushort slot)
+    private static int FilterEntities(int slot, ReadOnlySpan<RenderEntityId> entities)
     {
         var count = 0;
-        foreach (var entity in animation.GetEntitySpan())
+        foreach (var query in RenderEcs.Store<SkinningLink>().SparseQuery(entities))
         {
-            if (!RenderEcs.Core.IsVisible(entity)) continue;
-            RenderEcs.Store<SkinningLink>().Get(entity).AnimationSlot = slot;
+            if (!RenderEcs.Core.IsVisible(query.Entity)) continue;
+            query.Component.AnimationSlot = (ushort)slot;
             ++count;
         }
-
         return count;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private NativeView<Matrix4x4> WriteSlot(int bones)
+    private NativeView<Matrix4x4> NextSkinningView(int bones)
     {
-        var count = Count;
+        var count = Count++;
         var range = new Range32(BoneCount, bones);
         if (range.End > _boneBuffer.Length) EnsureBoneCapacity(range.End);
         if (count >= _slotRanges.Length) EnsureSlotCapacity(count);
         BoneCount += bones;
-        ++Count;
         _slotRanges[count] = range;
         return _boneBuffer.Slice(range);
     }
@@ -129,7 +127,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
         }
 
         globals = _globals.Ptr;
-        var dst = WriteSlot(length).Ptr;
+        var dst = NextSkinningView(length).Ptr;
         MatrixMath.MultiplyAffine(ref *++dst, in ctx.GetInverseBindPose(0), in globals[0]);
         for (var i = 1; i < length; ++i, ++dst)
         {

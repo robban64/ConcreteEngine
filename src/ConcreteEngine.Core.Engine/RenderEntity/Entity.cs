@@ -8,6 +8,7 @@ public readonly record struct RenderEntityId(int Id) : IComparable<RenderEntityI
 {
     public readonly int Id = Id;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsValid() => Id > 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -16,6 +17,7 @@ public readonly record struct RenderEntityId(int Id) : IComparable<RenderEntityI
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(RenderEntityId other) => Id.CompareTo(other.Id);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator int(RenderEntityId e) => e.Id;
 }
 

@@ -20,7 +20,7 @@ internal sealed class DrawCommandPipeline : IDisposable
 
     public readonly DrawCommandProcessor DrawCmd;
 
-    private NativeArray<(RenderEntityId, int)> _drawTickets;
+    private NativeArray<(RenderEntityId Entity, int SubmitIndex)> _drawTickets;
     private readonly Range32[] _passRanges;
 
     private readonly GfxBuffers _gfxBuffers;
@@ -42,6 +42,7 @@ internal sealed class DrawCommandPipeline : IDisposable
     public void ResetFrame() => DrawCmd.ResetFrame();
 
     public static AvgFrameTimer avg;
+
     public void StageCommands(RenderResolver resolver)
     {
         avg.BeginSample();
@@ -50,6 +51,7 @@ internal sealed class DrawCommandPipeline : IDisposable
         UploadBuffers(resolver.Transforms);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Range32 PrepareDrawPass(PassId passId)
     {
         DrawCmd.PrepareDrawPass();
@@ -61,8 +63,8 @@ internal sealed class DrawCommandPipeline : IDisposable
         var sources = RenderEcs.Core.GetSourceView().Ptr;
         foreach (var ticket in _drawTickets.Slice(passRange))
         {
-            var source = sources[ticket.Item1.Index()];
-            DrawCmd.DrawSource(source, ticket.Item1, ticket.Item2);
+            var source = sources[ticket.Entity.Index()];
+            DrawCmd.DrawSource(source, ticket.Entity, ticket.SubmitIndex);
         }
     }
 
@@ -122,7 +124,7 @@ internal sealed class DrawCommandPipeline : IDisposable
     private unsafe void CountTickets(NativeView<DrawEntityIndex> indices, int* heads)
     {
         var drawIndex = indices.Ptr;
-        var drawIndexEnd = drawIndex + indices.Length;
+        var drawIndexEnd = indices.EndPtr;
         while (drawIndex < drawIndexEnd)
         {
             var mask = (uint)drawIndex->Mask;
@@ -148,7 +150,6 @@ internal sealed class DrawCommandPipeline : IDisposable
             total += c;
         }
 
-
         return total;
     }
 
@@ -157,7 +158,7 @@ internal sealed class DrawCommandPipeline : IDisposable
         var drawTickets = _drawTickets.Ptr;
 
         var drawIndex = indices.Ptr;
-        var drawIndexEnd = drawIndex + indices.Length;
+        var drawIndexEnd = indices.EndPtr;
         while (drawIndex < drawIndexEnd)
         {
             var mask = (uint)drawIndex->Mask;
@@ -169,6 +170,7 @@ internal sealed class DrawCommandPipeline : IDisposable
                 drawTickets[w] = (drawIndex->Entity, submitIndex);
                 mask &= mask - 1;
             }
+
             ++drawIndex;
         }
     }

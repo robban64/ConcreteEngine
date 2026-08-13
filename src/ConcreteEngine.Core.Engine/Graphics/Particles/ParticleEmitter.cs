@@ -25,8 +25,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public readonly string Name;
 
     public MeshId BoundMesh { get; private set; }
-
-    public int Slot { get; private set; } = -1;
+    public int BoundSlot { get; private set; } = -1;
 
     public int ParticleCount { get; private set; }
     public int PendingParticleCount { get; private set; }
@@ -60,7 +59,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     }
 
     public bool IsDirty => _isDirty;
-    public bool IsAttached => Slot >= 0;
+    public bool IsAttached => BoundSlot >= 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly EmitterParams GetEmitterParams() => ref _emitterParams;
@@ -80,8 +79,8 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);
         ArgumentOutOfRangeException.ThrowIfZero(meshId.Id);
-        if (Slot >= 0) throw new ArgumentOutOfRangeException(nameof(slot));
-        Slot = slot;
+        if (BoundSlot >= 0) throw new ArgumentOutOfRangeException(nameof(slot));
+        BoundSlot = slot;
         BoundMesh = meshId;
     }
 
@@ -136,7 +135,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public void Dispose()
     {
         _particles.Dispose();
-        Slot = -1;
+        BoundSlot = -1;
         BoundMesh = default;
     }
 

@@ -13,7 +13,7 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
     public VisibilityQueryEnumerator VisibilityQuery() => new(_entities, _components, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SparseQueryEnumerator SparseQuery(NativeView<RenderEntityId> entities) => new(entities);
+    public SparseQueryEnumerator SparseQuery(ReadOnlySpan<RenderEntityId> entities) => new(entities);
 
     //[MethodImpl(MethodImplOptions.AggressiveInlining)]
     //public JoinQueryEnumerator JoinQuery(ReadOnlySpan<RenderEntityId> entities) => new(_entities, entities);
@@ -55,7 +55,7 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly ComponentEnumerator GetEnumerator() => this;
     }
-    
+
     public ref struct VisibilityQueryEnumerator
     {
         private RenderEntityId* _entity;
@@ -75,7 +75,7 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
             while (++_entity < _end)
             {
                 ++_component;
-                if(RenderEcs.Core.IsVisible(*_entity)) return true;
+                if (RenderEcs.Core.IsVisible(*_entity)) return true;
             }
 
             return false;
@@ -94,28 +94,24 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
 
     public ref struct SparseQueryEnumerator
     {
-        private RenderEntityId* _entity;
-        private readonly RenderEntityId* _end;
-        private int _index;
+        private readonly ReadOnlySpan<RenderEntityId> _entities;
+        private RenderEntityId _entity;
+        private int _i;
 
-        public SparseQueryEnumerator(NativeView<RenderEntityId> entities)
+        public SparseQueryEnumerator(ReadOnlySpan<RenderEntityId> entities)
         {
-            _index = 0;
-            _entity = entities.Ptr - 1;
-            _end = entities.Ptr + entities.Length;
+            _entities = entities;
+            _entity = default;
+            _i = -1;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-            while (++_entity < _end)
+            while (++_i < _entities.Length)
             {
-                var index = RenderEcs.Store<T>().FindIndexSorted(*_entity);
-                if (index >= 0)
-                {
-                    _index = index;
-                    return true;
-                }
+                _entity = _entities[_i];
+                if (_entity.IsValid()) return true;
             }
 
             return false;
@@ -124,14 +120,12 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
         public readonly RenderQueryItem Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(*_entity, ref RenderEcs.Store<T>().GetByIndex(_index));
+            get => new(_entity, ref RenderEcs.Store<T>().Get(_entity));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly SparseQueryEnumerator GetEnumerator() => this;
     }
-
-
 
 
     public ref struct JoinQueryEnumerator

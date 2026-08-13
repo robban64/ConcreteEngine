@@ -5,6 +5,7 @@ namespace ConcreteEngine.Core.Engine.RenderEntity;
 
 public sealed unsafe partial class RenderEntityCore
 {
+
     //
     public readonly ref struct QueryItem<T1>(RenderEntityId entity, ref T1 item1) where T1 : unmanaged
     {
@@ -35,7 +36,7 @@ public sealed unsafe partial class RenderEntityCore
             _entity = 0;
             _p1 = p1 - 1;
             _current = policies.Ptr - 1;
-            _end = policies.Ptr + policies.Length;
+            _end = policies.EndPtr;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,7 +46,8 @@ public sealed unsafe partial class RenderEntityCore
             {
                 ++_p1;
                 ++_entity;
-                if (_current->Status != 0 && _current->Status != _skipStatus) return true;
+                var status = _current->Status;
+                if (status != 0 && status != _skipStatus) return true;
             }
 
             return false;
@@ -64,15 +66,15 @@ public sealed unsafe partial class RenderEntityCore
     public ref struct SparseQueryEnumerator<T> where T : unmanaged
     {
         private readonly T* _p1;
-        private DrawEntityIndex* _current;
-        private readonly DrawEntityIndex* _end;
+        private RenderEntityId* _current;
+        private readonly RenderEntityId* _end;
 
-        public SparseQueryEnumerator(NativeView<DrawEntityIndex> entities, NativeView<T> p1)
+        public SparseQueryEnumerator(NativeView<RenderEntityId> entities, NativeView<T> p1)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThan(entities.Length, p1.Length);
             _p1 = p1;
             _current = entities - 1;
-            _end = entities + entities.Length;
+            _end = entities.EndPtr;
         }
 
 
@@ -94,10 +96,10 @@ public sealed unsafe partial class RenderEntityCore
         private readonly T1* _p1;
         private readonly T2* _p2;
 
-        private DrawEntityIndex* _current;
-        private readonly DrawEntityIndex* _end;
+        private RenderEntityId* _current;
+        private readonly RenderEntityId* _end;
 
-        public SparseQueryEnumerator(NativeView<DrawEntityIndex> entities, NativeView<T1> p1, NativeView<T2> p2)
+        public SparseQueryEnumerator(NativeView<RenderEntityId> entities, NativeView<T1> p1, NativeView<T2> p2)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThan(entities.Length, p1.Length);
             ArgumentOutOfRangeException.ThrowIfGreaterThan(entities.Length, p2.Length);
@@ -105,7 +107,7 @@ public sealed unsafe partial class RenderEntityCore
             _p1 = p1;
             _p2 = p2;
             _current = entities - 1;
-            _end = entities + entities.Length;
+            _end = entities.EndPtr;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

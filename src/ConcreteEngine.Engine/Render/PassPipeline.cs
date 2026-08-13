@@ -65,7 +65,7 @@ internal static partial class PassPipeline
             }).OnPassEnd(static (ctx, _) =>
             {
                 var texId = ctx.Target.Attachments.ColorTexture;
-                ctx.SampleTo<PostFxTarget>(FboVariant.V0, TexSlot.Slot0(texId));
+                ctx.SampleTo<PostFxTarget>(FboVariant.V0, 0, texId);
 
                 ctx.Cmd.EndRenderPass();
                 ctx.Cmd.GenerateMipMaps(texId);
@@ -81,7 +81,7 @@ internal static partial class PassPipeline
                 ctx.Cmd.EndRenderPass();
 
                 var texId = ctx.Target.Attachments.ColorTexture;
-                ctx.SampleTo<PostFxTarget>(FboVariant.V1, TexSlot.Slot0(texId));
+                ctx.SampleTo<PostFxTarget>(FboVariant.V1, 0, texId);
 
                 return PassAction.FsqPassResult();
             });
@@ -96,7 +96,7 @@ internal static partial class PassPipeline
                 ctx.Cmd.EndRenderPass();
 
                 var texId = ctx.Target.Attachments.ColorTexture;
-                ctx.SampleTo<OutputTarget>(FboVariant.V0, TexSlot.Slot0(texId));
+                ctx.SampleTo<OutputTarget>(FboVariant.V0, 0, texId);
 
                 return PassAction.FsqPassResult();
             });

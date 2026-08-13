@@ -29,6 +29,11 @@ public ref struct NativeAllocBuilder
         Cursor += length;
         return view;
     }
+    public NativeView<T> AllocSlice<T>(int amount = 1) where T : unmanaged
+    {
+        return AllocSlice(Unsafe.SizeOf<T>() * amount).Reinterpret<T>();
+    }
+
 
     public NativeView<byte> AllocStringSlice(ReadOnlySpan<char> str, bool nullTerminated = true)
     {
@@ -40,10 +45,6 @@ public ref struct NativeAllocBuilder
         return data;
     }
 
-    public NativeView<T> AllocSlice<T>(int amount = 1) where T : unmanaged
-    {
-        return AllocSlice(Unsafe.SizeOf<T>() * amount).Reinterpret<T>();
-    }
     
     public static NativeView<byte> AllocViewSlice(NativeView<byte> view, int cursor, int length, int alignment)
     {

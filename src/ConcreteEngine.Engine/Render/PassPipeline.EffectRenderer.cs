@@ -14,10 +14,9 @@ internal static partial class PassPipeline
 {
     private static unsafe void SelectionRenderer(RenderPassContext ctx)
     {
-        
         TransformUniform* uniform = stackalloc TransformUniform[1];
         EditorEffectsUniform* effect = stackalloc EditorEffectsUniform[1];
-        
+
         ctx.Cmd.UseShader(RenderRegistry.HighlightShader);
         RenderContext.OverrideShader = RenderRegistry.HighlightShader;
 
@@ -59,7 +58,7 @@ internal static partial class PassPipeline
             ref readonly var wb = ref RenderEcs.Core.GetWorldBounds(query.Entity);
             MatrixMath.CreateModelMatrix(wb.Center, wb.Extent, Quaternion.Identity, out uniform->Model);
             uniform->Normal = Matrix3X4.Identity;
-            
+
             ctx.Buffers.UploadSingleUniform(effect, 0);
             ctx.Buffers.UploadSingleUniform(uniform, 0);
             ctx.Cmd.BindUniformBufferRange<TransformUniform>(0, 1);

@@ -96,9 +96,7 @@ public sealed class EngineRenderSystem : IDisposable
         CameraManager.Instance.CommitFrame(alpha);
 
         // process and upload draw commands
-        RenderResolver.avg.BeginSample();
         _resolver.Execute();
-        RenderResolver.avg.EndSample();
 
         _particleSystem.Execute();
         _animationSystem.Execute(alpha);
@@ -106,10 +104,10 @@ public sealed class EngineRenderSystem : IDisposable
         // prepare buffers
         _drawPipeline.StageCommands(_resolver);
 
-        if (RenderResolver.avg.Ticks > 144)
+        if (DrawCommandPipeline.avg.Ticks > 144)
         {
-            RenderResolver.avg.ResetAndPrint("Cull");
             DrawCommandPipeline.avg.ResetAndPrint("Stage");
+            RenderResolver.avg.ResetAndPrint("animation");
         }
     }
 
@@ -123,10 +121,8 @@ public sealed class EngineRenderSystem : IDisposable
 
             if (passResult.Op is PassOp.Draw)
             {
-                //avg.BeginSample();
                 var passRange = _drawPipeline.PrepareDrawPass(nextPassId);
                 _drawPipeline.ExecuteDrawPass(passRange);
-                //if (avg.EndSample() > 144 * 4) avg.ResetAndPrint();
             }
 
             _passPipeline.ApplyAfterPass();

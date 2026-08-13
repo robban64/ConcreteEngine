@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
@@ -45,13 +46,17 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     public bool Has(RenderEntityId entity) => FindIndexLinear(entity) >= 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntityId GetEntity(int i) => _entities[i];
+    public RenderEntityId GetEntity(int index) => _entities[index];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T GetByIndex(int i) => ref _components[i];
+    public ref T GetByIndex(int index)
+    {
+        if ((uint)index >= (uint)Count) Throwers.IndexOutOfRange(nameof(_entities), index, Count);
+        return ref _components[index];
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T Get(RenderEntityId entity) => ref _components[FindIndexSorted(entity)];
+    public ref T Get(RenderEntityId entity) => ref GetByIndex(FindIndexSorted(entity));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T GetOrDefault(RenderEntityId entity)

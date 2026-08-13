@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
@@ -79,13 +80,13 @@ internal sealed class ParticleSystem : IDisposable
     internal void Execute()
     {
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
-        foreach (var emitterId in CollectionsMarshal.AsSpan(_processedEmitters))
+        foreach (var emitterId in _processedEmitters.AsSpan())
         {
             var emitter = _particleManager.Get(emitterId);
 
             var particles = emitter.GetParticleView();
             ProcessEmitter(particles, in emitter.GetParticleParams(), timeOffset);
-            _particleMesh.UploadGpuData(emitter.Slot, particles.Length);
+            _particleMesh.UploadGpuData(emitter.BoundSlot, particles.Length);
         }
     }
 

@@ -26,15 +26,26 @@ public readonly unsafe struct MemoryBlock : IEquatable<MemoryBlock>
     public int Length => Ptr->Length;
     public int Remaining => Ptr->Remaining;
 
-    public void SetLength(int length) => Ptr->Length = length;
-    public void SetCursor(int cursor) => Ptr->Cursor = cursor;
+    public bool HasNext => Ptr != null && Ptr->Next != null;
+
+    public void SetLength(int length)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)length, (uint)Cursor);
+        Ptr->Length = length;
+    }
+
+    public void SetCursor(int cursor)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)cursor, (uint)Length);
+        Ptr->Cursor = cursor;
+    }
 
     public MemoryBlock Next
     {
         get
         {
-            if(Ptr == null) Throwers.NullPointer(nameof(Ptr));
-            if(Ptr->Next == null) Throwers.NullPointer(nameof(Next));
+            if (Ptr == null) Throwers.NullPointer(nameof(Ptr));
+            if (Ptr->Next == null) Throwers.NullPointer(nameof(Next));
             return new MemoryBlock(Ptr->Next);
         }
     }
@@ -42,8 +53,14 @@ public readonly unsafe struct MemoryBlock : IEquatable<MemoryBlock>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetNext(out MemoryBlock block)
     {
-        block = Next;
-        return block != null;
+        if (HasNext)
+        {
+            block = new MemoryBlock(Ptr->Next);
+            return true;
+        }
+
+        block = default;
+        return false;
     }
 
     public NativeView<byte> Data
@@ -56,31 +73,24 @@ public readonly unsafe struct MemoryBlock : IEquatable<MemoryBlock>
         }
     }
 
-    public NativeView<byte> AllocSlice(int length, int alignment = 0)
+    public NativeView<byte> AllocSlice(int length, int cursorAlignment = 0)
     {
-        if(Ptr == null) Throwers.NullPointer(nameof(Next));
-
-        ArgumentOutOfRangeException.ThrowIfLessThan(length, 4);
-        if (alignment > 0) length = IntMath.AlignUp(length, alignment);
-
-        if ((uint)Cursor + (uint)length > (uint)Length)
-            Throwers.BufferOverflow(nameof(Data), Cursor + length, Length);
-
-        var start = Cursor;
-        Ptr->Cursor += length;
-        return Data.Slice(start, length);
+        var allocator = new NativeAllocBuilder(Data, Cursor, cursorAlignment);
+        var slice = allocator.AllocSlice(length);
+        SetCursor(allocator.Cursor);
+        return slice;
     }
 
     public static implicit operator MemoryBlock(MemoryBlockHeader* ptr) => new(ptr);
-    public static implicit operator MemoryBlock(IntPtr ptr) => new((MemoryBlockHeader*)ptr);
-    public static explicit operator IntPtr(MemoryBlock ptr) => (IntPtr)ptr.Ptr;
+    public static implicit operator MemoryBlock(nint ptr) => new((MemoryBlockHeader*)ptr);
+    public static explicit operator nint(MemoryBlock ptr) => (nint)ptr.Ptr;
 
     public static bool operator ==(MemoryBlock left, MemoryBlock right) => left.Equals(right);
     public static bool operator !=(MemoryBlock left, MemoryBlock right) => !left.Equals(right);
 
     public bool Equals(MemoryBlock other) => Ptr == other.Ptr;
     public override bool Equals(object? obj) => obj is MemoryBlock other && Equals(other);
-    public override int GetHashCode() => ((IntPtr)Ptr).GetHashCode();
+    public override int GetHashCode() => ((nint)Ptr).GetHashCode();
 
 
     [StructLayout(LayoutKind.Sequential)]

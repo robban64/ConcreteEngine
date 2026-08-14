@@ -179,7 +179,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     private void InitializeParticles(int start, int length)
     {
         if ((uint)start + (uint)length > (uint)_particles.Length)
-            Throwers.IndexOutOfRange(nameof(_particles), start + length, _particles.Length);
+            Throwers.RangeOutOfBounds(start, length, _particles.Length);
 
         var rng = _rng;
         var particles = _particles.Slice(start, length);

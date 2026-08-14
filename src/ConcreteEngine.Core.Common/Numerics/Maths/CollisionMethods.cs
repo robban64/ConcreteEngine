@@ -63,8 +63,7 @@ public static class CollisionMethods
         float d2 = Vector4.Dot(extent4, Vector4.Abs(plane));
         return d1 + d2 <= 0f;
     }
-
-
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3 IntersectPlanes(in Plane p1, in Plane p2, in Plane p3)
@@ -72,12 +71,15 @@ public static class CollisionMethods
         var n1 = p1.Normal;
         var n2 = p2.Normal;
         var n3 = p3.Normal;
+        var d1 = p1.D;
+        var d2 = p2.D;
+        var d3 = p3.D;
 
         var n2xn3 = Vector3.Cross(n2, n3);
         var n3xn1 = Vector3.Cross(n3, n1);
         var n1xn2 = Vector3.Cross(n1, n2);
 
         var denom = Vector3.Dot(n1, n2xn3);
-        return -(p1.D * n2xn3 + p2.D * n3xn1 + p3.D * n1xn2) / denom;
+        return -(d1 * n2xn3 + d2 * n3xn1 + d3 * n1xn2) / denom;
     }
 }

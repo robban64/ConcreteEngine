@@ -20,6 +20,9 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
         Length = length;
         _ptr1 = (T1*)array.Ptr;
         _ptr2 = (T2*)(array.Ptr + sizeT1);
+        //var x = new NativeAllocBuilder(array);
+        //_ptr1 = x.AllocSlice<T1>(length);
+        //_ptr2 = x.AllocSlice<T2>(length);
     }
 
     public readonly bool IsNull => _ptr1 == null;

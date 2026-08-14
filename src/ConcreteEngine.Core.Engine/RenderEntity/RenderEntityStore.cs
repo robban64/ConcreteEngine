@@ -51,7 +51,7 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T GetByIndex(int index)
     {
-        if ((uint)index >= (uint)Count) Throwers.IndexOutOfRange(nameof(_entities), index, Count);
+        if ((uint)index >= (uint)Count) Throwers.IndexOutOfRange(index, Count, nameof(index));
         return ref _components[index];
     }
 

@@ -18,8 +18,12 @@ public unsafe ref partial struct NativeSpanWriter
         _cursor = cursor;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeSpanWriter(NativeView<byte> buffer) : this(buffer, buffer.Length) { }
+    public NativeSpanWriter(NativeView<byte> buffer)
+    {
+        Buffer = buffer;
+        Capacity = buffer.Length;
+        _cursor = 0;
+    }
 
     public readonly int Cursor => _cursor;
     public readonly int BytesLeft => Capacity - _cursor;

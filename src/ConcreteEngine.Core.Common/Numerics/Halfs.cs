@@ -5,14 +5,30 @@ using System.Runtime.InteropServices;
 namespace ConcreteEngine.Core.Common.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct Half4(Half x, Half y, Half z, Half w)
+public struct Half4
 {
-    public Half4(float x, float y, float z, float w) : this((Half)x, (Half)y, (Half)z, (Half)w) { }
+    public Half4(Half x, Half y, Half z, Half w)
+    {
+        X = x;
+        Y = y;
+        Z = z;
+        W = w;
+    }
 
-    public Half X = x;
-    public Half Y = y;
-    public Half Z = z;
-    public Half W = w;
+    public Half4(float x, float y, float z, float w)
+    {
+        X = (Half)x;
+        Y = (Half)y;
+        Z = (Half)z;
+        W = (Half)w;
+    }
+
+
+    public Half X;
+    public Half Y;
+    public Half Z;
+    public Half W;
+
 }
 
 [StructLayout(LayoutKind.Sequential)]

@@ -49,17 +49,18 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
 
         if (Instance != null!) Throwers.InvalidOperation(nameof(Instance));
         Instance = this;
-        _free = new Stack<int>();
 
         _memory = NativeArray.Allocate(initialCapacity * Unsafe.SizeOf<Entry>());
         _entries = (Entry*)_memory.Ptr;
+
+        _free = new Stack<int>();
     }
 
     public GraphicsKind GraphicsKind => TMeta.ResourceKind;
 
     public int ActiveCount => Count - _free.Count;
     public int FreeCount => _free.Count;
-    public int Capacity => _memory.Length / Unsafe.SizeOf<Entry>();
+    public int Capacity => _memory.Length > 0 ? _memory.Length / Unsafe.SizeOf<Entry>() : 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeHandle<TMeta> GetHandle(GfxId<TMeta> id) => _entries[id.Index()].Handle;
@@ -70,8 +71,9 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeHandle<TMeta> GetHandleAndMeta(GfxId<TMeta> id, out TMeta meta)
     {
-        meta = _entries[id.Index()].Meta;
-        return _entries[id.Index()].Handle;
+        ref readonly var it = ref _entries[id.Index()];
+        meta = it.Meta;
+        return it.Handle;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -156,10 +158,20 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
         _onUpdate = callback;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public void EnsureCapacity(int capacity)
+    private int AllocateNext()
     {
-        var sizeInBytes = capacity * Unsafe.SizeOf<Entry>();
+        var index = SlotHelper.NextSlot(_free, Count);
+        if (index >= 0) return index;
+
+        if (Count >= Capacity) EnsureCapacity(1);
+        return Count++;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void EnsureCapacity(int count)
+    {
+        var newCount = Count + count;
+        var sizeInBytes = newCount * Unsafe.SizeOf<Entry>();
         if (sizeInBytes <= _memory.Length) return;
 
         var newCap = CapacityUtils.CapacityGrowthToFit(_memory.Length, sizeInBytes);
@@ -173,14 +185,6 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
         _entries = (Entry*)_memory.Ptr;
     }
 
-    private int AllocateNext()
-    {
-        var index = SlotHelper.NextSlot(_free, Count);
-        if (index >= 0) return index;
-
-        if (Count >= Capacity) EnsureCapacity(1);
-        return Count++;
-    }
 
     public void Dispose()
     {

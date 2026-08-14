@@ -10,40 +10,16 @@ namespace ConcreteEngine.Editor.Data;
 internal readonly unsafe struct NativeString : IEquatable<NativeString>
 {
     public const int HeaderSize = 2 * sizeof(int);
-
-    //
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct NativeStringHeader(int capacity, int length = 0)
-    {
-        public readonly int Capacity = capacity;
-
-        public int Length = length;
-        public readonly int Remaining => Capacity - Length;
-
-        // byte[capacity]
-    }
-    //
+    public static NativeString Null => new(null);
 
     private readonly NativeStringHeader* _ptr;
 
     public NativeString(NativeStringHeader* ptr) => _ptr = ptr;
 
-    //
-    public static NativeString Null => new(null);
-
-    internal static NativeString From(NativeView<byte> view)
-    {
-        ArgumentNullException.ThrowIfNull(view.Ptr);
-        var ptr = (NativeStringHeader*)view.Ptr;
-        *ptr = new NativeStringHeader(view.Length, 0);
-        return new NativeString(ptr);
-    }
-    //
-
     public bool IsNull => _ptr == null;
     public int Length => _ptr->Length;
     public int Capacity => _ptr->Capacity;
-    public int Remaining => _ptr->Remaining;
+    public int Remaining => Capacity - Length;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator byte*(NativeString str) => str.TextStart;
@@ -140,4 +116,21 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
     public override bool Equals(object? obj) => obj is NativeString other && Equals(other);
 
     public override int GetHashCode() => unchecked((int)(long)_ptr);
+
+    //
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct NativeStringHeader(int capacity, int length = 0)
+    {
+        public int Length = length;
+        public readonly int Capacity = capacity;
+    }
+
+    internal static NativeString From(NativeView<byte> view)
+    {
+        if (view.IsNullOrEmpty) Throwers.InvalidArgument(nameof(view));
+        var ptr = (NativeStringHeader*)view.Ptr;
+        *ptr = new NativeStringHeader(view.Length, 0);
+        return new NativeString(ptr);
+    }
+    
 }

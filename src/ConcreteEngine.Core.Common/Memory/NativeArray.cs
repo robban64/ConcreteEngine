@@ -86,7 +86,12 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         return new ReadOnlySpan<T>(Ptr + offset, length);
     }
     
-    public readonly void Clear() => NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear()
+    {
+        if (IsNull) Throwers.NullPointer(nameof(Ptr));
+        NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
+    }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void ReAlloc(int newLength, bool zeroed)

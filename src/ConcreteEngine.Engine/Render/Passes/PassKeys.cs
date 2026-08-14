@@ -9,7 +9,7 @@ public readonly record struct FboVariant(byte Value) : IComparable<FboVariant>
     public static FboVariant V3 => new(2);
     public static FboVariant V4 => new(3);
 
-    public static implicit operator byte(FboVariant slot) => slot.Value;
+    public static implicit operator int(FboVariant slot) => slot.Value;
 
     public int CompareTo(FboVariant other) => Value.CompareTo(other.Value);
 }

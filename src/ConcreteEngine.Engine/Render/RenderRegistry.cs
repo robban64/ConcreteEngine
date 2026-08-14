@@ -50,33 +50,18 @@ public sealed partial class RenderRegistry
 
 
     private ReadOnlySpan<RenderFbo> GetFrameBuffers() => new(_frameBuffers, 0, _fboCount);
+    private ReadOnlySpan<RenderPassEntry> GetPassEntries() => new(_passEntries, 0, _passCount);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetRenderFbo(FboKey key, [NotNullWhen(true)] out RenderFbo? fbo)
-    {
-        var index = _slotByTagIndex[key.TagIndex][key.Variant];
-        if (index < byte.MaxValue)
-        {
-            fbo = _frameBuffers[index];
-            return true;
-        }
-
-        fbo = null;
-        return false;
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderFbo GetByKey(FboKey key)
+    private RenderFbo GetByKey(FboKey key)
     {
         var index = _slotByTagIndex[key.TagIndex][key.Variant];
         return _frameBuffers[index];
     }
 
-    public void RecreateFixedFrameBuffer<TTarget>(FboVariant variant, Size2D size)
-        where TTarget : unmanaged, IRenderTarget
+    public void RecreateFixedFrameBuffer<TTarget>(FboVariant v, Size2D size) where TTarget : unmanaged, IRenderTarget
     {
-        RecreateFixedFrameBuffer(TargetRegistry<TTarget>.TagIndex, variant, size);
+        RecreateFixedFrameBuffer(TargetRegistry<TTarget>.TagIndex, v, size);
     }
 
 
@@ -91,8 +76,7 @@ public sealed partial class RenderRegistry
         var meta = GfxRegistry.GetMeta(fbo.FboId);
         if (meta.Size == size) return;
 
-        ValidateOutputSize(size, fbo.IsShadowFbo);
-        ArgumentOutOfRangeException.ThrowIfEqual(size, meta.Size);
+        RenderFbo.ValidateOutputSize(size, fbo.IsShadowFbo);
         ArgumentOutOfRangeException.ThrowIfEqual(fbo.IsFixedSize, false);
 
         try
@@ -110,7 +94,7 @@ public sealed partial class RenderRegistry
 
     public void RecreateScreenDependentFbo(Size2D outputSize)
     {
-        ValidateOutputSize(outputSize, false);
+        RenderFbo.ValidateOutputSize(outputSize, false);
 
         try
         {
@@ -138,12 +122,17 @@ public sealed partial class RenderRegistry
     private RenderPassEntry AddPassEntry(PassTargetKey key, PassOp op, GfxPassState gfxState, ShaderId shaderId,
         bool linearFilter)
     {
-        foreach (var e in _passEntries.AsSpan(0, _passCount))
+        foreach (var e in GetPassEntries())
         {
             if (e.PassKey == key) Throwers.InvalidArgument("Duplicated passes");
         }
 
-        var fboId = TryGetRenderFbo(key, out var fbo) ? fbo.FboId : default;
+        FrameBufferId fboId = default;
+        foreach (var e in GetFrameBuffers())
+        {
+            if(e.Key == key) fboId = e.FboId;
+        }
+
         return _passEntries[_passCount++] = new RenderPassEntry(key, op, gfxState, fboId, shaderId, linearFilter);
     }
 
@@ -170,7 +159,7 @@ public sealed partial class RenderRegistry
         if (_slotByTagIndex[key.TagIndex][key.Variant] != byte.MaxValue)
             Throwers.InvalidOperation(nameof(_slotByTagIndex));
 
-        ValidateOutputSize(entry.Size, targetKind == RenderTargetKind.Shadow);
+        RenderFbo.ValidateOutputSize(entry.Size, targetKind == RenderTargetKind.Shadow);
 
         var fboId = _gfxFbo.CreateFrameBuffer(entry);
         var renderFbo = new RenderFbo(fboId, key, targetKind, resizeMode, calc);
@@ -179,21 +168,6 @@ public sealed partial class RenderRegistry
 
         _slotByTagIndex[key.TagIndex][key.Variant] = (byte)_fboCount;
         _frameBuffers[_fboCount++] = renderFbo;
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ValidateOutputSize(Size2D outputSize, bool isShadowMap)
-    {
-        if (outputSize < RenderLimits.MinOutputSize) Throwers.InvalidArgument(nameof(outputSize));
-        if (isShadowMap)
-        {
-            if (outputSize > RenderLimits.MaxShadowMapSize) Throwers.InvalidArgument(nameof(outputSize));
-            if (outputSize < RenderLimits.MinShadowMapSize) Throwers.InvalidArgument(nameof(outputSize));
-        }
-        else if (outputSize > RenderLimits.MaxOutputSize)
-        {
-            Throwers.InvalidArgument(nameof(outputSize));
-        }
     }
 
     private static void RegisterFbo()

@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
@@ -9,6 +7,7 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Engine.Render;
+using ConcreteEngine.Engine.Render.Impl;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Graphics;
 
@@ -107,7 +106,6 @@ public sealed class EngineRenderSystem : IDisposable
         _drawPipeline.ReadyDrawCommands(_resolver.DrawIndices);
     }
 
-    public static AvgFrameTimer avg;
     public void ExecuteRenderPipeline()
     {
         var length = RenderRegistry.PassCount;
@@ -115,8 +113,6 @@ public sealed class EngineRenderSystem : IDisposable
         {
             _drawPipeline.RunPass(new PassId(i));
         }
-
-        if (avg.EndSample() > 80 * 8) avg.ResetAndPrint();
     }
 
 

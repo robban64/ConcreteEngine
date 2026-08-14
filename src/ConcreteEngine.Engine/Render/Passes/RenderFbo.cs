@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 
@@ -47,5 +48,20 @@ public sealed class RenderFbo : IComparable<RenderFbo>
     {
         if (ReferenceEquals(this, other)) return 0;
         return other is null ? 1 : Key.CompareTo(other.Key);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ValidateOutputSize(Size2D outputSize, bool isShadowMap)
+    {
+        if (outputSize < RenderLimits.MinOutputSize) Throwers.InvalidArgument(nameof(outputSize));
+        if (isShadowMap)
+        {
+            if (outputSize > RenderLimits.MaxShadowMapSize) Throwers.InvalidArgument(nameof(outputSize));
+            if (outputSize < RenderLimits.MinShadowMapSize) Throwers.InvalidArgument(nameof(outputSize));
+        }
+        else if (outputSize > RenderLimits.MaxOutputSize)
+        {
+            Throwers.InvalidArgument(nameof(outputSize));
+        }
     }
 }

@@ -10,6 +10,13 @@ public sealed partial class RenderRegistry
 {
     public static int FboCount => Instance._fboCount;
     public static int PassCount => Instance._passCount;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static RenderFbo GetRenderFbo(PassId passId)
+    {
+        var fboId = GetPassEntry(passId).Params.Target;
+        return Instance._frameBuffers[fboId];
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static RenderPassEntry GetPassEntry(PassId passId) => Instance._passEntries[passId];

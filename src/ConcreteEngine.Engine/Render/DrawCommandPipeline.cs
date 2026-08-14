@@ -38,9 +38,7 @@ internal sealed class DrawCommandPipeline : IDisposable
 
     public void RunPass(PassId passId)
     {
-        EngineRenderSystem.avg.BeginSample();
         var passResult = BeginPass(passId);
-        EngineRenderSystem.avg.EndSample();
         
         if (passResult.Op is PassOp.Draw)
         {
@@ -74,7 +72,6 @@ internal sealed class DrawCommandPipeline : IDisposable
             _drawCmd.DrawSource(source, ticket.Entity, ticket.SubmitIndex);
         }
     }
-
 
     public unsafe void ReadyDrawCommands(NativeView<DrawEntityIndex> indices)
     {

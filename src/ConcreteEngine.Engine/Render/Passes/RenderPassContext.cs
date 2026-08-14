@@ -1,7 +1,5 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render.Passes;
@@ -31,9 +29,9 @@ internal sealed class RenderPassContext(DrawCommandProcessor drawCmd)
         CurrentPass = default;
         _passParams = default;
         _gfxState = default;
-        Array.Clear(_passData);
+        Array.Clear(_passData, 0, RenderRegistry.PassCount);
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AttachPass(RenderPassEntry passEntry)
     {
@@ -76,7 +74,7 @@ internal sealed class RenderPassContext(DrawCommandProcessor drawCmd)
         _passData[toPassId].ResolveTarget = target;
     }
 
-    public void ApplyFsqSamplerBindings()
+    public void ApplyScreenSamplerBindings()
     {
         var gfx = Gfx;
         gfx.UnbindAllTextures();
@@ -85,7 +83,7 @@ internal sealed class RenderPassContext(DrawCommandProcessor drawCmd)
         gfx.BindSampler(SamplerProfile.PointClamp, 2);
     }
 
-    public void RunFsqPass()
+    public void RunFullScreenPass()
     {
         var gfx = Gfx;
         gfx.BeginRenderPass(TargetFbo, _gfxState);

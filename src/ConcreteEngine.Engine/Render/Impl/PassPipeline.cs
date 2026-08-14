@@ -8,7 +8,7 @@ using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics.Gfx;
 using static ConcreteEngine.Graphics.Gfx.GfxStateFlags;
 
-namespace ConcreteEngine.Engine.Render;
+namespace ConcreteEngine.Engine.Render.Impl;
 
 internal static partial class PassPipeline
 {
@@ -92,8 +92,8 @@ internal static partial class PassPipeline
         registry.RegisterPass<PostFxTarget>(FboVariant.V0, PassOp.Fsq, MakePostFx(), RenderStore.CompositeShader)
             .OnPassBegin(static ctx =>
             {
-                ctx.ApplyFsqSamplerBindings();
-                ctx.RunFsqPass();
+                ctx.ApplyScreenSamplerBindings();
+                ctx.RunFullScreenPass();
                 
                 var texId = ctx.TargetMeta.Attachments.ColorTexture;
                 ctx.SampleTo<PostFxTarget>(FboVariant.V1, 0, texId);
@@ -107,7 +107,7 @@ internal static partial class PassPipeline
             {
                 var texId = ctx.TargetMeta.Attachments.ColorTexture;
 
-                ctx.RunFsqPass();
+                ctx.RunFullScreenPass();
                 ctx.SampleTo<OutputTarget>(FboVariant.V0, 0, texId);
 
                 return PassAction.FsqPassResult();
@@ -117,7 +117,7 @@ internal static partial class PassPipeline
         registry.RegisterPass<OutputTarget>(FboVariant.V0, PassOp.Screen, MakeScreen(), RenderStore.PresentShader)
             .OnPassBegin(static ctx =>
             {
-                ctx.RunFsqPass();
+                ctx.RunFullScreenPass();
 
                 ctx.Gfx.ApplyPassState(ColorMask);
                 ctx.Gfx.Clear(ColorRgba.Black, ClearBufferFlag.ColorAndDepth);

@@ -8,7 +8,7 @@ using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Graphics.Gfx;
 
-namespace ConcreteEngine.Engine.Render;
+namespace ConcreteEngine.Engine.Render.Impl;
 
 internal static partial class PassPipeline
 {

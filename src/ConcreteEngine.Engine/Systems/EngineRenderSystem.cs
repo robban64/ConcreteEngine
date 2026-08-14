@@ -24,7 +24,7 @@ public sealed class EngineRenderSystem : IDisposable
     private readonly AnimationSystem _animationSystem;
 
     private readonly DrawCommandPipeline _drawPipeline;
-    private readonly DrawCommandProcessor _drawCmd;
+
 
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
@@ -37,12 +37,10 @@ public sealed class EngineRenderSystem : IDisposable
         _terrainSystem = new TerrainSystem(graphics.Gfx);
         _particleSystem = new ParticleSystem(graphics.Gfx);
         _animationSystem = new AnimationSystem(AnimationManager.Instance);
-
+        
+        _resolver = new RenderResolver(CameraManager.Instance.Frustum);
 
         _drawPipeline = new DrawCommandPipeline(graphics.Gfx, _animationSystem, _materialSystem);
-        _drawCmd = _drawPipeline.DrawCmd;
-
-        _resolver = new RenderResolver(CameraManager.Instance.Frustum);
 
         VisualSystem.Create(graphics.Gfx.Buffers);
     }
@@ -91,7 +89,6 @@ public sealed class EngineRenderSystem : IDisposable
     public void PrepareRenderer(float alpha)
     {
         RenderContext.ResetContext();
-
         _animationSystem.ResetFrame();
         _drawPipeline.ResetFrame();
 
@@ -110,19 +107,16 @@ public sealed class EngineRenderSystem : IDisposable
         _drawPipeline.ReadyDrawCommands(_resolver.DrawIndices);
     }
 
+    public static AvgFrameTimer avg;
     public void ExecuteRenderPipeline()
     {
         var length = RenderRegistry.PassCount;
         for (var i = 0; i < length; ++i)
         {
-            var passResult = RenderRegistry.GetPassEntry(i).ApplyPass(_drawCmd);
-            if (passResult.Op is PassOp.Draw)
-            {
-                _drawPipeline.ExecuteDrawPass(new PassId(i));
-            }
-
-            RenderRegistry.GetPassEntry(i).ApplyAfterPass(_drawCmd);
+            _drawPipeline.RunPass(new PassId(i));
         }
+
+        if (avg.EndSample() > 80 * 8) avg.ResetAndPrint();
     }
 
 

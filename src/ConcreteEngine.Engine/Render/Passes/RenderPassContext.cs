@@ -6,16 +6,43 @@ using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render.Passes;
 
-internal readonly ref struct RenderPassContext(RenderPassEntry passEntry, DrawCommandProcessor drawCmd)
+internal sealed class RenderPassContext(DrawCommandProcessor drawCmd)
 {
-    private readonly RenderPassEntry _passEntry = passEntry;
+    public PassId CurrentPass { get; private set; }
+    private PassState _passState;
+    private GfxPassState _gfxPassState;
+
+    private readonly FrameBufferId[] _targets = new FrameBufferId[RenderLimits.FboSlots];
+    private readonly InlineArray4<TextureId>[] _sources = new InlineArray4<TextureId>[RenderLimits.FboSlots];
+
     public readonly DrawCommandProcessor DrawCmd = drawCmd;
 
-    public ref PassState State
+    public ref PassState State => ref _passState;
+    public ref GfxPassState GfxState => ref _gfxPassState;
+    public FrameBufferId ResolveTarget => _passState.ResolveTarget;
+    public FrameBufferId TargetFbo => _passState.Target;
+    public ShaderId PassShader => _passState.PassShader;
+    public bool LinearFilter => _passState.LinearFilter;
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ResetFrame()
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref _passEntry.State;
+        CurrentPass = default;
+        _passState = default;
+        _gfxPassState = default;
+        Array.Clear(_targets);
+        Array.Clear(_sources);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AttachPass(RenderPassEntry passEntry)
+    {
+        var passId = CurrentPass = passEntry.PassKey;
+        _gfxPassState = passEntry.GfxState;
+        _passState = passEntry.State with { ResolveTarget = _targets[passId] };
+    }
+
 
     public GfxCommands Gfx
     {
@@ -29,9 +56,6 @@ internal readonly ref struct RenderPassContext(RenderPassEntry passEntry, DrawCo
         get => DrawCmd.GfxBuffers;
     }
 
-    public FrameBufferId TargetFbo => State.Target;
-    public ShaderId PassShader => State.PassShader;
-
     public ref readonly FrameBufferMeta TargetMeta
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -43,28 +67,35 @@ internal readonly ref struct RenderPassContext(RenderPassEntry passEntry, DrawCo
         where TTarget : unmanaged, IRenderTarget
     {
         Debug.Assert(slot < RenderLimits.TextureSlots);
-        RenderRegistry.GetPassEntry<TTarget>(variant).SetSourceSlot(slot, texture);
+        var toPassId = RenderRegistry.TargetRegistry<TTarget>.GetPassId(variant);
+        _sources[toPassId][slot] = texture;
+        //RenderRegistry.GetPassEntry<TTarget>(variant).SetSourceSlot(slot, texture);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void MutateStatePass<TTarget>(FboVariant variant, FrameBufferId targetFboId)
         where TTarget : unmanaged, IRenderTarget
     {
-        RenderRegistry.GetPassEntry<TTarget>(variant).State.ResolveTarget = targetFboId;
+        var toPassId = RenderRegistry.TargetRegistry<TTarget>.GetPassId(variant);
+        _targets[toPassId] = targetFboId;
+        //RenderRegistry.GetPassEntry<TTarget>(variant).State.ResolveTarget = targetFboId;
     }
-    
+
+
     public void DrawFullscreenQuad()
     {
-        var sources = _passEntry.GetSources();
-        
-        Gfx.UseShader(PassShader);
+        var gfx = Gfx;
+        gfx.BeginRenderPass(TargetFbo, _gfxPassState);
+        gfx.UseShader(PassShader);
+
+        var sources = _sources[CurrentPass];
         for (var i = 0; i < 4; ++i)
         {
             var source = sources[i];
-            if (source > 0) Gfx.BindTextureAndSampler(source, SamplerProfile.PointClamp, (byte)i);
+            gfx.BindTextureAndSampler(source, SamplerProfile.PointClamp, (byte)i);
         }
 
-        Gfx.DrawMesh(GfxMeshes.FsqQuad);
+        gfx.DrawMesh(GfxMeshes.FsqQuad);
+        gfx.EndRenderPass();
     }
-
 }

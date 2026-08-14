@@ -29,11 +29,11 @@ internal sealed class DrawCommandProcessor
         GfxBuffers = gfx.Buffers;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ResetFrame()
     {
         _lastAnimationSlot = 0;
         _lastMaterialId = default;
-        RenderContext.ResetContext();
     }
 
     public void PrepareDrawPass()
@@ -47,8 +47,7 @@ internal sealed class DrawCommandProcessor
             GfxCmd.UnbindAllTextures();
         }
 
-        GfxCmd.BindTextureAndSampler(RenderContext.DepthTexture, SamplerProfile.ShadowCompare,
-            (byte)SamplerSlot.ShadowMap0);
+        GfxCmd.BindTextureAndSampler(RenderContext.DepthTexture, SamplerProfile.ShadowCompare, (byte)SamplerSlot.ShadowMap0);
     }
 
     public void DrawSource(RenderSource source, RenderEntityId entity, int submitIndex)

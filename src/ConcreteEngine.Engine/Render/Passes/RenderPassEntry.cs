@@ -5,57 +5,37 @@ namespace ConcreteEngine.Engine.Render.Passes;
 
 internal sealed class RenderPassEntry : IComparable<PassTargetKey>
 {
-    private static PassAction NoOpPass(RenderPassContext ctx, GfxPassState gfxState) => default;
+    private static PassAction NoOpPass(RenderPassContext ctx) => default;
 
-    public PassTargetKey PassKey { get; }
-    public PassOp PassOp { get; private set; }
+    public readonly PassTargetKey PassKey;
+    public readonly PassOp PassOp;
 
-    public PassState State;
-    private InlineArray4<TextureId> _sources;
-    private readonly GfxPassState _gfxState;
+    public readonly PassState State;
+    public readonly GfxPassState GfxState;
 
-    private Func<RenderPassContext, GfxPassState, PassAction> _applyPassDel = NoOpPass;
-    private Action<RenderPassContext, GfxPassState>? _applyAfterPassDel;
+    public Func<RenderPassContext, PassAction> ApplyPassDel { get; private set; } = NoOpPass;
+    public Action<RenderPassContext>? ApplyAfterPassDel { get; private set; }
 
     internal RenderPassEntry(PassTargetKey key, PassOp op, GfxPassState gfxState, FrameBufferId target,
         ShaderId passShader, bool linearFilter)
     {
         PassKey = key;
         PassOp = op;
-        _gfxState = gfxState;
+        GfxState = gfxState;
         State.Target = target;
         State.PassShader = passShader;
         State.LinearFilter = linearFilter;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public InlineArray4<TextureId> GetSources() => _sources;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetSourceSlot(byte slot, TextureId id) => _sources[slot] = id;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public PassAction ApplyPass(DrawCommandProcessor drawCmd)
+    public RenderPassEntry OnPassBegin(Func<RenderPassContext, PassAction> op)
     {
-        return _applyPassDel(new RenderPassContext(this, drawCmd), _gfxState);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ApplyAfterPass(DrawCommandProcessor drawCmd)
-    {
-        _applyAfterPassDel?.Invoke(new RenderPassContext(this, drawCmd), _gfxState);
-        _sources = default;
-    }
-
-    public RenderPassEntry OnPassBegin(Func<RenderPassContext, GfxPassState, PassAction> op)
-    {
-        _applyPassDel = op;
+        ApplyPassDel = op;
         return this;
     }
 
-    public RenderPassEntry OnPassEnd(Action<RenderPassContext, GfxPassState> op)
+    public RenderPassEntry OnPassEnd(Action<RenderPassContext> op)
     {
-        _applyAfterPassDel = op;
+        ApplyAfterPassDel = op;
         return this;
     }
 

@@ -14,37 +14,66 @@ internal sealed class DrawCommandPipeline : IDisposable
 {
     private const int DefaultTicketCapacity = 1024 * 4;
 
-    public readonly DrawCommandProcessor DrawCmd;
+    private readonly DrawCommandProcessor _drawCmd;
+    private readonly RenderPassContext _passContext;
+
+    private readonly Range32[] _passRanges;
 
     private NativeArray<(RenderEntityId Entity, int SubmitIndex)> _drawTickets;
-    private readonly Range32[] _passRanges;
 
     public DrawCommandPipeline(GfxContext gfx, AnimationSystem animationSystem, MaterialSystem materialSystem)
     {
-        DrawCmd = new DrawCommandProcessor(gfx, animationSystem, materialSystem);
+        _drawCmd = new DrawCommandProcessor(gfx, animationSystem, materialSystem);
+        _passContext = new RenderPassContext(_drawCmd);
         _drawTickets = NativeArray.Allocate<(RenderEntityId, int)>(DefaultTicketCapacity);
         _passRanges = new Range32[RenderLimits.PassSlots];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ResetFrame() => DrawCmd.ResetFrame();
+    public void ResetFrame()
+    {
+        _drawCmd.ResetFrame();
+        _passContext.ResetFrame();
+    }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Range32 PrepareDrawPass(PassId passId)
+    public void RunPass(PassId passId)
     {
-        DrawCmd.PrepareDrawPass();
-        return _passRanges[passId];
+        EngineRenderSystem.avg.BeginSample();
+        var passResult = BeginPass(passId);
+        EngineRenderSystem.avg.EndSample();
+        
+        if (passResult.Op is PassOp.Draw)
+        {
+            _drawCmd.PrepareDrawPass();
+            ExecuteDrawPass(_passRanges[passId]);
+        }
+
+        EndPass(passId);
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private PassAction BeginPass(PassId passId)
+    {
+        var passEntry = RenderRegistry.GetPassEntry(passId);
+        _passContext.AttachPass(passEntry);
+        return passEntry.ApplyPassDel(_passContext);
     }
 
-    public unsafe void ExecuteDrawPass(PassId passId)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void EndPass(PassId passId)
     {
-        var passRange = PrepareDrawPass(passId);
+        var passEntry = RenderRegistry.GetPassEntry(passId);
+        passEntry.ApplyAfterPassDel?.Invoke(_passContext);
+    }
+
+    private unsafe void ExecuteDrawPass(Range32 passRange)
+    {
         var sources = RenderEcs.Core.GetSourceView().Ptr;
         foreach (ref readonly var ticket in _drawTickets.Slice(passRange))
         {
             var source = sources[ticket.Entity.Index()];
-            DrawCmd.DrawSource(source, ticket.Entity, ticket.SubmitIndex);
+            _drawCmd.DrawSource(source, ticket.Entity, ticket.SubmitIndex);
         }
     }
 

@@ -36,8 +36,6 @@ internal sealed class DrawCommandPipeline : IDisposable
         _passContext.ResetFrame();
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void RunPass(PassId passId)
     {
         EngineRenderSystem.avg.BeginSample();
@@ -57,14 +55,14 @@ internal sealed class DrawCommandPipeline : IDisposable
     {
         var passEntry = RenderRegistry.GetPassEntry(passId);
         _passContext.AttachPass(passEntry);
-        return passEntry.ApplyPassDel(_passContext);
+        return passEntry.BeginPassDel(_passContext);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EndPass(PassId passId)
     {
         var passEntry = RenderRegistry.GetPassEntry(passId);
-        passEntry.ApplyAfterPassDel?.Invoke(_passContext);
+        passEntry.EndPassDel?.Invoke(_passContext);
     }
 
     private unsafe void ExecuteDrawPass(Range32 passRange)

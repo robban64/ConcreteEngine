@@ -1,16 +1,10 @@
 namespace ConcreteEngine.Engine.Render.Passes;
 
-public struct PassState(
-    FrameBufferId target,
-    ShaderId passShader = default,
-    FrameBufferId resolveTarget = default,
-    bool linearFilter = false
-)
+public struct RenderPassParams
 {
-    public FrameBufferId Target = target;
-    public FrameBufferId ResolveTarget = resolveTarget;
+    public FrameBufferId Target;
+    public FrameBufferId ResolveTarget;
     
-    public ShaderId PassShader = passShader;
-    public bool LinearFilter = linearFilter;
-
+    public ShaderId PassShader;
+    public bool LinearFilter;
 }

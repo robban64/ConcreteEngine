@@ -240,10 +240,10 @@ public sealed class GfxCommands
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindTextureAndSampler(TextureId texture, SamplerProfile sampler, byte slot)
+    public void BindTextureAndSampler(TextureId texture, SamplerProfile sampler, SamplerSlot slot)
     {
-        BindSampler(sampler, slot);
-        BindTextureSlot(texture, slot);
+        BindSampler(sampler, (byte)slot);
+        BindTextureSlot(texture, (byte)slot);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -40,14 +40,6 @@ internal sealed class DrawCommandProcessor
     {
         _lastAnimationSlot = 0;
         _lastMaterialId = default;
-
-        if (RenderContext.RenderMode == RenderTargetKind.Shadow)
-        {
-            GfxCmd.UseShader(RenderStore.DepthShader);
-            GfxCmd.UnbindAllTextures();
-        }
-
-        GfxCmd.BindTextureAndSampler(RenderContext.DepthTexture, SamplerProfile.ShadowCompare, (byte)SamplerSlot.ShadowMap0);
     }
 
     public void DrawSource(RenderSource source, RenderEntityId entity, int submitIndex)

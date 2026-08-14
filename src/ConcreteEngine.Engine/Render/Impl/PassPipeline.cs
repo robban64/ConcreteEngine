@@ -12,7 +12,6 @@ namespace ConcreteEngine.Engine.Render;
 
 internal static partial class PassPipeline
 {
-        
     private static void ActivateDepthMode()
     {
         RenderContext.ApplyForDepthPass();
@@ -35,9 +34,12 @@ internal static partial class PassPipeline
             .OnPassBegin(static ctx =>
             {
                 ActivateDepthMode(); // Note!
+                var gfx = ctx.Gfx;
+                gfx.BeginRenderPass(ctx.TargetFbo, ctx.GfxState);
+                gfx.ApplyStateFunctions(GfxDrawFunctions.MakeDepth());
+                gfx.UseShader(RenderStore.DepthShader);
+                gfx.BindTextureAndSampler(RenderContext.DepthTexture, SamplerProfile.ShadowCompare, SamplerSlot.ShadowMap0);
 
-                ctx.Gfx.BeginRenderPass(ctx.TargetFbo, ctx.GfxState);
-                ctx.Gfx.ApplyStateFunctions(GfxDrawFunctions.MakeDepth());
                 return PassAction.DrawPassResult();
             }).OnPassEnd(static ctx =>
             {
@@ -52,11 +54,12 @@ internal static partial class PassPipeline
             {
                 ctx.Gfx.BeginRenderPass(ctx.TargetFbo, ctx.GfxState);
                 ctx.Gfx.ApplyStateFunctions(GfxDrawFunctions.MakeDefault());
+                ctx.Gfx.BindTextureAndSampler(RenderContext.DepthTexture, SamplerProfile.ShadowCompare, SamplerSlot.ShadowMap0);
                 return PassAction.DrawPassResult();
             })
             .OnPassEnd(static ctx =>
             {
-                ctx.MutateStatePass<SceneTarget>(FboVariant.V1, ctx.TargetFbo);
+                ctx.MutatePass<SceneTarget>(FboVariant.V1, ctx.TargetFbo);
                 
                 var selectionCount = RenderEcs.Store<SelectionComponent>().Count;
                 var debugBoundsCount = RenderEcs.Store<DebugBoundsComponent>().Count;
@@ -89,9 +92,10 @@ internal static partial class PassPipeline
         registry.RegisterPass<PostFxTarget>(FboVariant.V0, PassOp.Fsq, MakePostFx(), RenderStore.CompositeShader)
             .OnPassBegin(static ctx =>
             {
+                ctx.ApplyFsqSamplerBindings();
+                ctx.RunFsqPass();
+                
                 var texId = ctx.TargetMeta.Attachments.ColorTexture;
-
-                ctx.DrawFullscreenQuad();
                 ctx.SampleTo<PostFxTarget>(FboVariant.V1, 0, texId);
 
                 return PassAction.FsqPassResult();
@@ -103,7 +107,7 @@ internal static partial class PassPipeline
             {
                 var texId = ctx.TargetMeta.Attachments.ColorTexture;
 
-                ctx.DrawFullscreenQuad();
+                ctx.RunFsqPass();
                 ctx.SampleTo<OutputTarget>(FboVariant.V0, 0, texId);
 
                 return PassAction.FsqPassResult();
@@ -113,7 +117,7 @@ internal static partial class PassPipeline
         registry.RegisterPass<OutputTarget>(FboVariant.V0, PassOp.Screen, MakeScreen(), RenderStore.PresentShader)
             .OnPassBegin(static ctx =>
             {
-                ctx.DrawFullscreenQuad();
+                ctx.RunFsqPass();
 
                 ctx.Gfx.ApplyPassState(ColorMask);
                 ctx.Gfx.Clear(ColorRgba.Black, ClearBufferFlag.ColorAndDepth);

@@ -12,7 +12,7 @@ public sealed partial class RenderRegistry
     public static int PassCount => Instance._passCount;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static RenderPassEntry GetPassEntry(int key) => Instance._passEntries[key];
+    internal static RenderPassEntry GetPassEntry(PassId passId) => Instance._passEntries[passId];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static RenderPassEntry GetPassEntry<TTarget>(FboVariant variant) where TTarget : unmanaged, IRenderTarget

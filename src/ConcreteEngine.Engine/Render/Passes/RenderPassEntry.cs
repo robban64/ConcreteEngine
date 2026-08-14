@@ -10,11 +10,11 @@ internal sealed class RenderPassEntry : IComparable<PassTargetKey>
     public readonly PassTargetKey PassKey;
     public readonly PassOp PassOp;
 
-    public readonly PassState State;
+    public readonly RenderPassParams Params;
     public readonly GfxPassState GfxState;
 
-    public Func<RenderPassContext, PassAction> ApplyPassDel { get; private set; } = NoOpPass;
-    public Action<RenderPassContext>? ApplyAfterPassDel { get; private set; }
+    public Func<RenderPassContext, PassAction> BeginPassDel { get; private set; } = NoOpPass;
+    public Action<RenderPassContext>? EndPassDel { get; private set; }
 
     internal RenderPassEntry(PassTargetKey key, PassOp op, GfxPassState gfxState, FrameBufferId target,
         ShaderId passShader, bool linearFilter)
@@ -22,20 +22,20 @@ internal sealed class RenderPassEntry : IComparable<PassTargetKey>
         PassKey = key;
         PassOp = op;
         GfxState = gfxState;
-        State.Target = target;
-        State.PassShader = passShader;
-        State.LinearFilter = linearFilter;
+        Params.Target = target;
+        Params.PassShader = passShader;
+        Params.LinearFilter = linearFilter;
     }
 
     public RenderPassEntry OnPassBegin(Func<RenderPassContext, PassAction> op)
     {
-        ApplyPassDel = op;
+        BeginPassDel = op;
         return this;
     }
 
     public RenderPassEntry OnPassEnd(Action<RenderPassContext> op)
     {
-        ApplyAfterPassDel = op;
+        EndPassDel = op;
         return this;
     }
 

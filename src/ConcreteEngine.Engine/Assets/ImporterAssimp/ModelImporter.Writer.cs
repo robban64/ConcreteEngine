@@ -85,9 +85,8 @@ internal sealed unsafe partial class ModelImporter
         }
 
         // sanitize
-        for (var i = 0; i < skinningData.Length; i++)
+        foreach (ref var data in skinningData)
         {
-            ref var data = ref skinningData[i];
             if (data.I0 == byte.MaxValue)
             {
                 data = default;
@@ -122,11 +121,13 @@ internal sealed unsafe partial class ModelImporter
     {
         var weightLen = bone->MNumWeights;
         var weights = bone->MWeights;
+        var vertexLength = skinningData.Length;
+        
         for (var j = 0; j < weightLen; j++)
         {
             var weight = weights[j];
             var vertexId = (int)weight.MVertexId;
-            if (vertexId >= skinningData.Length) continue;
+            if (vertexId >= vertexLength) continue;
 
             ref var data = ref skinningData[vertexId];
             var packedWeight = (byte)float.Clamp(float.Round(weight.MWeight * 255f), 0f, 255f);

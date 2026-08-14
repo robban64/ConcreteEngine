@@ -27,13 +27,13 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
     public readonly NativeView<T1> View1
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(_ptr1, 0, Length);
+        get => new(_ptr1, Length);
     }
 
     public readonly NativeView<T2> View2
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(_ptr2, 0, Length);
+        get => new(_ptr2, Length);
     }
 
 
@@ -51,7 +51,7 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly PtrEnumerator<T1, T2> GetEnumerator() => new(_ptr1, _ptr2, Length);
+    public readonly PtrEnumerator<T1, T2> GetEnumerator() => new(View1, View2);
 
     public void ReAlloc(int length, bool zeroed)
     {
@@ -105,19 +105,19 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
     public readonly NativeView<T1> View1
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(_ptr1, 0, Length);
+        get => new(_ptr1, Length);
     }
 
     public readonly NativeView<T2> View2
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(_ptr2, 0, Length);
+        get => new(_ptr2, Length);
     }
 
     public readonly NativeView<T3> View3
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(_ptr3, 0, Length);
+        get => new(_ptr3, Length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

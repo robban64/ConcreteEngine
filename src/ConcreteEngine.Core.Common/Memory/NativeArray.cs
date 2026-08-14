@@ -44,13 +44,13 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly NativeView<T> AsView() => new(Ptr, 0, Length);
+    public readonly NativeView<T> AsView() => new(Ptr,  Length);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeView<T> Slice(int offset, int length = 0)
     {
         Debug.Assert((uint)offset + (uint)length <= (uint)Length);
-        return new NativeView<T>(Ptr + offset, offset, length > 0 ? length : Length - offset);
+        return new NativeView<T>(Ptr + offset, length > 0 ? length : Length - offset);
     }
 
 

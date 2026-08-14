@@ -66,15 +66,6 @@ internal sealed class ParticleMesh : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe ParticleVertex* GetBufferPtr(int count)
-    {
-        if (_particleData.IsNull) Throwers.NullPointer(nameof(_particleData));
-
-        EnsureCapacity(count);
-        return _particleData.Ptr;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly ParticleMeshHandle GetHandle(int slot)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_handles.Length, nameof(slot));

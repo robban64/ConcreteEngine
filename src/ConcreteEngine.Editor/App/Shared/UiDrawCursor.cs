@@ -45,9 +45,8 @@ public unsafe ref struct UiDrawCursor
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Text(NativeView<byte> text, uint color = Palette32.TextPrimary)
     {
-        var end = text.Ptr + text.Length;
-        DrawList->AddText(Cursor, color, text.Ptr, end);
-        Advance(ImGui.CalcTextSize(text.Ptr, end));
+        DrawList->AddText(Cursor, color, text.Ptr, text.EndPtr);
+        Advance(ImGui.CalcTextSize(text.Ptr, text.EndPtr));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

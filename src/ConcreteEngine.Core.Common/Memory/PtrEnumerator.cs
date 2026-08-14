@@ -7,10 +7,10 @@ public unsafe ref struct PtrEnumerator<T> where T : unmanaged
     private T* _p;
     private readonly T* _end;
 
-    public PtrEnumerator(T* start, int length)
+    public PtrEnumerator(NativeView<T> view)
     {
-        _p = start - 1;
-        _end = start + length;
+        _p = view.Ptr - 1;
+        _end = view.EndPtr;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -32,11 +32,12 @@ public unsafe ref struct PtrEnumerator<T1, T2> where T1 : unmanaged where T2 : u
     private T2* _p2;
     private readonly T1* _end;
 
-    public PtrEnumerator(T1* p1, T2* p2, int length)
+    public PtrEnumerator(NativeView<T1> p1, NativeView<T2> p2)
     {
-        _p1 = p1 - 1;
-        _p2 = p2 - 1;
-        _end = p1 + length;
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(p1.Length, p2.Length);
+        _p1 = p1.Ptr - 1;
+        _p2 = p2.Ptr - 1;
+        _end = p1.EndPtr;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

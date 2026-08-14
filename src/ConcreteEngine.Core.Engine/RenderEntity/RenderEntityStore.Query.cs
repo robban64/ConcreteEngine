@@ -128,25 +128,19 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
     }
 
 
-    public ref struct JoinQueryEnumerator
+    public ref struct JoinQueryEnumerator(NativeView<RenderEntityId> entities, ReadOnlySpan<RenderEntityId> right)
     {
-        private readonly NativeView<RenderEntityId> _entities;
-        private readonly ReadOnlySpan<RenderEntityId> _otherEntities;
-        private int _i;
-
-        public JoinQueryEnumerator(NativeView<RenderEntityId> entities, ReadOnlySpan<RenderEntityId> otherEntities)
-        {
-            _entities = entities;
-            _otherEntities = otherEntities;
-            _i = -1;
-        }
+        private readonly NativeView<RenderEntityId> _entities = entities;
+        private readonly ReadOnlySpan<RenderEntityId> _right = right;
+        private readonly int _length = entities.Length;
+        private int _i = -1;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-            while (++_i < _entities.Length)
+            while (++_i < _length)
             {
-                var index = SearchMethod.BinarySearch(_otherEntities, _entities[_i]);
+                var index = SearchMethod.BinarySearch(_right, _entities[_i]);
                 if (index >= 0) return true;
             }
 

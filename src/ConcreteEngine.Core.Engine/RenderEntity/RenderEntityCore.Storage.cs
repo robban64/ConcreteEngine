@@ -35,16 +35,16 @@ public sealed unsafe partial class RenderEntityCore
     
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<RenderSource> GetSourceView() => new(_sources, 0, Count);
+    public NativeView<RenderSource> GetSourceView() => new(_sources, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<DrawPolicy> GetDrawPolicyView() => new(_policies, 0, Count);
+    public NativeView<DrawPolicy> GetDrawPolicyView() => new(_policies, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<BoundingAxisBox> GetWorldBoundView() => new(_bounds, 0, Count);
+    public NativeView<BoundingAxisBox> GetWorldBoundView() => new(_bounds, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<TransformUniform> GetTransformView() => new(_transforms, 0, Count);
+    public NativeView<TransformUniform> GetTransformView() => new(_transforms, Count);
     //
 
     //

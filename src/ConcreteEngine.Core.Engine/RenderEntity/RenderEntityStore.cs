@@ -81,10 +81,10 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<RenderEntityId> EntitiesView() => new(_entities, 0, Count);
+    public NativeView<RenderEntityId> EntitiesView() => new(_entities, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<T> ComponentsView() => new(_components, 0, Count);
+    public NativeView<T> ComponentsView() => new(_components, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<RenderEntityId> EntitySpan() => new(_entities, Count);

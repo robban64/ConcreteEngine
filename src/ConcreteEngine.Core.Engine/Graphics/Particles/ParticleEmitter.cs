@@ -183,7 +183,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
         var rng = _rng;
         var particles = _particles.Slice(start, length);
-        for (var i = 0; i < particles.Length; i++)
+        for (var i = 0; i < length; i++)
         {
             ref var p = ref particles[i];
             var randomMaxLife = rng.RandomFloat(_emitterParams.LifeMinMax);

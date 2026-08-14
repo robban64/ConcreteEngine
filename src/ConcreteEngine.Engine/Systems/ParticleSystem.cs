@@ -117,9 +117,8 @@ internal sealed class ParticleSystem : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private unsafe PtrEnumerator<ParticleState, ParticleVertex> ParticleEnumerator(
-        NativeView<ParticleState> particles) =>
-        new(particles.Ptr, _particleMesh.GetBufferPtr(particles.Length), particles.Length);
+    private PtrEnumerator<ParticleState, ParticleVertex> ParticleEnumerator(NativeView<ParticleState> particles) =>
+        new(particles, _particleMesh.GetBufferView(particles.Length));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ColorRgba LerpSse(ColorRgba a, ColorRgba b, byte t)

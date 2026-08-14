@@ -61,13 +61,13 @@ internal static unsafe class AppDraw
     public static void Text(NativeString text) => ImGui.TextUnformatted(text.TextStart, text.TextEnd);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Text(NativeView<byte> text) => ImGui.TextUnformatted(text, text + text.Length);
+    public static void Text(NativeView<byte> text) => ImGui.TextUnformatted(text, text.EndPtr);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void TextColumn(NativeView<byte> text)
     {
         ImGui.TableNextColumn();
-        ImGui.TextUnformatted(text, text + text.Length);
+        ImGui.TextUnformatted(text, text.EndPtr);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -76,7 +76,7 @@ internal static unsafe class AppDraw
         ImGui.TableNextColumn();
         var top = ImGui.GetCursorPosY();
         AppLayout.NextAlignTextVertical(top, fontSize);
-        ImGui.TextUnformatted(text, text + text.Length);
+        ImGui.TextUnformatted(text, text.EndPtr);
         return top;
     }
 
@@ -85,7 +85,7 @@ internal static unsafe class AppDraw
     {
         ImGui.TextUnformatted(name);
         ImGui.SameLine();
-        ImGui.TextUnformatted(text, text + text.Length);
+        ImGui.TextUnformatted(text, text.EndPtr);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

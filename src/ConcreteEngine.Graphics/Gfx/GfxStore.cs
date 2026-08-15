@@ -16,10 +16,8 @@ internal interface IGfxResourceStore : IDisposable
     int FreeCount { get; }
     int Capacity { get; }
 
-    int GetAliveCount();
-
     void BindOnUpdateCallback(Action<int> callback);
-    void FillGfxStoreMeta(out GfxStoreMeta data);
+    StoreSample GetStoreSample();
 }
 
 internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : unmanaged, IResourceMeta
@@ -58,8 +56,8 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
 
     public GraphicsKind GraphicsKind => TMeta.ResourceKind;
 
-    public int ActiveCount => Count - _free.Count;
     public int FreeCount => _free.Count;
+    public int ActiveCount => Count - _free.Count;
     public int Capacity => _memory.Length > 0 ? _memory.Length / Unsafe.SizeOf<Entry>() : 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -139,17 +137,6 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
         _onUpdate?.Invoke(id);
     }
 
-    public int GetAliveCount()
-    {
-        var count = 0;
-        var length = Count;
-        for (var i = 0; i < length; i++)
-        {
-            if (_entries[i].Handle.IsValid()) count++;
-        }
-
-        return count;
-    }
 
     public void BindOnUpdateCallback(Action<int> callback)
     {
@@ -191,11 +178,7 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
         _memory.Dispose();
         _entries = null;
     }
+    
 
-    public void FillGfxStoreMeta(out GfxStoreMeta data)
-    {
-        data.Fk = new CollectionSample(Count, Capacity, GetAliveCount(), FreeCount);
-        data.Kind = GraphicsKind;
-        data.MetaInfo = GfxMetrics.GetSpecialMetric(GraphicsKind);
-    }
+    public StoreSample GetStoreSample() => new(Count, Capacity, ActiveCount, FreeCount);
 }

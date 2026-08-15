@@ -21,10 +21,12 @@ public static class GfxMetrics
 
     public static void DrainStoreMetrics(GfxStoreMeta[] data)
     {
-        var i = 0;
-        foreach (var store in GfxRegistry.GetStores())
+        var span = GfxRegistry.GetStores();
+        for (var i = 0; i < span.Length; i++)
         {
-            store.FillGfxStoreMeta(out data[i++]);
+            var store = span[i];
+            var kind = store.GraphicsKind;
+            data[i] = new GfxStoreMeta(store.GetStoreSample(), GetSpecialMetric(kind), kind);
         }
     }
 

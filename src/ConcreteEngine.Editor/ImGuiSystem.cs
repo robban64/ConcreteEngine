@@ -4,7 +4,9 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.App.Theme;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
@@ -64,6 +66,23 @@ internal static unsafe class ImGuiSystem
         ImGuizmo.Enable(true);
 
         Initialized = true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryResolveTextureHandle(TextureId id, scoped ref TexturePtrHandle texHandle)
+    {
+        if (!id.IsValid()) return false;
+        
+        var handle = GfxRegistry.GetHandle(id);
+        if (texHandle.Handle == handle) return true;
+
+        if (GfxRegistry.GetMeta(id).Kind != TextureKind.Texture2D) return false;
+
+        if (!texHandle.TexturePtr.IsNull) texHandle.TexturePtr.Destroy();
+        
+        texHandle.TexturePtr = ImGui.ImTextureRef(new ImTextureID(handle.Value));
+        texHandle.Handle = handle;
+        return true;
     }
 
 

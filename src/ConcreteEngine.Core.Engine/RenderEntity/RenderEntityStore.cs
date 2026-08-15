@@ -13,6 +13,8 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
 {
     public static RenderEntityStore<T> Instance { get; internal set; } = null!;
 
+    private static int GetAllocSize(int length) => length * (sizeof(RenderEntityId) + Unsafe.SizeOf<T>());
+
     public bool IsDirty { get; private set; }
     public int Count { get; private set; }
     public int Capacity { get; private set; }
@@ -20,19 +22,25 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     private T* _components;
     private RenderEntityId* _entities;
 
+    private NativeArray<byte> _memory;
+
     private readonly List<RenderEntityId> _removedEntities = [];
     private readonly List<IRenderComponentListener<T>> _listeners = [];
 
     public RenderEntityStore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 16);
-        _components = NativeArray.AllocatePointer<T>(initialCapacity);
-        _entities = NativeArray.AllocatePointer<RenderEntityId>(initialCapacity);
+
+        _memory = NativeArray.Allocate(GetAllocSize(initialCapacity));
+
+        var allocator = new NativeAllocBuilder(_memory);
+        _entities = allocator.AllocSlice<RenderEntityId>(initialCapacity);
+        _components = allocator.AllocSlice<T>(initialCapacity);
         Capacity = initialCapacity;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int FindIndexSorted(RenderEntityId entity) =>
+    private int FindIndex(RenderEntityId entity) =>
         SearchMethod.BinarySearch(new ReadOnlySpan<RenderEntityId>(_entities, Count), entity);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -46,7 +54,11 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     public bool Has(RenderEntityId entity) => FindIndexLinear(entity) >= 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntityId GetEntity(int index) => _entities[index];
+    public RenderEntityId GetEntity(int index)
+    {
+        if ((uint)index >= (uint)Count) Throwers.IndexOutOfRange(index, Count, nameof(index));
+        return _entities[index];
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T GetByIndex(int index)
@@ -56,12 +68,12 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T Get(RenderEntityId entity) => ref GetByIndex(FindIndexSorted(entity));
+    public ref T Get(RenderEntityId entity) => ref GetByIndex(FindIndex(entity));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T GetOrDefault(RenderEntityId entity)
     {
-        var index = FindIndexSorted(entity);
+        var index = FindIndex(entity);
         if ((uint)index >= (uint)Count) return default;
         return _components[index];
     }
@@ -69,7 +81,7 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGet(RenderEntityId entity, out ValueRef<T> value)
     {
-        var index = FindIndexSorted(entity);
+        var index = FindIndex(entity);
         if ((uint)index < (uint)Count)
         {
             value = new ValueRef<T>(ref _components[index]);
@@ -129,30 +141,32 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
         if (_removedEntities.Count > 0) CommitRemoved();
 
         EntitySpan().Sort(ComponentSpan());
-        return;
+    }
 
-        void CommitRemoved()
+    private void CommitRemoved()
+    {
+        var entities = _entities;
+        var components = _components;
+        foreach (var removed in CollectionsMarshal.AsSpan(_removedEntities))
         {
-            foreach (var entity in CollectionsMarshal.AsSpan(_removedEntities))
+            var index = FindIndexLinear(removed);
+            if (_listeners.Count > 0)
             {
-                var index = FindIndexLinear(entity);
-                if (_listeners.Count > 0)
-                {
-                    foreach (var listener in CollectionsMarshal.AsSpan(_listeners))
-                        listener.ComponentRemoved(entity, ref _components[index]);
-                }
-
-                var count = --Count;
-                _entities[index] = _entities[count];
-                _components[index] = _components[count];
-
-                _entities[count] = default;
-                _components[count] = default;
+                foreach (var listener in CollectionsMarshal.AsSpan(_listeners))
+                    listener.ComponentRemoved(removed, ref components[index]);
             }
 
-            _removedEntities.Clear();
+            var count = --Count;
+            entities[index] = entities[count];
+            components[index] = components[count];
+
+            entities[count] = default;
+            components[count] = default;
         }
+        
+        _removedEntities.Clear();
     }
+
 
     public void BindListener(IRenderComponentListener<T> listener) => _listeners.Add(listener);
     public void UnbindListener(IRenderComponentListener<T> listener) => _listeners.Remove(listener);
@@ -162,19 +176,18 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
         var length = Count + amount;
         if (Capacity >= length) return;
 
-        var newSize = CapacityUtils.CapacityGrowthToFit(Capacity, length);
-        _entities = NativeArray.ReAlloc(_entities, Capacity, newSize, 0, true);
-        _components = NativeArray.ReAlloc(_components, Capacity, newSize, 0, true);
+        var newLength = CapacityUtils.CapacityGrowthToFit(Capacity, length);
+        _memory.ReAlloc(GetAllocSize(newLength), true);
 
-        Logger.Log(LogScope.Ecs, $"{typeof(T)}: resized {newSize}", LogLevel.Warn);
+        Logger.Log(LogScope.Ecs, $"{nameof(T)}: resized {newLength}", LogLevel.Warn);
 
-        Capacity = newSize;
+        Capacity = newLength;
     }
 
     public void Dispose()
     {
-        NativeArray.DisposeArray(_entities, Capacity * Unsafe.SizeOf<RenderEntityId>(), 0);
-        NativeArray.DisposeArray(_components, Capacity * Unsafe.SizeOf<T>(), 0);
+        _memory.Dispose();
+        _memory = default;
         _entities = null;
         _components = null;
         Count = 0;

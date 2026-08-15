@@ -11,7 +11,7 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
     private T2* _ptr2;
 
     public int Length;
-    public int SizeInBytes => Length * StrideSum;
+    public readonly int SizeInBytes => Length * StrideSum;
 
     public NativeSoA(int length, bool zeroed = true)
     {
@@ -54,10 +54,7 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
         _ptr1[index] = t1;
         _ptr2[index] = t2;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly PtrEnumerator<T1, T2> GetEnumerator() => new(View1, View2);
-
+    
     public void ReAlloc(int length, bool zeroed)
     {
         var capacity = length * StrideSum;
@@ -77,6 +74,10 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
         _ptr1 = null;
         _ptr2 = null;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly PtrEnumerator<T1, T2> GetEnumerator() => new(View1, View2);
+
 }
 
 public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
@@ -88,7 +89,7 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
     private T3* _ptr3;
 
     public int Length;
-    public int SizeInBytes => Length * StrideSum;
+    public readonly int SizeInBytes => Length * StrideSum;
 
     public NativeSoA(int length, bool zeroed = true)
     {
@@ -156,23 +157,15 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
         Length = length;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly PtrEnumerator<T1, T2, T3> GetEnumerator() => new(_ptr1, _ptr2, _ptr3, Length);
-
-
     public void Dispose()
     {
-        NativeArray.DisposeArray(_ptr1, GetSizeInBytes(Length, out _, out _, out _), 0);
+        NativeArray.DisposeArray(_ptr1, SizeInBytes, 0);
         _ptr1 = null;
         _ptr2 = null;
         _ptr3 = null;
     }
 
-    private static int GetSizeInBytes(int len, out int sizeT1, out int sizeT2, out int sizeT3)
-    {
-        sizeT1 = len * Unsafe.SizeOf<T1>();
-        sizeT2 = len * Unsafe.SizeOf<T2>();
-        sizeT3 = len * Unsafe.SizeOf<T3>();
-        return sizeT1 + sizeT2 + sizeT3;
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly PtrEnumerator<T1, T2, T3> GetEnumerator() => new(_ptr1, _ptr2, _ptr3, Length);
+
 }

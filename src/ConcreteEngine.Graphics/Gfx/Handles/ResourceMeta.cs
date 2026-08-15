@@ -99,9 +99,6 @@ public readonly struct VertexBufferMeta(
 
     public static GraphicsKind ResourceKind => GraphicsKind.VertexBuffer;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool HasCapacity(int elementCount) => elementCount * Stride <= Capacity;
-
     public static VertexBufferMeta CreateCopy(in VertexBufferMeta m, int count, int stride, uint offset,
         BufferUsage usage) =>
         new(stride, count, offset, m.Divisor, usage, m.Storage, m.Access);
@@ -125,8 +122,6 @@ public readonly struct IndexBufferMeta(
     public nint Capacity => Stride * ElementCount;
     public static GraphicsKind ResourceKind => GraphicsKind.IndexBuffer;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool HasCapacity(int elementCount) => elementCount * Stride <= Capacity;
 
     public static IndexBufferMeta CreateCopy(in IndexBufferMeta meta, int count, int stride, BufferUsage usage) =>
         new(count, stride, usage, meta.Storage, meta.Access);

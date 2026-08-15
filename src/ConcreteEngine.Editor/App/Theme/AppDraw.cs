@@ -137,7 +137,7 @@ internal static unsafe class AppDraw
 
     public static bool ImageButton(ReadOnlySpan<byte> strId, TextureId id, ref TexturePtrHandle handle, Vector2 size)
     {
-        if (StateManager.TryGetOrSetTextureHandle(id, ref handle))
+        if (ImGuiSystem.TryResolveTextureHandle(id, ref handle))
             return ImGui.ImageButton(strId, handle, size);
 
         return ImGui.Button(strId, size);

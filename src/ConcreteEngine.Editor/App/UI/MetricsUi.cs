@@ -144,7 +144,7 @@ internal static class MetricsUi
                 var it = stores.Assets[i];
                 ImGui.PushID(i);
                 ImGui.TableNextRow();
-                AppDraw.TextColumn(sw.Write(it.Kind.ToText()));
+                AppDraw.TextColumn(sw.Write(it.Kind.ToUtf8()));
                 AppDraw.TextColumn(sw.Write(it.Count));
                 AppDraw.TextColumn(sw.Write(it.FileCount));
                 ImGui.PopID();
@@ -196,8 +196,8 @@ internal static class MetricsUi
                 ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowOverlap);
 
             AppDraw.TextColumn(sw.Write(it.Kind.ToShortText()));
-            AppDraw.TextColumn(sw.Append(it.Fk.Count).Append('/').Append(it.Fk.Reserved).End());
-            AppDraw.TextColumn(sw.Append(it.Fk.Active).Append('/').Append(it.Fk.Capacity).End());
+            AppDraw.TextColumn(sw.Append(it.Store.Count).AppendAscii('/').Append(it.Store.Free).End());
+            AppDraw.TextColumn(sw.Append(it.Store.Active).AppendAscii('/').Append(it.Store.Capacity).End());
             AppDraw.TextColumn(sw.Write(descriptions[i]));
 
             DrawPopup(open);

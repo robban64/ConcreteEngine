@@ -16,6 +16,7 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
         Allocate(initialCapacity);
     }
 
+    public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
 
 

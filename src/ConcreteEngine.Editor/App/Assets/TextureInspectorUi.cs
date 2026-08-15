@@ -38,9 +38,9 @@ internal sealed class TextureInspectorUi(StateManager state)
         if (ImGui.Button("Show Preview"u8, new Vector2(-1, 0)))
             ImGui.OpenPopup("##image-popup"u8);
 
-        if (ImGui.BeginPopup("##image-popup"u8))
+        if (ImGui.BeginPopup("##image-popup"u8) &&
+            ImGuiSystem.TryResolveTextureHandle(texture.GfxId, ref AssetInspectorPanel.PopupTextureHandle))
         {
-            state.GetOrSetTextureHandle(texture.GfxId, ref AssetInspectorPanel.PopupTextureHandle);
             ImGui.Image(AssetInspectorPanel.PopupTextureHandle, new Vector2(256, 256));
 
             if (ImGui.Button("Close"u8)) ImGui.CloseCurrentPopup();

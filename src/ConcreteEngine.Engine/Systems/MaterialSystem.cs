@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
@@ -115,7 +116,7 @@ internal sealed class MaterialSystem : IDisposable
         ref var uniform = ref _uniforms[state.MaterialId.Index()];
         uniform.Color = state.Color;
         uniform.SpecularColor = state.SpecularColor;
-        uniform.UvTransform = state.UvTransform;
+        uniform.UvTransform = new Vector4(state.UvOffset.X, state.UvOffset.Y, state.UvRepeat.X, state.UvRepeat.Y);
 
         uniform.Shininess = state.Shininess;
         uniform.Roughness = state.Roughness;

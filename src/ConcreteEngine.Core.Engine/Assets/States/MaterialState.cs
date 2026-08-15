@@ -64,12 +64,6 @@ public sealed class MaterialState
         set => SpecularColor = SpecularColor with { A = value };
     }
 
-    public float Uv
-    {
-        get => UvTransform.W;
-        set => UvTransform = UvTransform with { W = value };
-    }
-
     public GfxDrawState DrawState
     {
         get;
@@ -145,17 +139,28 @@ public sealed class MaterialState
     } = new(1, 1, 1, 0.12f);
 
     [InputNumber]
-    public Vector4 UvTransform
+    public Vector2 UvOffset
     {
         get;
         set
         {
-            var uv = value with { Z = float.Max(value.Z, 1f), W = float.Max(value.W, 1f) };
-            if (VectorMath.NearlyEqual(field, uv)) return;
-            field = uv;
+            if (VectorMath.NearlyEqual(field, value)) return;
+            field = value;
             _material.MarkDirty(AssetDirtyFlag.State);
         }
-    } = new(0, 0, 1f, 1f);
+    }
+    
+    [InputNumber]
+    public Vector2 UvRepeat
+    {
+        get;
+        set
+        {
+            if (VectorMath.NearlyEqual(field, value)) return;
+            field = new Vector2(float.Max(value.X, 1f), float.Max(value.Y, 1f));
+            _material.MarkDirty(AssetDirtyFlag.State);
+        }
+    }
 
     [InputNumber(InputStyle.Slider, Min = 0, Max = 50f)]
     public float Shininess

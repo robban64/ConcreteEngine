@@ -19,6 +19,7 @@ internal sealed unsafe class AssetInspectorPanel
 
     public static TexturePtrHandle PopupTextureHandle;
 
+    private AssetId _previousId = AssetId.Empty;
     private readonly NativeString _title;
 
     private readonly StateManager _state;
@@ -28,10 +29,8 @@ internal sealed unsafe class AssetInspectorPanel
     private readonly ModelInspectorUi _modelInspectorUi;
 
     private readonly TextInput _searchInput;
+    private Popup _popup;
 
-    private AssetId _previousId = AssetId.Empty;
-
-    private Popup _popup = new(new Vector2(12f, 10f));
 
     public AssetInspectorPanel(StateManager state)
     {

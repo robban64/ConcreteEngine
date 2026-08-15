@@ -59,15 +59,6 @@ public sealed class Material : AssetObject
     }
 
 
-    public void SetSourceSlotByIndex(Texture texture, int index)
-    {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_textureSources.Length);
-        ref var source = ref _textureSources[index];
-        source = source with { AssetId = texture.Id, TextureId = texture.GfxId, Profile = texture.Profile };
-        if (source.Slot == SamplerSlot.AlphaMask) State.HasAlphaMask = true;
-        MarkDirty(AssetDirtyFlag.State);
-    }
-
     public void SetSourceSlot(Texture texture, SamplerSlot slot)
     {
         ref var source = ref GetTextureSource(slot);
@@ -94,10 +85,12 @@ public sealed class Material : AssetObject
         throw new ArgumentException(nameof(slot));
     }
 
-    public void ClearSourceSlot(int slot)
+    public void ClearSourceSlot(SamplerSlot slot)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
-        _textureSources[slot] = default;
+        ref var source = ref GetTextureSource(slot);
+        if(source.Slot == slot) return;
+        source = default;
         MarkDirty(AssetDirtyFlag.State);
     }
 }

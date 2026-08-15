@@ -1,7 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Text.Unicode;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.App.Shared;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib.Field;
 using Hexa.NET.ImGui;
@@ -112,22 +117,31 @@ internal static unsafe class AppDraw
         if (!enabled) ImGui.EndDisabled();
         return enabled && clicked;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool Button(uint icon, bool enabled = true) => Button((byte*)&icon, enabled);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool ToggleButton(byte* text, bool value, bool enabled = true)
     {
         if (value) ImGui.PushStyleColor(ImGuiCol.Button, Palette32.FrameBgActive);
-        var result = Button(text, enabled);
+        if (!enabled) ImGui.BeginDisabled(true);
+        var clicked = ImGui.Button(text);
+        if (!enabled) ImGui.EndDisabled();
         if (value) ImGui.PopStyleColor();
-        return result;
+        return enabled && clicked;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Button(uint icon, bool enabled = true) => Button((byte*)&icon, enabled);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool ToggleButton(uint icon, bool value, bool enabled = true) =>
         ToggleButton((byte*)&icon, value, enabled);
+
+    public static bool ImageButton(ReadOnlySpan<byte> strId, TextureId id, ref TexturePtrHandle handle, Vector2 size)
+    {
+        if (StateManager.TryGetOrSetTextureHandle(id, ref handle))
+            return ImGui.ImageButton(strId, handle, size);
+
+        return ImGui.Button(strId, size);
+    }
 
 
     // ReSharper disable once OutParameterValueIsAlwaysDiscarded.Global

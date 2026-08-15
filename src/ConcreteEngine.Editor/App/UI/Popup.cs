@@ -3,10 +3,9 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.UI;
 
-internal struct Popup(Vector2 padding = default)
+internal struct Popup
 {
-    public Vector2 Padding = padding;
-    public bool State = false;
+    public bool State;
     private bool _wasOpen;
 
     public bool Begin(ReadOnlySpan<byte> id, Vector2 position = default)
@@ -19,19 +18,19 @@ internal struct Popup(Vector2 padding = default)
 
         _wasOpen = State;
 
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Padding);
-        if (ImGui.BeginPopup(id))
-        {
-            return true;
-        }
+        if (ImGui.BeginPopup(id)) return true;
 
-        ImGui.PopStyleVar();
         return State = false;
     }
 
-    public void End()
+    public void Close()
+    {
+        State = false;
+        ImGui.CloseCurrentPopup();
+    }
+
+    public readonly void End()
     {
         ImGui.EndPopup();
-        ImGui.PopStyleVar();
     }
 }

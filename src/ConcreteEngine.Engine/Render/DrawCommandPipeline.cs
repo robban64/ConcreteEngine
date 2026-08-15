@@ -26,7 +26,7 @@ internal sealed class DrawCommandPipeline : IDisposable
         _drawCmd = new DrawCommandProcessor(gfx, animationSystem, materialSystem);
         _passContext = new RenderPassContext(_drawCmd);
         _drawTickets = NativeArray.Allocate<(RenderEntityId, int)>(DefaultTicketCapacity);
-        _passRanges = new Range32[RenderLimits.PassSlots];
+        _passRanges = new Range32[RenderLimits.DrawPassSlots];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -80,7 +80,7 @@ internal sealed class DrawCommandPipeline : IDisposable
 
         Array.Clear(_passRanges);
 
-        var heads = stackalloc int[RenderLimits.PassSlots * 2];
+        var heads = stackalloc int[RenderLimits.DrawPassSlots * 2];
 
         // Count pass tickets
         CountTickets(indices, heads);
@@ -96,7 +96,7 @@ internal sealed class DrawCommandPipeline : IDisposable
         }
 
         // fill tickets in sorted order
-        FillTickets(indices, heads + RenderLimits.PassSlots);
+        FillTickets(indices, heads + RenderLimits.DrawPassSlots);
     }
 
     private static unsafe void CountTickets(NativeView<DrawEntityIndex> indices, int* heads)
@@ -120,10 +120,10 @@ internal sealed class DrawCommandPipeline : IDisposable
     private unsafe int CountPasses(int* heads)
     {
         var total = 0;
-        for (var p = 0; p < RenderLimits.PassSlots; ++p)
+        for (var p = 0; p < RenderLimits.DrawPassSlots; ++p)
         {
             var c = heads[p];
-            heads[RenderLimits.PassSlots + p] += total;
+            heads[RenderLimits.DrawPassSlots + p] += total;
             _passRanges[p] = new Range32(total, c);
             total += c;
         }

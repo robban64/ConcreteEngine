@@ -11,9 +11,10 @@ public static class RenderLimits
     public const int MaxShadowMapSize = 8192;
 
     public const int TextureSlots = 16;
-    public const int PassSlots = 4;
     public const int UboSlots = 16;
     public const int FboSlots = 16;
+
+    public const int DrawPassSlots = 4;
 
     public const int MaxFboVariants = 4;
 

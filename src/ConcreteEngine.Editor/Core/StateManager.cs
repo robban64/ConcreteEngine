@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Logging;
 using ConcreteEngine.Editor.Metrics;
@@ -42,14 +43,36 @@ internal sealed class StateManager(EventDispatcher eventDispatcher)
     public void EnqueueEvent<TEvent>(TEvent evt) where TEvent : EditorEvent => eventDispatcher.Enqueue(evt);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void GetOrSetTextureHandle(TextureId id, scoped ref TexturePtrHandle texHandle)
+    public ImTextureRef GetOrSetTextureHandle(TextureId id, scoped ref TexturePtrHandle texHandle)
     {
         ArgumentOutOfRangeException.ThrowIfZero(id.Id, nameof(id));
         var handle = GfxRegistry.GetHandle(id);
-        if (texHandle.Handle == handle) return;
+        if (texHandle.Handle == handle) return texHandle;
+        
+        if(GfxRegistry.GetMeta(id).Kind != TextureKind.Texture2D) 
+            Throwers.InvalidArgument(nameof(id),"Texture is not of Texture2D"); 
 
         if (!texHandle.TexturePtr.IsNull) texHandle.TexturePtr.Destroy();
+        
         texHandle.TexturePtr = ImGui.ImTextureRef(new ImTextureID(handle.Value));
         texHandle.Handle = handle;
+        return texHandle;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryGetOrSetTextureHandle(TextureId id, ref TexturePtrHandle texHandle)
+    {
+        if (!id.IsValid()) return false;
+        
+        var handle = GfxRegistry.GetHandle(id);
+        if (texHandle.Handle == handle) return true;
+
+        if (GfxRegistry.GetMeta(id).Kind != TextureKind.Texture2D) return false;
+
+        if (!texHandle.TexturePtr.IsNull) texHandle.TexturePtr.Destroy();
+        
+        texHandle.TexturePtr = ImGui.ImTextureRef(new ImTextureID(handle.Value));
+        texHandle.Handle = handle;
+        return true;
+    }
+
 }

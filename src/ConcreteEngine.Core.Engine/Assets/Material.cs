@@ -70,6 +70,7 @@ public sealed class Material : AssetObject
     public void SetSourceSlot(TextureId textureId, SamplerSlot slot, SamplerProfile profile)
     {
         ref var source = ref GetTextureSource(slot);
+        if(source.TextureId == textureId) return;
         source = source with { AssetId = default, TextureId = textureId, Profile = profile };
         if (source.Slot == SamplerSlot.AlphaMask) State.HasAlphaMask = true;
         MarkDirty(AssetDirtyFlag.State);
@@ -87,9 +88,8 @@ public sealed class Material : AssetObject
 
     public void ClearSourceSlot(SamplerSlot slot)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
         ref var source = ref GetTextureSource(slot);
-        if(source.Slot == slot) return;
+        if(source.IsFallback()) return;
         source = default;
         MarkDirty(AssetDirtyFlag.State);
     }

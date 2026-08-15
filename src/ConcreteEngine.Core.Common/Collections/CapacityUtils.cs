@@ -6,15 +6,22 @@ public static class CapacityUtils
 
     public static int CapacityGrowthToFit(int current, int required)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(current);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(required);
+
         var newSize = int.Max(current, 4);
         while (newSize < required) newSize *= 2;
         return newSize;
     }
 
-    public static int CapacityGrowthPageSize(int current, int required)
+    public static int CapacityGrowthLinear(int current, int required, int step)
     {
-        var newSize = int.Max(current, PageSize);
-        while (newSize < required) newSize += PageSize;
+        ArgumentOutOfRangeException.ThrowIfNegative(current);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(required);
+        ArgumentOutOfRangeException.ThrowIfLessThan(step, 4);
+        
+        var newSize = int.Max(current, step);
+        while (newSize < required) newSize += step;
         return newSize;
     }
 

@@ -21,16 +21,17 @@ internal sealed unsafe class AnimationSystem : IDisposable
     public int Count { get; private set; }
     public int BoneCount { get; private set; }
 
-    private NativeArray<Matrix4x4> _globals;
-    private NativeArray<Matrix4x4> _boneBuffer;
     private Range32[] _slotRanges;
+    private NativeArray<Matrix4x4> _boneBuffer;
+
+    private NativeArray<Matrix4x4> _scratchGlobals;
 
     private readonly AnimationManager _animations;
 
     internal AnimationSystem(AnimationManager animations)
     {
-        _globals = NativeArray.AlignedAllocate<Matrix4x4>(BoneCapacity, alignment: 16, false);
-        _boneBuffer = NativeArray.AlignedAllocate<Matrix4x4>(DefaultBoneBufferCap, alignment: 16, false);
+        _scratchGlobals = NativeArray.AlignedAllocate<Matrix4x4>(BoneCapacity, alignment: 64, false);
+        _boneBuffer = NativeArray.AlignedAllocate<Matrix4x4>(DefaultBoneBufferCap, alignment: 64, false);
         _slotRanges = new Range32[DefaultCapacity];
 
         _animations = animations;
@@ -67,14 +68,14 @@ internal sealed unsafe class AnimationSystem : IDisposable
 
             var time = animation.Interpolate(alpha);
             WriteSkinned(animation.GetSkinningContext(), time);
-
             ++slot;
         }
+
     }
 
     public void Dispose()
     {
-        _globals.Dispose();
+        _scratchGlobals.Dispose();
         _boneBuffer.Dispose();
     }
 
@@ -106,7 +107,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
 
     private void WriteSkinned(SkinningContext ctx, float time)
     {
-        var globals = _globals.Ptr;
+        var globals = _scratchGlobals.Ptr;
         var track = ctx.Tracks.BoneTracks;
         var length = ctx.Tracks.Length;
 
@@ -127,7 +128,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
             MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out *globals);
         }
 
-        globals = _globals.Ptr;
+        globals = _scratchGlobals.Ptr;
         var dst = NextSkinningView(length).Ptr;
         MatrixMath.MultiplyAffine(ref *++dst, in ctx.GetInverseBindPose(0), in globals[0]);
         for (var i = 1; i < length; ++i, ++dst)

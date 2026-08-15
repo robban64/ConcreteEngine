@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
@@ -38,7 +39,7 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
     [MethodImpl(MethodImplOptions.NoInlining)]
     protected override void OnActivate()
     {
-        _allocator = new BumpAllocator(AllocSize, blockSize: ShaderImporter.ShaderBlockSize, zeroed: false);
+        _allocator = new BumpAllocator(AllocSize, blockSize: CapacityUtils.PageSize, zeroed: false);
 
         _shaderImporter = new ShaderImporter();
         _shaderImporter.ImportAllDefinitions();

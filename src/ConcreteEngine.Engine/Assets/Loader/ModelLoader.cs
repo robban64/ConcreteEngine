@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
@@ -11,7 +12,7 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
     : AssetTypeLoader<Model, ModelRecord>()
 {
-    private const int DefaultLength = 4096 * 32;
+    private const int DefaultLength = CapacityUtils.PageSize * 32;
 
     private static readonly int TotalSize =
         DefaultLength * Unsafe.SizeOf<VertexShading>() +
@@ -27,7 +28,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
 
     protected override void OnActivate()
     {
-        _importBuffer = NativeArray.Allocate(TotalSize, false);
+        _importBuffer = NativeArray.AlignedAllocate<byte>(TotalSize, CapacityUtils.PageSize, false);
 
         _importer = new ModelImporter(textureLoader);
     }

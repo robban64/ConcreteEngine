@@ -132,8 +132,7 @@ public static unsafe class NativeArray
         if (alignment != 0)
         {
             ArgumentOutOfRangeException.ThrowIfLessThan(alignment, 16);
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 64);
-            ArgumentOutOfRangeException.ThrowIfNotEqual(IntMath.IsPowerOfTwo(alignment), true, nameof(alignment));
+            ArgumentOutOfRangeException.ThrowIfEqual(IntMath.IsPowerOfTwo(alignment), false, nameof(alignment));
         }
     }
 }

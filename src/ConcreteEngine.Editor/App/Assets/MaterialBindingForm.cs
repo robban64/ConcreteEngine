@@ -22,9 +22,10 @@ internal sealed unsafe class MaterialBindingForm
         float imageSize = float.Clamp(rightSpace, 24f, 64f);
         float inputFrameWidth = availWidth - imageSize - GuiTheme.ItemSpacing.X;
 
+        int id = 0;
         foreach (var source in material.GetSourceSpan())
         {
-            ImGui.PushID((int)source.Slot);
+            ImGui.PushID(++id);
 
             DrawTitle(source);
             

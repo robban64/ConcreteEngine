@@ -37,19 +37,10 @@ internal sealed unsafe partial class ModelImporter
         }
     }
 
-    private static void WriteVertices(
-        AssimpMesh* aiMesh,
-        int meshIndex,
-        MeshImportContext ctx,
-        NativeView<VertexShading> vertices)
+    private static void WriteVertices(AssimpMesh* aiMesh, NativeView<VertexShading> vertices)
     {
         var count = (int)aiMesh->MNumVertices;
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
-
-        var meshEntry = ctx.Meshes[meshIndex];
-
-        BoundingBox.FromPoints(new ReadOnlySpan<Vector3>(aiMesh->MVertices, count), out var bounds);
-        meshEntry.SetBounds(in bounds);
 
         var texCoords = aiMesh->MTextureCoords[0];
         for (int i = 0; i < count; i++)

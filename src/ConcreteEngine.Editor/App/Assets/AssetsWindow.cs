@@ -266,7 +266,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         {
             var start = range.Offset * columnCount;
             var length = range.Length * columnCount;
-            if(start + length >= filteredCount) length = filteredCount - start;
+            if (start + length >= filteredCount) length = filteredCount - start;
             DrawFilesInner(start, length, columnCount, _selectedFile);
         }
     }

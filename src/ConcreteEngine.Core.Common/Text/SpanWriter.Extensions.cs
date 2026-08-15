@@ -15,7 +15,7 @@ public static class SpanWriterExtensions
             sw.Advance(2);
             return ref sw;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref SpanWriter AppendChar(char c1, char c2, char c3)
         {

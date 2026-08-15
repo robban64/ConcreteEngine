@@ -125,7 +125,7 @@ public sealed class MaterialState
         set
         {
             var color = value.WithClampedAlpha();
-            if (Color4.NearlyEqual( field,  color)) return;
+            if (Color4.NearlyEqual(field, color)) return;
             field = color;
             _material.MarkDirty(AssetDirtyFlag.State);
         }
@@ -138,7 +138,7 @@ public sealed class MaterialState
         set
         {
             var color = value.WithClampedAlpha();
-            if (Color4.NearlyEqual( field,  color)) return;
+            if (Color4.NearlyEqual(field, color)) return;
             field = color;
             _material.MarkDirty(AssetDirtyFlag.State);
         }
@@ -151,7 +151,7 @@ public sealed class MaterialState
         set
         {
             var uv = value with { Z = float.Max(value.Z, 1f), W = float.Max(value.W, 1f) };
-            if (VectorMath.NearlyEqual( field,  uv)) return;
+            if (VectorMath.NearlyEqual(field, uv)) return;
             field = uv;
             _material.MarkDirty(AssetDirtyFlag.State);
         }

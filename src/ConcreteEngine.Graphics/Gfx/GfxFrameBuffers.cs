@@ -140,12 +140,13 @@ public sealed class GfxFrameBuffers
 
         var newRboHandle = GlFrameBuffers.CreateRenderBuffer(attachmentSlot, size, msaa.ToSamples());
         GlFrameBuffers.AttachRenderBuffer(fboHandle, newRboHandle, attachmentSlot);
-        
+
         meta = new RenderBufferMeta(size, attachmentSlot, msaa);
         return GfxRegistry.RboStore.Replace(rboId, in meta, newRboHandle);
     }
 
-    private void AttachTexture(NativeHandle<FrameBufferMeta> fboHandle, NativeHandle<TextureMeta> texHandle, FrameBufferAttachmentSlot attachmentSlot)
+    private void AttachTexture(NativeHandle<FrameBufferMeta> fboHandle, NativeHandle<TextureMeta> texHandle,
+        FrameBufferAttachmentSlot attachmentSlot)
     {
         ArgumentOutOfRangeException.ThrowIfZero(fboHandle.Value);
         ArgumentOutOfRangeException.ThrowIfZero(texHandle.Value);
@@ -162,7 +163,7 @@ public sealed class GfxFrameBuffers
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.Size.Width, 1, nameof(desc.Size.Width));
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.Size.Height, 1, nameof(desc.Size.Height));
 
-        if (!desc.ColorTexture.IsEmpty() )
+        if (!desc.ColorTexture.IsEmpty())
         {
             if (desc.Size.Width > GfxLimits.MaxTextureSize || desc.Size.Height > GfxLimits.MaxTextureSize)
                 throw new GraphicsException($"Texture Size exceeds {GfxLimits.MaxTextureSize}");

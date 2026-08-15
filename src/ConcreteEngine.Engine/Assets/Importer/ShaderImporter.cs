@@ -23,7 +23,7 @@ internal sealed unsafe class ShaderImporter
 
     private int _uboSlot;
     private readonly Dictionary<string, UboDictEntry> _uboDict = new(16);
-    
+
     private readonly Dictionary<string, byte[]> _structsDict = new(4);
 
     public void ImportAllDefinitions()

@@ -24,7 +24,7 @@ internal static class RenderContext
     public static TextureId OutputTexture;
     public static TextureId DepthTexture;
 
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ShaderId ResolveShader(ShaderId shader) => OverrideShader.IsValid() ? OverrideShader : shader;
 
@@ -34,12 +34,11 @@ internal static class RenderContext
         OverrideShader = RenderStore.DepthShader;
         RenderMode = RenderTargetKind.Shadow;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ResetContext()
     {
         OverrideShader = default;
         RenderMode = RenderTargetKind.Scene;
     }
-    
 }

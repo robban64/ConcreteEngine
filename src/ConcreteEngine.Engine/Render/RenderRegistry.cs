@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
@@ -7,7 +6,6 @@ using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
-
 
 namespace ConcreteEngine.Engine.Render;
 
@@ -130,7 +128,7 @@ public sealed partial class RenderRegistry
         FrameBufferId fboId = default;
         foreach (var e in GetFrameBuffers())
         {
-            if(e.Key == key) fboId = e.FboId;
+            if (e.Key == key) fboId = e.FboId;
         }
 
         return _passEntries[_passCount++] = new RenderPassEntry(key, op, gfxState, fboId, shaderId, linearFilter);

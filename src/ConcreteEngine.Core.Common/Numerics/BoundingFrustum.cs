@@ -14,8 +14,8 @@ public struct BoundingFrustum
     public Plane BottomPlane;
     public Plane NearPlane;
     public Plane FarPlane;
-    
-    
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void From(in Matrix4x4 transposedViewProjection, out BoundingFrustum f)
     {
@@ -32,7 +32,7 @@ public struct BoundingFrustum
         f.NearPlane = NormalizePlane(col4 + col3);
         f.FarPlane = NormalizePlane(col4 - col3);
     }
-    
+
     public static void FromCorners(ReadOnlySpan<Vector3> corners, out BoundingFrustum f)
     {
         f.LeftPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[2], corners[4]));
@@ -40,7 +40,7 @@ public struct BoundingFrustum
         f.TopPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[4], corners[1]));
         f.BottomPlane = Plane.Normalize(PlaneFromPoints(corners[2], corners[3], corners[6]));
         f.NearPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[1], corners[2]));
-        f. FarPlane = Plane.Normalize(PlaneFromPoints(corners[4], corners[6], corners[5]));
+        f.FarPlane = Plane.Normalize(PlaneFromPoints(corners[4], corners[6], corners[5]));
     }
 
     public static void GetCorners(in BoundingFrustum f, Span<Vector3> corners)
@@ -71,6 +71,4 @@ public struct BoundingFrustum
         Vector4 normalized = p * invLength;
         return Unsafe.As<Vector4, Plane>(ref normalized);
     }
-
-
 }

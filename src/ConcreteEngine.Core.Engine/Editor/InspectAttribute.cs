@@ -22,7 +22,9 @@ public abstract class InspectInputAttribute : Attribute
     public string? Segment { get; init; }
 }
 
-public sealed class InputGroupAttribute : InspectInputAttribute { }
+public sealed class InputGroupAttribute : InspectInputAttribute
+{
+}
 
 public sealed class InputNumberAttribute(InputStyle style = InputStyle.Input) : InspectInputAttribute
 {
@@ -31,7 +33,7 @@ public sealed class InputNumberAttribute(InputStyle style = InputStyle.Input) : 
     public float Min { get; init; }
     public float Max { get; init; }
     public float Speed { get; init; }
-    
+
     public bool IsFloat { get; init; }
     public bool IsInt { get; init; } = false;
 
@@ -54,4 +56,6 @@ public sealed class InputComboAttribute(int[]? values = null, string[]? names = 
     public int StartAt { get; init; }
 }
 
-public sealed class InputCheckboxAttribute : InspectInputAttribute { }
+public sealed class InputCheckboxAttribute : InspectInputAttribute
+{
+}

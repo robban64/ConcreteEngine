@@ -33,7 +33,7 @@ public sealed class SceneManager
         Store = new SceneStore();
         Raycaster = new RayCaster(Store, CameraManager.Instance.Camera.Transform);
         _renderToSceneId = new SceneObjectId[RenderEcs.Core.Capacity];
-        if(_renderToSceneId.Length == 0) throw new InvalidOperationException("No render to scene ids");
+        if (_renderToSceneId.Length == 0) throw new InvalidOperationException("No render to scene ids");
     }
 
     public int DirtyCount => _dirtyIds.Count;
@@ -49,17 +49,18 @@ public sealed class SceneManager
             sceneObject.Commit();
         }
     }
-    
+
     //
     public SceneObjectId GetByLinkedEntity(RenderEntityId e) => _renderToSceneId[e.Index()];
     public bool IsLinkedEntity(RenderEntityId e) => e.IsValid() && _renderToSceneId[e.Index()].IsValid();
 
     public void UnbindSceneHandle(RenderEntityId e) => _renderToSceneId[e.Index()] = SceneObjectId.Empty;
+
     public void BindSceneHandle(RenderEntityId e, SceneObjectId sceneId)
     {
-        if(_renderToSceneId.Length < RenderEcs.Core.Capacity) 
+        if (_renderToSceneId.Length < RenderEcs.Core.Capacity)
             Array.Resize(ref _renderToSceneId, RenderEcs.Core.Capacity);
-        
+
         _renderToSceneId[e.Index()] = sceneId;
     }
 

@@ -11,7 +11,7 @@ public sealed partial class InspectorGenerator
         {
             nameof(Vector2) => ("InputNumeric2", true, true),
             nameof(Vector3) => ("InputNumeric3", true, true),
-            nameof(Vector4)=> ("InputNumeric4", true, true),
+            nameof(Vector4) => ("InputNumeric4", true, true),
             nameof(Quaternion) or "Color4" => ("InputNumeric4", true, false),
             "Size2D" => ("InputNumeric2", false, false),
             "Size3D" => ("InputNumeric3", false, false),
@@ -20,7 +20,7 @@ public sealed partial class InspectorGenerator
             "Int4" => ("InputNumeric4", false, false),
             _ => (null, false, false)
         };
-    
+
     private static string? ComponentsToNumericName(int components) => components switch
     {
         1 => "InputNumeric1",
@@ -80,7 +80,7 @@ public sealed partial class InspectorGenerator
             style = (InputStyle)b;
 
         (string? TypeName, bool IsFloat, bool ImplicitCast) valueInfo = (null, false, false);
-        
+
         float min = 0, max = 0, speed = 0;
         string? format = null;
         foreach (var (key, value) in attr.NamedArguments)
@@ -93,9 +93,9 @@ public sealed partial class InspectorGenerator
                 case "Speed" when v is float l: speed = l; break;
                 case "Format" when v is string l: format = l; break;
                 case "IsFloat" when v is bool l: valueInfo.IsFloat = l; break;
-                case "Components" when v is int l: 
+                case "Components" when v is int l:
                     valueInfo.ImplicitCast = false;
-                    valueInfo.TypeName = ComponentsToNumericName(l); 
+                    valueInfo.TypeName = ComponentsToNumericName(l);
                     break;
             }
         }
@@ -105,7 +105,7 @@ public sealed partial class InspectorGenerator
             var s = type.SpecialType;
             if (s is System_Single) valueInfo = ("InputNumeric1", true, true);
             else if (s is System_Int32 or System_Int16 or System_UInt16) valueInfo = ("InputNumeric1", false, true);
-            else if(s is System_Enum) valueInfo = ("InputNumeric1", false, false);
+            else if (s is System_Enum) valueInfo = ("InputNumeric1", false, false);
             else valueInfo = GetDefaultValueType(type.Name);
         }
 

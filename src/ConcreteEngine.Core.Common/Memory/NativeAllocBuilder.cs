@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Text;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Memory;
@@ -18,7 +17,7 @@ public ref struct NativeAllocBuilder
 
         if (alignCursor > 0 && !IntMath.IsPowerOfTwo(alignCursor))
             Throwers.InvalidArgument(nameof(alignCursor), "Alignment of cursor must be a power of 2");
-        
+
         Data = data;
         AlignCursor = alignCursor;
         Cursor = cursor;

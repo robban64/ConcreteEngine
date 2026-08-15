@@ -131,13 +131,16 @@ internal static class GlStates
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void BindTexture(NativeHandle<TextureMeta> textureHandle, int slot) => Gl.BindTextureUnit((uint)slot, textureHandle);
+    public static void BindTexture(NativeHandle<TextureMeta> textureHandle, int slot) =>
+        Gl.BindTextureUnit((uint)slot, textureHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void BindSampler(NativeHandle<SamplerMeta> samplerHandle, int slot) => Gl.BindSampler((uint)slot, samplerHandle);
+    public static void BindSampler(NativeHandle<SamplerMeta> samplerHandle, int slot) =>
+        Gl.BindSampler((uint)slot, samplerHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void BindTextureSampler(NativeHandle<TextureMeta> textureHandle, NativeHandle<SamplerMeta> samplerHandle, int slot)
+    public static void BindTextureSampler(NativeHandle<TextureMeta> textureHandle,
+        NativeHandle<SamplerMeta> samplerHandle, int slot)
     {
         Gl.BindSampler((uint)slot, samplerHandle);
         Gl.BindTextureUnit((uint)slot, textureHandle);
@@ -164,24 +167,23 @@ internal static class GlStates
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void UnbindShader() => Gl.UseProgram(0);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void Draw(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount)
     {
-        if(elementSize != DrawElementSize.None)
+        if (elementSize != DrawElementSize.None)
             Gl.DrawElements(primitive.ToGlEnum(), drawCount, elementSize.ToGlEnum(), (void*)0);
         else
             Gl.DrawArrays(primitive.ToGlEnum(), 0, drawCount);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void DrawInstance(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount, uint instances)
+    public static unsafe void DrawInstance(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount,
+        uint instances)
     {
-        if(elementSize != DrawElementSize.None)
+        if (elementSize != DrawElementSize.None)
             Gl.DrawElementsInstanced(primitive.ToGlEnum(), drawCount, elementSize.ToGlEnum(), (void*)0, instances);
         else
             Gl.DrawArraysInstanced(primitive.ToGlEnum(), 0, drawCount, instances);
     }
-    
-    
 }

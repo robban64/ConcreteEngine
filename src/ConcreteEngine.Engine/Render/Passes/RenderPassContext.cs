@@ -7,7 +7,7 @@ namespace ConcreteEngine.Engine.Render.Passes;
 internal sealed class RenderPassContext(DrawCommandProcessor drawCmd)
 {
     public readonly DrawCommandProcessor DrawCmd = drawCmd;
-    
+
     public PassId CurrentPass { get; private set; }
     private RenderPassParams _passParams;
     private GfxPassState _gfxState;
@@ -31,7 +31,7 @@ internal sealed class RenderPassContext(DrawCommandProcessor drawCmd)
         _gfxState = default;
         Array.Clear(_passData, 0, RenderRegistry.PassCount);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AttachPass(RenderPassEntry passEntry)
     {
@@ -101,7 +101,7 @@ internal sealed class RenderPassContext(DrawCommandProcessor drawCmd)
     private struct PassData
     {
         public const int SlotLimit = 3;
-        
+
         public FrameBufferId ResolveTarget;
         public TextureId Slot0;
         public TextureId Slot1;

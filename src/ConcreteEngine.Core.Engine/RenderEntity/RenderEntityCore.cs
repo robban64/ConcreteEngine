@@ -40,7 +40,7 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
         if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
         _policies[entity.Index()].Status = status;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToggleDrawFlag(RenderEntityId entity, EntityDrawFlags flag, bool enabled)
     {
@@ -58,14 +58,14 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
             if (Count >= Capacity) EnsureCapacity(1);
             index = Count++;
         }
-        
+
         var entity = new RenderEntityId(index + 1);
 
         if (_policies[index].Status != 0) Throwers.InvalidOperation("Entity already exists");
         _sources[index] = source;
         _policies[index] = policy;
         ClearEntitySpatial(entity);
-        
+
         return entity;
     }
 
@@ -81,5 +81,4 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
 
         Count = SlotHelper.FreeSlot(_free, entity.Index(), Count);
     }
-
 }

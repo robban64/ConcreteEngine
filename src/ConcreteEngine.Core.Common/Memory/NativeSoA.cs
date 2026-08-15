@@ -1,28 +1,30 @@
-namespace ConcreteEngine.Core.Common.Memory;
-
 using System.Runtime.CompilerServices;
+
+namespace ConcreteEngine.Core.Common.Memory;
 
 // ReSharper disable OutParameterValueIsAlwaysDiscarded.Local
 public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where T2 : unmanaged
 {
+    public static int StrideSum => Unsafe.SizeOf<T1>() + Unsafe.SizeOf<T2>();
+
     private T1* _ptr1;
     private T2* _ptr2;
 
     public int Length;
+    public int SizeInBytes => Length * StrideSum;
 
     public NativeSoA(int length, bool zeroed = true)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(length, 4);
 
-        var capacity = GetSizeInBytes(length, out var sizeT1, out _);
+        var capacity = length * StrideSum;
         var array = NativeArray.Allocate(capacity, zeroed);
 
+        var allocator = new NativeAllocBuilder(array);
+        _ptr1 = allocator.AllocSlice<T1>(length);
+        _ptr2 = allocator.AllocSlice<T2>(length);
+
         Length = length;
-        _ptr1 = (T1*)array.Ptr;
-        _ptr2 = (T2*)(array.Ptr + sizeT1);
-        //var x = new NativeAllocBuilder(array);
-        //_ptr1 = x.AllocSlice<T1>(length);
-        //_ptr2 = x.AllocSlice<T2>(length);
     }
 
     public readonly bool IsNull => _ptr1 == null;
@@ -58,49 +60,49 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
 
     public void ReAlloc(int length, bool zeroed)
     {
-        int sizeT1 = length * Unsafe.SizeOf<T1>(), sizeT2 = length * Unsafe.SizeOf<T2>();
+        var capacity = length * StrideSum;
+        var array = new NativeArray<byte>((byte*)_ptr1, SizeInBytes, 0);
+        array.ReAlloc(capacity, zeroed);
 
-        var array = new NativeArray<byte>((byte*)_ptr1, sizeT1 + sizeT2, 0);
-        array.ReAlloc(sizeT1 + sizeT2, zeroed);
+        var allocator = new NativeAllocBuilder(array);
+        _ptr1 = allocator.AllocSlice<T1>(length);
+        _ptr2 = allocator.AllocSlice<T2>(length);
 
         Length = length;
-        _ptr1 = (T1*)array.Ptr;
-        _ptr2 = (T2*)(array.Ptr + sizeT1);
     }
 
     public void Dispose()
     {
-        NativeArray.DisposeArray(_ptr1, GetSizeInBytes(Length, out _, out _), 0);
+        NativeArray.DisposeArray(_ptr1, SizeInBytes, 0);
         _ptr1 = null;
         _ptr2 = null;
-    }
-
-    private static int GetSizeInBytes(int len, out int sizeT1, out int sizeT2)
-    {
-        sizeT1 = len * Unsafe.SizeOf<T1>();
-        sizeT2 = len * Unsafe.SizeOf<T2>();
-        return sizeT1 + sizeT2;
     }
 }
 
 public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
 {
+    public static int StrideSum => Unsafe.SizeOf<T1>() + Unsafe.SizeOf<T2>() + Unsafe.SizeOf<T3>();
+
     private T1* _ptr1;
     private T2* _ptr2;
     private T3* _ptr3;
 
     public int Length;
+    public int SizeInBytes => Length * StrideSum;
 
     public NativeSoA(int length, bool zeroed = true)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(length, 4);
-        var capacity = GetSizeInBytes(length, out var sizeT1, out var sizeT2, out _);
-        var bytes = NativeArray.Allocate(capacity, zeroed);
+
+        var capacity = length * StrideSum;
+        var array = NativeArray.Allocate(capacity, zeroed);
+
+        var allocator = new NativeAllocBuilder(array);
+        _ptr1 = allocator.AllocSlice<T1>(length);
+        _ptr2 = allocator.AllocSlice<T2>(length);
+        _ptr3 = allocator.AllocSlice<T3>(length);
 
         Length = length;
-        _ptr1 = (T1*)bytes.Ptr;
-        _ptr2 = (T2*)(bytes.Ptr + sizeT1);
-        _ptr3 = (T3*)((byte*)_ptr2 + sizeT2);
     }
 
     public readonly bool IsNull => _ptr1 == null;
@@ -142,14 +144,16 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
 
     public void ReAlloc(int length, bool zeroed)
     {
-        var capacity = GetSizeInBytes(length, out var sizeT1, out var sizeT2, out _);
-        var array = new NativeArray<byte>((byte*)_ptr1, capacity, 0);
-        array.ReAlloc(sizeT1 + sizeT2, zeroed);
+        var capacity = length * StrideSum;
+        var array = new NativeArray<byte>((byte*)_ptr1, SizeInBytes, 0);
+        array.ReAlloc(capacity, zeroed);
+
+        var allocator = new NativeAllocBuilder(array);
+        _ptr1 = allocator.AllocSlice<T1>(length);
+        _ptr2 = allocator.AllocSlice<T2>(length);
+        _ptr3 = allocator.AllocSlice<T3>(length);
 
         Length = length;
-        _ptr1 = (T1*)array.Ptr;
-        _ptr2 = (T2*)(array.Ptr + sizeT1);
-        _ptr3 = (T3*)((byte*)_ptr2 + sizeT2);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

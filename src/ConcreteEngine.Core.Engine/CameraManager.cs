@@ -84,7 +84,7 @@ public sealed class CameraManager
 
         ref var viewMatrix = ref LightTransforms.ViewMatrix;
         viewMatrix = Matrix4x4.CreateLookAt(eye, snappedCenterWorld, worldUp);
-        
+
         var minZ = float.MaxValue;
         var maxZ = float.MinValue;
         foreach (ref readonly var c in corners)

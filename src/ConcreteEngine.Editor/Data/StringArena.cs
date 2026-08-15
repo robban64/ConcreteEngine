@@ -30,7 +30,7 @@ internal sealed class StringArena : IDisposable
 
     private StringArena()
     {
-        _allocator = new BumpAllocator(CapacityUtils.PageSize * MaxBlocks,CapacityUtils.PageSize, 0, false);
+        _allocator = new BumpAllocator(CapacityUtils.PageSize * MaxBlocks, CapacityUtils.PageSize, 0, false);
         _allocator.AllocBlock(CapacityUtils.PageSize, true);
     }
 

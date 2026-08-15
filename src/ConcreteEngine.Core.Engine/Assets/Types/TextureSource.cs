@@ -15,7 +15,7 @@ public readonly record struct TextureSource(
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsFallback() => !AssetId.IsValid();
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public TextureId GetTextureOrFallback()
     {

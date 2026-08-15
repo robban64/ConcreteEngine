@@ -21,7 +21,7 @@ internal sealed unsafe class CheckboxInput : InputField
 {
     public bool Value;
     private readonly Action<bool> _setter;
-    
+
     public CheckboxInput(string label, Action<bool> setter) : base(label, InputKind.Bool)
     {
         _setter = setter;

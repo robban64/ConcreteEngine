@@ -6,9 +6,9 @@ namespace ConcreteEngine.Core.Common;
 public struct FastRandom(uint seed)
 {
     private uint _seed = seed == 0 ? 420_1337 : seed;
-    
+
     public void SetSeed(uint seed) => _seed = seed;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void IncrementSeed() => _seed++;
 

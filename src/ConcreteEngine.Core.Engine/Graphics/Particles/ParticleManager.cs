@@ -29,7 +29,7 @@ internal sealed class ParticleManager : IDisposable
     {
         foreach (var it in _emitters.AsSpan())
         {
-            if(it?.Name == name) Throwers.InvalidArgument(nameof(name));
+            if (it?.Name == name) Throwers.InvalidArgument(nameof(name));
         }
 
         var emitterId = new Id16<ParticleEmitter>(_emitters.AllocateNextId() + 1);
@@ -54,6 +54,7 @@ internal sealed class ParticleManager : IDisposable
                 return true;
             }
         }
+
         emitter = null;
         return false;
     }

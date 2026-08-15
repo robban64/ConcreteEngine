@@ -64,10 +64,12 @@ public static unsafe class GfxLog
         Event(LogGfx(id, 0, 0, flags, h.IsValid(), topic, action));
 
     //
-    private static LogEvent LogBk(NativeHandle handle, int slot, ushort flags, bool alive, LogTopic topic, LogAction action) =>
+    private static LogEvent LogBk(NativeHandle handle, int slot, ushort flags, bool alive, LogTopic topic,
+        LogAction action) =>
         new(handle, slot, alive ? 1 : 0, flags: flags, scope: LogScope.Backend, topic: topic, action: action);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void LogBackend(NativeHandle handle, ushort h, LogTopic topic, LogAction action, ushort flags = 0) =>
+    internal static void LogBackend(NativeHandle handle, ushort h, LogTopic topic, LogAction action,
+        ushort flags = 0) =>
         Event(LogBk(handle, h, flags, handle.IsValid(), topic, action));
 }

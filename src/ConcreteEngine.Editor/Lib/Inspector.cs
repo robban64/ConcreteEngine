@@ -1,6 +1,8 @@
 namespace ConcreteEngine.Editor.Lib;
 
-internal abstract class Inspector { }
+internal abstract class Inspector
+{
+}
 
 internal abstract class Inspector<TSelf> : Inspector where TSelf : Inspector<TSelf>
 {

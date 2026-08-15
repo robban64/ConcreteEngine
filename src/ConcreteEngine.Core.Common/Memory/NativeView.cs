@@ -56,7 +56,7 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<T> Slice(int offset, int length)
     {
-        Debug.Assert((uint)offset + (uint)length < (uint)Length);
+        Debug.Assert((uint)offset + (uint)length <= (uint)Length);
         return new NativeView<T>(Ptr + offset, length);
     }
 

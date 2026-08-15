@@ -132,5 +132,4 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
         *ptr = new NativeStringHeader(view.Length, 0);
         return new NativeString(ptr);
     }
-    
 }

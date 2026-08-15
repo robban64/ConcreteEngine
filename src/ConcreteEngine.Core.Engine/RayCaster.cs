@@ -36,10 +36,11 @@ public sealed class RayCaster
         RenderEntityId closestEntity = default;
         foreach (var query in Query())
         {
-            if (query.Item1.VisiblePassMask == 0 || !SceneManager.Instance.IsLinkedEntity(query.Entity)) 
+            if (query.Item1.VisiblePassMask == 0 || !SceneManager.Instance.IsLinkedEntity(query.Entity))
                 continue;
 
-            if (CollisionMethods.RayIntersectsBox(in ray, query.Item2.Min, query.Item2.Max, out var dist) && dist < distance)
+            if (CollisionMethods.RayIntersectsBox(in ray, query.Item2.Min, query.Item2.Max, out var dist) &&
+                dist < distance)
             {
                 distance = dist;
                 closestEntity = query.Entity;

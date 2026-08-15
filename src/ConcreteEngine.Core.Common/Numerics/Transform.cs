@@ -6,7 +6,6 @@ namespace ConcreteEngine.Core.Common.Numerics;
 [StructLayout(LayoutKind.Sequential)]
 public struct Transform
 {
-
     public Vector3 Translation;
     public Quaternion Rotation;
     public Vector3 Scale;
@@ -16,7 +15,6 @@ public struct Transform
         Translation = translation;
         Rotation = Quaternion.Identity;
         Scale = Vector3.One;
-
     }
 
     public Transform(in Vector3 translation, in Vector3 scale, in Quaternion rotation)

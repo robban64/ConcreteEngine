@@ -12,7 +12,7 @@ public interface IRenderEntityStore : IDisposable;
 public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore where T : unmanaged, IRenderComponent<T>
 {
     public static RenderEntityStore<T> Instance { get; internal set; } = null!;
-    
+
     public bool IsDirty { get; private set; }
     public int Count { get; private set; }
     public int Capacity { get; private set; }
@@ -97,7 +97,7 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
         if (Has(entity)) return false;
         if (Count >= Capacity) EnsureCapacity(1);
-        
+
         var index = Count++;
         _entities[index] = entity;
         _components[index] = value;
@@ -180,5 +180,4 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
         Count = 0;
         Capacity = 0;
     }
-
 }

@@ -39,7 +39,7 @@ internal sealed class DrawCommandPipeline : IDisposable
     public void RunPass(PassId passId)
     {
         var passResult = BeginPass(passId);
-        
+
         if (passResult.Op is PassOp.Draw)
         {
             _drawCmd.PrepareDrawPass();
@@ -48,6 +48,7 @@ internal sealed class DrawCommandPipeline : IDisposable
 
         EndPass(passId);
     }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private PassAction BeginPass(PassId passId)
     {

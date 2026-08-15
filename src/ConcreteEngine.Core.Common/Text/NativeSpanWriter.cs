@@ -64,7 +64,7 @@ public unsafe ref partial struct NativeSpanWriter
         var cursor = _cursor;
         _cursor = 0;
         Buffer[cursor] = 0;
-        return new NativeView<byte>(Buffer,cursor);
+        return new NativeView<byte>(Buffer, cursor);
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]

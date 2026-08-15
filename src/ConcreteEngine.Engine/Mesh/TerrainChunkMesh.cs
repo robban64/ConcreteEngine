@@ -137,7 +137,7 @@ internal sealed class TerrainChunkMesh(int slot)
 
             int vi = (int)(z * ChunkSamples + x);
             ref var instance = ref foliage[vi];
-            
+
             instance.PositionSize = new Half4(worldX, y, worldZ, random.RandomFloat(0.8f, 1.2f));
             instance.Color.R = (byte)(255f * random.RandomFloat(0.8f, 1f));
             instance.Color.G = (byte)(255f * random.RandomFloat(0.8f, 1f));
@@ -146,7 +146,7 @@ internal sealed class TerrainChunkMesh(int slot)
 
             ++instanceCount;
         }
-        
+
 
         return instanceCount;
     }

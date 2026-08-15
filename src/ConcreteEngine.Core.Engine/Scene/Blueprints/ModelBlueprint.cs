@@ -72,9 +72,8 @@ public sealed class ModelInstance : RenderBlueprintInstance
             {
                 RenderEcs.Core.ToggleDrawFlag(entity, EntityDrawFlags.Skinned, true);
                 AnimationManager.Instance.AttachEntity(rig, entity);
-
             }
-            
+
             RenderEcs.Store<SkinningLink>().Commit();
         }
     }
@@ -104,6 +103,5 @@ public sealed class ModelInstance : RenderBlueprintInstance
         }
 
         WorldBounds = globalBounds.ToAxisBox();
-
     }
 }

@@ -13,11 +13,11 @@ public static class CollisionMethods
         if (box1.Min.Z > box2.Max.Z || box2.Min.Z > box1.Max.Z) return false;
         return true;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool RayIntersectsBox(in Ray ray, in BoundingBox box, out float t)
         => RayIntersectsBox(in ray, box.Min, box.Max, out t);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool RayIntersectsBox(in Ray ray, Vector3 min, Vector3 max, out float t)
     {
@@ -54,8 +54,6 @@ public static class CollisionMethods
     }
 
 
-    
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsOutsidePlane(Vector4 center4, Vector4 extent4, ref Vector4 plane)
     {
@@ -63,7 +61,7 @@ public static class CollisionMethods
         float d2 = Vector4.Dot(extent4, Vector4.Abs(plane));
         return d1 + d2 <= 0f;
     }
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3 IntersectPlanes(in Plane p1, in Plane p2, in Plane p3)

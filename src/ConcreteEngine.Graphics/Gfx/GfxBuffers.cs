@@ -137,9 +137,10 @@ public sealed class GfxBuffers
         var stride = T.Stride > 0 ? T.Stride : Unsafe.SizeOf<T>();
         return CreateUniformBuffer(stride, T.Slot, storage, access);
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static UniformBufferId CreateUniformBuffer(int stride, byte slot, BufferStorage storage, BufferAccess access)
+    private static UniformBufferId CreateUniformBuffer(int stride, byte slot, BufferStorage storage,
+        BufferAccess access)
     {
         if (!UniformBufferUtils.IsStd140Aligned(stride))
             throw GraphicsException.InvalidStd140Layout(stride);

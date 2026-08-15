@@ -31,7 +31,7 @@ public sealed class GameEntityCore : EcsStore
     {
         var index = AllocateNext();
         var entity = _entities[index] = new GameEntityId(index + 1);
-        foreach (var it in _listeners) 
+        foreach (var it in _listeners)
             it.EntityAdded(entity, this);
 
         return entity;

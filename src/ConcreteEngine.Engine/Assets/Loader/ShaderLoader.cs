@@ -17,7 +17,7 @@ public sealed class ShaderData
     public ShaderData(string name, MemoryBlock memory)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
-        if(memory.IsNull) throw new ArgumentNullException(nameof(memory));
+        if (memory.IsNull) throw new ArgumentNullException(nameof(memory));
         Name = name;
         Memory = memory;
     }
@@ -38,7 +38,7 @@ internal sealed class ShaderLoader(GfxShaders gfxShaders) : AssetTypeLoader<Shad
     [MethodImpl(MethodImplOptions.NoInlining)]
     protected override void OnActivate()
     {
-        _allocator = new BumpAllocator(AllocSize, blockSize:ShaderImporter.ShaderBlockSize, zeroed: false);
+        _allocator = new BumpAllocator(AllocSize, blockSize: ShaderImporter.ShaderBlockSize, zeroed: false);
 
         _shaderImporter = new ShaderImporter();
         _shaderImporter.ImportAllDefinitions();

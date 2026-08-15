@@ -28,7 +28,6 @@ public struct Half4
     public Half Y;
     public Half Z;
     public Half W;
-
 }
 
 [StructLayout(LayoutKind.Sequential)]

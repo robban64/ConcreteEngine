@@ -15,7 +15,7 @@ internal static class StyleMap
 
     public static void Create()
     {
-        var size =  LogLevelExt.Count * sizeof(uint);
+        var size = LogLevelExt.Count * sizeof(uint);
         _buffer = NativeArray.Allocate<uint>(size);
         _buffer[(int)LogLevel.None] = Palette32.White;
         _buffer[(int)LogLevel.Trace] = Palette32.TextSecondary;

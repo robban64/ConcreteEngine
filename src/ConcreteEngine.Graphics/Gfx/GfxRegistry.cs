@@ -14,7 +14,7 @@ public static class GfxRegistry
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static GfxStore<TMeta> GetStore<TMeta>() where TMeta : unmanaged, IResourceMeta =>
         GfxStore<TMeta>.Instance;
-    
+
     internal static GfxStore<TextureMeta> TextureStore => GfxStore<TextureMeta>.Instance;
     internal static GfxStore<ShaderMeta> ShaderStore => GfxStore<ShaderMeta>.Instance;
     internal static GfxStore<MeshMeta> MeshStore => GfxStore<MeshMeta>.Instance;
@@ -26,7 +26,7 @@ public static class GfxRegistry
 
     internal static IGfxResourceStore GetStore(GraphicsKind kind) => GfxStores[(int)kind - 1];
     internal static ReadOnlySpan<IGfxResourceStore> GetStores() => GfxStores;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NativeHandle<TMeta> GetHandle<TMeta>(GfxId<TMeta> id) where TMeta : unmanaged, IResourceMeta
     {
@@ -43,7 +43,7 @@ public static class GfxRegistry
     {
         GetStore<TMeta>().BindOnUpdateCallback(callback);
     }
-    
+
     internal static void CreateStores()
     {
         CreateStore<TextureMeta>();
@@ -66,7 +66,7 @@ public static class GfxRegistry
     {
         var index = (int)TMeta.ResourceKind - 1;
         if (GfxStores[index] != null!)
-            Throwers.InvalidArgument(nameof(TMeta),"Store already initialized");
+            Throwers.InvalidArgument(nameof(TMeta), "Store already initialized");
 
         GfxStores[index] = new GfxStore<TMeta>(GetCapacity(TMeta.ResourceKind));
     }

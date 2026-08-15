@@ -45,10 +45,9 @@ public sealed class ParticleInstance : RenderBlueprintInstance
 
         SceneManager.Instance.BindSceneHandle(entity, Owner.Id);
         RenderEntityIds.Add(entity);
-        
+
         RenderEcs.Store<EmitterLink>().Commit();
         RenderEcs.Store<DrawInstancedComponent>().Commit();
-
     }
 
     protected override void OnCommit()
@@ -58,15 +57,13 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         RenderEcs.Core.GetSource(entity).Mesh = Emitter.BoundMesh;
         RenderEcs.Core.GetDrawPolicy(entity) = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
         RenderEcs.Store<DrawInstancedComponent>().Get(entity).Instances = (uint)Emitter.ParticleCount;
-
-
     }
 
     internal override void ApplyTransform(in Matrix4x4 rootMatrix)
     {
         if (RenderEntityIds.Count == 0) return;
         var entity = RenderEntityIds[0];
-        
+
         BoundingAxisBox.GetWorldBounds(in Emitter.LocalBounds(), in rootMatrix, out WorldBounds);
         RenderEcs.Core.GetModelMatrix(entity) = rootMatrix;
         RenderEcs.Core.GetWorldBounds(entity) = WorldBounds;

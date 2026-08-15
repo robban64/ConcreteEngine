@@ -5,7 +5,6 @@ namespace ConcreteEngine.Core.Engine.RenderEntity;
 
 public sealed unsafe partial class RenderEntityCore
 {
-
     //
     public readonly ref struct QueryItem<T1>(RenderEntityId entity, ref T1 item1) where T1 : unmanaged
     {

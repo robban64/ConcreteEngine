@@ -10,12 +10,12 @@ public enum SamplerSlot : byte
     Specular = 2,
     Emissive = 3,
     AlphaMask = 4,
-    
+
     DetailMap = 5,
     EnvironmentMap = 6,
     FeatureMap0 = 7,
     FeatureMap1 = 8,
-    
+
     ShadowMap0 = 9,
     ShadowMap1 = 10,
 

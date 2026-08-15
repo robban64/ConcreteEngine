@@ -113,6 +113,7 @@ public sealed class GfxCommands
 
         GlFrameBuffers.Blit(fromHandle, toHandle, fromMeta.Size, fromMeta.Size, linear);
     }
+
     public void GenerateMipMaps(TextureId textureId)
     {
         var texHandle = TextureStore.GetHandleAndMeta(textureId, out var meta);
@@ -245,7 +246,7 @@ public sealed class GfxCommands
         BindSampler(sampler, (byte)slot);
         BindTextureSlot(texture, (byte)slot);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindTextureSlot(TextureId texture, byte slot)
     {
@@ -286,7 +287,7 @@ public sealed class GfxCommands
         GlStates.UseShader(handle);
         _boundShaderId = id;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindUniformBufferRange<T>(int offset, int length) where T : unmanaged, IUniform
     {
@@ -308,8 +309,8 @@ public sealed class GfxCommands
         GlStates.Draw(meta.Primitive, meta.ElementSize, meta.DrawCount);
         GfxMetrics.AddDrawCall(meta.DrawCount, 0);
     }
-    
-    
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrawMeshInstanced(MeshId id, uint instanceCount)
     {

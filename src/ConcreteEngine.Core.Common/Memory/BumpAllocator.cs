@@ -23,8 +23,8 @@ public sealed unsafe class BumpAllocator : IDisposable
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 1024);
         if (IntMath.AlignUp(capacity, 64) != IntMath.AlignDown(capacity, 64))
             Throwers.InvalidArgument(nameof(capacity));
-        
-        if(blockSize < 0 || (blockSize != 0 && !IntMath.IsPowerOfTwo(blockSize)))
+
+        if (blockSize < 0 || (blockSize != 0 && !IntMath.IsPowerOfTwo(blockSize)))
             Throwers.InvalidArgument(nameof(blockSize));
 
         BlockSize = blockSize;

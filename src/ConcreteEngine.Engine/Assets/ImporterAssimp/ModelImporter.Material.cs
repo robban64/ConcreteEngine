@@ -147,7 +147,6 @@ internal static unsafe class MaterialModelImporter
         if (material.Textures.Contains(texture)) return;
         if (MatUtils.ToSystemEnums(type, out texture.SlotKind, out texture.PixelFormat))
             material.Textures.Add(texture);
-
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

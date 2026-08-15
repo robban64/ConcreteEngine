@@ -32,7 +32,7 @@ public sealed unsafe partial class RenderEntityCore
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref Matrix3X4 GetNormalMatrix(RenderEntityId e) => ref _transforms[e.Index()].Normal;
-    
+
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<RenderSource> GetSourceView() => new(_sources, Count);

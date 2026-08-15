@@ -99,7 +99,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         if (_context.IsAnimated)
             ProcessAnimations(_scene->MAnimations, _context);
 
-        MaterialModelImporter.ProcessMaterials( _scene, _context);
+        MaterialModelImporter.ProcessMaterials(_scene, _context);
     }
 
 
@@ -112,7 +112,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         foreach (var mesh in meshes)
         {
             var meshIndex = mesh.Info.MeshIndex;
-            var data =  meshCtx.GetMeshData(meshIndex, out var is16Bit);
+            var data = meshCtx.GetMeshData(meshIndex, out var is16Bit);
 
             var meshId = isAnimated
                 ? gfxUploader.UploadAnimatedMesh(in data, is16Bit)
@@ -258,7 +258,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     private static void ProcessMeshVertices(AssimpMesh* aiMesh, int meshIndex, ModelImportContext ctx)
     {
         ref var data = ref ctx.MeshContext.GetMeshData(meshIndex, out var is16Bit);
-        
+
         data.Positions = new NativeView<Vector3>(aiMesh->MVertices, (int)aiMesh->MNumVertices);
 
         WriteVertices(aiMesh, meshIndex, ctx.MeshContext, data.Vertices);

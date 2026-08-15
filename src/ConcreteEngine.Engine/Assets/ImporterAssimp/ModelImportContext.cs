@@ -11,7 +11,6 @@ using ConcreteEngine.Engine.Assets.Loader;
 namespace ConcreteEngine.Engine.Assets.ImporterAssimp;
 
 using static AssimpUtils;
-
 using Mesh = Core.Engine.Graphics.Mesh;
 
 internal sealed class ModelImportContext(TextureLoader textureLoader)
@@ -98,7 +97,6 @@ internal sealed class ModelImportContext(TextureLoader textureLoader)
     }
 }
 
-
 internal sealed class MeshImportContext
 {
     public int MeshCount;
@@ -147,7 +145,7 @@ internal sealed class MeshImportContext
         if (MeshCount == 0) Throwers.InvalidOperation(nameof(MeshCount));
         is16Bit = Meshes[meshIndex].Info.Has16BitIndex;
         var data = MeshData[meshIndex];
-        if(data.Vertices.IsNull) Throwers.InvalidOperation(nameof(MeshData));
+        if (data.Vertices.IsNull) Throwers.InvalidOperation(nameof(MeshData));
         return ref MeshData[meshIndex];
     }
 }

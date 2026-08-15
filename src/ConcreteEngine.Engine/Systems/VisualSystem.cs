@@ -22,8 +22,9 @@ internal sealed unsafe class VisualSystem
     {
         _gfx = gfx;
     }
-    
-    public void UploadUniformBuffers(RenderResolver resolver, MaterialSystem materialSystem, AnimationSystem animationSystem)
+
+    public void UploadUniformBuffers(RenderResolver resolver, MaterialSystem materialSystem,
+        AnimationSystem animationSystem)
     {
         // Ensure ubo size
         var drawCount = IntMath.AlignUp(resolver.VisibleCount, 64);
@@ -44,7 +45,7 @@ internal sealed unsafe class VisualSystem
 
         var materials = materialSystem.GetUniforms();
         if (materials.Length > 0) _gfx.UploadUniform(materials, 0);
-        
+
         var boneData = animationSystem.GetUniforms();
         if (boneData.Length > 0) _gfx.UploadUniform(boneData, 0);
     }

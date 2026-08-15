@@ -1,6 +1,5 @@
 namespace ConcreteEngine.Core.Engine.Graphics;
 
-
 [Flags]
 public enum PassMask : byte
 {

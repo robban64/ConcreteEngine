@@ -14,10 +14,10 @@ public struct Int2(int x, int y) : IEquatable<Int2>, IComparable<Int2>
     public Int2(float x, float y) : this((int)x, (int)y) { }
 
     //
-    public static  Int2 Zero => new(0, 0);
-    public static  Int2 One => new(1, 1);
-    public static  Int2 UnitX => new(1, 0);
-    public static  Int2 UnitY => new(0, 1);
+    public static Int2 Zero => new(0, 0);
+    public static Int2 One => new(1, 1);
+    public static Int2 UnitX => new(1, 0);
+    public static Int2 UnitY => new(0, 1);
     //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -71,8 +71,11 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public ref readonly BoundingBox LocalBounds() => ref _localBounds;
 
     //TEMP
-    [InspectInclude] public ref EmitterParams EmitterParams => ref _emitterParams;
-    [InspectInclude] public ref ParticleParams ParticleParams => ref _particleParams;
+    [InspectInclude]
+    public ref EmitterParams EmitterParams => ref _emitterParams;
+
+    [InspectInclude]
+    public ref ParticleParams ParticleParams => ref _particleParams;
     //
 
     internal void Attach(int slot, MeshId meshId)

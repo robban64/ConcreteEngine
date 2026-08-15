@@ -13,7 +13,7 @@ internal sealed unsafe class InputGroup : InputField
     private int _count;
 
     private readonly InputEntry[] _inputs;
-    
+
     private readonly NativeView<InputNumeric1> _values;
     private readonly Action<Span<InputNumeric1>> _setter;
 

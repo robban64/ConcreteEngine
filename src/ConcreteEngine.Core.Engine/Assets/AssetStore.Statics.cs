@@ -68,7 +68,6 @@ public sealed partial class AssetStore
                 manager.Store.AddAsset(material);
 
                 DebugBoundsMaterial = material;
-                
             }
         }
     }

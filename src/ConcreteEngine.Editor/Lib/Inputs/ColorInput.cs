@@ -5,7 +5,6 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Field;
 
-
 internal sealed unsafe class ColorInput : InputField
 {
     public bool HasAlpha;
@@ -13,7 +12,7 @@ internal sealed unsafe class ColorInput : InputField
     private readonly Color4* _value;
 
     private readonly Action<Color4> _setter;
-    
+
     public ColorInput(string label, Action<Color4> setter, bool hasAlpha = true)
         : base(label, InputKind.Color)
     {
@@ -22,7 +21,7 @@ internal sealed unsafe class ColorInput : InputField
         LabelPlacement = LabelPlacement.Top;
         _value = (Color4*)StringArena.Instance.AllocBytes(Unsafe.SizeOf<Color4>()).Ptr;
     }
-    
+
     public ref Color4 Value => ref *_value;
 
     public bool Draw()

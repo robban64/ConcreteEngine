@@ -12,6 +12,7 @@ public readonly record struct NativeHandle(ulong Value)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsValid() => Value != 0;
 }
+
 public readonly record struct NativeHandle<T>(ulong Value) where T : IResourceMeta
 {
     public NativeHandle(uint value) : this((ulong)value) { }
@@ -20,7 +21,7 @@ public readonly record struct NativeHandle<T>(ulong Value) where T : IResourceMe
     public static implicit operator uint(NativeHandle<T> handle) => (uint)handle.Value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator NativeHandle(NativeHandle<T> handle) => new (handle.Value);
+    public static implicit operator NativeHandle(NativeHandle<T> handle) => new(handle.Value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsValid() => Value != 0;

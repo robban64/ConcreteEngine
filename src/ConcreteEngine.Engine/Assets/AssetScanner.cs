@@ -9,7 +9,6 @@ namespace ConcreteEngine.Engine.Assets;
 
 internal sealed class AssetScanner(AssetManager assetManager)
 {
-
     private void RunMigration()
     {
         foreach (var scanInfo in MakeAssetEnumerable())

@@ -100,7 +100,7 @@ public sealed class MaterialProfile
     {
         if (usage is >= SamplerSlot.DetailMap and <= SamplerSlot.FeatureMap1)
             return GfxTextures.Fallback.AlbedoId;
-        
+
         return usage switch
         {
             SamplerSlot.Diffuse or SamplerSlot.Specular or SamplerSlot.Emissive => GfxTextures.Fallback.AlbedoId,
@@ -183,7 +183,10 @@ public sealed class MaterialProfile
         };
 
     private static MaterialProfile TerrainProfile =>
-        new("Terrain", SamplerSlot.Diffuse, SamplerSlot.FeatureMap0) { StateValues = MaterialStateRecord.Make(0.02f, 4f) };
+        new("Terrain", SamplerSlot.Diffuse, SamplerSlot.FeatureMap0)
+        {
+            StateValues = MaterialStateRecord.Make(0.02f, 4f)
+        };
 
     private static MaterialProfile FoliageProfile =>
         new(

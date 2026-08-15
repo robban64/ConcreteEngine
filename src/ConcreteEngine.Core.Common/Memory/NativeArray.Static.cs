@@ -5,15 +5,14 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
-
 public static unsafe class NativeArray
 {
     public static ulong AllocSizeInBytes { get; private set; }
     public static int AllocCount { get; private set; }
-    
+
     public static float AllocSizeInMb => AllocSizeInBytes > 0 ? AllocSizeInBytes / 1024.0f / 1024.0f : 0;
-    
-    public static NativeArray<byte> Allocate(int capacity, bool zeroed = true) 
+
+    public static NativeArray<byte> Allocate(int capacity, bool zeroed = true)
     {
         var ptr = AllocMemory(capacity, 1, 0, zeroed);
         return new NativeArray<byte>((byte*)ptr, capacity, 0);
@@ -23,26 +22,26 @@ public static unsafe class NativeArray
     {
         return new NativeArray<T>(AllocatePointer<T>(capacity, zeroed), capacity, 0);
     }
-    
+
     public static NativeArray<T> AlignedAllocate<T>(int capacity, int alignment = 16, bool zeroed = true)
         where T : unmanaged
     {
         var ptr = AllocMemory(capacity, Unsafe.SizeOf<T>(), alignment, zeroed);
         return new NativeArray<T>((T*)ptr, capacity, alignment);
     }
-    
+
     public static T* AllocatePointer<T>(int capacity, bool zeroed = true) where T : unmanaged
     {
         var ptr = AllocMemory(capacity, Unsafe.SizeOf<T>(), 0, zeroed);
         return (T*)ptr;
     }
-    
+
     public static T* ReAlloc<T>(T* ptr, int length, int newLength, int alignment, bool zeroed) where T : unmanaged
     {
         return (T*)ReAlloc(ptr, length, newLength, Unsafe.SizeOf<T>(), alignment, zeroed);
     }
-    
-     
+
+
     public static NativeArray<T> CreateFrom<T>(T* ptr, int length, int alignment = 0) where T : unmanaged
     {
         Validate(length, Unsafe.SizeOf<T>(), alignment);
@@ -51,8 +50,8 @@ public static unsafe class NativeArray
         ++AllocCount;
         return array;
     }
-    
-    
+
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void* AllocMemory(int length, int stride, int alignment, bool zeroed)
     {
@@ -73,7 +72,7 @@ public static unsafe class NativeArray
             ? NativeMemory.AllocZeroed((nuint)length, (nuint)stride)
             : NativeMemory.Alloc((nuint)length, (nuint)stride);
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void* ReAlloc(void* ptr, int length, int newLength, int stride, int alignment,
         bool zeroed)
@@ -107,13 +106,13 @@ public static unsafe class NativeArray
     {
         if (ptr == null) return;
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sizeInBytes);
-        
+
         if (alignment > 0) NativeMemory.AlignedFree(ptr);
         else NativeMemory.Free(ptr);
-        
-        if(AllocSizeInBytes - (ulong)sizeInBytes > AllocSizeInBytes) 
+
+        if (AllocSizeInBytes - (ulong)sizeInBytes > AllocSizeInBytes)
             Throwers.InvalidOperation(nameof(AllocSizeInBytes));
-        
+
         AllocSizeInBytes -= (ulong)sizeInBytes;
         --AllocCount;
 
@@ -123,9 +122,8 @@ public static unsafe class NativeArray
 #endif
 */
     }
-    
-    
-    
+
+
     [MethodImpl(MethodImplOptions.NoInlining), StackTraceHidden]
     private static void Validate(int capacity, int stride, int alignment)
     {

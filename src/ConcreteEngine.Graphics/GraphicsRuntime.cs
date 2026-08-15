@@ -80,9 +80,9 @@ public sealed class GraphicsRuntime : IDisposable
 
     public void EndFrame()
     {
-        if (_disposer.PendingCount > 0) 
+        if (_disposer.PendingCount > 0)
             _disposer.DrainDisposeQueue();
-        
+
         Gfx.Buffers.EndFrame(out GfxMetrics.FrameBufferMeta);
         Gfx.Commands.EndFrame();
     }

@@ -13,9 +13,11 @@ public sealed class AssetFile : IComparable<AssetFile>
 {
     public Guid GId { get; }
 
-    [JsonIgnore] public AssetFileId Id { get; }
+    [JsonIgnore]
+    public AssetFileId Id { get; }
 
-    [JsonIgnore] public AssetId AssetRootId { get; }
+    [JsonIgnore]
+    public AssetId AssetRootId { get; }
 
     public string LogicalName { get; internal set; }
     public string RelativePath { get; }

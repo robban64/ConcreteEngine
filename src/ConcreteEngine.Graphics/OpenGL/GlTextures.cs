@@ -37,7 +37,8 @@ internal static class GlTextures
         Gl.TextureStorage3D(handle, desc.Levels, desc.Format.ToStorageFormat(), width, height, depth);
     }
 
-    public static void UploadTexture2D_Data(NativeHandle<TextureMeta> handle, ReadOnlySpan<byte> data, TexturePixelFormat format,
+    public static void UploadTexture2D_Data(NativeHandle<TextureMeta> handle, ReadOnlySpan<byte> data,
+        TexturePixelFormat format,
         Size2D size)
     {
         (uint width, uint height) = size.ToUnsigned();
@@ -45,7 +46,8 @@ internal static class GlTextures
         Gl.TextureSubImage2D(handle, 0, 0, 0, width, height, fmt, type, data);
     }
 
-    public static void UploadTexture3D_Data(NativeHandle<TextureMeta> handle, ReadOnlySpan<byte> data, TexturePixelFormat format,
+    public static void UploadTexture3D_Data(NativeHandle<TextureMeta> handle, ReadOnlySpan<byte> data,
+        TexturePixelFormat format,
         Size3D size, int zOffset)
     {
         (uint width, uint height, uint depth) = size.ToUnsigned();
@@ -77,7 +79,7 @@ internal static class GlTextures
 
     public static void SetLodBias(NativeHandle<TextureMeta> handle, float lodBias) =>
         Gl.TextureParameter(handle, GLEnum.TextureLodBias, lodBias);
-    
+
     public static void SetSamplerLodBias(NativeHandle<SamplerMeta> handle, float lodBias) =>
         Gl.SamplerParameter(handle, GLEnum.TextureLodBias, lodBias);
 
@@ -90,13 +92,13 @@ internal static class GlTextures
     public static void SetBorder(NativeHandle<TextureMeta> handle, TextureBorder b)
     {
         var c = (int)b;
-        Gl.TextureParameterI(handle, GLEnum.TextureBorderColor, stackalloc int[] { c,c,c,c });
+        Gl.TextureParameterI(handle, GLEnum.TextureBorderColor, stackalloc int[] { c, c, c, c });
     }
 
     public static void SetSamplerBorder(NativeHandle<SamplerMeta> handle, TextureBorder b)
     {
         var c = (int)b;
-        Gl.SamplerParameterI(handle, GLEnum.TextureBorderColor, stackalloc int[] { c,c,c,c });
+        Gl.SamplerParameterI(handle, GLEnum.TextureBorderColor, stackalloc int[] { c, c, c, c });
     }
 
     public static void SetCompareTextureFunc(NativeHandle<TextureMeta> handle, DepthMode depthMode)

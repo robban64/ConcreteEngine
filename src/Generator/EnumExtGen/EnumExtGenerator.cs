@@ -158,8 +158,8 @@ public sealed class EnumExtGenerator : IIncrementalGenerator
             {
                 sb.BeginLine(it.TypeName);
                 sb.Builder.AppendLine($".{it.Data[i].Name} => {nameLiterals[i]}u8,");
-
             }
+
             sb.AppendLine("_ => throw new ArgumentOutOfRangeException(nameof(value))");
 
             sb.CloseBrace(";");

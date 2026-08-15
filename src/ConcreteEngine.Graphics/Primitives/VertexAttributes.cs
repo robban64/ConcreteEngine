@@ -7,7 +7,7 @@ namespace ConcreteEngine.Graphics.Primitives;
 public static class VertexAttributes
 {
     public static readonly VertexAttributeDef[] Vertex3DAttributes = new VertexAttributeDef[4];
-    
+
     public static readonly VertexAttributeDef[] MainVertexAttributes = new VertexAttributeDef[4];
     public static readonly VertexAttributeDef[] SkinnedAttributes = new VertexAttributeDef[6];
 
@@ -35,6 +35,5 @@ public static class VertexAttributes
         attribBuilder.ResetOffset();
         SkinnedAttributes[4] = attribBuilder.Make<uint>(4, 2, VertexFormat.UByte);
         SkinnedAttributes[5] = attribBuilder.Make<uint>(5, 2, VertexFormat.UByte, normalized: true);
-
     }
 }

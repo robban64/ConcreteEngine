@@ -31,7 +31,6 @@ public sealed class RenderFbo : IComparable<RenderFbo>
         TargetKind = targetKind;
         ResizeMode = resizeMode;
         _calc = calc;
-
     }
 
     public bool IsShadowFbo => TargetKind == RenderTargetKind.Shadow;

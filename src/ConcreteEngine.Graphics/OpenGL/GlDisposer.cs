@@ -22,6 +22,7 @@ internal static class GlDisposer
             case GraphicsKind.RenderBuffer: DisposeRbo(cmd); break;
             default: throw new ArgumentOutOfRangeException(nameof(cmd));
         }
+
         GfxLog.LogBackend(cmd.Handle, cmd.GfxId, cmd.Kind.ToLogTopic(), LogAction.Destroy);
     }
 

@@ -21,7 +21,7 @@ public static class RenderEcs
     internal static void OnResize(int newSize)
     {
     }
-    
+
     internal static void Init()
     {
         if (All.Count > 0) throw new InvalidOperationException("ECS already initialized");

@@ -83,7 +83,7 @@ public ref struct SpanWriter(Span<char> buffer)
         _cursor = 0;
         return span;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<char> NullTerminate()
     {

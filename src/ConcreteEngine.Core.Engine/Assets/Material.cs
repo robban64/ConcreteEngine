@@ -88,8 +88,9 @@ public sealed class Material : AssetObject
     {
         foreach (ref var textureSource in _textureSources.AsSpan())
         {
-            if(textureSource.Slot == slot) return ref textureSource;
+            if (textureSource.Slot == slot) return ref textureSource;
         }
+
         throw new ArgumentException(nameof(slot));
     }
 

@@ -14,7 +14,7 @@ internal sealed unsafe class ComboInput : InputField
     private readonly string[] _names;
 
     private readonly Action<int> _setter;
-    
+
     public int StartAt
     {
         get;

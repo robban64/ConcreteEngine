@@ -34,11 +34,12 @@ public static partial class EngineInput
             {
                 state = it;
                 return true;
-            } 
+            }
+
             state = default;
             return false;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void ClearKeys() => KeyChars.Clear();
 
@@ -58,7 +59,7 @@ public static partial class EngineInput
         private static ref InputButtonState GetRefOrNull(int key, out int index)
         {
             index = FindIndex(key);
-            if(index >= 0) return ref _keyState[index];
+            if (index >= 0) return ref _keyState[index];
             return ref Unsafe.NullRef<InputButtonState>();
         }
 
@@ -99,7 +100,7 @@ public static partial class EngineInput
                 ActiveKeys.Add(key.Button);
             }
         }
-        
+
         // Keyboard callbacks
         private static void OnKeyDown(IKeyboard keyboard, Key key, int scancode)
         {
@@ -108,13 +109,13 @@ public static partial class EngineInput
             {
                 if (_keyStateCount >= _keyState.Length)
                 {
-                    if(_keyState.Length >= 128) Throwers.InvalidOperation("Too many keys");
+                    if (_keyState.Length >= 128) Throwers.InvalidOperation("Too many keys");
                     Array.Resize(ref _keyState, _keyState.Length * 2);
                 }
 
                 index = _keyStateCount++;
             }
-            
+
             _keyState[index] = new InputButtonState { Button = (int)key, Down = true, Up = false };
         }
 

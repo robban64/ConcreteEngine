@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
-
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 {
@@ -42,10 +41,10 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
             return ref Ptr[index];
         }
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly NativeView<T> AsView() => new(Ptr,  Length);
-    
+    public readonly NativeView<T> AsView() => new(Ptr, Length);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeView<T> Slice(int offset, int length = 0)
     {
@@ -69,7 +68,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         if (IsNull) return default;
         return new Span<T>(Ptr + offset, length);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ReadOnlySpan<T> AsReadOnlySpan(int offset = 0)
     {
@@ -77,7 +76,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         if (IsNull) return default;
         return new ReadOnlySpan<T>(Ptr + offset, Length - offset);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ReadOnlySpan<T> AsReadOnlySpan(int offset, int length)
     {
@@ -85,7 +84,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         if (IsNull) return default;
         return new ReadOnlySpan<T>(Ptr + offset, length);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear()
     {

@@ -12,7 +12,7 @@ public struct ParticleParams
     [InputColor] public ColorRgba StartColor;
     [InputColor] public ColorRgba EndColor;
     [InputNumber] public Vector2 SizeStartEnd;
-    
+
     public static ParticleParams MakeDefault() =>
         new()
         {
@@ -20,7 +20,7 @@ public struct ParticleParams
             EndColor = new Color4(1.0f, 0.9f, 0.6f, 0.05f).ToRgba(),
             SizeStartEnd = new Vector2(0.12f, 0.22f),
         };
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly void Deconstruct(out ColorRgba startColor, out ColorRgba endColor, out Vector2 sizeStartEnd)
     {
@@ -39,10 +39,5 @@ public struct EmitterParams
     [InputNumber] public Vector2 LifeMinMax;
 
     public static EmitterParams MakeDefault() =>
-        new()
-        {
-            Spread = 3.14f,
-            LifeMinMax = new Vector2(6f, 10f),
-            SpeedMinMax = new Vector2(0.02f, 0.05f)
-        };
+        new() { Spread = 3.14f, LifeMinMax = new Vector2(6f, 10f), SpeedMinMax = new Vector2(0.02f, 0.05f) };
 }

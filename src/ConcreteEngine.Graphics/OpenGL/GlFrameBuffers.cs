@@ -8,7 +8,6 @@ namespace ConcreteEngine.Graphics.OpenGL;
 
 internal static class GlFrameBuffers
 {
-
     // Fix ClearBufferMask and Filter, depth/stencil use filter = Nearest
     public static void Blit(NativeHandle<FrameBufferMeta> readFbo, NativeHandle<FrameBufferMeta> drawFbo,
         Size2D srcSize, Size2D dstSize, bool linear)
@@ -45,7 +44,8 @@ internal static class GlFrameBuffers
         return new NativeHandle<FrameBufferMeta>(fbo);
     }
 
-    public static NativeHandle<RenderBufferMeta> CreateRenderBuffer(FrameBufferAttachmentSlot attachment, Size2D size, int samples)
+    public static NativeHandle<RenderBufferMeta> CreateRenderBuffer(FrameBufferAttachmentSlot attachment, Size2D size,
+        int samples)
     {
         var internalFormat = attachment.ToGlInternalFormatEnum();
         var (width, height) = size.ToUnsigned();
@@ -59,13 +59,15 @@ internal static class GlFrameBuffers
         return new NativeHandle<RenderBufferMeta>(rbo);
     }
 
-    public static void AttachTexture(NativeHandle<FrameBufferMeta> fboHandle, NativeHandle<TextureMeta> textureHandle, FrameBufferAttachmentSlot attachmentSlot)
+    public static void AttachTexture(NativeHandle<FrameBufferMeta> fboHandle, NativeHandle<TextureMeta> textureHandle,
+        FrameBufferAttachmentSlot attachmentSlot)
     {
         var glAttachment = attachmentSlot.ToGlAttachmentEnum();
         Gl.NamedFramebufferTexture(fboHandle, glAttachment, textureHandle, 0);
     }
 
-    public static void AttachRenderBuffer(NativeHandle<FrameBufferMeta> fboHandle, NativeHandle<RenderBufferMeta> rboHandle,
+    public static void AttachRenderBuffer(NativeHandle<FrameBufferMeta> fboHandle,
+        NativeHandle<RenderBufferMeta> rboHandle,
         FrameBufferAttachmentSlot attachmentSlot)
     {
         var glAttachment = attachmentSlot.ToGlAttachmentEnum();

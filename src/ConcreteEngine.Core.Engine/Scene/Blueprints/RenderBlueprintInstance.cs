@@ -76,7 +76,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
                 RenderEcs.Core.SetStatus(entity, EntityDrawStatus.Normal);
             }
         }
-        
+
         RenderEcs.Store<SelectionComponent>().Commit();
     }
 
@@ -91,6 +91,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
             if (isSelected) debugStore.Add(entity, new DebugBoundsComponent(color));
             else debugStore.Remove(entity);
         }
+
         debugStore.Commit();
     }
 }

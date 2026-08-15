@@ -46,7 +46,6 @@ internal sealed class TerrainSystem
             var drawPolicy = new DrawPolicy(DrawQueue.Terrain, PassMask.Default);
             var entity = RenderEcs.Core.AddEntity(source, drawPolicy);
             RenderEcs.Core.GetWorldBounds(entity) = new BoundingAxisBox(in chunk.GetBounds());
-
         }
     }
 
@@ -62,11 +61,11 @@ internal sealed class TerrainSystem
             var entity = RenderEcs.Core.AddEntity(source, drawPolicy);
             RenderEcs.Core.GetWorldBounds(entity) = new BoundingAxisBox(in chunk.GetBounds());
 
-            var component = new DrawInstancedComponent {  Instances = (uint)it.FoliageCount};
+            var component = new DrawInstancedComponent { Instances = (uint)it.FoliageCount };
             RenderEcs.Store<DrawInstancedComponent>().Add(entity, component);
-
         }
     }
+
     private void Allocate()
     {
         if (!TerrainMesh.TerrainIboId.IsValid() && MainTerrain.Heightmap?.TryGetPixelSpan(out var heightData) == true)

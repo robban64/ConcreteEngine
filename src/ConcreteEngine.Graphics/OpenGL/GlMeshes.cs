@@ -16,7 +16,8 @@ internal static class GlMeshes
         Gl.VertexArrayElementBuffer(vao, ibo);
     }
 
-    public static void AttachVertexBuffer(NativeHandle<MeshMeta> vao, int binding, NativeHandle<VertexBufferMeta> vbo, in VertexBufferMeta meta)
+    public static void AttachVertexBuffer(NativeHandle<MeshMeta> vao, int binding, NativeHandle<VertexBufferMeta> vbo,
+        in VertexBufferMeta meta)
     {
         Gl.VertexArrayVertexBuffer(vao, (uint)binding, vbo, 0, (uint)meta.Stride);
         if (meta.Divisor != 0)

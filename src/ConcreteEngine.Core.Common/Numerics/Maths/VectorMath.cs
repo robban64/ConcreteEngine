@@ -14,11 +14,11 @@ public static class VectorMath
         MathF.Abs(a.X - b.X) < eps && MathF.Abs(a.Y - b.Y) < eps;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool NearlyEqual( Vector3 a,  Vector3 b, float eps = FloatMath.DefaultEpsilon) =>
+    public static bool NearlyEqual(Vector3 a, Vector3 b, float eps = FloatMath.DefaultEpsilon) =>
         MathF.Abs(a.X - b.X) < eps && MathF.Abs(a.Y - b.Y) < eps && MathF.Abs(a.Z - b.Z) < eps;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool NearlyEqual( Vector4 a,  Vector4 b, float eps = FloatMath.DefaultEpsilon) =>
+    public static bool NearlyEqual(Vector4 a, Vector4 b, float eps = FloatMath.DefaultEpsilon) =>
         MathF.Abs(a.X - b.X) < eps && MathF.Abs(a.Y - b.Y) < eps && MathF.Abs(a.Z - b.Z) < eps &&
         MathF.Abs(a.W - b.W) < eps;
 

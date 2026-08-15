@@ -28,7 +28,7 @@ internal sealed unsafe partial class ShadowSettingsInspector : Inspector<ShadowS
 }
 
 [EditorInspector(typeof(EnvironmentSettings))]
-internal sealed  unsafe partial class EnvironmentSettingsInspector : Inspector<EnvironmentSettingsInspector>
+internal sealed unsafe partial class EnvironmentSettingsInspector : Inspector<EnvironmentSettingsInspector>
 {
     private static EnvironmentSettings Target => VisualManager.Instance.Environment;
 

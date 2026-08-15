@@ -10,7 +10,7 @@ public sealed partial class RenderRegistry
 {
     public static int FboCount => Instance._fboCount;
     public static int PassCount => Instance._passCount;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static RenderFbo GetRenderFbo(PassId passId)
     {
@@ -54,7 +54,7 @@ public sealed partial class RenderRegistry
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(variant.Value, RenderLimits.MaxFboVariants);
             if (!_isBound) Throwers.NotFound(nameof(TTarget), "PassTag not registered.");
             if (_passIds[variant] != 0) Throwers.InvalidArgument(nameof(variant));
-            
+
             var fboId = Instance.GetByKey(FboKey(variant)).FboId;
 
             _passIds[variant] = passId.Value;

@@ -35,10 +35,10 @@ internal sealed unsafe class AnimationSystem : IDisposable
 
         _animations = animations;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Range32 GetSlotRange(int slot) => _slotRanges[slot];
-    
+
     public NativeView<SkinningUniform> GetUniforms()
     {
         if (BoneCount == 0) return NativeView<SkinningUniform>.MakeNull();
@@ -67,7 +67,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
 
             var time = animation.Interpolate(alpha);
             WriteSkinned(animation.GetSkinningContext(), time);
-            
+
             ++slot;
         }
     }
@@ -87,6 +87,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
             query.Component.AnimationSlot = (ushort)slot;
             ++count;
         }
+
         return count;
     }
 
@@ -101,14 +102,14 @@ internal sealed unsafe class AnimationSystem : IDisposable
         _slotRanges[count] = range;
         return _boneBuffer.Slice(range);
     }
-    
-    
+
+
     private void WriteSkinned(SkinningContext ctx, float time)
     {
         var globals = _globals.Ptr;
         var track = ctx.Tracks.BoneTracks;
         var length = ctx.Tracks.Length;
-        
+
         for (var i = 0; i < length; ++i, ++track, ++globals)
         {
             if (track->IsEmpty)
@@ -136,7 +137,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
             MatrixMath.MultiplyAffine(ref *dst, in ctx.GetInverseBindPose(i), in globals[i]);
         }
     }
-    
+
     private void EnsureBoneCapacity(int length)
     {
         if (_boneBuffer.Length >= length + 1) return;

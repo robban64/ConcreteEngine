@@ -99,7 +99,7 @@ internal static class InspectorGeneratorEmitter
         sb.AppendLine().AppendLine("// Draw");
         sb.BeginLine().Builder.AppendLine($"Instance.{group.Name}.Draw();");
     }
-    
+
     private static void EmitDrawInputFields(SourceBuilder sb, InspectorGroup group, EmitSegment segment)
     {
         sb.AppendLine("Fetch();").AppendLine().AppendLine("// Draw");
@@ -209,7 +209,7 @@ internal static class InspectorGeneratorEmitter
 
         input.AppendFieldName(sb);
         sb.Append(input.Name).Append(" = new(").AppendLiteral(member.Label);
-        sb.Append(", ").Append(input.ToStyleString()).EndLine(", ");        
+        sb.Append(", ").Append(input.ToStyleString()).EndLine(", ");
         sb.PushIndent();
 
         // setter

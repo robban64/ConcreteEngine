@@ -8,7 +8,6 @@ public enum EntityDrawFlags : byte
     Instanced = 1 << 1,
 }
 
-
 public enum EntityDrawStatus : byte
 {
     Unset = 0,

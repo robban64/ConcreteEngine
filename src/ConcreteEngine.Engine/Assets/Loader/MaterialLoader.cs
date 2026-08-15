@@ -49,11 +49,11 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
         foreach (var it in embedded.Textures)
         {
-            if(!it.IsValid()) continue;
+            if (!it.IsValid()) continue;
 
             if (!_store.TryGetByGuid<Texture>(it.GId, out var texture))
                 Throwers.NotFound(it.Name, "Embedded texture");
-            
+
             mat.SetSourceSlot(texture, it.SlotKind);
         }
 

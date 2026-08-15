@@ -5,6 +5,7 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
+
 // ReSharper disable UnusedParameter.Local
 
 namespace ConcreteEngine.Editor.App;
@@ -54,9 +55,9 @@ internal sealed class TopMenuWindow
         ]);
 
 
-        _toolbarLeft   = new ToolbarGroup(ToolbarGroupAlignment.Left, []);
+        _toolbarLeft = new ToolbarGroup(ToolbarGroupAlignment.Left, []);
         _toolbarCenter = new ToolbarGroup(ToolbarGroupAlignment.Center, [Translate, Scale, Rotate, DebugBounds]);
-        _toolbarRight  = new ToolbarGroup(ToolbarGroupAlignment.Right, [Selected, Camera, Lighting, Visual]);
+        _toolbarRight = new ToolbarGroup(ToolbarGroupAlignment.Right, [Selected, Camera, Lighting, Visual]);
     }
 
     public ReadOnlySpan<ToolbarItem> GetToolbarGroup(ToolbarGroupAlignment i) => i switch
@@ -70,9 +71,9 @@ internal sealed class TopMenuWindow
 
     public void SyncToolbar()
     {
-        _toolbarLeft  .UpdateVisibleCount();
+        _toolbarLeft.UpdateVisibleCount();
         _toolbarCenter.UpdateVisibleCount();
-        _toolbarRight .UpdateVisibleCount();
+        _toolbarRight.UpdateVisibleCount();
     }
 
     public void Draw(StateManager stateManager)
@@ -107,7 +108,6 @@ internal sealed class TopMenuWindow
         ImGui.SetNextWindowSize(new Vector2(width, GuiTheme.TopbarHeight));
         if (ImGui.Begin(WindowRoot.ToolbarWindowId, TopbarFlags))
         {
-
             var offsetX = GuiTheme.WindowPadding.X;
             var centerX = float.Max(width * 0.5f - _toolbarCenter.TotalWidth * 0.5f, _toolbarLeft.TotalWidth);
             var rightX = float.Max(width - _toolbarRight.TotalWidth, centerX + _toolbarCenter.TotalWidth) -

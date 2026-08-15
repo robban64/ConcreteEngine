@@ -41,7 +41,7 @@ internal static unsafe class GlBuffers
     {
         Gl.NamedBufferData(handle, (nuint)size, data, usage.ToGlEnum());
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ResizeBuffer(NativeHandle handle, int size, BufferUsage usage)
     {

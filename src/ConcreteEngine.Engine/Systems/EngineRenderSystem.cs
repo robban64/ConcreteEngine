@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
@@ -36,7 +35,7 @@ public sealed class EngineRenderSystem : IDisposable
         _terrainSystem = new TerrainSystem(graphics.Gfx);
         _particleSystem = new ParticleSystem(graphics.Gfx);
         _animationSystem = new AnimationSystem(AnimationManager.Instance);
-        
+
         _resolver = new RenderResolver(CameraManager.Instance.Frustum);
 
         _drawPipeline = new DrawCommandPipeline(graphics.Gfx, _animationSystem, _materialSystem);

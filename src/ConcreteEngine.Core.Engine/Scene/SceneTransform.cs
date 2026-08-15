@@ -13,7 +13,7 @@ public sealed class SceneTransform(SceneObject sceneObject)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly Transform GetTransform() => ref _transform;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly BoundingAxisBox GetBounds() => ref _bounds;
 
@@ -76,7 +76,7 @@ public sealed class SceneTransform(SceneObject sceneObject)
         _bounds = bounds;
         sceneObject.MarkDirty(SceneDirtyFlags.Transform);
     }
-    
+
     internal void CommitTransform(ReadOnlySpan<RenderBlueprintInstance> instances)
     {
         var worldBounds = BoundingBox.Infinite;
@@ -90,5 +90,4 @@ public sealed class SceneTransform(SceneObject sceneObject)
 
         SetBounds(worldBounds.ToAxisBox());
     }
-
 }

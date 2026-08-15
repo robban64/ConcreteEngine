@@ -47,7 +47,7 @@ internal sealed unsafe partial class ModelImporter
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
 
         var meshEntry = ctx.Meshes[meshIndex];
-        
+
         BoundingBox.FromPoints(new ReadOnlySpan<Vector3>(aiMesh->MVertices, count), out var bounds);
         meshEntry.SetBounds(in bounds);
 
@@ -122,7 +122,7 @@ internal sealed unsafe partial class ModelImporter
         var weightLen = bone->MNumWeights;
         var weights = bone->MWeights;
         var vertexLength = skinningData.Length;
-        
+
         for (var j = 0; j < weightLen; j++)
         {
             var weight = weights[j];

@@ -45,5 +45,4 @@ public sealed class Texture(
         if (_textureData is not null) throw new InvalidOperationException("Texture already has a data entry.");
         _textureData = textureData;
     }
-
 }

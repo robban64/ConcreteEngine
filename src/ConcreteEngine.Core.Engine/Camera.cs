@@ -111,13 +111,13 @@ public sealed class Camera
     internal void BeginUpdate()
     {
         _lastTranslation = _translation;
-        _lastOrientation =  _orientation;
+        _lastOrientation = _orientation;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Interpolate(float alpha, out Vector3 translation, out YawPitch orientation)
     {
-        translation = Vector3.Lerp(_lastTranslation,_translation, alpha);
+        translation = Vector3.Lerp(_lastTranslation, _translation, alpha);
         orientation = YawPitch.Lerp(_lastOrientation, _orientation, alpha);
     }
 

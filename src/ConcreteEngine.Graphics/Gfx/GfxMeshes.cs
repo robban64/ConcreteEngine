@@ -16,7 +16,7 @@ public sealed class GfxMeshes
 
     //
     private readonly GfxBuffers _buffers;
-    
+
     private GfxMeshEntry[] _meshAttributes;
 
     internal GfxMeshes(GfxBuffers buffers)
@@ -31,7 +31,7 @@ public sealed class GfxMeshes
         meta = GfxRegistry.MeshStore.GetMeta(meshId);
         return _meshAttributes[meshId.Index()];
     }
-    
+
     public MeshId CreateEmptyMesh(in MeshDrawProperties props, int vboCount, VertexAttributeDef[] attrib)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(vboCount);
@@ -52,9 +52,9 @@ public sealed class GfxMeshes
         };
 
         var meshId = GfxRegistry.MeshStore.Add(in meta, meshHandle);
-        if(GfxRegistry.MeshStore.Capacity != _meshAttributes.Length) 
+        if (GfxRegistry.MeshStore.Capacity != _meshAttributes.Length)
             Array.Resize(ref _meshAttributes, GfxRegistry.MeshStore.Capacity);
-        
+
         _meshAttributes[meshId.Index()] = new GfxMeshEntry(vboCount, attrib);
         return meshId;
     }
@@ -87,7 +87,7 @@ public sealed class GfxMeshes
         GlMeshes.AttachVertexBuffer(meshView, binding, vboRef, in vboMeta);
         _meshAttributes[meshId.Index()].VboIds[binding] = vboId;
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void AttachIndexBuffer(MeshId meshId, IndexBufferId iboId)
     {

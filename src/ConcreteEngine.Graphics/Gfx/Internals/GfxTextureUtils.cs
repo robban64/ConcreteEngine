@@ -75,7 +75,8 @@ internal static class GfxTextureUtils
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ValidateTextureDescriptor(Size3D size, TextureKind kind, TexturePixelFormat format, RenderBufferMsaa samples, int levels)
+    public static void ValidateTextureDescriptor(Size3D size, TextureKind kind, TexturePixelFormat format,
+        RenderBufferMsaa samples, int levels)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(format, TexturePixelFormat.Unknown);
 
@@ -87,7 +88,7 @@ internal static class GfxTextureUtils
             throw new GraphicsException("Multisample2D must have MSAA != None");
         if (!isMsaa && samples != RenderBufferMsaa.None)
             throw new GraphicsException("Non-multisample textures must have MSAA=None");
-        
+
 /*
          if (isMsaa && levels != 1)
             throw new GraphicsException("Multisample textures cannot have mipmaps");

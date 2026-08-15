@@ -66,5 +66,4 @@ internal sealed record InspectorMember(
 {
     public string? Segment { get; init; }
     public InputField? Input { get; init; }
-
 }

@@ -24,7 +24,7 @@ public static class EngineWindow
 
     public static Size2D ViewportSize => _viewport.Size;
     public static float AspectRatio => ViewportSize.AspectRatio;
-    
+
     public static ref readonly ViewportRect Viewport
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

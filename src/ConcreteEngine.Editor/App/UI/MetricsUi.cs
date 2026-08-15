@@ -82,7 +82,7 @@ internal static class MetricsUi
         ImGui.TextUnformatted("FPS:"u8);
         ImGui.SameLine();
         AppDraw.Text(sw.Append(Metrics.FrameMeta.Fps, "F2").AppendAscii(' ', '(')
-            .Append(Metrics.FrameMeta.Alpha, "F2").AppendAscii('m','s',')').End());
+            .Append(Metrics.FrameMeta.Alpha, "F2").AppendAscii('m', 's', ')').End());
 
         // Render Frame 
         ImGui.SeparatorText("Render Info"u8);
@@ -91,7 +91,7 @@ internal static class MetricsUi
         ImGui.Spacing();
         MetricText(sw, "VBO Uploaded:", GfxMetrics.FrameBufferMeta.MeshBufferBytes, space: 0);
         MetricText(sw, "UBO Uploaded:", GfxMetrics.FrameBufferMeta.UniformBufferBytes, space: 0);
-        
+
         // Frame Metric
         ref readonly var frameMetric = ref Metrics.Metric;
         ImGui.SeparatorText("Frame Metric"u8);
@@ -118,8 +118,8 @@ internal static class MetricsUi
         ImGui.SameLine();
         AppDraw.Text(
             sw.Append("Gen: "u8).Append('[')
-                .Append(frameMetric.Gc.Gen0).AppendAscii(',',' ')
-                .Append(frameMetric.Gc.Gen1).AppendAscii(',',' ')
+                .Append(frameMetric.Gc.Gen0).AppendAscii(',', ' ')
+                .Append(frameMetric.Gc.Gen1).AppendAscii(',', ' ')
                 .Append(frameMetric.Gc.Gen2).Append(']').End()
         );
     }
@@ -152,6 +152,7 @@ internal static class MetricsUi
 
             ImGui.EndTable();
         }
+
         ImGui.EndChild();
 
         ImGui.Dummy(new Vector2(0, 6));
@@ -176,13 +177,13 @@ internal static class MetricsUi
         ImGui.TableSetupColumn("Cnt/Free"u8, ImGuiTableColumnFlags.WidthStretch, 0.8f);
         ImGui.TableSetupColumn("Live/Cap"u8, ImGuiTableColumnFlags.WidthStretch, 0.8f);
         ImGui.TableSetupColumn("*"u8, ImGuiTableColumnFlags.WidthStretch, 1f);
-        
+
         ImGui.TableHeadersRow();
-        
+
         var metas = store.Gfx;
         var descriptions = store.GfxMetaDescriptions;
         ArgumentOutOfRangeException.ThrowIfNotEqual(metas.Length, descriptions.Length);
-        
+
         var sw = ScratchBuffer.Writer();
         for (int i = 0; i < metas.Length; i++)
         {
@@ -203,6 +204,7 @@ internal static class MetricsUi
 
             ImGui.PopID();
         }
+
         ImGui.EndTable();
         return;
 

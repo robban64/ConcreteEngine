@@ -62,7 +62,7 @@ internal sealed partial class MaterialInspector : Inspector<MaterialInspector>
         Instance.CullCombo.Value = (int)drawFunc.Cull;
         Instance.DepthCombo.Value = (int)drawFunc.Depth;
         Instance.PolygonCombo.Value = (int)drawFunc.PolygonOffset;
-        
+
         Instance.BlendCombo.Draw();
         Instance.CullCombo.Draw();
         Instance.DepthCombo.Draw();

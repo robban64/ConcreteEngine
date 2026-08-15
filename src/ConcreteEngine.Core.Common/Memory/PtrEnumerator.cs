@@ -57,7 +57,6 @@ public unsafe ref struct PtrEnumerator<T1, T2> where T1 : unmanaged where T2 : u
     public readonly PtrEnumerator<T1, T2> GetEnumerator() => this;
 }
 
-
 public unsafe ref struct PtrEnumerator<T1, T2, T3> where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
 {
     private T1* _p1;

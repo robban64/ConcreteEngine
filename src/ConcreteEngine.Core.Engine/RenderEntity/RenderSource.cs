@@ -22,11 +22,10 @@ public struct RenderSource(MeshId mesh, Id16<Material> material, int meshIndex =
 
     public byte MeshIndex = (byte)meshIndex;
     public EntityDrawFlags DrawFlags = flags;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool IsSkinned() => (DrawFlags & EntityDrawFlags.Skinned) != 0;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool IsInstanced() => (DrawFlags & EntityDrawFlags.Instanced) != 0;
-
 }
-

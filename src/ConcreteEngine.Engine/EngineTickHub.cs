@@ -45,21 +45,7 @@ internal sealed class EngineTickHub
         EngineTime.GameDelta = _gameTicker.TickDt;
         EngineTime.EnvironmentDelta = _simulationTicker.TickDt;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AdvanceFrame(float deltaTime)
-    {
-        EngineTime.AdvanceFrame(deltaTime, _gameTicker.Alpha, _simulationTicker.Alpha);
-    }
-
-    private void Accumulate(float deltaTime)
-    {
-        _gameTicker.Accumulate(deltaTime);
-        _simulationTicker.Accumulate(deltaTime);
-        _diagnosticTicker.Accumulate(deltaTime);
-        _systemTicker.Accumulate(deltaTime);
-    }
-
+    
     public void Update(float deltaTime)
     {
         Accumulate(deltaTime);
@@ -68,24 +54,31 @@ internal sealed class EngineTickHub
         if (_systemTicker.DequeueTick(out var tickDt))
             _engine.OnSystemTick(tickDt);
 
-        if (_diagnosticTicker.DequeueTick(out tickDt))
-            _engine.OnDiagnosticTick(tickDt);
+        if (_diagnosticTicker.DequeueTick(out var  diagnosticDt))
+            _engine.OnDiagnosticTick(diagnosticDt);
 
         var tickCounter = 0;
-        while (tickCounter < MaxTicksPerFrame && _gameTicker.DequeueTick(out tickDt))
+        while (tickCounter < MaxTicksPerFrame && _gameTicker.DequeueTick(out var gameDt))
         {
             ++tickCounter;
             ++EngineTime.GameTickId;
-            _engine.OnGameTick(tickDt);
+            _engine.OnGameTick(gameDt);
         }
 
-        tickCounter = 0;
-        while (tickCounter < MaxTicksPerFrame && _simulationTicker.DequeueTick(out tickDt))
-        {
-            _engine.OnSimulateTick(tickDt);
-            ++tickCounter;
-        }
+        if (_simulationTicker.DequeueTick(out var simDt))
+            _engine.OnSimulateTick(simDt);
+        
+        EngineTime.AdvanceFrame(deltaTime, _gameTicker.Alpha, _simulationTicker.Alpha);
     }
+    
+    private void Accumulate(float deltaTime)
+    {
+        _gameTicker.Accumulate(deltaTime);
+        _simulationTicker.Accumulate(deltaTime);
+        _diagnosticTicker.Accumulate(deltaTime);
+        _systemTicker.Accumulate(deltaTime);
+    }
+
 
     private static float GetAlpha(double now, double last, float dt)
     {

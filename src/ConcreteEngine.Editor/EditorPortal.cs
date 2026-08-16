@@ -62,7 +62,7 @@ public sealed class EditorPortal : IDisposable
     public void UpdateInput() => ImGuiSystem.FillInput();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateGameTick(float deltaTime) => EditorCamera.Instance.Update(deltaTime);
+    public void UpdateGameTick(float deltaTime) => EditorCamera.Update(deltaTime);
 
     public void Render(float deltaTime, TextureId outputTexture)
     {

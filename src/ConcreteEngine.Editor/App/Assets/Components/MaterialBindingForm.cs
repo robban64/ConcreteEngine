@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.App.Assets;
+namespace ConcreteEngine.Editor.App.Assets.Components;
 
 internal sealed unsafe class MaterialBindingForm
 {
@@ -29,21 +29,25 @@ internal sealed unsafe class MaterialBindingForm
             if (source.TextureId.IsValid())
             {
                 var texture = AssetManager.Assets.Get<Texture>(source.AssetId);
+                ImGui.AlignTextToFramePadding();
                 AppDraw.Text(texture.Name);
+                ImGui.AlignTextToFramePadding();
                 ImGui.TextUnformatted(texture.TextureKind.ToUtf8());
             }
             else
             {
+                ImGui.AlignTextToFramePadding();
                 AppDraw.TextColored(Palette32.OrangeBase, "Fallback"u8);
             }
+            ImGui.AlignTextToFramePadding();
             ImGui.TextUnformatted(source.Profile.ToUtf8());
             ImGui.EndGroup();
 
             var availWidth = ImGui.GetContentRegionAvail().X;
-
             ImGui.SameLine(availWidth - ImageOffset);
 
-            AppDraw.ImageButton("##x"u8, source.GetTextureOrFallback(), ref _textureHandles[(int)source.Slot], new Vector2(ImageThumbnailSize));
+            ref var handle = ref  _textureHandles[(int)source.Slot];
+            AppDraw.ImageButton("##x"u8, source.GetTextureOrFallback(), ref handle, new Vector2(ImageThumbnailSize));
 
             if (source.TextureId.IsValid() && ImGui.IsItemClicked(ImGuiMouseButton.Right))
                 material.ClearSourceSlot(source.Slot);

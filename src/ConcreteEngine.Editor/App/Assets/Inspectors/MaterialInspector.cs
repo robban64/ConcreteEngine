@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Editor.App.Assets.Components;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -19,6 +20,7 @@ internal sealed partial class MaterialInspector : Inspector<MaterialInspector>
 
     public unsafe void Draw()
     {
+        DrawHeader();
         AppDraw.CollapseSection("Bindings"u8, &DrawBindings);
         AppDraw.CollapseSection("State"u8, &DrawState);
         AppDraw.CollapseSection("Rendering"u8, &DrawPipeline);
@@ -26,6 +28,7 @@ internal sealed partial class MaterialInspector : Inspector<MaterialInspector>
 
     private static void DrawHeader()
     {
+        ImGui.AlignTextToFramePadding();
         ImGui.TextUnformatted("Shader: "u8);
         ImGui.SameLine();
         AppDraw.TextColored(Palette32.White, Target.BoundShader.Name);

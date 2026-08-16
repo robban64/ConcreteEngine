@@ -92,7 +92,6 @@ public sealed class GameEngine : IDisposable
         _gateway.BeginFrame();
 
         _tickHub.Update(dt);
-        _tickHub.AdvanceFrame(dt);
 
         // Draw
         Draw(dt);

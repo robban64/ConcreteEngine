@@ -26,7 +26,6 @@ internal sealed unsafe class AssetInspectorPanel
     private readonly NativeString _title;
 
     private readonly StateManager _state;
-    private readonly TextureInspectorUi _textureProxyUi;
     private readonly ShaderInspectorUi _shaderInspectorUi;
     private readonly ModelInspectorUi _modelInspectorUi;
 
@@ -37,8 +36,9 @@ internal sealed unsafe class AssetInspectorPanel
     public AssetInspectorPanel(StateManager state)
     {
         Instance = this;
+        _ = new TextureInspector();
         _ = new MaterialInspector();
-        
+
         _state = state;
         _title = StringArena.AllocateString(24);
         _searchInput = new TextInput("name", 64, OnNameInput)
@@ -48,7 +48,6 @@ internal sealed unsafe class AssetInspectorPanel
             .WithMinLength(4)
             .ToggleFlag(ImGuiInputTextFlags.EnterReturnsTrue, true);
 
-        _textureProxyUi = new TextureInspectorUi(state);
         _shaderInspectorUi = new ShaderInspectorUi(state);
         _modelInspectorUi = new ModelInspectorUi(state);
     }
@@ -78,7 +77,7 @@ internal sealed unsafe class AssetInspectorPanel
     {
         _searchInput.Text.Set(asset.Name);
     }
-    
+
 
     public void Draw()
     {
@@ -87,7 +86,7 @@ internal sealed unsafe class AssetInspectorPanel
         if (_previousId != asset.Id)
             OnNewInspector(asset);
 
-        ImGui.PushID(asset.Id.Id);
+        ImGui.PushID(asset.Id);
 
         DrawHeader(asset);
         ImGui.Spacing();
@@ -101,8 +100,8 @@ internal sealed unsafe class AssetInspectorPanel
             case Model model:
                 _modelInspectorUi.Draw(model);
                 break;
-            case Texture texture:
-                _textureProxyUi.Draw(texture);
+            case Texture:
+                TextureInspector.Instance.Draw();
                 break;
             case Material:
                 MaterialInspector.Instance.Draw();

@@ -69,20 +69,26 @@ internal static unsafe class ImGuiSystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryResolveTextureHandle(TextureId id, scoped ref TexturePtrHandle texHandle)
+    public static bool TryResolveTextureHandle(TextureId id, ref TexturePtrHandle texHandle)
     {
         if (!id.IsValid()) return false;
-        
+
         var handle = GfxRegistry.GetHandle(id);
-        if (texHandle.Handle == handle) return true;
+        return texHandle.Handle == handle || SetHandle(id, handle, texHandle.TexturePtr, out texHandle);
 
-        if (GfxRegistry.GetMeta(id).Kind != TextureKind.Texture2D) return false;
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static bool SetHandle(TextureId id, NativeHandle<TextureMeta> handle, ImTextureRefPtr textureRef,
+            out TexturePtrHandle result)
+        {
+            Unsafe.SkipInit(out result);
+            if (GfxRegistry.GetMeta(id).Kind != TextureKind.Texture2D) return false;
 
-        if (!texHandle.TexturePtr.IsNull) texHandle.TexturePtr.Destroy();
-        
-        texHandle.TexturePtr = ImGui.ImTextureRef(new ImTextureID(handle.Value));
-        texHandle.Handle = handle;
-        return true;
+            if (!textureRef.IsNull) textureRef.Destroy();
+
+            var textRef = ImGui.ImTextureRef(new ImTextureID(handle.Value));
+            result = new TexturePtrHandle(textRef, handle);
+            return true;
+        }
     }
 
 

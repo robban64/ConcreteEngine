@@ -44,8 +44,8 @@ internal abstract unsafe class InputField
     {
         if (placement is LabelPlacement.Top)
         {
+            ImGui.AlignTextToFramePadding();
             ImGui.TextUnformatted(label);
-            ImGui.Separator();
             ImGui.SetNextItemWidth(GuiTheme.FormItemWidth);
         }
         else if (placement is LabelPlacement.Inline)

@@ -26,18 +26,27 @@ internal static unsafe class AppDraw
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CollapseSection(InputGroup inputGroup, ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen)
     {
-        if (ImGui.CollapsingHeader(inputGroup.Label, flags)) inputGroup.Draw();
         ImGui.Spacing();
-        ImGui.Separator();
+        if (ImGui.CollapsingHeader(inputGroup.Label, flags)) 
+        {
+            ImGui.Spacing();
+            inputGroup.Draw();
+        }
+        ImGui.Spacing();
+
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CollapseSection(ReadOnlySpan<byte> title, delegate*<void> draw,
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen)
     {
-        if (ImGui.CollapsingHeader(title, flags)) draw();
         ImGui.Spacing();
-        ImGui.Separator();
+        if (ImGui.CollapsingHeader(title, flags)) 
+        {
+            ImGui.Spacing();
+            draw();
+        }
+        ImGui.Spacing();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -85,6 +94,14 @@ internal static unsafe class AppDraw
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void TextColumn(ReadOnlySpan<byte> text)
+    {
+        ImGui.TableNextColumn();
+        ImGui.TextUnformatted(text);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float ColumnV(NativeView<byte> text, float fontSize = GuiTheme.FontSizeDefault)
     {
         ImGui.TableNextColumn();
@@ -93,6 +110,25 @@ internal static unsafe class AppDraw
         ImGui.TextUnformatted(text, text.EndPtr);
         return top;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void TextPropertyField(float offset, ReadOnlySpan<byte> name, ReadOnlySpan<byte> text)
+    {
+        ImGui.AlignTextToFramePadding();
+        ImGui.TextUnformatted(name);
+        ImGui.SameLine(offset);
+        ImGui.TextUnformatted(text);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void TextPropertyField(float offset, ReadOnlySpan<byte> name, NativeView<byte> text)
+    {
+        ImGui.AlignTextToFramePadding();
+        ImGui.TextUnformatted(name);
+        ImGui.SameLine(offset);
+        ImGui.TextUnformatted(text, text.EndPtr);
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void TextProperty(ReadOnlySpan<byte> name, NativeView<byte> text)

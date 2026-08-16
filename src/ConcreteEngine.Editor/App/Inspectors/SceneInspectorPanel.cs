@@ -15,6 +15,8 @@ internal sealed unsafe class SceneInspectorPanel
     private const ImGuiTreeNodeFlags CollapseFlags = ImGuiTreeNodeFlags.DefaultOpen;
     private const string ValidNoneAlphaNumericChars = "_-";
 
+    public static SceneInspectorPanel Instance = null!;
+
     private readonly StateManager _state;
     private readonly SceneObjectInspector _inspector;
     private readonly ParticleInspector _particleInspector;
@@ -27,6 +29,7 @@ internal sealed unsafe class SceneInspectorPanel
 
     public SceneInspectorPanel(StateManager state)
     {
+        Instance = this;
         _state = state;
         _title = StringArena.AllocateString(24);
         _nameInputStr = StringArena.AllocateString(64);

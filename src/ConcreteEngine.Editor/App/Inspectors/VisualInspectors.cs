@@ -9,7 +9,7 @@ internal sealed partial class DirectionalLightInspector : Inspector<DirectionalL
 {
     private static DirectionalLight Target => VisualManager.Instance.Illumination;
 
-    public unsafe void Draw()
+    public static unsafe void Draw()
     {
         AppDraw.Section("Directional Light"u8, &DrawRoot);
     }
@@ -20,7 +20,7 @@ internal sealed unsafe partial class ShadowSettingsInspector : Inspector<ShadowS
 {
     private static ShadowSettings Target => VisualManager.Instance.Shadow;
 
-    public void Draw()
+    public static unsafe void Draw()
     {
         AppDraw.Section("Projection"u8, &DrawProjection);
         AppDraw.Section("Visuals"u8, &DrawVisuals);
@@ -32,7 +32,7 @@ internal sealed unsafe partial class EnvironmentSettingsInspector : Inspector<En
 {
     private static EnvironmentSettings Target => VisualManager.Instance.Environment;
 
-    public void Draw()
+    public static unsafe void Draw()
     {
         AppDraw.CollapseSection("Ambient"u8, &DrawAmbient);
         AppDraw.CollapseSection("Fog"u8, &DrawFogSection);
@@ -51,7 +51,7 @@ internal sealed unsafe partial class PostEffectSettingsInspector : Inspector<Pos
 {
     private static PostEffectSettings Target => VisualManager.Instance.PostEffect;
 
-    public void Draw()
+    public static unsafe void Draw()
     {
         AppDraw.Section("Grade"u8, &DrawGrade);
         AppDraw.Section("WhiteBalance"u8, &DrawWhiteBalance);

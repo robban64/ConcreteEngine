@@ -9,7 +9,7 @@ internal sealed partial class CameraInspector : Inspector<CameraInspector>
 {
     private static Camera Target => CameraManager.Instance.Camera;
 
-    public unsafe void Draw()
+    public static unsafe void Draw()
     {
         AppDraw.Section("Transform"u8, &DrawTransform);
         AppDraw.Section("Projection"u8, &DrawProjection);

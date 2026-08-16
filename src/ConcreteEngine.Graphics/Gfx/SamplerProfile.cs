@@ -2,7 +2,7 @@ using ConcreteEngine.Core.Common.Attributes;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-[EnumExt]
+[EnumExt(ToUtf8 = true)]
 public enum SamplerSlot : byte
 {
     Diffuse = 0,
@@ -23,7 +23,7 @@ public enum SamplerSlot : byte
     AmbientOcclusion = 12
 }
 
-[EnumExt]
+[EnumExt(ToUtf8 = true)]
 public enum SamplerProfile : byte
 {
     PointClamp,

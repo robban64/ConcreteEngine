@@ -9,90 +9,49 @@ namespace ConcreteEngine.Editor.App.Assets;
 
 internal sealed unsafe class MaterialBindingForm
 {
+    const float ImageThumbnailSize = 64f;
+
     private readonly TexturePtrHandle[] _textureHandles = new TexturePtrHandle[16];
+
+    private static float ImageOffset => ImageThumbnailSize + GuiTheme.FramePadding.X;
 
     public void Draw(Material material)
     {
-        const float minInputBoxWidth = 100f;
-
-        var availWidth = ImGui.GetContentRegionAvail().X;
-        var rowHeight = ImGui.GetFrameHeight();
-
-        float rightSpace = availWidth - (minInputBoxWidth + GuiTheme.ItemSpacing.X);
-        float imageSize = float.Clamp(rightSpace, 24f, 64f);
-        float inputFrameWidth = availWidth - imageSize - GuiTheme.ItemSpacing.X;
-
-        int id = 0;
-        foreach (var source in material.GetSourceSpan())
+        var span = material.GetSourceSpan();
+        for (var i = 0; i < span.Length; i++)
         {
-            ImGui.PushID(++id);
+            var source = span[i];
+            ImGui.PushID(i);
 
-            DrawTitle(source);
+            ImGui.SeparatorText(source.Slot.ToUtf8());
+
+            ImGui.BeginGroup();
+            if (source.TextureId.IsValid())
+            {
+                var texture = AssetManager.Assets.Get<Texture>(source.AssetId);
+                AppDraw.Text(texture.Name);
+                ImGui.TextUnformatted(texture.TextureKind.ToUtf8());
+            }
+            else
+            {
+                AppDraw.TextColored(Palette32.OrangeBase, "Fallback"u8);
+            }
+            ImGui.TextUnformatted(source.Profile.ToUtf8());
+            ImGui.EndGroup();
+
+            var availWidth = ImGui.GetContentRegionAvail().X;
+
+            ImGui.SameLine(availWidth - ImageOffset);
+
+            AppDraw.ImageButton("##x"u8, source.GetTextureOrFallback(), ref _textureHandles[(int)source.Slot], new Vector2(ImageThumbnailSize));
+
+            if (source.TextureId.IsValid() && ImGui.IsItemClicked(ImGuiMouseButton.Right))
+                material.ClearSourceSlot(source.Slot);
             
-            DrawUvInputGroup(inputFrameWidth);
-            ImGui.SameLine();
-            DrawTextureGroup(material, source, rowHeight, imageSize);
-            
+            DropTexture(material, source.Slot);
+
+
             ImGui.PopID();
-        }
-    }
-
-    private static void DrawTitle(TextureSource source)
-    {
-        var sw = ScratchBuffer.Writer();
-        sw.Append(SamplerSlotExt.Names[(int)source.Slot]).PadRight(2);
-        sw.Append(SamplerProfileExt.Names[(int)source.Profile]);
-        ImGui.AlignTextToFramePadding();
-        AppDraw.Text(sw.End());
-    }
-
-    private static void DrawUvInputGroup(float width)
-    {
-        ImGui.BeginGroup();
-        {
-            Vector2 v = default;
-
-            ImGui.SetNextItemWidth(width);
-            ImGui.AlignTextToFramePadding();
-            ImGui.TextUnformatted("Offset"u8);
-            ImGui.InputFloat2("##Offset"u8, ref v.X);
-
-            ImGui.SetNextItemWidth(width);
-            ImGui.AlignTextToFramePadding();
-            ImGui.TextUnformatted("Repeat"u8);
-            ImGui.InputFloat2("##Repeat"u8, ref v.X);
-        }
-        ImGui.EndGroup();
-    }
-
-    private void DrawTextureGroup(Material material, TextureSource source, float rowHeight, float imageSize)
-    {
-        ImGui.BeginGroup();
-        ImGui.Dummy(new Vector2(0, rowHeight));
-        if (source.TextureId.IsValid())
-        {
-            AppDraw.ImageButton("##text-slot"u8, source.TextureId, ref _textureHandles[(int)source.Slot],
-                new Vector2(imageSize));
-        }
-        else
-        {
-            ImGui.PushStyleColor(ImGuiCol.Text, Palette32.OrangeBase);
-            ImGui.Button("Empty Slot"u8, new Vector2(imageSize) + GuiTheme.FramePadding);
-            ImGui.PopStyleColor();
-        }
-
-        ImGui.EndGroup();
-
-        if (source.TextureId.IsValid() && ImGui.IsItemClicked(ImGuiMouseButton.Right))
-            material.ClearSourceSlot(source.Slot);
-
-        DropTexture(material, source.Slot);
-
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.TextUnformatted("Right + Click to clear slot"u8);
-            ImGui.EndTooltip();
         }
     }
     
@@ -110,4 +69,5 @@ internal sealed unsafe class MaterialBindingForm
 
         ImGui.EndDragDropTarget();
     }
+
 }

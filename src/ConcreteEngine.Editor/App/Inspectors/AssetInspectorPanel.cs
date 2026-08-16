@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.App.Assets;
 using ConcreteEngine.Editor.App.Theme;
@@ -15,6 +16,8 @@ internal sealed unsafe class AssetInspectorPanel
 {
     private const string ValidNoneAlphaNumericChars = ":/_-.";
 
+    public static AssetInspectorPanel Instance = null!;
+
     private static SelectionManager Selection => SelectionManager.Instance;
 
     public static TexturePtrHandle PopupTextureHandle;
@@ -24,7 +27,6 @@ internal sealed unsafe class AssetInspectorPanel
 
     private readonly StateManager _state;
     private readonly TextureInspectorUi _textureProxyUi;
-    private readonly MaterialInspectorUi _materialProxyUi;
     private readonly ShaderInspectorUi _shaderInspectorUi;
     private readonly ModelInspectorUi _modelInspectorUi;
 
@@ -34,6 +36,9 @@ internal sealed unsafe class AssetInspectorPanel
 
     public AssetInspectorPanel(StateManager state)
     {
+        Instance = this;
+        _ = new MaterialInspector();
+        
         _state = state;
         _title = StringArena.AllocateString(24);
         _searchInput = new TextInput("name", 64, OnNameInput)
@@ -44,7 +49,6 @@ internal sealed unsafe class AssetInspectorPanel
             .ToggleFlag(ImGuiInputTextFlags.EnterReturnsTrue, true);
 
         _textureProxyUi = new TextureInspectorUi(state);
-        _materialProxyUi = new MaterialInspectorUi(state);
         _shaderInspectorUi = new ShaderInspectorUi(state);
         _modelInspectorUi = new ModelInspectorUi(state);
     }
@@ -74,6 +78,7 @@ internal sealed unsafe class AssetInspectorPanel
     {
         _searchInput.Text.Set(asset.Name);
     }
+    
 
     public void Draw()
     {
@@ -99,8 +104,8 @@ internal sealed unsafe class AssetInspectorPanel
             case Texture texture:
                 _textureProxyUi.Draw(texture);
                 break;
-            case Material material:
-                _materialProxyUi.Draw(material);
+            case Material:
+                MaterialInspector.Instance.Draw();
                 break;
         }
 

@@ -7,8 +7,8 @@ namespace ConcreteEngine.Core.Common.Memory;
 
 public static unsafe class NativeArray
 {
-    public static ulong AllocSizeInBytes { get; private set; }
     public static int AllocCount { get; private set; }
+    public static ulong AllocSizeInBytes { get; private set; }
 
     public static float AllocSizeInMb => AllocSizeInBytes > 0 ? AllocSizeInBytes / 1024.0f / 1024.0f : 0;
 

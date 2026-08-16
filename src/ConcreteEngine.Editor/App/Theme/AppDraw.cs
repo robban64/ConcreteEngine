@@ -52,12 +52,21 @@ internal static unsafe class AppDraw
     public static void Icon(uint icon) => ImGui.TextUnformatted((byte*)&icon);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void TextColored(uint color, string text)
+    public static void TextColored(uint color, ReadOnlySpan<char> text)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, color);
         Text(ScratchBuffer.Write(text));
         ImGui.PopStyleColor();
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void TextColored(uint color, ReadOnlySpan<byte> text)
+    {
+        ImGui.PushStyleColor(ImGuiCol.Text, color);
+        ImGui.TextUnformatted(text);
+        ImGui.PopStyleColor();
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Text(string text) => Text(ScratchBuffer.Write(text));

@@ -63,7 +63,8 @@ internal sealed unsafe class SceneWindow : EditorWindow
 
     private void SyncState()
     {
-        _title.OverWriter.Append("SceneObjects [").Append(_browser.FilteredCount).Append(']').End();
+        using var builder = new NativeStringBuilder(_title);
+        builder.Writer.Append("SceneObjects ["u8).Append(_browser.FilteredCount).Append(']');
     }
 
     protected override void OnDraw()

@@ -15,7 +15,7 @@ namespace ConcreteEngine.Editor.App.Assets;
 internal sealed partial class MaterialInspector : Inspector<MaterialInspector>
 {
     public static Material Target => (Material)SelectionManager.Instance.SelectedAsset!;
-    
+
     private readonly MaterialBindingForm _bindingForm = new();
 
     public unsafe void Draw()
@@ -41,8 +41,8 @@ internal sealed partial class MaterialInspector : Inspector<MaterialInspector>
         Instance.DrawRenderFlags();
         Instance.DrawRenderCombos();
     }
-    
-    
+
+
     private readonly ComboInput BlendCombo = ComboInput.Create("Blend Mode", BlendModeExt.Values, BlendModeExt.Names,
         static v => Target.State.DrawFunctions = Target.State.DrawFunctions with { Blend = (BlendMode)v });
 
@@ -72,7 +72,7 @@ internal sealed partial class MaterialInspector : Inspector<MaterialInspector>
         DepthCombo.Draw();
         PolygonCombo.Draw();
     }
-    
+
     private unsafe void DrawRenderFlags()
     {
         var ogDrawState = Target.State.DrawState;
@@ -107,5 +107,4 @@ internal sealed partial class MaterialInspector : Inspector<MaterialInspector>
                 state = new GfxDrawState(state.Enabled ^ flag, state.Defined);
         }
     }
-
 }

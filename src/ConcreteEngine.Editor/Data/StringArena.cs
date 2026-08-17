@@ -54,7 +54,7 @@ internal sealed class StringArena : IDisposable
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
         capacity = IntMath.AlignUp(capacity, 4);
 
-        var sizeInBytes = Unsafe.SizeOf<NativeString.NativeStringHeader>() + capacity;
+        var sizeInBytes = NativeString.HeaderStride + capacity;
         Ensure(sizeInBytes);
 
         var memory = _allocator.Tail.AllocSlice(sizeInBytes);

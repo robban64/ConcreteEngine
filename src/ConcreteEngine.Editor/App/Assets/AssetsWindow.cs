@@ -95,12 +95,12 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             return;
         }
 
-        var sw = _breadcrumbs.OverWriter; //sw.Append('[').Append().Append(']').PadRight(2);
+        var builder = new NativeStringBuilder(_breadcrumbs);
         foreach (var range in path.Split('/'))
-            sw.Append(path[range]).Append('/');
+            builder.Writer.Append(path[range]).Append('/');
 
-        sw.SetCursor(sw.Cursor - 1); // remove last '/'
-        sw.End();
+        var cursor = builder.Writer.Cursor;
+        builder.Writer.SetCursor(cursor - 2); // remove last '/'
     }
 
     private void UpdateFilter(FileBinding bindingFilter, AssetKind assetFilter)

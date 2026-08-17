@@ -42,7 +42,9 @@ internal sealed unsafe class SceneInspectorPanel
     {
         RestoreName(sceneObject);
         _previousId = sceneObject.Id;
-        _title.OverWriter.Append(sceneObject.Kind.ToUtf8()).Append(" - ["u8).Append(sceneObject.Id).Append(']').End();
+
+        using var builder = new NativeStringBuilder(_title);
+        builder.Writer.Append(sceneObject.Kind.ToUtf8()).Append(" - ["u8).Append(sceneObject.Id).Append(']');
     }
 
     private void RestoreName(SceneObject sceneObject)

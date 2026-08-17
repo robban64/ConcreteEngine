@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.App.Assets;
 using ConcreteEngine.Editor.App.Theme;
@@ -70,7 +71,8 @@ internal sealed unsafe class AssetInspectorPanel
     {
         RestoreName(asset);
         _previousId = asset.Id;
-        _title.OverWriter.Append(asset.Kind.ToText()).Append(" - ["u8).Append(asset.Id).Append(']').End();
+        using var builder = new NativeStringBuilder(_title);
+        builder.Writer.Append(asset.Kind.ToUtf8()).Append(" - ["u8).Append(asset.Id).Append(']');
     }
 
     private void RestoreName(AssetObject asset)
@@ -84,7 +86,12 @@ internal sealed unsafe class AssetInspectorPanel
         if (Selection.SelectedAsset is not { } asset) return;
 
         if (_previousId != asset.Id)
+        {
+            Console.WriteLine("Length : " +_title.Length);
             OnNewInspector(asset);
+            Console.WriteLine("Length : " +_title.Length);
+
+        }
 
         ImGui.PushID(asset.Id);
 

@@ -45,6 +45,34 @@ public struct ShadowVisualParams(float strength, float pcfRadius)
     public float PcfRadius = pcfRadius;
 }
 
+public struct FogParams
+{
+    [InputNumber(InputStyle.Slider, Min = 100, Max = 1500)]
+    public float Density;
+
+    [InputNumber(InputStyle.Slider, Min = -1000f, Max = 1000f)]
+    public float BaseHeight;
+
+    [InputNumber(InputStyle.Slider, Min = 0.001f, Max = 10000.0f)]
+    public float HeightFalloff;
+    
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
+    public float Strength;
+    
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
+    public float Scattering;
+
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
+    public float DistanceWeight;
+
+    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
+    public float HeightWeight;
+
+    [InputNumber(InputStyle.Drag, Speed = 1f, Min = 1f, Max = 10000f, Format = "%.2f")]
+    public float MaxDistance;
+
+
+}
 [StructLayout(LayoutKind.Sequential)]
 public struct FogHeightParams(float density, float strength, float baseHeight, float heightFalloff)
 {

@@ -60,7 +60,7 @@ internal sealed unsafe class VisualSystem
         if (VisualManager.Illumination.WasDirty)
             UploadDirLight();
 
-        if (VisualManager.Illumination.WasDirty || VisualManager.Environment.WasDirty)
+        if (VisualManager.Illumination.WasDirty || VisualManager.Fog.WasDirty)
             UploadFrameUniformRecord();
 
         if (VisualManager.PostEffect.WasDirty)
@@ -107,14 +107,12 @@ internal sealed unsafe class VisualSystem
     [SkipLocalsInit]
     public void UploadShadow()
     {
-        var size = VisualManager.Shadow.InvMapSize;
-        var proj = VisualManager.Shadow.Projection;
-        var vis = VisualManager.Shadow.Visuals;
-
+        var shadow = VisualManager.Shadow;
+        var size = shadow.InvMapSize;
         ShadowUniform data;
-        data.LightViewProj = CameraManager.LightTransforms.ViewMatrix * CameraManager.LightTransforms.ProjectionMatrix;
-        data.ShadowParams0 = new Vector4(size, size, proj.ConstBias, proj.SlopeBias);
-        data.ShadowParams1 = new Vector4(vis.Strength, vis.PcfRadius, 0.03f, proj.Distance);
+        data.LightViewProj = CameraManager.LightTransforms.ProjectionViewMatrix;
+        data.ShadowParams0 = new Vector4(size, size, shadow.ConstBias, shadow.SlopeBias);
+        data.ShadowParams1 = new Vector4(shadow.Strength, shadow.PcfRadius, 0.03f, shadow.Distance);
 
         _gfx.UploadSingleUniform(&data, 0);
     }
@@ -137,20 +135,18 @@ internal sealed unsafe class VisualSystem
     [SkipLocalsInit]
     private void UploadFrameUniformRecord()
     {
-        var env = VisualManager.Environment;
-        var fogHeight = env.FogHeight;
-        var fogOptics = env.FogOptics;
+        var fog = VisualManager.Fog;
 
-        float kExp2 = 1f / (fogHeight.Density * fogHeight.Density);
-        float kHeight = 1f / MathF.Max(fogHeight.HeightFalloff, 1e-6f);
+        float kExp2 = 1f / (fog.Density * fog.Density);
+        float kHeight = 1f / MathF.Max(fog.HeightFalloff, 1e-6f);
 
         FrameUniform data;
-        data.Ambient = new Vector4(env.Ambient, env.Exposure);
-        data.AmbientGround = new Vector4(env.AmbientGround, 0.0f);
+        data.Ambient = new Vector4(VisualManager.Illumination.Ambient, VisualManager.Illumination.Exposure);
+        data.AmbientGround = new Vector4(VisualManager.Illumination.AmbientGround, 0.0f);
 
-        data.FogColor = new Vector4(env.FogColor, fogOptics.Scattering);
-        data.FogParams0 = new Vector4(kExp2, kHeight, fogHeight.BaseHeight, fogHeight.Strength);
-        data.FogParams1 = new Vector4(fogOptics.DistanceWeight, fogOptics.HeightWeight, fogOptics.MaxDistance, 0.0f);
+        data.FogColor = new Vector4(fog.FogColor, fog.Scattering);
+        data.FogParams0 = new Vector4(kExp2, kHeight, fog.BaseHeight, fog.Strength);
+        data.FogParams1 = new Vector4(fog.DistanceWeight, fog.HeightWeight, fog.MaxDistance, 0.0f);
 
         _gfx.UploadSingleUniform(&data, 0);
     }

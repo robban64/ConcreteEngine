@@ -12,9 +12,10 @@ internal partial class ParticleInspector : Inspector<ParticleInspector>
     private static ParticleEmitter Target =>
         SelectionManager.Instance.SelectedSceneObject?.GetInstance<ParticleInstance>().Emitter!;
 
-    public unsafe void Draw()
+    public void Draw()
     {
-        AppDraw.Section("Emitter"u8, &DrawEmitterParams);
-        AppDraw.Section("Particle"u8, &DrawParticleParams);
+        _sectionEmitterParams.Draw();
+        _sectionParticleParams.Draw();
+        _sectionSimulation.Draw();
     }
 }

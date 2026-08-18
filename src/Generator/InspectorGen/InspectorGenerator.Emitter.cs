@@ -66,8 +66,35 @@ internal static class InspectorGeneratorEmitter
         sb.CloseBrace(); // class
         return sb.ToString();
     }
+    private static void EmitDrawFunc(SourceBuilder sb, EmitGroup emitGroup)
+    {
+        var group = emitGroup.Group;
+        foreach (ref readonly var segment in emitGroup.Segments.AsSpan())
+        {
+            var members = segment.Members;
+            if (members.Length == 0) continue;
+
+            sb.AppendLine();
+            sb.BeginLine("private static void Fetch");
+            segment.AppendDrawName(sb, group);
+            sb.EndLine("()");
+            sb.OpenBrace();
+
+            foreach (var member in members)
+            {
+                if (member.Input is not { } input) continue;
+                var access = CreateAccessPath(member, group);
+                sb.BeginLine().Builder.Append($"{input.Name}.Value = ");
+                member.Input.AppendGetter(member, access.Value, sb);
+                sb.EndLine(";");
+            }
 
 
+            sb.CloseBrace();
+        }
+    }
+
+/*
     private static void EmitDrawFunc(SourceBuilder sb, EmitGroup emitGroup)
     {
         var group = emitGroup.Group;
@@ -94,7 +121,7 @@ internal static class InspectorGeneratorEmitter
             if (segment.Members.Length == 0) continue;
 
             sb.AppendLine();
-            sb.BeginLine("public static void Fetch");
+            sb.BeginLine("private static void Fetch");
             segment.AppendDrawName(sb, group);
             sb.EndLine("()");
             sb.OpenBrace();
@@ -136,7 +163,7 @@ internal static class InspectorGeneratorEmitter
         sb.AppendLine().AppendLine("// Draw");
         sb.BeginLine().Builder.AppendLine($"{group.Name}.Draw();");
     }
-
+*/
     private static void EmitDrawInputFields(SourceBuilder sb, InspectorGroup group, EmitSegment segment)
     {
         sb.AppendLine("Fetch();").AppendLine().AppendLine("// Draw");

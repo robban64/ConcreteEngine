@@ -1,15 +1,14 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.App.Assets;
-using ConcreteEngine.Editor.App.Theme;
+using ConcreteEngine.Editor.App.Inspectors;
+using ConcreteEngine.Editor.App.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.App.Inspectors;
+namespace ConcreteEngine.Editor.App;
 
-internal sealed unsafe class InspectionWindow : EditorWindow
+internal sealed class InspectionWindow : EditorWindow
 {
     public override ReadOnlySpan<byte> Id => WindowRoot.RightWindowId;
 
@@ -23,9 +22,9 @@ internal sealed unsafe class InspectionWindow : EditorWindow
         _ = new CameraInspector();
         
         _ = new PostEffectSettingsInspector();
-        _ = new DirectionalLightInspector();
+        _ = new LightingSettingsInspector();
         _ = new ShadowSettingsInspector();
-        _ = new EnvironmentSettingsInspector();
+        _ = new FogSettingsInspector();
         _ = new AssetInspectorPanel(state);
         _ = new SceneInspectorPanel(state);
 
@@ -92,7 +91,7 @@ internal sealed unsafe class InspectionWindow : EditorWindow
 
         if (ImGui.BeginTabItem("Sun"u8))
         {
-            DirectionalLightInspector.Instance.Draw();
+            LightingSettingsInspector.Instance.Draw();
             ImGui.EndTabItem();
         }
 
@@ -104,7 +103,7 @@ internal sealed unsafe class InspectionWindow : EditorWindow
 
         if (ImGui.BeginTabItem("Environment"u8))
         {
-            EnvironmentSettingsInspector.Instance.Draw();
+            FogSettingsInspector.Instance.Draw();
             ImGui.EndTabItem();
         }
 

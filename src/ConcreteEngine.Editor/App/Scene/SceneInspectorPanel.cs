@@ -1,14 +1,14 @@
 using System.Text;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.App.Scene;
+using ConcreteEngine.Editor.App.Inspectors;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.App.Inspectors;
+namespace ConcreteEngine.Editor.App.Scene;
 
 internal sealed unsafe class SceneInspectorPanel
 {

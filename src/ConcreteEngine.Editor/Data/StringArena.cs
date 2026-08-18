@@ -37,6 +37,8 @@ internal sealed class StringArena : IDisposable
 
     public NativeString AllocString(ReadOnlySpan<char> value, int extraCapacity = 0)
     {
+        ArgumentOutOfRangeException.ThrowIfZero(value.Length);
+        ArgumentOutOfRangeException.ThrowIfNegative(extraCapacity);
         var str = AllocString(Encoding.UTF8.GetByteCount(value) + 1 + extraCapacity);
         str.Set(value);
         return str;
@@ -44,6 +46,8 @@ internal sealed class StringArena : IDisposable
 
     public NativeString AllocString(ReadOnlySpan<byte> value, int extraCapacity = 0)
     {
+        ArgumentOutOfRangeException.ThrowIfZero(value.Length);
+        ArgumentOutOfRangeException.ThrowIfNegative(extraCapacity);
         var str = AllocString(value.Length + 1 + extraCapacity);
         str.Set(value);
         return str;

@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Common.Collections;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib.Field;
+namespace ConcreteEngine.Editor.Lib.Inputs;
 
 internal sealed unsafe class TextInputHistory
 {

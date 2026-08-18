@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Inputs;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
@@ -35,7 +35,6 @@ internal sealed unsafe class SceneWindow : EditorWindow
         _kindCombo = ComboInput.Create("scene-combo", SceneObjectKindExt.Values, SceneObjectKindExt.Names,
             v => OnCategoryChange((SceneObjectKind)v));
 
-        _kindCombo.LabelPlacement = LabelPlacement.None;
         _kindCombo.SetItemName(0, "All");
 
         _searchInput = new TextInput("search", 8, Search) { AllowEmpty = true, Trim = true, Lowercase = true };

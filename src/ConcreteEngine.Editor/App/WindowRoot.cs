@@ -69,19 +69,20 @@ internal static class WindowRoot
     {
         HasDockSpace = true;
 
-        float leftWidth = float.Clamp(WorkSize.X * 0.15f, 260f, 320f);
-        float rightWidth = float.Clamp(WorkSize.X * 0.15f, 260f, 320f);
-        float bottomHeight = float.Clamp(WorkSize.Y * 0.20f, 220f, 300f);
+        var workSize = WorkSize;
+        float leftWidth = float.Clamp(workSize.X * 0.15f, 260f, 320f);
+        float rightWidth = float.Clamp(workSize.X * 0.20f, 260f, 320f);
+        float bottomHeight = float.Clamp(workSize.Y * 0.20f, 220f, 300f);
 
-        float leftRatio = leftWidth / WorkSize.X;
-        float rightRatio = rightWidth / (WorkSize.X - leftWidth);
-        float bottomRatio = bottomHeight / WorkSize.Y;
+        float leftRatio = leftWidth / workSize.X;
+        float rightRatio = rightWidth / (workSize.X - leftWidth);
+        float bottomRatio = bottomHeight / workSize.Y;
 
         DockSpaceId = ImGui.GetID("MainDockSpace"u8);
 
         ImGuiP.DockBuilderRemoveNode(DockSpaceId);
         ImGuiP.DockBuilderAddNode(DockSpaceId, DockNodeFlags);
-        ImGuiP.DockBuilderSetNodeSize(DockSpaceId, WorkSize);
+        ImGuiP.DockBuilderSetNodeSize(DockSpaceId, workSize);
 
         uint* nodes = stackalloc uint[4];
         nodes[0] = DockSpaceId;
@@ -100,8 +101,8 @@ internal static class WindowRoot
         ImGuiP.DockBuilderGetNode(*dockRightId).LocalFlags |= noTabBarBit;
         ImGuiP.DockBuilderGetNode(*dockMainId).LocalFlags |= noTabBarBit;
 
-        ImGuiP.DockBuilderGetNode(dockBottomLeftId).LocalFlags |= ImGuiDockNodeFlags.AutoHideTabBar;
-        ImGuiP.DockBuilderGetNode(dockBottomRightId).LocalFlags |= ImGuiDockNodeFlags.AutoHideTabBar;
+        ImGuiP.DockBuilderGetNode(dockBottomLeftId).LocalFlags |= noTabBarBit;
+        ImGuiP.DockBuilderGetNode(dockBottomRightId).LocalFlags |= noTabBarBit;
 
 
         ImGuiP.DockBuilderDockWindow(LeftWindowId, *dockLeftId);

@@ -47,7 +47,7 @@ public sealed class Camera
     }
 
 
-    [InputNumber(Segment = "Transform")]
+    [InputNumber]
     public Vector3 Translation
     {
         get => _translation;
@@ -59,7 +59,7 @@ public sealed class Camera
         }
     }
 
-    [InputNumber(Segment = "Transform", IsFloat = true, Components = 2)]
+    [InputNumber(IsFloat = true, Components = 2)]
     public YawPitch Orientation
     {
         get => _orientation;
@@ -71,7 +71,7 @@ public sealed class Camera
         }
     }
 
-    [InputNumber(Label = "Near & Far", Segment = "Projection")]
+    [InputNumber(Label = "Near & Far")]
     public Vector2 NearFarPlane
     {
         get;
@@ -84,7 +84,7 @@ public sealed class Camera
         }
     } = new(0.1f, 500f);
 
-    [InputNumber(InputStyle.Slider, Label = "Field of view", Min = 10f, Max = 179f, Segment = "Projection")]
+    [InputNumber(InputStyle.Slider, Label = "Field of view", Min = 10f, Max = 179f)]
     public float Fov
     {
         get;

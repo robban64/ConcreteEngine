@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.Data;
 
-namespace ConcreteEngine.Editor.Lib.Field;
+namespace ConcreteEngine.Editor.Lib.Inputs;
 
 internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IInputNumeric<T>
 {
@@ -33,19 +33,18 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IIn
         Max = max;
 
         _value = (T*)StringArena.Instance.AllocBytes(Unsafe.SizeOf<T>()).Ptr;
-        if (T.Components == 1) LabelPlacement = LabelPlacement.Inline;
     }
 
     public ref T Value => ref *_value;
 
-    public bool Draw()
+    public override bool Draw()
     {
-        DrawLabel();
+        var strId = _stringId;
         var changed = Style switch
         {
-            InputStyle.Input => T.DrawFloatInput(StringId, _value, _format),
-            InputStyle.Slider => T.DrawFloatSlider(StringId, _value, _format, Min, Max),
-            InputStyle.Drag => T.DrawFloatDrag(StringId, _value, _format, Speed, Min, Max),
+            InputStyle.Input => T.DrawFloatInput((byte*)&strId, _value, _format),
+            InputStyle.Slider => T.DrawFloatSlider((byte*)&strId, _value, _format, Min, Max),
+            InputStyle.Drag => T.DrawFloatDrag((byte*)&strId, _value, _format, Speed, Min, Max),
             _ => false
         };
         if (changed && ShouldTrigger())
@@ -83,19 +82,18 @@ internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IInpu
         Max = max;
 
         _value = (T*)StringArena.Instance.AllocBytes(Unsafe.SizeOf<T>()).Ptr;
-        if (T.Components == 1) LabelPlacement = LabelPlacement.Inline;
     }
 
     public ref T Value => ref *_value;
 
-    public bool Draw()
+    public override bool Draw()
     {
-        DrawLabel();
+        var strId = _stringId;
         var changed = Style switch
         {
-            InputStyle.Input => T.DrawIntInput(StringId, _value),
-            InputStyle.Slider => T.DrawIntSlider(StringId, _value, Min, Max),
-            InputStyle.Drag => T.DrawIntDrag(StringId, _value, Speed, Min, Max),
+            InputStyle.Input => T.DrawIntInput((byte*)&strId, _value),
+            InputStyle.Slider => T.DrawIntSlider((byte*)&strId, _value, Min, Max),
+            InputStyle.Drag => T.DrawIntDrag((byte*)&strId, _value, Speed, Min, Max),
             _ => false
         };
 

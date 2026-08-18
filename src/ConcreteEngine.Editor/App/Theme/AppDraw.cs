@@ -8,7 +8,7 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.App.Shared;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Inputs;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Theme;
@@ -84,7 +84,21 @@ internal static unsafe class AppDraw
     public static void Text(NativeString text) => ImGui.TextUnformatted(text.TextStart, text.TextEnd);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Text(NativeView<byte> text) => ImGui.TextUnformatted(text, text.EndPtr);
+    public static void Text(NativeView<byte> text) => ImGui.TextUnformatted(text.Ptr, text.EndPtr);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void TextFrameAligned(NativeString text)
+    {
+        ImGui.AlignTextToFramePadding();
+        ImGui.TextUnformatted(text.TextStart, text.TextEnd);
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void TextFrameAligned(NativeView<byte> text)
+    {
+        ImGui.AlignTextToFramePadding();
+        ImGui.TextUnformatted(text.Ptr, text.EndPtr);
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void TextColumn(NativeView<byte> text)

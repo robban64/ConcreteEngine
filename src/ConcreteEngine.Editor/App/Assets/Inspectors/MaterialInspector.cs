@@ -4,7 +4,7 @@ using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Inputs;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
@@ -22,7 +22,7 @@ internal sealed partial class MaterialInspector : Inspector<MaterialInspector>
     {
         DrawHeader();
         AppDraw.CollapseSection("Bindings"u8, &DrawBindings);
-        AppDraw.CollapseSection("State"u8, &DrawState);
+        _sectionState.Draw();
         AppDraw.CollapseSection("Rendering"u8, &DrawPipeline);
     }
 

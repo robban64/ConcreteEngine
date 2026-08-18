@@ -30,7 +30,7 @@ internal static class InspectorGeneratorEmitter
                       using System.Runtime.CompilerServices;
                       using ConcreteEngine.Core.Common.Numerics;
                       using ConcreteEngine.Core.Engine.Editor;
-                      using ConcreteEngine.Editor.Lib.Field;
+                      using ConcreteEngine.Editor.Lib.Inputs;
                       """);
 
         sb.Builder.AppendLine().AppendLine($"namespace {ns};\n").AppendLine();
@@ -44,7 +44,7 @@ internal static class InspectorGeneratorEmitter
         for (var i = 0; i < groupSegments.Length; i++)
         {
             var group = model.Groups[i];
-            groupSegments[i] = new EmitGroup(group, BuildSegments(group));
+            groupSegments[i] = new EmitGroup(group, BuildSegments(model.TargetName, group));
         }
 
         GenerateHeaders(sb, model.InspectorNs);
@@ -53,6 +53,9 @@ internal static class InspectorGeneratorEmitter
         sb.OpenBrace();
 
         // Fields
+        foreach (var it in groupSegments)
+            EmitSections(sb, model.TargetName, it);
+
         foreach (var it in groupSegments)
             EmitInputFields(sb, it);
 
@@ -85,19 +88,53 @@ internal static class InspectorGeneratorEmitter
 
             sb.CloseBrace();
         }
+
+        foreach (ref readonly var segment in emitGroup.Segments.AsSpan())
+        {
+            if (segment.Members.Length == 0) continue;
+
+            sb.AppendLine();
+            sb.BeginLine("public static void Fetch");
+            segment.AppendDrawName(sb, group);
+            sb.EndLine("()");
+            sb.OpenBrace();
+
+            if (group.IsInputGroup)
+            {
+                sb.BeginLine().Builder.AppendLine($"var value = Target.{group.AccessPath};");
+                sb.BeginLine().Builder.AppendLine($"var dst = {group.Name}.Values;");
+
+                var span = group.Members.AsSpan();
+                for (var i = 0; i < span.Length; i++)
+                    sb.BeginLine().Builder.AppendLine($"dst[{i}] = value.{span[i].Name};");
+            }
+            else
+            {
+                foreach (var member in segment.Members.AsSpan())
+                {
+                    if (member.Input is not { } input) continue;
+                    var access = CreateAccessPath(member, group);
+                    sb.BeginLine().Builder.Append($"{input.Name}.Value = ");
+                    member.Input.AppendGetter(member, access.Value, sb);
+                    sb.EndLine(";");
+                }
+            }
+
+            sb.CloseBrace();
+        }
     }
 
     private static void EmitDrawInputGroup(SourceBuilder sb, InspectorGroup group)
     {
         sb.BeginLine().Builder.AppendLine($"var value = Target.{group.AccessPath};");
-        sb.BeginLine().Builder.AppendLine($"var dst = Instance.{group.Name}.Values;");
+        sb.BeginLine().Builder.AppendLine($"var dst = {group.Name}.Values;");
 
         var span = group.Members.AsSpan();
         for (var i = 0; i < span.Length; i++)
             sb.BeginLine().Builder.AppendLine($"dst[{i}] = value.{span[i].Name};");
 
         sb.AppendLine().AppendLine("// Draw");
-        sb.BeginLine().Builder.AppendLine($"Instance.{group.Name}.Draw();");
+        sb.BeginLine().Builder.AppendLine($"{group.Name}.Draw();");
     }
 
     private static void EmitDrawInputFields(SourceBuilder sb, InspectorGroup group, EmitSegment segment)
@@ -106,7 +143,7 @@ internal static class InspectorGeneratorEmitter
         foreach (var member in segment.Members.AsSpan())
         {
             if (member.Input is null) continue;
-            sb.BeginLine().Builder.AppendLine($"Instance.{member.Input.Name}.Draw();");
+            sb.BeginLine().Builder.AppendLine($"{member.Input.Name}.Draw();");
         }
 
         sb.AppendLine("return;").AppendLine();
@@ -116,7 +153,7 @@ internal static class InspectorGeneratorEmitter
         {
             if (member.Input is not { } input) continue;
             var access = CreateAccessPath(member, group);
-            sb.BeginLine().Builder.Append($"Instance.{input.Name}.Value = ");
+            sb.BeginLine().Builder.Append($"{input.Name}.Value = ");
             member.Input.AppendGetter(member, access.Value, sb);
             sb.EndLine(";");
         }
@@ -137,11 +174,12 @@ internal static class InspectorGeneratorEmitter
 
         foreach (ref readonly var segment in emitGroup.Segments.AsSpan())
         {
+            if(group.Members.Length == 0) continue;
             if (!segment.IsDefault) sb.AppendLine().AppendLine("// ", segment.Name!);
             foreach (var member in segment.Members.AsSpan())
             {
                 var access = CreateAccessPath(member, group);
-                sb.BeginLine("private readonly ");
+                sb.BeginLine("private static readonly ");
                 switch (member.Input)
                 {
                     case NumberInput: EmitInput(sb, member, access); break;
@@ -151,15 +189,42 @@ internal static class InspectorGeneratorEmitter
                     default: throw new UnreachableException(nameof(member.Input));
                 }
             }
+
         }
 
         sb.AppendLine();
     }
 
+    private static void EmitSections(SourceBuilder sb, string targetName, EmitGroup emitGroup)
+    {
+        var group = emitGroup.Group;
+        if(group.IsInputGroup) return;
+        foreach (ref readonly var segment in emitGroup.Segments.AsSpan())
+        {
+            string segmentName;
+            if (group.IsRoot) segmentName = segment.IsDefault ? "Root" : segment.Name!;
+            else if (segment.IsDefault) segmentName = group.Name;
+            else segmentName = $"{group.Name}_{segment.Name!}";
+
+            sb.BeginLine("private readonly ");
+            sb.Builder.Append($"InspectSection _section{segmentName} = new InspectSection(");
+            sb.EndLine();
+            sb.PushIndent();
+
+            var label = segmentName == "Root" ? targetName : segmentName;
+            sb.BeginLine().AppendLiteral(label).Append(", [");
+            sb.Builder.AppendJoin(',', segment.Members.Select(static x => x.Name));
+            sb.Append("], Fetch").EndLine(segmentName);
+
+            sb.PopIndent();
+            sb.AppendLine(");");
+        }
+    }
+
 
     private static void EmitInputGroup(SourceBuilder sb, InspectorGroup group)
     {
-        sb.BeginLine("private readonly InputGroup ");
+        sb.BeginLine("private static readonly InputGroup ");
         sb.Append(group.Name).Append(" = new InputGroup(");
         sb.AppendLiteral(group.Name).Append(", ").Append(group.Members.Length);
         sb.EndLine(",");
@@ -311,7 +376,7 @@ internal static class InspectorGeneratorEmitter
         return result;
     }
 
-    private static EmitSegment[] BuildSegments(InspectorGroup group)
+    private static EmitSegment[] BuildSegments(string targetName, InspectorGroup group)
     {
         var dict = new Dictionary<string, List<InspectorMember>>(StringComparer.Ordinal);
 

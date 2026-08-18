@@ -222,7 +222,7 @@ public sealed class ShadowSettings : VisualStateObject
         }
     }
 
-    [InspectInclude, InputGroup]
+    [InspectInclude]
     public ShadowProjectionParams Projection
     {
         get;
@@ -233,7 +233,7 @@ public sealed class ShadowSettings : VisualStateObject
         }
     }
 
-    [InspectInclude, InputGroup]
+    [InspectInclude]
     public ShadowVisualParams Visuals
     {
         get;
@@ -248,7 +248,7 @@ public sealed class ShadowSettings : VisualStateObject
 [Inspect]
 public sealed class PostEffectSettings : VisualStateObject
 {
-    [InspectInclude, InputGroup]
+    [InspectInclude]
     public PostGradeParams Grade
     {
         get;
@@ -259,7 +259,7 @@ public sealed class PostEffectSettings : VisualStateObject
         }
     } = new(1.0f, 1.1f, 1.05f, 0.0f);
 
-    [InspectInclude, InputGroup]
+    [InspectInclude]
     public PostWhiteBalanceParams WhiteBalance
     {
         get;
@@ -270,7 +270,7 @@ public sealed class PostEffectSettings : VisualStateObject
         }
     } = new(0.0f, 0.0f);
 
-    [InspectInclude, InputGroup]
+    [InspectInclude]
     public PostBloomParams Bloom
     {
         get;
@@ -281,7 +281,7 @@ public sealed class PostEffectSettings : VisualStateObject
         }
     } = new(0.5f, 0.85f, 3.0f);
 
-    [InspectInclude, InputGroup]
+    [InspectInclude]
     public PostImageFxParams ImageFx
     {
         get;

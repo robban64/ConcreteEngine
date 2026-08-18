@@ -1,5 +1,8 @@
+using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Editor.App.Assets;
+using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
@@ -18,6 +21,7 @@ internal sealed unsafe class InspectionWindow : EditorWindow
     public InspectionWindow(StateManager state) : base(state)
     {
         _ = new CameraInspector();
+        
         _ = new PostEffectSettingsInspector();
         _ = new DirectionalLightInspector();
         _ = new ShadowSettingsInspector();
@@ -25,11 +29,10 @@ internal sealed unsafe class InspectionWindow : EditorWindow
         _ = new AssetInspectorPanel(state);
         _ = new SceneInspectorPanel(state);
 
-        _inspectionDrawer = static () => CameraInspector.Draw();
+        _inspectionDrawer = static () => CameraInspector.Instance.Draw();
     }
 
     protected override void OnCreate() => State.ContextChanged += OnStateOnContextChanged;
-
 
     protected override void OnDraw()
     {
@@ -69,8 +72,8 @@ internal sealed unsafe class InspectionWindow : EditorWindow
         switch (activeState)
         {
             case InspectorId.None: break;
-            case InspectorId.Camera: _inspectionDrawer = static () => CameraInspector.Draw(); break;
-            case InspectorId.Visual: _inspectionDrawer = static () => PostEffectSettingsInspector.Draw(); break;
+            case InspectorId.Camera: _inspectionDrawer = static () => CameraInspector.Instance.Draw(); break;
+            case InspectorId.Visual: _inspectionDrawer = static () => PostEffectSettingsInspector.Instance.Draw(); break;
             case InspectorId.Lighting: _inspectionDrawer = static () => DrawLightning(); break;
             case InspectorId.Asset: _inspectionDrawer = static () => AssetInspectorPanel.Instance.Draw(); break;
             case InspectorId.SceneObject: _inspectionDrawer = static () => SceneInspectorPanel.Instance.Draw(); break;
@@ -89,19 +92,19 @@ internal sealed unsafe class InspectionWindow : EditorWindow
 
         if (ImGui.BeginTabItem("Sun"u8))
         {
-            DirectionalLightInspector.Draw();
+            DirectionalLightInspector.Instance.Draw();
             ImGui.EndTabItem();
         }
 
         if (ImGui.BeginTabItem("Shadow"u8))
         {
-            ShadowSettingsInspector.Draw();
+            ShadowSettingsInspector.Instance.Draw();
             ImGui.EndTabItem();
         }
 
         if (ImGui.BeginTabItem("Environment"u8))
         {
-            EnvironmentSettingsInspector.Draw();
+            EnvironmentSettingsInspector.Instance.Draw();
             ImGui.EndTabItem();
         }
 

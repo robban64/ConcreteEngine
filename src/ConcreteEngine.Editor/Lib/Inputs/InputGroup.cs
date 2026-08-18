@@ -3,10 +3,11 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Editor;
+using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib.Field;
+namespace ConcreteEngine.Editor.Lib.Inputs;
 
 internal sealed unsafe class InputGroup : InputField
 {
@@ -32,11 +33,11 @@ internal sealed unsafe class InputGroup : InputField
     public Span<int> IntValues => _values.Reinterpret<int>().AsSpan();
     public Span<float> FloatValues => _values.Reinterpret<float>().AsSpan();
 
-    public bool Draw()
+    public override bool Draw()
     {
         if (_count != _inputs.Length) Throwers.InvalidOperation(nameof(_count));
 
-        ImGui.PushID(StringId);
+        ImGui.PushID(_id);
 
         var changed = false;
         var value = _values.Ptr;
@@ -56,10 +57,10 @@ internal sealed unsafe class InputGroup : InputField
 
     public InputGroup WithFloatInput(string name, InputStyle style, float speed, float min, float max,
         string fmt = "%.2f") =>
-        Add(new InputEntry(CreateNativeLabel(name, _count, out var start), start, style, true, speed, min, max, fmt));
+        Add(new InputEntry(StringArena.AllocateString(name), style, true, speed, min, max, fmt));
 
     public InputGroup WithIntInput(string name, InputStyle style, float speed, int min, int max) =>
-        Add(new InputEntry(CreateNativeLabel(name, _count, out var start), start, style, false, speed, min, max));
+        Add(new InputEntry(StringArena.AllocateString(name), style, false, speed, min, max));
 
     private InputGroup Add(InputEntry entry)
     {
@@ -71,7 +72,6 @@ internal sealed unsafe class InputGroup : InputField
 
     private readonly struct InputEntry(
         NativeString label,
-        byte idStart,
         InputStyle style,
         bool isFloat,
         float speed,
@@ -83,26 +83,24 @@ internal sealed unsafe class InputGroup : InputField
         private readonly String8Utf8 _format = format;
         private readonly float _speed = speed, _min = min, _max = max;
         private readonly InputStyle _style = style;
-        private readonly byte _idStart = idStart;
         private readonly bool _isFloat = isFloat;
-
-        private byte* StringId => _label.TextStart + _idStart;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Draw(InputNumeric1* value)
         {
-            DrawLabel(_label, LabelPlacement.Inline);
+            AppDraw.TextFrameAligned(_label);
             return _isFloat ? DrawFloat(value) : DrawInt(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool DrawFloat(InputNumeric1* value)
         {
+            var id = StringPacker.PackUtf8((byte)'#', (byte)'#', (byte)'i');
             return _style switch
             {
-                InputStyle.Input => InputNumeric1.DrawFloatInput(StringId, value, _format),
-                InputStyle.Slider => InputNumeric1.DrawFloatSlider(StringId, value, _format, _min, _max),
-                InputStyle.Drag => InputNumeric1.DrawFloatDrag(StringId, value, _format, _speed, _min, _max),
+                InputStyle.Input => InputNumeric1.DrawFloatInput((byte*)&id, value, _format),
+                InputStyle.Slider => InputNumeric1.DrawFloatSlider((byte*)&id, value, _format, _min, _max),
+                InputStyle.Drag => InputNumeric1.DrawFloatDrag((byte*)&id, value, _format, _speed, _min, _max),
                 _ => false
             };
         }
@@ -110,11 +108,12 @@ internal sealed unsafe class InputGroup : InputField
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool DrawInt(InputNumeric1* value)
         {
+            var id = StringPacker.PackUtf8((byte)'#', (byte)'#', (byte)'i');
             return _style switch
             {
-                InputStyle.Input => InputNumeric1.DrawIntInput(StringId, value),
-                InputStyle.Slider => InputNumeric1.DrawIntSlider(StringId, value, (int)_min, (int)_max),
-                InputStyle.Drag => InputNumeric1.DrawIntDrag(StringId, value, _speed, (int)_min, (int)_max),
+                InputStyle.Input => InputNumeric1.DrawIntInput((byte*)&id, value),
+                InputStyle.Slider => InputNumeric1.DrawIntSlider((byte*)&id, value, (int)_min, (int)_max),
+                InputStyle.Drag => InputNumeric1.DrawIntDrag((byte*)&id, value, _speed, (int)_min, (int)_max),
                 _ => false
             };
         }

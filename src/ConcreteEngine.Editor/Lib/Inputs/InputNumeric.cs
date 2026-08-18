@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib.Field;
+namespace ConcreteEngine.Editor.Lib.Inputs;
 
 internal interface IInputNumeric<T> where T : unmanaged, IInputNumeric<T>
 {

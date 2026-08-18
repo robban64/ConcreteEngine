@@ -1,7 +1,8 @@
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib.Field;
+namespace ConcreteEngine.Editor.Lib.Inputs;
 
 internal sealed unsafe class ComboInput : InputField
 {
@@ -41,7 +42,6 @@ internal sealed unsafe class ComboInput : InputField
 
         _setter = setter;
 
-        LabelPlacement = LabelPlacement.None;
         _displayText = StringArena.AllocateString(32);
     }
 
@@ -49,12 +49,12 @@ internal sealed unsafe class ComboInput : InputField
 
     public void SetItemName(int index, string newName) => _names[index] = newName;
 
-    public bool Draw()
+    public override bool Draw()
     {
         if (_lastValue != Value) OnChanged();
 
-        DrawLabel();
-        var open = ImGui.BeginCombo(StringId, _displayText);
+        var strId = _stringId;
+        var open = ImGui.BeginCombo((byte*)&strId, _displayText);
         if (open && DrawInner() && ShouldTrigger())
         {
             _setter(Value);
@@ -82,7 +82,7 @@ internal sealed unsafe class ComboInput : InputField
         {
             var isSelected = i == _index;
             sw.Append(_names[i]);
-            sw.Append(StringId);
+            sw.AppendImGuiId(i);
             if (ImGui.Selectable(sw.Append((byte)'-').Append(i).End(), isSelected))
             {
                 _index = i;

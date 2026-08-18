@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib.Field;
+namespace ConcreteEngine.Editor.Lib.Inputs;
 
 public enum TextInputFilter : byte
 {
@@ -40,7 +40,6 @@ internal sealed unsafe class TextInput : InputField
         if (!IntMath.IsPowerOfTwo(capacity)) throw new ArgumentOutOfRangeException(nameof(capacity));
 
         _inputCallback = OnInputCallback;
-        LabelPlacement = LabelPlacement.None;
         Text = StringArena.AllocateString(capacity);
         Text.Clear();
     }
@@ -75,11 +74,11 @@ internal sealed unsafe class TextInput : InputField
 
     public ReadOnlySpan<byte> GetTextSpan() => !Text.IsNull ? Text.AsSpan() : ReadOnlySpan<byte>.Empty;
 
-    public bool Draw()
+    public override bool Draw()
     {
         var hint = Hint;
-        DrawLabel();
-        var changed = ImGui.InputTextEx(StringId, (byte*)&hint, Text, Text.Capacity, default, ImFlags, _inputCallback);
+        var strId = _stringId;
+        var changed = ImGui.InputTextEx((byte*)&strId, (byte*)&hint, Text, Text.Capacity, default, ImFlags, _inputCallback);
         if (changed && ProcessInput())
         {
             InvokeCallback();

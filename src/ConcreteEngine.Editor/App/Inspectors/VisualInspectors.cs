@@ -9,9 +9,9 @@ internal sealed partial class DirectionalLightInspector : Inspector<DirectionalL
 {
     private static DirectionalLight Target => VisualManager.Instance.Illumination;
 
-    public static unsafe void Draw()
+    public void Draw()
     {
-        AppDraw.Section("Directional Light"u8, &DrawRoot);
+        _sectionRoot.Draw();
     }
 }
 
@@ -20,10 +20,10 @@ internal sealed unsafe partial class ShadowSettingsInspector : Inspector<ShadowS
 {
     private static ShadowSettings Target => VisualManager.Instance.Shadow;
 
-    public static unsafe void Draw()
+    public   void Draw()
     {
-        AppDraw.Section("Projection"u8, &DrawProjection);
-        AppDraw.Section("Visuals"u8, &DrawVisuals);
+        _sectionProjection.Draw();
+        _sectionVisuals.Draw();
     }
 }
 
@@ -32,9 +32,10 @@ internal sealed unsafe partial class EnvironmentSettingsInspector : Inspector<En
 {
     private static EnvironmentSettings Target => VisualManager.Instance.Environment;
 
-    public static unsafe void Draw()
+    public void Draw()
     {
-        AppDraw.CollapseSection("Ambient"u8, &DrawAmbient);
+        _sectionAmbient.Draw();
+        _sectionFog.Draw();
         AppDraw.CollapseSection("Fog"u8, &DrawFogSection);
     }
 
@@ -47,15 +48,15 @@ internal sealed unsafe partial class EnvironmentSettingsInspector : Inspector<En
 }
 
 [EditorInspector(typeof(PostEffectSettings))]
-internal sealed unsafe partial class PostEffectSettingsInspector : Inspector<PostEffectSettingsInspector>
+internal sealed partial class PostEffectSettingsInspector : Inspector<PostEffectSettingsInspector>
 {
     private static PostEffectSettings Target => VisualManager.Instance.PostEffect;
 
-    public static unsafe void Draw()
+    public void Draw()
     {
-        AppDraw.Section("Grade"u8, &DrawGrade);
-        AppDraw.Section("WhiteBalance"u8, &DrawWhiteBalance);
-        AppDraw.Section("Bloom"u8, &DrawBloom);
-        AppDraw.Section("ImageFx"u8, &DrawImageFx);
+        _sectionGrade.Draw();
+        _sectionWhiteBalance.Draw();
+        _sectionBloom.Draw();
+        _sectionImageFx.Draw();
     }
 }

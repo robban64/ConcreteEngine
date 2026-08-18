@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib.Field;
+namespace ConcreteEngine.Editor.Lib.Inputs;
 
 internal sealed unsafe class ColorInput : InputField
 {
@@ -18,18 +18,17 @@ internal sealed unsafe class ColorInput : InputField
     {
         _setter = setter;
         HasAlpha = hasAlpha;
-        LabelPlacement = LabelPlacement.Top;
         _value = (Color4*)StringArena.Instance.AllocBytes(Unsafe.SizeOf<Color4>()).Ptr;
     }
 
     public ref Color4 Value => ref *_value;
 
-    public bool Draw()
+    public override bool Draw()
     {
-        DrawLabel();
+        var strId = _stringId;
         var changed = HasAlpha
-            ? ImGui.ColorEdit4(StringId, &_value->R)
-            : ImGui.ColorEdit3(StringId, &_value->R);
+            ? ImGui.ColorEdit4((byte*)&strId, &_value->R)
+            : ImGui.ColorEdit3((byte*)&strId, &_value->R);
 
         if (changed && ShouldTrigger())
         {

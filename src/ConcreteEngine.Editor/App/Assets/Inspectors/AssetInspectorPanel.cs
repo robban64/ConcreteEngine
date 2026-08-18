@@ -1,17 +1,14 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor.App.Assets;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.App.UI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Inputs;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.App.Inspectors;
+namespace ConcreteEngine.Editor.App.Assets;
 
 internal sealed unsafe class AssetInspectorPanel
 {

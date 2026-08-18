@@ -1,6 +1,6 @@
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib.Field;
+namespace ConcreteEngine.Editor.Lib.Inputs;
 
 public enum LabelPlacement : byte
 {
@@ -27,12 +27,12 @@ internal sealed unsafe class CheckboxInput : InputField
         _setter = setter;
     }
 
-    public bool Draw()
+    public override bool Draw()
     {
         var value = Value;
 
-        DrawLabel();
-        var changed = ImGui.Checkbox(StringId, &value);
+        var strId = _stringId;
+        var changed = ImGui.Checkbox((byte*)&strId, &value);
         if (changed)
         {
             _setter(value);

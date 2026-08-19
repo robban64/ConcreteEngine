@@ -58,7 +58,7 @@ public sealed class VisualManager
 
 public abstract class VisualStateObject
 {
-    public ulong Version { get; private set; }
+    public long Version { get; private set; }
     public bool WasDirty { get; private set; }
 
     protected bool IsDirty = true;

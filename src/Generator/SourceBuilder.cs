@@ -81,21 +81,18 @@ internal ref struct SourceBuilder
     }
 
     [UnscopedRef]
-    public readonly ref readonly SourceBuilder AppendJoin<T>(string s, params ReadOnlySpan<T> values)
+    public readonly ref readonly SourceBuilder AppendJoin<T>(string s, T[] array)
     {
-        for (var i = 0; i < values.Length; i++)
-        {
-            _sb.Append(values[i]);
-            if (i < values.Length - 1) _sb.Append(s);
-        }
-
+        Builder.AppendJoin(s, array);
         return ref this;
     }
-
     [UnscopedRef]
-    public readonly ref readonly SourceBuilder AppendJoin<T>(string s, EquatableArray<T> array) where T : IEquatable<T>
+    public readonly ref readonly SourceBuilder AppendJoin<T>(string s, IEnumerable<T> array, char first = '\0', char last = '\0')
     {
-        return ref AppendJoin(s, array.AsSpan());
+        if (first > 0) Builder.Append(first);
+        Builder.AppendJoin(s, array);
+        if(last > 0) Builder.Append(last);
+        return ref this;
     }
 
 

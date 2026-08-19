@@ -20,7 +20,6 @@ internal sealed record NumberInput(
 {
     public int GetComponents() => (int)char.GetNumericValue(NumericInfo.NumberType[^1]);
 
-
     public string MakeSetterCast(InspectorMember member, string v)
     {
         if (NumericInfo.ImplicitCast)

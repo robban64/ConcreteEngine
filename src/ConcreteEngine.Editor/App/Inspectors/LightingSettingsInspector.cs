@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
 
@@ -8,10 +9,10 @@ namespace ConcreteEngine.Editor.App.Inspectors;
 internal sealed partial class LightingSettingsInspector : Inspector<LightingSettingsInspector>
 {
     private static LightingSettings Target => VisualManager.Instance.Lightning;
+    public override uint Icon => IconNames.Sun;
 
     public void Draw()
     {
-        _sectionSun.Draw();
-        _sectionAmbient.Draw();
+        foreach (var section in Sections) section.Draw();
     }
 }

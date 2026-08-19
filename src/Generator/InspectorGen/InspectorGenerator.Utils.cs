@@ -6,19 +6,19 @@ namespace Generator.InspectorGen;
 
 public sealed partial class InspectorGenerator
 {
-    private static (string? TypeName, bool IsFloat, bool ImplicitCast) GetDefaultValueType(string typeName) =>
+    private static (string? TypeName, bool IsFloat) GetDefaultValueType(string typeName) =>
         typeName switch
         {
-            nameof(Vector2) => ("InputNumeric2", true, true),
-            nameof(Vector3) => ("InputNumeric3", true, true),
-            nameof(Vector4) => ("InputNumeric4", true, true),
-            nameof(Quaternion) or "Color4" => ("InputNumeric4", true, false),
-            "Size2D" => ("InputNumeric2", false, false),
-            "Size3D" => ("InputNumeric3", false, false),
-            "Int2" => ("InputNumeric2", false, false),
-            "Int3" => ("InputNumeric3", false, false),
-            "Int4" => ("InputNumeric4", false, false),
-            _ => (null, false, false)
+            nameof(Vector2) => ("InputNumeric2", true),
+            nameof(Vector3) => ("InputNumeric3", true),
+            nameof(Vector4) => ("InputNumeric4", true),
+            nameof(Quaternion) or "Color4" => ("InputNumeric4", true),
+            "Size2D" => ("InputNumeric2", false),
+            "Size3D" => ("InputNumeric3", false),
+            "Int2" => ("InputNumeric2", false),
+            "Int3" => ("InputNumeric3", false),
+            "Int4" => ("InputNumeric4", false),
+            _ => (null, false)
         };
 
     private static string? ComponentsToNumericName(int components) => components switch
@@ -49,24 +49,17 @@ public sealed partial class InspectorGenerator
         }
     }
 
-    private static bool TryParseIncludeAttribute(ISymbol member, out string? nestedName, out bool isInputGroup)
+    private static bool TryParseIncludeAttribute(ISymbol member, out string? nestedName)
     {
         nestedName = null;
-        isInputGroup = false;
 
         bool hasInclude = false;
-        foreach (var attr in member.GetAttributes())
+        foreach (var attr in member.GetAttributes().Where(x => x.AttributeClass?.Name == IncludeAttrib))
         {
             if (attr.AttributeClass is null) continue;
+            hasInclude = true;
             var ctor = attr.ConstructorArguments;
-            var name = attr.AttributeClass.Name;
-
-            if (name is IncludeAttrib)
-            {
-                hasInclude = true;
-                if (!ctor.IsEmpty && ctor[0].Value is string accessSuffix) nestedName = accessSuffix;
-            }
-            else if (name is InputGroupAttrib) isInputGroup = true;
+            if (!ctor.IsEmpty && ctor[0].Value is string accessSuffix) nestedName = accessSuffix;
         }
 
         return hasInclude;
@@ -106,7 +99,11 @@ public sealed partial class InspectorGenerator
             if (s is System_Single) valueInfo = ("InputNumeric1", true, true);
             else if (s is System_Int32 or System_Int16 or System_UInt16) valueInfo = ("InputNumeric1", false, true);
             else if (s is System_Enum) valueInfo = ("InputNumeric1", false, false);
-            else valueInfo = GetDefaultValueType(type.Name);
+            else
+            {
+                var (typeName, isFloat) = GetDefaultValueType(type.Name);
+                valueInfo = (typeName, isFloat, false);
+            }
         }
 
         if (valueInfo.TypeName is null) return null;

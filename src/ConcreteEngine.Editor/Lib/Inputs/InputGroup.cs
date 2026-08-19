@@ -8,7 +8,7 @@ using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Inputs;
-
+/*
 internal sealed unsafe class InputGroup : InputField
 {
     private int _count;
@@ -118,4 +118,4 @@ internal sealed unsafe class InputGroup : InputField
             };
         }
     }
-}
+}*/

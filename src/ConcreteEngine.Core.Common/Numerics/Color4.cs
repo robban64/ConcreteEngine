@@ -16,13 +16,13 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Vector4(in Color4 c) => new(c.R, c.G, c.B, c.A);
+    public static implicit operator Vector4(in Color4 c) => Unsafe.BitCast<Color4, Vector4>(c);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Vector3(in Color4 c) => new(c.R, c.G, c.B);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static explicit operator Color4(in Vector4 v) => new(v.X, v.Y, v.Z, v.W);
+    public static explicit operator Color4(in Vector4 v) => Unsafe.BitCast<Vector4, Color4>(v);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Color4(Vector3 v) => new(v.X, v.Y, v.Z);

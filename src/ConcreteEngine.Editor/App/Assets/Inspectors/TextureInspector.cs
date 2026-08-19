@@ -7,6 +7,7 @@ using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
 
@@ -16,6 +17,8 @@ namespace ConcreteEngine.Editor.App.Assets;
 internal sealed partial class TextureInspector : Inspector<TextureInspector>
 {
     public static Texture Target => (Texture)SelectionManager.Instance.SelectedAsset!;
+    
+    public override uint Icon => IconNames.Image;
 
     private static TexturePtrHandle _imageHandle;
 
@@ -60,4 +63,5 @@ internal sealed partial class TextureInspector : Inspector<TextureInspector>
         var mips =  GfxRegistry.GetMeta(texture.GfxId).MipLevels;
         AppDraw.TextPropertyField(offset, "Mips"u8, sw.Write(mips));
     }
+
 }

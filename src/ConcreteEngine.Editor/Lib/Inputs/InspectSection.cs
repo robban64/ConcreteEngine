@@ -1,11 +1,39 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Inputs;
+
+internal sealed unsafe class InspectorHeader
+{
+    public uint Icon;
+    public Color4 Color;
+    public NativeString InspectorName;
+
+    public InspectorHeader(NativeString inspectorName, uint icon, Color4 color)
+    {
+        ArgumentNullException.ThrowIfNull(inspectorName.TextStart);
+        ArgumentOutOfRangeException.ThrowIfLessThan(inspectorName.Length, 2);
+
+        InspectorName = inspectorName;
+        Icon = icon;
+        Color = color;
+    }
+
+    public void Draw()
+    {
+        ImGui.AlignTextToFramePadding();
+        AppLayout.PushFontIconLarge();
+        AppDraw.IconColored(Color, Icon);
+        ImGui.PopFont();
+        ImGui.SameLine(0, 8f);
+        AppDraw.Text(InspectorName);
+    }
+}
 
 internal sealed unsafe class InspectSection
 {
@@ -20,7 +48,6 @@ internal sealed unsafe class InspectSection
     private readonly InputField[] _fields;
     
     private readonly Action _refresh;
-
 
     public InspectSection(string title, InputField[] fields, Action refresh)
     {
@@ -40,14 +67,14 @@ internal sealed unsafe class InspectSection
         _labelWidth = float.Clamp(labelWidth, LabelMinWidth, LabelMaxWidth);
     }
 
-    public void Draw()
+    public void Draw(float contentWidth = 0)
     {
         if (!ImGui.CollapsingHeader(_title, ImGuiTreeNodeFlags.DefaultOpen)) return;
 
         _refresh();
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
 
-        var contentWidth = ImGui.GetContentRegionAvail().X;
+        if(contentWidth == 0) contentWidth= ImGui.GetContentRegionAvail().X;
         var fieldWidth = contentWidth - _labelWidth - LabelFieldGap;
         fieldWidth = float.Min(fieldWidth, FieldMaxWidth);
         ImGui.PushItemWidth(fieldWidth);

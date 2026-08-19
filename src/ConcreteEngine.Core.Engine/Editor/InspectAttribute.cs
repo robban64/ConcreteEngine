@@ -8,6 +8,12 @@ public sealed class InspectAttribute : Attribute
     public string DisplayName { get; init; } = null!;
 }
 
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, Inherited = false)]
+public sealed class SegmentAttribute(string name) : Attribute
+{
+    public string Name { get; } = name;
+}
+
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public sealed class InspectIncludeAttribute : Attribute
 {
@@ -20,10 +26,6 @@ public abstract class InspectInputAttribute : Attribute
 {
     public string? Label { get; init; }
     public string? Segment { get; init; }
-}
-
-public sealed class InputGroupAttribute : InspectInputAttribute
-{
 }
 
 public sealed class InputNumberAttribute(InputStyle style = InputStyle.Input) : InspectInputAttribute
@@ -47,8 +49,8 @@ public sealed class InputColorAttribute : InspectInputAttribute
 
 public sealed class InputComboAttribute : InspectInputAttribute
 {
-    public string? Names { get; init; } 
-    public string? Values { get; init; } 
+    public string? Names { get; init; }
+    public string? Values { get; init; }
 
     public bool UseEnumExt { get; init; }
 

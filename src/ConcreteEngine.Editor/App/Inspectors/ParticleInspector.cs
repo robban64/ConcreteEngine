@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
 
@@ -12,10 +13,10 @@ internal partial class ParticleInspector : Inspector<ParticleInspector>
     private static ParticleEmitter Target =>
         SelectionManager.Instance.SelectedSceneObject?.GetInstance<ParticleInstance>().Emitter!;
 
+    public override uint Icon => IconNames.Sparkles;
+
     public void Draw()
     {
-        _sectionEmitterParams.Draw();
-        _sectionParticleParams.Draw();
-        _sectionSimulation.Draw();
+        foreach (var section in Sections) section.Draw();
     }
 }

@@ -17,12 +17,13 @@ internal sealed partial class MaterialInspector : Inspector<MaterialInspector>
     public static Material Target => (Material)SelectionManager.Instance.SelectedAsset!;
 
     private readonly MaterialBindingForm _bindingForm = new();
+    public override uint Icon => IconNames.Circle;
 
     public unsafe void Draw()
     {
         DrawHeader();
         AppDraw.CollapseSection("Bindings"u8, &DrawBindings);
-        _sectionState.Draw();
+        foreach (var section in Sections) section.Draw();
         AppDraw.CollapseSection("Rendering"u8, &DrawPipeline);
     }
 

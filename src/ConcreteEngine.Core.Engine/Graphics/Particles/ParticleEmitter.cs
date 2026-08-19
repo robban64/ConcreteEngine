@@ -33,8 +33,8 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     private ParticleParams _particleParams;
     private EmitterParams _emitterParams;
-    [InputNumber(Segment = "Simulation")] public Vector3 Gravity = new Vector3(0.0f, 0.015f, 0.0f);
-    [InputNumber(Segment = "Simulation")] public float Drag;
+    [Segment("Simulation")] [InputNumber] public Vector3 Gravity = new Vector3(0.0f, 0.015f, 0.0f);
+    [Segment("Ambient")] [InputNumber] public float Drag;
 
     private BoundingBox _localBounds;
 

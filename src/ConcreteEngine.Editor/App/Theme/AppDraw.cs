@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Unicode;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.App.Shared;
 using ConcreteEngine.Editor.Core;
@@ -15,26 +16,6 @@ namespace ConcreteEngine.Editor.App.Theme;
 
 internal static unsafe class AppDraw
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Section(InputGroup inputGroup)
-    {
-        ImGui.SeparatorText(inputGroup.Label);
-        inputGroup.Draw();
-        ImGui.Spacing();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CollapseSection(InputGroup inputGroup, ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen)
-    {
-        ImGui.Spacing();
-        if (ImGui.CollapsingHeader(inputGroup.Label, flags)) 
-        {
-            ImGui.Spacing();
-            inputGroup.Draw();
-        }
-        ImGui.Spacing();
-
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CollapseSection(ReadOnlySpan<byte> title, delegate*<void> draw,
@@ -59,6 +40,14 @@ internal static unsafe class AppDraw
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Icon(uint icon) => ImGui.TextUnformatted((byte*)&icon);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void IconColored(Vector4 color, uint icon)
+    {
+        ImGui.PushStyleColor(ImGuiCol.Text, color);
+        ImGui.TextColored(color,(byte*)&icon);
+        ImGui.PopStyleColor();
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void TextColored(uint color, ReadOnlySpan<char> text)

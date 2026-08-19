@@ -21,8 +21,8 @@ public sealed class Camera
     private const float MaxFov = 179;
 
     private const float DirtyThreshold = MetricUnits.Micrometer;
-
-    public ulong Version { get; private set; }
+    
+    public long Version { get; private set; }
     public bool IsDirty { get; private set; }
     public float AspectRatio { get; private set; }
 

@@ -2,43 +2,6 @@ using Generator.Misc;
 
 namespace Generator.InspectorGen;
 
-public enum SpecialInspectKind : byte
-{
-    Invalid,
-    RuntimeId,
-    StorageId,
-    ObjectName,
-}
-
-public enum InspectorTypeKind : byte
-{
-    Invalid,
-    RuntimeId,
-    StorageId,
-    Number,
-    Boolean,
-    String,
-    Array,
-    Map,
-    Struct,
-    Class,
-}
-
-internal enum SupportedTypes : byte
-{
-    Int, Float, Bool, DateTime,
-}
-
-internal enum InputKind : byte
-{
-    Int, Float, Color, Combo, Text
-}
-
-internal enum InputStyle : byte
-{
-    Input, Slider, Drag,
-}
-
 internal sealed record InspectModel(
     string InspectorName,
     string InspectorNs,
@@ -50,8 +13,7 @@ internal sealed record InspectModel(
 }
 
 internal sealed record InspectorGroup(
-    bool IsRoot,
-    bool IsInputGroup,
+    bool HasRootTarget,
     string Name,
     string AccessPath,
     MemberInfo Info,

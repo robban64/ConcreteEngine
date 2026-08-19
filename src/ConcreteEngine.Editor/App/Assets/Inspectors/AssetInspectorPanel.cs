@@ -84,10 +84,7 @@ internal sealed unsafe class AssetInspectorPanel
 
         if (_previousId != asset.Id)
         {
-            Console.WriteLine("Length : " +_title.Length);
             OnNewInspector(asset);
-            Console.WriteLine("Length : " +_title.Length);
-
         }
 
         ImGui.PushID(asset.Id);

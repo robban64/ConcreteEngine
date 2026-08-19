@@ -9,6 +9,9 @@ public sealed class ShadowSettings : VisualStateObject
 {
     private int _shadowSize;
     public float InvMapSize { get; private set; }
+    public float ConstBias { get; private set; }
+    public float SlopeBias { get; private set; }
+
     public bool HasPendingShadowSize { get; internal set; }
 
 
@@ -34,30 +37,16 @@ public sealed class ShadowSettings : VisualStateObject
     } = 1f;
 
 
-    [InputNumber(InputStyle.Slider, Min = 10f, Max = 100f, Segment = "ShadowProjection")]
+
+    [Segment("ShadowProjection")]
+    [InputNumber(InputStyle.Slider, Min = 10f, Max = 100f)]
     public float ZPad
     {
         get;
         set => field = Set(field, value, ref IsDirty);
     }
-
-    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0.001f, Max = 0.01f, Format = "%.4f",
-        Segment = "ShadowProjection")]
-    public float ConstBias
-    {
-        get;
-        set => field = Set(field, value, ref IsDirty);
-    }
-
-    [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0.001f, Max = 0.01f, Format = "%.4f",
-        Segment = "ShadowProjection")]
-    public float SlopeBias
-    {
-        get;
-        set => field = Set(field, value, ref IsDirty);
-    }
-
-    [InputNumber(InputStyle.Slider, Min = 0.5f, Max = 4f, Segment = "ShadowProjection")]
+    [Segment("ShadowProjection")]
+    [InputNumber(InputStyle.Slider, Min = 0.5f, Max = 4f)]
     public float PcfRadius
     {
         get;

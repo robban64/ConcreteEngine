@@ -7,7 +7,8 @@ internal enum InspectorId : byte
     SceneObject,
     Camera,
     Lighting,
-    Visual,
+    Environment,
+    PostFx,
 }
 
 internal enum FixedInspectorId : byte
@@ -15,5 +16,6 @@ internal enum FixedInspectorId : byte
     None,
     Camera,
     Lighting,
-    Visual
+    Environment,
+    PostFx
 }

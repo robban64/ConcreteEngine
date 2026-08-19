@@ -6,7 +6,7 @@ namespace ConcreteEngine.Core.Common.Numerics.Maths;
 public static class VectorMath
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool DistanceNearlyEqual(in Vector3 a, in Vector3 b, float eps = FloatMath.DefaultEpsilon) =>
+    public static bool DistanceNearlyEqual(Vector3 a, Vector3 b, float eps = FloatMath.DefaultEpsilon) =>
         Vector3.DistanceSquared(a, b) < eps * eps;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

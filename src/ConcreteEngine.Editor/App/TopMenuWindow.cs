@@ -57,7 +57,8 @@ internal sealed class TopMenuWindow
 
         _toolbarLeft = new ToolbarGroup(ToolbarGroupAlignment.Left, []);
         _toolbarCenter = new ToolbarGroup(ToolbarGroupAlignment.Center, [Translate, Scale, Rotate, DebugBounds]);
-        _toolbarRight = new ToolbarGroup(ToolbarGroupAlignment.Right, [Selected, Camera, Lighting, Visual]);
+        _toolbarRight =
+            new ToolbarGroup(ToolbarGroupAlignment.Right, [Selected, Camera, Lighting, Environment, PostFx]);
     }
 
     public ReadOnlySpan<ToolbarItem> GetToolbarGroup(ToolbarGroupAlignment i) => i switch
@@ -185,7 +186,11 @@ internal sealed class TopMenuWindow
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Lighting)),
         (prev, next, it) => it.Set(next.Selection.HasNewFixed(prev.Selection, FixedInspectorId.Lighting)));
 
-    private static readonly ToolbarItem Visual = new(IconNames.Sparkles, ContextChangeMask.Selection,
-        state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Visual)),
-        (prev, next, it) => it.Set(next.Selection.HasNewFixed(prev.Selection, FixedInspectorId.Visual)));
+    private static readonly ToolbarItem Environment = new(IconNames.CloudFog, ContextChangeMask.Selection,
+        state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Environment)),
+        (prev, next, it) => it.Set(next.Selection.HasNewFixed(prev.Selection, FixedInspectorId.Environment)));
+
+    private static readonly ToolbarItem PostFx = new(IconNames.Sparkles, ContextChangeMask.Selection,
+        state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.PostFx)),
+        (prev, next, it) => it.Set(next.Selection.HasNewFixed(prev.Selection, FixedInspectorId.PostFx)));
 }

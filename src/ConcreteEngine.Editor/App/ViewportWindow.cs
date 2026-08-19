@@ -31,10 +31,11 @@ internal static unsafe class ViewportWindow
         IsHovering = ImGui.IsWindowHovered();
         IsFocused = ImGui.IsWindowFocused();
 
-        if(!ImGuiSystem.TryResolveTextureHandle(ImGuiSystem.OutputTexture, ref _viewportTexHandle))
+        ref var viewportHandle = ref _viewportTexHandle;
+        if(!ImGuiSystem.TryResolveTextureHandle(ImGuiSystem.OutputTexture, ref viewportHandle))
             Throwers.InvalidOperation(nameof(ImGuiSystem.OutputTexture));
         
-        ImGui.Image(_viewportTexHandle, EngineWindow.Viewport.Size, Vector2.UnitY, Vector2.UnitX);
+        ImGui.Image(viewportHandle, EngineWindow.Viewport.Size, Vector2.UnitY, Vector2.UnitX);
 
         if (SelectionManager.Instance.SelectedSceneObject != null)
         {

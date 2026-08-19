@@ -45,10 +45,10 @@ public sealed class InputColorAttribute : InspectInputAttribute
     public bool HasAlpha { get; init; }
 }
 
-public sealed class InputComboAttribute(int[]? values = null, string[]? names = null) : InspectInputAttribute
+public sealed class InputComboAttribute : InspectInputAttribute
 {
-    public string[]? Names { get; } = names;
-    public int[]? Values { get; } = values;
+    public string? Names { get; init; } 
+    public string? Values { get; init; } 
 
     public bool UseEnumExt { get; init; }
 

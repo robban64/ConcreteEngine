@@ -20,11 +20,11 @@ internal sealed class InspectionWindow : EditorWindow
     public InspectionWindow(StateManager state) : base(state)
     {
         _ = new CameraInspector();
-        
         _ = new PostEffectSettingsInspector();
         _ = new LightingSettingsInspector();
         _ = new ShadowSettingsInspector();
         _ = new FogSettingsInspector();
+        
         _ = new AssetInspectorPanel(state);
         _ = new SceneInspectorPanel(state);
 
@@ -57,7 +57,8 @@ internal sealed class InspectionWindow : EditorWindow
                 FixedInspectorId.None => InspectorId.None,
                 FixedInspectorId.Camera => InspectorId.Camera,
                 FixedInspectorId.Lighting => InspectorId.Lighting,
-                FixedInspectorId.Visual => InspectorId.Visual,
+                FixedInspectorId.Environment => InspectorId.Environment,
+                FixedInspectorId.PostFx => InspectorId.PostFx,
                 _ => throw new ArgumentOutOfRangeException(),
             };
         }
@@ -71,42 +72,17 @@ internal sealed class InspectionWindow : EditorWindow
         switch (activeState)
         {
             case InspectorId.None: break;
-            case InspectorId.Camera: _inspectionDrawer = static () => CameraInspector.Instance.Draw(); break;
-            case InspectorId.Visual: _inspectionDrawer = static () => PostEffectSettingsInspector.Instance.Draw(); break;
-            case InspectorId.Lighting: _inspectionDrawer = static () => DrawLightning(); break;
             case InspectorId.Asset: _inspectionDrawer = static () => AssetInspectorPanel.Instance.Draw(); break;
             case InspectorId.SceneObject: _inspectionDrawer = static () => SceneInspectorPanel.Instance.Draw(); break;
+
+            case InspectorId.Camera: _inspectionDrawer = static () => CameraInspector.Instance.Draw(); break;
+            case InspectorId.Lighting: _inspectionDrawer = static () => LightingSettingsInspector.Instance.Draw(); break;
+            case InspectorId.Environment: _inspectionDrawer = static () => FogSettingsInspector.Instance.Draw(); break;
+            case InspectorId.PostFx: _inspectionDrawer = static () => PostEffectSettingsInspector.Instance.Draw(); break;
             default: throw new ArgumentOutOfRangeException();
         }
 
         ActiveState = activeState;
     }
 
-
-    private static void DrawLightning()
-    {
-        ImGui.SeparatorText("Illumination"u8);
-
-        if (!ImGui.BeginTabBar("##tabs"u8)) return;
-
-        if (ImGui.BeginTabItem("Sun"u8))
-        {
-            LightingSettingsInspector.Instance.Draw();
-            ImGui.EndTabItem();
-        }
-
-        if (ImGui.BeginTabItem("Shadow"u8))
-        {
-            ShadowSettingsInspector.Instance.Draw();
-            ImGui.EndTabItem();
-        }
-
-        if (ImGui.BeginTabItem("Environment"u8))
-        {
-            FogSettingsInspector.Instance.Draw();
-            ImGui.EndTabItem();
-        }
-
-        ImGui.EndTabBar();
-    }
 }

@@ -71,14 +71,10 @@ internal sealed class WindowManager
 
     public void OnDiagnosticTick()
     {
-        if (SceneWindow.Enabled)
-            SceneWindow.OnUpdateDiagnostic();
-        if (AssetWindow.Enabled)
-            AssetWindow.OnUpdateDiagnostic();
-        if (InspectionWindow.Enabled)
-            InspectionWindow.OnUpdateDiagnostic();
-        if (ConsoleWindow.Enabled)
-            ConsoleWindow.OnUpdateDiagnostic();
+        if (SceneWindow.Enabled) SceneWindow.OnUpdateDiagnostic();
+        if (AssetWindow.Enabled) AssetWindow.OnUpdateDiagnostic();
+        if (InspectionWindow.Enabled) InspectionWindow.OnUpdateDiagnostic();
+        if (ConsoleWindow.Enabled) ConsoleWindow.OnUpdateDiagnostic();
     }
 
     public void Draw()

@@ -36,7 +36,7 @@ public sealed class CameraManager
         var shadow = VisualManager.Instance.Shadow;
         if (!Camera.Ensure() && !shadow.WasDirty) return;
 
-        var lightDir = VisualManager.Instance.Illumination.Direction;
+        var lightDir = VisualManager.Instance.Lightning.Direction;
         UpdateLightView(shadow.ShadowMapSize, shadow.Distance, shadow.ZPad, lightDir);
         Frustum.UpdateLight(in LightTransforms.ProjectionViewMatrix);
     }

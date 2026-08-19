@@ -11,5 +11,6 @@ internal sealed partial class ShadowSettingsInspector : Inspector<ShadowSettings
     public void Draw()
     {
         _sectionRoot.Draw();
+        _sectionShadowProjection.Draw();
     }
 }

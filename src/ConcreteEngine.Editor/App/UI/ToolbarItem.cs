@@ -21,7 +21,8 @@ internal sealed class ToolbarGroup(ToolbarGroupAlignment alignment, ToolbarItem[
     public void Draw(StateManager ctx)
     {
         var start = int.Max(Start, 0);
-        for (var i = start; i < Items.Length; i++)
+        var length = Items.Length;
+        for (var i = start; i < length; i++)
         {
             if (i > start) ImGui.SameLine();
             Items[i].Draw(ctx);

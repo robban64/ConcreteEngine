@@ -53,7 +53,7 @@ public sealed class Camera
         get => _translation;
         set
         {
-            if (VectorMath.DistanceNearlyEqual(in value, in _translation, DirtyThreshold)) return;
+            if (VectorMath.DistanceNearlyEqual( value,  _translation, DirtyThreshold)) return;
             _translation = value;
             IsDirty = true;
         }
@@ -123,8 +123,7 @@ public sealed class Camera
 
     internal bool Ensure()
     {
-        var isDirty = IsDirty;
-        if (!isDirty) return false;
+        if (!IsDirty) return false;
         IsDirty = false;
         ++Version;
 
@@ -145,6 +144,6 @@ public sealed class Camera
         Matrix4x4.Invert(projectionMatrix, out var invProjection);
         Transform.InverseProjectionViewMatrix = invProjection * modelMatrix;
 
-        return isDirty;
+        return IsDirty;
     }
 }

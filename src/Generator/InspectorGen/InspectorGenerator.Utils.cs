@@ -142,6 +142,11 @@ public sealed partial class InspectorGenerator
             {
                 case "StartAt" when value.Value is int l: startAt = l; break;
                 case "Placeholder" when value.Value is string l: placeholder = l; break;
+                case "Values" when value.Value is string l: values = $"[{l}]"; break;
+                case "Names" when value.Value is string l:
+                    var name = string.Join(", ", l.Split(", ").Select(static x => $"\"{x}\""));
+                    names = $"[{name}]";
+                    break;
                 case "UseEnumExt" when value.Value is bool l:
                     if (!l) break;
                     var ns = type.ContainingNamespace.ToDisplayString();
@@ -158,11 +163,6 @@ public sealed partial class InspectorGenerator
                 var enumMembers = type.GetMembers().OfType<IFieldSymbol>().Where(f => f.HasConstantValue).ToArray();
                 names = $"[{string.Join(", ", enumMembers.Select(static m => Symbols.FormatLiteral(m.Name, true)))}]";
                 values = $"[{string.Join(", ", enumMembers.Select(static m => m.ConstantValue))}]";
-            }
-            else if (attr.ConstructorArguments.Length > 2)
-            {
-                values = attr.ConstructorArguments[1].Values.ToCollectionString();
-                names = attr.ConstructorArguments[2].Values.ToCollectionString();
             }
             else return null;
         }

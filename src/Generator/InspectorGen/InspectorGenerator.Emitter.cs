@@ -94,76 +94,6 @@ internal static class InspectorGeneratorEmitter
         }
     }
 
-/*
-    private static void EmitDrawFunc(SourceBuilder sb, EmitGroup emitGroup)
-    {
-        var group = emitGroup.Group;
-        foreach (ref readonly var segment in emitGroup.Segments.AsSpan())
-        {
-            if (segment.Members.Length == 0) continue;
-
-            sb.AppendLine();
-            sb.BeginLine("public static void Draw");
-            segment.AppendDrawName(sb, group);
-            sb.EndLine("()");
-            sb.OpenBrace();
-
-            if (group.IsInputGroup)
-                EmitDrawInputGroup(sb, group);
-            else
-                EmitDrawInputFields(sb, group, segment);
-
-            sb.CloseBrace();
-        }
-
-        foreach (ref readonly var segment in emitGroup.Segments.AsSpan())
-        {
-            if (segment.Members.Length == 0) continue;
-
-            sb.AppendLine();
-            sb.BeginLine("private static void Fetch");
-            segment.AppendDrawName(sb, group);
-            sb.EndLine("()");
-            sb.OpenBrace();
-
-            if (group.IsInputGroup)
-            {
-                sb.BeginLine().Builder.AppendLine($"var value = Target.{group.AccessPath};");
-                sb.BeginLine().Builder.AppendLine($"var dst = {group.Name}.Values;");
-
-                var span = group.Members.AsSpan();
-                for (var i = 0; i < span.Length; i++)
-                    sb.BeginLine().Builder.AppendLine($"dst[{i}] = value.{span[i].Name};");
-            }
-            else
-            {
-                foreach (var member in segment.Members.AsSpan())
-                {
-                    if (member.Input is not { } input) continue;
-                    var access = CreateAccessPath(member, group);
-                    sb.BeginLine().Builder.Append($"{input.Name}.Value = ");
-                    member.Input.AppendGetter(member, access.Value, sb);
-                    sb.EndLine(";");
-                }
-            }
-
-            sb.CloseBrace();
-        }
-    }
-
-    private static void EmitDrawInputGroup(SourceBuilder sb, InspectorGroup group)
-    {
-        sb.BeginLine().Builder.AppendLine($"var value = Target.{group.AccessPath};");
-        sb.BeginLine().Builder.AppendLine($"var dst = {group.Name}.Values;");
-
-        var span = group.Members.AsSpan();
-        for (var i = 0; i < span.Length; i++)
-            sb.BeginLine().Builder.AppendLine($"dst[{i}] = value.{span[i].Name};");
-
-        sb.AppendLine().AppendLine("// Draw");
-        sb.BeginLine().Builder.AppendLine($"{group.Name}.Draw();");
-    }
-*/
     private static void EmitDrawInputFields(SourceBuilder sb, InspectorGroup group, EmitSegment segment)
     {
         sb.AppendLine("Fetch();").AppendLine().AppendLine("// Draw");
@@ -425,3 +355,74 @@ internal static class InspectorGeneratorEmitter
         return segments.ToArray();
     }
 }
+
+/*
+    private static void EmitDrawFunc(SourceBuilder sb, EmitGroup emitGroup)
+    {
+        var group = emitGroup.Group;
+        foreach (ref readonly var segment in emitGroup.Segments.AsSpan())
+        {
+            if (segment.Members.Length == 0) continue;
+
+            sb.AppendLine();
+            sb.BeginLine("public static void Draw");
+            segment.AppendDrawName(sb, group);
+            sb.EndLine("()");
+            sb.OpenBrace();
+
+            if (group.IsInputGroup)
+                EmitDrawInputGroup(sb, group);
+            else
+                EmitDrawInputFields(sb, group, segment);
+
+            sb.CloseBrace();
+        }
+
+        foreach (ref readonly var segment in emitGroup.Segments.AsSpan())
+        {
+            if (segment.Members.Length == 0) continue;
+
+            sb.AppendLine();
+            sb.BeginLine("private static void Fetch");
+            segment.AppendDrawName(sb, group);
+            sb.EndLine("()");
+            sb.OpenBrace();
+
+            if (group.IsInputGroup)
+            {
+                sb.BeginLine().Builder.AppendLine($"var value = Target.{group.AccessPath};");
+                sb.BeginLine().Builder.AppendLine($"var dst = {group.Name}.Values;");
+
+                var span = group.Members.AsSpan();
+                for (var i = 0; i < span.Length; i++)
+                    sb.BeginLine().Builder.AppendLine($"dst[{i}] = value.{span[i].Name};");
+            }
+            else
+            {
+                foreach (var member in segment.Members.AsSpan())
+                {
+                    if (member.Input is not { } input) continue;
+                    var access = CreateAccessPath(member, group);
+                    sb.BeginLine().Builder.Append($"{input.Name}.Value = ");
+                    member.Input.AppendGetter(member, access.Value, sb);
+                    sb.EndLine(";");
+                }
+            }
+
+            sb.CloseBrace();
+        }
+    }
+
+    private static void EmitDrawInputGroup(SourceBuilder sb, InspectorGroup group)
+    {
+        sb.BeginLine().Builder.AppendLine($"var value = Target.{group.AccessPath};");
+        sb.BeginLine().Builder.AppendLine($"var dst = {group.Name}.Values;");
+
+        var span = group.Members.AsSpan();
+        for (var i = 0; i < span.Length; i++)
+            sb.BeginLine().Builder.AppendLine($"dst[{i}] = value.{span[i].Name};");
+
+        sb.AppendLine().AppendLine("// Draw");
+        sb.BeginLine().Builder.AppendLine($"{group.Name}.Draw();");
+    }
+*/

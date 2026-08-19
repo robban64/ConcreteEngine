@@ -57,10 +57,10 @@ internal sealed unsafe class VisualSystem
 
         if (!VisualManager.AnyWasDirty) return;
 
-        if (VisualManager.Illumination.WasDirty)
+        if (VisualManager.Lightning.WasDirty)
             UploadDirLight();
 
-        if (VisualManager.Illumination.WasDirty || VisualManager.Fog.WasDirty)
+        if (VisualManager.Lightning.WasDirty || VisualManager.Fog.WasDirty)
             UploadFrameUniformRecord();
 
         if (VisualManager.PostEffect.WasDirty)
@@ -141,8 +141,8 @@ internal sealed unsafe class VisualSystem
         float kHeight = 1f / MathF.Max(fog.HeightFalloff, 1e-6f);
 
         FrameUniform data;
-        data.Ambient = new Vector4(VisualManager.Illumination.Ambient, VisualManager.Illumination.Exposure);
-        data.AmbientGround = new Vector4(VisualManager.Illumination.AmbientGround, 0.0f);
+        data.Ambient = new Vector4(VisualManager.Lightning.Ambient, VisualManager.Lightning.Exposure);
+        data.AmbientGround = new Vector4(VisualManager.Lightning.AmbientGround, 0.0f);
 
         data.FogColor = new Vector4(fog.FogColor, fog.Scattering);
         data.FogParams0 = new Vector4(kExp2, kHeight, fog.BaseHeight, fog.Strength);
@@ -154,7 +154,7 @@ internal sealed unsafe class VisualSystem
     [SkipLocalsInit]
     private void UploadDirLight()
     {
-        var it = VisualManager.Illumination;
+        var it = VisualManager.Lightning;
 
         DirectionalLightUniform data;
         data.Direction = it.Direction.AsVector4();

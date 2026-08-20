@@ -14,7 +14,7 @@ using Hexa.NET.ImGui;
 namespace ConcreteEngine.Editor.App.Assets;
 
 [EditorInspector(typeof(Texture))]
-internal sealed partial class TextureInspector : Inspector<TextureInspector>
+internal sealed unsafe partial class TextureInspector : Inspector<TextureInspector>
 {
     public static Texture Target => (Texture)SelectionManager.Instance.SelectedAsset!;
     
@@ -22,7 +22,7 @@ internal sealed partial class TextureInspector : Inspector<TextureInspector>
 
     private static TexturePtrHandle _imageHandle;
 
-    public unsafe void Draw()
+    public override void Draw()
     {
         AppDraw.Section("Preview"u8, &DrawImage);
         AppDraw.Section("Info"u8, &DrawInfo);

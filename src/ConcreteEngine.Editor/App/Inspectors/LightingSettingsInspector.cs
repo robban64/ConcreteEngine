@@ -11,7 +11,7 @@ internal sealed partial class LightingSettingsInspector : Inspector<LightingSett
     private static LightingSettings Target => VisualManager.Instance.Lightning;
     public override uint Icon => IconNames.Sun;
 
-    public void Draw()
+    public override void Draw()
     {
         foreach (var section in Sections) section.Draw();
     }

@@ -10,7 +10,7 @@ internal sealed partial class ShadowSettingsInspector : Inspector<ShadowSettings
     private static ShadowSettings Target => VisualManager.Instance.Shadow;
     public override uint Icon => IconNames.SunDim;
 
-    public void Draw()
+    public override void Draw()
     {
         foreach (var section in Sections) section.Draw();
     }

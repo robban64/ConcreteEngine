@@ -12,7 +12,7 @@ internal sealed partial class SceneObjectInspector : Inspector<SceneObjectInspec
     private static SceneObject Target => SelectionManager.Instance.SelectedSceneObject!;
     public override uint Icon => IconNames.Box;
 
-    public void Draw()
+    public override void Draw()
     {
         foreach (var section in Sections) section.Draw();
     }

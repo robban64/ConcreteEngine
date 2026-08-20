@@ -15,7 +15,7 @@ internal partial class ParticleInspector : Inspector<ParticleInspector>
 
     public override uint Icon => IconNames.Sparkles;
 
-    public void Draw()
+    public override void Draw()
     {
         foreach (var section in Sections) section.Draw();
     }

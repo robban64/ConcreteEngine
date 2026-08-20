@@ -17,7 +17,7 @@ internal sealed partial class CameraInspector : Inspector<CameraInspector>
     private static Camera Target => CameraManager.Instance.Camera;
     public override uint Icon => IconNames.Video;
 
-    public void Draw()
+    public override void Draw()
     {
         foreach (var section in Sections) section.Draw();
     }

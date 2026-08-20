@@ -7,16 +7,21 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
 
+internal abstract class Inspector
+{
+    public abstract void Draw();
+}
 
-internal abstract class Inspector<TSelf>  where TSelf : Inspector<TSelf>
+internal abstract class Inspector<TSelf> : Inspector  where TSelf : Inspector<TSelf>
 {
     public static TSelf Instance { get; private set; } = null!;
 
     //protected InspectorHeader Header;
     //protected InspectSection[] Sections;
     
+    
     public abstract uint Icon { get; }
-
+    
     protected Inspector()
     {
         if (Instance != null) throw new InvalidOperationException($"{typeof(TSelf).Name} already initialized.");

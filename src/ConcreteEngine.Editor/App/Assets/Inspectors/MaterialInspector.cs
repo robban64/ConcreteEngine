@@ -12,14 +12,14 @@ using Hexa.NET.ImGui;
 namespace ConcreteEngine.Editor.App.Assets;
 
 [EditorInspector(typeof(Material))]
-internal sealed partial class MaterialInspector : Inspector<MaterialInspector>
+internal sealed unsafe partial class MaterialInspector : Inspector<MaterialInspector>
 {
     public static Material Target => (Material)SelectionManager.Instance.SelectedAsset!;
 
     private readonly MaterialBindingForm _bindingForm = new();
     public override uint Icon => IconNames.Circle;
 
-    public unsafe void Draw()
+    public override void Draw()
     {
         DrawHeader();
         AppDraw.CollapseSection("Bindings"u8, &DrawBindings);

@@ -46,7 +46,7 @@ internal sealed unsafe class InspectSection
 
     private readonly NativeString _title;
     private readonly InputField[] _fields;
-    
+
     private readonly Action _refresh;
 
     public InspectSection(string title, InputField[] fields, Action refresh)
@@ -62,6 +62,7 @@ internal sealed unsafe class InspectSection
             var length = ImGui.CalcTextSize(it.Label.AsSpan()).X;
             labelWidth = float.Max(labelWidth, length);
         }
+
         ImGui.PopFont();
 
         _labelWidth = float.Clamp(labelWidth, LabelMinWidth, LabelMaxWidth);
@@ -74,11 +75,11 @@ internal sealed unsafe class InspectSection
         _refresh();
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
 
-        if(contentWidth == 0) contentWidth= ImGui.GetContentRegionAvail().X;
+        if (contentWidth == 0) contentWidth = ImGui.GetContentRegionAvail().X;
         var fieldWidth = contentWidth - _labelWidth - LabelFieldGap;
         fieldWidth = float.Min(fieldWidth, FieldMaxWidth);
         ImGui.PushItemWidth(fieldWidth);
-        
+
         var labelSize = new Vector2(_labelWidth, ImGui.GetFrameHeight());
         foreach (var field in _fields)
         {
@@ -86,9 +87,9 @@ internal sealed unsafe class InspectSection
             ImGui.SameLine(0, LabelFieldGap);
             field.Draw();
         }
+
         ImGui.PopItemWidth();
         ImGui.PopStyleVar();
-
     }
 
     public void DrawSubSection()
@@ -101,7 +102,7 @@ internal sealed unsafe class InspectSection
         var fieldWidth = contentWidth - _labelWidth - LabelFieldGap;
         fieldWidth = float.Min(fieldWidth, FieldMaxWidth);
         ImGui.PushItemWidth(fieldWidth);
-        
+
         var labelSize = new Vector2(_labelWidth, ImGui.GetFrameHeight());
         foreach (var field in _fields)
         {
@@ -109,9 +110,8 @@ internal sealed unsafe class InspectSection
             ImGui.SameLine(0, LabelFieldGap);
             field.Draw();
         }
+
         ImGui.PopItemWidth();
         ImGui.PopStyleVar();
-
     }
-
 }

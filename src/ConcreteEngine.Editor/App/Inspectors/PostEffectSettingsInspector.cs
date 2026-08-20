@@ -11,7 +11,7 @@ internal sealed partial class PostEffectSettingsInspector : Inspector<PostEffect
     private static PostEffectSettings Target => VisualManager.Instance.PostEffect;
     public override uint Icon => IconNames.Sparkles;
 
-    public void Draw()
+    public override void Draw()
     {
         foreach (var section in Sections) section.Draw();
     }

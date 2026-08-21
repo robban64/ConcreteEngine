@@ -14,13 +14,17 @@ using Hexa.NET.ImGui;
 namespace ConcreteEngine.Editor.App.Assets;
 
 [EditorInspector(typeof(Texture))]
-internal sealed unsafe partial class TextureInspector : Inspector<TextureInspector>
+internal sealed unsafe partial class TextureInspector : Inspector<Texture>
 {
-    public static Texture Target => (Texture)SelectionManager.Instance.SelectedAsset!;
-    
-    public override uint Icon => IconNames.Image;
-
     private static TexturePtrHandle _imageHandle;
+
+    public override uint Icon => IconNames.Image;
+    public override InspectorId Id => InspectorId.Asset;
+
+    public TextureInspector()
+    {
+        Sections = _fields.CreateSections();
+    }
 
     public override void Draw()
     {
@@ -30,8 +34,7 @@ internal sealed unsafe partial class TextureInspector : Inspector<TextureInspect
 
     private static void DrawImage()
     {
-        ref var imageHandle = ref _imageHandle;
-        if (!ImGuiSystem.TryResolveTextureHandle(Target.GfxId, ref imageHandle)) return;
+        if (!ImGuiSystem.TryResolveTextureHandle(Target!.GfxId, ref _imageHandle)) return;
 
         var contentWidth = ImGui.GetContentRegionAvail().X;
 
@@ -46,12 +49,12 @@ internal sealed unsafe partial class TextureInspector : Inspector<TextureInspect
 
         ImGui.Spacing();
         
-        ImGui.ImageButton("##x"u8, imageHandle, new Vector2(imageSize));
+        ImGui.ImageButton("##img"u8, _imageHandle, new Vector2(imageSize));
     }
 
     private static void DrawInfo()
     {
-        var texture = Target;
+        var texture = Target!;
         var offset = ImGui.GetContentRegionAvail().X / 2f;
 
         AppDraw.TextPropertyField(offset, "Kind"u8, texture.Kind.ToUtf8());

@@ -1,91 +1,101 @@
 using System.Text;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.App.Inspectors;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Scene;
 
-internal sealed unsafe class SceneInspectorPanel
+[EditorInspector(typeof(SceneObject))]
+internal sealed unsafe partial class SceneInspectorPanel : Inspector<SceneObject>
 {
     private const ImGuiTreeNodeFlags CollapseFlags = ImGuiTreeNodeFlags.DefaultOpen;
     private const string ValidNoneAlphaNumericChars = "_-";
 
-    public static SceneInspectorPanel Instance = null!;
-
     private readonly StateManager _state;
-    private readonly SceneObjectInspector _inspector;
-    private readonly ParticleInspector _particleInspector;
+    private Inspector? _instanceInspector;
 
     private readonly NativeString _title;
     private readonly NativeString _nameInputStr;
 
-    private SceneObjectId _previousId = SceneObjectId.Empty;
-
+    public override InspectorId Id => InspectorId.SceneObject;
+    public override uint Icon => IconNames.Box;
 
     public SceneInspectorPanel(StateManager state)
     {
-        Instance = this;
+        Sections = _fields.CreateSections();
+        _ = new ParticleInspector();
+
         _state = state;
         _title = StringArena.AllocateString(24);
         _nameInputStr = StringArena.AllocateString(64);
 
-        _inspector = new SceneObjectInspector();
-        _particleInspector = new ParticleInspector();
     }
 
-    private void OnNewInspector(SceneObject sceneObject)
+    protected override void OnAttachTarget(SceneObject? oldTarget, SceneObject newTarget)
     {
-        RestoreName(sceneObject);
-        _previousId = sceneObject.Id;
-
+        RestoreName(newTarget);
         using var builder = new NativeStringBuilder(_title);
-        builder.Writer.Append(sceneObject.Kind.ToUtf8()).Append(" - ["u8).Append(sceneObject.Id).Append(']');
+        builder.Writer.Append(newTarget.Kind.ToUtf8()).Append(" - ["u8).Append(newTarget.Id).Append(']');
+
+        if (_instanceInspector != null)
+        {
+            _instanceInspector.DetachTarget();
+            _instanceInspector = null;
+        }
+        /*
+        if (newTarget.TryGetInstance<ModelInstance>(out var modelInstance))
+        {
+            _instanceInspector = ParticleInspector.Instance;
+            ParticleInspector.Instance.AttachTarget(particleInstance.Emitter);
+        }*/
+
+        if (newTarget.TryGetInstance<ParticleInstance>(out var particleInstance))
+        {
+            _instanceInspector = ParticleInspector.Instance;
+            ParticleInspector.Instance.AttachTarget(particleInstance.Emitter);
+        }
     }
 
-    private void RestoreName(SceneObject sceneObject)
+    private void RestoreName(SceneObject sceneObject) => _nameInputStr.Set(sceneObject.Name);
+
+
+    public override void Draw()
     {
-        _nameInputStr.Set(sceneObject.Name);
-    }
-
-    public void Draw()
-    {
-        if (SelectionManager.Instance.SelectedSceneObject is not { } sceneObject) return;
-
-        if (_previousId != sceneObject.Id)
-            OnNewInspector(sceneObject);
-
         //
-        ImGui.PushStyleColor(ImGuiCol.Text, sceneObject.Kind.ToColor());
+        ImGui.PushStyleColor(ImGuiCol.Text, Target!.Kind.ToColor());
         ImGui.SeparatorText(_title);
         ImGui.PopStyleColor();
 
         //string
         ImGui.BeginGroup();
         if (AppDraw.Button(IconNames.Undo2))
-            RestoreName(sceneObject);
+            RestoreName(Target);
 
         ImGui.SameLine();
         if (ImGui.InputText("##name"u8, _nameInputStr, 64, GuiTheme.InputNameFlags, InputCallback))
-            HandleRename(sceneObject);
+            HandleRename();
 
         ImGui.EndGroup();
 
         ImGui.Spacing();
 
-        _inspector.Draw();
+        foreach (var section in Sections) section.Draw();
+        _instanceInspector?.Draw();
+
+        /*
         if (sceneObject.TryGetInstance<ModelInstance>(out var modelInstance))
         {
             ImGui.Spacing();
             DrawModelInstance(modelInstance);
         }
-
-        if (sceneObject.TryGetInstance<ParticleInstance>(out _))
-            _particleInspector.Draw();
+        */
     }
 
     private void DrawModelInstance(ModelInstance modelInstance)
@@ -121,8 +131,10 @@ internal sealed unsafe class SceneInspectorPanel
         }
     }
 
-    private void HandleRename(SceneObject sceneObject)
+    private void HandleRename()
     {
+        if (Target is null) Throwers.NullReference(nameof(Target));
+
         UtfText.SliceNullTerminate(_nameInputStr.Data.AsSpan(), out var byteSpan);
         if (byteSpan.IsEmpty) return;
         if (!UtfText.IsAscii(byteSpan)) return;
@@ -131,10 +143,10 @@ internal sealed unsafe class SceneInspectorPanel
         Encoding.UTF8.GetChars(byteSpan, chars);
 
         chars = chars.Trim();
-        if (chars.IsEmpty || chars.Equals(sceneObject.Name, StringComparison.Ordinal)) return;
+        if (chars.IsEmpty || chars.Equals(Target.Name, StringComparison.Ordinal)) return;
 
         var name = chars.ToString();
-        _state.EnqueueEvent(new SceneObjectEvent(sceneObject.Id, Rename: name));
+        _state.EnqueueEvent(new SceneObjectEvent(Target.Id, Rename: name));
     }
 
     private static int InputCallback(ImGuiInputTextCallbackData* data)

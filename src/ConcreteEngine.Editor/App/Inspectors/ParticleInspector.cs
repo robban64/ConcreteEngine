@@ -8,12 +8,15 @@ using ConcreteEngine.Editor.Utils;
 namespace ConcreteEngine.Editor.App.Inspectors;
 
 [EditorInspector(typeof(ParticleEmitter))]
-internal partial class ParticleInspector : Inspector<ParticleInspector>
+internal partial class ParticleInspector : Inspector<ParticleEmitter>
 {
-    private static ParticleEmitter Target =>
-        SelectionManager.Instance.SelectedSceneObject?.GetInstance<ParticleInstance>().Emitter!;
-
     public override uint Icon => IconNames.Sparkles;
+    public override InspectorId Id => InspectorId.Asset;
+
+    public ParticleInspector()
+    {
+        Sections = _fields.CreateSections();
+    }
 
     public override void Draw()
     {

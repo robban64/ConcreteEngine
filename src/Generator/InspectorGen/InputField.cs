@@ -4,6 +4,9 @@ namespace Generator.InspectorGen;
 
 internal abstract record InputField(string Name)
 {
+    public abstract string InputValueType { get; }
+    public abstract string MakeSetterCast(InspectorMember member, string v);
+
     public abstract void AppendGetter(InspectorMember member, string accessPath, SourceBuilder sb);
 }
 
@@ -20,10 +23,11 @@ internal sealed record NumberInput(
 {
     public int GetComponents() => (int)char.GetNumericValue(NumericInfo.NumberType[^1]);
 
-    public string MakeSetterCast(InspectorMember member, string v)
+    public override string InputValueType => NumericInfo.NumberType;
+
+    public override string MakeSetterCast(InspectorMember member, string v)
     {
-        if (NumericInfo.ImplicitCast)
-            return $"({member.TypeName})v";
+        if (NumericInfo.ImplicitCast) return $"({member.TypeName}){v}";
         return $"Unsafe.BitCast<{NumericInfo.NumberType}, {member.TypeName}>({v})";
     }
 
@@ -45,7 +49,7 @@ internal sealed record NumberInput(
 
     public override void AppendGetter(InspectorMember member, string accessPath, SourceBuilder sb)
     {
-        if (member.Info.TypeInfo.IsPrimitive() || IsImplicitCast(member.TypeName))
+        if (NumericInfo.ImplicitCast)
             sb.Append(accessPath);
         else
             sb.Builder.Append($"Unsafe.BitCast<{member.TypeName}, {NumericInfo.NumberType}>({accessPath})");
@@ -60,17 +64,12 @@ internal sealed record NumberInput(
             _ => throw new UnreachableException()
         };
 
-    private static bool IsImplicitCast(string typeName)
-    {
-        if (typeName[^1] == '2') return typeName.EndsWith("Vector2") || typeName.EndsWith("Int2");
-        if (typeName[^1] == '3') return typeName.EndsWith("Vector3") || typeName.EndsWith("Int3");
-        if (typeName[^1] == '4') return typeName.EndsWith("Vector4") || typeName.EndsWith("Int4");
-        return false;
-    }
 }
 
 internal sealed record ColorInput(string Name, bool HasAlpha) : InputField(Name)
 {
+    public override string InputValueType => "Color4";
+
     public override void AppendGetter(InspectorMember member, string accessPath, SourceBuilder sb)
     {
         var typeName = member.TypeName;
@@ -79,11 +78,27 @@ internal sealed record ColorInput(string Name, bool HasAlpha) : InputField(Name)
 
         sb.Append(accessPath);
     }
+    public override string MakeSetterCast(InspectorMember member, string v)
+    {
+        string castTo = v, typeName = member.TypeName;
+        if (typeName.EndsWith("Vector3") || typeName.EndsWith("Vector4") || typeName.EndsWith("ColorRgba"))
+            castTo = $"({member.TypeName}){v}";
+        return castTo;
+    }
+
 }
 
 internal sealed record ComboInput(string Name, string Values, string Names, string? Placeholder, int StartAt)
     : InputField(Name)
 {
+    public override string InputValueType => "int";
+    
+    public override string MakeSetterCast(InspectorMember member, string v)
+    {
+        return member.TypeName == "int" ? v : $"({member.TypeName}){v}";
+    }
+
+
     public override void AppendGetter(InspectorMember member, string accessPath, SourceBuilder sb)
     {
         if (member.TypeName != "int")
@@ -95,6 +110,10 @@ internal sealed record ComboInput(string Name, string Values, string Names, stri
 
 internal sealed record CheckboxInput(string Name) : InputField(Name)
 {
+    public override string InputValueType => "bool";
+
+    public override string MakeSetterCast(InspectorMember member, string v) => v;
+
     public override void AppendGetter(InspectorMember member, string accessPath, SourceBuilder sb)
     {
         sb.Append(accessPath);

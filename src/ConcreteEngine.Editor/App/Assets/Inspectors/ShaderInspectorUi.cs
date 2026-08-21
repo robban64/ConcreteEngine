@@ -2,13 +2,22 @@ using System.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Assets;
 
-internal sealed class ShaderInspectorUi(StateManager state)
+internal sealed class ShaderInspectorUi : Inspector<Shader>
 {
-    public void Draw(Shader shader)
+    public required StateManager State { get; init;}
+    public override InspectorId Id => InspectorId.Asset;
+    public override uint Icon { get; }
+
+    public ShaderInspectorUi()
+    {
+    }
+
+    public override void Draw()
     {
         ImGui.Spacing();
         var width = AppLayout.GetRowWidthForItems(2);
@@ -17,7 +26,7 @@ internal sealed class ShaderInspectorUi(StateManager state)
         ImGui.SameLine();
 
         if (ImGui.Button("Reload"u8, new Vector2(width, 0)))
-            state.EnqueueEvent(new AssetEvent(shader.Id, shader.Kind, Reload: true));
+            State.EnqueueEvent(new AssetEvent(Target!.Id, Target!.Kind, Reload: true));
 
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip("Recompiles source files."u8);

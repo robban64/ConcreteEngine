@@ -1,40 +1,40 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.App.UI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Inputs;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Assets;
 
-internal sealed unsafe class AssetInspectorPanel
+internal sealed unsafe class AssetInspectorPanel : Inspector<AssetObject>
 {
     private const string ValidNoneAlphaNumericChars = ":/_-.";
 
-    public static AssetInspectorPanel Instance = null!;
-
     private static SelectionManager Selection => SelectionManager.Instance;
 
-    private AssetId _previousId = AssetId.Empty;
     private readonly NativeString _title;
-
     private readonly StateManager _state;
-    private readonly ShaderInspectorUi _shaderInspectorUi;
-    private readonly ModelInspectorUi _modelInspectorUi;
-
     private readonly TextInput _searchInput;
     private Popup _popup;
 
+    public override InspectorId Id => InspectorId.Asset;
+    public override uint Icon { get; }
+
+    private Inspector? _inspector;
 
     public AssetInspectorPanel(StateManager state)
     {
-        Instance = this;
+        //Sections = _fields.CreateSections();
         _ = new TextureInspector();
         _ = new MaterialInspector();
-
+        _ = new ModelInspectorUi();
+        _ = new ShaderInspectorUi { State = state };
         _state = state;
         _title = StringArena.AllocateString(24);
         _searchInput = new TextInput("name", 64, OnNameInput)
@@ -43,47 +43,50 @@ internal sealed unsafe class AssetInspectorPanel
             }
             .WithMinLength(4)
             .ToggleFlag(ImGuiInputTextFlags.EnterReturnsTrue, true);
+    }
 
-        _shaderInspectorUi = new ShaderInspectorUi(state);
-        _modelInspectorUi = new ModelInspectorUi(state);
+    protected override void OnAttachTarget(AssetObject? oldTarget, AssetObject newTarget)
+    {
+        _inspector?.DetachTarget();
+        _inspector = null;
+
+        switch (newTarget)
+        {
+            case Shader shader:
+                _inspector = ShaderInspectorUi.Instance;
+                ShaderInspectorUi.Instance.AttachTarget(shader);
+                break;
+            case Model model:
+                _inspector = ModelInspectorUi.Instance;
+                ModelInspectorUi.Instance.AttachTarget(model);
+                break;
+            case Texture texture:
+                _inspector = TextureInspector.Instance;
+                TextureInspector.Instance.AttachTarget(texture);
+                break;
+            case Material material:
+                _inspector = MaterialInspector.Instance;
+                MaterialInspector.Instance.AttachTarget(material);
+                break;
+        }
+
+        RestoreName(newTarget);
+        using var builder = new NativeStringBuilder(_title);
+        builder.Writer.Append(newTarget.Kind.ToUtf8()).Append(" - ["u8).Append(newTarget.Id).Append(']');
     }
 
     private void OnNameInput(Span<char> text)
     {
-        if (Selection.SelectedAsset is not { } inspectAsset) return;
-        if (text.Equals(inspectAsset.Name, StringComparison.Ordinal)) return;
-        _state.EnqueueEvent(new AssetEvent(inspectAsset.Id, inspectAsset.Kind, Rename: text.ToString()));
+        if (text.Equals(Target!.Name, StringComparison.Ordinal)) return;
+        _state.EnqueueEvent(new AssetEvent(Target.Id, Target.Kind, Rename: text.ToString()));
     }
 
-
-    public void OnLeave()
-    {
-        _previousId = AssetId.Empty;
-        _searchInput.Text.Clear();
-    }
-
-    private void OnNewInspector(AssetObject asset)
-    {
-        RestoreName(asset);
-        _previousId = asset.Id;
-        using var builder = new NativeStringBuilder(_title);
-        builder.Writer.Append(asset.Kind.ToUtf8()).Append(" - ["u8).Append(asset.Id).Append(']');
-    }
-
-    private void RestoreName(AssetObject asset)
-    {
-        _searchInput.Text.Set(asset.Name);
-    }
+    private void RestoreName(AssetObject asset) => _searchInput.Text.Set(asset.Name);
 
 
-    public void Draw()
+    public override void Draw()
     {
         if (Selection.SelectedAsset is not { } asset) return;
-
-        if (_previousId != asset.Id)
-        {
-            OnNewInspector(asset);
-        }
 
         ImGui.PushID(asset.Id);
 
@@ -91,21 +94,7 @@ internal sealed unsafe class AssetInspectorPanel
         ImGui.Spacing();
         ImGui.Separator();
 
-        switch (asset)
-        {
-            case Shader shader:
-                _shaderInspectorUi.Draw(shader);
-                break;
-            case Model model:
-                _modelInspectorUi.Draw(model);
-                break;
-            case Texture:
-                TextureInspector.Instance.Draw();
-                break;
-            case Material:
-                MaterialInspector.Instance.Draw();
-                break;
-        }
+        _inspector?.Draw();
 
         ImGui.PopID();
     }
@@ -113,7 +102,7 @@ internal sealed unsafe class AssetInspectorPanel
     private void DrawHeader(AssetObject asset)
     {
         ImGui.BeginGroup();
-        if (AppDraw.Button(asset.Kind.ToIcon())) _popup.State = true;
+        if (AppDraw.Button(Target!.Kind.ToIcon())) _popup.State = true;
 
         ImGui.SameLine();
 
@@ -126,10 +115,7 @@ internal sealed unsafe class AssetInspectorPanel
         ImGui.Spacing();
 
         ImGui.BeginGroup();
-        if (AppDraw.Button(IconNames.Undo2))
-        {
-            RestoreName(asset);
-        }
+        if (AppDraw.Button(IconNames.Undo2)) RestoreName(asset);
 
         ImGui.SameLine();
         _searchInput.Draw();
@@ -147,7 +133,7 @@ internal sealed unsafe class AssetInspectorPanel
     private static void DrawFilesTable(AssetId assetId)
     {
         ImGui.SeparatorText("Files"u8);
-        if (!ImGui.BeginTable("##asset_store_files_tbl"u8, 5, ImGuiTableFlags.Borders)) return;
+        if (!ImGui.BeginTable("##asset_files_tbl"u8, 5, ImGuiTableFlags.Borders)) return;
 
         ImGui.TableSetupColumn("ID"u8, ImGuiTableColumnFlags.WidthFixed);
         ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthFixed);

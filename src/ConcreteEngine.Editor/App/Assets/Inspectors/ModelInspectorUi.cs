@@ -4,25 +4,34 @@ using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Assets;
 
-internal sealed unsafe class ModelInspectorUi(StateManager state)
+internal sealed unsafe class ModelInspectorUi : Inspector<Model>
 {
-    public void Draw(Model model)
+    public override InspectorId Id { get; }
+    public override uint Icon { get; }
+
+    public ModelInspectorUi()
+    {
+    }
+
+    public override void Draw()
     {
         var sw = ScratchBuffer.Writer();
 
         ImGui.SeparatorText("Model Info"u8);
-        AppDraw.TextProperty("Vertices:"u8, sw.Write(model.Info.VertexCount));
-        AppDraw.TextProperty("Triangles:"u8, sw.Write(model.Info.FaceCount));
-        AppDraw.TextProperty("Meshes:"u8, sw.Write((int)model.Info.MeshCount));
-        AppDraw.TextProperty("Animated:"u8, sw.Write(model.Info.IsAnimated ? 'Y' : 'N'));
+        var info = Target!.Info;
+        AppDraw.TextProperty("Vertices:"u8, sw.Write(info.VertexCount));
+        AppDraw.TextProperty("Triangles:"u8, sw.Write(info.FaceCount));
+        AppDraw.TextProperty("Meshes:"u8, sw.Write((int)info.MeshCount));
+        AppDraw.TextProperty("Animated:"u8, sw.Write(info.IsAnimated ? 'Y' : 'N'));
 
 
         ImGui.SeparatorText("Meshes"u8);
-        foreach (var mesh in model.GetMeshes())
+        foreach (var mesh in Target.GetMeshes())
         {
             if (!ImGui.TreeNodeEx(sw.Write(mesh.Name), ImGuiTreeNodeFlags.SpanFullWidth)) continue;
 
@@ -35,8 +44,8 @@ internal sealed unsafe class ModelInspectorUi(StateManager state)
             ImGui.TreePop();
         }
 
-        if (model.Rig != null)
-            DrawAnimated(model.Rig, sw);
+        if (Target.Rig != null)
+            DrawAnimated(Target.Rig, sw);
     }
 
     private static void DrawAnimated(ModelRig rig, NativeSpanWriter sw)
@@ -66,4 +75,5 @@ internal sealed unsafe class ModelInspectorUi(StateManager state)
             ImGui.EndTable();
         }
     }
+
 }

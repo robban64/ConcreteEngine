@@ -14,7 +14,7 @@ internal sealed class InspectionWindow : EditorWindow
 
     public InspectorId ActiveState { get; private set; }
 
-    private Action _inspectionDrawer;
+    private Inspector _inspector = null!;
     private AvgFrameTimer avg;
 
     public InspectionWindow(StateManager state) : base(state)
@@ -28,7 +28,6 @@ internal sealed class InspectionWindow : EditorWindow
         _ = new AssetInspectorPanel(state);
         _ = new SceneInspectorPanel(state);
 
-        _inspectionDrawer = static () => CameraInspector.Instance.Draw();
     }
 
     protected override void OnCreate() => State.ContextChanged += OnStateOnContextChanged;
@@ -38,7 +37,7 @@ internal sealed class InspectionWindow : EditorWindow
         if (ActiveState == InspectorId.None) return;
 
         avg.BeginSample();
-        _inspectionDrawer();
+        _inspector.Draw();
         if (avg.EndSample() > 40) avg.ResetAndPrint();
     }
 
@@ -72,13 +71,13 @@ internal sealed class InspectionWindow : EditorWindow
         switch (activeState)
         {
             case InspectorId.None: break;
-            case InspectorId.Asset: _inspectionDrawer = static () => AssetInspectorPanel.Instance.Draw(); break;
-            case InspectorId.SceneObject: _inspectionDrawer = static () => SceneInspectorPanel.Instance.Draw(); break;
+            case InspectorId.Asset: _inspector = AssetInspectorPanel.Instance; break;
+            case InspectorId.SceneObject: _inspector = SceneInspectorPanel.Instance; break;
 
-            case InspectorId.Camera: _inspectionDrawer = static () => CameraInspector.Instance.Draw(); break;
-            case InspectorId.Lighting: _inspectionDrawer = static () => LightingSettingsInspector.Instance.Draw(); break;
-            case InspectorId.Environment: _inspectionDrawer = static () => FogSettingsInspector.Instance.Draw(); break;
-            case InspectorId.PostFx: _inspectionDrawer = static () => PostEffectSettingsInspector.Instance.Draw(); break;
+            case InspectorId.Camera: _inspector = CameraInspector.Instance; break;
+            case InspectorId.Lighting: _inspector = LightingSettingsInspector.Instance; break;
+            case InspectorId.Environment: _inspector = FogSettingsInspector.Instance; break;
+            case InspectorId.PostFx: _inspector = PostEffectSettingsInspector.Instance; break;
             default: throw new ArgumentOutOfRangeException();
         }
 

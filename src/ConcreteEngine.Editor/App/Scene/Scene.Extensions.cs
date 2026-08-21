@@ -28,15 +28,5 @@ internal static class SceneExtensions
                 SceneObjectKind.Particle => IconNames.Sparkles,
                 _ => throw new ArgumentOutOfRangeException(nameof(kind))
             };
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public uint ToIntIcon() =>
-            kind switch
-            {
-                SceneObjectKind.Empty => IconNames.Minus,
-                SceneObjectKind.Model => IconNames.Box,
-                SceneObjectKind.Particle => IconNames.Sparkles,
-                _ => throw new ArgumentOutOfRangeException(nameof(kind))
-            };
     }
 }

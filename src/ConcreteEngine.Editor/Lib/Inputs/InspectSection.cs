@@ -68,6 +68,8 @@ internal sealed unsafe class InspectSection
         _labelWidth = float.Clamp(labelWidth, LabelMinWidth, LabelMaxWidth);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Fetch() => _refresh();
     public void Draw(float contentWidth = 0)
     {
         if (!ImGui.CollapsingHeader(_title, ImGuiTreeNodeFlags.DefaultOpen)) return;

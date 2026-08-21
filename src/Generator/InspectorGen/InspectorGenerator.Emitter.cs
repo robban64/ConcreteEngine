@@ -7,8 +7,8 @@ namespace Generator.InspectorGen;
 
 internal static class InspectorGeneratorEmitter
 {
-    private const string NestedClassSuffix = "Fields";
-    private const string NestedClassField = "_fields";
+    public const string FieldClassSuffix = "Fields";
+    public const string FieldClassFieldName = "_fields";
 
     private static void GenerateHeaders(SourceBuilder sb, string targetNs, string ns)
     {
@@ -19,22 +19,17 @@ internal static class InspectorGeneratorEmitter
                       using ConcreteEngine.Core.Engine.Editor;
                       using ConcreteEngine.Editor.Lib.Inputs;
                       """);
-        
+
         sb.Builder.AppendLine($"using {targetNs};");
 
         sb.Builder.AppendLine().AppendLine($"namespace {ns};\n").AppendLine();
     }
 
 
-    public static string Emit(InspectModel model)
+    public static string Emit(InspectModel inspectModel)
     {
         var sb = new SourceBuilder(4096 * 2);
-        var groupSegments = new EmitGroup[model.Groups.Length];
-        for (var i = 0; i < groupSegments.Length; i++)
-        {
-            var group = model.Groups[i];
-            groupSegments[i] = new EmitGroup(group, BuildSegments(model.TargetName, group));
-        }
+        var model = new EmitterModel(inspectModel);
 
         GenerateHeaders(sb, model.TargetNs, model.InspectorNs);
 
@@ -42,121 +37,83 @@ internal static class InspectorGeneratorEmitter
         sb.OpenBrace();
 
         sb.AppendLine();
-        sb.BeginLine("private readonly ").Builder.Append($"{model.InspectorName}{NestedClassSuffix} _fields = new();");
+        sb.BeginLine("private readonly ").Builder.Append($"{model.InspectorName}{FieldClassSuffix} _fields = new();");
         sb.EndLine("\n");
-        
-        sb.AppendLine("public readonly InspectSection[] Sections;\n");
-        
-        // Ctor
-        sb.BeginLine("public ").Append(model.InspectorName).EndLine("()");
-        sb.OpenBrace();
-        sb.AppendLine("Sections = _fields.Sections;");
-        sb.CloseBrace().AppendLine();
 
-        // Functions
-        foreach (var it in groupSegments)
-            EmitFetch(sb, model, it);
-
-        sb.AppendLine();
-
-        sb.BeginLine().Builder.AppendLine($"internal sealed partial class {model.InspectorName}{NestedClassSuffix}");
-        sb.OpenBrace().AppendLine();
-
-        EmitCtor(sb, model.InspectorName, model.TargetName,  groupSegments);
-        sb.AppendLine();
-        
-        // Sections
-        foreach (var it in groupSegments)
-            EmitSections(sb, model.TargetName, it);
-        
-        sb.AppendLine();
-
-        // Fields
-        foreach (var it in groupSegments)
-            EmitInputFields(sb, it);
-
-
-        sb.CloseBrace();
+        // Inner Class
+        EmitFieldClass(sb, model);
         sb.PopIndent();
 
         sb.CloseBrace(); // class
         return sb.ToString();
     }
 
-    private static void EmitCtor(SourceBuilder sb, string inspectorName, string targetName, ReadOnlySpan<EmitGroup> groupSegments)
+    private static void EmitFieldClass(SourceBuilder sb, EmitterModel model)
     {
-        sb.AppendLine("public readonly InspectSection[] Sections;\n");
-        sb.BeginLine().Builder.Append($"public {inspectorName}{NestedClassSuffix}()");
-        sb.EndLine();
+        sb.BeginLine("internal sealed class ").Append(model.InspectorName).EndLine(FieldClassSuffix);
         sb.OpenBrace();
-        List<string> sections = new List<string>(8);
-        foreach (var (group, segments) in groupSegments)
-        {
-            foreach (var segment in segments)
-            {
-
-                string segmentName;
-                if (group.HasRootTarget) segmentName = segment.IsDefault ? "Root" : segment.Name!;
-                else if (segment.IsDefault) segmentName = group.Name;
-                else segmentName = $"{group.Name}_{segment.Name!}";
-
-                var label = segmentName == "Root" ? targetName : segmentName;
-                var sectionName = $"Section{segmentName}";
-                sections.Add(sectionName);
-
-                sb.BeginLine(sectionName).Append(" = new InspectSection(").AppendLiteral(label).Append(", ");
-                sb.AppendJoin(", ", segment.Members.Select(x => x.Name), '[', ']').Append(", ");
-                sb.Append("Fetch");
-                segment.AppendDrawName(sb, group);
-                sb.EndLine(");");
-
-            }
-        }
+        
+        foreach (var segment in model.Segments)
+            sb.BeginLine("public readonly InspectSection Section").Append(segment.DisplayName).EndLine(";");
 
         sb.AppendLine();
-        sb.BeginLine("Sections = ").AppendJoin(", ", sections,'[',']').EndLine(";");
+        EmitCtor(sb, model);
+        sb.AppendLine();
+        
+        var sections = model.Segments.Select(x => x.FieldName);
+        sb.BeginLine("public InspectSection[] CreateSections() => ").AppendJoin(", ", sections, '[', ']').EndLine(";");
+
+
+        sb.AppendLine();
+
+        // Fields
+        foreach (var it in model.GroupSegments)
+            EmitInputFields(sb, it);
+
+        // Functions
+        foreach (var it in model.GroupSegments)
+            EmitFetch(sb, it);
+
+        sb.CloseBrace();
+    }
+
+    private static void EmitCtor(SourceBuilder sb, EmitterModel model)
+    {
+        sb.BeginLine().Builder.Append($"public {model.InspectorName}{FieldClassSuffix}()");
+        sb.EndLine();
+        sb.OpenBrace();
+
+        foreach (var segment in model.Segments)
+        {
+            var label = segment.DisplayName == "Root" ? model.TargetName : segment.DisplayName;
+
+            sb.BeginLine(segment.FieldName).Append(" = new InspectSection(").AppendLiteral(label).Append(", ");
+            sb.AppendJoin(", ", segment.Members.Select(x => x.Name), '[', ']').Append(", ");
+            sb.Builder.Append($"Fetch{segment.DisplayName}");
+            sb.EndLine(");");
+        }
+
         sb.CloseBrace();
     }
 
 
-    private static void EmitSections(SourceBuilder sb, string targetName, EmitGroup emitGroup)
+    private static void EmitFetch(SourceBuilder sb, EmitGroup emitGroup)
     {
         var group = emitGroup.Group;
-        foreach (ref readonly var segment in emitGroup.Segments.AsSpan())
-        {
-            string segmentName = null!;
-            if (group.HasRootTarget) segmentName = segment.IsDefault ? "Root" : segment.Name!;
-            else if (segment.IsDefault) segmentName = group.Name;
-
-            sb.BeginLine();
-            if (group.HasRootTarget) sb.Append($"//group.IsRoot"); // DrawRoot, DrawSegment
-            else if (segment.IsDefault) sb.Append("//segment.IsDefault"); // DrawGroup
-            else sb.Append("//segment.Else"); //DrawGroup_Segment
-            sb.EndLine();
-
-            sb.BeginLine("public readonly InspectSection Section").Append(segmentName).EndLine(";");
-        }
-    }
-    
-    private static void EmitFetch(SourceBuilder sb, InspectModel model, EmitGroup emitGroup)
-    {
-        var group = emitGroup.Group;
-        foreach (ref readonly var segment in emitGroup.Segments.AsSpan())
+        foreach (var segment in emitGroup.Segments.AsSpan())
         {
             var members = segment.Members;
             if (members.Length == 0) continue;
 
-            sb.AppendLine().BeginLine("public static void Fetch");
-            segment.AppendDrawName(sb, group);
-            sb.EndLine("()");
+            sb.AppendLine().BeginLine("public void Fetch").Append(segment.DisplayName).EndLine("()");
             sb.OpenBrace();
 
-            sb.AppendLine($"var fields = Instance.{NestedClassField};");
+            sb.AppendLine($"var target = Target!;");
             foreach (var member in members.AsSpan())
             {
                 if (member.Input is not { } input) continue;
-                var access = CreateAccessPath(member, group);
-                sb.BeginLine().Builder.Append($"fields.{input.Name}.Value = ");
+                var access = CreateAccessPath(member, group, "target");
+                sb.BeginLine().Builder.Append($"{input.Name}.Value = ");
                 member.Input.AppendGetter(member, access.Value, sb);
                 sb.EndLine(";");
             }
@@ -164,7 +121,6 @@ internal static class InspectorGeneratorEmitter
 
             sb.CloseBrace();
         }
-
     }
 
     private static void EmitInputFields(SourceBuilder sb, EmitGroup emitGroup)
@@ -172,9 +128,9 @@ internal static class InspectorGeneratorEmitter
         var group = emitGroup.Group;
         sb.AppendLine("// ", group.Name);
 
-        foreach (ref readonly var segment in emitGroup.Segments.AsSpan())
+        foreach (var segment in emitGroup.Segments.AsSpan())
         {
-            if(group.Members.Length == 0) continue;
+            if (group.Members.Length == 0) continue;
             if (!segment.IsDefault) sb.AppendLine().AppendLine("// ", segment.Name!);
             foreach (var member in segment.Members.AsSpan())
             {
@@ -189,10 +145,7 @@ internal static class InspectorGeneratorEmitter
                     default: throw new UnreachableException(nameof(member.Input));
                 }
             }
-
         }
-
-        sb.AppendLine();
     }
 
     private static void EmitInput(SourceBuilder sb, InspectorMember member, AccessPath access)
@@ -205,7 +158,7 @@ internal static class InspectorGeneratorEmitter
         sb.PushIndent();
 
         // setter
-        AppendSetter(sb, member, in access, input.MakeSetterCast(member, "v"), ", ");
+        AppendSetter(sb, member, in access,  ", ");
 
         //
         sb.BeginLine();
@@ -220,16 +173,13 @@ internal static class InspectorGeneratorEmitter
     private static void EmitColor(SourceBuilder sb, InspectorMember member, AccessPath access)
     {
         var input = (ColorInput)member.Input!;
-        string castTo = "", typeName = member.TypeName;
-        if (typeName.EndsWith("Vector3") || typeName.EndsWith("Vector4") || typeName.EndsWith("ColorRgba"))
-            castTo = $"({member.TypeName})";
 
         sb.Builder.Append($"ColorInput {input.Name} = new(");
         sb.AppendLiteral(member.Label).EndLine(", ");
         sb.PushIndent();
 
         // setter
-        AppendSetter(sb, member, in access, $"{castTo}v", endLine: ", ");
+        AppendSetter(sb, member, in access, endLine: ", ");
 
         sb.AppendLine(input.HasAlpha.AsBoolString());
         sb.PopIndent();
@@ -239,7 +189,6 @@ internal static class InspectorGeneratorEmitter
     private static void EmitCombo(SourceBuilder sb, InspectorMember member, AccessPath access)
     {
         var input = (ComboInput)member.Input!;
-        var castTo = member.TypeName == "int" ? "" : $"({member.TypeName})";
 
         sb.Builder.Append($"ComboInput {input.Name} = ComboInput.Create(");
         sb.AppendLiteral(member.Label).EndLine(", ");
@@ -247,7 +196,7 @@ internal static class InspectorGeneratorEmitter
         sb.AppendLine(input.Values, ", ").AppendLine(input.Names, ", ");
 
         //setter
-        AppendSetter(sb, member, in access, $"{castTo}v", endLine: ", ");
+        AppendSetter(sb, member, in access, endLine: ", ");
 
         sb.BeginLine().Append(input.StartAt).EndLine();
         if (!string.IsNullOrEmpty(input.Placeholder)) sb.AppendLine(", ", input.Placeholder);
@@ -262,23 +211,22 @@ internal static class InspectorGeneratorEmitter
         sb.AppendLiteral(member.Label).EndLine(", ");
 
         sb.PushIndent();
-        AppendSetter(sb, member, in access, "v", endLine: ");");
+        AppendSetter(sb, member, in access, endLine: ");");
         sb.PopIndent();
-        sb.AppendLine();
     }
 
-    private static void AppendSetter(SourceBuilder sb, InspectorMember m, in AccessPath access, string assignedValue,
-        string endLine)
+    private static void AppendSetter(SourceBuilder sb, InspectorMember m, in AccessPath access, string endLine)
     {
-        sb.BeginLine();
+        var input = m.Input!;
+        sb.BeginLine("static v => ");
         if (access.UsesStructCopy)
-            sb.Builder.Append($"static v => {access.Owner} = {access.Owner} with {{ {m.Name} = {assignedValue} }}");
+            sb.Builder.Append($"{access.Owner} = {access.Owner} with {{ {m.Name} = {input.MakeSetterCast(m, "v")} }}");
         else
-            sb.Builder.Append($"static v => {access.Value} = {assignedValue}");
+            sb.Builder.Append($"{access.Value} = {input.MakeSetterCast(m, "v")}");
         sb.EndLine(endLine);
     }
 
-    private static AccessPath CreateAccessPath(InspectorMember member, InspectorGroup group, string target = "Target")
+    private static AccessPath CreateAccessPath(InspectorMember member, InspectorGroup group, string target = "Target!")
     {
         if (group.HasRootTarget)
         {
@@ -303,27 +251,6 @@ internal static class InspectorGeneratorEmitter
         return result;
     }
 
-    private static EmitSegment[] BuildSegments(string targetName, InspectorGroup group)
-    {
-        var dict = new Dictionary<string, List<InspectorMember>>(StringComparer.Ordinal);
-
-        foreach (var member in group.Members.AsSpan())
-        {
-            var key = member.Segment ?? "";
-
-            if (!dict.TryGetValue(key, out var list)) dict[key] = list = new List<InspectorMember>();
-            list.Add(member);
-        }
-
-        var segments = new List<EmitSegment>(dict.Count);
-        if (dict.Remove("", out var defaultMembers))
-            segments.Add(new EmitSegment(null, defaultMembers.ToArray()));
-
-        foreach (var pair in dict)
-            segments.Add(new EmitSegment(pair.Key, pair.Value.ToArray()));
-
-        return segments.ToArray();
-    }
 }
 
 /*

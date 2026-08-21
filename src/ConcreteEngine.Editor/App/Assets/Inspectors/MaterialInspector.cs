@@ -12,19 +12,24 @@ using Hexa.NET.ImGui;
 namespace ConcreteEngine.Editor.App.Assets;
 
 [EditorInspector(typeof(Material))]
-internal sealed unsafe partial class MaterialInspector : Inspector<MaterialInspector>
+internal sealed unsafe partial class MaterialInspector : Inspector<Material>
 {
-    public static Material Target => (Material)SelectionManager.Instance.SelectedAsset!;
-
     private readonly MaterialBindingForm _bindingForm = new();
     public override uint Icon => IconNames.Circle;
+    public override InspectorId Id => InspectorId.Asset;
 
+    public MaterialInspector()
+    {
+        Sections = _fields.CreateSections();
+
+    }
     public override void Draw()
     {
         DrawHeader();
-        AppDraw.CollapseSection("Bindings"u8, &DrawBindings);
+
+        DrawBindings();
         foreach (var section in Sections) section.Draw();
-        AppDraw.CollapseSection("Rendering"u8, &DrawPipeline);
+        DrawPipeline();
     }
 
     private static void DrawHeader()
@@ -32,37 +37,52 @@ internal sealed unsafe partial class MaterialInspector : Inspector<MaterialInspe
         ImGui.AlignTextToFramePadding();
         ImGui.TextUnformatted("Shader: "u8);
         ImGui.SameLine();
-        AppDraw.TextColored(Palette32.White, Target.BoundShader.Name);
+        AppDraw.TextColored(Palette32.White, Target!.BoundShader.Name);
     }
 
-    private static void DrawBindings() => Instance._bindingForm.Draw(Target);
-
-    private static void DrawPipeline()
+    private void DrawBindings()
     {
-        Instance.DrawRenderFlags();
-        Instance.DrawRenderCombos();
+        ImGui.Spacing();
+        if (ImGui.CollapsingHeader("Bindings"u8, ImGuiTreeNodeFlags.DefaultOpen)) 
+        {
+            ImGui.Spacing();
+            _bindingForm.Draw(Target!);
+        }
+        ImGui.Spacing();
+    }
+
+    private  void DrawPipeline()
+    {
+        ImGui.Spacing();
+        if (ImGui.CollapsingHeader("Bindings"u8, ImGuiTreeNodeFlags.DefaultOpen)) 
+        {
+            ImGui.Spacing();
+            DrawRenderFlags();
+            DrawRenderCombos();
+        }
+        ImGui.Spacing();
     }
 
 
     private readonly ComboInput BlendCombo = ComboInput.Create("Blend Mode", BlendModeExt.Values, BlendModeExt.Names,
-        static v => Target.State.DrawFunctions = Target.State.DrawFunctions with { Blend = (BlendMode)v });
+        static v => Target!.State.DrawFunctions = Target!.State.DrawFunctions with { Blend = (BlendMode)v });
 
     private readonly ComboInput CullCombo = ComboInput.Create("Cull Mode", CullModeExt.Values, CullModeExt.Names,
-        static v => Target.State.DrawFunctions = Target.State.DrawFunctions with { Cull = (CullMode)v });
+        static v => Target!.State.DrawFunctions = Target!.State.DrawFunctions with { Cull = (CullMode)v });
 
     private readonly ComboInput DepthCombo = ComboInput.Create("Depth Mode", DepthModeExt.Values, DepthModeExt.Names,
-        static v => Target.State.DrawFunctions = Target.State.DrawFunctions with { Depth = (DepthMode)v });
+        static v => Target!.State.DrawFunctions = Target!.State.DrawFunctions with { Depth = (DepthMode)v });
 
     private readonly ComboInput PolygonCombo = ComboInput.Create("Polygon Offset",
         PolygonOffsetLevelExt.Values, PolygonOffsetLevelExt.Names,
-        static v => Target.State.DrawFunctions = Target.State.DrawFunctions with
+        static v => Target!.State.DrawFunctions = Target!.State.DrawFunctions with
         {
             PolygonOffset = (PolygonOffsetLevel)v
         });
 
     private void DrawRenderCombos()
     {
-        var drawFunc = Target.State.DrawFunctions;
+        var drawFunc = Target!.State.DrawFunctions;
         BlendCombo.Value = (int)drawFunc.Blend;
         CullCombo.Value = (int)drawFunc.Cull;
         DepthCombo.Value = (int)drawFunc.Depth;
@@ -76,7 +96,7 @@ internal sealed unsafe partial class MaterialInspector : Inspector<MaterialInspe
 
     private unsafe void DrawRenderFlags()
     {
-        var ogDrawState = Target.State.DrawState;
+        var ogDrawState = Target!.State.DrawState;
         var drawState = ogDrawState;
         DrawFlagToggle("Blend Mode"u8, GfxDrawFlags.Blend, ref drawState);
         DrawFlagToggle("Cull Mode"u8, GfxDrawFlags.Cull, ref drawState);
@@ -87,7 +107,7 @@ internal sealed unsafe partial class MaterialInspector : Inspector<MaterialInspe
         DrawFlagToggle("A2C"u8, GfxDrawFlags.Ac2, ref drawState);
 
         if (ogDrawState != drawState)
-            Target.State.DrawState = drawState;
+            Target!.State.DrawState = drawState;
         return;
 
         static void DrawFlagToggle(ReadOnlySpan<byte> label, GfxDrawFlags flag, ref GfxDrawState state)

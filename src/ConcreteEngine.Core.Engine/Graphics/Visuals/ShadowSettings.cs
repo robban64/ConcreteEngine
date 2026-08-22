@@ -4,16 +4,16 @@ using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Visuals;
 
-[Inspect]
-public sealed class ShadowSettings : VisualStateObject
+public sealed class ShadowSettings : VisualSettings
 {
-    private int _shadowSize;
+    public bool HasPendingShadowSize { get; internal set; }
+
     public float InvMapSize { get; private set; }
     public float ConstBias { get; private set; }
     public float SlopeBias { get; private set; }
 
-    public bool HasPendingShadowSize { get; internal set; }
 
+    private int _shadowSize;
 
     [InputCombo(Label = "Shadow Map Size", Names = "1024px, 2048px, 4096px, 8192px", Values = "1024, 2048, 4096, 8192")]
     public int ShadowMapSize
@@ -26,31 +26,29 @@ public sealed class ShadowSettings : VisualStateObject
     public float Distance
     {
         get;
-        set => field = Set(field, value, ref IsDirty);
+        set => field = Set(field, value);
     }
 
     [InputNumber(InputStyle.Slider, Min = 0, Max = 1f)]
     public float Strength
     {
         get;
-        set => field = Set(field, value, ref IsDirty);
+        set => field = Set(field, value);
     } = 1f;
 
 
-
-    [Segment("ShadowProjection")]
-    [InputNumber(InputStyle.Slider, Min = 10f, Max = 100f)]
+    //[InputNumber(InputStyle.Slider, Min = 10f, Max = 100f)]
     public float ZPad
     {
         get;
-        set => field = Set(field, value, ref IsDirty);
+        set => field = Set(field, value);
     }
-    [Segment("ShadowProjection")]
-    [InputNumber(InputStyle.Slider, Min = 0.5f, Max = 4f)]
+
+    //[InputNumber(InputStyle.Slider, Min = 0.5f, Max = 4f)]
     public float PcfRadius
     {
         get;
-        set => field = Set(field, value, ref IsDirty);
+        set => field = Set(field, value);
     } = 1f;
 
 

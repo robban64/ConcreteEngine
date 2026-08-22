@@ -22,11 +22,10 @@ internal sealed class InspectionWindow : EditorWindow
         _ = new CameraInspector();
         _ = new PostEffectSettingsInspector();
         _ = new LightingSettingsInspector();
-        _ = new ShadowSettingsInspector();
         _ = new FogSettingsInspector();
         
-        _ = new AssetInspectorPanel(state);
-        _ = new SceneInspectorPanel(state);
+        _ = new AssetObjectInspector(state);
+        _ = new SceneObjectInspector(state);
 
     }
 
@@ -71,8 +70,8 @@ internal sealed class InspectionWindow : EditorWindow
         switch (activeState)
         {
             case InspectorId.None: break;
-            case InspectorId.Asset: _inspector = AssetInspectorPanel.Instance; break;
-            case InspectorId.SceneObject: _inspector = SceneInspectorPanel.Instance; break;
+            case InspectorId.Asset: _inspector = AssetObjectInspector.Instance; break;
+            case InspectorId.SceneObject: _inspector = SceneObjectInspector.Instance; break;
 
             case InspectorId.Camera: _inspector = CameraInspector.Instance; break;
             case InspectorId.Lighting: _inspector = LightingSettingsInspector.Instance; break;

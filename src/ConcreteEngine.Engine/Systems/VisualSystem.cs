@@ -18,6 +18,10 @@ internal sealed unsafe class VisualSystem
 
     private readonly GfxBuffers _gfx;
 
+    private long _sunVersion, _ambientVersion, _shadowVersion;
+    private long _fogVersion;
+    private long _postFxVersion;
+
     private VisualSystem(GfxBuffers gfx)
     {
         _gfx = gfx;
@@ -57,16 +61,16 @@ internal sealed unsafe class VisualSystem
 
         if (!VisualManager.AnyWasDirty) return;
 
-        if (VisualManager.Lightning.WasDirty)
-            UploadDirLight();
+        if (VisualManager.Lightning.Sun.Version != _sunVersion)
+            UploadSun();
 
-        if (VisualManager.Lightning.WasDirty || VisualManager.Fog.WasDirty)
+        if (VisualManager.Lightning.Ambient.Version != _ambientVersion || VisualManager.Fog.Version != _fogVersion)
             UploadFrameUniformRecord();
 
-        if (VisualManager.PostEffect.WasDirty)
+        if (VisualManager.PostEffect.Version != _postFxVersion)
             UploadPost();
 
-        VisualManager.Commit();
+        VisualManager.ClearWasDirty();
     }
 
     public void UploadPointLight()
@@ -107,7 +111,8 @@ internal sealed unsafe class VisualSystem
     [SkipLocalsInit]
     public void UploadShadow()
     {
-        var shadow = VisualManager.Shadow;
+        var shadow = VisualManager.Lightning.Shadow;
+        _shadowVersion = shadow.Version;
         var size = shadow.InvMapSize;
         ShadowUniform data;
         data.LightViewProj = CameraManager.LightTransforms.ProjectionViewMatrix;
@@ -135,15 +140,19 @@ internal sealed unsafe class VisualSystem
     [SkipLocalsInit]
     private void UploadFrameUniformRecord()
     {
-        var fog = VisualManager.Fog;
+        FrameUniform data;
 
+        var ambient = VisualManager.Lightning.Ambient;
+        _ambientVersion = ambient.Version;
+        
+        data.Ambient = new Vector4(ambient.Ambient, ambient.Exposure);
+        data.AmbientGround = new Vector4(ambient.AmbientGround, 0.0f);
+
+        var fog = VisualManager.Fog;
+        _fogVersion = fog.Version;
+        
         float kExp2 = 1f / (fog.Density * fog.Density);
         float kHeight = 1f / MathF.Max(fog.HeightFalloff, 1e-6f);
-
-        FrameUniform data;
-        data.Ambient = new Vector4(VisualManager.Lightning.Ambient, VisualManager.Lightning.Exposure);
-        data.AmbientGround = new Vector4(VisualManager.Lightning.AmbientGround, 0.0f);
-
         data.FogColor = new Vector4(fog.FogColor, fog.Scattering);
         data.FogParams0 = new Vector4(kExp2, kHeight, fog.BaseHeight, fog.Strength);
         data.FogParams1 = new Vector4(fog.DistanceWeight, fog.HeightWeight, fog.MaxDistance, 0.0f);
@@ -152,9 +161,10 @@ internal sealed unsafe class VisualSystem
     }
 
     [SkipLocalsInit]
-    private void UploadDirLight()
+    private void UploadSun()
     {
-        var it = VisualManager.Lightning;
+        var it = VisualManager.Lightning.Sun;
+        _sunVersion = it.Version;
 
         DirectionalLightUniform data;
         data.Direction = it.Direction.AsVector4();
@@ -168,6 +178,7 @@ internal sealed unsafe class VisualSystem
     private void UploadPost()
     {
         var post = VisualManager.PostEffect;
+        _postFxVersion = post.Version;
         var bloom = post.Bloom;
         var wb = post.WhiteBalance;
 

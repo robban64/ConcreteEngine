@@ -4,68 +4,68 @@ using ConcreteEngine.Core.Engine.Editor;
 namespace ConcreteEngine.Core.Engine.Graphics.Visuals;
 
 [Inspect]
-public sealed class FogSettings : VisualStateObject
+public sealed class FogSettings : VisualSettings
 {
     [InputColor]
     public Color4 FogColor
     {
         get;
-        set => field = Set(field, value, ref IsDirty);
+        set => field = Set(field, value);
     } = new(0.70f, 0.89f, 0.68f);
 
     [InputNumber(InputStyle.Slider, Min = 100, Max = 1500)]
     public float Density
     {
         get;
-        set => field = Set(field, value, ref IsDirty);
+        set => field = Set(field, value);
     } = 720f;
 
     [InputNumber(InputStyle.Slider, Min = -1000f, Max = 1000f)]
     public float BaseHeight
     {
         get;
-        set => field = Set(field, value, ref IsDirty);
+        set => field = Set(field, value);
     } = 0f;
 
     [InputNumber(InputStyle.Slider, Min = 0.001f, Max = 10000.0f)]
     public float HeightFalloff
     {
         get;
-        set => field = Set(field, value, ref IsDirty);
+        set => field = Set(field, value);
     } = 5200f;
 
     [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
     public float Strength
     {
         get;
-        set => field = Set(field, value, ref IsDirty);
+        set => field = Set(field, value);
     } = 1.05f;
 
     [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
     public float Scattering
     {
         get;
-        set => field = Set(field, value, ref IsDirty);
+        set => field = Set(field, value);
     } = 0.09f;
 
     [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
     public float DistanceWeight
     {
         get;
-        set => field = Set(field, value, ref IsDirty);
+        set => field = Set(field, value);
     } = 1f;
 
     [InputNumber(InputStyle.Drag, Speed = 0.001f, Min = 0f, Max = 1f, Format = "%.3f")]
     public float HeightWeight
     {
         get;
-        set => field = Set(field, value, ref IsDirty);
+        set => field = Set(field, value);
     } = 0.85f;
 
     [InputNumber(InputStyle.Drag, Speed = 1f, Min = 1f, Max = 10000f, Format = "%.2f")]
     public float MaxDistance
     {
         get;
-        set => field = Set(field, value, ref IsDirty);
+        set => field = Set(field, value);
     } = 9500f;
 }

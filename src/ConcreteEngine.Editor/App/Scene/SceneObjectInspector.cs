@@ -13,7 +13,7 @@ using Hexa.NET.ImGui;
 namespace ConcreteEngine.Editor.App.Scene;
 
 [EditorInspector(typeof(SceneObject))]
-internal sealed unsafe partial class SceneInspectorPanel : Inspector<SceneObject>
+internal sealed unsafe partial class SceneObjectInspector : Inspector<SceneObject>
 {
     private const ImGuiTreeNodeFlags CollapseFlags = ImGuiTreeNodeFlags.DefaultOpen;
     private const string ValidNoneAlphaNumericChars = "_-";
@@ -27,7 +27,7 @@ internal sealed unsafe partial class SceneInspectorPanel : Inspector<SceneObject
     public override InspectorId Id => InspectorId.SceneObject;
     public override uint Icon => IconNames.Box;
 
-    public SceneInspectorPanel(StateManager state)
+    public SceneObjectInspector(StateManager state)
     {
         Sections = _fields.CreateSections();
         _ = new ParticleInspector();

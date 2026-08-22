@@ -7,13 +7,13 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Assets;
 
-internal sealed class ShaderInspectorUi : Inspector<Shader>
+internal sealed class ShaderInspector : Inspector<Shader>
 {
     public required StateManager State { get; init;}
     public override InspectorId Id => InspectorId.Asset;
     public override uint Icon { get; }
 
-    public ShaderInspectorUi()
+    public ShaderInspector()
     {
     }
 

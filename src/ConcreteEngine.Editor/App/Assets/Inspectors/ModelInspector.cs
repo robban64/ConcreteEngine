@@ -9,12 +9,12 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Assets;
 
-internal sealed unsafe class ModelInspectorUi : Inspector<Model>
+internal sealed unsafe class ModelInspector : Inspector<Model>
 {
     public override InspectorId Id { get; }
     public override uint Icon { get; }
 
-    public ModelInspectorUi()
+    public ModelInspector()
     {
     }
 

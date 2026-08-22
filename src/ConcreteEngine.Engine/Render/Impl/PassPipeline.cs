@@ -134,7 +134,7 @@ internal static partial class PassPipeline
     {
         var registry = RenderRegistry.Instance;
         var outputSize = EngineWindow.Viewport.Size;
-        var shadowSize = new Size2D(VisualManager.Instance.Shadow.ShadowMapSize);
+        var shadowSize = new Size2D(VisualManager.Instance.Lightning.Shadow.ShadowMapSize);
         registry.Register<ShadowTarget>(FboVariant.V0, new CreateFboInfo(shadowSize)
             .AttachDepthTexture(FboDepthAttachment.Default()), FboResizeMode.Fixed);
 

@@ -69,7 +69,7 @@ internal sealed class SelectionManager
         }
 
         SelectedAsset = AssetManager.Assets.Get<AssetObject>(id);
-        AssetInspectorPanel.Instance.AttachTarget(SelectedAsset);
+        AssetObjectInspector.Instance.AttachTarget(SelectedAsset);
     }
 
     private void DeselectAsset()
@@ -78,7 +78,7 @@ internal sealed class SelectionManager
         if (!id.IsValid()) return;
 
         SelectedAsset = null;
-        AssetInspectorPanel.Instance.DetachTarget();
+        AssetObjectInspector.Instance.DetachTarget();
     }
 
     private void SelectSceneObject(SceneObjectId id, bool showDebugBounds)
@@ -104,7 +104,7 @@ internal sealed class SelectionManager
             ToggleDrawBounds(true);
 
         SelectedSceneObject = sceneObject;
-        SceneInspectorPanel.Instance.AttachTarget(sceneObject);
+        SceneObjectInspector.Instance.AttachTarget(sceneObject);
     }
 
     private void DeselectSceneObject()
@@ -118,6 +118,6 @@ internal sealed class SelectionManager
         }
         
         SelectedSceneObject = null;
-        SceneInspectorPanel.Instance.DetachTarget();
+        SceneObjectInspector.Instance.DetachTarget();
     }
 }

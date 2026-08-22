@@ -12,19 +12,15 @@ public sealed class VisualManager
 
     public bool AnyWasDirty { get; private set; }
 
-    public readonly ShadowSettings Shadow;
     public readonly LightingSettings Lightning;
     public readonly FogSettings Fog;
     public readonly PostEffectSettings PostEffect;
-
-    public bool HasPendingShadowSize => Shadow.HasPendingShadowSize;
 
     private VisualManager()
     {
         if (Instance != null)
             throw new InvalidOperationException($"{nameof(VisualManager)} is already initialized");
 
-        Shadow = new ShadowSettings();
         Lightning = new LightingSettings();
         Fog = new FogSettings();
         PostEffect = new PostEffectSettings();
@@ -33,80 +29,64 @@ public sealed class VisualManager
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool CommitShadowSize()
     {
-        var hasPendingShadowSize = Shadow.HasPendingShadowSize;
-        if (hasPendingShadowSize) Shadow.HasPendingShadowSize = false;
+        var hasPendingShadowSize = Lightning.Shadow.HasPendingShadowSize;
+        if (hasPendingShadowSize) Lightning.Shadow.HasPendingShadowSize = false;
         return hasPendingShadowSize;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Commit()
-    {
-        AnyWasDirty = false;
-    }
+    internal void ClearWasDirty() => AnyWasDirty = false;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Ensure()
+    public bool Commit()
     {
         var anyWasDirty = AnyWasDirty = false;
-        anyWasDirty |= Lightning.Ensure();
-        anyWasDirty |= Shadow.Ensure();
-        anyWasDirty |= Fog.Ensure();
-        anyWasDirty |= PostEffect.Ensure();
+        anyWasDirty |= Lightning.Commit();
+        anyWasDirty |= Fog.Commit();
+        anyWasDirty |= PostEffect.Commit();
         return AnyWasDirty = anyWasDirty;
     }
 }
 
-public abstract class VisualStateObject
+public abstract class VisualSettings
 {
-    public long Version { get; private set; }
-    public bool WasDirty { get; private set; }
-
-    protected bool IsDirty = true;
+    public long Version { get; private set; } = 1;
+    public bool IsDirty { get; protected set; }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal bool Ensure()
+    internal bool Commit()
     {
-        bool isDirty = IsDirty, wasDirty = WasDirty;
-        if (!isDirty && wasDirty)
-        {
-            WasDirty = false;
-        }
-        else if (isDirty && !wasDirty)
-        {
-            IsDirty = false;
-            WasDirty = true;
-            ++Version;
-        }
-
-        return WasDirty;
+        if (!IsDirty) return false;
+        IsDirty = false;
+        ++Version;
+        return true;
     }
-    
-    
-    public static float Set(float field, float value, ref bool isDirty)
+
+    protected float Set(float field, float value)
     {
         if (FloatMath.NearlyEqual(field, value)) return field;
-        isDirty = true;
+        IsDirty = true;
         return value;
     }
 
-    public static Vector3 Set(Vector3 field, Vector3 value, ref bool isDirty)
+    protected Vector3 Set(Vector3 field, Vector3 value)
     {
         if (VectorMath.NearlyEqual(field, value)) return field;
-        isDirty = true;
+        IsDirty = true;
         return value;
     }
 
-    public static Vector2 Set(Vector2 field, Vector2 value, ref bool isDirty)
+    protected Vector2 Set(Vector2 field, Vector2 value)
     {
         if (VectorMath.NearlyEqual(field, value)) return field;
-        isDirty = true;
+        IsDirty = true;
         return value;
     }
 
-    public static T Set<T>(T field, T value, ref bool isDirty) where T : unmanaged
+    protected T Set<T>(T field, T value) where T : unmanaged
     {
         if (EqualityComparer<T>.Default.Equals(field, value)) return field;
-        isDirty = true;
+        IsDirty = true;
         return value;
     }
 }

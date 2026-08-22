@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
@@ -28,7 +29,7 @@ public sealed class EngineRenderSystem : IDisposable
     {
         _ = CameraManager.Instance;
         _ = VisualManager.Instance;
-        VisualManager.Instance.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
+        VisualManager.Instance.Lightning.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
 
         RenderRegistry.Create(graphics.Gfx);
         _materialSystem = new MaterialSystem();
@@ -53,7 +54,7 @@ public sealed class EngineRenderSystem : IDisposable
 
     internal void AfterUpdate()
     {
-        VisualManager.Instance.Ensure();
+        VisualManager.Instance.Commit();
         CameraManager.Instance.CommitUpdate();
         _materialSystem.Commit();
     }
@@ -73,7 +74,7 @@ public sealed class EngineRenderSystem : IDisposable
         if (VisualManager.Instance.CommitShadowSize())
         {
             Logger.Log(LogScope.Engine, "Recreating shadow framebuffers");
-            var size = new Size2D(VisualManager.Instance.Shadow.ShadowMapSize);
+            var size = new Size2D(VisualManager.Instance.Lightning.Shadow.ShadowMapSize);
             RenderRegistry.Instance.RecreateFixedFrameBuffer<ShadowTarget>(FboVariant.V0, size);
         }
     }
@@ -84,6 +85,7 @@ public sealed class EngineRenderSystem : IDisposable
         _particleSystem.Simulate(dt);
     }
 
+    private AvgFrameTimer avg;
     public void PrepareRenderer(float alpha)
     {
         RenderContext.ResetContext();
@@ -92,7 +94,9 @@ public sealed class EngineRenderSystem : IDisposable
 
         // frame update
         CameraManager.Instance.CommitFrame(alpha);
+        avg.BeginSample();
         VisualSystem.Instance.UploadUniforms();
+        if (avg.EndSample() > 80) avg.ResetAndPrint();
 
         // process and upload draw commands
         _resolver.Execute();

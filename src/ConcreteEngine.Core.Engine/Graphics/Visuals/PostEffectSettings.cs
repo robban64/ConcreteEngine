@@ -6,7 +6,7 @@ namespace ConcreteEngine.Core.Engine.Graphics.Visuals;
 
 
 [Inspect]
-public sealed class PostEffectSettings : VisualStateObject
+public sealed class PostEffectSettings : VisualSettings
 {
     [InspectInclude]
     public PostGradeParams Grade

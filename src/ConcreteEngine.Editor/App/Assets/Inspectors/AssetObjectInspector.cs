@@ -12,7 +12,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Assets;
 
-internal sealed unsafe class AssetInspectorPanel : Inspector<AssetObject>
+internal sealed unsafe class AssetObjectInspector : Inspector<AssetObject>
 {
     private const string ValidNoneAlphaNumericChars = ":/_-.";
 
@@ -26,15 +26,16 @@ internal sealed unsafe class AssetInspectorPanel : Inspector<AssetObject>
     public override InspectorId Id => InspectorId.Asset;
     public override uint Icon { get; }
 
-    private Inspector? _inspector;
+    private Inspector? _kindInspector;
 
-    public AssetInspectorPanel(StateManager state)
+    public AssetObjectInspector(StateManager state)
     {
         //Sections = _fields.CreateSections();
         _ = new TextureInspector();
         _ = new MaterialInspector();
-        _ = new ModelInspectorUi();
-        _ = new ShaderInspectorUi { State = state };
+        _ = new ModelInspector();
+        _ = new ShaderInspector { State = state };
+
         _state = state;
         _title = StringArena.AllocateString(24);
         _searchInput = new TextInput("name", 64, OnNameInput)
@@ -47,25 +48,25 @@ internal sealed unsafe class AssetInspectorPanel : Inspector<AssetObject>
 
     protected override void OnAttachTarget(AssetObject? oldTarget, AssetObject newTarget)
     {
-        _inspector?.DetachTarget();
-        _inspector = null;
+        _kindInspector?.DetachTarget();
+        _kindInspector = null;
 
         switch (newTarget)
         {
             case Shader shader:
-                _inspector = ShaderInspectorUi.Instance;
-                ShaderInspectorUi.Instance.AttachTarget(shader);
+                _kindInspector = ShaderInspector.Instance;
+                ShaderInspector.Instance.AttachTarget(shader);
                 break;
             case Model model:
-                _inspector = ModelInspectorUi.Instance;
-                ModelInspectorUi.Instance.AttachTarget(model);
+                _kindInspector = ModelInspector.Instance;
+                ModelInspector.Instance.AttachTarget(model);
                 break;
             case Texture texture:
-                _inspector = TextureInspector.Instance;
+                _kindInspector = TextureInspector.Instance;
                 TextureInspector.Instance.AttachTarget(texture);
                 break;
             case Material material:
-                _inspector = MaterialInspector.Instance;
+                _kindInspector = MaterialInspector.Instance;
                 MaterialInspector.Instance.AttachTarget(material);
                 break;
         }
@@ -94,7 +95,7 @@ internal sealed unsafe class AssetInspectorPanel : Inspector<AssetObject>
         ImGui.Spacing();
         ImGui.Separator();
 
-        _inspector?.Draw();
+        _kindInspector?.Draw();
 
         ImGui.PopID();
     }

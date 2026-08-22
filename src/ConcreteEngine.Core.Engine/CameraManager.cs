@@ -16,6 +16,7 @@ public sealed class CameraManager
     internal readonly CameraTransformSnapshot FrameTransforms;
     internal readonly CameraTransformSnapshot LightTransforms;
 
+    private long _shadowVersion;
 
     private CameraManager()
     {
@@ -33,10 +34,10 @@ public sealed class CameraManager
 
     internal void CommitUpdate()
     {
-        var shadow = VisualManager.Instance.Shadow;
-        if (!Camera.Ensure() && !shadow.WasDirty) return;
-
-        var lightDir = VisualManager.Instance.Lightning.Direction;
+        var shadow = VisualManager.Instance.Lightning.Shadow;
+        if (!Camera.Ensure() && shadow.Version == _shadowVersion) return;
+        _shadowVersion = shadow.Version;
+        var lightDir = VisualManager.Instance.Lightning.Sun.Direction;
         UpdateLightView(shadow.ShadowMapSize, shadow.Distance, shadow.ZPad, lightDir);
         Frustum.UpdateLight(in LightTransforms.ProjectionViewMatrix);
     }

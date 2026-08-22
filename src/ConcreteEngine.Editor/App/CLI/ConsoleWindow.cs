@@ -11,6 +11,7 @@ using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Inputs;
 using ConcreteEngine.Editor.Logging;
 using ConcreteEngine.Editor.Metrics;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.CLI;
@@ -47,7 +48,7 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
 
     protected override void OnCreate()
     {
-        _title = StringArena.AllocateString(64);
+        _title = StringArena.AllocateString(80);
     }
 
     public override void OnUpdateDiagnostic()
@@ -55,21 +56,22 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         if (LogService.Instance.NewLogs > 0)
             _scrollTopBottomStepper.SetIntervalTicks(4);
 
-        using var b = new NativeStringBuilder(_title);
-        b.Writer.Append("CLI: "u8);
-        b.Writer.AppendAscii('[').Append(ImGuiSystem.Io.Framerate, "F0").AppendAscii(']');
-        b.Writer.PadRight(4);
+        var sw = _title.GetWriter();
+        sw.Append("CLI: "u8);
+        sw.AppendAscii('[').Append(ImGuiSystem.Io.Framerate, "F0").AppendAscii(']');
+        sw.PadRight(4);
 
-        b.Writer.AppendAscii('[').Append(MetricSystem.Instance.Metric.AvgMs, "F4").AppendAscii('m', 's', ']');
-        b.Writer.PadRight(4);
+        sw.AppendAscii('[').Append(MetricSystem.Instance.Metric.AvgMs, "F4").AppendAscii('m', 's', ']');
+        sw.PadRight(4);
 
         var allocMbPerSec = MetricSystem.Instance.Metric.AllocMbPerSec;
-        b.Writer.Append("GC: "u8);
-        b.Writer.AppendAscii('[').Append(allocMbPerSec, "F4").Append("MB/s"u8).AppendAscii(']');
-        b.Writer.PadRight(4);
+        sw.Append("GC: "u8);
+        sw.AppendAscii('[').Append(allocMbPerSec, "F4").Append("MB/s"u8).AppendAscii(']');
+        sw.PadRight(4);
 
-        b.Writer.Append("Native: "u8);
-        b.Writer.AppendAscii('[').Append(NativeArray.AllocSizeInMb, "F2").AppendAscii('M', 'B', ']');
+        sw.Append("Native: "u8);
+        sw.AppendAscii('[').Append(NativeArray.AllocSizeInMb, "F2").AppendAscii('M', 'B', ']');
+        sw.EndNativeString();
 
     }
 

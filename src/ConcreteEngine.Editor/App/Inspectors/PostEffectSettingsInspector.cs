@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
-using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Utils;
@@ -15,11 +14,9 @@ internal sealed partial class PostEffectSettingsInspector : Inspector<PostEffect
     public PostEffectSettingsInspector()
     {
         Sections = _fields.CreateSections();
+        ApplySectionLowFetchRate();
         AttachTarget(VisualManager.Instance.PostEffect);
     }
+    
 
-    public override void Draw()
-    {
-        foreach (var section in Sections) section.Draw();
-    }
 }

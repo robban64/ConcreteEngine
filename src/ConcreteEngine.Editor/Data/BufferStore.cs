@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.Data;
 
@@ -12,10 +13,11 @@ internal static unsafe class ScratchBuffer
     public static NativeSpanWriter Writer() => new(_buffer.Ptr, _buffer.Length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static NativeView<byte> Write(ReadOnlySpan<byte> str) => Writer().Write(str);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static NativeView<byte> Write(ReadOnlySpan<char> str) => Writer().Write(str);
+    public static NativeView<byte> WriteString(ReadOnlySpan<char> str)
+    {
+        var writer = Writer();
+        return writer.Write(str);
+    }
 
     public static void Create()
     {

@@ -1,10 +1,5 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Logging;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Graphics.Gfx;
-using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core;
 

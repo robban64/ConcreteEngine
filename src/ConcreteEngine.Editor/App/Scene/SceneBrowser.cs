@@ -65,9 +65,10 @@ internal sealed class SceneBrowser
             ref var name = ref span[cursor++];
             if (name.IsNull) name = StringArena.AllocateString(32);
 
-            using var builder = new NativeStringBuilder(name);
-            builder.Writer.PadRight(1).AppendIcon(sceneObj.Kind.ToIcon()).PadRight(4);
-            builder.Writer.Append(sceneObj.Name.Truncate(20));
+            var sw = name.GetWriter();
+            sw.PadRight(1).AppendIcon(sceneObj.Kind.ToIcon()).PadRight(4);
+            sw.Append(sceneObj.Name.Truncate(20));
+            sw.EndNativeString();
         }
     }
 

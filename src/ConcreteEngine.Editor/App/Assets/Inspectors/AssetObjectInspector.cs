@@ -1,5 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.App.UI;
@@ -72,8 +71,8 @@ internal sealed unsafe class AssetObjectInspector : Inspector<AssetObject>
         }
 
         RestoreName(newTarget);
-        using var builder = new NativeStringBuilder(_title);
-        builder.Writer.Append(newTarget.Kind.ToUtf8()).Append(" - ["u8).Append(newTarget.Id).Append(']');
+        var sw = _title.GetWriter();
+        sw.Append(newTarget.Kind.ToUtf8()).Append(" - ["u8).Append(newTarget.Id).Append(']').EndNativeString();
     }
 
     private void OnNameInput(Span<char> text)

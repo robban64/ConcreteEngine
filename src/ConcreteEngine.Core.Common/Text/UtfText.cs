@@ -33,6 +33,13 @@ public static class UtfText
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CharToByteCount(char c)
+    {
+        if (c <= 0x7F) return 1;
+        return c <= 0x7FF ? 2 : 3;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int FormatChar(ref byte value, char c)
     {
         if (c <= 0x7F)

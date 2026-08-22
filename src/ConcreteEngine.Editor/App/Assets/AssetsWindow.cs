@@ -89,18 +89,18 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     private void UpdateTitleText()
     {
         var path = _assetBrowser.CurrentNode.GetRelativePath();
+        _breadcrumbs.Reset();
         if (path.Length == 0)
         {
             _breadcrumbs.Set("/");
             return;
         }
 
-        var builder = new NativeStringBuilder(_breadcrumbs);
+        var sw = _breadcrumbs.GetWriter();
         foreach (var range in path.Split('/'))
-            builder.Writer.Append(path[range]).Append('/');
+            sw.Append(path[range]).Append('/');
+        sw.EndNativeString();
 
-        var cursor = builder.Writer.Cursor;
-        builder.Writer.SetCursor(cursor - 2); // remove last '/'
     }
 
     private void UpdateFilter(FileBinding bindingFilter, AssetKind assetFilter)
@@ -244,7 +244,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             var previewName = node.PreviewName;
 
             sw.AppendIcon(IconNames.Folder).PadRight(2);
-            sw.Append((byte*)&previewName);
+            sw.Append(previewName._value);
             var text = sw.AppendImGuiId(i).End();
             if (ImGui.Selectable(text, false, 0, size))
                 _assetBrowser.GoToChild(node.GetFolderName());
@@ -273,16 +273,17 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 
     private void DrawFilesInner(int start, int length, int columnCount, AssetFileId selectedFileId)
     {
-        var sw = ScratchBuffer.Writer();
         var drawList = ImGui.GetWindowDrawList();
 
         var gridIndex = 0;
         foreach (var it in _assetBrowser.GetDrawEnumerator(start, length, out var fileIds))
         {
             var fileId = fileIds[gridIndex];
-
             var startPos = ImGui.GetCursorScreenPos(); // top left
-            if (ImGui.Selectable(sw.AppendImGuiId(fileId.Id).End(), selectedFileId.Id == fileId.Id, 0, ItemSize))
+            
+            var sw = ScratchBuffer.Writer();
+            var selectId = sw.AppendImGuiId(fileId.Id).End();
+            if (ImGui.Selectable(selectId, selectedFileId.Id == fileId.Id, 0, ItemSize))
                 OnListItemClick(fileId);
 
             drawList.PushClipRect(startPos, startPos + ItemSize, true);
@@ -291,7 +292,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             drawList.AddText(IconBasePos + startPos, it.Binding.GetColor(), (byte*)&it.Icon);
             ImGui.PopFont();
 
-            var textBegin = (byte*)&it.DisplayName;
+            var textBegin = it.DisplayName._value;
             var textEnd = textBegin + it.DisplayName.Count;
 
             var labelSize = ImGui.CalcTextSize(textBegin, textEnd);
@@ -311,7 +312,8 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             }
             else
             {
-                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + GridPadding);
+                var posY = ImGui.GetCursorPosY() + GridPadding;
+                ImGui.SetCursorPosY(posY);
                 ImGui.Dummy(default);
             }
 

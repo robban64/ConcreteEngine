@@ -1,11 +1,14 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Core.Common.Text;
 
-public unsafe ref partial struct NativeSpanWriter
+[InterpolatedStringHandler]
+public unsafe ref struct NativeSpanWriter
 {
     public readonly byte* Buffer;
     public readonly int Capacity;
@@ -26,19 +29,24 @@ public unsafe ref partial struct NativeSpanWriter
     }
 
     public readonly int Cursor => _cursor;
-    public readonly int BytesLeft => Capacity - _cursor;
+
+    public readonly int BytesLeft
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Capacity - _cursor;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref *Buffer, Capacity - 1);
-
-    public readonly Span<byte> WrittenSpan() => MemoryMarshal.CreateSpan(ref *Buffer, _cursor);
+    public readonly Span<byte> AsSpan() => new(Buffer, Capacity - 1);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Span<byte> RemainingSpan() => MemoryMarshal.CreateSpan(ref Buffer[_cursor], BytesLeft);
-
+    public readonly Span<byte> WrittenSpan() => new(Buffer, _cursor);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Clear() => _cursor = 0;
+    public readonly Span<byte> RemainingSpan() => new(Buffer + _cursor, BytesLeft);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Reset() => _cursor = 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetCursor(int cursor)
@@ -46,17 +54,6 @@ public unsafe ref partial struct NativeSpanWriter
         if ((uint)cursor >= (uint)Capacity) Throwers.BufferOverflow(nameof(NativeSpanWriter), cursor, Capacity);
         _cursor = cursor;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool Validate(int length)
-    {
-        if ((uint)length + (uint)_cursor >= (uint)Capacity)
-            Throwers.BufferOverflow(nameof(NativeSpanWriter), length + _cursor, Capacity);
-        return length > 0;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<byte> EndSpan() => End().AsSpan();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<byte> End()
@@ -67,84 +64,139 @@ public unsafe ref partial struct NativeSpanWriter
         return new NativeView<byte>(Buffer, cursor);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<byte> EndSpan()
+    {
+        var cursor = _cursor;
+        _cursor = 0;
+        Buffer[cursor] = 0;
+        return new Span<byte>(Buffer, cursor);
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter Append(byte* value)
+    {
+        if (value == null) Throwers.NullPointer(nameof(value));
+        var src = MemoryMarshal.CreateReadOnlySpanFromNullTerminated(value);
+        return ref Append(src);
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter Append(scoped ReadOnlySpan<byte> value)
+    {
+        Ensure(value.Length);
+        value.CopyTo(RemainingSpan());
+        _cursor += value.Length;
+        return ref this;
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter Append(scoped ReadOnlySpan<char> value)
+    {
+        var dst = RemainingSpan();
+        if (!Encoding.UTF8.TryGetBytes(value, dst, out var written))
+            Throwers.BufferOverflow(nameof(NativeSpanWriter), _cursor + written, Capacity);
+
+        _cursor += written;
+        return ref this;
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter Append(byte value)
+    {
+        Ensure(1);
+        Buffer[_cursor] = value;
+        _cursor += 1;
+        return ref this;
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter Append(char value)
+    {
+        Ensure(1);
+        _cursor += UtfText.FormatChar(ref Buffer[_cursor], value);
+        return ref this;
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter Append(int value)
+    {
+        Ensure(1);
+        _cursor += UtfText.Format(value, ref Buffer[_cursor], BytesLeft);
+        return ref this;
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter Append(uint value)
+    {
+        Ensure(1);
+        _cursor += UtfText.Format(value, ref Buffer[_cursor], BytesLeft);
+        return ref this;
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter Append<T>(T value, ReadOnlySpan<char> format = default) where T : IUtf8SpanFormattable
+    {
+        if (!value.TryFormat(RemainingSpan(), out var written, format, null))
+            Throwers.BufferOverflow(nameof(NativeSpanWriter), _cursor + written, Capacity);
+
+        _cursor += written;
+        return ref this;
+    }
+
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter AppendAscii(char c1)
+    {
+        Ensure(1);
+        Buffer[_cursor++] = (byte)c1;
+        return ref this;
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter AppendAscii(char c1, char c2)
+    {
+        Ensure(2);
+        var ptr = Buffer + _cursor;
+        *ptr++ = (byte)c1;
+        *ptr = (byte)c2;
+        _cursor += 2;
+        return ref this;
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref NativeSpanWriter AppendAscii(char c1, char c2, char c3)
+    {
+        Ensure(3);
+        var ptr = Buffer + _cursor;
+        *ptr++ = (byte)c1;
+        *ptr++ = (byte)c2;
+        *ptr = (byte)c3;
+        _cursor += 3;
+        return ref this;
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Append([InterpolatedStringHandlerArgument("")] ref NativeSpanWriterHandler handler)
+    {
+    }
+
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref NativeSpanWriter PadRight(int amount, byte value = 0x20)
     {
-        var start = _cursor;
-        var end = start + int.Clamp(amount, 0, Capacity - start);
-        while (start < end)
-        {
-            Buffer[start] = value;
-            ++start;
-        }
-
-        _cursor = end;
+        Ensure(amount);
+        var span = new Span<byte>(Buffer + _cursor, amount);
+        span.Fill(value);
+        _cursor += amount;
         return ref this;
     }
-}
 
-[InterpolatedStringHandler]
-public ref struct NativeSpanWriterHandler(int literalLength, int formattedCount, NativeSpanWriter writer)
-{
-    private NativeSpanWriter _writer = writer;
-
-    public void AppendLiteral(string s) => _writer.Append(s);
-
-    public void AppendLiteral(ReadOnlySpan<char> s) => _writer.Append(s);
-    public void AppendLiteral(ReadOnlySpan<byte> s) => _writer.Append(s);
-
-    public void AppendFormatted<T>(T t) where T : IUtf8SpanFormattable => _writer.Append(t);
-
-    public void AppendFormatted<T>(T t, string? format) where T : IUtf8SpanFormattable => _writer.Append(t, format);
-
-    public void AppendFormatted(string? s)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly void Ensure(int length)
     {
-        if (s is not null) _writer.Append(s);
-    }
-
-    public void AppendFormatted<T>(T value, int alignment) where T : IUtf8SpanFormattable
-    {
-        Span<byte> tmp = stackalloc byte[64];
-        if (value.TryFormat(tmp, out int written, default, null))
-        {
-            int pad = Math.Abs(alignment) - written;
-            if (alignment > 0) _writer.PadRight(pad);
-            _writer.Append(tmp[..written]);
-            if (alignment < 0) _writer.PadRight(pad);
-        }
-        else
-        {
-            _writer.Append(value);
-        }
-    }
-
-    public void AppendFormatted<T>(T value, int alignment, string? format) where T : IUtf8SpanFormattable
-    {
-        Span<byte> tmp = stackalloc byte[64];
-        if (value.TryFormat(tmp, out int written, format, null))
-        {
-            int pad = Math.Abs(alignment) - written;
-            if (alignment > 0) _writer.PadRight(pad);
-            _writer.Append(tmp[..written]);
-            if (alignment < 0) _writer.PadRight(pad);
-        }
-        else
-        {
-            _writer.Append(value);
-        }
-    }
-
-    public void AppendFormatted(ReadOnlySpan<char> s) => _writer.Append(s);
-    public void AppendFormatted(ReadOnlySpan<byte> s) => _writer.Append(s);
-
-    public void AppendFormatted(object? value)
-    {
-        if (value is not null) _writer.Append(value.ToString()!);
-    }
-
-    public void AppendFormatted(object? value, string? format)
-    {
-        if (value is IFormattable f) _writer.Append(f.ToString(format, null)!);
-        else if (value is not null) _writer.Append(value.ToString()!);
+        // Null terminated last byte excluded from capacity 
+        if ((uint)length + (uint)_cursor >= (uint)Capacity)
+            Throwers.BufferOverflow(nameof(NativeSpanWriter), length + _cursor, Capacity);
     }
 }

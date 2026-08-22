@@ -26,9 +26,10 @@ internal sealed unsafe class ColorInput : InputField
     public override bool Draw()
     {
         var strId = _stringId;
+        var strIdPtr = strId._value;
         var changed = HasAlpha
-            ? ImGui.ColorEdit4((byte*)&strId, &_value->R)
-            : ImGui.ColorEdit3((byte*)&strId, &_value->R);
+            ? ImGui.ColorEdit4(strIdPtr, &_value->R)
+            : ImGui.ColorEdit3(strIdPtr, &_value->R);
 
         if (changed && ShouldTrigger())
         {

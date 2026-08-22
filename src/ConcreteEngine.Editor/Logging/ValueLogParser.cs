@@ -35,7 +35,7 @@ internal static class ValueLogParser
         var action = log.Action.ToLogText();
         var topic = log.Topic.ToLogText();
 
-        sw.Clear();
+        sw.Reset();
         sw.Append(action).PadRight(4).AppendAscii('-');
         sw.Append(topic).PadRight(4).AppendAscii(' ');
         sw.Append(id).Append(eq).Append(log.Id);

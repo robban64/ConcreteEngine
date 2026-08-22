@@ -29,7 +29,10 @@ internal sealed unsafe partial class SceneObjectInspector : Inspector<SceneObjec
 
     public SceneObjectInspector(StateManager state)
     {
+        _fields.SectionRoot.SetFetchRateLow();
+        _fields.SectionTransform.SetFetchRateHigh();
         Sections = _fields.CreateSections();
+        
         _ = new ParticleInspector();
 
         _state = state;
@@ -41,8 +44,9 @@ internal sealed unsafe partial class SceneObjectInspector : Inspector<SceneObjec
     protected override void OnAttachTarget(SceneObject? oldTarget, SceneObject newTarget)
     {
         RestoreName(newTarget);
-        using var builder = new NativeStringBuilder(_title);
-        builder.Writer.Append(newTarget.Kind.ToUtf8()).Append(" - ["u8).Append(newTarget.Id).Append(']');
+
+        var sw = _title.GetWriter();
+        sw.Append(newTarget.Kind.ToUtf8()).Append(" - ["u8).Append(newTarget.Id).Append(']').EndNativeString();
 
         if (_instanceInspector != null)
         {
@@ -86,7 +90,7 @@ internal sealed unsafe partial class SceneObjectInspector : Inspector<SceneObjec
 
         ImGui.Spacing();
 
-        foreach (var section in Sections) section.Draw();
+        DrawSections();
         _instanceInspector?.Draw();
 
         /*

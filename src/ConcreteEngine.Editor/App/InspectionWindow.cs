@@ -4,7 +4,6 @@ using ConcreteEngine.Editor.App.Inspectors;
 using ConcreteEngine.Editor.App.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
-using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App;
 
@@ -15,14 +14,13 @@ internal sealed class InspectionWindow : EditorWindow
     public InspectorId ActiveState { get; private set; }
 
     private Inspector _inspector = null!;
-    private AvgFrameTimer avg;
 
     public InspectionWindow(StateManager state) : base(state)
     {
         _ = new CameraInspector();
         _ = new PostEffectSettingsInspector();
         _ = new LightingSettingsInspector();
-        _ = new FogSettingsInspector();
+        _ = new EnvironmentSettingsInspector();
         
         _ = new AssetObjectInspector(state);
         _ = new SceneObjectInspector(state);
@@ -34,10 +32,7 @@ internal sealed class InspectionWindow : EditorWindow
     protected override void OnDraw()
     {
         if (ActiveState == InspectorId.None) return;
-
-        avg.BeginSample();
         _inspector.Draw();
-        if (avg.EndSample() > 40) avg.ResetAndPrint();
     }
 
     private void OnStateOnContextChanged(EditorContext prev, EditorContext next)
@@ -75,7 +70,7 @@ internal sealed class InspectionWindow : EditorWindow
 
             case InspectorId.Camera: _inspector = CameraInspector.Instance; break;
             case InspectorId.Lighting: _inspector = LightingSettingsInspector.Instance; break;
-            case InspectorId.Environment: _inspector = FogSettingsInspector.Instance; break;
+            case InspectorId.Environment: _inspector = EnvironmentSettingsInspector.Instance; break;
             case InspectorId.PostFx: _inspector = PostEffectSettingsInspector.Instance; break;
             default: throw new ArgumentOutOfRangeException();
         }

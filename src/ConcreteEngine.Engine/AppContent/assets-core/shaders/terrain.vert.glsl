@@ -10,7 +10,7 @@ out VS_OUT {
     vec3 N_world;
 } vs_out;
 
-@import ubo:FrameUniform
+@import ubo:EnvironmentUniform
 @import ubo:CameraUniform
 @import ubo:DrawUniform
 

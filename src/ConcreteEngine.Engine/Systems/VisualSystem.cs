@@ -18,8 +18,8 @@ internal sealed unsafe class VisualSystem
 
     private readonly GfxBuffers _gfx;
 
-    private long _sunVersion, _ambientVersion, _shadowVersion;
-    private long _fogVersion;
+    private long _sunVersion, _shadowVersion;
+    private long _fogVersion, _ambientVersion;
     private long _postFxVersion;
 
     private VisualSystem(GfxBuffers gfx)
@@ -54,40 +54,54 @@ internal sealed unsafe class VisualSystem
         if (boneData.Length > 0) _gfx.UploadUniform(boneData, 0);
     }
 
+    private void UploadDirtyUniforms()
+    {
+        
+    }
     public void UploadUniforms()
     {
-        UploadEngineUniformRecord();
+        UploadEngineUniform();
         UploadMainView();
+        UploadShadow();
 
+        var visualManager = VisualManager;
         if (!VisualManager.AnyWasDirty) return;
 
-        if (VisualManager.Lightning.Sun.Version != _sunVersion)
-            UploadSun();
+        if (visualManager.Lightning.Sun.Version != _sunVersion)
+        {
+            _sunVersion = visualManager.Lightning.Sun.Version;
+            UploadLightningUniform();
+        }
 
-        if (VisualManager.Lightning.Ambient.Version != _ambientVersion || VisualManager.Fog.Version != _fogVersion)
-            UploadFrameUniformRecord();
+        if (visualManager.Environment.FogSettings.Version != _fogVersion || visualManager.Environment.Ambient.Version != _ambientVersion)
+        {
+            _fogVersion = visualManager.PostEffect.Version;
+            UploadEnvironmentUniform();
+        }
 
-        if (VisualManager.PostEffect.Version != _postFxVersion)
-            UploadPost();
+        if (visualManager.PostEffect.Version != _postFxVersion)
+        {
+            _postFxVersion = visualManager.PostEffect.Version;
+            UploadPostUniform();
+        }
 
-        VisualManager.ClearWasDirty();
+        visualManager.ClearWasDirty();
     }
 
     public void UploadPointLight()
     {
-        LightUniform data = default;
+        PointLightUniform data = default;
         _gfx.UploadSingleUniform(&data, 0);
     }
-
 
     [SkipLocalsInit]
     public void UploadMainView()
     {
         var t = CameraManager.FrameTransforms;
         CameraUniform data;
-        data.ViewMat = t.ViewMatrix;
-        data.ProjMat = t.ProjectionMatrix;
-        data.ProjViewMat = t.ProjectionViewMatrix;
+        data.ViewMatrix = t.ViewMatrix;
+        data.ProjectionMatrix = t.ProjectionMatrix;
+        data.ProjectionViewMatrix = t.ProjectionViewMatrix;
         data.CameraPos = t.Translation;
         data.CameraUp = t.Up;
         data.CameraRight = t.Right;
@@ -99,9 +113,9 @@ internal sealed unsafe class VisualSystem
     {
         var t = CameraManager.LightTransforms;
         CameraUniform data;
-        data.ViewMat = t.ViewMatrix;
-        data.ProjMat = t.ProjectionMatrix;
-        data.ProjViewMat = t.ProjectionViewMatrix;
+        data.ViewMatrix = t.ViewMatrix;
+        data.ProjectionMatrix = t.ProjectionMatrix;
+        data.ProjectionViewMatrix = t.ProjectionViewMatrix;
         data.CameraPos = t.Translation;
         data.CameraUp = t.Up;
         data.CameraRight = t.Right;
@@ -111,11 +125,11 @@ internal sealed unsafe class VisualSystem
     [SkipLocalsInit]
     public void UploadShadow()
     {
-        var shadow = VisualManager.Lightning.Shadow;
-        _shadowVersion = shadow.Version;
-        var size = shadow.InvMapSize;
         ShadowUniform data;
-        data.LightViewProj = CameraManager.LightTransforms.ProjectionViewMatrix;
+        data.LightViewProjectionMatrix = CameraManager.LightTransforms.ProjectionViewMatrix;
+        
+        var shadow = VisualManager.Lightning.Shadow;
+        var size = shadow.InvMapSize;
         data.ShadowParams0 = new Vector4(size, size, shadow.ConstBias, shadow.SlopeBias);
         data.ShadowParams1 = new Vector4(shadow.Strength, shadow.PcfRadius, 0.03f, shadow.Distance);
 
@@ -123,7 +137,7 @@ internal sealed unsafe class VisualSystem
     }
 
     [SkipLocalsInit]
-    private void UploadEngineUniformRecord()
+    private void UploadEngineUniform()
     {
         var mouse = CoordinateMath.ToUvCoords(EngineInput.Mouse.ViewportPos, EngineWindow.ViewportSize);
         var data = new EngineUniformRecord(
@@ -138,19 +152,15 @@ internal sealed unsafe class VisualSystem
     }
 
     [SkipLocalsInit]
-    private void UploadFrameUniformRecord()
+    private void UploadEnvironmentUniform()
     {
-        FrameUniform data;
-
-        var ambient = VisualManager.Lightning.Ambient;
-        _ambientVersion = ambient.Version;
-        
+        EnvironmentUniform data;
+                
+        var ambient = VisualManager.Environment.Ambient;
         data.Ambient = new Vector4(ambient.Ambient, ambient.Exposure);
         data.AmbientGround = new Vector4(ambient.AmbientGround, 0.0f);
 
-        var fog = VisualManager.Fog;
-        _fogVersion = fog.Version;
-        
+        var fog = VisualManager.Environment.FogSettings;
         float kExp2 = 1f / (fog.Density * fog.Density);
         float kHeight = 1f / MathF.Max(fog.HeightFalloff, 1e-6f);
         data.FogColor = new Vector4(fog.FogColor, fog.Scattering);
@@ -161,12 +171,11 @@ internal sealed unsafe class VisualSystem
     }
 
     [SkipLocalsInit]
-    private void UploadSun()
+    private void UploadLightningUniform()
     {
+        LightningUniform data;
+        
         var it = VisualManager.Lightning.Sun;
-        _sunVersion = it.Version;
-
-        DirectionalLightUniform data;
         data.Direction = it.Direction.AsVector4();
         data.Diffuse = new Vector4(it.Diffuse, it.Intensity);
         data.Specular = new Vector4(it.Specular, 0.0f, 0.0f, 0.0f);
@@ -175,10 +184,9 @@ internal sealed unsafe class VisualSystem
     }
 
     [SkipLocalsInit]
-    private void UploadPost()
+    private void UploadPostUniform()
     {
         var post = VisualManager.PostEffect;
-        _postFxVersion = post.Version;
         var bloom = post.Bloom;
         var wb = post.WhiteBalance;
 

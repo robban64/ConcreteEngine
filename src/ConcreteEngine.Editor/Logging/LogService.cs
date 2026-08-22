@@ -81,7 +81,7 @@ internal sealed class LogService : IDisposable
                 PushLog(message, sLog.Timestamp, sLog.Level, sLog.Scope);
             }
 
-            writer.Clear();
+            writer.Reset();
         }
     }
 

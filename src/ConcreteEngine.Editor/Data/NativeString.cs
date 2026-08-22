@@ -1,29 +1,11 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Editor.Data;
-
-internal unsafe ref struct NativeStringBuilder : IDisposable
-{
-    private NativeSpanWriter _sw;
-    private readonly NativeString _str;
-
-    public NativeStringBuilder(NativeString str)
-    {
-        if (str.IsNull) Throwers.NullPointer(nameof(str));
-        _str = str;
-        _sw = new NativeSpanWriter(str.Data, str.Capacity);
-    }
-
-    [UnscopedRef]
-    public ref NativeSpanWriter Writer => ref _sw;
-
-    public readonly void Dispose() => _str.ApplyWriter(_sw);
-}
 
 internal readonly unsafe struct NativeString : IEquatable<NativeString>
 {
@@ -45,14 +27,7 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator NativeView<byte>(NativeString str) => str.Text;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<byte> AsSpan()
-    {
-        if (IsNull) Throwers.NullPointer(nameof(_ptr));
-        return Text.AsSpan();
-    }
-
+    
     public byte* TextStart
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -77,17 +52,20 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
         get => new(TextStart, Capacity);
     }
 
-    //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetLength(int length)
+    public Span<byte> AsTextSpan()
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)length, (uint)Capacity, nameof(length));
-        TextStart[length] = 0;
-        _ptr->Length = length;
+        if (IsNull) Throwers.NullPointer(nameof(_ptr));
+        return new Span<byte>(TextStart, Length);
     }
 
-    public void Set(ReadOnlySpan<byte> str) => ApplyWriter(GetWriter().Append(str));
-    public void Set(ReadOnlySpan<char> str) => ApplyWriter(GetWriter().Append(str));
+    //
+    public void SetLength(int length)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)length, (uint)Capacity, nameof(length));
+        if (Remaining > 0) TextStart[length] = 0;
+        _ptr->Length = length;
+    }
 
     public void CalculateLength()
     {
@@ -98,26 +76,38 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
 
     public void Reset() => _ptr->Length = 0;
 
-    public void Clear()
+    public void ClearText()
     {
         if (IsNull) Throwers.NullPointer(nameof(_ptr));
         Data.Clear();
         _ptr->Length = 0;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeSpanWriter GetWriter()
     {
         if (IsNull) Throwers.NullPointer(nameof(_ptr));
-        return new NativeSpanWriter(TextStart, Capacity);
+        return new NativeSpanWriter(TextStart, Capacity + 1);
     }
 
-    public void ApplyWriter(NativeSpanWriter sw, bool nullTerminated = true)
+    public void Set(ReadOnlySpan<byte> value)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sw.Cursor);
-        ArgumentOutOfRangeException.ThrowIfNotEqual((nint)sw.Buffer, (nint)TextStart);
-        SetLength(sw.Cursor);
-        if (nullTerminated) TextStart[sw.Cursor] = 0;
+        Ensure(value.Length);
+        value.CopyTo(Data.AsSpan());
+        SetLength(value.Length);
+    }
+
+    public void Set(ReadOnlySpan<char> value)
+    {
+        Ensure(Encoding.UTF8.GetByteCount(value));
+        var written = Encoding.UTF8.GetBytes(value, Data.AsSpan());
+        SetLength(written);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void Ensure(int length)
+    {
+        if ((uint)length > (uint)Capacity)
+            Throwers.BufferOverflow(nameof(NativeSpanWriter), length + Length, Capacity);
     }
 
 
@@ -142,11 +132,27 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
         public byte Start;
     }
 
-    internal static NativeString From(NativeView<byte> view)
+    internal static NativeString Create(NativeView<byte> view)
     {
-        if (view.IsNullOrEmpty) Throwers.InvalidArgument(nameof(view));
+        if (view.IsNull) Throwers.NullPointer(nameof(view));
+
+        var textCapacity = view.Length - HeaderStride;
+        ArgumentOutOfRangeException.ThrowIfLessThan(textCapacity, 4, nameof(view));
+
         var ptr = (NativeStringHeader*)view.Ptr;
-        *ptr = new NativeStringHeader(view.Length);
+        *ptr = new NativeStringHeader(textCapacity);
         return new NativeString(ptr);
+    }
+
+    internal static NativeString From(byte* text, int capacity)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentOutOfRangeException.ThrowIfNegative(capacity);
+
+        var header = (NativeStringHeader*)(text - HeaderStride);
+        if (header->Capacity != capacity - 1)
+            Throwers.InvalidOperation("Invalid pointer - Capacity mismatch");
+
+        return new NativeString(header);
     }
 }

@@ -40,11 +40,12 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IIn
     public override bool Draw()
     {
         var strId = _stringId;
+        var strIdPtr = strId._value;
         var changed = Style switch
         {
-            InputStyle.Input => T.DrawFloatInput((byte*)&strId, _value, _format),
-            InputStyle.Slider => T.DrawFloatSlider((byte*)&strId, _value, _format, Min, Max),
-            InputStyle.Drag => T.DrawFloatDrag((byte*)&strId, _value, _format, Speed, Min, Max),
+            InputStyle.Input => T.DrawFloatInput(strIdPtr, _value, _format),
+            InputStyle.Slider => T.DrawFloatSlider(strIdPtr, _value, _format, Min, Max),
+            InputStyle.Drag => T.DrawFloatDrag(strIdPtr, _value, _format, Speed, Min, Max),
             _ => false
         };
         if (changed && ShouldTrigger())
@@ -89,11 +90,13 @@ internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IInpu
     public override bool Draw()
     {
         var strId = _stringId;
+        var strIdPtr = strId._value;
+
         var changed = Style switch
         {
-            InputStyle.Input => T.DrawIntInput((byte*)&strId, _value),
-            InputStyle.Slider => T.DrawIntSlider((byte*)&strId, _value, Min, Max),
-            InputStyle.Drag => T.DrawIntDrag((byte*)&strId, _value, Speed, Min, Max),
+            InputStyle.Input => T.DrawIntInput(strIdPtr, _value),
+            InputStyle.Slider => T.DrawIntSlider(strIdPtr, _value, Min, Max),
+            InputStyle.Drag => T.DrawIntDrag(strIdPtr, _value, Speed, Min, Max),
             _ => false
         };
 

@@ -14,12 +14,9 @@ internal sealed partial class LightingSettingsInspector : Inspector<LightingSett
 
     public LightingSettingsInspector()
     {
+        _fields.SectionShadow.SetFetchRateLow();
         Sections = _fields.CreateSections();
         AttachTarget(VisualManager.Instance.Lightning);
     }
     
-    public override void Draw()
-    {
-        foreach (var section in Sections) section.Draw();
-    }
 }

@@ -180,10 +180,10 @@ public sealed partial class RenderRegistry
     private static void CreateUniformBuffers(GfxBuffers gfxBuffers)
     {
         EngineUniformRecord.UboId = gfxBuffers.CreateUniformBuffer<EngineUniformRecord>();
-        FrameUniform.UboId = gfxBuffers.CreateUniformBuffer<FrameUniform>();
+        EnvironmentUniform.UboId = gfxBuffers.CreateUniformBuffer<EnvironmentUniform>();
         CameraUniform.UboId = gfxBuffers.CreateUniformBuffer<CameraUniform>();
-        DirectionalLightUniform.UboId = gfxBuffers.CreateUniformBuffer<DirectionalLightUniform>();
-        LightUniform.UboId = gfxBuffers.CreateUniformBuffer<LightUniform>();
+        LightningUniform.UboId = gfxBuffers.CreateUniformBuffer<LightningUniform>();
+        PointLightUniform.UboId = gfxBuffers.CreateUniformBuffer<PointLightUniform>();
         ShadowUniform.UboId = gfxBuffers.CreateUniformBuffer<ShadowUniform>();
         MaterialUniform.UboId = gfxBuffers.CreateUniformBuffer<MaterialUniform>();
         TransformUniform.UboId = gfxBuffers.CreateUniformBuffer<TransformUniform>();

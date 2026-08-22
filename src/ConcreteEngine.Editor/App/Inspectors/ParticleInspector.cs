@@ -1,6 +1,4 @@
 using ConcreteEngine.Core.Engine.Graphics.Particles;
-using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Utils;
@@ -16,10 +14,6 @@ internal partial class ParticleInspector : Inspector<ParticleEmitter>
     public ParticleInspector()
     {
         Sections = _fields.CreateSections();
-    }
-
-    public override void Draw()
-    {
-        foreach (var section in Sections) section.Draw();
+        ApplySectionLowFetchRate();
     }
 }

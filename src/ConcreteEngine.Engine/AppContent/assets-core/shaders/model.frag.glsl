@@ -14,10 +14,10 @@ out vec4 FragColor;
 
 @import struct:LightData
 
-@import ubo:FrameUniform
+@import ubo:EnvironmentUniform
 @import ubo:CameraUniform
-@import ubo:DirLightUniform
-@import ubo:LightUniform
+@import ubo:LightningUniform
+@import ubo:PointLightUniform
 @import ubo:ShadowUniform
 @import ubo:MaterialUniform
 

@@ -15,7 +15,6 @@ internal static partial class PassPipeline
     private static void ActivateDepthMode()
     {
         RenderContext.ApplyForDepthPass();
-        VisualSystem.Instance.UploadShadow();
         VisualSystem.Instance.UploadLightView();
     }
 

@@ -1,15 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.Unicode;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.App.Shared;
-using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Lib.Inputs;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.Theme;
@@ -53,7 +47,7 @@ internal static unsafe class AppDraw
     public static void TextColored(uint color, ReadOnlySpan<char> text)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, color);
-        Text(ScratchBuffer.Write(text));
+        Text(ScratchBuffer.WriteString(text));
         ImGui.PopStyleColor();
     }
 
@@ -67,7 +61,7 @@ internal static unsafe class AppDraw
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Text(string text) => Text(ScratchBuffer.Write(text));
+    public static void Text(string text) => Text(ScratchBuffer.WriteString(text));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Text(NativeString text) => ImGui.TextUnformatted(text.TextStart, text.TextEnd);

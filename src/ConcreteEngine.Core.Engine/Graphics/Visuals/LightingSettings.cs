@@ -7,13 +7,9 @@ namespace ConcreteEngine.Core.Engine.Graphics.Visuals;
 [Inspect]
 public sealed class LightingSettings
 {
-    public bool HasPendingShadowSize => Shadow.HasPendingShadowSize;
     //
     [InspectInclude]
     public SunSettings Sun { get; } = new();
-    
-    [InspectInclude]
-    public AmbientSettings Ambient { get; } = new ();
     
     [InspectInclude]
     public ShadowSettings Shadow { get; } = new();
@@ -22,7 +18,6 @@ public sealed class LightingSettings
     {
         var anyDirty = false;
         anyDirty |= Sun.Commit();
-        anyDirty |= Ambient.Commit();
         anyDirty |= Shadow.Commit();
         return anyDirty;
     }

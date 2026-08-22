@@ -10,9 +10,9 @@ in VS_OUT {
 
 out vec4 FragColor;
 
-@import ubo:FrameUniform
+@import ubo:EnvironmentUniform
 @import ubo:CameraUniform
-@import ubo:DirLightUniform
+@import ubo:LightningUniform
 @import ubo:ShadowUniform
 @import ubo:MaterialUniform
 

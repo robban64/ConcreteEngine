@@ -13,7 +13,7 @@ public sealed class VisualManager
     public bool AnyWasDirty { get; private set; }
 
     public readonly LightingSettings Lightning;
-    public readonly FogSettings Fog;
+    public readonly EnvironmentSettings Environment;
     public readonly PostEffectSettings PostEffect;
 
     private VisualManager()
@@ -22,7 +22,7 @@ public sealed class VisualManager
             throw new InvalidOperationException($"{nameof(VisualManager)} is already initialized");
 
         Lightning = new LightingSettings();
-        Fog = new FogSettings();
+        Environment = new EnvironmentSettings();
         PostEffect = new PostEffectSettings();
     }
 
@@ -42,7 +42,7 @@ public sealed class VisualManager
     {
         var anyWasDirty = AnyWasDirty = false;
         anyWasDirty |= Lightning.Commit();
-        anyWasDirty |= Fog.Commit();
+        anyWasDirty |= Environment.FogSettings.Commit();
         anyWasDirty |= PostEffect.Commit();
         return AnyWasDirty = anyWasDirty;
     }

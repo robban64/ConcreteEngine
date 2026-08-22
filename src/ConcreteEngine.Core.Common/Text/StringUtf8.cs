@@ -10,7 +10,7 @@ public unsafe struct String32Utf8
     public const int Capacity = 32;
     public const int TextLength = 30;
 
-    private fixed byte _value[Capacity];
+    public fixed byte _value[Capacity];
 
     public String32Utf8(ReadOnlySpan<byte> span)
     {
@@ -44,7 +44,7 @@ public unsafe struct String16Utf8
     public const int Capacity = 16;
     public const int TextLength = 14;
 
-    private fixed byte _value[Capacity];
+    public fixed byte _value[Capacity];
 
     public String16Utf8(ReadOnlySpan<byte> span)
     {

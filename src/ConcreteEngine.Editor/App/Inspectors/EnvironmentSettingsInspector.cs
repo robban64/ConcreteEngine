@@ -5,22 +5,18 @@ using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
 
-[EditorInspector(typeof(FogSettings))]
-internal sealed partial class FogSettingsInspector : Inspector<FogSettings>
+[EditorInspector(typeof(EnvironmentSettings))]
+internal sealed partial class EnvironmentSettingsInspector : Inspector<EnvironmentSettings>
 {
-   
     public override InspectorId Id => InspectorId.Environment;
 
     public override uint Icon => IconNames.CloudFog;
 
-    public FogSettingsInspector()
+    public EnvironmentSettingsInspector()
     {
         Sections = _fields.CreateSections();
-        AttachTarget(VisualManager.Instance.Fog);
+        ApplySectionLowFetchRate();
+        AttachTarget(VisualManager.Instance.Environment);
     }
 
-    public override void Draw()
-    {
-        foreach (var section in Sections) section.Draw();
-    }
 }

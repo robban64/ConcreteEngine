@@ -154,7 +154,7 @@ internal sealed unsafe class ShaderImporter
                 else _structsDict.Add(activeName, result);
 
                 activeName = null;
-                sw.Clear();
+                sw.Reset();
             }
         }
 

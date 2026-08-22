@@ -41,7 +41,7 @@ internal sealed unsafe class TextInput : InputField
 
         _inputCallback = OnInputCallback;
         Text = StringArena.AllocateString(capacity);
-        Text.Clear();
+        Text.ClearText();
     }
 
     public TextInput(string label, int capacity, Action<Span<byte>> callback) : this(label, capacity) =>
@@ -72,7 +72,7 @@ internal sealed unsafe class TextInput : InputField
         return this;
     }
 
-    public ReadOnlySpan<byte> GetTextSpan() => !Text.IsNull ? Text.AsSpan() : ReadOnlySpan<byte>.Empty;
+    public ReadOnlySpan<byte> GetTextSpan() => !Text.IsNull ? Text.AsTextSpan() : ReadOnlySpan<byte>.Empty;
 
     public override bool Draw()
     {
@@ -82,7 +82,7 @@ internal sealed unsafe class TextInput : InputField
         if (changed && ProcessInput())
         {
             InvokeCallback();
-            if (ClearAfter) Text.Clear();
+            if (ClearAfter) Text.ClearText();
             return true;
         }
 
@@ -114,7 +114,7 @@ internal sealed unsafe class TextInput : InputField
     {
         if (_callback is null) return;
 
-        var text = Text.AsSpan();
+        var text = Text.AsTextSpan();
         if (_callback is Action<Span<byte>> callbackU8)
         {
             if (text.Length == 0)
@@ -145,7 +145,7 @@ internal sealed unsafe class TextInput : InputField
     private bool ProcessInput()
     {
         Text.CalculateLength();
-        var src = Text.AsSpan();
+        var src = Text.AsTextSpan();
         if (src.Length < MinLength || (src.IsEmpty && !AllowEmpty)) return false;
 
         var hasAsciiFilter = Filter is TextInputFilter.AsciiLetter or TextInputFilter.AsciiLettersAndDigit;

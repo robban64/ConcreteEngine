@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
+using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Utility;
 using Hexa.NET.ImGui;
@@ -144,7 +145,7 @@ internal static class MetricsUi
                 var it = stores.Assets[i];
                 ImGui.PushID(i);
                 ImGui.TableNextRow();
-                AppDraw.TextColumn(sw.Write(it.Kind.ToUtf8()));
+                AppDraw.TextColumn(it.Kind.ToUtf8());
                 AppDraw.TextColumn(sw.Write(it.Count));
                 AppDraw.TextColumn(sw.Write(it.FileCount));
                 ImGui.PopID();

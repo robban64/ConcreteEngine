@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Visuals;
 
-[Inspect]
 public sealed class FogSettings : VisualSettings
 {
     [InputColor]

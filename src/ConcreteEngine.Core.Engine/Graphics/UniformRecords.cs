@@ -46,27 +46,27 @@ public struct EngineUniformRecord : IUniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct FrameUniform : IUniform
+public struct EnvironmentUniform : IUniform
 {
     public Vector4 Ambient; // xyz = sky ambient, w = exposure
     public Vector4 AmbientGround; // xyz = ground ambient
+
     public Vector4 FogColor; // rgb = base fog color, a = in-scattering mix
     public Vector4 FogParams0; // x=exp2_k, y=height_k, z=height0, w=globalStrength
     public Vector4 FogParams1; // x=expWeight, y=heightWeight, z=maxDistance, w=reserved
-
-
+    
     public static UniformBufferId UboId { get; set; }
 
     public static byte Slot => 1;
-    public static int Stride => Unsafe.SizeOf<FrameUniform>();
+    public static int Stride => Unsafe.SizeOf<EnvironmentUniform>();
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public struct CameraUniform : IUniform
 {
-    public Matrix4x4 ViewMat;
-    public Matrix4x4 ProjMat;
-    public Matrix4x4 ProjViewMat;
+    public Matrix4x4 ViewMatrix;
+    public Matrix4x4 ProjectionMatrix;
+    public Matrix4x4 ProjectionViewMatrix;
 
     public Vector3 CameraPos;
     private float _cameraPosPad;
@@ -77,7 +77,6 @@ public struct CameraUniform : IUniform
     public Vector3 CameraRight;
     private float _cameraRightPad;
 
-
     public static UniformBufferId UboId { get; set; }
 
     public static byte Slot => 2;
@@ -85,21 +84,20 @@ public struct CameraUniform : IUniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct DirectionalLightUniform : IUniform
+public struct LightningUniform : IUniform
 {
     public Vector4 Direction; // direction, light toward scene
     public Vector4 Diffuse; // rgb=color, a=intensity
     public Vector4 Specular; // x = specular multiplier
-
-
+    
     public static UniformBufferId UboId { get; set; }
 
     public static byte Slot => 3;
-    public static int Stride => Unsafe.SizeOf<DirectionalLightUniform>();
+    public static int Stride => Unsafe.SizeOf<LightningUniform>();
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct LightUniform : IUniform
+public struct PointLightUniform : IUniform
 {
     // yzw unused/padding
     public Int4 LightCounts;
@@ -117,13 +115,13 @@ public struct LightUniform : IUniform
     public static UniformBufferId UboId { get; set; }
 
     public static byte Slot => 4;
-    public static int Stride => Unsafe.SizeOf<LightUniform>();
+    public static int Stride => Unsafe.SizeOf<PointLightUniform>();
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public struct ShadowUniform : IUniform
 {
-    public Matrix4x4 LightViewProj;
+    public Matrix4x4 LightViewProjectionMatrix;
     public Vector4 ShadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
     public Vector4 ShadowParams1; // x=strength, y=pcfRadius, z=NormalBias, w=MaxDistance
 

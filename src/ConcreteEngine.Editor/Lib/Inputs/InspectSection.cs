@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
@@ -42,6 +43,11 @@ internal sealed unsafe class InspectSection
     const float LabelMaxWidth = 180.0f;
     const float FieldMaxWidth = 220f;
 
+    private static int _idCounter;
+    
+    public readonly int Id;
+    private readonly uint Icon;
+    
     private readonly float _labelWidth;
 
     private readonly NativeString _title;
@@ -49,71 +55,73 @@ internal sealed unsafe class InspectSection
 
     private readonly Action _refresh;
 
+    private FrameAccumulator _accumulator;
+
     public InspectSection(string title, InputField[] fields, Action refresh)
     {
-        _title = StringArena.AllocateString(title.Truncate(32));
+        Id = ++_idCounter;
         _fields = fields;
         _refresh = refresh;
+        _title = StringArena.AllocateStringId(title.Truncate(28), "title", Id);
+
+        SetFetchRateMedium();
 
         float labelWidth = 0;
         AppLayout.PushFontText();
         foreach (var it in fields)
         {
-            var length = ImGui.CalcTextSize(it.Label.AsSpan()).X;
+            var length = ImGui.CalcTextSize(it.Label.AsTextSpan()).X;
             labelWidth = float.Max(labelWidth, length);
         }
-
         ImGui.PopFont();
 
         _labelWidth = float.Clamp(labelWidth, LabelMinWidth, LabelMaxWidth);
     }
 
+    public void SetFetchRateHigh()
+    {
+        _accumulator = new FrameAccumulator(1f / 20f);
+        _accumulator.Accumulator = _accumulator.TickDt;
+    }
+    public void SetFetchRateMedium()
+    {
+        _accumulator = new FrameAccumulator(1f / 8f);
+        _accumulator.Accumulator = _accumulator.TickDt;
+    }
+
+    public void SetFetchRateLow()
+    {
+        _accumulator = new FrameAccumulator(1f);
+        _accumulator.Accumulator = _accumulator.TickDt;
+    }
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Fetch() => _refresh();
-    public void Draw(float contentWidth = 0)
+    public void Fetch(float dt)
     {
-        if (!ImGui.CollapsingHeader(_title, ImGuiTreeNodeFlags.DefaultOpen)) return;
+        _accumulator.Accumulate(dt);
+        if (_accumulator.DrainTick()) _refresh();
+    }
 
-        _refresh();
-        ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
+    public void Draw(float contentWidth)
+    {
+        var open = ImGui.CollapsingHeader(_title, ImGuiTreeNodeFlags.DefaultOpen);
+        if (!open) return;
 
-        if (contentWidth == 0) contentWidth = ImGui.GetContentRegionAvail().X;
         var fieldWidth = contentWidth - _labelWidth - LabelFieldGap;
         fieldWidth = float.Min(fieldWidth, FieldMaxWidth);
-        ImGui.PushItemWidth(fieldWidth);
 
         var labelSize = new Vector2(_labelWidth, ImGui.GetFrameHeight());
+        
+        ImGui.PushItemWidth(fieldWidth);
         foreach (var field in _fields)
         {
             ImGui.Selectable(field.Label, false, ImGuiSelectableFlags.None, labelSize);
             ImGui.SameLine(0, LabelFieldGap);
             field.Draw();
         }
-
         ImGui.PopItemWidth();
-        ImGui.PopStyleVar();
+        
     }
 
-    public void DrawSubSection()
-    {
-        _refresh();
-        ImGui.SeparatorText(_title);
-        ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
-
-        var contentWidth = ImGui.GetContentRegionAvail().X;
-        var fieldWidth = contentWidth - _labelWidth - LabelFieldGap;
-        fieldWidth = float.Min(fieldWidth, FieldMaxWidth);
-        ImGui.PushItemWidth(fieldWidth);
-
-        var labelSize = new Vector2(_labelWidth, ImGui.GetFrameHeight());
-        foreach (var field in _fields)
-        {
-            ImGui.Selectable(field.Label, false, ImGuiSelectableFlags.None, labelSize);
-            ImGui.SameLine(0, LabelFieldGap);
-            field.Draw();
-        }
-
-        ImGui.PopItemWidth();
-        ImGui.PopStyleVar();
-    }
 }

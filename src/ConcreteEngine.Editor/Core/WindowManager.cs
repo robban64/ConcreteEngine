@@ -1,7 +1,6 @@
 using ConcreteEngine.Editor.App;
 using ConcreteEngine.Editor.App.Assets;
 using ConcreteEngine.Editor.App.CLI;
-using ConcreteEngine.Editor.App.Inspectors;
 using ConcreteEngine.Editor.App.Scene;
 using ConcreteEngine.Editor.App.UI;
 using Hexa.NET.ImGui;

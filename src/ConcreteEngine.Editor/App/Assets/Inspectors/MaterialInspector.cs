@@ -21,14 +21,14 @@ internal sealed unsafe partial class MaterialInspector : Inspector<Material>
     public MaterialInspector()
     {
         Sections = _fields.CreateSections();
+        ApplySectionLowFetchRate();
 
     }
     public override void Draw()
     {
         DrawHeader();
-
         DrawBindings();
-        foreach (var section in Sections) section.Draw();
+        DrawSections();
         DrawPipeline();
     }
 

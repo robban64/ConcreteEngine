@@ -22,6 +22,8 @@ public readonly struct GfxPassState
         StateFlags = stateFlags;
     }
 
+    public bool IsEmpty => ClearColor == default && ClearBuffer == 0 && StateFlags == 0;
+
     public static GfxPassState MakeColorClear(Color4 clearColor, GfxStateFlags flags) =>
         new(in clearColor, ClearBufferFlag.Color, flags);
 

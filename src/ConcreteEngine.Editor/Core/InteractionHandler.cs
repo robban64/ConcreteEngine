@@ -108,7 +108,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
     private bool OnClickViewport(Vector2 mousePos)
     {
         var selectedId = state.Context.Selection.SelectedSceneId;
-        var sceneObject = SceneManager.Instance.Raycaster.GetSceneObjectFromView(mousePos, out _, out _);
+        var sceneObject = SceneManager.Instance.Raycaster.GetSceneObjectFromView(mousePos, out _);
         if (sceneObject is null)
         {
             if (selectedId.IsValid())

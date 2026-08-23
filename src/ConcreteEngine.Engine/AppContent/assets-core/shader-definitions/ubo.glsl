@@ -7,7 +7,7 @@ uniform EngineUniform {
     vec2  uMouse;
 };
 
-uniform FrameUniform {
+uniform EnvironmentUniform {
     vec4 uAmbient;
     vec4 uAmbientGround;
     vec4 uFogColor;
@@ -24,13 +24,13 @@ uniform CameraUniform {
     vec4 uCameraRight;
 };
 
-uniform DirLightUniform {
+uniform LightningUniform {
     vec4 uLightDirection;
     vec4 uLightDiffuse;
     vec4 uLightSpecularIntensity;
 };
 
-uniform LightUniform {
+uniform PointLightUniform {
     ivec4 uLightCounts;
     LightData uLights[MAX_LIGHTS];
 };

@@ -9,17 +9,16 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Engine.Mesh;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct ParticleGpuInstance
+internal struct ParticleVertex(in Vector4 positionSize, ColorRgba color)
 {
-    public Vector4 PositionSize;
-    public ColorRgba Color;
+    public Vector4 PositionSize = positionSize;
+    public ColorRgba Color = color;
 }
 
 internal readonly struct ParticleMeshHandle(MeshId meshId, VertexBufferId vboInstanceId)
@@ -39,7 +38,7 @@ internal sealed class ParticleMesh : IDisposable
     public int Count { get; private set; }
 
     private ParticleMeshHandle[] _handles;
-    private NativeArray<ParticleGpuInstance> _particleData;
+    private NativeArray<ParticleVertex> _particleData;
 
     private readonly GfxContext _gfx;
 
@@ -49,7 +48,7 @@ internal sealed class ParticleMesh : IDisposable
             throw new InvalidOperationException($"{nameof(ParticleMesh)} is already initialized");
 
         _handles = new ParticleMeshHandle[DefaultHandleCap];
-        _particleData = NativeArray.Allocate<ParticleGpuInstance>(DefaultParticleCap);
+        _particleData = NativeArray.Allocate<ParticleVertex>(DefaultParticleCap, false);
 
         _gfx = gfx;
     }
@@ -58,7 +57,7 @@ internal sealed class ParticleMesh : IDisposable
     public int HandleCapacity => _handles.Length;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<ParticleGpuInstance> GetBufferView(int count)
+    public NativeView<ParticleVertex> GetBufferView(int count)
     {
         if (_particleData.IsNull) Throwers.NullPointer(nameof(_particleData));
 
@@ -80,11 +79,11 @@ internal sealed class ParticleMesh : IDisposable
 
         if (!vboId.IsValid()) Throwers.InvalidHandle(vboId);
 
-        _gfx.Buffers.UploadVertexBuffer(vboId, _particleData.AsSpan(0, count), 0);
+        _gfx.Buffers.UploadVertexBuffer(vboId, _particleData.Slice(0, count), 0);
     }
 
 
-    public int CreateParticleMesh(int particleCapacity)
+    public unsafe int CreateParticleMesh(int particleCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(particleCapacity);
         EnsureCapacity(particleCapacity);
@@ -92,11 +91,12 @@ internal sealed class ParticleMesh : IDisposable
 
         var gfxMeshes = _gfx.Meshes;
 
-        ReadOnlySpan<Vertex2D> vertices = stackalloc[]
+        Vertex2D* vertexPtr = stackalloc Vertex2D[4]
         {
             new Vertex2D(-0.5f, -0.5f, 0f, 0f), new Vertex2D(0.5f, -0.5f, 1f, 0f),
             new Vertex2D(-0.5f, 0.5f, 0f, 1f), new Vertex2D(0.5f, 0.5f, 1f, 1f)
         };
+        var vertices = new NativeView<Vertex2D>(vertexPtr, 4);
 
         var props = MeshDrawProperties.MakeInstance(
             DrawPrimitive.TriangleStrip,
@@ -111,7 +111,7 @@ internal sealed class ParticleMesh : IDisposable
             particleBuilder.Make<Vector4>(2, 1), particleBuilder.Make<ColorRgba>(3, 1, VertexFormat.UByte, true)
         ]);
         gfxMeshes.CreateAttachVertexBuffer(meshId, vertices, CreateVboArgs.MakeDefault(0));
-        gfxMeshes.CreateAttachVertexBuffer(meshId, ReadOnlySpan<ParticleGpuInstance>.Empty,
+        gfxMeshes.CreateAttachVertexBuffer(meshId, NativeView<ParticleVertex>.MakeNull(),
             CreateVboArgs.MakeInstance(1, 2, particleCapacity));
 
         var details = gfxMeshes.GetMeshDetails(meshId, out _);
@@ -129,7 +129,7 @@ internal sealed class ParticleMesh : IDisposable
         {
             foreach (var handle in _handles)
             {
-                if (handle.MeshId.IsValid()) _gfx.Disposer.EnqueueRemoval(new GfxId<TextureMeta>(handle.MeshId));
+                if (handle.MeshId.IsValid()) _gfx.Disposer.EnqueueRemoval(handle.MeshId);
             }
         }
 
@@ -145,7 +145,7 @@ internal sealed class ParticleMesh : IDisposable
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);
         if (capacity <= _particleData.Length) return;
         var newCap = CapacityUtils.CapacityGrowthToFit(_particleData.Length, capacity);
-        _particleData.Resize(newCap, true);
+        _particleData.ReAlloc(newCap, false);
         Logger.Log(LogScope.Engine, $"{nameof(_particleData)} resize");
     }
 

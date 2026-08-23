@@ -1,10 +1,10 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Renderer.Buffer;
+using ConcreteEngine.Core.Engine.Graphics.Particles;
+using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -36,26 +36,27 @@ public sealed class ParticleInstance : RenderBlueprintInstance
 
     internal override void OnCreate()
     {
-        var materialId = ParticleMaterial.MaterialId;
-        var source = new SourceComponent(default, materialId, 0, EntitySourceKind.Particle,
-            DrawCommandQueue.Particles, PassMask.Main);
+        var matId = ParticleMaterial.MaterialId;
+        var policy = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
+        var source = new RenderSource(default, matId, flags: EntityDrawFlags.Instanced);
+        var entity = RenderEcs.Core.AddEntity(source, policy);
+        RenderEcs.Store<EmitterLink>().Add(entity, new EmitterLink(Emitter.Id));
+        RenderEcs.Store<DrawInstancedComponent>().Add(entity, new DrawInstancedComponent(Emitter.ParticleCount));
 
-        var entity = Ecs.RenderCore.AddEntity(source);
-        var particle = new ParticleComponent(Emitter.Id);
-        Ecs.GetRenderStore<ParticleComponent>().Add(entity, in particle);
-        Ecs.SceneLink.BindSceneHandle(entity, Owner.Id);
+        SceneManager.Instance.BindSceneHandle(entity, Owner.Id);
         RenderEntityIds.Add(entity);
+
+        RenderEcs.Store<EmitterLink>().Commit();
+        RenderEcs.Store<DrawInstancedComponent>().Commit();
     }
 
     protected override void OnCommit()
     {
         if (RenderEntityIds.Count == 0) return;
         var entity = RenderEntityIds[0];
-
-        ref var source = ref Ecs.Render.Core.GetSource(entity);
-        source.Queue = DrawCommandQueue.Particles;
-        source.Passes = PassMask.Main;
-        source.Mesh = Emitter.BoundMesh;
+        RenderEcs.Core.GetSource(entity).Mesh = Emitter.BoundMesh;
+        RenderEcs.Core.GetDrawPolicy(entity) = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
+        RenderEcs.Store<DrawInstancedComponent>().Get(entity).Instances = (uint)Emitter.ParticleCount;
     }
 
     internal override void ApplyTransform(in Matrix4x4 rootMatrix)
@@ -63,9 +64,9 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         if (RenderEntityIds.Count == 0) return;
         var entity = RenderEntityIds[0];
 
-        Ecs.Render.Core.GetModelMatrix(entity) = rootMatrix;
-        BoundingBox.GetWorldBounds(in Emitter.LocalBounds(), in rootMatrix, out WorldBounds);
-        Ecs.Render.Core.GetWorldBounds(entity) = WorldBounds;
+        BoundingAxisBox.GetWorldBounds(in Emitter.LocalBounds(), in rootMatrix, out WorldBounds);
+        RenderEcs.Core.GetModelMatrix(entity) = rootMatrix;
+        RenderEcs.Core.GetWorldBounds(entity) = WorldBounds;
     }
 
     public void OnAssetChanged(AssetObject asset) { }

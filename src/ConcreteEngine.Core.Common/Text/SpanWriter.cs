@@ -10,7 +10,7 @@ public ref struct SpanWriter(Span<char> buffer)
     public static SpanWriter Make(Span<char> buffer) => new(buffer);
 
     //
-    private readonly Span<char> _buffer = buffer;
+    internal readonly Span<char> Buffer = buffer;
     private int _cursor;
     //
 
@@ -20,10 +20,10 @@ public ref struct SpanWriter(Span<char> buffer)
     public void Advance(int count) => _cursor += count;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Span<char> WrittenSpan() => _buffer.Slice(0, _cursor + 1);
+    public readonly Span<char> WrittenSpan() => Buffer.Slice(0, _cursor + 1);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Span<char> LeftSpan() => _buffer.Slice(_cursor);
+    public readonly Span<char> LeftSpan() => Buffer.Slice(_cursor);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining), UnscopedRef]
@@ -31,7 +31,7 @@ public ref struct SpanWriter(Span<char> buffer)
     {
         if (value.Length == 0) return ref this;
 
-        var dst = _buffer.Slice(_cursor);
+        var dst = Buffer.Slice(_cursor);
         if (value.Length > dst.Length) ThrowBufferTooSmall();
 
         value.CopyTo(dst);
@@ -76,10 +76,20 @@ public ref struct SpanWriter(Span<char> buffer)
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<char> End()
+    public ReadOnlySpan<char> Terminate()
     {
-        if ((uint)_cursor > (uint)_buffer.Length) ThrowBufferFull();
-        var span = _buffer.Slice(0, _cursor);
+        if ((uint)_cursor > (uint)Buffer.Length) ThrowBufferFull();
+        var span = Buffer.Slice(0, _cursor);
+        _cursor = 0;
+        return span;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<char> NullTerminate()
+    {
+        var cursor = _cursor + 1;
+        if ((uint)cursor > (uint)Buffer.Length) ThrowBufferFull();
+        var span = Buffer.Slice(0, cursor);
         _cursor = 0;
         return span;
     }

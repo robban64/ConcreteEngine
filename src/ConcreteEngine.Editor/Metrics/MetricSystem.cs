@@ -35,7 +35,6 @@ public sealed class MetricSystem
     public bool IsWarmup => _totalTicks < 40;
 
     internal ref FrameMetric Metric => ref DataStore.Metric;
-    internal ref GpuFrameMeta GpuFrameMeta => ref DataStore.GpuFrameMeta;
     internal ref FrameMeta FrameMeta => ref DataStore.FrameMeta;
     internal ref SceneMeta SceneMeta => ref DataStore.SceneMeta;
 
@@ -88,12 +87,11 @@ public sealed class MetricSystem
         _startAllocatedBytes = runtimeReport.Allocated;
     }
 
-    public void PushMeta(in FrameMeta frameMeta, in SceneMeta sceneMeta, in GpuFrameMeta gpuFrameMeta)
+    public void PushMeta(in FrameMeta frameMeta, in SceneMeta sceneMeta)
     {
         if (!Enabled) return;
         FrameMeta = frameMeta;
         SceneMeta = sceneMeta;
-        GpuFrameMeta = gpuFrameMeta;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -106,12 +104,11 @@ public sealed class MetricSystem
     private static class DataStore
     {
         public static FrameMetric Metric;
-        public static GpuFrameMeta GpuFrameMeta;
         public static FrameMeta FrameMeta;
         public static SceneMeta SceneMeta;
     }
 
-    private sealed class FrameReportAggregator()
+    private sealed class FrameReportAggregator
     {
         public double WindowTotalMs;
         public double WindowMaxMs = double.MinValue;

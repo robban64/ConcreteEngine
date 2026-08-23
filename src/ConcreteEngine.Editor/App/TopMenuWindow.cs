@@ -2,9 +2,11 @@ using System.Numerics;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.App.UI;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
+
+// ReSharper disable UnusedParameter.Local
 
 namespace ConcreteEngine.Editor.App;
 
@@ -16,29 +18,32 @@ internal sealed class TopMenuWindow
         ImGuiWindowFlags.NoScrollbar;
 
     public const int ToolbarGroupCount = 3;
-    public const int MenuCount = 3;
 
-    public static readonly TopMenuWindow Instance = new();
+    public static TopMenuWindow Instance { get; private set; } = null!;
 
-    private bool _hasInitialized;
-
-    private readonly MenuGroup[] _menuBar = new MenuGroup[MenuCount];
-    private readonly ToolbarGroup[] _toolbar = new ToolbarGroup[ToolbarGroupCount];
-
-    public ReadOnlySpan<ToolbarItem> GetToolbarGroup(ToolbarGroupAlignment i) => _toolbar[(int)i].Items;
-
-    public void RegisterMenuToolbar()
+    public static void Create()
     {
-        if (_hasInitialized) throw new InvalidOperationException("Already registered");
-        _hasInitialized = true;
+        if (Instance != null) throw new InvalidOperationException("Already registered");
+        Instance = new TopMenuWindow();
+    }
 
-        _menuBar[0] = new MenuGroup(StringArena.AllocateString("File"), [
+    private readonly MenuGroup _groupLeft;
+    private readonly MenuGroup _groupCenter;
+    private readonly MenuGroup _groupRight;
+
+    private readonly ToolbarGroup _toolbarLeft;
+    private readonly ToolbarGroup _toolbarCenter;
+    private readonly ToolbarGroup _toolbarRight;
+
+    private TopMenuWindow()
+    {
+        _groupLeft = new MenuGroup(StringArena.AllocateString("File"), [
             new MenuItem("Test1", null, static (state) => { })
         ]);
-        _menuBar[1] = new MenuGroup(StringArena.AllocateString("Edit"), [
+        _groupCenter = new MenuGroup(StringArena.AllocateString("Edit"), [
             new MenuItem("Test2", null, static (state) => { })
         ]);
-        _menuBar[2] = new MenuGroup(StringArena.AllocateString("Debug"), [
+        _groupRight = new MenuGroup(StringArena.AllocateString("Debug"), [
             new MenuItem("Metrics", null,
                 static (state) => state.ToggleDebugWindow(WindowManager.DebugMetricsWindow)),
             new MenuItem("ImGui Demo", null,
@@ -50,15 +55,26 @@ internal sealed class TopMenuWindow
         ]);
 
 
-        _toolbar[0] = new ToolbarGroup(ToolbarGroupAlignment.Left, []);
-        _toolbar[1] = new ToolbarGroup(ToolbarGroupAlignment.Center, [Translate, Scale, Rotate, DebugBounds]);
-        _toolbar[2] = new ToolbarGroup(ToolbarGroupAlignment.Right, [Selected, Camera, Lighting, Visual]);
+        _toolbarLeft = new ToolbarGroup(ToolbarGroupAlignment.Left, []);
+        _toolbarCenter = new ToolbarGroup(ToolbarGroupAlignment.Center, [Translate, Scale, Rotate, DebugBounds]);
+        _toolbarRight =
+            new ToolbarGroup(ToolbarGroupAlignment.Right, [Selected, Camera, Lighting, Environment, PostFx]);
     }
+
+    public ReadOnlySpan<ToolbarItem> GetToolbarGroup(ToolbarGroupAlignment i) => i switch
+    {
+        ToolbarGroupAlignment.Left => _toolbarLeft.Items,
+        ToolbarGroupAlignment.Center => _toolbarCenter.Items,
+        ToolbarGroupAlignment.Right => _toolbarRight.Items,
+        _ => throw new ArgumentOutOfRangeException(nameof(i), i, null)
+    };
 
 
     public void SyncToolbar()
     {
-        foreach (var it in _toolbar) it.UpdateVisibleCount();
+        _toolbarLeft.UpdateVisibleCount();
+        _toolbarCenter.UpdateVisibleCount();
+        _toolbarRight.UpdateVisibleCount();
     }
 
     public void Draw(StateManager stateManager)
@@ -72,8 +88,9 @@ internal sealed class TopMenuWindow
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, GuiTheme.MenuFramePadding);
         if (ImGui.BeginMainMenuBar())
         {
-            foreach (var it in _menuBar)
-                it.Draw(stateManager);
+            _groupLeft.Draw(stateManager);
+            _groupCenter.Draw(stateManager);
+            _groupRight.Draw(stateManager);
 
             ImGui.EndMainMenuBar();
         }
@@ -92,18 +109,17 @@ internal sealed class TopMenuWindow
         ImGui.SetNextWindowSize(new Vector2(width, GuiTheme.TopbarHeight));
         if (ImGui.Begin(WindowRoot.ToolbarWindowId, TopbarFlags))
         {
-            ToolbarGroup left = _toolbar[0], center = _toolbar[1], right = _toolbar[2];
-
             var offsetX = GuiTheme.WindowPadding.X;
-            var centerX = float.Max(width * 0.5f - center.TotalWidth * 0.5f, left.TotalWidth);
-            var rightX = float.Max(width - right.TotalWidth, centerX + center.TotalWidth) - right.VisibleCount * 6f;
+            var centerX = float.Max(width * 0.5f - _toolbarCenter.TotalWidth * 0.5f, _toolbarLeft.TotalWidth);
+            var rightX = float.Max(width - _toolbarRight.TotalWidth, centerX + _toolbarCenter.TotalWidth) -
+                         _toolbarRight.VisibleCount * 6f;
 
             ImGui.SetCursorPos(new Vector2(offsetX, 0));
-            left.Draw(stateManager);
+            _toolbarLeft.Draw(stateManager);
             ImGui.SetCursorPos(new Vector2(centerX + offsetX, 0));
-            center.Draw(stateManager);
+            _toolbarCenter.Draw(stateManager);
             ImGui.SetCursorPos(new Vector2(rightX - offsetX, 0));
-            right.Draw(stateManager);
+            _toolbarRight.Draw(stateManager);
         }
 
         ImGui.End();
@@ -170,7 +186,11 @@ internal sealed class TopMenuWindow
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Lighting)),
         (prev, next, it) => it.Set(next.Selection.HasNewFixed(prev.Selection, FixedInspectorId.Lighting)));
 
-    private static readonly ToolbarItem Visual = new(IconNames.Sparkles, ContextChangeMask.Selection,
-        state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Visual)),
-        (prev, next, it) => it.Set(next.Selection.HasNewFixed(prev.Selection, FixedInspectorId.Visual)));
+    private static readonly ToolbarItem Environment = new(IconNames.CloudFog, ContextChangeMask.Selection,
+        state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Environment)),
+        (prev, next, it) => it.Set(next.Selection.HasNewFixed(prev.Selection, FixedInspectorId.Environment)));
+
+    private static readonly ToolbarItem PostFx = new(IconNames.Sparkles, ContextChangeMask.Selection,
+        state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.PostFx)),
+        (prev, next, it) => it.Set(next.Selection.HasNewFixed(prev.Selection, FixedInspectorId.PostFx)));
 }

@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Common.Visuals;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Core.Engine.Graphics;
 
@@ -23,21 +22,14 @@ public sealed class Camera
 
     private const float DirtyThreshold = MetricUnits.Micrometer;
 
-    public ulong Version { get; private set; }
-
-    private bool _dirty;
-
-    private float _viewZ;
-
-    private ViewTransform _transform, _prevTransform;
+    public long Version { get; private set; }
+    public bool IsDirty { get; private set; }
+    public float AspectRatio { get; private set; }
 
     internal readonly CameraTransform Transform;
 
-    public Vector3 Forward { get; private set; }
-    public Vector3 Up { get; private set; }
-    public Vector3 Right { get; private set; }
-
-    public float AspectRatio { get; private set; }
+    private Vector3 _translation, _lastTranslation;
+    private YawPitch _orientation, _lastOrientation;
 
     public Camera(Size2D viewport)
     {
@@ -45,35 +37,41 @@ public sealed class Camera
         Transform = new CameraTransform();
         AspectRatio = viewport.AspectRatio;
         Ensure();
-        _dirty = true;
+        IsDirty = true;
+    }
+
+    internal void SetAspectRatio(float aspectRatio)
+    {
+        AspectRatio = aspectRatio;
+        IsDirty = true;
     }
 
 
-    [InputNumber(Segment = "Transform")]
+    [InputNumber]
     public Vector3 Translation
     {
-        get => _transform.Translation;
+        get => _translation;
         set
         {
-            if (VectorMath.DistanceNearlyEqual(in value, in _transform.Translation, DirtyThreshold)) return;
-            _transform.Translation = value;
-            _dirty = true;
+            if (VectorMath.DistanceNearlyEqual(value, _translation, DirtyThreshold)) return;
+            _translation = value;
+            IsDirty = true;
         }
     }
 
-    [InputNumber(Segment = "Transform", Converter = typeof(Vector2))]
+    [InputNumber(IsFloat = true, Components = 2)]
     public YawPitch Orientation
     {
-        get => _transform.Orientation;
+        get => _orientation;
         set
         {
-            if (YawPitch.NearlyEqual(value, _transform.Orientation)) return;
-            _transform.Orientation = value;
-            _dirty = true;
+            if (YawPitch.NearlyEqual(value, _orientation)) return;
+            _orientation = value;
+            IsDirty = true;
         }
     }
 
-    [InputNumber(Label = "Near & Far", Segment = "Projection")]
+    [InputNumber(Label = "Near & Far")]
     public Vector2 NearFarPlane
     {
         get;
@@ -82,11 +80,11 @@ public sealed class Camera
             if (VectorMath.NearlyEqual(value, field, MetricUnits.Millimeter)) return;
             field.X = float.Min(float.Max(value.X, MinNearPlane), MaxNearPlane);
             field.Y = float.Min(float.Max(value.Y, MinFarPlane), MaxFarPlane);
-            _dirty = true;
+            IsDirty = true;
         }
     } = new(0.1f, 500f);
 
-    [InputNumber(InputStyle.Slider, Label = "Field of view", Min = 10f, Max = 179f, Segment = "Projection")]
+    [InputNumber(InputStyle.Slider, Label = "Field of view", Min = 10f, Max = 179f)]
     public float Fov
     {
         get;
@@ -94,45 +92,48 @@ public sealed class Camera
         {
             if (FloatMath.NearlyEqual(value, field, MetricUnits.Decimeter)) return;
             field = float.Clamp(value, MinFov, MaxFov);
-            _dirty = true;
+            IsDirty = true;
         }
     } = 70;
 
 
     //
+    public Vector3 Forward => Transform.Forward;
+    public Vector3 Up => Transform.Up;
+    public Vector3 Right => Transform.Right;
+
     public ref readonly Matrix4x4 ViewMatrix => ref Transform.ViewMatrix;
     public ref readonly Matrix4x4 ProjectionMatrix => ref Transform.ProjectionMatrix;
     public ref readonly Matrix4x4 InverseProjectionViewMatrix => ref Transform.InverseProjectionViewMatrix;
     //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void BeginUpdate() => _prevTransform = _transform;
+    internal void BeginUpdate()
+    {
+        _lastTranslation = _translation;
+        _lastOrientation = _orientation;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Interpolate(float alpha, out ViewTransform transform)
+    internal void Interpolate(float alpha, out Vector3 translation, out YawPitch orientation)
     {
-        transform = ViewTransform.Lerp(in _prevTransform, in _transform, alpha);
+        translation = Vector3.Lerp(_lastTranslation, _translation, alpha);
+        orientation = YawPitch.Lerp(_lastOrientation, _orientation, alpha);
     }
 
     internal bool Ensure()
     {
-        var isDirty = _dirty;
-        if (!isDirty) return false;
-        _dirty = false;
-        Version++;
+        if (!IsDirty) return false;
+        IsDirty = false;
+        ++Version;
 
-        AspectRatio = EngineWindow.Viewport.Size.AspectRatio;
+        var quaternion = RotationMath.YawPitchToQuaternion(_orientation);
+        MatrixMath.CreateFixedSizeModelMatrix(_translation, in quaternion, out var modelMatrix);
 
         ref var viewMatrix = ref Transform.ViewMatrix;
-        ref var projectionMatrix = ref Transform.ProjectionMatrix;
-
-        MatrixMath.CreateFixedSizeModelMatrix(
-            in _transform.Translation,
-            RotationMath.YawPitchToQuaternion(_transform.Orientation),
-            out var modelMatrix);
-
         Matrix4x4.Invert(modelMatrix, out viewMatrix);
 
+        ref var projectionMatrix = ref Transform.ProjectionMatrix;
         projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(
             FloatMath.ToRadians(Fov * 0.5f),
             AspectRatio,
@@ -143,24 +144,6 @@ public sealed class Camera
         Matrix4x4.Invert(projectionMatrix, out var invProjection);
         Transform.InverseProjectionViewMatrix = invProjection * modelMatrix;
 
-        _viewZ = ViewMatrix.M43;
-        Up = Transform.Up;
-        Right = Transform.Right;
-        Forward = Transform.Forward;
-
-        return isDirty;
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ushort MakeDepthKey(Vector3 worldPos)
-    {
-        var d = Vector3.Dot(Forward, worldPos) - _viewZ;
-        var nearFar = NearFarPlane;
-        if (d <= nearFar.X) return 0;
-        if (d >= nearFar.Y) return ushort.MaxValue;
-
-        var t = (d - nearFar.X) / (nearFar.Y - nearFar.X);
-        return (ushort)(t * ushort.MaxValue + 0.5f);
+        return IsDirty;
     }
 }

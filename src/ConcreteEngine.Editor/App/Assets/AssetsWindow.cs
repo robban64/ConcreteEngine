@@ -3,9 +3,9 @@ using System.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Inputs;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.App.Theme.Palette32;
@@ -89,18 +89,17 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     private void UpdateTitleText()
     {
         var path = _assetBrowser.CurrentNode.GetRelativePath();
+        _breadcrumbs.Reset();
         if (path.Length == 0)
         {
             _breadcrumbs.Set("/");
             return;
         }
 
-        var sw = _breadcrumbs.OverWriter; //sw.Append('[').Append().Append(']').PadRight(2);
+        var sw = _breadcrumbs.GetWriter();
         foreach (var range in path.Split('/'))
             sw.Append(path[range]).Append('/');
-
-        sw.SetCursor(sw.Cursor - 1); // remove last '/'
-        sw.End();
+        sw.EndNativeString();
     }
 
     private void UpdateFilter(FileBinding bindingFilter, AssetKind assetFilter)
@@ -244,7 +243,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             var previewName = node.PreviewName;
 
             sw.AppendIcon(IconNames.Folder).PadRight(2);
-            sw.Append((byte*)&previewName);
+            sw.Append(previewName._value);
             var text = sw.AppendImGuiId(i).End();
             if (ImGui.Selectable(text, false, 0, size))
                 _assetBrowser.GoToChild(node.GetFolderName());
@@ -256,33 +255,34 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     private void DrawFiles()
     {
         if (_assetBrowser.FilteredCount == 0 || _assetBrowser.FileCount == 0) return;
-
-        var count = _assetBrowser.FilteredCount;
+        var filteredCount = _assetBrowser.FilteredCount;
 
         int columnCount = (int)(ImGui.GetContentRegionAvail().X / GridCellSize);
         columnCount = int.Max(columnCount, 1);
-        var rowCount = (int)float.Ceiling(count / (float)columnCount);
+        var rowCount = (int)float.Ceiling(filteredCount / (float)columnCount);
 
         foreach (var range in AppDraw.Clipper(rowCount, GridCellSize, out _))
         {
             var start = range.Offset * columnCount;
-            var length = start + range.Length;
+            var length = range.Length * columnCount;
+            if (start + length >= filteredCount) length = filteredCount - start;
             DrawFilesInner(start, length, columnCount, _selectedFile);
         }
     }
 
     private void DrawFilesInner(int start, int length, int columnCount, AssetFileId selectedFileId)
     {
-        var sw = ScratchBuffer.Writer();
         var drawList = ImGui.GetWindowDrawList();
 
         var gridIndex = 0;
         foreach (var it in _assetBrowser.GetDrawEnumerator(start, length, out var fileIds))
         {
             var fileId = fileIds[gridIndex];
-
             var startPos = ImGui.GetCursorScreenPos(); // top left
-            if (ImGui.Selectable(sw.AppendImGuiId(fileId.Id).End(), selectedFileId.Id == fileId.Id, 0, ItemSize))
+
+            var sw = ScratchBuffer.Writer();
+            var selectId = sw.AppendImGuiId(fileId.Id).End();
+            if (ImGui.Selectable(selectId, selectedFileId.Id == fileId.Id, 0, ItemSize))
                 OnListItemClick(fileId);
 
             drawList.PushClipRect(startPos, startPos + ItemSize, true);
@@ -291,7 +291,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             drawList.AddText(IconBasePos + startPos, it.Binding.GetColor(), (byte*)&it.Icon);
             ImGui.PopFont();
 
-            var textBegin = (byte*)&it.DisplayName;
+            var textBegin = it.DisplayName._value;
             var textEnd = textBegin + it.DisplayName.Count;
 
             var labelSize = ImGui.CalcTextSize(textBegin, textEnd);
@@ -311,7 +311,8 @@ internal sealed unsafe class AssetsWindow : EditorWindow
             }
             else
             {
-                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + GridPadding);
+                var posY = ImGui.GetCursorPosY() + GridPadding;
+                ImGui.SetCursorPosY(posY);
                 ImGui.Dummy(default);
             }
 

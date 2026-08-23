@@ -11,44 +11,29 @@ internal readonly struct GpuTextureProps(TexturePixelFormat format, uint levels,
         new(format, (uint)levels, (uint)samples);
 }
 
-public readonly struct CreateTextureProps(
-    float lod,
-    TextureKind kind,
-    TexturePixelFormat format,
-    TexturePreset preset,
-    TextureAnisotropy anisotropy,
-    DepthMode compareTextureFunc = DepthMode.Unset,
-    GpuTextureBorder borderColor = default,
-    RenderBufferMsaa samples = RenderBufferMsaa.None
-)
+public struct CreateFboInfo(Size2D size)
 {
-    public readonly GpuTextureBorder BorderColor = borderColor;
+    public Size2D Size = size;
+    public FboColorAttachment ColorTexture;
+    public FboDepthAttachment DepthTexture;
+    public bool ColorBuffer;
+    public bool DepthStencilBuffer;
+    public RenderBufferMsaa Multisample = RenderBufferMsaa.None;
 
-    public readonly Half Lod = (Half)lod;
-    public readonly TextureKind Kind = kind;
-    public readonly TexturePixelFormat Format = format;
+    public readonly CreateFboInfo AttachColorTexture(FboColorAttachment attachment, RenderBufferMsaa multisample = 0)
+    {
+        return this with { ColorTexture = attachment, Multisample = multisample };
+    }
 
-    public readonly TexturePreset Preset = preset;
-    public readonly TextureAnisotropy Anisotropy = anisotropy;
-    public readonly DepthMode CompareTextureFunc = compareTextureFunc;
-    public readonly RenderBufferMsaa Samples = samples;
-}
+    public readonly CreateFboInfo AttachDepthTexture(FboDepthAttachment attachment)
+    {
+        return this with { DepthTexture = attachment };
+    }
 
-public readonly struct CreateFboInfo(
-    Size2D size,
-    FboColorAttachment? colorTexture,
-    FboDepthAttachment? depthTexture,
-    bool colorBuffer,
-    bool depthStencilBuffer,
-    RenderBufferMsaa multisample = RenderBufferMsaa.None
-)
-{
-    public readonly Size2D Size = size;
-    public readonly FboColorAttachment? ColorTexture = colorTexture;
-    public readonly FboDepthAttachment? DepthTexture = depthTexture;
-    public readonly bool ColorBuffer = colorBuffer;
-    public readonly bool DepthStencilBuffer = depthStencilBuffer;
-    public readonly RenderBufferMsaa Multisample = multisample;
+    public CreateFboInfo AttachDepthStencilBuffer()
+    {
+        return this with { DepthStencilBuffer = true };
+    }
 }
 
 internal readonly struct CreateBufferInfo(uint size, BufferStorage storage, BufferAccess access)

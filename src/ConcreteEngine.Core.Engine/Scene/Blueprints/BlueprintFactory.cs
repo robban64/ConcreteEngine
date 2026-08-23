@@ -1,5 +1,3 @@
-using ConcreteEngine.Core.Common;
-
 namespace ConcreteEngine.Core.Engine.Scene;
 
 internal static class BlueprintFactory

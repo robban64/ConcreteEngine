@@ -1,0 +1,81 @@
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine.GameEntity.GameComponent;
+using ConcreteEngine.Core.Engine.GameEntity.Integration;
+using static ConcreteEngine.Core.Engine.GameEntity.Ecs.Game;
+
+namespace ConcreteEngine.Core.Engine.GameEntity;
+
+public sealed class GameEntityCore : EcsStore
+{
+    private GameEntityId[] _entities;
+    private readonly List<IGameEntityListener> _listeners = new(64);
+
+    internal GameEntityCore(int capacity)
+    {
+        _entities = new GameEntityId[capacity];
+    }
+
+    public override int Capacity => _entities.Length;
+    public override EcsStoreType StoreType => EcsStoreType.GameCore;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Has(GameEntityId entity)
+    {
+        var index = entity.Index();
+        return (uint)index < (uint)Count && _entities[index] == entity;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public GameEntityId AddEntity()
+    {
+        var index = AllocateNext();
+        var entity = _entities[index] = new GameEntityId(index + 1);
+        foreach (var it in _listeners)
+            it.EntityAdded(entity, this);
+
+        return entity;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void Remove(GameEntityId entity)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(entity.Id, Count, nameof(entity));
+
+        var index = entity.Index();
+        ref var existing = ref _entities[index];
+        if (existing != entity) throw new InvalidOperationException();
+
+        foreach (var it in _listeners)
+            it.EntityRemoved(entity, this);
+
+        existing = default;
+        FreeEntity(index);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void AddComponent<T>(GameEntityId entity, in T component) where T : unmanaged, IGameComponent<T>
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity.Id));
+        Stores<T>.Store.Add(entity, component);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void RemoveComponent<T>(GameEntityId entity) where T : unmanaged, IGameComponent<T>
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity.Id));
+        Stores<T>.Store.Remove(entity);
+    }
+
+    public void BindListener(IGameEntityListener listener) => _listeners.Add(listener);
+    public void UnbindListener(IGameEntityListener listener) => _listeners.Remove(listener);
+
+    protected override void Resize(int newSize)
+    {
+        Array.Resize(ref _entities, newSize);
+        Logger.Log(LogScope.Ecs, $"{nameof(GameEntityCore)}: resized {newSize}", LogLevel.Warn);
+    }
+
+    public override void Dispose() { }
+}

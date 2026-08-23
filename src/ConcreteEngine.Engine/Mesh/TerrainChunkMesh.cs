@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Graphics.Terrains;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Utility;
@@ -11,13 +11,13 @@ using ConcreteEngine.Graphics.Utility;
 namespace ConcreteEngine.Engine.Mesh;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct FoliageGpuInstance
+public struct FoliageVertex
 {
     public Half4 PositionSize;
     public ColorRgba Color;
 }
 
-internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) : IDisposable
+internal sealed class TerrainChunkMesh(int slot)
 {
     private const int ChunkQuads = TerrainChunk.ChunkQuads; // 64
     private const int ChunkSamples = TerrainChunk.ChunkSamples; // 65
@@ -25,53 +25,40 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
     public readonly int Slot = slot;
 
     public MeshId TerrainMeshId;
-    public VertexBufferId TerrainVboId;
 
     public MeshId FoliageMeshId;
     public VertexBufferId FoliageInstanceVboId;
     public float FoliageDensity;
 
-    private NativeView<Vertex3D> _vertices = vertices;
-    private NativeView<FoliageGpuInstance> _foliageView = NativeView<FoliageGpuInstance>.MakeNull();
+    public int FoliageCount;
 
-    public bool HasNullVertices => _vertices.IsNull;
-    public int VertexCount => _vertices.Length;
-    public int FoliageCount => _foliageView.Length;
-
-    public NativeView<Vertex3D> GetVertices() => _vertices;
-    public NativeView<FoliageGpuInstance> GetFoliageInstances() => _foliageView;
-
-    public void Dispose()
+    internal void CreateChunkMesh(
+        GfxMeshes gfx,
+        IndexBufferId terrainIboId,
+        NativeView<Vector3> vPos,
+        NativeView<VertexShading> vShading,
+        int drawCount)
     {
-        _vertices = NativeView<Vertex3D>.MakeNull();
-        _foliageView = NativeView<FoliageGpuInstance>.MakeNull();
-    }
-
-    internal void CreateChunkMesh(GfxMeshes gfxMeshes, IndexBufferId terrainIboId, int drawCount)
-    {
-        if (HasNullVertices) throw new InvalidOperationException("Mesh buffer not allocated");
-
-        var args = CreateVboArgs.MakeDynamic(0);
         var props = MeshDrawProperties.MakeElemental(size: DrawElementSize.UnsignedShort, drawCount: drawCount);
 
-        var vertices = _vertices.AsReadOnlySpan();
+        var meshId = gfx.CreateEmptyMesh(in props, 2, VertexAttributes.MainVertexAttributes);
+        gfx.CreateAttachVertexBuffer(meshId, vPos, CreateVboArgs.MakeDynamic(0));
+        gfx.CreateAttachVertexBuffer(meshId, vShading, CreateVboArgs.MakeDynamic(1));
 
-        var meshId = gfxMeshes.CreateEmptyMesh(in props, 1, VertexAttributes.GetVertex3DAttributes());
-        var vboId = gfxMeshes.CreateAttachVertexBuffer(meshId, vertices, args);
-        gfxMeshes.AttachIndexBuffer(meshId, terrainIboId);
+        gfx.AttachIndexBuffer(meshId, terrainIboId);
 
         TerrainMeshId = meshId;
-        TerrainVboId = vboId;
     }
 
-    internal unsafe void GenerateFoliageMesh(GfxMeshes gfxMeshes, int instanceCount)
+    internal unsafe void GenerateFoliageMesh(GfxMeshes gfxMeshes, NativeView<FoliageVertex> foliage, int instanceCount)
     {
-        if (FoliageMeshId > 0) throw new InvalidOperationException("Foliage mesh already generated");
+        if (foliage.IsNull) Throwers.NullPointer(nameof(foliage));
+        if (FoliageMeshId > 0) Throwers.InvalidOperation("Foliage mesh already generated");
 
         var normal = Vector3.UnitY;
         var tangent = Vector3.UnitX;
 
-        ReadOnlySpan<Vertex3D> vertices = stackalloc Vertex3D[]
+        var vertexPtr = stackalloc Vertex3D[8]
         {
             new Vertex3D(new Vector3(-0.5f, 0.0f, -0.5f), new Vector2(0f, 1f), normal, tangent),
             new Vertex3D(new Vector3(0.5f, 0.0f, 0.5f), new Vector2(1f, 1f), normal, tangent),
@@ -82,14 +69,16 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
             new Vertex3D(new Vector3(-0.5f, 1.0f, 0.5f), new Vector2(0f, 0f), normal, tangent),
             new Vertex3D(new Vector3(0.5f, 1.0f, -0.5f), new Vector2(1f, 0f), normal, tangent)
         };
+        var vertices = new NativeView<Vertex3D>(vertexPtr, 8);
 
-        ReadOnlySpan<ushort> indices = stackalloc ushort[]
+        var indicesPtr = stackalloc ushort[12]
         {
             // Quad 1
             0, 1, 2, 2, 1, 3,
             // Quad 2
             4, 5, 6, 6, 5, 7
         };
+        var indices = new NativeView<ushort>(indicesPtr, 12);
 
         Span<VertexAttributeDef> attribs = stackalloc VertexAttributeDef[7];
         VertexAttributes.GetVertex3DAttributes().CopyTo(attribs);
@@ -105,24 +94,27 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
             drawCount: indices.Length,
             instances: instanceCount);
 
-        var meshId = FoliageMeshId = gfxMeshes.CreateEmptyMesh(in drawProps, 2, attribs);
+        var meshId = FoliageMeshId = gfxMeshes.CreateEmptyMesh(in drawProps, 2, attribs.ToArray());
 
         gfxMeshes.CreateAttachVertexBuffer(meshId, vertices, CreateVboArgs.MakeDefault(0));
 
         var args = CreateVboArgs.MakeInstance(1, 2, instanceCount);
-        FoliageInstanceVboId = gfxMeshes.CreateAttachVertexBuffer(meshId, _foliageView.AsReadOnlySpan(), args);
+        FoliageInstanceVboId = gfxMeshes.CreateAttachVertexBuffer(meshId, foliage, args);
 
         gfxMeshes.CreateAttachIndexBuffer(meshId, indices, CreateIboArgs.MakeDefault());
     }
 
 
-    internal int GenerateFoliageBuffer(NativeView<FoliageGpuInstance> instanceData, ReadOnlySpan<byte> data,
-        float density, Terrain terrain, TerrainChunk chunk)
+    internal int GenerateFoliageBuffer(
+        Terrain terrain,
+        TerrainChunk chunk,
+        NativeView<FoliageVertex> foliage,
+        ReadOnlySpan<byte> heights,
+        float density)
     {
-        if (instanceData.IsNull) Throwers.NullPointer(nameof(instanceData));
-        if (!_foliageView.IsNull) Throwers.InvalidOperation("Foliage buffer already allocated");
+        if (foliage.IsNull) Throwers.NullPointer(nameof(foliage));
 
-        _foliageView = instanceData;
+        FoliageCount = foliage.Length;
         FoliageDensity = density;
 
         var step = 1.0f / density;
@@ -133,81 +125,80 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
         var random = new FastRandom((uint)chunk.WorldStart.GetHashCode());
         var instanceCount = 0;
         for (float z = 0; z < ChunkQuads; z += step)
+        for (float x = 0; x < ChunkQuads; x += step)
         {
-            for (float x = 0; x < ChunkQuads; x += step)
-            {
-                float offsetX = random.NextFloat() * step;
-                float offsetZ = random.NextFloat() * step;
+            float offsetX = random.NextFloat() * step, offsetZ = random.NextFloat() * step;
+            float worldX = start.X + x + offsetX, worldZ = start.Y + z + offsetZ;
 
-                float worldX = start.X + x + offsetX;
-                float worldZ = start.Y + z + offsetZ;
+            var layer = TerrainUtils.SampleLayer(heights, (int)(start.X + x), (int)(start.Y + z), dimensions);
+            if (layer < 0) continue;
 
-                var layer = TerrainUtils.SampleLayer(data, (int)(start.X + x), (int)(start.Y + z), dimensions);
-                if (layer < 0) continue;
+            float y = terrain.GetHeight(worldX, worldZ);
 
-                float y = terrain.GetHeight(worldX, worldZ);
+            int vi = (int)(z * ChunkSamples + x);
+            ref var instance = ref foliage[vi];
 
-                int vi = (int)(z * ChunkSamples + x);
+            instance.PositionSize = new Half4(worldX, y, worldZ, random.RandomFloat(0.8f, 1.2f));
+            instance.Color.R = (byte)(255f * random.RandomFloat(0.8f, 1f));
+            instance.Color.G = (byte)(255f * random.RandomFloat(0.8f, 1f));
+            instance.Color.B = (byte)(255f * random.RandomFloat(0.8f, 1f));
+            instance.Color.A = (byte)layer;
 
-                ref var instance = ref instanceData[vi];
-                instance.PositionSize = new Half4(worldX, y, worldZ, random.RandomFloat(0.8f, 1.2f));
-                instance.Color.R = (byte)(255f * random.RandomFloat(0.8f, 1f));
-                instance.Color.G = (byte)(255f * random.RandomFloat(0.8f, 1f));
-                instance.Color.B = (byte)(255f * random.RandomFloat(0.8f, 1f));
-                instance.Color.A = (byte)layer;
-
-
-                instanceCount++;
-            }
+            ++instanceCount;
         }
+
 
         return instanceCount;
     }
 
     //FillVertices, GenerateNormals, CalculateBounds
-    internal void GenerateHeightBuffer(ReadOnlySpan<byte> heightData, TerrainChunk chunk, int dimension,
+    internal void GenerateHeightBuffer(
+        TerrainChunk chunk,
+        NativeView<Vector3> vPos,
+        NativeView<VertexShading> vShading,
+        ReadOnlySpan<byte> heights,
+        int dimension,
         float maxHeight)
     {
         ArgumentNullException.ThrowIfNull(chunk);
-        if (HasNullVertices) throw new InvalidOperationException("Mesh buffer not allocated");
-
-        var vertices = _vertices;
+        if (vPos.IsNull || vShading.IsNull)
+            Throwers.NullPointer("Null vPos or vShading");
+        if (vPos.Length != vShading.Length || vPos.Length == 0)
+            Throwers.NullPointer("vPos and vShading length mismatch");
 
         var start = chunk.WorldStart;
-        var end = chunk.WorldStart + ChunkQuads;
+        for (int z = 0; z < ChunkSamples; z++)
+        for (int x = 0; x < ChunkSamples; x++)
+        {
+            float worldX = start.X + x, worldZ = start.Y + z;
+            float y = chunk.GetHeight(x, z);
+
+            int vi = z * ChunkSamples + x;
+            vPos[vi] = new Vector3(worldX, y, worldZ);
+        }
 
         for (int z = 0; z < ChunkSamples; z++)
+        for (int x = 0; x < ChunkSamples; x++)
         {
-            for (int x = 0; x < ChunkSamples; x++)
-            {
-                float worldX = start.X + x;
-                float worldZ = start.Y + z;
+            float worldX = start.X + x, worldZ = start.Y + z;
+            float u = worldX / (dimension - 1), v = worldZ / (dimension - 1);
 
-                float y = chunk.GetHeight(x, z);
+            int vi = z * ChunkSamples + x;
+            ref var vx = ref vShading[vi];
 
-                float u = worldX / (dimension - 1);
-                float v = worldZ / (dimension - 1);
-
-                int vi = z * ChunkSamples + x;
-
-                ref var vx = ref vertices[vi];
-
-                vx.Position = new Vector3(worldX, y, worldZ);
-                vx.TexCoords = new Vector2(u, v);
-
-                vx.Normal = TerrainUtils.GetNormal(heightData, (int)worldX, (int)worldZ, 1, dimension, maxHeight);
-                vx.Tangent =
-                    TerrainUtils.GetTangent(heightData, (int)worldX, (int)worldZ, 1, dimension, maxHeight, vx.Normal);
-            }
+            vx.TexCoords = new Vector2(u, v);
+            vx.Normal = TerrainUtils
+                .GetNormal(heights, (int)worldX, (int)worldZ, 1, dimension, maxHeight);
+            vx.Tangent = TerrainUtils
+                .GetTangent(heights, (int)worldX, (int)worldZ, 1, dimension, maxHeight, vx.Normal);
         }
     }
 
-
-    internal void FillVertices(TerrainChunk chunk, int dimension)
+/*
+    internal void FillVertices(TerrainChunk chunk, NativeView<Vector3> vPos, NativeView<VertexShading> vShading, int dimension)
     {
         if (HasNullVertices) throw new InvalidOperationException("Mesh buffer not allocated");
 
-        var vertices = _vertices;
         for (int z = 0; z < ChunkSamples; z++)
         {
             for (int x = 0; x < ChunkSamples; x++)
@@ -249,4 +240,5 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
             }
         }
     }
+    */
 }

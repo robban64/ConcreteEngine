@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Logging;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Utils;
@@ -62,7 +62,7 @@ public sealed class EditorPortal : IDisposable
     public void UpdateInput() => ImGuiSystem.FillInput();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateGameTick(float deltaTime) => EditorCamera.Instance.Update(deltaTime);
+    public void UpdateGameTick(float deltaTime) => EditorCamera.Update(deltaTime);
 
     public void Render(float deltaTime, TextureId outputTexture)
     {

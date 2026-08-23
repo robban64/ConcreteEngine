@@ -3,13 +3,13 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Input;
+using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Gateway;
-using ConcreteEngine.Engine.Render;
+using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using Silk.NET.OpenGL;
@@ -41,7 +41,7 @@ public sealed class GameEngine : IDisposable
         var gpuCapabilities = _graphics.Initialize(gfxBundle.Config, out var version);
         EngineSettings.Current.LoadGraphicsSettings(version, gpuCapabilities);
 
-        Ecs.Init();
+        RenderEcs.Init();
 
         _assetSystem = new AssetSystem(gfxBundle.Graphics.Gfx);
         _renderSystem = new EngineRenderSystem(gfxBundle.Graphics);
@@ -49,7 +49,7 @@ public sealed class GameEngine : IDisposable
 
         _commandBuses = new CommandBus(new EngineCommandContext(_assetSystem));
 
-        _gateway = new EngineGateway(_renderSystem.Program);
+        _gateway = new EngineGateway();
 
         _tickHub = new EngineTickHub(this);
 
@@ -92,7 +92,6 @@ public sealed class GameEngine : IDisposable
         _gateway.BeginFrame();
 
         _tickHub.Update(dt);
-        _tickHub.AdvanceFrame(dt);
 
         // Draw
         Draw(dt);
@@ -106,7 +105,8 @@ public sealed class GameEngine : IDisposable
     private void Draw(float dt)
     {
         _graphics.BeginFrame(EngineWindow.Viewport.Size);
-        _renderSystem.Render(dt);
+        _renderSystem.PrepareRenderer(EngineTime.GameAlpha);
+        _renderSystem.ExecuteRenderPipeline();
         _graphics.EndFrame();
 
         _gateway.RenderEditor(dt);
@@ -158,6 +158,7 @@ public sealed class GameEngine : IDisposable
         _gateway.Dispose();
         _sceneSystem.Shutdown();
         _renderSystem.Dispose();
+        RenderEcs.Dispose();
         _assetSystem.Shutdown();
 
         EngineInput.Detach();

@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.RenderEntity;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -19,8 +20,10 @@ public sealed class SceneManager
     public readonly SceneStore Store;
     public readonly RayCaster Raycaster;
 
+    private SceneObjectId[] _renderToSceneId;
+
     private readonly List<int> _dirtyIds = new(SceneStore.DefaultCapacity);
-    private readonly List<ISceneListener> _listeners = new();
+    private readonly List<ISceneListener> _listeners = [];
 
     internal SceneManager()
     {
@@ -29,6 +32,8 @@ public sealed class SceneManager
 
         Store = new SceneStore();
         Raycaster = new RayCaster(Store, CameraManager.Instance.Camera.Transform);
+        _renderToSceneId = new SceneObjectId[RenderEcs.Core.Capacity];
+        if (_renderToSceneId.Length == 0) throw new InvalidOperationException("No render to scene ids");
     }
 
     public int DirtyCount => _dirtyIds.Count;
@@ -43,6 +48,20 @@ public sealed class SceneManager
                 InvokeRenameListener(sceneObject);
             sceneObject.Commit();
         }
+    }
+
+    //
+    public SceneObjectId GetByLinkedEntity(RenderEntityId e) => _renderToSceneId[e.Index()];
+    public bool IsLinkedEntity(RenderEntityId e) => e.IsValid() && _renderToSceneId[e.Index()].IsValid();
+
+    public void UnbindSceneHandle(RenderEntityId e) => _renderToSceneId[e.Index()] = SceneObjectId.Empty;
+
+    public void BindSceneHandle(RenderEntityId e, SceneObjectId sceneId)
+    {
+        if (_renderToSceneId.Length < RenderEcs.Core.Capacity)
+            Array.Resize(ref _renderToSceneId, RenderEcs.Core.Capacity);
+
+        _renderToSceneId[e.Index()] = sceneId;
     }
 
     private void InvokeRenameListener(SceneObject sceneObject)

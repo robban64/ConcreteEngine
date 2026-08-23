@@ -5,10 +5,8 @@ using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Internals;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Primitives;
-using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Graphics;
@@ -18,19 +16,7 @@ public sealed class GraphicsRuntime : IDisposable
     private static bool _isInitialized;
     private static bool _isDisposed;
 
-    private GlBackendDriver _driver = null!;
-
     private GfxResourceDisposer _disposer = null!;
-    private GfxResourceManager _resources = null!;
-
-    private GfxCommands _cmd = null!;
-    private GfxBuffers _buffers = null!;
-    private GfxMeshes _meshes = null!;
-    private GfxShaders _shaders = null!;
-    private GfxTextures _textures = null!;
-    private GfxFrameBuffers _frameBuffers = null!;
-    private GfxDraw _draw = null!;
-
     public GfxContext Gfx { get; private set; } = null!;
 
     public GraphicsRuntime() { }
@@ -43,7 +29,7 @@ public sealed class GraphicsRuntime : IDisposable
         if (config is not GlStartupConfig glConfig)
             throw GraphicsException.UnsupportedFeature("Only OpenGL is supported");
 
-        _resources = new GfxResourceManager();
+        GfxRegistry.CreateStores();
         _disposer = new GfxResourceDisposer();
 
         var capabilities = InitializeDriver(glConfig);
@@ -58,37 +44,29 @@ public sealed class GraphicsRuntime : IDisposable
 
     private void InitializeGfx()
     {
-        var gfxCtxInternal = new GfxContextInternal(_driver, _resources, _disposer);
-
-        _buffers = new GfxBuffers(gfxCtxInternal);
-        _shaders = new GfxShaders(gfxCtxInternal);
-        _textures = new GfxTextures(gfxCtxInternal);
-        _meshes = new GfxMeshes(gfxCtxInternal, _buffers);
-        _frameBuffers = new GfxFrameBuffers(gfxCtxInternal, _textures);
-        _cmd = new GfxCommands(gfxCtxInternal);
-        _draw = new GfxDraw(gfxCtxInternal);
+        var buffers = new GfxBuffers();
+        var shaders = new GfxShaders(_disposer);
+        var textures = new GfxTextures(_disposer);
+        var meshes = new GfxMeshes(buffers);
+        var frameBuffers = new GfxFrameBuffers(_disposer, textures);
+        var cmd = new GfxCommands();
 
         Gfx = new GfxContext
         {
             Disposer = _disposer,
-            Buffers = _buffers,
-            Meshes = _meshes,
-            Shaders = _shaders,
-            Textures = _textures,
-            FrameBuffers = _frameBuffers,
-            Commands = _cmd,
-            Draw = _draw
+            Buffers = buffers,
+            Meshes = meshes,
+            Shaders = shaders,
+            Textures = textures,
+            FrameBuffers = frameBuffers,
+            Commands = cmd,
         };
     }
 
     private GlCapabilities InitializeDriver(GlStartupConfig glConfig)
     {
-        var driver = new GlBackendDriver(glConfig, _resources);
-        var caps = driver.Initialize();
-        _driver = driver;
-
+        var caps = GlBackendDriver.Initialize(glConfig);
         UniformBufferUtils.Init(caps.Capabilities.UniformBufferOffsetAlignment);
-
         return caps;
     }
 
@@ -96,17 +74,17 @@ public sealed class GraphicsRuntime : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginFrame(Size2D outputSize)
     {
-        _cmd.BeginFrame(outputSize);
-        _draw.BeginFrame();
+        GfxMetrics.FrameMeta = default;
+        Gfx.Commands.BeginFrame(outputSize);
     }
 
     public void EndFrame()
     {
-        if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue(_driver);
-        ref var meta = ref GfxMetrics.FrameMeta;
-        _buffers.EndFrame(out meta.Buffer);
-        _draw.EndFrame(out meta.Frame);
-        _cmd.EndFrame();
+        if (_disposer.PendingCount > 0)
+            _disposer.DrainDisposeQueue();
+
+        Gfx.Buffers.EndFrame(out GfxMetrics.FrameBufferMeta);
+        Gfx.Commands.EndFrame();
     }
 
     public void Dispose()
@@ -114,8 +92,7 @@ public sealed class GraphicsRuntime : IDisposable
         if (_isDisposed) return;
         _isDisposed = true;
 
-        _draw.Dispose();
-        _resources.Dispose();
+        GfxRegistry.DisposeAllStores();
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

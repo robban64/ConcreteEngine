@@ -7,9 +7,8 @@ namespace Generator;
 
 internal static class Extensions
 {
-    public static string ToFloatStr(this float v) => $"{v}f";
-    public static string ToLiteralStr(this string s) => Symbols.FormatLiteral(s, true);
-    public static string ToLiteralStr(this bool s) => s ? "\"true\"" : "\"false\"";
+    public static string AsLiteralString(this bool s) => s ? "\"true\"" : "\"false\"";
+    public static string AsBoolString(this bool s) => s ? "true" : "false";
 
     public static bool IsPublicClassOrStruct(this INamedTypeSymbol sym) =>
         sym.TypeKind is TypeKind.Class or TypeKind.Struct && sym.DeclaredAccessibility == Accessibility.Public;

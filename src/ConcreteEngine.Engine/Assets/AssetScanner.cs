@@ -9,8 +9,6 @@ namespace ConcreteEngine.Engine.Assets;
 
 internal sealed class AssetScanner(AssetManager assetManager)
 {
-    private AvgFrameTimer avg1;
-
     private void RunMigration()
     {
         foreach (var scanInfo in MakeAssetEnumerable())
@@ -28,11 +26,12 @@ internal sealed class AssetScanner(AssetManager assetManager)
 
         //RunMigration();
 
-        avg1.BeginSample();
+        AvgFrameTimer avg = new();
+        avg.BeginSample();
         ScanFiles();
         ScanAssets(ctx);
-        avg1.EndSample();
-        avg1.ResetAndPrint("Scanner took");
+        avg.EndSample();
+        avg.ResetAndPrint("Scanner took");
     }
 
     private void ScanFiles()

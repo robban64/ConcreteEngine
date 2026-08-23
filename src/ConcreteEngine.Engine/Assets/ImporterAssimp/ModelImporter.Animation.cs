@@ -2,7 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Graphics.Animations;
 using Silk.NET.Assimp;
 using AssimpAnimation = Silk.NET.Assimp.Animation;
 using AssimpScene = Silk.NET.Assimp.Scene;
@@ -36,8 +36,7 @@ internal sealed unsafe partial class ModelImporter
 
         NativeArray<byte> clipBuffer = NativeArray.Allocate<byte>(totalAllocSize);
 
-        int cursor = 0;
-        NativeAllocator allocator = new NativeAllocator(clipBuffer, ref cursor);
+        NativeAllocBuilder allocator = new NativeAllocBuilder(clipBuffer);
         NativeView<NativeClip> clips = allocator.AllocSlice<NativeClip>(animationCount);
 
         for (int i = 0; i < animationCount; i++)

@@ -1,11 +1,8 @@
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Editor.App;
 using ConcreteEngine.Editor.App.Assets;
 using ConcreteEngine.Editor.App.CLI;
-using ConcreteEngine.Editor.App.Inspectors;
 using ConcreteEngine.Editor.App.Scene;
 using ConcreteEngine.Editor.App.UI;
-using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 
 // ReSharper disable UnusedParameter.Local
@@ -25,7 +22,6 @@ internal sealed class WindowManager
     //
     private readonly StateManager _stateManager;
 
-    private readonly EditorWindow[] _windows;
     private readonly Action[] _debugWindows;
 
     public readonly SceneWindow SceneWindow;
@@ -42,7 +38,6 @@ internal sealed class WindowManager
         InspectionWindow = new InspectionWindow(stateManager);
         AssetWindow = new AssetsWindow(stateManager);
         ConsoleWindow = new ConsoleWindow(stateManager);
-        _windows = [SceneWindow, InspectionWindow, AssetWindow, ConsoleWindow];
 
         AssetWindow.NoBorder = true;
         ConsoleWindow.NoBorder = true;
@@ -51,10 +46,13 @@ internal sealed class WindowManager
 
     public void Setup()
     {
-        TopMenuWindow.Instance.RegisterMenuToolbar();
+        TopMenuWindow.Create();
         RegisterDebugWindows();
 
-        foreach (var it in _windows) it.Create();
+        SceneWindow.Create();
+        AssetWindow.Create();
+        InspectionWindow.Create();
+        ConsoleWindow.Create();
 
         TopMenuWindow.Instance.SyncToolbar();
 
@@ -69,25 +67,13 @@ internal sealed class WindowManager
         }
     }
 
-    public EditorWindow GetWindow(WindowId windowId) => _windows[(int)windowId];
-
-    public T GetWindow<T>() where T : EditorWindow
-    {
-        foreach (var it in _windows)
-        {
-            if (it is T window) return window;
-        }
-
-        Throwers.InvalidArgument(nameof(T));
-        return null;
-    }
 
     public void OnDiagnosticTick()
     {
-        foreach (var window in _windows)
-        {
-            if (window.Enabled) window.OnUpdateDiagnostic();
-        }
+        if (SceneWindow.Enabled) SceneWindow.OnUpdateDiagnostic();
+        if (AssetWindow.Enabled) AssetWindow.OnUpdateDiagnostic();
+        if (InspectionWindow.Enabled) InspectionWindow.OnUpdateDiagnostic();
+        if (ConsoleWindow.Enabled) ConsoleWindow.OnUpdateDiagnostic();
     }
 
     public void Draw()

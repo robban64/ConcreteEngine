@@ -3,11 +3,11 @@
 in vec3 Pos;
 out vec4 FragColor;
 
-layout(binding = 0) uniform samplerCube uCubemapTex;
+layout(binding = 0) uniform samplerCube uTexture;
 
 void main()
 {
-    vec4 c = texture(uCubemapTex, normalize(Pos));
+    vec4 c = texture(uTexture, normalize(Pos));
     float l = dot(c.rgb, vec3(0.333));
     float t = smoothstep(0.6, 1.0, l);
     c.rgb = mix(c.rgb, vec3(0.6), t * 0.35);

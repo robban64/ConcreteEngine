@@ -2,8 +2,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
-using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using StbImageSharp;
 
@@ -27,7 +25,7 @@ internal static unsafe class TextureImporter
         size = new Size2D(x, y);
         var sizeInBytes = x * y * 4;
 
-        return NativeArray.From(imageData, sizeInBytes);
+        return NativeArray.CreateFrom(imageData, sizeInBytes);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -46,31 +44,10 @@ internal static unsafe class TextureImporter
 
         size = new Size2D(x, y);
 
-        return NativeArray.From(imageData, sizeInBytes);
+        return NativeArray.CreateFrom(imageData, sizeInBytes);
     }
 
     //
-
-    public static CreateTextureProps CreateTextureProps(TextureRecord record)
-    {
-        return new CreateTextureProps(record.LodBias, record.TextureKind, record.PixelFormat, record.Preset,
-            GetAnisotropy(record.Anisotropy));
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static TextureAnisotropy GetAnisotropy(AnisotropyLevel format)
-    {
-        return format switch
-        {
-            AnisotropyLevel.Default => EngineSettings.Current.Graphics.MaxAnisotropy,
-            AnisotropyLevel.Off => TextureAnisotropy.Off,
-            AnisotropyLevel.X2 => TextureAnisotropy.X2,
-            AnisotropyLevel.X4 => TextureAnisotropy.X4,
-            AnisotropyLevel.X8 => TextureAnisotropy.X8,
-            AnisotropyLevel.X16 => TextureAnisotropy.X16,
-            _ => throw new ArgumentOutOfRangeException()
-        };
-    }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static ColorComponents GetColorComponent(TexturePixelFormat format)

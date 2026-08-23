@@ -4,15 +4,15 @@ namespace ConcreteEngine.Core.Diagnostics.Time;
 
 public struct FrameStepper(int intervalTicks)
 {
-    private short _ticks;
-    public short IntervalTicks { get; private set; } = (short)intervalTicks;
+    private int _ticks;
+    public int IntervalTicks { get; private set; } = intervalTicks;
 
 
     public void SetIntervalTicks(int intervalTicks, int ticks = 0)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(intervalTicks);
-        IntervalTicks = (short)intervalTicks;
-        _ticks = (short)ticks;
+        IntervalTicks = intervalTicks;
+        _ticks = ticks;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

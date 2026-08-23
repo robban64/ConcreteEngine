@@ -1,109 +1,94 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Handles;
-using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
+using static ConcreteEngine.Graphics.OpenGL.GlDriver;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlFrameBuffers
+internal static class GlFrameBuffers
 {
-    private readonly GL _gl = GlBackendDriver.Gl;
-    private readonly BackendResourceStore _fboStore = GfxRegistry.GetBackendStore<FrameBufferMeta>();
-    private readonly BackendResourceStore _rboStore = GfxRegistry.GetBackendStore<RenderBufferMeta>();
-    private readonly BackendResourceStore _textureStore = GfxRegistry.GetBackendStore<TextureMeta>();
-
-
     // Fix ClearBufferMask and Filter, depth/stencil use filter = Nearest
-    public void Blit(GfxHandle readFbo, GfxHandle drawFbo,
+    public static void Blit(NativeHandle<FrameBufferMeta> readFbo, NativeHandle<FrameBufferMeta> drawFbo,
         Size2D srcSize, Size2D dstSize, bool linear)
     {
         var filter = linear ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest;
-        var read = _fboStore.Get(readFbo);
-        var draw = _fboStore.Get(drawFbo);
-        _gl.ReadBuffer(ReadBufferMode.ColorAttachment0);
-        _gl.DrawBuffer(DrawBufferMode.ColorAttachment0);
+        Gl.ReadBuffer(ReadBufferMode.ColorAttachment0);
+        Gl.DrawBuffer(DrawBufferMode.ColorAttachment0);
 
-        _gl.BlitNamedFramebuffer(
-            read, draw,
+        Gl.BlitNamedFramebuffer(
+            readFbo, drawFbo,
             0, 0, srcSize.Width, srcSize.Height,
             0, 0, dstSize.Width, dstSize.Height,
             ClearBufferMask.ColorBufferBit, filter
         );
     }
 
-    public void BlitDefault(GfxHandle readFbo, Size2D srcSize, Size2D dstSize, bool linear)
+    public static void BlitDefault(NativeHandle<FrameBufferMeta> readFbo, Size2D srcSize, Size2D dstSize, bool linear)
     {
         var filter = linear ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest;
-        var read = _fboStore.Get(readFbo);
-        //_gl.ReadBuffer(ReadBufferMode.ColorAttachment0);
-        //_gl.DrawBuffer(DrawBufferMode.ColorAttachment0);
+        //Gl.ReadBuffer(ReadBufferMode.ColorAttachment0);
+        //Gl.DrawBuffer(DrawBufferMode.ColorAttachment0);
 
-        _gl.BlitNamedFramebuffer(
-            read, 0,
+        Gl.BlitNamedFramebuffer(
+            readFbo, 0,
             0, 0, srcSize.Width, srcSize.Height,
             0, 0, dstSize.Width, dstSize.Height,
             ClearBufferMask.ColorBufferBit, filter
         );
     }
 
-    public GfxHandle CreateFrameBuffer()
+    public static NativeHandle<FrameBufferMeta> CreateFrameBuffer()
     {
-        _gl.CreateFramebuffers(1, out uint fbo);
-        return _fboStore.Add(new NativeHandle(fbo));
+        Gl.CreateFramebuffers(1, out uint fbo);
+        return new NativeHandle<FrameBufferMeta>(fbo);
     }
 
-    public GfxHandle CreateRenderBuffer(FrameBufferAttachmentSlot attachment, Size2D size,
+    public static NativeHandle<RenderBufferMeta> CreateRenderBuffer(FrameBufferAttachmentSlot attachment, Size2D size,
         int samples)
     {
         var internalFormat = attachment.ToGlInternalFormatEnum();
         var (width, height) = size.ToUnsigned();
 
-        _gl.CreateRenderbuffers(1, out uint rbo);
+        Gl.CreateRenderbuffers(1, out uint rbo);
         if (samples > 0)
-            _gl.NamedRenderbufferStorageMultisample(rbo, (uint)samples, internalFormat, width, height);
+            Gl.NamedRenderbufferStorageMultisample(rbo, (uint)samples, internalFormat, width, height);
         else
-            _gl.NamedRenderbufferStorage(rbo, internalFormat, width, height);
+            Gl.NamedRenderbufferStorage(rbo, internalFormat, width, height);
 
-        return _rboStore.Add(new NativeHandle(rbo));
+        return new NativeHandle<RenderBufferMeta>(rbo);
     }
 
-    public void AttachTexture(GfxHandle fboRef, GfxHandle texture,
+    public static void AttachTexture(NativeHandle<FrameBufferMeta> fboHandle, NativeHandle<TextureMeta> textureHandle,
         FrameBufferAttachmentSlot attachmentSlot)
     {
-        var fboH = _fboStore.Get(fboRef);
-        var texH = _textureStore.Get(texture);
         var glAttachment = attachmentSlot.ToGlAttachmentEnum();
-        _gl.NamedFramebufferTexture(fboH, glAttachment, texH, 0);
+        Gl.NamedFramebufferTexture(fboHandle, glAttachment, textureHandle, 0);
     }
 
-    public void AttachRenderBuffer(GfxHandle fboRef, GfxHandle rboRef,
+    public static void AttachRenderBuffer(NativeHandle<FrameBufferMeta> fboHandle,
+        NativeHandle<RenderBufferMeta> rboHandle,
         FrameBufferAttachmentSlot attachmentSlot)
     {
-        var fboHandle = _fboStore.Get(fboRef);
-        var rboHandle = _rboStore.Get(rboRef);
         var glAttachment = attachmentSlot.ToGlAttachmentEnum();
-        _gl.NamedFramebufferRenderbuffer(fboHandle, glAttachment, RenderbufferTarget.Renderbuffer, rboHandle);
+        Gl.NamedFramebufferRenderbuffer(fboHandle, glAttachment, RenderbufferTarget.Renderbuffer, rboHandle);
     }
 
-    public void SetDrawReadBuffer(GfxHandle fboRef, bool colorAttachment)
+    public static void SetDrawReadBuffer(NativeHandle<FrameBufferMeta> fboHandle, bool colorAttachment)
     {
-        var handle = _fboStore.Get(fboRef);
         var glEnum = colorAttachment ? GLEnum.ColorAttachment0 : GLEnum.None;
-        _gl.NamedFramebufferDrawBuffer(handle, glEnum);
-        _gl.NamedFramebufferReadBuffer(handle, glEnum);
+        Gl.NamedFramebufferDrawBuffer(fboHandle, glEnum);
+        Gl.NamedFramebufferReadBuffer(fboHandle, glEnum);
     }
 
-    public void ValidateComplete(GfxHandle fboRef, bool colorAttachment)
+    public static void ValidateComplete(NativeHandle<FrameBufferMeta> fboHandle, bool colorAttachment)
     {
-        var handle = _fboStore.Get(fboRef);
         var glEnum = colorAttachment ? GLEnum.ColorAttachment0 : GLEnum.None;
-        _gl.NamedFramebufferDrawBuffer(handle, glEnum);
-        _gl.NamedFramebufferReadBuffer(handle, glEnum);
+        Gl.NamedFramebufferDrawBuffer(fboHandle, glEnum);
+        Gl.NamedFramebufferReadBuffer(fboHandle, glEnum);
 
-        var status = _gl.CheckNamedFramebufferStatus(handle, GLEnum.Framebuffer);
+        var status = Gl.CheckNamedFramebufferStatus(fboHandle, GLEnum.Framebuffer);
         if (status != GLEnum.FramebufferComplete)
-            GraphicsException.ThrowFramebufferIncomplete(nameof(fboRef), status.ToString());
+            GraphicsException.ThrowFramebufferIncomplete(nameof(fboHandle), status.ToString());
     }
 }

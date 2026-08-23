@@ -1,9 +1,7 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Renderer.Buffer;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
@@ -26,13 +24,11 @@ public sealed class MaterialProfile
     private const MaterialShading DefaultToggle = MaterialShading.Shadows;
 
     public Shader Shader { get; private set; } = null!;
+    public required MaterialStateRecord StateValues { get; init; }
 
     public readonly string ShaderName;
-    public readonly DrawCommandQueue DrawQueue;
-
+    public readonly DrawQueue DrawQueue;
     public readonly MaterialShading Shading;
-
-    public required MaterialStateRecord StateValues { get; init; }
 
     public GfxDrawState DrawState = GfxDrawState.Set(
         GfxDrawFlags.DepthTest | GfxDrawFlags.DepthWrite | GfxDrawFlags.Cull,
@@ -42,15 +38,19 @@ public sealed class MaterialProfile
     public GfxDrawFunctions DrawFunctions =
         new(BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None);
 
-    private readonly TextureUsage[] _slots;
+    private readonly SamplerSlot[] _slots;
 
-    public MaterialProfile(string shaderName, DrawCommandQueue drawQueue, params TextureUsage[] slots)
-        : this(shaderName, drawQueue, DefaultToggle, slots) { }
+    public MaterialProfile(string shaderName, DrawQueue drawQueue, params SamplerSlot[] slots)
+        : this(shaderName, drawQueue, DefaultToggle, slots)
+    {
+    }
 
-    public MaterialProfile(string shaderName, params TextureUsage[] slots)
-        : this(shaderName, DrawCommandQueue.Opaque, DefaultToggle, slots) { }
+    public MaterialProfile(string shaderName, params SamplerSlot[] slots)
+        : this(shaderName, DrawQueue.Opaque, DefaultToggle, slots)
+    {
+    }
 
-    public MaterialProfile(string shader, DrawCommandQueue queue, MaterialShading shading, params TextureUsage[] slots)
+    public MaterialProfile(string shader, DrawQueue queue, MaterialShading shading, params SamplerSlot[] slots)
     {
         _slots = slots;
         ShaderName = shader;
@@ -60,7 +60,7 @@ public sealed class MaterialProfile
 
 
     public int SlotsCount => _slots.Length;
-    public ReadOnlySpan<TextureUsage> Slots => _slots;
+    public ReadOnlySpan<SamplerSlot> Slots => _slots;
 
     internal void AttachShader(Shader shader)
     {
@@ -69,7 +69,7 @@ public sealed class MaterialProfile
         Shader = shader;
     }
 
-    public TextureUsage GetSlot(int index)
+    public SamplerSlot GetSlot(int index)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_slots.Length, nameof(index));
         return _slots[index];
@@ -88,27 +88,24 @@ public sealed class MaterialProfile
         for (int i = 0; i < sources.Length; i++)
         {
             var usage = _slots[i];
-            sources[i] = new TextureSource(default, _slots[i], GetFallbackTexture(usage));
+            var fallback = GetFallbackTexture(usage);
+            sources[i] = new TextureSource(default, default, fallback, SamplerProfile.TrilinearWrap, _slots[i]);
         }
     }
 
-    public void ValidateSources(ReadOnlySpan<TextureSource> sources)
-    {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(sources.Length, _slots.Length, nameof(sources));
-        for (int i = 0; i < _slots.Length; i++)
-            ArgumentOutOfRangeException.ThrowIfNotEqual((int)sources[i].Usage, (int)_slots[i], nameof(sources));
-    }
 
     // --
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TextureId GetFallbackTexture(TextureUsage usage)
+    public static TextureId GetFallbackTexture(SamplerSlot usage)
     {
+        if (usage is >= SamplerSlot.DetailMap and <= SamplerSlot.FeatureMap1)
+            return GfxTextures.Fallback.AlbedoId;
+
         return usage switch
         {
-            TextureUsage.Albedo or TextureUsage.Specular or TextureUsage.Roughness or TextureUsage.Emissive
-                or TextureUsage.Splatmap or TextureUsage.Heightmap => GfxTextures.Fallback.AlbedoId,
-            TextureUsage.Normal => GfxTextures.Fallback.NormalId,
-            TextureUsage.Mask => GfxTextures.Fallback.AlphaMaskId,
+            SamplerSlot.Diffuse or SamplerSlot.Specular or SamplerSlot.Emissive => GfxTextures.Fallback.AlbedoId,
+            SamplerSlot.Normal => GfxTextures.Fallback.NormalId,
+            SamplerSlot.AlphaMask => GfxTextures.Fallback.AlphaMaskId,
             _ => throw new ArgumentOutOfRangeException(nameof(usage))
         };
     }
@@ -132,13 +129,13 @@ public sealed class MaterialProfile
     }
 
     private static MaterialProfile OpaqueProfile =>
-        new("Model", TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask)
+        new("Model", SamplerSlot.Diffuse, SamplerSlot.Normal, SamplerSlot.AlphaMask)
         {
             StateValues = MaterialStateRecord.Make(0.12f, 12f)
         };
 
     private static MaterialProfile AnimatedProfile =>
-        new("ModelAnimated", TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask)
+        new("ModelAnimated", SamplerSlot.Diffuse, SamplerSlot.Normal, SamplerSlot.AlphaMask)
         {
             StateValues = MaterialStateRecord.Make(0.12f, 12f)
         };
@@ -146,9 +143,9 @@ public sealed class MaterialProfile
 
     private static MaterialProfile TransparentProfile =>
         new(
-            "Model", DrawCommandQueue.Transparent,
+            "Model", DrawQueue.Transparent,
             MaterialShading.Shadows | MaterialShading.Transparent,
-            TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask
+            SamplerSlot.Diffuse, SamplerSlot.Normal, SamplerSlot.AlphaMask
         )
         {
             StateValues = MaterialStateRecord.Make(0, 0),
@@ -161,9 +158,9 @@ public sealed class MaterialProfile
 
     private static MaterialProfile AlphaMaskedProfile =>
         new(
-            "Model", DrawCommandQueue.Transparent,
+            "Model", DrawQueue.Transparent,
             MaterialShading.Shadows | MaterialShading.Transparent,
-            TextureUsage.Albedo, TextureUsage.Normal, TextureUsage.Mask
+            SamplerSlot.Diffuse, SamplerSlot.Normal, SamplerSlot.AlphaMask
         )
         {
             StateValues = MaterialStateRecord.Make(0, 0),
@@ -175,7 +172,7 @@ public sealed class MaterialProfile
 
 
     private static MaterialProfile ParticleProfile =>
-        new("Particle", DrawCommandQueue.Particles, MaterialShading.Transparent, TextureUsage.Albedo)
+        new("Particle", DrawQueue.Particles, MaterialShading.Transparent, SamplerSlot.Diffuse)
         {
             StateValues = MaterialStateRecord.Make(0, 0),
             DrawState = GfxDrawState.Set(
@@ -186,16 +183,16 @@ public sealed class MaterialProfile
         };
 
     private static MaterialProfile TerrainProfile =>
-        new("Terrain", TextureUsage.Albedo, TextureUsage.Splatmap)
+        new("Terrain", SamplerSlot.Diffuse, SamplerSlot.FeatureMap0)
         {
             StateValues = MaterialStateRecord.Make(0.02f, 4f)
         };
 
     private static MaterialProfile FoliageProfile =>
         new(
-            "Foliage", DrawCommandQueue.Transparent,
+            "Foliage", DrawQueue.Transparent,
             MaterialShading.Transparent | MaterialShading.ReceiveShadows,
-            TextureUsage.Albedo
+            SamplerSlot.Diffuse
         )
         {
             StateValues = MaterialStateRecord.Make(0, 0),
@@ -207,7 +204,7 @@ public sealed class MaterialProfile
         };
 
     private static MaterialProfile SkyProfile =>
-        new("Skybox", DrawCommandQueue.Skybox, MaterialShading.DoubleSided, TextureUsage.Albedo)
+        new("Skybox", DrawQueue.Skybox, MaterialShading.DoubleSided, SamplerSlot.Diffuse)
         {
             StateValues = MaterialStateRecord.Make(0, 0),
             DrawState = GfxDrawState.Disable(GfxDrawFlags.DepthWrite | GfxDrawFlags.Ac2 | GfxDrawFlags.PolygonOffset |

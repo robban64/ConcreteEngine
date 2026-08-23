@@ -4,13 +4,11 @@ using ConcreteEngine.Graphics.Gfx;
 namespace ConcreteEngine.Graphics.Diagnostic;
 
 public struct GfxStoreMeta(
-    in CollectionSample fk,
-    in CollectionSample bk,
+    in StoreSample store,
     in GfxMetaInfo metaInfo,
     GraphicsKind kind)
 {
-    public CollectionSample Fk = fk;
-    public CollectionSample Bk = bk;
+    public StoreSample Store = store;
     public GfxMetaInfo MetaInfo = metaInfo;
     public GraphicsKind Kind = kind;
 }

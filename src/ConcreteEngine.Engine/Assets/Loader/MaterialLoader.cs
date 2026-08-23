@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 
@@ -25,12 +26,13 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         var mat = new Material(record.Name, ctx.Id, record.Id, record.Profile, record.Parameters);
 
         var sourceCount = mat.SourceCount;
+        var profile = AssetManager.GetMaterialProfile(mat.ProfileId);
         for (int i = 0; i < sourceCount; i++)
         {
             var name = record.ProfileSlots.Length > i ? record.ProfileSlots[i] : null;
             if (name == null) continue;
             if (_store.TryGetByName<Texture>(name, out var tex))
-                mat.SetSourceSlot(i, tex.Id);
+                mat.SetSourceSlot(tex, profile.GetSlot(i));
         }
 
         return mat;
@@ -45,14 +47,14 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
         var mat = new Material(embedded.Name, assetId, embedded.GId, profile, embedded.State);
 
-        var slot = 0;
-        foreach (var textureGId in embedded.Textures)
+        foreach (var it in embedded.Textures)
         {
-            if (!_store.TryGetByGuid<Texture>(textureGId, out var texture))
-                throw new InvalidOperationException($"Embedded texture [{textureGId}] not found");
+            if (!it.IsValid()) continue;
 
-            mat.SetSourceSlot(slot++, texture.Id);
-            if (slot == 3) break;
+            if (!_store.TryGetByGuid<Texture>(it.GId, out var texture))
+                Throwers.NotFound(it.Name, "Embedded texture");
+
+            mat.SetSourceSlot(texture, it.SlotKind);
         }
 
         return mat;

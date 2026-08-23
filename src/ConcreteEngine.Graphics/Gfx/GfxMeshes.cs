@@ -1,9 +1,8 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Internals;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
-using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Graphics.Gfx;
@@ -16,61 +15,35 @@ public sealed class GfxMeshes
     public static MeshId Sphere { get; private set; }
 
     //
-    private readonly GlBackendDriver _driver;
-
     private readonly GfxBuffers _buffers;
 
-    private readonly MeshStore _meshStore;
-    private readonly VboStore _vboStore;
-    private readonly IboStore _iboStore;
+    private GfxMeshEntry[] _meshAttributes;
 
-    private readonly Dictionary<int, MeshLayout> _meshAttributes;
-
-
-    internal GfxMeshes(GfxContextInternal context, GfxBuffers buffers)
+    internal GfxMeshes(GfxBuffers buffers)
     {
-        _driver = context.Driver;
         _buffers = buffers;
-        _meshStore = GfxRegistry.GetGfxStore<MeshMeta>();
-        _vboStore = GfxRegistry.GetGfxStore<VertexBufferMeta>();
-        _iboStore = GfxRegistry.GetGfxStore<IndexBufferMeta>();
-
-        _meshAttributes = new Dictionary<int, MeshLayout>(int.Max(64, _meshStore.Capacity));
+        _meshAttributes = new GfxMeshEntry[int.Max(64, GfxRegistry.MeshStore.Capacity)];
         CreatePrimitives(this);
     }
 
-    public MeshLayout GetMeshDetails(MeshId meshId, out MeshMeta meta)
+    public GfxMeshEntry GetMeshDetails(MeshId meshId, out MeshMeta meta)
     {
-        meta = _meshStore.GetMeta(meshId);
-        return _meshAttributes[meshId];
+        meta = GfxRegistry.MeshStore.GetMeta(meshId);
+        return _meshAttributes[meshId.Index()];
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public void EnsureMeshCount(int count)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(count);
-        _meshStore.EnsureCapacity(count);
-        _vboStore.EnsureCapacity(count);
-        _iboStore.EnsureCapacity(count);
-        _meshAttributes.EnsureCapacity(count);
-    }
-
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public MeshId CreateEmptyMesh(in MeshDrawProperties props, int vboCount, ReadOnlySpan<VertexAttributeDef> attrib)
+    public MeshId CreateEmptyMesh(in MeshDrawProperties props, int vboCount, VertexAttributeDef[] attrib)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(vboCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(vboCount, GfxLimits.MaxVboBindings);
         ArgumentOutOfRangeException.ThrowIfZero(attrib.Length);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(attrib.Length, GfxLimits.MaxVertexAttribs);
 
-        var meshRef = _driver.Meshes.CreateVertexArray();
-        _driver.Meshes.AddVertexAttributes(meshRef, attrib);
+        var meshHandle = GlMeshes.CreateVertexArray();
+        GlMeshes.AddVertexAttributes(meshHandle, attrib);
 
         var meta = new MeshMeta
         {
-            VboCount = (byte)vboCount,
-            AttributeCount = attrib.Length,
             Kind = props.Kind,
             ElementSize = props.ElementSize,
             Primitive = props.Primitive,
@@ -78,13 +51,15 @@ public sealed class GfxMeshes
             InstanceCount = props.InstanceCount
         };
 
-        var meshId = _meshStore.Add(in meta, meshRef);
-        _meshAttributes.Add(meshId, new MeshLayout(meshId, vboCount, attrib.ToArray()));
+        var meshId = GfxRegistry.MeshStore.Add(in meta, meshHandle);
+        if (GfxRegistry.MeshStore.Capacity != _meshAttributes.Length)
+            Array.Resize(ref _meshAttributes, GfxRegistry.MeshStore.Capacity);
+
+        _meshAttributes[meshId.Index()] = new GfxMeshEntry(vboCount, attrib);
         return meshId;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public VertexBufferId CreateAttachVertexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateVboArgs args)
+    public VertexBufferId CreateAttachVertexBuffer<T>(MeshId meshId, NativeView<T> data, CreateVboArgs args)
         where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfZero(meshId.Id);
@@ -94,8 +69,7 @@ public sealed class GfxMeshes
         return vbo;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public IndexBufferId CreateAttachIndexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateIboArgs args)
+    public IndexBufferId CreateAttachIndexBuffer<T>(MeshId meshId, NativeView<T> data, CreateIboArgs args)
         where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfZero(meshId.Id);
@@ -105,27 +79,28 @@ public sealed class GfxMeshes
     }
 
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void AttachVertexBuffer(MeshId meshId, VertexBufferId vboId, int binding)
     {
-        var meshView = _meshStore.GetHandleAndMeta(meshId, out var meta);
-        var vboRef = _vboStore.GetHandleAndMeta(vboId, out var vboMeta);
-        _driver.Meshes.AttachVertexBuffer(meshView, binding, vboRef, in vboMeta);
-
-        var newMeta = meta with { VboCount = (byte)(meta.VboCount + 1) };
-        _meshStore.ReplaceMeta(meshId, in newMeta, out _);
-        _meshAttributes[meshId].VboIds[binding] = vboId;
+        var meshView = GfxRegistry.MeshStore.GetHandleAndMeta(meshId, out var meta);
+        var vboRef = GfxRegistry.VboStore.GetHandleAndMeta(vboId, out var vboMeta);
+        GlMeshes.AttachVertexBuffer(meshView, binding, vboRef, in vboMeta);
+        _meshAttributes[meshId.Index()].VboIds[binding] = vboId;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void AttachIndexBuffer(MeshId meshId, IndexBufferId iboId)
     {
-        var meshRef = _meshStore.GetHandleAndMeta(meshId, out var meta);
-        var iboRef = _iboStore.GetHandleAndMeta(iboId, out var iboMeta);
-        _driver.Meshes.AttachIndexBuffer(meshRef, iboRef);
+        ArgumentOutOfRangeException.ThrowIfZero(meshId.Id);
+        ArgumentOutOfRangeException.ThrowIfZero(iboId.Id);
+
+        var meshHandle = GfxRegistry.MeshStore.GetHandleAndMeta(meshId, out var meta);
+        var iboRef = GfxRegistry.IboStore.GetHandleAndMeta(iboId, out var iboMeta);
+        GlMeshes.AttachIndexBuffer(meshHandle, iboRef);
 
         var elementSize = GfxEnumUtils.ToDrawElementSize(iboMeta.Stride);
-        _meshStore.ReplaceMeta(meshId, meta with { ElementSize = elementSize }, out _);
-
-        _meshAttributes[meshId].IboId = iboId;
+        GfxRegistry.MeshStore.ReplaceMeta(meshId, meta with { ElementSize = elementSize }, out _);
+        _meshAttributes[meshId.Index()].IboId = iboId;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

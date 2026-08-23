@@ -3,9 +3,8 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Editor;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Renderer.Buffer;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
@@ -25,7 +24,7 @@ public sealed class MaterialState
 {
     private static int _materialIdCounter;
 
-    public readonly Id16<MaterialSlot> MaterialId = new(++_materialIdCounter);
+    public readonly Id16<Material> MaterialId = new(++_materialIdCounter);
 
     private readonly Material _material;
     private MaterialShading _shading;
@@ -53,8 +52,8 @@ public sealed class MaterialState
         if (CastShadow) Passes |= PassMask.Depth;
         else Passes &= ~PassMask.Depth;
 
-        if (IsTransparent && profile.DrawQueue == DrawCommandQueue.Opaque)
-            DrawQueue = DrawCommandQueue.Transparent;
+        if (IsTransparent && profile.DrawQueue == DrawQueue.Opaque)
+            DrawQueue = DrawQueue.Transparent;
         else
             DrawQueue = profile.DrawQueue;
     }
@@ -63,12 +62,6 @@ public sealed class MaterialState
     {
         get => SpecularColor.A;
         set => SpecularColor = SpecularColor with { A = value };
-    }
-
-    public float Uv
-    {
-        get => UvTransform.W;
-        set => UvTransform = UvTransform with { W = value };
     }
 
     public GfxDrawState DrawState
@@ -96,7 +89,7 @@ public sealed class MaterialState
         }
     } = new(BlendMode.Unset, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None);
 
-    public DrawCommandQueue DrawQueue
+    public DrawQueue DrawQueue
     {
         get;
         set
@@ -105,7 +98,7 @@ public sealed class MaterialState
             field = value;
             _material.MarkDirty(AssetDirtyFlag.Structure);
         }
-    } = DrawCommandQueue.Opaque;
+    } = DrawQueue.Opaque;
 
 
     public PassMask Passes
@@ -126,7 +119,7 @@ public sealed class MaterialState
         set
         {
             var color = value.WithClampedAlpha();
-            if (Color4.NearlyEqual(in field, in color)) return;
+            if (Color4.NearlyEqual(field, color)) return;
             field = color;
             _material.MarkDirty(AssetDirtyFlag.State);
         }
@@ -139,24 +132,35 @@ public sealed class MaterialState
         set
         {
             var color = value.WithClampedAlpha();
-            if (Color4.NearlyEqual(in field, in color)) return;
+            if (Color4.NearlyEqual(field, color)) return;
             field = color;
             _material.MarkDirty(AssetDirtyFlag.State);
         }
     } = new(1, 1, 1, 0.12f);
 
     [InputNumber]
-    public Vector4 UvTransform
+    public Vector2 UvOffset
     {
         get;
         set
         {
-            var uv = value with { Z = float.Max(value.Z, 1f), W = float.Max(value.W, 1f) };
-            if (VectorMath.NearlyEqual(in field, in uv)) return;
-            field = uv;
+            if (VectorMath.NearlyEqual(field, value)) return;
+            field = value;
             _material.MarkDirty(AssetDirtyFlag.State);
         }
-    } = new(0, 0, 1f, 1f);
+    }
+
+    [InputNumber]
+    public Vector2 UvRepeat
+    {
+        get;
+        set
+        {
+            if (VectorMath.NearlyEqual(field, value)) return;
+            field = new Vector2(float.Max(value.X, 1f), float.Max(value.Y, 1f));
+            _material.MarkDirty(AssetDirtyFlag.State);
+        }
+    }
 
     [InputNumber(InputStyle.Slider, Min = 0, Max = 50f)]
     public float Shininess

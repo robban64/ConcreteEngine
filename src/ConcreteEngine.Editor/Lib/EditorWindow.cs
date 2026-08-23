@@ -33,7 +33,8 @@ internal abstract class EditorWindow(StateManager state)
 
         if (NoBorder) ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
 
-        if (ImGui.Begin(Id, Flags))
+        var open = ImGui.Begin(Id, Flags);
+        if (open)
         {
             OnDraw();
         }

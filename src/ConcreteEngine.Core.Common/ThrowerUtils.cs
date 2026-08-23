@@ -12,8 +12,13 @@ public static class Throwers
         throw new ArgumentException(message, paramName);
 
     [DoesNotReturn]
-    public static void IndexOutOfRange(string buffer, int index, int length) =>
-        throw new ArgumentOutOfRangeException(buffer, $"OutOfRange {index} with length {length}");
+    public static void IndexOutOfRange(int index, int length, string? paramName = null) =>
+        throw new ArgumentOutOfRangeException(paramName, $"OutOfRange index={index}, length={length}");
+
+    [DoesNotReturn]
+    public static void RangeOutOfBounds(int offset, int length, int capacity, string? paramName = null) =>
+        throw new ArgumentOutOfRangeException(paramName,
+            $"OutOfRange offset={offset}, length={length}, capacity={capacity}");
 
     [DoesNotReturn]
     public static void NullReference(string name) => throw new ArgumentNullException(name, "Null arg reference");
@@ -24,6 +29,10 @@ public static class Throwers
     [DoesNotReturn]
     public static void NotFound(string name, string message) =>
         throw new ArgumentException($"{message} not found", name);
+
+    [DoesNotReturn]
+    public static void NotFound(int id, string name, string message) =>
+        throw new ArgumentException($"{message} [{id}] not found", name);
 
     [DoesNotReturn]
     public static void Unreachable(string name) => throw new UnreachableException(name);

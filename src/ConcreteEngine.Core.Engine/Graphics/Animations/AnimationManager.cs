@@ -1,0 +1,120 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
+
+namespace ConcreteEngine.Core.Engine.Graphics.Animations;
+
+internal sealed class AnimationManager
+{
+    internal static readonly AnimationManager Instance = new();
+
+    private readonly SlotArray<AnimationInstance> _animations = new(8);
+
+    private AnimationManager() { }
+
+    public int AnimationCount => _animations.Count;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal ReadOnlySpan<AnimationInstance?> GetAnimationSpan() => _animations.AsSpan();
+
+    public void AttachEntity(ModelRig rig, RenderEntityId entity, Id16<AnimationInstance> animationId = default)
+    {
+        if (animationId == 0 && TryGetFirstByRig(rig, out var firstEntry))
+            animationId = firstEntry.Id;
+
+        if (animationId == 0 || !_animations.TryGet(animationId.Index(), out var animation))
+        {
+            animationId = new Id16<AnimationInstance>(_animations.AllocateNextId() + 1);
+            animation = new AnimationInstance(rig, animationId);
+            animation.SetClip(0);
+            _animations[animationId.Index()] = animation;
+        }
+        else if (rig != animation.Rig)
+        {
+            Throwers.InvalidArgument(nameof(rig));
+        }
+
+
+        animation.AddEntity(entity);
+        RenderEcs.Core.ToggleDrawFlag(entity, EntityDrawFlags.Skinned, true);
+        RenderEcs.Store<SkinningLink>().Add(entity, new SkinningLink(animation.Id));
+    }
+
+    private bool TryGetFirstByRig(ModelRig rig, out AnimationInstance animation)
+    {
+        foreach (var a in _animations)
+        {
+            if (a.Rig == rig)
+            {
+                animation = a;
+                return true;
+            }
+        }
+
+        animation = null!;
+        return false;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ActiveObjectEnumerator<AnimationInstance> GetEnumerator() => new(_animations.AsSpan());
+}
+
+public sealed class AnimationInstance : IComparable<AnimationInstance>
+{
+    public readonly Id16<AnimationInstance> Id;
+    public short ActiveClip { get; private set; } = -1;
+
+    public readonly ModelRig Rig;
+
+    private readonly List<RenderEntityId> _renderEntities = [];
+
+    private AnimationTime _animationTime;
+
+    internal AnimationInstance(ModelRig rig, Id16<AnimationInstance> animationId)
+    {
+        ArgumentNullException.ThrowIfNull(rig);
+        ArgumentOutOfRangeException.ThrowIfZero(animationId.Value, nameof(animationId));
+        Rig = rig;
+        Id = animationId;
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal SkinningContext GetSkinningContext() => Rig.GetSkinningContext(ActiveClip);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<RenderEntityId> GetEntitySpan() => CollectionsMarshal.AsSpan(_renderEntities);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AdvanceTime(float delta) => _animationTime.AdvanceTime(delta);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Interpolate(float alpha) => _animationTime.Interpolate(alpha);
+
+    public void AddEntity(RenderEntityId entity)
+    {
+        if (_renderEntities.Contains(entity)) Throwers.InvalidArgument(nameof(entity), "Already added");
+        _renderEntities.Add(entity);
+    }
+
+    public void RemoveEntity(RenderEntityId entity) => _renderEntities.Remove(entity);
+
+    public void SetClip(short clipIndex)
+    {
+        if (ActiveClip == clipIndex) return;
+        ActiveClip = clipIndex;
+
+        var clip = Rig.GetClip(clipIndex);
+        _animationTime.SetClip(clip.Duration, clip.TicksPerSecond);
+    }
+
+    public int CompareTo(AnimationInstance? other)
+    {
+        if (other is null) return 1;
+        if (ReferenceEquals(this, other)) return 0;
+        return Id.CompareTo(other.Id);
+    }
+}

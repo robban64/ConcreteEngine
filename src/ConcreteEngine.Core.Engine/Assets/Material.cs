@@ -2,14 +2,14 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Editor;
-using ConcreteEngine.Renderer.Core;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
 [Inspect]
 public sealed class Material : AssetObject
 {
-    public Id16<MaterialSlot> MaterialId => State.MaterialId;
+    public Id16<Material> MaterialId => State.MaterialId;
     public MaterialProfileId ProfileId { get; private set; }
 
     [InspectInclude] public readonly MaterialState State;
@@ -59,27 +59,38 @@ public sealed class Material : AssetObject
     }
 
 
-    public void SetSourceSlot(int slot, AssetId assetId, TextureId textureId = default)
+    public void SetSourceSlot(Texture texture, SamplerSlot slot)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_textureSources.Length);
-        ref var source = ref _textureSources[slot];
-        source = source.WithTexture(assetId, textureId);
-        if (source.Usage == TextureUsage.Mask) State.HasAlphaMask = source.IsBound();
+        ref var source = ref GetTextureSource(slot);
+        source = source with { AssetId = texture.Id, TextureId = texture.GfxId, Profile = texture.Profile };
+        if (source.Slot == SamplerSlot.AlphaMask) State.HasAlphaMask = true;
         MarkDirty(AssetDirtyFlag.State);
     }
 
-    public void SetTextureSlot(int slot, Texture? texture) =>
-        SetSourceSlot(slot, texture?.Id ?? default, texture?.GfxId ?? default);
-
-    public void SetSources(ReadOnlySpan<TextureSource> sources)
+    public void SetSourceSlot(TextureId textureId, SamplerSlot slot, SamplerProfile profile)
     {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(sources.Length, _textureSources.Length, nameof(sources));
-        var profile = AssetManager.GetMaterialProfile(ProfileId);
-        profile.ValidateSources(sources);
-        for (var i = 0; i < sources.Length; i++)
+        ref var source = ref GetTextureSource(slot);
+        if (source.TextureId == textureId) return;
+        source = source with { AssetId = default, TextureId = textureId, Profile = profile };
+        if (source.Slot == SamplerSlot.AlphaMask) State.HasAlphaMask = true;
+        MarkDirty(AssetDirtyFlag.State);
+    }
+
+    private ref TextureSource GetTextureSource(SamplerSlot slot)
+    {
+        foreach (ref var textureSource in _textureSources.AsSpan())
         {
-            var source = sources[i];
-            SetSourceSlot(i, source.AssetTexture, source.OverrideTexture);
+            if (textureSource.Slot == slot) return ref textureSource;
         }
+
+        throw new ArgumentException(nameof(slot));
+    }
+
+    public void ClearSourceSlot(SamplerSlot slot)
+    {
+        ref var source = ref GetTextureSource(slot);
+        if (source.IsFallback()) return;
+        source = default;
+        MarkDirty(AssetDirtyFlag.State);
     }
 }

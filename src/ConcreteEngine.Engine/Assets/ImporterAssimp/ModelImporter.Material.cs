@@ -8,7 +8,6 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Renderer.Core;
 using Silk.NET.Assimp;
 using AssimpMaterial = Silk.NET.Assimp.Material;
 using AssimpScene = Silk.NET.Assimp.Scene;
@@ -19,7 +18,7 @@ namespace ConcreteEngine.Engine.Assets.ImporterAssimp;
 
 internal static unsafe class MaterialModelImporter
 {
-    public static void ProcessMaterials(Assimp assimp, AssimpScene* scene, ModelImportContext ctx)
+    public static void ProcessMaterials(AssimpScene* scene, ModelImportContext ctx)
     {
         var embeddedContext = ctx.EmbeddedContext;
         if (embeddedContext.MaterialCount == 0 && embeddedContext.TextureCount == 0) return;
@@ -145,16 +144,9 @@ internal static unsafe class MaterialModelImporter
                 $"Property texture index {textureIndex} does not match {texture.TextureIndex}");
         }
 
-        if (material.Textures.Contains(texture.GId)) return;
-        if (!MatUtils.ToSystemEnums(type, out var kind, out var format))
-        {
-            kind = TextureUsage.Albedo;
-            format = TexturePixelFormat.SrgbAlpha;
-        }
-
-        texture.SlotKind = kind;
-        texture.PixelFormat = format;
-        material.Textures.Add(texture.GId);
+        if (material.Textures.Contains(texture)) return;
+        if (MatUtils.ToSystemEnums(type, out texture.SlotKind, out texture.PixelFormat))
+            material.Textures.Add(texture);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -180,34 +172,40 @@ internal static unsafe class MaterialModelImporter
         if (sizeInBytes < 4) Throwers.InvalidOperation(nameof(sizeInBytes));
 
         var ptr = (byte*)aiTex->PcData;
-        //texture.PixelDataBlock =
         context.RegisterTexture(texture, ptr, sizeInBytes);
         return sizeInBytes;
-        //return TextureImporter.ImportUnmanagedTexture(ptr, sizeInBytes, width, height, format, out size);
     }
 }
 
 file static unsafe class MatUtils
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static bool ToSystemEnums(TextureType type, out TextureUsage kind, out TexturePixelFormat format)
+    public static bool ToSystemEnums(TextureType type, out SamplerSlot kind, out TexturePixelFormat format)
     {
         switch (type)
         {
             case TextureType.Diffuse:
-                kind = TextureUsage.Albedo;
+                kind = SamplerSlot.Diffuse;
                 format = TexturePixelFormat.SrgbAlpha;
                 return true;
             case TextureType.Normals:
-                kind = TextureUsage.Normal;
+                kind = SamplerSlot.Normal;
+                format = TexturePixelFormat.Rgba;
+                return true;
+            case TextureType.Specular:
+                kind = SamplerSlot.Specular;
                 format = TexturePixelFormat.Rgba;
                 return true;
             case TextureType.Opacity:
-                kind = TextureUsage.Mask;
+                kind = SamplerSlot.AlphaMask;
                 format = TexturePixelFormat.Red;
                 return true;
-            case TextureType.GltfMetallicRoughness:
-                kind = TextureUsage.Roughness;
+            case TextureType.Emissive:
+                kind = SamplerSlot.Emissive;
+                format = TexturePixelFormat.Rgba;
+                return true;
+            case TextureType.Metalness or TextureType.GltfMetallicRoughness:
+                kind = SamplerSlot.DetailMap;
                 format = TexturePixelFormat.Rgba;
                 return true;
             default:

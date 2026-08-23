@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Common.Numerics;
+namespace ConcreteEngine.Core.Common.Numerics.Maths;
 
 public static class MetricUnits
 {

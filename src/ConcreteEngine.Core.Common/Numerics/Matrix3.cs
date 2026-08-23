@@ -29,5 +29,5 @@ public struct Matrix3X4
         M34 = m34;
     }
 
-    public static readonly Matrix3X4 Identity = new(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0);
+    public static Matrix3X4 Identity { get; } = new(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0);
 }

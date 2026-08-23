@@ -1,64 +1,42 @@
+using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Resources;
-using Silk.NET.OpenGL;
+using static ConcreteEngine.Graphics.OpenGL.GlDriver;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlDisposer
+internal static class GlDisposer
 {
-    private static GL Gl => GlBackendDriver.Gl;
-    private readonly ResourceBackendDispatcher _dispatcher;
-
-    internal GlDisposer(ResourceBackendDispatcher dispatcher)
+    public static void DeleteGlResource(DeleteResourceCommand cmd)
     {
-        _dispatcher = dispatcher;
-    }
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cmd.Handle.Value, nameof(cmd.Handle));
 
-    public void DeleteGlResource(DeleteResourceCommand cmd)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cmd.BackendHandle.Value, nameof(cmd.BackendHandle));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)cmd.BackendHandle.Value, uint.MaxValue);
-
-        switch (cmd.Handle.Kind)
+        switch (cmd.Kind)
         {
-            case GraphicsKind.Texture:
-                DisposeTexture(cmd);
-                break;
-            case GraphicsKind.Shader:
-                DisposeShader(cmd);
-                break;
-            case GraphicsKind.Mesh:
-                DisposeVao(cmd);
-                break;
-            case GraphicsKind.VertexBuffer:
-                DisposeVbo(cmd);
-                break;
-            case GraphicsKind.IndexBuffer:
-                DisposeIbo(cmd);
-                break;
-            case GraphicsKind.FrameBuffer:
-                DisposeFbo(cmd);
-                break;
-            case GraphicsKind.RenderBuffer:
-                DisposeRbo(cmd);
-                break;
-            default: throw new ArgumentOutOfRangeException(nameof(cmd), cmd, $"Invalid resource {cmd.Handle.Kind}");
+            case GraphicsKind.Texture: DisposeTexture(cmd); break;
+            case GraphicsKind.Shader: DisposeShader(cmd); break;
+            case GraphicsKind.Mesh: DisposeVao(cmd); break;
+            case GraphicsKind.VertexBuffer: DisposeVbo(cmd); break;
+            case GraphicsKind.IndexBuffer: DisposeIbo(cmd); break;
+            case GraphicsKind.FrameBuffer: DisposeFbo(cmd); break;
+            case GraphicsKind.RenderBuffer: DisposeRbo(cmd); break;
+            default: throw new ArgumentOutOfRangeException(nameof(cmd));
         }
 
-        _dispatcher.OnDelete(cmd);
+        GfxLog.LogBackend(cmd.Handle, cmd.GfxId, cmd.Kind.ToLogTopic(), LogAction.Destroy);
     }
 
-    private void DisposeTexture(DeleteResourceCommand cmd) => Gl.DeleteTexture(cmd.BackendHandle);
+    private static void DisposeTexture(DeleteResourceCommand cmd) => Gl.DeleteTexture(cmd.Handle);
 
-    private void DisposeShader(DeleteResourceCommand cmd) => Gl.DeleteProgram(cmd.BackendHandle);
+    private static void DisposeShader(DeleteResourceCommand cmd) => Gl.DeleteProgram(cmd.Handle);
 
-    private void DisposeVao(DeleteResourceCommand cmd) => Gl.DeleteVertexArray(cmd.BackendHandle);
+    private static void DisposeVao(DeleteResourceCommand cmd) => Gl.DeleteVertexArray(cmd.Handle);
 
-    private void DisposeVbo(DeleteResourceCommand cmd) => Gl.DeleteBuffer(cmd.BackendHandle);
+    private static void DisposeVbo(DeleteResourceCommand cmd) => Gl.DeleteBuffer(cmd.Handle);
 
-    private void DisposeIbo(DeleteResourceCommand cmd) => Gl.DeleteBuffer(cmd.BackendHandle);
+    private static void DisposeIbo(DeleteResourceCommand cmd) => Gl.DeleteBuffer(cmd.Handle);
 
-    private void DisposeFbo(DeleteResourceCommand cmd) => Gl.DeleteFramebuffer(cmd.BackendHandle);
+    private static void DisposeFbo(DeleteResourceCommand cmd) => Gl.DeleteFramebuffer(cmd.Handle);
 
-    private void DisposeRbo(DeleteResourceCommand cmd) => Gl.DeleteRenderbuffer(cmd.BackendHandle);
+    private static void DisposeRbo(DeleteResourceCommand cmd) => Gl.DeleteRenderbuffer(cmd.Handle);
 }

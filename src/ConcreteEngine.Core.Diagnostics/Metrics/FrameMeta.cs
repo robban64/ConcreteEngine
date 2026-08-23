@@ -2,12 +2,6 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Diagnostics.Metrics;
 
-public struct GpuFrameMeta(in GpuBufferMeta buffer, in RenderFrameMeta frame)
-{
-    public GpuBufferMeta Buffer = buffer;
-    public RenderFrameMeta Frame = frame;
-}
-
 public readonly struct FrameMeta(ulong frameId, float fps, float alpha)
 {
     public readonly ulong FrameId = frameId;

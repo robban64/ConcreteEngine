@@ -21,7 +21,7 @@ public static partial class EngineInput
 
         private static Vector2 _lastScreenPos;
 
-        private static Vector2 _accumScroll;
+        private static Vector2 _accScroll;
         private static Vector2 _lastMouseScroll;
 
         private static int _activeMouseButtonCount;
@@ -39,7 +39,7 @@ public static partial class EngineInput
 
         internal static void UpdateMouse()
         {
-            var step = (_accumScroll - _lastMouseScroll) * SmoothFactor;
+            var step = (_accScroll - _lastMouseScroll) * SmoothFactor;
             _scroll = step;
             if (float.Abs(step.X) > Epsilon || float.Abs(step.Y) > Epsilon)
             {
@@ -48,7 +48,7 @@ public static partial class EngineInput
             else
             {
                 _scroll = Vector2.Zero;
-                _lastMouseScroll = _accumScroll;
+                _lastMouseScroll = _accScroll;
             }
 
             _delta = _screenPos - _lastScreenPos;
@@ -74,7 +74,7 @@ public static partial class EngineInput
         private static void OnMouseMove(IMouse _, Vector2 position) => _screenPos = position;
 
         private static void OnMouseScroll(IMouse _, ScrollWheel scroll) =>
-            _accumScroll += new Vector2(scroll.X, scroll.Y);
+            _accScroll += new Vector2(scroll.X, scroll.Y);
 
         private static void OnMouseDown(IMouse _, MouseButton button)
         {

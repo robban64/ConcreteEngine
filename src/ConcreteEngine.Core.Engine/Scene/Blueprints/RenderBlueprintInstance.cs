@@ -2,8 +2,8 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -14,14 +14,14 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
     protected readonly SceneObject Owner = owner;
     protected readonly List<RenderEntityId> RenderEntityIds = [];
 
-    protected BoundingBox WorldBounds;
+    protected BoundingAxisBox WorldBounds;
 
     public abstract RenderBlueprint GetBlueprint();
     public string DisplayName => GetBlueprint().DisplayName;
     public int EntityCount => RenderEntityIds.Count;
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(RenderEntityIds);
 
-    public ref readonly BoundingBox GetWorldBounds() => ref WorldBounds;
+    public ref readonly BoundingAxisBox GetWorldBounds() => ref WorldBounds;
 
     internal void MarkDirty(SceneDirtyFlags flag)
     {
@@ -46,42 +46,43 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
     {
         foreach (var entity in GetRenderEntities())
         {
-            ref var source = ref Ecs.Render.Core.GetSource(entity);
-            if (source.Material.Value > 0 && source.Material != material.MaterialId) continue;
-            source.Queue = material.DrawQueue;
-            source.Passes = material.Passes;
+            var materialId = RenderEcs.Core.GetSource(entity).Material;
+            if (materialId > 0 && materialId != material.MaterialId) continue;
+            RenderEcs.Core.GetDrawPolicy(entity) = new DrawPolicy(material.DrawQueue, material.Passes);
         }
     }
 
     public void ToggleVisibility(bool visible)
     {
-        foreach (var entity in GetRenderEntities())
-            Ecs.RenderCore.ToggleVisibility(entity, VisibilityFlags.ForceHidden, visible);
+        var flag = visible ? EntityDrawStatus.Normal : EntityDrawStatus.ForceHidden;
+        foreach (var entity in GetRenderEntities()) RenderEcs.Core.SetStatus(entity, flag);
     }
 
     public void ToggleSelection(bool isSelected)
     {
-        var selectionStore = Ecs.GetRenderStore<SelectionComponent>();
-
-        foreach (var entity in GetRenderEntities())
+        if (isSelected)
         {
-            ref var source = ref Ecs.RenderCore.GetSource(entity);
-            if (isSelected)
+            foreach (var entity in GetRenderEntities())
             {
-                selectionStore.Add(entity, new SelectionComponent(SelectionComponent.DefaultHighlight, source.Passes));
-            }
-            else
-            {
-                var passes = selectionStore.Get(entity).OriginalPasses;
-                source = source with { Resolver = 0, ResolverSlot = 0, Passes = passes };
-                selectionStore.Remove(entity);
+                RenderEcs.Store<SelectionComponent>().Add(entity, SelectionComponent.DefaultHighlight);
+                RenderEcs.Core.SetStatus(entity, EntityDrawStatus.ForceHidden);
             }
         }
+        else
+        {
+            foreach (var entity in GetRenderEntities())
+            {
+                RenderEcs.Store<SelectionComponent>().Remove(entity);
+                RenderEcs.Core.SetStatus(entity, EntityDrawStatus.Normal);
+            }
+        }
+
+        RenderEcs.Store<SelectionComponent>().Commit();
     }
 
     public void ToggleDebugBounds(bool isSelected)
     {
-        var debugStore = Ecs.Render.Stores<DebugBoundsComponent>.Store;
+        var debugStore = RenderEcs.Store<DebugBoundsComponent>();
         var span = GetRenderEntities();
         for (var i = 0; i < span.Length; i++)
         {
@@ -90,5 +91,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
             if (isSelected) debugStore.Add(entity, new DebugBoundsComponent(color));
             else debugStore.Remove(entity);
         }
+
+        debugStore.Commit();
     }
 }

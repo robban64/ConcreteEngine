@@ -1,21 +1,18 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text.Json.Serialization;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
-public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
+public record struct BoundingBox(Vector3 Min, Vector3 Max)
 {
-    public Vector3 Min = Min;
-    public Vector3 Max = Max;
+    [JsonInclude] public Vector3 Min = Min;
+    [JsonInclude] public Vector3 Max = Max;
 
-    public static readonly BoundingBox Identity = new(Vector3.Zero, Vector3.Zero);
-    public static readonly BoundingBox One = new(-Vector3.One, Vector3.One);
-
-    public static readonly BoundingBox Infinite = new(new Vector3(float.MaxValue), new Vector3(float.MinValue));
-
-    public readonly bool IsIdentity => Min == Vector3.Zero && Max == Vector3.Zero;
+    public static BoundingBox One { get; } = new(-Vector3.One, Vector3.One);
+    public static BoundingBox Infinite { get; } = new(new Vector3(float.MaxValue), new Vector3(float.MinValue));
 
     public readonly Vector3 Center
     {
@@ -30,18 +27,34 @@ public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly BoundingAxisBox ToAxisBox() => new(Center, Extent);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void FromPoint(Vector3 point)
     {
         Min = Vector3.Min(Min, point);
         Max = Vector3.Max(Max, point);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Expand(in BoundingBox other)
+    {
+        Min = Vector3.Min(Min, other.Min);
+        Max = Vector3.Max(Max, other.Max);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Expand(in BoundingAxisBox other)
+    {
+        Min = Vector3.Min(Min, other.Min);
+        Max = Vector3.Max(Max, other.Max);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly void FillCorners(Span<Vector3> corners)
     {
-        ref readonly var min = ref Min;
-        ref readonly var max = ref Max;
+        var min = Min;
+        var max = Max;
 
         corners[0] = new Vector3(min.X, min.Y, min.Z);
         corners[1] = new Vector3(max.X, min.Y, min.Z);
@@ -56,10 +69,14 @@ public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Merge(in BoundingBox boxA, in BoundingBox boxB, out BoundingBox result) =>
-        result = new BoundingBox(Vector3.Min(boxA.Min, boxB.Min), Vector3.Max(boxA.Max, boxB.Max));
+    public static void Merge(in BoundingBox boxA, in BoundingBox boxB, out BoundingBox result)
+    {
+        var min = Vector3.Min(boxA.Min, boxB.Min);
+        var max = Vector3.Max(boxA.Max, boxB.Max);
+        result = new BoundingBox(min, max);
+    }
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void FromAxisBox(in BoundingAxisBox axisBox, out BoundingBox result) =>
         result = new BoundingBox(axisBox.Min, axisBox.Max);
 
@@ -75,6 +92,17 @@ public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
         }
 
         result = new BoundingBox(min, max);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsOutsidePlane(in BoundingBox box, in Plane plane)
+    {
+        var ext = box.Extent;
+        return Vector3.Dot(box.Center, plane.Normal)
+               + ext.X * MathF.Abs(plane.Normal.X)
+               + ext.Y * MathF.Abs(plane.Normal.Y)
+               + ext.Z * MathF.Abs(plane.Normal.Z)
+               <= -plane.D;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

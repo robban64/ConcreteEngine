@@ -11,7 +11,7 @@ namespace ConcreteEngine.Editor.App.Assets;
 
 internal sealed class AssetBrowser
 {
-    private const int Capacity = 64;
+    public const int FileListCapacity = 64;
 
     public int FileCount { get; private set; }
     public int FilteredCount { get; private set; }
@@ -29,7 +29,7 @@ internal sealed class AssetBrowser
     {
         _onDirectoryChange = onDirectoryChange;
         _fileIds = new AssetFileId[64];
-        _buffer = new CircularListBuffer<FileItem>(Capacity, OnInvalidateDrawBuffer);
+        _buffer = new CircularListBuffer<FileItem>(FileListCapacity, OnInvalidateDrawBuffer);
 
         RootNode = new AssetDirectoryNode("", null);
         CurrentNode = RootNode;
@@ -130,7 +130,7 @@ internal sealed class AssetBrowser
 
         FilteredCount = count;
 
-        _buffer.Invalidate(0, _buffer.Capacity);
+        _buffer.Invalidate(0, count);
     }
 
 

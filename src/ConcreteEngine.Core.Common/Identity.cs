@@ -11,7 +11,7 @@ public interface ITypedId<T> where T : ITypedId<T>
 }
 
 public readonly record struct Id16<T>(ushort Value)
-    : ITypedId<Id16<T>>, IComparable<ushort>, IComparable<Id16<T>> where T : class
+    : ITypedId<Id16<T>>, IComparable<ushort>, IComparable<Id16<T>>
 {
     public Id16(int value) : this((ushort)value) { }
 
@@ -39,7 +39,7 @@ public readonly record struct Id16<T>(ushort Value)
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct Id32<T>(int Id)
-    : ITypedId<Id32<T>>, IComparable<int>, IComparable<Id32<T>> where T : class
+    : ITypedId<Id32<T>>, IComparable<int>, IComparable<Id32<T>>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Id - 1;
@@ -66,7 +66,7 @@ public readonly record struct Id32<T>(int Id)
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct Handle32<T>(int Id, ushort Gen)
-    : ITypedId<Handle32<T>>, IComparable<int>, IComparable<Handle32<T>> where T : class
+    : ITypedId<Handle32<T>>, IComparable<int>, IComparable<Handle32<T>>
 {
     public Handle32(int id, int gen) : this(id, (ushort)gen) { }
 

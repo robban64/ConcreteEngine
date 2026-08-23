@@ -6,6 +6,9 @@ namespace ConcreteEngine.Core.Common.Collections;
 public static class ListExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Span<T> AsSpan<T>(this List<T> list) => CollectionsMarshal.AsSpan(list);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int BinarySearch<T>(this List<T> list, T value) where T : IComparable<T>
     {
         return SearchMethod.BinarySearch(CollectionsMarshal.AsSpan(list), value);

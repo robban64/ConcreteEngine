@@ -1,8 +1,6 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.App.Theme;
-using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.App.Scene;
@@ -22,17 +20,7 @@ internal static class SceneExtensions
             };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Icons ToIcon() =>
-            kind switch
-            {
-                SceneObjectKind.Empty => Icons.Minus,
-                SceneObjectKind.Model => Icons.Box,
-                SceneObjectKind.Particle => Icons.Sparkles,
-                _ => throw new ArgumentOutOfRangeException(nameof(kind))
-            };
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public uint ToIntIcon() =>
+        public uint ToIcon() =>
             kind switch
             {
                 SceneObjectKind.Empty => IconNames.Minus,

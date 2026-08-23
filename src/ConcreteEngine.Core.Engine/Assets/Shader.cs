@@ -36,7 +36,6 @@ public sealed class Shader : AssetObject
     public const string AlphaName = "uAlpha";
     public const string LightMapName = "uLightMap";
 
-
     public readonly ShaderId GfxId;
     public GfxUniformSampler[] Samplers { get; private set; } = [];
 

@@ -18,7 +18,7 @@ internal sealed class LogService : IDisposable
     private int _count;
 
     private NativeArray<byte> _buffer;
-    private NativeView<byte> LogText => _buffer;
+    public NativeView<byte> LogBufferText => _buffer;
 
     private readonly LogEntry[] _logs = new LogEntry[StoredLogCap];
 
@@ -31,7 +31,7 @@ internal sealed class LogService : IDisposable
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<byte> GetLogText(RangeU16 handle) => LogText.Slice(handle);
+    public NativeView<byte> GetLogText(RangeU16 handle) => LogBufferText.Slice(handle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<LogEntry> GetLogs(int start, int length) => new(_logs, start, length);
@@ -81,7 +81,7 @@ internal sealed class LogService : IDisposable
                 PushLog(message, sLog.Timestamp, sLog.Level, sLog.Scope);
             }
 
-            writer.Clear();
+            writer.Reset();
         }
     }
 
@@ -90,7 +90,7 @@ internal sealed class LogService : IDisposable
     {
         var offset = _head > 0 ? _logs[_head - 1].Handle.End + 1 : 0;
 
-        var sw = LogText.SliceFrom(offset).Writer();
+        var sw = LogBufferText.SliceFrom(offset).Writer();
         sw.Append('[').Append(timestamp, "HH:mm:ss:ff").Append(']');
         sw.SetCursor(LogEntry.TimestampOffset);
         sw.Append(message.Truncate(LogStride - LogEntry.TimestampOffset));

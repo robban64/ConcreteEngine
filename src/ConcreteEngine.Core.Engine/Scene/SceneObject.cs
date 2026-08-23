@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Editor;
 
@@ -14,7 +13,8 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     public SceneObjectId Id { get; }
     public Guid GId { get; }
 
-    [JsonIgnore] public ulong PackedName { get; private set; }
+    [JsonIgnore]
+    public ulong PackedName { get; private set; }
 
     public string Name
     {
@@ -53,9 +53,11 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     public SceneObjectKind Kind { get; private set; }
 
-    [JsonIgnore] public SceneDirtyFlags Dirty { get; private set; }
+    [JsonIgnore]
+    public SceneDirtyFlags Dirty { get; private set; }
 
-    [InspectInclude] public SceneTransform Transform { get; }
+    [InspectInclude]
+    public SceneTransform Transform { get; }
 
     private readonly List<RenderBlueprintInstance> _instances = [];
 
@@ -137,7 +139,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     {
         var flag = Dirty;
         if ((flag & SceneDirtyFlags.Visibility) != 0) CommitVisibility();
-        if ((flag & SceneDirtyFlags.Transform) != 0) CommitTransform();
+        if ((flag & SceneDirtyFlags.Transform) != 0) Transform.CommitTransform(GetInstances());
         if ((flag & SceneDirtyFlags.Instance) != 0) CommitInstances();
         Dirty = SceneDirtyFlags.None;
     }
@@ -146,19 +148,6 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     private void CommitVisibility()
     {
         foreach (var it in GetInstances()) it.ToggleVisibility(Visible);
-    }
-
-    private void CommitTransform()
-    {
-        Transform.GetTransformMatrix(out var rootMatrix);
-        var worldBounds = BoundingBox.Infinite;
-        foreach (var instance in GetInstances())
-        {
-            instance.ApplyTransform(in rootMatrix);
-            BoundingBox.Merge(in worldBounds, in instance.GetWorldBounds(), out worldBounds);
-        }
-
-        Transform.SetBounds(worldBounds);
     }
 
     private void CommitInstances()

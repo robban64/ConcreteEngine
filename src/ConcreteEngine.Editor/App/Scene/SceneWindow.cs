@@ -3,9 +3,9 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Inputs;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
@@ -33,9 +33,8 @@ internal sealed unsafe class SceneWindow : EditorWindow
     {
         _browser = new SceneBrowser();
         _kindCombo = ComboInput.Create("scene-combo", SceneObjectKindExt.Values, SceneObjectKindExt.Names,
-            () => (int)_selectedKind, v => OnCategoryChange((SceneObjectKind)v));
+            v => OnCategoryChange((SceneObjectKind)v));
 
-        _kindCombo.LabelPlacement = LabelPlacement.None;
         _kindCombo.SetItemName(0, "All");
 
         _searchInput = new TextInput("search", 8, Search) { AllowEmpty = true, Trim = true, Lowercase = true };
@@ -63,11 +62,12 @@ internal sealed unsafe class SceneWindow : EditorWindow
 
     private void SyncState()
     {
-        _title.OverWriter.Append("SceneObjects [").Append(_browser.FilteredCount).Append(']').End();
+        _title.GetWriter().Append("SceneObjects ["u8).Append(_browser.FilteredCount).Append(']').EndNativeString();
     }
 
     protected override void OnDraw()
     {
+        _kindCombo.Value = (int)_selectedKind;
         ImGui.SeparatorText(_title);
 
         // search
@@ -87,7 +87,8 @@ internal sealed unsafe class SceneWindow : EditorWindow
         if (ImGui.BeginChild("scene-list"u8))
         {
             var itemWidth = ImGui.GetContentRegionAvail().X - ListItemHeight;
-            foreach (var range in AppDraw.Clipper(_browser.FilteredCount, ListItemHeight, out _))
+            var count = _browser.FilteredCount;
+            foreach (var range in AppDraw.Clipper(count, ListItemHeight, out _))
                 DrawList(range, itemWidth);
         }
 
@@ -100,17 +101,20 @@ internal sealed unsafe class SceneWindow : EditorWindow
     {
         var cursor = 0;
         var selectedId = SelectedId;
+        var selectSize = new Vector2(itemWidth, ListItemHeight);
         var sceneIds = _browser.GetSceneIds(range.Offset, range.Length);
         foreach (var name in _browser.GetDrawEnumerator(range.Offset, range.Length))
         {
             var id = sceneIds[cursor++];
+            var selected = id == selectedId;
             var visible = SceneManager.SceneStore.Get(id).Visible;
-            ImGui.PushID(id);
 
-            if (ImGui.Selectable(name, id == selectedId, 0, new Vector2(itemWidth, ListItemHeight)))
+            ImGui.PushID(id);
+            if (ImGui.Selectable(name, selected, 0, selectSize))
                 State.EnqueueEvent(new SelectionEvent(id));
 
             ImGui.SameLine();
+
             if (AppDraw.Button(visible ? IconNames.Eye : IconNames.EyeClosed))
                 State.EnqueueEvent(new SceneObjectEvent(id, Visible: !visible));
 

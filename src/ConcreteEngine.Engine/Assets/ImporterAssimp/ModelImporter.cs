@@ -100,7 +100,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         if (_context.IsAnimated)
             ProcessAnimations(_scene->MAnimations, _context);
 
-        MaterialModelImporter.ProcessMaterials(_assimp, _scene, _context);
+        MaterialModelImporter.ProcessMaterials(_scene, _context);
     }
 
 
@@ -113,7 +113,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         foreach (var mesh in meshes)
         {
             var meshIndex = mesh.Info.MeshIndex;
-            var data =  meshCtx.GetMeshData(meshIndex, out var is16Bit);
+            var data = meshCtx.GetMeshData(meshIndex, out var is16Bit);
 
             var meshId = isAnimated
                 ? gfxUploader.UploadAnimatedMesh(in data, is16Bit)
@@ -127,7 +127,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
         var bounds = meshes[0].Bounds;
         for (var i = 1; i < meshes.Length; i++)
-            BoundingBox.Merge(in bounds, in meshes[i].Bounds, out bounds);
+            bounds.Expand(in meshes[i].Bounds);
 
         meshCtx.ModelBounds = bounds;
     }
@@ -259,10 +259,13 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     private static void ProcessMeshVertices(AssimpMesh* aiMesh, int meshIndex, ModelImportContext ctx)
     {
         ref var data = ref ctx.MeshContext.GetMeshData(meshIndex, out var is16Bit);
-        
+
         data.Positions = new NativeView<Vector3>(aiMesh->MVertices, (int)aiMesh->MNumVertices);
 
-        WriteVertices(aiMesh, meshIndex, ctx.MeshContext, data.Vertices);
+        BoundingBox.FromPoints(data.Positions.AsReadOnlySpan(), out var bounds);
+        ctx.MeshContext.Meshes[meshIndex].SetBounds(in bounds);
+
+        WriteVertices(aiMesh, data.Vertices);
 
         if (is16Bit)
             WriteIndicesU16(aiMesh, data.Indices.Reinterpret<ushort>());

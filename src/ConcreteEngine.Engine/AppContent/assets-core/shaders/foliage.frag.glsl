@@ -10,14 +10,14 @@ in VS_OUT {
 
 out vec4 FragColor;
 
-@import ubo:FrameUniform
+@import ubo:EnvironmentUniform
 @import ubo:CameraUniform
-@import ubo:DirLightUniform
+@import ubo:LightningUniform
 @import ubo:ShadowUniform
 @import ubo:MaterialUniform
 
 layout(binding = 0) uniform sampler2DArray uTexture;
-layout(binding = 1) uniform sampler2DShadow uShadowMap;
+layout(binding = 9) uniform sampler2DShadow uShadowMap;
 
 const vec2 offsets[4] = vec2[](
 vec2(-0.5, -0.5),

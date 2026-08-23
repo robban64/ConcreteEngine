@@ -17,9 +17,9 @@ internal static class Predicates
         return node is PropertyDeclarationSyntax or VariableDeclaratorSyntax;
     }
 
-    public static bool IsEnumWithAttrib(SyntaxNode node, CancellationToken ct)
+    public static bool IsEnumNode(SyntaxNode node, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        return node is EnumDeclarationSyntax { AttributeLists.Count: > 0 };
+        return node is EnumDeclarationSyntax;
     }
 }

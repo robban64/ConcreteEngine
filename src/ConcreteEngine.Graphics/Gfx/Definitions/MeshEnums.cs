@@ -2,11 +2,10 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public enum DrawMeshKind : byte
 {
-    Invalid = 0,
-    Arrays = 1,
-    Elements = 2,
-    ArraysInstanced = 3,
-    ElementsInstanced = 4,
+    Arrays = 0,
+    Elements = 1,
+    ArraysInstanced = 2,
+    ElementsInstanced = 3,
 }
 
 public enum DrawElementSize : byte

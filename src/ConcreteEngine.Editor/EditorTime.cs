@@ -15,6 +15,8 @@ public static class EditorTime
     private static float _activityTimer;
     private static FrameAccumulator _accumulator = new(RateIdle);
 
+    public static float Delta { get; private set; }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Advance(float frameDelta, out float editorDelta)
@@ -23,7 +25,9 @@ public static class EditorTime
         if (_activityTimer <= 0f) _accumulator.TickDt = RateIdle;
 
         _accumulator.Accumulate(frameDelta);
-        return _accumulator.DequeueTick(out editorDelta);
+        var shouldAdvance = _accumulator.DequeueTick(out editorDelta);
+        Delta = editorDelta;
+        return shouldAdvance;
     }
 
     public static void WakeUp()

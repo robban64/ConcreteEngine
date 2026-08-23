@@ -11,9 +11,11 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
     private const string MainAttribute = "EditorInspectorAttribute";
     private const string MainAttributeFullName = "ConcreteEngine.Editor.Lib.EditorInspectorAttribute";
 
+
     private const string InspectAttrib = "InspectAttribute";
+    private const string SegmentAttrib = "SegmentAttribute";
+
     private const string IncludeAttrib = "InspectIncludeAttribute";
-    private const string InputGroupAttrib = "InputGroupAttribute";
 
     private const string InputNumberAttrib = "InputNumberAttribute";
     private const string InputColorAttrib = "InputColorAttribute";
@@ -79,7 +81,7 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
                 continue;
             }
 
-            if (TryParseIncludeAttribute(member, out var nestedName, out var isInputGroup))
+            if (TryParseIncludeAttribute(member, out var nestedName))
             {
                 var accessPath = member.Name;
                 if (nestedName is not null) accessPath += "." + nestedName;
@@ -94,7 +96,7 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
 
                 if (groupMembers.Count > 0)
                 {
-                    groups.Add(new InspectorGroup(false, isInputGroup,
+                    groups.Add(new InspectorGroup(false,
                         Name: member.Name,
                         AccessPath: accessPath,
                         Info: MemberInfo.Extract(member),
@@ -104,7 +106,7 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
         }
 
         if (roots.Count > 0)
-            groups.Insert(0, new InspectorGroup(true, false, "Root", "", default, roots.ToEquatableArray()));
+            groups.Insert(0, new InspectorGroup(true, "Root", "", default, roots.ToEquatableArray()));
 
         groupArray = groups.Count > 0 ? groups.ToEquatableArray() : [];
     }
@@ -129,6 +131,9 @@ public sealed partial class InspectorGenerator : IIncrementalGenerator
         if (inputField is null) return null;
 
         ExtractCommonFieldAttr(attr, out var label, out var segment);
+        var segmentAttr = sym.GetAttributes().FirstOrDefault(static x => x.AttributeClass?.Name == SegmentAttrib);
+        if (segmentAttr is not null && segmentAttr.ConstructorArguments[0].Value is string segmentName)
+            segment = segmentName;
 
         return new InspectorMember(Name: sym.Name,
             Label: label ?? sym.Name,

@@ -1,11 +1,12 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGuizmo;
@@ -30,8 +31,11 @@ internal static unsafe class ViewportWindow
         IsHovering = ImGui.IsWindowHovered();
         IsFocused = ImGui.IsWindowFocused();
 
-        state.GetOrSetTextureHandle(ImGuiSystem.OutputTexture, ref _viewportTexHandle);
-        ImGui.Image(_viewportTexHandle, EngineWindow.Viewport.Size, Vector2.UnitY, Vector2.UnitX);
+        ref var viewportHandle = ref _viewportTexHandle;
+        if (!ImGuiSystem.TryResolveTextureHandle(ImGuiSystem.OutputTexture, ref viewportHandle))
+            Throwers.InvalidOperation(nameof(ImGuiSystem.OutputTexture));
+
+        ImGui.Image(viewportHandle, EngineWindow.Viewport.Size, Vector2.UnitY, Vector2.UnitX);
 
         if (SelectionManager.Instance.SelectedSceneObject != null)
         {

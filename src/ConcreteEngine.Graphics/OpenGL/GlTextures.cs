@@ -1,58 +1,55 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Handles;
-using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
+using static ConcreteEngine.Graphics.OpenGL.GlDriver;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlTextures
+internal static class GlTextures
 {
-    private static GL Gl => GlBackendDriver.Gl;
-    private readonly BackendResourceStore _textureStore = GfxRegistry.GetBackendStore<TextureMeta>();
-
-
-    public GfxHandle CreateTexture(TextureKind kind)
+    public static NativeHandle<TextureMeta> CreateTexture(TextureKind kind)
     {
         Gl.CreateTextures(kind.ToGlEnum(), 1, out uint texture);
-        return _textureStore.Add(new NativeHandle(texture));
+        return new NativeHandle<TextureMeta>(texture);
     }
 
-
-    public void TextureStorage2D(GfxHandle texRef, Size2D size, GpuTextureProps desc)
+    public static NativeHandle<SamplerMeta> CreateSampler()
     {
-        var handle = _textureStore.Get(texRef);
+        Gl.CreateSamplers(1, out uint samplerId);
+        return new NativeHandle<SamplerMeta>(samplerId);
+    }
+
+    public static void TextureStorage2D(NativeHandle<TextureMeta> handle, Size2D size, GpuTextureProps desc)
+    {
         (uint width, uint height) = size.ToUnsigned();
         Gl.TextureStorage2D(handle, desc.Levels, desc.Format.ToStorageFormat(), width, height);
     }
 
-    public void TextureStorage2D_MultiSample(GfxHandle texRef, Size2D size, GpuTextureProps desc)
+    public static void TextureStorage2D_MultiSample(NativeHandle<TextureMeta> handle, Size2D size, GpuTextureProps desc)
     {
-        var handle = _textureStore.Get(texRef);
         (uint width, uint height) = size.ToUnsigned();
         Gl.TextureStorage2DMultisample(handle, desc.Samples, desc.Format.ToStorageFormat(), width, height, true);
     }
 
-    public void TextureStorage3D(GfxHandle texRef, Size3D size, GpuTextureProps desc)
+    public static void TextureStorage3D(NativeHandle<TextureMeta> handle, Size3D size, GpuTextureProps desc)
     {
-        var handle = _textureStore.Get(texRef);
         (uint width, uint height, uint depth) = size.ToUnsigned();
         Gl.TextureStorage3D(handle, desc.Levels, desc.Format.ToStorageFormat(), width, height, depth);
     }
 
-    public void UploadTexture2D_Data(GfxHandle texRef, ReadOnlySpan<byte> data, TexturePixelFormat format,
+    public static void UploadTexture2D_Data(NativeHandle<TextureMeta> handle, ReadOnlySpan<byte> data,
+        TexturePixelFormat format,
         Size2D size)
     {
-        var handle = _textureStore.Get(texRef);
         (uint width, uint height) = size.ToUnsigned();
         var (fmt, type) = format.ToUploadFormatType();
         Gl.TextureSubImage2D(handle, 0, 0, 0, width, height, fmt, type, data);
     }
 
-    public void UploadTexture3D_Data(GfxHandle texRef, ReadOnlySpan<byte> data, TexturePixelFormat format,
+    public static void UploadTexture3D_Data(NativeHandle<TextureMeta> handle, ReadOnlySpan<byte> data,
+        TexturePixelFormat format,
         Size3D size, int zOffset)
     {
-        var handle = _textureStore.Get(texRef);
         (uint width, uint height, uint depth) = size.ToUnsigned();
         var (fmt, type) = format.ToUploadFormatType();
         Gl.TextureSubImage3D(
@@ -64,128 +61,99 @@ internal sealed class GlTextures
         );
     }
 
-    public void CopyTextureData(
-        GfxHandle src, TextureKind srcKind, GfxHandle dst, TextureKind dstKind,
+    public static void CopyTextureData(
+        NativeHandle<TextureMeta> src, TextureKind srcKind, NativeHandle<TextureMeta> dst, TextureKind dstKind,
         int srcLevel, int dstLevel, Size3D srcSize,
         Int3 srcPos = default, Int3 dstPos = default)
     {
-        var srcHandle = _textureStore.Get(src);
-        var dstHandle = _textureStore.Get(dst);
         (uint width, uint height, uint depth) = srcSize.ToUnsigned();
 
         Gl.CopyImageSubData(
-            srcHandle, srcKind.ToGlEnum(), srcLevel, srcPos.X, srcPos.Y, srcPos.Z,
-            dstHandle, dstKind.ToGlEnum(), dstLevel, dstPos.X, dstPos.Y, dstPos.Z,
+            src, srcKind.ToGlEnum(), srcLevel, srcPos.X, srcPos.Y, srcPos.Z,
+            dst, dstKind.ToGlEnum(), dstLevel, dstPos.X, dstPos.Y, dstPos.Z,
             width, height, depth
         );
     }
 
+    public static void GenerateMipMaps(NativeHandle<TextureMeta> handle) => Gl.GenerateTextureMipmap(handle);
 
-    public void SetLodBias(GfxHandle texRef, float lodBias) =>
-        Gl.TextureParameter(_textureStore.Get(texRef), GLEnum.TextureLodBias, lodBias);
+    public static void SetLodBias(NativeHandle<TextureMeta> handle, float lodBias) =>
+        Gl.TextureParameter(handle, GLEnum.TextureLodBias, lodBias);
 
-    public void SetAnisotropy(GfxHandle texRef, int anisotropy)
-    {
-        var handle = _textureStore.Get(texRef);
+    public static void SetSamplerLodBias(NativeHandle<SamplerMeta> handle, float lodBias) =>
+        Gl.SamplerParameter(handle, GLEnum.TextureLodBias, lodBias);
+
+    public static void SetAnisotropy(NativeHandle<TextureMeta> handle, int anisotropy) =>
         Gl.TextureParameter(handle, GLEnum.TextureMaxAnisotropy, anisotropy);
+
+    public static void SetSamplerAnisotropy(NativeHandle<SamplerMeta> handle, int anisotropy) =>
+        Gl.SamplerParameter(handle, GLEnum.TextureMaxAnisotropy, anisotropy);
+
+    public static void SetBorder(NativeHandle<TextureMeta> handle, TextureBorder b)
+    {
+        var c = (int)b;
+        Gl.TextureParameterI(handle, GLEnum.TextureBorderColor, stackalloc int[] { c, c, c, c });
     }
 
-    public void GenerateMipMaps(GfxHandle texRef) => Gl.GenerateTextureMipmap(_textureStore.Get(texRef));
-
-    public void SetBorder(GfxHandle texRef, GpuTextureBorder b)
+    public static void SetSamplerBorder(NativeHandle<SamplerMeta> handle, TextureBorder b)
     {
-        var handle = _textureStore.Get(texRef);
-        Span<int> border = stackalloc int[] { b.R, b.G, b.B, b.A };
-        Gl.TextureParameterI(handle, GLEnum.TextureBorderColor, border);
+        var c = (int)b;
+        Gl.SamplerParameterI(handle, GLEnum.TextureBorderColor, stackalloc int[] { c, c, c, c });
     }
 
-    public void SetCompareTextureFunc(GfxHandle texRef, DepthMode depthMode)
+    public static void SetCompareTextureFunc(NativeHandle<TextureMeta> handle, DepthMode depthMode)
     {
-        if (depthMode == DepthMode.Unset) return;
-
-        var handle = _textureStore.Get(texRef);
         var compareMode = (int)GLEnum.CompareRefToTexture;
         var depthFunc = (int)depthMode.ToGlEnum();
         Gl.TextureParameterI(handle, GLEnum.TextureCompareMode, in compareMode);
         Gl.TextureParameterI(handle, GLEnum.TextureCompareFunc, in depthFunc);
     }
 
-    public void SetTexturePreset(GfxHandle texRef, TexturePreset preset, bool wrapR)
+    public static void SetSamplerCompareTextureFunc(NativeHandle<SamplerMeta> handle, DepthMode depthMode)
     {
-        var handle = _textureStore.Get(texRef);
+        var compareMode = (int)GLEnum.CompareRefToTexture;
+        var depthFunc = (int)depthMode.ToGlEnum();
+        Gl.SamplerParameterI(handle, GLEnum.TextureCompareMode, in compareMode);
+        Gl.SamplerParameterI(handle, GLEnum.TextureCompareFunc, in depthFunc);
+    }
 
-        switch (preset)
+    public static void SetTexturePreset(NativeHandle<TextureMeta> handle, TexturePreset preset, bool wrapR)
+    {
+        var param = GetGlParameters(preset);
+        Gl.TextureParameter(handle, GLEnum.TextureMinFilter, ref param.MinFilter);
+        Gl.TextureParameter(handle, GLEnum.TextureMagFilter, ref param.MagFilter);
+        Gl.TextureParameter(handle, GLEnum.TextureWrapS, ref param.Wrap);
+        Gl.TextureParameter(handle, GLEnum.TextureWrapT, ref param.Wrap);
+        if (wrapR) Gl.TextureParameter(handle, GLEnum.TextureWrapR, ref param.Wrap);
+    }
+
+    public static void ApplySamplerParameters(NativeHandle<SamplerMeta> samplerHandle, TexturePreset preset, bool wrapR)
+    {
+        var param = GetGlParameters(preset);
+        Gl.SamplerParameterI(samplerHandle, GLEnum.TextureMinFilter, ref param.MinFilter);
+        Gl.SamplerParameterI(samplerHandle, GLEnum.TextureMagFilter, ref param.MagFilter);
+        Gl.SamplerParameterI(samplerHandle, GLEnum.TextureWrapS, ref param.Wrap);
+        Gl.SamplerParameterI(samplerHandle, GLEnum.TextureWrapT, ref param.Wrap);
+        if (wrapR) Gl.SamplerParameterI(samplerHandle, GLEnum.TextureWrapR, ref param.Wrap);
+    }
+
+
+    private static (int MinFilter, int MagFilter, int Wrap) GetGlParameters(TexturePreset preset)
+    {
+        return preset switch
         {
-            case TexturePreset.NearestClamp:
-            case TexturePreset.NearestClampBorder:
-                SetTexParameter(GLEnum.TextureMinFilter, GLEnum.Nearest);
-                SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Nearest);
-                var nparam = preset == TexturePreset.NearestClamp ? GLEnum.ClampToEdge : GLEnum.ClampToBorder;
-                SetTexParameter(GLEnum.TextureWrapS, nparam);
-                SetTexParameter(GLEnum.TextureWrapT, nparam);
-                if (wrapR) SetTexParameter(GLEnum.TextureWrapR, nparam);
-                break;
-
-            case TexturePreset.NearestRepeat:
-                SetTexParameter(GLEnum.TextureMinFilter, GLEnum.Nearest);
-                SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Nearest);
-                SetTexParameter(GLEnum.TextureWrapS, GLEnum.Repeat);
-                SetTexParameter(GLEnum.TextureWrapT, GLEnum.Repeat);
-                if (wrapR) SetTexParameter(GLEnum.TextureWrapR, GLEnum.Repeat);
-                break;
-
-            case TexturePreset.LinearClamp:
-            case TexturePreset.LinearClampBorder:
-                SetTexParameter(GLEnum.TextureMinFilter, GLEnum.Linear);
-                SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Linear);
-                var param = preset == TexturePreset.LinearClamp ? GLEnum.ClampToEdge : GLEnum.ClampToBorder;
-                SetTexParameter(GLEnum.TextureWrapS, param);
-                SetTexParameter(GLEnum.TextureWrapT, param);
-                if (wrapR) SetTexParameter(GLEnum.TextureWrapR, param);
-                break;
-
-            case TexturePreset.LinearRepeat:
-                SetTexParameter(GLEnum.TextureMinFilter, GLEnum.Linear);
-                SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Linear);
-                SetTexParameter(GLEnum.TextureWrapS, GLEnum.Repeat);
-                SetTexParameter(GLEnum.TextureWrapT, GLEnum.Repeat);
-                if (wrapR) SetTexParameter(GLEnum.TextureWrapR, GLEnum.Repeat);
-                break;
-
-            case TexturePreset.LinearMipmapClamp:
-                SetTexParameter(GLEnum.TextureMinFilter, GLEnum.LinearMipmapLinear);
-                SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Linear);
-                SetTexParameter(GLEnum.TextureWrapS, GLEnum.ClampToEdge);
-                SetTexParameter(GLEnum.TextureWrapT, GLEnum.ClampToEdge);
-                if (wrapR) SetTexParameter(GLEnum.TextureWrapR, GLEnum.ClampToEdge);
-                break;
-
-            case TexturePreset.LinearMipmapRepeat:
-                SetTexParameter(GLEnum.TextureMinFilter, GLEnum.LinearMipmapLinear);
-                SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Linear);
-                SetTexParameter(GLEnum.TextureWrapS, GLEnum.Repeat);
-                SetTexParameter(GLEnum.TextureWrapT, GLEnum.Repeat);
-                if (wrapR) SetTexParameter(GLEnum.TextureWrapR, GLEnum.Repeat);
-
-                break;
-
-            case TexturePreset.PremultipliedUi:
-                SetTexParameter(GLEnum.TextureMinFilter, GLEnum.Linear);
-                SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Linear);
-                SetTexParameter(GLEnum.TextureWrapS, GLEnum.ClampToEdge);
-                SetTexParameter(GLEnum.TextureWrapT, GLEnum.ClampToEdge);
-                if (wrapR) SetTexParameter(GLEnum.TextureWrapR, GLEnum.ClampToEdge);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
-        }
-
-        return;
-
-        void SetTexParameter(GLEnum pName, GLEnum param)
-        {
-            var intParam = (int)param;
-            Gl.TextureParameterI(handle, pName, ref intParam);
-        }
+            TexturePreset.NearestClamp => ((int)GLEnum.Nearest, (int)GLEnum.Nearest, (int)GLEnum.ClampToEdge),
+            TexturePreset.NearestClampBorder => ((int)GLEnum.Nearest, (int)GLEnum.Nearest, (int)GLEnum.ClampToBorder),
+            TexturePreset.NearestRepeat => ((int)GLEnum.Nearest, (int)GLEnum.Nearest, (int)GLEnum.Repeat),
+            TexturePreset.LinearClamp => ((int)GLEnum.Linear, (int)GLEnum.Linear, (int)GLEnum.ClampToEdge),
+            TexturePreset.LinearClampBorder => ((int)GLEnum.Linear, (int)GLEnum.Linear, (int)GLEnum.ClampToBorder),
+            TexturePreset.LinearRepeat => ((int)GLEnum.Linear, (int)GLEnum.Linear, (int)GLEnum.Repeat),
+            TexturePreset.LinearMipmapClamp => ((int)GLEnum.LinearMipmapLinear, (int)GLEnum.Linear,
+                (int)GLEnum.ClampToEdge),
+            TexturePreset.LinearMipmapRepeat => ((int)GLEnum.LinearMipmapLinear, (int)GLEnum.Linear,
+                (int)GLEnum.Repeat),
+            TexturePreset.PremultipliedUi => ((int)GLEnum.Linear, (int)GLEnum.Linear, (int)GLEnum.ClampToEdge),
+            _ => throw new ArgumentOutOfRangeException(nameof(preset), preset, null)
+        };
     }
 }

@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.App.Shared;
-using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.App.Scene;
@@ -65,10 +65,10 @@ internal sealed class SceneBrowser
             ref var name = ref span[cursor++];
             if (name.IsNull) name = StringArena.AllocateString(32);
 
-            var sw = name.OverWriter;
-            sw.PadRight(1).AppendIcon(sceneObj.Kind.ToIntIcon()).PadRight(4);
+            var sw = name.GetWriter();
+            sw.PadRight(1).AppendIcon(sceneObj.Kind.ToIcon()).PadRight(4);
             sw.Append(sceneObj.Name.Truncate(20));
-            sw.End();
+            sw.EndNativeString();
         }
     }
 

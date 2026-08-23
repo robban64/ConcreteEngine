@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
@@ -11,7 +12,7 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
     : AssetTypeLoader<Model, ModelRecord>()
 {
-    private const int DefaultLength = 4096 * 32;
+    private const int DefaultLength = CapacityUtils.PageSize * 32;
 
     private static readonly int TotalSize =
         DefaultLength * Unsafe.SizeOf<VertexShading>() +
@@ -27,7 +28,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
 
     protected override void OnActivate()
     {
-        _importBuffer = NativeArray.Allocate(TotalSize, false);
+        _importBuffer = NativeArray.AlignedAllocate<byte>(TotalSize, CapacityUtils.PageSize, false);
 
         _importer = new ModelImporter(textureLoader);
     }
@@ -79,8 +80,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
         var meshLength = context.MeshCount;
         if (meshLength == 0) throw new InvalidOperationException("Model import resulted in zero meshes");
 
-        var cursor = 0;
-        var allocator = new NativeAllocator(_importBuffer, ref cursor);
+        var allocator = new NativeAllocBuilder(_importBuffer);
         for (int i = 0; i < meshLength; i++)
         {
             var info = context.Meshes[i].Info;
@@ -106,13 +106,13 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
         var properties = MeshDrawProperties.MakeElemental(drawCount: indices, size: drawSize);
         var iboArgs = CreateIboArgs.MakeDefault();
 
-        var meshId = gfx.CreateEmptyMesh(in properties, 2, VertexAttributes.GetVertex3DAttributesV2());
-        gfx.CreateAttachVertexBuffer(meshId, data.Positions.AsReadOnlySpan(), CreateVboArgs.MakeDefault(0));
-        gfx.CreateAttachVertexBuffer(meshId, data.Vertices.AsReadOnlySpan(), CreateVboArgs.MakeDefault(1));
+        var meshId = gfx.CreateEmptyMesh(in properties, 2, VertexAttributes.MainVertexAttributes);
+        gfx.CreateAttachVertexBuffer(meshId, data.Positions, CreateVboArgs.MakeDefault(0));
+        gfx.CreateAttachVertexBuffer(meshId, data.Vertices, CreateVboArgs.MakeDefault(1));
         if (is16Bit)
-            gfx.CreateAttachIndexBuffer(meshId, data.Indices.Reinterpret<ushort>().AsReadOnlySpan(), iboArgs);
+            gfx.CreateAttachIndexBuffer(meshId, data.Indices.Reinterpret<ushort>(), iboArgs);
         else
-            gfx.CreateAttachIndexBuffer(meshId, data.Indices.Reinterpret<uint>().AsReadOnlySpan(), iboArgs);
+            gfx.CreateAttachIndexBuffer(meshId, data.Indices.Reinterpret<uint>(), iboArgs);
         return meshId;
     }
 
@@ -123,14 +123,14 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
         var properties = MeshDrawProperties.MakeElemental(drawCount: indices, size: drawSize);
         var iboArgs = CreateIboArgs.MakeDefault();
 
-        var meshId = gfx.CreateEmptyMesh(in properties, 3, VertexAttributes.GetSkinnedAttributesV2());
-        gfx.CreateAttachVertexBuffer(meshId, data.Positions.AsReadOnlySpan(), CreateVboArgs.MakeDefault(0));
-        gfx.CreateAttachVertexBuffer(meshId, data.Vertices.AsReadOnlySpan(), CreateVboArgs.MakeDefault(1));
-        gfx.CreateAttachVertexBuffer(meshId, data.Skinning.AsReadOnlySpan(), CreateVboArgs.MakeDefault(2));
+        var meshId = gfx.CreateEmptyMesh(in properties, 3, VertexAttributes.SkinnedAttributes);
+        gfx.CreateAttachVertexBuffer(meshId, data.Positions, CreateVboArgs.MakeDefault(0));
+        gfx.CreateAttachVertexBuffer(meshId, data.Vertices, CreateVboArgs.MakeDefault(1));
+        gfx.CreateAttachVertexBuffer(meshId, data.Skinning, CreateVboArgs.MakeDefault(2));
         if (is16Bit)
-            gfx.CreateAttachIndexBuffer(meshId, data.Indices.Reinterpret<ushort>().AsReadOnlySpan(), iboArgs);
+            gfx.CreateAttachIndexBuffer(meshId, data.Indices.Reinterpret<ushort>(), iboArgs);
         else
-            gfx.CreateAttachIndexBuffer(meshId, data.Indices.Reinterpret<uint>().AsReadOnlySpan(), iboArgs);
+            gfx.CreateAttachIndexBuffer(meshId, data.Indices.Reinterpret<uint>(), iboArgs);
         return meshId;
     }
 }

@@ -1,5 +1,8 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
+using ConcreteEngine.Editor.App.Assets;
+using ConcreteEngine.Editor.App.Inspectors;
+using ConcreteEngine.Editor.App.Scene;
 using ConcreteEngine.Editor.Logging;
 
 namespace ConcreteEngine.Editor.Core;
@@ -66,6 +69,7 @@ internal sealed class SelectionManager
         }
 
         SelectedAsset = AssetManager.Assets.Get<AssetObject>(id);
+        AssetObjectInspector.Instance.AttachTarget(SelectedAsset);
     }
 
     private void DeselectAsset()
@@ -74,6 +78,7 @@ internal sealed class SelectionManager
         if (!id.IsValid()) return;
 
         SelectedAsset = null;
+        AssetObjectInspector.Instance.DetachTarget();
     }
 
     private void SelectSceneObject(SceneObjectId id, bool showDebugBounds)
@@ -90,12 +95,16 @@ internal sealed class SelectionManager
 
         var sceneObject = SceneManager.SceneStore.Get(id);
         foreach (var it in sceneObject.GetInstances())
+        {
             it.ToggleSelection(true);
+            if (it is ParticleInstance particle) ParticleInspector.Instance.AttachTarget(particle.Emitter);
+        }
 
         if (showDebugBounds)
             ToggleDrawBounds(true);
 
         SelectedSceneObject = sceneObject;
+        SceneObjectInspector.Instance.AttachTarget(sceneObject);
     }
 
     private void DeselectSceneObject()
@@ -105,8 +114,10 @@ internal sealed class SelectionManager
         {
             it.ToggleSelection(false);
             it.ToggleDebugBounds(false);
+            if (it is ParticleInstance) ParticleInspector.Instance.DetachTarget();
         }
 
         SelectedSceneObject = null;
+        SceneObjectInspector.Instance.DetachTarget();
     }
 }

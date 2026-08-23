@@ -1,4 +1,4 @@
-using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Graphics.Terrains;
 using ConcreteEngine.Core.Engine.Scene.Modules;
 
 namespace ConcreteEngine.Core.Engine.Scene;

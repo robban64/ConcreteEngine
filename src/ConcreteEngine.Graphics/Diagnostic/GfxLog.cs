@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
@@ -60,18 +60,16 @@ public static unsafe class GfxLog
             action: action);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void LogGfxStore(int id, GfxHandle h, LogTopic topic, LogAction action, ushort flags = 0) =>
-        Event(LogGfx(id, h.Slot, h.Gen, flags, h.IsValid, topic, action));
+    internal static void LogGfxStore(int id, NativeHandle h, LogTopic topic, LogAction action, ushort flags = 0) =>
+        Event(LogGfx(id, 0, 0, flags, h.IsValid(), topic, action));
 
     //
-    private static LogEvent LogBk(uint handle, int slot, ushort flags, bool alive, LogTopic topic, LogAction action) =>
+    private static LogEvent LogBk(NativeHandle handle, int slot, ushort flags, bool alive, LogTopic topic,
+        LogAction action) =>
         new(handle, slot, alive ? 1 : 0, flags: flags, scope: LogScope.Backend, topic: topic, action: action);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void LogBkStore(uint handle, int slot, LogTopic topic, LogAction action, ushort flags = 0) =>
-        Event(LogBk(handle, slot, flags, handle > 0, topic, action));
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void LogBackend(uint handle, GfxHandle h, LogTopic topic, LogAction action, ushort flags = 0) =>
-        Event(LogBk(handle, h.Slot, flags, h.IsValid, topic, action));
+    internal static void LogBackend(NativeHandle handle, ushort h, LogTopic topic, LogAction action,
+        ushort flags = 0) =>
+        Event(LogBk(handle, h, flags, handle.IsValid(), topic, action));
 }

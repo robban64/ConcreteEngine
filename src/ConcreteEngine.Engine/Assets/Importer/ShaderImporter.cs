@@ -15,15 +15,15 @@ internal sealed unsafe class ShaderImporter
     private static ReadOnlySpan<byte> Identifier => "@import "u8;
     private static ReadOnlySpan<byte> Std140Header => "layout(std140, binding = "u8;
 
-    private sealed class UboDictEntry(int slot, byte[] data)
+    private sealed class UboDictEntry(int slot, byte[] textUtf8)
     {
         public readonly int Slot = slot;
-        public readonly byte[] Data = data;
+        public readonly byte[] TextUtf8 = textUtf8;
     }
 
     private int _uboSlot;
-
     private readonly Dictionary<string, UboDictEntry> _uboDict = new(16);
+
     private readonly Dictionary<string, byte[]> _structsDict = new(4);
 
     public void ImportAllDefinitions()
@@ -31,8 +31,8 @@ internal sealed unsafe class ShaderImporter
         var buffer = stackalloc byte[2048];
         var sw = new NativeSpanWriter(buffer, 1024);
         var line = new Span<byte>(buffer + 1024, 1024);
-        ParseShaderDef("ubo.glsl", "uniform"u8, line, sw, &UboCallback);
-        ParseShaderDef("structs.glsl", "struct"u8, line, sw, &StructCallback);
+        ParseShaderDef(true, line, sw);
+        ParseShaderDef(false, line, sw);
     }
 
     public ReadOnlySpan<byte> ImportShader(string path, NativeView<byte> buffer, out long length)
@@ -92,7 +92,7 @@ internal sealed unsafe class ShaderImporter
                 var uboEntry = _uboDict[strName];
                 sw.Append(Std140Header);
                 sw.Append(uboEntry.Slot).Append((byte)')').Append(' ');
-                sw.Append(uboEntry.Data);
+                sw.Append(uboEntry.TextUtf8);
                 sw.Append('\n');
             }
             else if (type.SequenceEqual("struct"u8))
@@ -114,14 +114,11 @@ internal sealed unsafe class ShaderImporter
     }
 
 
-    public void ParseShaderDef(
-        string filename,
-        ReadOnlySpan<byte> identifier,
-        Span<byte> line,
-        NativeSpanWriter sw,
-        delegate*<string, byte[], ShaderImporter, void> onAdd
-    )
+    public void ParseShaderDef(bool isUniform, Span<byte> line, NativeSpanWriter sw)
     {
+        var filename = isUniform ? "ubo.glsl" : "structs.glsl";
+        var identifier = isUniform ? "uniform"u8 : "struct"u8;
+
         using var fs = File.OpenRead(Path.Join(ShaderDefPath, filename));
         string? activeName = null;
 
@@ -151,10 +148,13 @@ internal sealed unsafe class ShaderImporter
             if (span.StartsWith((byte)'}') && fieldEnd > 0)
             {
                 if (activeName == null!) Throwers.InvalidOperation("Invalid shader def");
-                onAdd(activeName, sw.EndSpan().ToArray(), this);
+
+                var result = sw.EndSpan().ToArray();
+                if (isUniform) _uboDict.Add(activeName, new UboDictEntry(_uboSlot++, result));
+                else _structsDict.Add(activeName, result);
 
                 activeName = null;
-                sw.Clear();
+                sw.Reset();
             }
         }
 
@@ -164,16 +164,11 @@ internal sealed unsafe class ShaderImporter
         if (lastLine.StartsWith((byte)'}') && lastLine.EndsWith((byte)';'))
         {
             sw.Append(lastLine);
-            onAdd(activeName, sw.EndSpan().ToArray(), this);
+            var result = sw.EndSpan().ToArray();
+            if (isUniform) _uboDict.Add(activeName, new UboDictEntry(_uboSlot++, result));
+            else _structsDict.Add(activeName, result);
         }
     }
-
-    private static void StructCallback(string name, byte[] data, ShaderImporter importer) =>
-        importer._structsDict.Add(name, data);
-
-    private static void UboCallback(string name, byte[] data, ShaderImporter importer) =>
-        importer._uboDict.Add(name, new UboDictEntry(importer._uboSlot++, data));
-
 
     private static bool ReadLine(FileStream fs, Span<byte> line, scoped ref int cursor)
     {

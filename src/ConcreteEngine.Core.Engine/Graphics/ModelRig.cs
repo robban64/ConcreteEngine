@@ -1,8 +1,8 @@
-using System.Collections.ObjectModel;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Engine.Graphics.Animations;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
@@ -14,7 +14,7 @@ public sealed class ModelRig : IDisposable
     public readonly int ClipCount;
     public readonly int BoneCount;
 
-    public readonly ReadOnlyDictionary<string, int> BoneMapping;
+    public readonly Dictionary<string, int> BoneMapping;
 
     private readonly AnimationClip[] _clips;
 
@@ -54,7 +54,7 @@ public sealed class ModelRig : IDisposable
         ClipCount = clips.Length;
         BoneCount = parentIndices.Length;
 
-        BoneMapping = new ReadOnlyDictionary<string, int>(boneMapping);
+        BoneMapping = boneMapping;
         _clips = clips.ToArray();
         _parentIndices = parentIndices.ToArray();
         _bindPose = bindPose.ToArray();

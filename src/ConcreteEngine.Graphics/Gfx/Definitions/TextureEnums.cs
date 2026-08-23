@@ -2,6 +2,28 @@ using ConcreteEngine.Core.Common.Attributes;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
+[EnumExt(ToUtf8 = true)]
+public enum TexturePixelFormat : byte
+{
+    Unknown = 0,
+    Rgb = 1,
+    Rgba = 2,
+    SrgbAlpha = 3,
+    Depth = 4,
+    Red = 5
+}
+
+[EnumExt(ToUtf8 = true)]
+public enum TextureKind : byte
+{
+    Unknown = 0,
+    Texture2D = 1,
+    Texture3D = 2,
+    CubeMap = 3,
+    Texture2DArray = 4,
+    Multisample2D = 5
+}
+
 public enum TextureFilter : byte
 {
     Nearest = 0,
@@ -20,28 +42,6 @@ public enum TextureCompare : byte
     None = 0,
     LessOrEqual = 1,
     GreaterOrEqual = 2
-}
-
-[EnumExt]
-public enum TexturePixelFormat : byte
-{
-    Unknown = 0,
-    Rgb = 1,
-    Rgba = 2,
-    SrgbAlpha = 3,
-    Depth = 4,
-    Red = 5
-}
-
-[EnumExt]
-public enum TextureKind : byte
-{
-    Unknown = 0,
-    Texture2D = 1,
-    Texture3D = 2,
-    CubeMap = 3,
-    Texture2DArray = 4,
-    Multisample2D = 5
 }
 
 [EnumExt]

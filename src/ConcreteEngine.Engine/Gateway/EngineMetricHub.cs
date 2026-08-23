@@ -5,10 +5,11 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Graphics.Diagnostic;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Gateway;
 
@@ -24,7 +25,7 @@ internal sealed class EngineMetricHub
     public void ConnectEditor(MetricSystem metricSystem)
     {
         _metricSystem = metricSystem;
-        metricSystem.BindStore(GfxMetrics.StoreCount, AssetKindUtils.AssetTypeCount, WriteStoreMeta);
+        metricSystem.BindStore(GfxRegistry.StoreCount, AssetKindUtils.AssetTypeCount, WriteStoreMeta);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -60,11 +61,11 @@ internal sealed class EngineMetricHub
         var sceneMeta = new SceneMeta(
             SceneManager.SceneStore.ActiveCount,
             0,
-            Ecs.Game.ActiveCount,
-            Ecs.Render.ActiveCount
+            0,
+            RenderEcs.ActiveCount
         );
 
-        _metricSystem.PushMeta(in frameMeta, in sceneMeta, in GfxMetrics.FrameMeta);
+        _metricSystem.PushMeta(in frameMeta, in sceneMeta);
         _metricSystem.TickDiagnostic();
     }
 

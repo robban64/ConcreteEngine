@@ -1,7 +1,5 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
@@ -38,25 +36,10 @@ internal sealed unsafe partial class ModelImporter
         }
     }
 
-    private static void WriteVertices(
-        AssimpMesh* aiMesh,
-        int meshIndex,
-        MeshImportContext ctx,
-        NativeView<VertexShading> vertices)
+    private static void WriteVertices(AssimpMesh* aiMesh, NativeView<VertexShading> vertices)
     {
         var count = (int)aiMesh->MNumVertices;
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
-
-        var meshEntry = ctx.Meshes[meshIndex];
-/*
-        var bounds = BoundingBox.Infinite;
-        for (int i = 0; i < count; i++)
-        {
-            bounds.FromPoint(aiMesh->MVertices[i]);
-        }
-*/
-        BoundingBox.FromPoints(new ReadOnlySpan<Vector3>(aiMesh->MVertices, count), out var bounds);
-        meshEntry.SetBounds(in bounds);
 
         var texCoords = aiMesh->MTextureCoords[0];
         for (int i = 0; i < count; i++)
@@ -92,20 +75,11 @@ internal sealed unsafe partial class ModelImporter
         }
 
         // sanitize
-        for (var i = 0; i < skinningData.Length; i++)
+        foreach (ref var data in skinningData)
         {
-            ref var data = ref skinningData[i];
             if (data.I0 == byte.MaxValue)
             {
-                data.I0 = 0;
-                data.I1 = 0;
-                data.I2 = 0;
-                data.I3 = 0;
-
-                data.W0 = 0;
-                data.W1 = 0;
-                data.W2 = 0;
-                data.W3 = 0;
+                data = default;
             }
             else if (data.I1 == byte.MaxValue)
             {
@@ -137,11 +111,13 @@ internal sealed unsafe partial class ModelImporter
     {
         var weightLen = bone->MNumWeights;
         var weights = bone->MWeights;
+        var vertexLength = skinningData.Length;
+
         for (var j = 0; j < weightLen; j++)
         {
             var weight = weights[j];
             var vertexId = (int)weight.MVertexId;
-            if (vertexId >= skinningData.Length) continue;
+            if (vertexId >= vertexLength) continue;
 
             ref var data = ref skinningData[vertexId];
             var packedWeight = (byte)float.Clamp(float.Round(weight.MWeight * 255f), 0f, 255f);

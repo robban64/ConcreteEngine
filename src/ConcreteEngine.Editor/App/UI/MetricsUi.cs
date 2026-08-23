@@ -3,8 +3,10 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.App.Theme;
-using ConcreteEngine.Editor.Core.Data;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
+using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Utility;
 using Hexa.NET.ImGui;
 
@@ -72,25 +74,24 @@ internal static class MetricsUi
 
     private static void DrawFrameMetrics()
     {
-        ref readonly var frameMeta = ref Metrics.FrameMeta;
         var sw = ScratchBuffer.Writer();
+
         // Frame Info
         ImGui.SeparatorText("Frame Info"u8);
-        MetricText(sw, "Frame:", frameMeta.FrameId);
+        MetricText(sw, "Frame:", Metrics.FrameMeta.FrameId);
 
         ImGui.TextUnformatted("FPS:"u8);
         ImGui.SameLine();
-        AppDraw.Text(sw.Append(frameMeta.Fps, "F2").Append(" (").Append(frameMeta.Alpha, "F2")
-            .Append("ms)").End());
+        AppDraw.Text(sw.Append(Metrics.FrameMeta.Fps, "F2").AppendAscii(' ', '(')
+            .Append(Metrics.FrameMeta.Alpha, "F2").AppendAscii('m', 's', ')').End());
 
         // Render Frame 
-        ref readonly var gpu = ref Metrics.GpuFrameMeta;
         ImGui.SeparatorText("Render Info"u8);
-        MetricText(sw, "Draws:", gpu.Frame.Draws);
-        MetricText(sw, "Tris:", gpu.Frame.Tris);
+        MetricText(sw, "Draws:", GfxMetrics.FrameMeta.Draws);
+        MetricText(sw, "Tris:", GfxMetrics.FrameMeta.Tris);
         ImGui.Spacing();
-        MetricText(sw, "VBO Uploaded:", gpu.Buffer.MeshBufferBytes, space: 0);
-        MetricText(sw, "UBO Uploaded:", gpu.Buffer.UniformBufferBytes, space: 0);
+        MetricText(sw, "VBO Uploaded:", GfxMetrics.FrameBufferMeta.MeshBufferBytes, space: 0);
+        MetricText(sw, "UBO Uploaded:", GfxMetrics.FrameBufferMeta.UniformBufferBytes, space: 0);
 
         // Frame Metric
         ref readonly var frameMetric = ref Metrics.Metric;
@@ -118,8 +119,8 @@ internal static class MetricsUi
         ImGui.SameLine();
         AppDraw.Text(
             sw.Append("Gen: "u8).Append('[')
-                .Append(frameMetric.Gc.Gen0).Append(", "u8)
-                .Append(frameMetric.Gc.Gen1).Append(", "u8)
+                .Append(frameMetric.Gc.Gen0).AppendAscii(',', ' ')
+                .Append(frameMetric.Gc.Gen1).AppendAscii(',', ' ')
                 .Append(frameMetric.Gc.Gen2).Append(']').End()
         );
     }
@@ -127,8 +128,6 @@ internal static class MetricsUi
     private static void DrawStoreMetrics()
     {
         if (Metrics.Stores is not { } stores) return;
-
-        var sw = ScratchBuffer.Writer();
 
         if (ImGui.BeginChild("metrics-asset"u8, ImGuiChildFlags.AutoResizeY))
         {
@@ -140,12 +139,13 @@ internal static class MetricsUi
             ImGui.TableSetupColumn("Files"u8, ImGuiTableColumnFlags.WidthStretch, 0.35f);
             ImGui.TableHeadersRow();
 
+            var sw = ScratchBuffer.Writer();
             for (var i = 0; i < stores.Assets.Length; i++)
             {
                 var it = stores.Assets[i];
                 ImGui.PushID(i);
                 ImGui.TableNextRow();
-                AppDraw.TextColumn(sw.Write(it.Kind.ToText()));
+                AppDraw.TextColumn(it.Kind.ToUtf8());
                 AppDraw.TextColumn(sw.Write(it.Count));
                 AppDraw.TextColumn(sw.Write(it.FileCount));
                 ImGui.PopID();
@@ -154,28 +154,15 @@ internal static class MetricsUi
             ImGui.EndTable();
         }
 
+        ImGui.EndChild();
+
         ImGui.Dummy(new Vector2(0, 6));
 
-        ImGui.EndChild();
 
         if (ImGui.BeginChild("metrics-gfx"u8, ImGuiChildFlags.AutoResizeY))
         {
             ImGui.SeparatorText("Gfx Metrics"u8);
-
-            ImGui.BeginTabBar("metrics_tabs"u8, ImGuiTabBarFlags.FittingPolicyScroll);
-            if (ImGui.BeginTabItem("Main"u8))
-            {
-                DrawGraphicsTable(stores, false);
-                ImGui.EndTabItem();
-            }
-
-            if (ImGui.BeginTabItem("Backend"u8))
-            {
-                DrawGraphicsTable(stores, true);
-                ImGui.EndTabItem();
-            }
-
-            ImGui.EndTabBar();
+            DrawGfxTable(stores);
             ImGui.Dummy(new Vector2(0, 2));
         }
 
@@ -183,42 +170,19 @@ internal static class MetricsUi
     }
 
 
-    private static void DrawGraphicsTable(StoreMetrics store, bool bkStore)
+    private static void DrawGfxTable(StoreMetrics store)
     {
-        int cols = bkStore ? 3 : 4;
-        if (!ImGui.BeginTable(bkStore ? "bk-table"u8 : "gfx-table"u8, cols, TableFlags)) return;
+        if (!ImGui.BeginTable("gfx-table"u8, 4, TableFlags)) return;
 
-        ImGui.TableSetupColumn("##Name"u8, ImGuiTableColumnFlags.WidthFixed, 26f);
+        ImGui.TableSetupColumn("##name"u8, ImGuiTableColumnFlags.WidthFixed, 26f);
         ImGui.TableSetupColumn("Cnt/Free"u8, ImGuiTableColumnFlags.WidthStretch, 0.8f);
         ImGui.TableSetupColumn("Live/Cap"u8, ImGuiTableColumnFlags.WidthStretch, 0.8f);
-        if (!bkStore) ImGui.TableSetupColumn("*"u8, ImGuiTableColumnFlags.WidthStretch, 1f);
+        ImGui.TableSetupColumn("*"u8, ImGuiTableColumnFlags.WidthStretch, 1f);
 
         ImGui.TableHeadersRow();
-        if (bkStore) DrawBkStore(store);
-        else DrawGfxStore(store);
-        ImGui.EndTable();
-    }
 
-    private static void DrawBkStore(StoreMetrics storeMetrics)
-    {
-        var metas = storeMetrics.Gfx;
-        var sw = ScratchBuffer.Writer();
-        for (int i = 0; i < metas.Length; i++)
-        {
-            ref readonly var it = ref metas[i];
-            ImGui.PushID(i);
-            ImGui.TableNextRow();
-            AppDraw.TextColumn(sw.Write(it.Kind.ToShortText()));
-            AppDraw.TextColumn(sw.Append(it.Bk.Count).Append('/').Append(it.Bk.Reserved).End());
-            AppDraw.TextColumn(sw.Append(it.Bk.Active).Append('/').Append(it.Bk.Capacity).End());
-            ImGui.PopID();
-        }
-    }
-
-    private static void DrawGfxStore(StoreMetrics storeMetrics)
-    {
-        var metas = storeMetrics.Gfx;
-        var descriptions = storeMetrics.GfxMetaDescriptions;
+        var metas = store.Gfx;
+        var descriptions = store.GfxMetaDescriptions;
         ArgumentOutOfRangeException.ThrowIfNotEqual(metas.Length, descriptions.Length);
 
         var sw = ScratchBuffer.Writer();
@@ -233,8 +197,8 @@ internal static class MetricsUi
                 ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowOverlap);
 
             AppDraw.TextColumn(sw.Write(it.Kind.ToShortText()));
-            AppDraw.TextColumn(sw.Append(it.Fk.Count).Append('/').Append(it.Fk.Reserved).End());
-            AppDraw.TextColumn(sw.Append(it.Fk.Active).Append('/').Append(it.Fk.Capacity).End());
+            AppDraw.TextColumn(sw.Append(it.Store.Count).AppendAscii('/').Append(it.Store.Free).End());
+            AppDraw.TextColumn(sw.Append(it.Store.Active).AppendAscii('/').Append(it.Store.Capacity).End());
             AppDraw.TextColumn(sw.Write(descriptions[i]));
 
             DrawPopup(open);
@@ -242,6 +206,7 @@ internal static class MetricsUi
             ImGui.PopID();
         }
 
+        ImGui.EndTable();
         return;
 
         static void DrawPopup(bool isOpen)
@@ -257,7 +222,7 @@ internal static class MetricsUi
                 ImGui.TextUnformatted("Id"u8);
                 ImGui.SameLine();
                 var popupId = _popupInput;
-                if (ImGui.InputInt("##Idu8", ref popupId)) _popupInput = popupId;
+                if (ImGui.InputInt("##input"u8, ref popupId)) _popupInput = popupId;
                 if (_popupInput < 1) _popupInput = 1;
 
                 var canPrint = _popupInput >= 1;
@@ -273,7 +238,6 @@ internal static class MetricsUi
             }
         }
     }
-
 
     private static void MetricText(
         NativeSpanWriter sw,

@@ -1,17 +1,21 @@
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Editor.App.Theme;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
 
 [EditorInspector(typeof(Camera))]
-internal sealed partial class CameraInspector : Inspector<CameraInspector>
+internal sealed partial class CameraInspector : Inspector<Camera>
 {
-    private static Camera Target => CameraManager.Instance.Camera;
+    public override uint Icon => IconNames.Video;
+    public override InspectorId Id => InspectorId.Camera;
 
-    public unsafe void Draw()
+    public CameraInspector()
     {
-        AppDraw.Section("Transform"u8, &DrawTransform);
-        AppDraw.Section("Projection"u8, &DrawProjection);
+        _fields.SectionRoot.SetFetchRateHigh();
+
+        Sections = _fields.CreateSections();
+        AttachTarget(CameraManager.Instance.Camera);
     }
 }

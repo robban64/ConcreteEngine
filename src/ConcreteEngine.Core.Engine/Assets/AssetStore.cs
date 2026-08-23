@@ -63,7 +63,7 @@ public sealed partial class AssetStore
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal T GetUnsafe<T>(int id) where T : AssetObject => (T)_assets[id - 1]!;
+    internal AssetObject GetUnsafe(int id) => _assets[id - 1]!;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T Get<T>(AssetId id) where T : AssetObject

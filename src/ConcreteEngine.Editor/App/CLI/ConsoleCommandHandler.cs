@@ -1,9 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Editor.Logging;
-using ConcreteEngine.Renderer.Buffer;
-using ConcreteEngine.Renderer.Passes;
 
 namespace ConcreteEngine.Editor.App.CLI;
 
@@ -27,15 +26,10 @@ internal sealed class UtilityCommandHandler() : ConsoleCommandHandler("utility")
 
     private static void OnStructSizesCmd()
     {
-        LogService.PushMessage(StructStr<DrawCommand>());
-        LogService.PushMessage(StructStr<DrawCommandMeta>());
-        LogService.PushMessage(StructStr<SourceComponent>());
-        LogService.PushMessage(StructStr<SkinningComponent>());
-
-        LogService.PushMessage(StructStr<GpuFrameMeta>());
+        LogService.PushMessage(StructStr<RenderSource>());
+        LogService.PushMessage(StructStr<SkinningLink>());
         LogService.PushMessage(StructStr<GpuBufferMeta>());
         LogService.PushMessage(StructStr<FrameMetric>());
-        LogService.PushMessage(StructStr<PassMutationState>());
         return;
 
         static string StructStr<T>() where T : struct =>

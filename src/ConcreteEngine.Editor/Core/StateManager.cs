@@ -1,9 +1,5 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Editor.Core.Data;
 using ConcreteEngine.Editor.Logging;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Graphics.Resources;
-using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -40,16 +36,4 @@ internal sealed class StateManager(EventDispatcher eventDispatcher)
     }
 
     public void EnqueueEvent<TEvent>(TEvent evt) where TEvent : EditorEvent => eventDispatcher.Enqueue(evt);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void GetOrSetTextureHandle(TextureId id, scoped ref TexturePtrHandle texHandle)
-    {
-        ArgumentOutOfRangeException.ThrowIfZero(id.Id, nameof(id));
-        var handle = GfxResourceApi.GetNativeHandle(id);
-        if (texHandle.Handle == handle) return;
-
-        if (!texHandle.TexturePtr.IsNull) texHandle.TexturePtr.Destroy();
-        texHandle.TexturePtr = ImGui.ImTextureRef(new ImTextureID(handle.Value));
-        texHandle.Handle = handle;
-    }
 }

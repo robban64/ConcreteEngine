@@ -27,7 +27,7 @@ public sealed class MaterialStateRecord
             Color = Color4.White,
             SpecularColor = Color4.White with { A = specular },
             UvOffset = Vector2.Zero,
-            UvRepeat = new  Vector2(uvRepeat, uvRepeat),
+            UvRepeat = new Vector2(uvRepeat, uvRepeat),
             Shininess = shininess,
             Roughness = 0f,
             Metallic = 0f

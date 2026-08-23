@@ -70,7 +70,7 @@ public sealed class Material : AssetObject
     public void SetSourceSlot(TextureId textureId, SamplerSlot slot, SamplerProfile profile)
     {
         ref var source = ref GetTextureSource(slot);
-        if(source.TextureId == textureId) return;
+        if (source.TextureId == textureId) return;
         source = source with { AssetId = default, TextureId = textureId, Profile = profile };
         if (source.Slot == SamplerSlot.AlphaMask) State.HasAlphaMask = true;
         MarkDirty(AssetDirtyFlag.State);
@@ -89,7 +89,7 @@ public sealed class Material : AssetObject
     public void ClearSourceSlot(SamplerSlot slot)
     {
         ref var source = ref GetTextureSource(slot);
-        if(source.IsFallback()) return;
+        if (source.IsFallback()) return;
         source = default;
         MarkDirty(AssetDirtyFlag.State);
     }

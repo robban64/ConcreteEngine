@@ -14,7 +14,7 @@ public static class EditorTime
 
     private static float _activityTimer;
     private static FrameAccumulator _accumulator = new(RateIdle);
-    
+
     public static float Delta { get; private set; }
 
 
@@ -25,7 +25,7 @@ public static class EditorTime
         if (_activityTimer <= 0f) _accumulator.TickDt = RateIdle;
 
         _accumulator.Accumulate(frameDelta);
-        var shouldAdvance =_accumulator.DequeueTick(out editorDelta);
+        var shouldAdvance = _accumulator.DequeueTick(out editorDelta);
         Delta = editorDelta;
         return shouldAdvance;
     }

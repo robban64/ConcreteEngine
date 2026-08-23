@@ -39,6 +39,7 @@ internal sealed unsafe class MaterialBindingForm
                 ImGui.AlignTextToFramePadding();
                 AppDraw.TextColored(Palette32.OrangeBase, "Fallback"u8);
             }
+
             ImGui.AlignTextToFramePadding();
             ImGui.TextUnformatted(source.Profile.ToUtf8());
             ImGui.EndGroup();
@@ -46,19 +47,19 @@ internal sealed unsafe class MaterialBindingForm
             var availWidth = ImGui.GetContentRegionAvail().X;
             ImGui.SameLine(availWidth - ImageOffset);
 
-            ref var handle = ref  _textureHandles[(int)source.Slot];
+            ref var handle = ref _textureHandles[(int)source.Slot];
             AppDraw.ImageButton("##x"u8, source.GetTextureOrFallback(), ref handle, new Vector2(ImageThumbnailSize));
 
             if (source.TextureId.IsValid() && ImGui.IsItemClicked(ImGuiMouseButton.Right))
                 material.ClearSourceSlot(source.Slot);
-            
+
             DropTexture(material, source.Slot);
 
 
             ImGui.PopID();
         }
     }
-    
+
     private static void DropTexture(Material material, SamplerSlot slot)
     {
         if (!ImGui.BeginDragDropTarget()) return;
@@ -73,5 +74,4 @@ internal sealed unsafe class MaterialBindingForm
 
         ImGui.EndDragDropTarget();
     }
-
 }

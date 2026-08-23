@@ -70,7 +70,6 @@ internal sealed unsafe class AnimationSystem : IDisposable
             WriteSkinned(animation.GetSkinningContext(), time);
             ++slot;
         }
-
     }
 
     public void Dispose()

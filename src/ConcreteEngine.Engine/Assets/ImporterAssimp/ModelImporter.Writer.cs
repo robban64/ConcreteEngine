@@ -1,6 +1,5 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
 using AssimpMesh = Silk.NET.Assimp.Mesh;

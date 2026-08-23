@@ -19,7 +19,7 @@ public static class CapacityUtils
         ArgumentOutOfRangeException.ThrowIfNegative(current);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(required);
         ArgumentOutOfRangeException.ThrowIfLessThan(step, 4);
-        
+
         var newSize = int.Max(current, step);
         while (newSize < required) newSize += step;
         return newSize;

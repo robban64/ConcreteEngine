@@ -54,7 +54,7 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
         _ptr1[index] = t1;
         _ptr2[index] = t2;
     }
-    
+
     public void ReAlloc(int length, bool zeroed)
     {
         var capacity = length * StrideSum;
@@ -74,10 +74,9 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
         _ptr1 = null;
         _ptr2 = null;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly PtrEnumerator<T1, T2> GetEnumerator() => new(View1, View2);
-
 }
 
 public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
@@ -167,5 +166,4 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly PtrEnumerator<T1, T2, T3> GetEnumerator() => new(_ptr1, _ptr2, _ptr3, Length);
-
 }

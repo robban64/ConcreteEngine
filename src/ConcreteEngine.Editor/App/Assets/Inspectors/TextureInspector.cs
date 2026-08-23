@@ -46,7 +46,7 @@ internal sealed unsafe partial class TextureInspector : Inspector<Texture>
         ImGui.TextUnformatted(Target.PixelFormat.ToUtf8());
 
         ImGui.Spacing();
-        
+
         ImGui.ImageButton("##img"u8, _imageHandle, new Vector2(imageSize));
     }
 
@@ -61,8 +61,7 @@ internal sealed unsafe partial class TextureInspector : Inspector<Texture>
 
 
         var sw = ScratchBuffer.Writer();
-        var mips =  GfxRegistry.GetMeta(texture.GfxId).MipLevels;
+        var mips = GfxRegistry.GetMeta(texture.GfxId).MipLevels;
         AppDraw.TextPropertyField(offset, "Mips"u8, sw.Write(mips));
     }
-
 }

@@ -78,7 +78,8 @@ internal sealed unsafe class TextInput : InputField
     {
         var hint = Hint;
         var strId = _stringId;
-        var changed = ImGui.InputTextEx((byte*)&strId, (byte*)&hint, Text, Text.Capacity, default, ImFlags, _inputCallback);
+        var changed = ImGui.InputTextEx((byte*)&strId, (byte*)&hint, Text, Text.Capacity, default, ImFlags,
+            _inputCallback);
         if (changed && ProcessInput())
         {
             InvokeCallback();

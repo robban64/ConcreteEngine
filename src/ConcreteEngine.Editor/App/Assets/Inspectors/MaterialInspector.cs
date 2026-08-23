@@ -22,8 +22,8 @@ internal sealed unsafe partial class MaterialInspector : Inspector<Material>
     {
         Sections = _fields.CreateSections();
         ApplySectionLowFetchRate();
-
     }
+
     public override void Draw()
     {
         DrawHeader();
@@ -43,23 +43,25 @@ internal sealed unsafe partial class MaterialInspector : Inspector<Material>
     private void DrawBindings()
     {
         ImGui.Spacing();
-        if (ImGui.CollapsingHeader("Bindings"u8, ImGuiTreeNodeFlags.DefaultOpen)) 
+        if (ImGui.CollapsingHeader("Bindings"u8, ImGuiTreeNodeFlags.DefaultOpen))
         {
             ImGui.Spacing();
             _bindingForm.Draw(Target!);
         }
+
         ImGui.Spacing();
     }
 
-    private  void DrawPipeline()
+    private void DrawPipeline()
     {
         ImGui.Spacing();
-        if (ImGui.CollapsingHeader("Bindings"u8, ImGuiTreeNodeFlags.DefaultOpen)) 
+        if (ImGui.CollapsingHeader("Bindings"u8, ImGuiTreeNodeFlags.DefaultOpen))
         {
             ImGui.Spacing();
             DrawRenderFlags();
             DrawRenderCombos();
         }
+
         ImGui.Spacing();
     }
 

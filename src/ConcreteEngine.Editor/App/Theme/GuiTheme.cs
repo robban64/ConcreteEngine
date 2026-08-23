@@ -23,8 +23,7 @@ internal static class GuiTheme
     public const float TopbarHeight = 36f;
     public const float MenuBarHeight = 30f;
     public const float TopOffset = TopbarHeight + MenuBarHeight;
-    
- 
+
 
     public const float FormItemWidth = 220f;
     public const float FormItemInlineWidth = 120f + 12f;

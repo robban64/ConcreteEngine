@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
-using Generator.Misc;
 
 namespace Generator;
 
@@ -86,12 +85,14 @@ internal ref struct SourceBuilder
         Builder.AppendJoin(s, array);
         return ref this;
     }
+
     [UnscopedRef]
-    public readonly ref readonly SourceBuilder AppendJoin<T>(string s, IEnumerable<T> array, char first = '\0', char last = '\0')
+    public readonly ref readonly SourceBuilder AppendJoin<T>(string s, IEnumerable<T> array, char first = '\0',
+        char last = '\0')
     {
         if (first > 0) Builder.Append(first);
         Builder.AppendJoin(s, array);
-        if(last > 0) Builder.Append(last);
+        if (last > 0) Builder.Append(last);
         return ref this;
     }
 

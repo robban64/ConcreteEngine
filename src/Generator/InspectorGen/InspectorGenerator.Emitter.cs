@@ -52,14 +52,14 @@ internal static class InspectorGeneratorEmitter
     {
         sb.BeginLine("internal sealed class ").Append(model.InspectorName).EndLine(FieldClassSuffix);
         sb.OpenBrace();
-        
+
         foreach (var segment in model.Segments)
             sb.BeginLine("public readonly InspectSection Section").Append(segment.DisplayName).EndLine(";");
 
         sb.AppendLine();
         EmitCtor(sb, model);
         sb.AppendLine();
-        
+
         var sections = model.Segments.Select(x => x.FieldName);
         sb.BeginLine("public InspectSection[] CreateSections() => ").AppendJoin(", ", sections, '[', ']').EndLine(";");
 
@@ -158,7 +158,7 @@ internal static class InspectorGeneratorEmitter
         sb.PushIndent();
 
         // setter
-        AppendSetter(sb, member, in access,  ", ");
+        AppendSetter(sb, member, in access, ", ");
 
         //
         sb.BeginLine();
@@ -250,7 +250,6 @@ internal static class InspectorGeneratorEmitter
 
         return result;
     }
-
 }
 
 /*

@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
@@ -45,7 +44,7 @@ internal sealed class EngineTickHub
         EngineTime.GameDelta = _gameTicker.TickDt;
         EngineTime.EnvironmentDelta = _simulationTicker.TickDt;
     }
-    
+
     public void Update(float deltaTime)
     {
         Accumulate(deltaTime);
@@ -54,7 +53,7 @@ internal sealed class EngineTickHub
         if (_systemTicker.DequeueTick(out var tickDt))
             _engine.OnSystemTick(tickDt);
 
-        if (_diagnosticTicker.DequeueTick(out var  diagnosticDt))
+        if (_diagnosticTicker.DequeueTick(out var diagnosticDt))
             _engine.OnDiagnosticTick(diagnosticDt);
 
         var tickCounter = 0;
@@ -67,10 +66,10 @@ internal sealed class EngineTickHub
 
         if (_simulationTicker.DequeueTick(out var simDt))
             _engine.OnSimulateTick(simDt);
-        
+
         EngineTime.AdvanceFrame(deltaTime, _gameTicker.Alpha, _simulationTicker.Alpha);
     }
-    
+
     private void Accumulate(float deltaTime)
     {
         _gameTicker.Accumulate(deltaTime);

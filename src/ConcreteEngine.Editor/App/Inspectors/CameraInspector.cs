@@ -18,5 +18,4 @@ internal sealed partial class CameraInspector : Inspector<Camera>
         Sections = _fields.CreateSections();
         AttachTarget(CameraManager.Instance.Camera);
     }
-
 }

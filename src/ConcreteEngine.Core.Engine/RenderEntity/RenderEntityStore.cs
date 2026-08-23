@@ -163,7 +163,7 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
             entities[count] = default;
             components[count] = default;
         }
-        
+
         _removedEntities.Clear();
     }
 

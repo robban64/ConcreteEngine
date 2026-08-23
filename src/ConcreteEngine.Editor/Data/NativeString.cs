@@ -27,7 +27,7 @@ internal readonly unsafe struct NativeString : IEquatable<NativeString>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator NativeView<byte>(NativeString str) => str.Text;
-    
+
     public byte* TextStart
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

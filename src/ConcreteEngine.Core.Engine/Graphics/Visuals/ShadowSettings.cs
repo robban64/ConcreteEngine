@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Common.Attributes;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Editor;
 

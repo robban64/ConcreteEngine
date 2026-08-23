@@ -79,5 +79,4 @@ internal sealed class EmitterModel
 
         return segments.ToArray();
     }
-    
 }

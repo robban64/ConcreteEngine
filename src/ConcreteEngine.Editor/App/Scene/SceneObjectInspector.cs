@@ -32,13 +32,12 @@ internal sealed unsafe partial class SceneObjectInspector : Inspector<SceneObjec
         _fields.SectionRoot.SetFetchRateLow();
         _fields.SectionTransform.SetFetchRateHigh();
         Sections = _fields.CreateSections();
-        
+
         _ = new ParticleInspector();
 
         _state = state;
         _title = StringArena.AllocateString(24);
         _nameInputStr = StringArena.AllocateString(64);
-
     }
 
     protected override void OnAttachTarget(SceneObject? oldTarget, SceneObject newTarget)

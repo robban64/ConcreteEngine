@@ -26,7 +26,7 @@ internal abstract unsafe class InputField
         var sw = new NativeSpanWriter((byte*)&strId, 8);
         sw.AppendAscii('#', '#').AppendAscii('i', 'f').Append(_id);
         strId._value[String8Utf8.TextLength] = 0;
-        
+
         _stringId = strId;
     }
 

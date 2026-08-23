@@ -10,9 +10,9 @@ internal abstract class Inspector
     protected InspectSection[] Sections { get; init; } = [];
 
     public abstract InspectorId Id { get; }
-    
+
     public virtual uint Icon { get; }
-    
+
     public abstract void DetachTarget();
 
     public virtual void Draw() => DrawSections();
@@ -20,7 +20,7 @@ internal abstract class Inspector
     protected void DrawSections()
     {
         foreach (var section in Sections) section.Fetch(EditorTime.Delta);
-        
+
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f));
         var contentWidth = ImGui.GetContentRegionAvail().X;
         foreach (var section in Sections)
@@ -37,11 +37,11 @@ internal abstract class Inspector
     {
         foreach (var section in Sections) section.SetFetchRateLow();
     }
+
     protected void ApplySectionHighFetchRate()
     {
         foreach (var section in Sections) section.SetFetchRateHigh();
     }
-
 }
 
 internal abstract class Inspector<TTarget> : Inspector where TTarget : class
@@ -56,7 +56,7 @@ internal abstract class Inspector<TTarget> : Inspector where TTarget : class
     {
         if (Instance != null)
             throw new InvalidOperationException($"{typeof(Inspector<TTarget>).Name} already initialized.");
-        
+
         Instance = this;
     }
 

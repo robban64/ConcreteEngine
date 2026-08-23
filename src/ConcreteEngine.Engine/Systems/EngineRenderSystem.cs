@@ -86,6 +86,7 @@ public sealed class EngineRenderSystem : IDisposable
     }
 
     private AvgFrameTimer avg;
+
     public void PrepareRenderer(float alpha)
     {
         RenderContext.ResetContext();
@@ -94,9 +95,9 @@ public sealed class EngineRenderSystem : IDisposable
 
         // frame update
         CameraManager.Instance.CommitFrame(alpha);
-       // avg.BeginSample();
+        // avg.BeginSample();
         VisualSystem.Instance.UploadUniforms();
-       // if (avg.EndSample() > 80) avg.ResetAndPrint();
+        // if (avg.EndSample() > 80) avg.ResetAndPrint();
 
         // process and upload draw commands
         _resolver.Execute();

@@ -18,7 +18,7 @@ public readonly record struct PassId(byte Value) : IComparable<PassId>
 {
     public PassId(int value) : this((byte)value) { }
     public static implicit operator int(PassId id) => id.Value;
-    
+
     public int CompareTo(PassId other) => Value.CompareTo(other.Value);
 }
 

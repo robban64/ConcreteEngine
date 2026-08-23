@@ -44,10 +44,10 @@ internal sealed unsafe class InspectSection
     const float FieldMaxWidth = 220f;
 
     private static int _idCounter;
-    
+
     public readonly int Id;
     private readonly uint Icon;
-    
+
     private readonly float _labelWidth;
 
     private readonly NativeString _title;
@@ -73,6 +73,7 @@ internal sealed unsafe class InspectSection
             var length = ImGui.CalcTextSize(it.Label.AsTextSpan()).X;
             labelWidth = float.Max(labelWidth, length);
         }
+
         ImGui.PopFont();
 
         _labelWidth = float.Clamp(labelWidth, LabelMinWidth, LabelMaxWidth);
@@ -83,6 +84,7 @@ internal sealed unsafe class InspectSection
         _accumulator = new FrameAccumulator(1f / 20f);
         _accumulator.Accumulator = _accumulator.TickDt;
     }
+
     public void SetFetchRateMedium()
     {
         _accumulator = new FrameAccumulator(1f / 8f);
@@ -112,7 +114,7 @@ internal sealed unsafe class InspectSection
         fieldWidth = float.Min(fieldWidth, FieldMaxWidth);
 
         var labelSize = new Vector2(_labelWidth, ImGui.GetFrameHeight());
-        
+
         ImGui.PushItemWidth(fieldWidth);
         foreach (var field in _fields)
         {
@@ -120,8 +122,7 @@ internal sealed unsafe class InspectSection
             ImGui.SameLine(0, LabelFieldGap);
             field.Draw();
         }
-        ImGui.PopItemWidth();
-        
-    }
 
+        ImGui.PopItemWidth();
+    }
 }

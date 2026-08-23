@@ -18,5 +18,4 @@ internal sealed partial class EnvironmentSettingsInspector : Inspector<Environme
         ApplySectionLowFetchRate();
         AttachTarget(VisualManager.Instance.Environment);
     }
-
 }

@@ -32,9 +32,9 @@ internal static unsafe class ViewportWindow
         IsFocused = ImGui.IsWindowFocused();
 
         ref var viewportHandle = ref _viewportTexHandle;
-        if(!ImGuiSystem.TryResolveTextureHandle(ImGuiSystem.OutputTexture, ref viewportHandle))
+        if (!ImGuiSystem.TryResolveTextureHandle(ImGuiSystem.OutputTexture, ref viewportHandle))
             Throwers.InvalidOperation(nameof(ImGuiSystem.OutputTexture));
-        
+
         ImGui.Image(viewportHandle, EngineWindow.Viewport.Size, Vector2.UnitY, Vector2.UnitX);
 
         if (SelectionManager.Instance.SelectedSceneObject != null)

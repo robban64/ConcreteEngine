@@ -56,8 +56,8 @@ internal sealed unsafe class VisualSystem
 
     private void UploadDirtyUniforms()
     {
-        
     }
+
     public void UploadUniforms()
     {
         UploadEngineUniform();
@@ -73,7 +73,8 @@ internal sealed unsafe class VisualSystem
             UploadLightningUniform();
         }
 
-        if (visualManager.Environment.FogSettings.Version != _fogVersion || visualManager.Environment.Ambient.Version != _ambientVersion)
+        if (visualManager.Environment.FogSettings.Version != _fogVersion ||
+            visualManager.Environment.Ambient.Version != _ambientVersion)
         {
             _fogVersion = visualManager.PostEffect.Version;
             UploadEnvironmentUniform();
@@ -127,7 +128,7 @@ internal sealed unsafe class VisualSystem
     {
         ShadowUniform data;
         data.LightViewProjectionMatrix = CameraManager.LightTransforms.ProjectionViewMatrix;
-        
+
         var shadow = VisualManager.Lightning.Shadow;
         var size = shadow.InvMapSize;
         data.ShadowParams0 = new Vector4(size, size, shadow.ConstBias, shadow.SlopeBias);
@@ -155,7 +156,7 @@ internal sealed unsafe class VisualSystem
     private void UploadEnvironmentUniform()
     {
         EnvironmentUniform data;
-                
+
         var ambient = VisualManager.Environment.Ambient;
         data.Ambient = new Vector4(ambient.Ambient, ambient.Exposure);
         data.AmbientGround = new Vector4(ambient.AmbientGround, 0.0f);
@@ -174,7 +175,7 @@ internal sealed unsafe class VisualSystem
     private void UploadLightningUniform()
     {
         LightningUniform data;
-        
+
         var it = VisualManager.Lightning.Sun;
         data.Direction = it.Direction.AsVector4();
         data.Diffuse = new Vector4(it.Diffuse, it.Intensity);

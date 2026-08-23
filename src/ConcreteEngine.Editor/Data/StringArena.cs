@@ -33,7 +33,7 @@ internal sealed class StringArena : IDisposable
         _allocator = new BumpAllocator(CapacityUtils.PageSize * MaxBlocks, CapacityUtils.PageSize, 0, true);
         _allocator.AllocBlock(CapacityUtils.PageSize, true);
     }
-    
+
     public NativeView<byte> AllocBytes(int capacity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
@@ -94,14 +94,14 @@ internal sealed class StringArena : IDisposable
     public static NativeString AllocateStringId(ReadOnlySpan<char> value, ReadOnlySpan<char> strId, int? intId = null)
     {
         var capacity = value.Length + 2 + strId.Length;
-        if(intId.HasValue) capacity += IntMath.GetDigits(intId.Value);
-        
+        if (intId.HasValue) capacity += IntMath.GetDigits(intId.Value);
+
         var str = Instance.AllocString(capacity);
         var sw = str.GetWriter();
         sw.Append(value);
         sw.AppendAscii('#', '#');
         sw.Append(strId);
-        if(intId.HasValue) sw.Append(intId.Value);
+        if (intId.HasValue) sw.Append(intId.Value);
         sw.EndNativeString();
         return str;
     }

@@ -149,7 +149,7 @@ public sealed class MaterialState
             _material.MarkDirty(AssetDirtyFlag.State);
         }
     }
-    
+
     [InputNumber]
     public Vector2 UvRepeat
     {

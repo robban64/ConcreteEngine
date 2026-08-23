@@ -63,7 +63,7 @@ internal static class EditorCamera
             target.Pitch += -speed;
 
         target.WithClampedPitch();
-        
+
         float t = 1.0f - MathF.Exp(-25 * fixedDt);
         Camera.Orientation = YawPitch.Lerp(Camera.Orientation, target, t);
         _targetOrientation = target;

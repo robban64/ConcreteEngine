@@ -72,7 +72,6 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         sw.Append("Native: "u8);
         sw.AppendAscii('[').Append(NativeArray.AllocSizeInMb, "F2").AppendAscii('M', 'B', ']');
         sw.EndNativeString();
-
     }
 
 

@@ -63,7 +63,6 @@ internal sealed record NumberInput(
             InputStyle.Drag => "InputStyle.Drag",
             _ => throw new UnreachableException()
         };
-
 }
 
 internal sealed record ColorInput(string Name, bool HasAlpha) : InputField(Name)
@@ -78,6 +77,7 @@ internal sealed record ColorInput(string Name, bool HasAlpha) : InputField(Name)
 
         sb.Append(accessPath);
     }
+
     public override string MakeSetterCast(InspectorMember member, string v)
     {
         string castTo = v, typeName = member.TypeName;
@@ -85,14 +85,13 @@ internal sealed record ColorInput(string Name, bool HasAlpha) : InputField(Name)
             castTo = $"({member.TypeName}){v}";
         return castTo;
     }
-
 }
 
 internal sealed record ComboInput(string Name, string Values, string Names, string? Placeholder, int StartAt)
     : InputField(Name)
 {
     public override string InputValueType => "int";
-    
+
     public override string MakeSetterCast(InspectorMember member, string v)
     {
         return member.TypeName == "int" ? v : $"({member.TypeName}){v}";

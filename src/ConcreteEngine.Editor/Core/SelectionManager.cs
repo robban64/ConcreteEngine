@@ -116,7 +116,7 @@ internal sealed class SelectionManager
             it.ToggleDebugBounds(false);
             if (it is ParticleInstance) ParticleInspector.Instance.DetachTarget();
         }
-        
+
         SelectedSceneObject = null;
         SceneObjectInspector.Instance.DetachTarget();
     }

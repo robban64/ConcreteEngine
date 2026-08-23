@@ -1,5 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Visuals;
@@ -10,7 +9,7 @@ public sealed class LightingSettings
     //
     [InspectInclude]
     public SunSettings Sun { get; } = new();
-    
+
     [InspectInclude]
     public ShadowSettings Shadow { get; } = new();
 
@@ -21,7 +20,6 @@ public sealed class LightingSettings
         anyDirty |= Shadow.Commit();
         return anyDirty;
     }
-    
 }
 
 public sealed class SunSettings : VisualSettings
@@ -57,7 +55,6 @@ public sealed class SunSettings : VisualSettings
 
 public sealed class AmbientSettings : VisualSettings
 {
-    
     [InputColor(HasAlpha = false)]
     public Vector3 Ambient
     {

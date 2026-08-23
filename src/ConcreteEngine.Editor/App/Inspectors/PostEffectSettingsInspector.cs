@@ -17,6 +17,4 @@ internal sealed partial class PostEffectSettingsInspector : Inspector<PostEffect
         ApplySectionLowFetchRate();
         AttachTarget(VisualManager.Instance.PostEffect);
     }
-    
-
 }

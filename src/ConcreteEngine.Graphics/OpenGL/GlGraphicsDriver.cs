@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Configuration;
 using Silk.NET.Core.Native;

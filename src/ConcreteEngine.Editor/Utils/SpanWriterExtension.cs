@@ -17,7 +17,7 @@ internal static unsafe class SpanWriterExtension
             str.SetLength(sw.Cursor);
             sw.SetCursor(0);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref NativeSpanWriter AppendImGuiId(int id)
         {
@@ -49,14 +49,12 @@ internal static unsafe class SpanWriterExtension
             sw.SetCursor(cursor);
             return ref sw;
         }
-        
     }
 
     extension(NativeSpanWriter sw)
     {
-        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public  NativeView<byte> Write(int value)
+        public NativeView<byte> Write(int value)
         {
             var written = UtfText.Format(value, ref *sw.Buffer, sw.Capacity);
             sw.Ensure(written);
@@ -65,7 +63,7 @@ internal static unsafe class SpanWriterExtension
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public  NativeView<byte> Write(scoped ReadOnlySpan<char> value)
+        public NativeView<byte> Write(scoped ReadOnlySpan<char> value)
         {
             if (!Encoding.UTF8.TryGetBytes(value, sw.AsSpan(), out var written))
                 Throwers.BufferOverflow(nameof(NativeSpanWriter), written, sw.Capacity);
@@ -90,7 +88,8 @@ internal static unsafe class SpanWriterExtension
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private NativeView<byte> ReturnWritten(int written)
         {
-            if ((uint)written >= (uint)sw.Capacity) Throwers.BufferOverflow(nameof(NativeSpanWriter), written, sw.Capacity);
+            if ((uint)written >= (uint)sw.Capacity)
+                Throwers.BufferOverflow(nameof(NativeSpanWriter), written, sw.Capacity);
             sw.Buffer[written] = 0;
             return new NativeView<byte>(sw.Buffer, written);
         }

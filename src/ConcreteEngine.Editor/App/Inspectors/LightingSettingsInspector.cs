@@ -5,7 +5,6 @@ using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.App.Inspectors;
 
-
 [EditorInspector(typeof(LightingSettings))]
 internal sealed partial class LightingSettingsInspector : Inspector<LightingSettings>
 {
@@ -18,5 +17,4 @@ internal sealed partial class LightingSettingsInspector : Inspector<LightingSett
         Sections = _fields.CreateSections();
         AttachTarget(VisualManager.Instance.Lightning);
     }
-    
 }

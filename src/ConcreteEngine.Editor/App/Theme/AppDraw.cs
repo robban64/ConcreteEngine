@@ -10,17 +10,17 @@ namespace ConcreteEngine.Editor.App.Theme;
 
 internal static unsafe class AppDraw
 {
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CollapseSection(ReadOnlySpan<byte> title, delegate*<void> draw,
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen)
     {
         ImGui.Spacing();
-        if (ImGui.CollapsingHeader(title, flags)) 
+        if (ImGui.CollapsingHeader(title, flags))
         {
             ImGui.Spacing();
             draw();
         }
+
         ImGui.Spacing();
     }
 
@@ -34,12 +34,12 @@ internal static unsafe class AppDraw
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Icon(uint icon) => ImGui.TextUnformatted((byte*)&icon);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void IconColored(Vector4 color, uint icon)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, color);
-        ImGui.TextColored(color,(byte*)&icon);
+        ImGui.TextColored(color, (byte*)&icon);
         ImGui.PopStyleColor();
     }
 
@@ -75,6 +75,7 @@ internal static unsafe class AppDraw
         ImGui.AlignTextToFramePadding();
         ImGui.TextUnformatted(text.TextStart, text.TextEnd);
     }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void TextFrameAligned(NativeView<byte> text)
     {
@@ -107,7 +108,7 @@ internal static unsafe class AppDraw
         ImGui.TextUnformatted(text, text.EndPtr);
         return top;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void TextPropertyField(float offset, ReadOnlySpan<byte> name, ReadOnlySpan<byte> text)
     {
@@ -116,7 +117,7 @@ internal static unsafe class AppDraw
         ImGui.SameLine(offset);
         ImGui.TextUnformatted(text);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void TextPropertyField(float offset, ReadOnlySpan<byte> name, NativeView<byte> text)
     {
@@ -159,6 +160,7 @@ internal static unsafe class AppDraw
         if (!enabled) ImGui.EndDisabled();
         return enabled && clicked;
     }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Button(uint icon, bool enabled = true) => Button((byte*)&icon, enabled);
 

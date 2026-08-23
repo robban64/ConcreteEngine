@@ -54,7 +54,7 @@ public struct EnvironmentUniform : IUniform
     public Vector4 FogColor; // rgb = base fog color, a = in-scattering mix
     public Vector4 FogParams0; // x=exp2_k, y=height_k, z=height0, w=globalStrength
     public Vector4 FogParams1; // x=expWeight, y=heightWeight, z=maxDistance, w=reserved
-    
+
     public static UniformBufferId UboId { get; set; }
 
     public static byte Slot => 1;
@@ -89,7 +89,7 @@ public struct LightningUniform : IUniform
     public Vector4 Direction; // direction, light toward scene
     public Vector4 Diffuse; // rgb=color, a=intensity
     public Vector4 Specular; // x = specular multiplier
-    
+
     public static UniformBufferId UboId { get; set; }
 
     public static byte Slot => 3;

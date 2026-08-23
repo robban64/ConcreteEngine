@@ -100,7 +100,6 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         foreach (var range in path.Split('/'))
             sw.Append(path[range]).Append('/');
         sw.EndNativeString();
-
     }
 
     private void UpdateFilter(FileBinding bindingFilter, AssetKind assetFilter)
@@ -280,7 +279,7 @@ internal sealed unsafe class AssetsWindow : EditorWindow
         {
             var fileId = fileIds[gridIndex];
             var startPos = ImGui.GetCursorScreenPos(); // top left
-            
+
             var sw = ScratchBuffer.Writer();
             var selectId = sw.AppendImGuiId(fileId.Id).End();
             if (ImGui.Selectable(selectId, selectedFileId.Id == fileId.Id, 0, ItemSize))

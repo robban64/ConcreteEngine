@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Common.Text;
 
-
 [InterpolatedStringHandler]
 public ref struct NativeSpanWriterHandler(int literalLength, int formattedCount, NativeSpanWriter writer)
 {

@@ -76,5 +76,4 @@ internal sealed unsafe class ModelInspector : Inspector<Model>
             ImGui.EndTable();
         }
     }
-
 }

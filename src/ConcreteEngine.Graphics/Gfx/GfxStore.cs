@@ -178,7 +178,7 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
         _memory.Dispose();
         _entries = null;
     }
-    
+
 
     public StoreSample GetStoreSample() => new(Count, Capacity, ActiveCount, FreeCount);
 }

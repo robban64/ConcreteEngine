@@ -36,5 +36,4 @@ internal sealed class StateManager(EventDispatcher eventDispatcher)
     }
 
     public void EnqueueEvent<TEvent>(TEvent evt) where TEvent : EditorEvent => eventDispatcher.Enqueue(evt);
-
 }

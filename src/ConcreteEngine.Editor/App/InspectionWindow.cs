@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.App.Assets;
 using ConcreteEngine.Editor.App.Inspectors;
 using ConcreteEngine.Editor.App.Scene;
@@ -21,10 +20,9 @@ internal sealed class InspectionWindow : EditorWindow
         _ = new PostEffectSettingsInspector();
         _ = new LightingSettingsInspector();
         _ = new EnvironmentSettingsInspector();
-        
+
         _ = new AssetObjectInspector(state);
         _ = new SceneObjectInspector(state);
-
     }
 
     protected override void OnCreate() => State.ContextChanged += OnStateOnContextChanged;
@@ -77,5 +75,4 @@ internal sealed class InspectionWindow : EditorWindow
 
         ActiveState = activeState;
     }
-
 }

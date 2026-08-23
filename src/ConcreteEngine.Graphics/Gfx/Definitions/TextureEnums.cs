@@ -2,7 +2,6 @@ using ConcreteEngine.Core.Common.Attributes;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-
 [EnumExt(ToUtf8 = true)]
 public enum TexturePixelFormat : byte
 {
@@ -24,7 +23,6 @@ public enum TextureKind : byte
     Texture2DArray = 4,
     Multisample2D = 5
 }
-
 
 public enum TextureFilter : byte
 {

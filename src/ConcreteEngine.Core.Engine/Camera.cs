@@ -23,17 +23,16 @@ public sealed class Camera
 
     private const float DirtyThreshold = MetricUnits.Micrometer;
 
-    public long Version { get; private set; }
-    public bool IsDirty { get; private set; }
-    public float AspectRatio { get; private set; }
-
     internal readonly CameraTransform Transform;
 
+    public bool IsDirty { get; private set; }
+    public float AspectRatio { get; private set; }
+    
     private double _fov;
     private Vector2 _nearFarPlane;
     
-    private Vector3 _translation, _lastTranslation;
-    private YawPitch _orientation, _lastOrientation;
+    private Vector3D _translation, _lastTranslation;
+    private Vector2D _orientation, _lastOrientation;
 
     public Camera(Size2D viewport)
     {
@@ -54,21 +53,19 @@ public sealed class Camera
     [InputNumber]
     public Vector3 Translation
     {
-        get => _translation;
+        get => (Vector3)_translation;
         set
         {
-            if (VectorMath.DistanceNearlyEqual(value, _translation, DirtyThreshold)) return;
             _translation = value;
             IsDirty = true;
         }
     }
     
-    public YawPitch Orientation
+    public Vector2D Orientation
     {
         get => _orientation;
         set
         {
-            if (YawPitch.NearlyEqual(value, _orientation)) return;
             _orientation = value;
             IsDirty = true;
         }
@@ -77,11 +74,10 @@ public sealed class Camera
     [InputNumber(Label = "Orientation")]
     public Vector2 OrientationF
     {
-        get => _orientation;
+        get => (Vector2)_orientation;
         set
         {
-            if (VectorMath.NearlyEqual(value, _orientation)) return;
-            _orientation = (YawPitch)value;
+            _orientation = value;
             IsDirty = true;
         }
     }
@@ -130,20 +126,20 @@ public sealed class Camera
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Interpolate(double alpha, out Vector3 translation, out YawPitch orientation)
+    internal void Interpolate(double alpha, out Vector3D translation, out Vector2D orientation)
     {
-        translation = Vector3.Lerp(_lastTranslation, _translation, (float)alpha);
-        orientation = YawPitch.Lerp(_lastOrientation, _orientation, alpha);
+        translation = Vector3D.Lerp(_lastTranslation, _translation, alpha);
+        orientation = RotationMath.LerpYawPitch(_lastOrientation, _orientation, alpha);
     }
 
     internal bool Ensure()
     {
         if (!IsDirty) return false;
         IsDirty = false;
-        ++Version;
 
+        var translation = (Vector3)_translation;
         var quaternion = RotationMath.YawPitchToQuaternion(_orientation);
-        MatrixMath.CreateFixedSizeModelMatrix(in _translation, in quaternion, out var modelMatrix);
+        MatrixMath.CreateFixedSizeModelMatrix(in translation, in quaternion, out var modelMatrix);
 
         ref var viewMatrix = ref Transform.ViewMatrix;
         Matrix4x4.Invert(modelMatrix, out viewMatrix);

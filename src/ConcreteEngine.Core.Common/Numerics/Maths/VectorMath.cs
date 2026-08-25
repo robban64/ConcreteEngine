@@ -1,27 +1,30 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
 
 namespace ConcreteEngine.Core.Common.Numerics.Maths;
 
 public static class VectorMath
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool DistanceNearlyEqual(Vector3 a, Vector3 b, float eps = FloatMath.DefaultEpsilon) =>
-        Vector3.DistanceSquared(a, b) < eps * eps;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool NearlyEqual(Vector2 a, Vector2 b, float eps = FloatMath.DefaultEpsilon) =>
         MathF.Abs(a.X - b.X) < eps && MathF.Abs(a.Y - b.Y) < eps;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool NearlyEqual(Vector3 a, Vector3 b, float eps = FloatMath.DefaultEpsilon) =>
-        MathF.Abs(a.X - b.X) < eps && MathF.Abs(a.Y - b.Y) < eps && MathF.Abs(a.Z - b.Z) < eps;
+    public static bool NearlyEqual(Vector128<float> a, Vector128<float> b, float eps = 1e-4f)
+    {
+        var diff = Vector128.Abs(a - b);
+        var cmp = Vector128.LessThanOrEqual(diff, Vector128.Create(eps));
+        return Vector128.EqualsAll(cmp, Vector128<float>.AllBitsSet);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool NearlyEqual(Vector4 a, Vector4 b, float eps = FloatMath.DefaultEpsilon) =>
-        MathF.Abs(a.X - b.X) < eps && MathF.Abs(a.Y - b.Y) < eps && MathF.Abs(a.Z - b.Z) < eps &&
-        MathF.Abs(a.W - b.W) < eps;
-
+    public static bool NearlyEqual(Vector256<double> a, Vector256<double> b, double eps = 1e-4)
+    {
+        var diff = Vector256.Abs(a - b);
+        var cmp = Vector256.LessThanOrEqual(diff, Vector256.Create(eps));
+        return Vector256.EqualsAll(cmp, Vector256<double>.AllBitsSet);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float BarryCentric(Vector3 p1, Vector3 p2, Vector3 p3, Vector2 pos)

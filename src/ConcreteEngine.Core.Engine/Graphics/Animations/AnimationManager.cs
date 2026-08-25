@@ -20,6 +20,34 @@ internal sealed class AnimationManager
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<AnimationInstance?> GetAnimationSpan() => _animations.AsSpan();
 
+    public AnimationInstance Get(Id16<AnimationInstance> id) => _animations[id.Index()]!;
+
+    public void Interpolate(double alpha)
+    {
+        int slot = 1;
+        foreach (var animation in GetEnumerator())
+        {
+            var count = FilterEntities(slot, animation.GetEntitySpan());
+            if (count == 0) continue;
+
+            var time = animation.Interpolate(alpha);
+            ++slot;
+        }
+
+    }
+        
+    private static int FilterEntities(int slot, ReadOnlySpan<RenderEntityId> entities)
+    {
+        var count = 0;
+        foreach (var query in RenderEcs.Store<SkinningLink>().SparseQuery(entities))
+        {
+            if (!RenderEcs.Core.IsVisible(query.Entity)) continue;
+            query.Component.AnimationSlot = (ushort)slot;
+            ++count;
+        }
+
+        return count;
+    }
     public void AttachEntity(ModelRig rig, RenderEntityId entity, Id16<AnimationInstance> animationId = default)
     {
         if (animationId == 0 && TryGetFirstByRig(rig, out var firstEntry))
@@ -68,10 +96,16 @@ public sealed class AnimationInstance : IComparable<AnimationInstance>
     public int ActiveClip { get; private set; } = -1;
 
     public readonly ModelRig Rig;
+    
+    public double Time;
 
+    public double Duration;
+    public double TicksPerSecond;
+
+    private double _prevTime;
+    
     private readonly List<RenderEntityId> _renderEntities = [];
 
-    private AnimationTime _animationTime;
 
     internal AnimationInstance(ModelRig rig, Id16<AnimationInstance> animationId)
     {
@@ -89,10 +123,22 @@ public sealed class AnimationInstance : IComparable<AnimationInstance>
     public ReadOnlySpan<RenderEntityId> GetEntitySpan() => CollectionsMarshal.AsSpan(_renderEntities);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AdvanceTime(double delta) => _animationTime.AdvanceTime((float)delta);
+    public void AdvanceTime(double dt)
+    {
+        _prevTime = Time;
+        Time += dt * TicksPerSecond;
+        if (Time > Duration) Time = 0;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float Interpolate(double alpha) => _animationTime.Interpolate((float)alpha);
+    public double Interpolate(double alpha)
+    {
+        if (Time < _prevTime)
+            return double.Lerp(_prevTime, Time + Duration, alpha) % Duration;
+
+        return double.Lerp(_prevTime, Time, alpha);
+
+    }
 
     public void AddEntity(RenderEntityId entity)
     {
@@ -108,7 +154,10 @@ public sealed class AnimationInstance : IComparable<AnimationInstance>
         ActiveClip = clipIndex;
 
         var clip = Rig.GetClip(clipIndex);
-        _animationTime.SetClip(clip.Duration, clip.TicksPerSecond);
+        Duration = clip.Duration;
+        TicksPerSecond = clip.TicksPerSecond;
+        Time = 0;
+        _prevTime = 0;
     }
 
     public int CompareTo(AnimationInstance? other)

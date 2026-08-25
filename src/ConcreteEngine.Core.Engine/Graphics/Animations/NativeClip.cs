@@ -18,6 +18,9 @@ internal readonly unsafe struct NativeClip
         BoneTracks = boneTracks;
         Length = boneTracks.Length;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<NativeBoneTrack> AsView() => new (BoneTracks, Length);
 
     public bool IsNull => BoneTracks == null;
 

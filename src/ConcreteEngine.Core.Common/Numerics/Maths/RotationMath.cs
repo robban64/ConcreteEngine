@@ -5,10 +5,27 @@ namespace ConcreteEngine.Core.Common.Numerics.Maths;
 
 public static class RotationMath
 {
+    public const double PitchLimit = 89.9;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static double ClampPitch(double pitch) => double.Clamp(pitch, -PitchLimit, PitchLimit);
+    
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2D LerpYawPitch(Vector2D a, Vector2D b, double t)
+    {
+        double yawDelta = b.X - a.X;
+        if (yawDelta > 180.0) yawDelta -= 360.0;
+        if (yawDelta < -180.0) yawDelta += 360.0;
+
+        Unsafe.SkipInit(out Vector2D result);
+        result.X = a.X + yawDelta * t;
+        result.Y = double.Lerp(a.Y, b.Y, t);
+        return result;
+    }
+
     public static YawPitch QuaternionToYawPitch(Quaternion q)
     {
-        const float pitchLimit = 89f;
-
         var forward = Vector3.Transform(new Vector3(0f, 0f, -1f), q);
         float pitchRad = float.Asin(FloatMath.Clamp1N1(forward.Y));
         float yawRad = float.Atan2(forward.X, forward.Z);
@@ -16,18 +33,18 @@ public static class RotationMath
         float yawDeg = yawRad * FloatMath.Rad2Deg;
         float pitchDeg = pitchRad * FloatMath.Rad2Deg;
 
-        if (pitchDeg > pitchLimit) pitchDeg = pitchLimit;
-        else if (pitchDeg < -pitchLimit) pitchDeg = -pitchLimit;
+        if (pitchDeg > PitchLimit) pitchDeg = (float)PitchLimit;
+        else if (pitchDeg < -PitchLimit) pitchDeg = (float)-PitchLimit;
 
         return new YawPitch(yawDeg, pitchDeg);
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Quaternion YawPitchToQuaternion(YawPitch orientation)
+    public static Quaternion YawPitchToQuaternion(Vector2D orientation)
     {
-        double yaw = orientation.Yaw * DoubleMath.Deg2Rad;
-        double pitch = orientation.Pitch * DoubleMath.Deg2Rad;
+        double yaw = orientation.X * DoubleMath.Deg2Rad;
+        double pitch = orientation.Y * DoubleMath.Deg2Rad;
 
         var qy = Quaternion.CreateFromAxisAngle(Vector3.UnitY, (float)yaw);
         var qx = Quaternion.CreateFromAxisAngle(Vector3.UnitX, (float)pitch);

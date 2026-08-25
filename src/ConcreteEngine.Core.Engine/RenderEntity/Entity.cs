@@ -40,14 +40,12 @@ public readonly struct DrawEntityIndex : IComparable<DrawEntityIndex>
         Entity = entity;
         Mask = mask;
         _queue = queue;
-        _depthKey = depthKey;
+        if (queue < DrawQueue.Transparent) _depthKey = depthKey;
+        else _depthKey = (ushort)(ushort.MaxValue - depthKey);
     }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DrawEntityIndex WithDepth(ushort depthKey) => new (Entity, Mask, _queue, depthKey);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator RenderEntityId(DrawEntityIndex e) => e.Entity;
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Entity.Id - 1;

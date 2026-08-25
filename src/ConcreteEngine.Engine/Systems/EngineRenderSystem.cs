@@ -107,6 +107,8 @@ public sealed class EngineRenderSystem : IDisposable
         _drawPipeline.ReadyDrawCommands(_resolver.DrawIndices);
     }
 
+    private AvgFrameTimer avg;
+
     public void ExecuteRenderPipeline()
     {
         var length = RenderRegistry.PassCount;

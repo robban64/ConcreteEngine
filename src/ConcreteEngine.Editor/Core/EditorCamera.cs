@@ -1,5 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Extensions;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
 using Silk.NET.Input;
 
@@ -13,7 +15,7 @@ internal static class EditorCamera
     private static Camera Camera => CameraManager.Instance.Camera;
 
     private static Vector3 _currentVelocity;
-    private static YawPitch _targetOrientation;
+    private static Vector2D _targetOrientation;
 
 
     public static void Update(double dt)
@@ -50,22 +52,22 @@ internal static class EditorCamera
 
         var target = _targetOrientation;
 
-        if (!YawPitch.NearlyEqual(Camera.Orientation, _targetOrientation))
+        if (!VectorMath.NearlyEqual(Camera.Orientation.AsVector256(), _targetOrientation.AsVector256()))
             target = Camera.Orientation;
 
         if (EditorInput.Layer.IsKeyDown(Key.A))
-            target.Yaw += speed;
+            target.X += speed;
         if (EditorInput.Layer.IsKeyDown(Key.D))
-            target.Yaw += -speed;
+            target.X += -speed;
         if (EditorInput.Layer.IsKeyDown(Key.Q))
-            target.Pitch += speed;
+            target.Y += speed;
         if (EditorInput.Layer.IsKeyDown(Key.E))
-            target.Pitch += -speed;
+            target.Y += -speed;
 
-        target.WithClampedPitch();
+        target.Y = RotationMath.ClampPitch(target.Y);
 
         double t = 1.0 - double.Exp(-25 * fixedDt);
-        Camera.Orientation = YawPitch.Lerp(Camera.Orientation, target, t);
+        Camera.Orientation = Vector2D.Lerp(Camera.Orientation, target, t);
         _targetOrientation = target;
     }
 }

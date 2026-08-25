@@ -1,7 +1,9 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 using System.Text.Json.Serialization;
+using ConcreteEngine.Core.Common.Numerics.Extensions;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Numerics;
@@ -50,6 +52,20 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color4 operator *(Color4 a, Color4 b) => new(a.R * b.R, a.G * b.G, a.B * b.B, a.A * b.A);
+    
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator ==(Color4 left, Color4 right) => left.AsVector128() == right.AsVector128();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator !=(Color4 left, Color4 right) => !(left == right);
+    
+    //
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly bool Equals(Color4 other) => this.AsVector128() == other.AsVector128();
+    public override readonly bool Equals(object? obj) => obj is Color4 other && Equals(other);
+    public override readonly int GetHashCode() => HashCode.Combine(R, G, B, A);
+    public override readonly string ToString() => $"[R:{R:F2} G:{G:F2} B:{B:F2} A:{A:F2}]";
 
     // 
 
@@ -90,31 +106,13 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
     public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool NearlyEqual(Color4 a, Color4 b, float eps = FloatMath.DefaultEpsilon)
-    {
-        return VectorMath.NearlyEqual(Unsafe.As<Color4, Vector4>(ref a), Unsafe.As<Color4, Vector4>(ref b), eps);
-    }
+    public static bool NearlyEqual(Color4 a, Color4 b, float eps = FloatMath.DefaultEpsilon) =>
+        VectorMath.NearlyEqual(a.AsVector128(), b.AsVector128(), eps);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Color4 Lerp(Color4 a, Color4 b, float t)
-    {
-        return (Color4)Vector4.Lerp(Unsafe.As<Color4, Vector4>(ref a), Unsafe.As<Color4, Vector4>(ref b), t);
-    }
+    public static Color4 Lerp(Color4 a, Color4 b, float t) =>
+        Vector128.Lerp(a.AsVector128(), b.AsVector128(), Vector128.Create(t)).AsColor4();
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator ==(Color4 left, Color4 right) => left.Equals(right);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator !=(Color4 left, Color4 right) => !left.Equals(right);
-
-    // 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // ReSharper disable CompareOfFloatsByEqualityOperator
-    public readonly bool Equals(Color4 other) => R == other.R && G == other.G && B == other.B && A == other.A;
-
-    public override readonly bool Equals(object? obj) => obj is Color4 other && Equals(other);
-    public override readonly int GetHashCode() => HashCode.Combine(R, G, B, A);
-    public override readonly string ToString() => $"[R:{R:F2} G:{G:F2} B:{B:F2} A:{A:F2}]";
 
     // 
     public static Color4 FromHex(ReadOnlySpan<char> hex)

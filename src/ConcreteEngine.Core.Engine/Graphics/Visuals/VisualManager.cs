@@ -1,5 +1,8 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Extensions;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Visuals;
@@ -66,14 +69,6 @@ public abstract class VisualSettings
         IsDirty = true;
         return value;
     }
-
-    protected Vector3 Set(Vector3 field, Vector3 value)
-    {
-        if (VectorMath.NearlyEqual(field, value)) return field;
-        IsDirty = true;
-        return value;
-    }
-
     protected Vector2 Set(Vector2 field, Vector2 value)
     {
         if (VectorMath.NearlyEqual(field, value)) return field;
@@ -81,6 +76,20 @@ public abstract class VisualSettings
         return value;
     }
 
+    protected Vector3 Set(Vector3 field, Vector3 value)
+    {
+        if (VectorMath.NearlyEqual(field.AsVector128(), value.AsVector128())) return field;
+        IsDirty = true;
+        return value;
+    }
+    protected Color4 Set(Color4 field, Color4 value)
+    {
+        if (Color4.NearlyEqual(field, value)) return field;
+        IsDirty = true;
+        return value;
+    }
+
+  
     protected T Set<T>(T field, T value) where T : unmanaged
     {
         if (EqualityComparer<T>.Default.Equals(field, value)) return field;

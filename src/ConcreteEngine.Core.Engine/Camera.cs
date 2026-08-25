@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Core.Engine.Graphics;
 
@@ -17,8 +18,8 @@ public sealed class Camera
     private const float MinFarPlane = 5f;
     private const float MaxFarPlane = 10_000f;
 
-    private const float MinFov = 10;
-    private const float MaxFov = 179;
+    private const double MinFov = 10;
+    private const double MaxFov = 179;
 
     private const float DirtyThreshold = MetricUnits.Micrometer;
 
@@ -28,6 +29,9 @@ public sealed class Camera
 
     internal readonly CameraTransform Transform;
 
+    private double _fov;
+    private Vector2 _nearFarPlane;
+    
     private Vector3 _translation, _lastTranslation;
     private YawPitch _orientation, _lastOrientation;
 
@@ -58,8 +62,7 @@ public sealed class Camera
             IsDirty = true;
         }
     }
-
-    [InputNumber(IsFloat = true, Components = 2)]
+    
     public YawPitch Orientation
     {
         get => _orientation;
@@ -70,6 +73,18 @@ public sealed class Camera
             IsDirty = true;
         }
     }
+    
+    [InputNumber(Label = "Orientation")]
+    public Vector2 OrientationF
+    {
+        get => _orientation;
+        set
+        {
+            if (VectorMath.NearlyEqual(value, _orientation)) return;
+            _orientation = (YawPitch)value;
+            IsDirty = true;
+        }
+    }
 
     [InputNumber(Label = "Near & Far")]
     public Vector2 NearFarPlane
@@ -77,9 +92,9 @@ public sealed class Camera
         get;
         set
         {
-            if (VectorMath.NearlyEqual(value, field, MetricUnits.Millimeter)) return;
-            field.X = float.Min(float.Max(value.X, MinNearPlane), MaxNearPlane);
-            field.Y = float.Min(float.Max(value.Y, MinFarPlane), MaxFarPlane);
+            if (VectorMath.NearlyEqual(value, _nearFarPlane, MetricUnits.Millimeter)) return;
+            _nearFarPlane.X = float.Min(float.Max(value.X, MinNearPlane), MaxNearPlane);
+            _nearFarPlane.Y = float.Min(float.Max(value.Y, MinFarPlane), MaxFarPlane);
             IsDirty = true;
         }
     } = new(0.1f, 500f);
@@ -90,8 +105,8 @@ public sealed class Camera
         get;
         set
         {
-            if (FloatMath.NearlyEqual(value, field, MetricUnits.Decimeter)) return;
-            field = float.Clamp(value, MinFov, MaxFov);
+            if (DoubleMath.NearlyEqual(value, _fov, MetricUnits.Decimeter)) return;
+            _fov = double.Clamp(value, MinFov, MaxFov);
             IsDirty = true;
         }
     } = 70;
@@ -115,9 +130,9 @@ public sealed class Camera
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Interpolate(float alpha, out Vector3 translation, out YawPitch orientation)
+    internal void Interpolate(double alpha, out Vector3 translation, out YawPitch orientation)
     {
-        translation = Vector3.Lerp(_lastTranslation, _translation, alpha);
+        translation = Vector3.Lerp(_lastTranslation, _translation, (float)alpha);
         orientation = YawPitch.Lerp(_lastOrientation, _orientation, alpha);
     }
 
@@ -128,14 +143,14 @@ public sealed class Camera
         ++Version;
 
         var quaternion = RotationMath.YawPitchToQuaternion(_orientation);
-        MatrixMath.CreateFixedSizeModelMatrix(_translation, in quaternion, out var modelMatrix);
+        MatrixMath.CreateFixedSizeModelMatrix(in _translation, in quaternion, out var modelMatrix);
 
         ref var viewMatrix = ref Transform.ViewMatrix;
         Matrix4x4.Invert(modelMatrix, out viewMatrix);
 
         ref var projectionMatrix = ref Transform.ProjectionMatrix;
         projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(
-            FloatMath.ToRadians(Fov * 0.5f),
+            (float)DoubleMath.ToRadians(Fov * 0.5),
             AspectRatio,
             NearFarPlane.X,
             NearFarPlane.Y

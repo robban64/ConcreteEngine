@@ -78,7 +78,7 @@ internal sealed class ParticleSystem : IDisposable
 
     internal void Execute()
     {
-        var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
+        var timeOffset = (float)(EngineTime.SimulationDelta * EngineTime.SimulationAlpha);
         foreach (var emitterId in _processedEmitters.AsSpan())
         {
             var emitter = _particleManager.Get(emitterId);

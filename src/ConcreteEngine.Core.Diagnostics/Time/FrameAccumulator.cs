@@ -2,22 +2,22 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Diagnostics.Time;
 
-public struct FrameAccumulator(float tickRate)
+public struct FrameAccumulator(double tickRate)
 {
-    public float Accumulator = 0f;
-    public float TickDt = tickRate;
+    public double Accumulator = 0.0;
+    public double TickDt = tickRate;
 
-    public readonly float Alpha
+    public readonly double Alpha
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => TickDt > 0f ? Accumulator / TickDt : 0f;
+        get => TickDt > 0.0 ? Accumulator / TickDt : 0.0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Accumulate(float dt) => Accumulator += dt;
+    public void Accumulate(double dt) => Accumulator += dt;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool DrainTick()
+    public bool TryDrainTick()
     {
         if (Accumulator < TickDt) return false;
         Accumulator = 0;
@@ -25,7 +25,7 @@ public struct FrameAccumulator(float tickRate)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool DequeueTick(out float dt)
+    public bool DequeueTick(out double dt)
     {
         if (Accumulator < TickDt)
         {

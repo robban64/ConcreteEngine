@@ -144,8 +144,8 @@ internal sealed unsafe class VisualSystem
         var data = new EngineUniformRecord(
             invResolution: EngineWindow.InvViewport,
             mouse: mouse,
-            deltaTime: EngineTime.DeltaTime,
-            time: EngineTime.Time,
+            deltaTime: EngineTime.DeltaTimeF,
+            time: EngineTime.TimeF,
             random: EngineTime.FrameRng
         );
 

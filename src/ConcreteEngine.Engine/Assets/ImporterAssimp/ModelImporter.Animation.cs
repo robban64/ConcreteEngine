@@ -60,12 +60,12 @@ internal sealed unsafe partial class ModelImporter
 
                 if (floatCount == 0)
                 {
-                    tracks[boneIndex] = new NativeBoneTrack(null, 0, 0);
+                    tracks[boneIndex] = new NativeBoneTrack(default, 0, 0);
                     continue;
                 }
 
                 var trackData = allocator.AllocSlice<float>(floatCount);
-                var track = new NativeBoneTrack(trackData.Ptr, posCount, rotCount);
+                var track = new NativeBoneTrack(trackData, posCount, rotCount);
                 WriteChannels(aiChannel, track);
                 tracks[boneIndex] = track;
             }

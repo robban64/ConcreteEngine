@@ -1,17 +1,29 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
-public record struct BoundingAxisBox(Vector3 Center, Vector3 Extent)
+public struct BoundingAxisBox : IEquatable<BoundingAxisBox>
 {
-    public Vector3 Center = Center;
-    public Vector3 Extent = Extent;
+    [JsonInclude] public Vector3 Center;
+    [JsonInclude] public Vector3 Extent;
 
     public static BoundingAxisBox Infinite { get; } =
         new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue)).ToAxisBox();
 
-    public BoundingAxisBox(in BoundingBox box) : this(box.Center, box.Extent) { }
+    public BoundingAxisBox(Vector3 center, Vector3 extent)
+    {
+        Center = center;
+        Extent = extent;
+    }
+
+    public BoundingAxisBox(in BoundingBox box)
+    {
+        Center = box.Center;
+        Extent = box.Extent;
+    }
+
 
     public readonly Vector3 Min
     {
@@ -91,4 +103,8 @@ public record struct BoundingAxisBox(Vector3 Center, Vector3 Extent)
 
         world = new BoundingAxisBox(worldCenter, worldExtent);
     }
+
+    public readonly bool Equals(BoundingAxisBox other) => Center.Equals(other.Center) && Extent.Equals(other.Extent);
+    public override readonly bool Equals(object? obj) => obj is BoundingAxisBox other && Equals(other);
+    public override readonly int GetHashCode() => HashCode.Combine(Center, Extent);
 }

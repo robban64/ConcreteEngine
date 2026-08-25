@@ -20,13 +20,7 @@ internal readonly unsafe struct NativeClip
     }
 
     public bool IsNull => BoneTracks == null;
-    public NativeView<NativeBoneTrack> View => new(BoneTracks, Length);
 
-    public ref NativeBoneTrack this[int index]
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref BoneTracks[index];
-    }
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -34,6 +28,8 @@ internal readonly unsafe struct NativeBoneTrack
 {
     public readonly int PosCount;
     public readonly int RotCount;
+    public readonly int PositionIndex;
+    public readonly int RotationIndex;
 
     private readonly float* _data;
 
@@ -48,6 +44,8 @@ internal readonly unsafe struct NativeBoneTrack
         _data = data;
         PosCount = posCount;
         RotCount = rotCount;
+        PositionIndex = posCount + rotCount;
+        RotationIndex = posCount + rotCount + (posCount * 3);
     }
 
     public bool IsNull => _data == null;
@@ -73,12 +71,12 @@ internal readonly unsafe struct NativeBoneTrack
     public NativeView<Vector3> Positions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new((Vector3*)(_data + (PosCount + RotCount)), PosCount);
+        get => new((Vector3*)(_data + PositionIndex), PosCount);
     }
 
     public NativeView<Quaternion> Rotations
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new((Quaternion*)(_data + (PosCount + RotCount + (PosCount * 3))), RotCount);
+        get => new((Quaternion*)(_data + RotationIndex), RotCount);
     }
 }

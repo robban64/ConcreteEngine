@@ -1,9 +1,11 @@
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.RenderEntity;
@@ -41,32 +43,36 @@ internal sealed class RenderResolver : IDisposable
         DrawIndices.Reinterpret<ulong>().AsSpan().Sort();
         SubmitTransforms();
     }
-
+    
 
     private unsafe int CullEntities()
     {
-        var forward = CameraManager.Instance.Camera.Forward;
+        var forward = new Vector4(CameraManager.Instance.Camera.Forward, 0);
         var viewZ = CameraManager.Instance.Camera.ViewMatrix.M43;
         var nearFar = CameraManager.Instance.Camera.NearFarPlane;
 
-        var visibleEntities = _indices.Ptr;
+        int count = 0;
+        var indices = _indices.AsView().Ptr;
         foreach (var query in CullQuery())
         {
-            var it = query.Item1;
-            var mask = it.Status == EntityDrawStatus.AlwaysVisible
-                ? it.Passes
-                : _frustum.Intersects(it.Passes, in query.Item2);
+            var status = query.Item1.Status == EntityDrawStatus.AlwaysVisible;
+            var mask = status
+                ? query.Item1.Passes
+                : _frustum.Intersects(query.Item1.Passes, in query.Item2);
 
             if (mask != 0)
             {
-                query.Item1.VisiblePassMask = mask;
-                var depthKey = FrustumMath.MakeDepthKey(forward, query.Item2.Center, nearFar, viewZ);
-                *visibleEntities++ = new DrawEntityIndex(query.Entity, mask, it.Queue, (ushort)depthKey);
+                var depthKey = FrustumMath.MakeDepthKey(forward, in query.Item2.Center, nearFar, viewZ);
+                indices[count++] = new DrawEntityIndex(query.Entity, mask, query.Item1.Queue, (ushort)depthKey);
+                
+                var res = query.Item1.WithMask(mask);
+                query.Item1 = res;
             }
         }
 
-        return VisibleCount = (int)(visibleEntities - _indices);
+        return VisibleCount = count;
     }
+    
 
     private unsafe void SubmitTransforms()
     {
@@ -97,6 +103,7 @@ internal sealed class RenderResolver : IDisposable
         _transforms.Dispose();
     }
 
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static RenderEntityCore.QueryEnumerator<BoundingAxisBox> CullQuery() =>
         new(RenderEcs.Core.GetDrawPolicyView(), RenderEcs.Core.GetWorldBoundView(), EntityDrawStatus.ForceHidden);

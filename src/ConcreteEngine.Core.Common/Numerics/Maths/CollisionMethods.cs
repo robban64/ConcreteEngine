@@ -55,7 +55,7 @@ public static class CollisionMethods
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsOutsidePlane(Vector4 center4, Vector4 extent4, ref Vector4 plane)
+    public static bool IsOutsidePlane(Vector4 center4, Vector4 extent4, in Vector4 plane)
     {
         float d1 = Vector4.Dot(center4, plane);
         float d2 = Vector4.Dot(extent4, Vector4.Abs(plane));

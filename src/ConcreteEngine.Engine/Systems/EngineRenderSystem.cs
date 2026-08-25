@@ -79,30 +79,27 @@ public sealed class EngineRenderSystem : IDisposable
         }
     }
 
-    internal void OnSimulate(float dt)
+    internal void OnSimulate(double dt)
     {
         _animationSystem.Simulate(dt);
-        _particleSystem.Simulate(dt);
+        _particleSystem.Simulate((float)dt);
     }
 
-    private AvgFrameTimer avg;
 
-    public void PrepareRenderer(float alpha)
+    public void PrepareRenderer()
     {
         RenderContext.ResetContext();
         _animationSystem.ResetFrame();
         _drawPipeline.ResetFrame();
 
         // frame update
-        CameraManager.Instance.CommitFrame(alpha);
-        // avg.BeginSample();
+        CameraManager.Instance.CommitFrame(EngineTime.GameAlpha);
         VisualSystem.Instance.UploadUniforms();
-        // if (avg.EndSample() > 80) avg.ResetAndPrint();
 
         // process and upload draw commands
         _resolver.Execute();
         _particleSystem.Execute();
-        _animationSystem.Execute(alpha);
+        _animationSystem.Execute(EngineTime.GameAlpha);
 
         // prepare buffers
         VisualSystem.Instance.UploadUniformBuffers(_resolver, _materialSystem, _animationSystem);

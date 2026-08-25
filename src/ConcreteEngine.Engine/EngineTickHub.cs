@@ -7,7 +7,8 @@ namespace ConcreteEngine.Engine;
 internal sealed class EngineTickHub
 {
     private const int MaxTicksPerFrame = 6;
-
+    private const float SystemDt = 0.25f;
+    
     private readonly GameEngine _engine;
 
     private FrameAccumulator _gameTicker;
@@ -27,8 +28,8 @@ internal sealed class EngineTickHub
 
         _engine = engine;
 
-        EngineTime.GameDelta = _gameTicker.TickDt;
-        EngineTime.EnvironmentDelta = _simulationTicker.TickDt;
+        EngineTime.GameDelta = (float)_gameTicker.TickDt;
+        EngineTime.SimulationDelta = (float)_simulationTicker.TickDt;
     }
 
     public void Reset()
@@ -41,36 +42,39 @@ internal sealed class EngineTickHub
         EngineTime.FrameId = 0;
         EngineTime.GameTickId = 0;
 
-        EngineTime.GameDelta = _gameTicker.TickDt;
-        EngineTime.EnvironmentDelta = _simulationTicker.TickDt;
+        EngineTime.GameDelta = (float)_gameTicker.TickDt;
+        EngineTime.SimulationDelta = (float)_simulationTicker.TickDt;
     }
 
-    public void Update(float deltaTime)
+    public void Update(double deltaTime)
     {
         Accumulate(deltaTime);
 
         // Advance
-        if (_systemTicker.DequeueTick(out var tickDt))
-            _engine.OnSystemTick(tickDt);
+        if (_systemTicker.TryDrainTick())
+            _engine.OnSystemTick(SystemDt);
 
-        if (_diagnosticTicker.DequeueTick(out var diagnosticDt))
-            _engine.OnDiagnosticTick(diagnosticDt);
+        if (_diagnosticTicker.TryDrainTick())
+            _engine.OnDiagnosticTick(_diagnosticTicker.TickDt);
 
-        var tickCounter = 0;
-        while (tickCounter < MaxTicksPerFrame && _gameTicker.DequeueTick(out var gameDt))
+        var updateCounter = 0;
+        while (++updateCounter < MaxTicksPerFrame && _gameTicker.DequeueTick(out var gameDt))
         {
-            ++tickCounter;
             ++EngineTime.GameTickId;
             _engine.OnGameTick(gameDt);
         }
 
-        if (_simulationTicker.DequeueTick(out var simDt))
+        var simCounter = 0;
+        while (++simCounter < MaxTicksPerFrame && _simulationTicker.DequeueTick(out var simDt))
+        {
+            ++simCounter;
             _engine.OnSimulateTick(simDt);
+        }
 
         EngineTime.AdvanceFrame(deltaTime, _gameTicker.Alpha, _simulationTicker.Alpha);
     }
 
-    private void Accumulate(float deltaTime)
+    private void Accumulate(double deltaTime)
     {
         _gameTicker.Accumulate(deltaTime);
         _simulationTicker.Accumulate(deltaTime);
@@ -78,10 +82,4 @@ internal sealed class EngineTickHub
         _systemTicker.Accumulate(deltaTime);
     }
 
-
-    private static float GetAlpha(double now, double last, float dt)
-    {
-        var alpha = (float)(now - last) / dt;
-        return float.Clamp(alpha, 0f, 1f);
-    }
 }

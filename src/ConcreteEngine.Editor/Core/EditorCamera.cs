@@ -8,7 +8,7 @@ namespace ConcreteEngine.Editor.Core;
 internal static class EditorCamera
 {
     private const float BaseSpeed = 65f;
-    private const float RotationSpeed = 165f;
+    private const double RotationSpeed = 165.0;
 
     private static Camera Camera => CameraManager.Instance.Camera;
 
@@ -16,10 +16,10 @@ internal static class EditorCamera
     private static YawPitch _targetOrientation;
 
 
-    public static void Update(float dt)
+    public static void Update(double dt)
     {
         if (EditorInput.IsBlockingKeyboard) return;
-        MovementController(dt, BaseSpeed);
+        MovementController((float)dt, BaseSpeed);
         RotateController(dt, RotationSpeed);
     }
 
@@ -44,7 +44,7 @@ internal static class EditorCamera
         Camera.Translation += _currentVelocity * dt;
     }
 
-    private static void RotateController(float fixedDt, float rotateSpeed)
+    private static void RotateController(double fixedDt, double rotateSpeed)
     {
         var speed = rotateSpeed * fixedDt;
 
@@ -64,7 +64,7 @@ internal static class EditorCamera
 
         target.WithClampedPitch();
 
-        float t = 1.0f - MathF.Exp(-25 * fixedDt);
+        double t = 1.0 - double.Exp(-25 * fixedDt);
         Camera.Orientation = YawPitch.Lerp(Camera.Orientation, target, t);
         _targetOrientation = target;
     }

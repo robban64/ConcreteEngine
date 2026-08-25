@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Core.Engine.RenderEntity;
@@ -53,12 +54,12 @@ internal sealed unsafe class AnimationSystem : IDisposable
         BoneCount = 0;
     }
 
-    public void Simulate(float dt)
+    public void Simulate(double dt)
     {
         foreach (var it in _animations) it.AdvanceTime(dt);
     }
 
-    public void Execute(float alpha)
+    public void Execute(double alpha)
     {
         int slot = 1;
         foreach (var animation in _animations)
@@ -123,9 +124,10 @@ internal sealed unsafe class AnimationSystem : IDisposable
 
             var pos = GetPosition(posIndex, posFactor, track->Positions);
             var rot = GetRotation(rotIndex, rotFactor, track->Rotations);
-
+            
             MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out *globals);
         }
+
 
         globals = _scratchGlobals.Ptr;
         var dst = NextSkinningView(length).Ptr;

@@ -116,8 +116,8 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             var data = meshCtx.GetMeshData(meshIndex, out var is16Bit);
 
             var meshId = isAnimated
-                ? gfxUploader.UploadAnimatedMesh(in data, is16Bit)
-                : gfxUploader.UploadMesh(in data, is16Bit);
+                ? gfxUploader.UploadAnimatedMesh(data, is16Bit)
+                : gfxUploader.UploadMesh(data, is16Bit);
 
             if (!meshId.IsValid())
                 Throwers.InvalidOperation("Upload returned invalid MeshId");
@@ -258,7 +258,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ProcessMeshVertices(AssimpMesh* aiMesh, int meshIndex, ModelImportContext ctx)
     {
-        ref var data = ref ctx.MeshContext.GetMeshData(meshIndex, out var is16Bit);
+        var data = ctx.MeshContext.GetMeshData(meshIndex, out var is16Bit);
 
         data.Positions = new NativeView<Vector3>(aiMesh->MVertices, (int)aiMesh->MNumVertices);
 

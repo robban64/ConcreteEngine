@@ -18,7 +18,7 @@ internal abstract class EditorWindow(StateManager state)
     public abstract ReadOnlySpan<byte> Id { get; }
 
     public virtual void OnUpdateDiagnostic() { }
-    protected abstract void OnCreate();
+    protected virtual void OnCreate(){}
     protected abstract void OnDraw();
 
     public void Create()

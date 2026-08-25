@@ -102,7 +102,7 @@ internal sealed unsafe class InspectSection
     public void Fetch(float dt)
     {
         _accumulator.Accumulate(dt);
-        if (_accumulator.DrainTick()) _refresh();
+        if (_accumulator.TryDrainTick()) _refresh();
     }
 
     public void Draw(float contentWidth)

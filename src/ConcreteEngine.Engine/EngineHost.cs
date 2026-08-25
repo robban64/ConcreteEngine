@@ -150,7 +150,7 @@ public sealed class EngineHost
 
             _window.DoEvents();
 
-            _engine.Render((float)deltaTime);
+            _engine.Render(deltaTime);
 
             _window.SwapBuffers();
 

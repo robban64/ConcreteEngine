@@ -54,9 +54,7 @@ internal sealed unsafe class ComboInput : InputField
         if (_lastValue != Value) OnChanged();
 
         var strId = _stringId;
-        var strIdPtr = strId._value;
-
-        var open = ImGui.BeginCombo(strIdPtr, _displayText);
+        var open = ImGui.BeginCombo(strId._value, _displayText);
         if (open && DrawInner() && ShouldTrigger())
         {
             _setter(Value);

@@ -9,19 +9,19 @@ namespace ConcreteEngine.Editor.App.Shared;
 
 public unsafe ref struct UiDrawCursor
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static UiDrawCursor Make(Vector2 itemSpacing = default)
-    {
-        if (itemSpacing == default) itemSpacing = GuiTheme.ItemSpacing;
-        return new UiDrawCursor(ImGui.GetWindowDrawList(), ImGui.GetCursorScreenPos(), itemSpacing);
-    }
-
     public readonly ImDrawList* DrawList;
     public Vector2 Start;
     public Vector2 Cursor;
     public Vector2 ItemSpacing;
     public float LineHeight;
     public float MaxRight;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static UiDrawCursor Make(Vector2 itemSpacing = default)
+    {
+        if (itemSpacing == default) itemSpacing = GuiTheme.ItemSpacing;
+        return new UiDrawCursor(ImGui.GetWindowDrawList(), ImGui.GetCursorScreenPos(), itemSpacing);
+    }
 
     public UiDrawCursor(ImDrawListPtr drawList, Vector2 start, Vector2 itemSpacing)
     {
@@ -32,13 +32,15 @@ public unsafe ref struct UiDrawCursor
         ItemSpacing = itemSpacing;
         MaxRight = start.X;
     }
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void RestoreCursor()
     {
-        var start = Start = ImGui.GetCursorScreenPos();
+        var start = ImGui.GetCursorScreenPos();
+        Start = start;
         Cursor = start;
-        LineHeight = 0;
         MaxRight = start.X;
+        LineHeight = 0;
     }
 
 
@@ -46,21 +48,23 @@ public unsafe ref struct UiDrawCursor
     public void Text(NativeView<byte> text, uint color = Palette32.TextPrimary)
     {
         DrawList->AddText(Cursor, color, text.Ptr, text.EndPtr);
-        Advance(ImGui.CalcTextSize(text.Ptr, text.EndPtr));
+        var width = ImGui.CalcTextSize(text.Ptr, text.EndPtr);
+        Advance(width);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Text(ReadOnlySpan<byte> text, uint color = Palette32.TextPrimary)
     {
-        ref var textRef = ref MemoryMarshal.GetReference(text);
-        DrawList->AddText(Cursor, color, ref textRef, ref Unsafe.Add(ref textRef, text.Length));
-        Advance(ImGui.CalcTextSize(ref textRef));
+        DrawList->AddText(Cursor, color, text);
+        var width = ImGui.CalcTextSize(text);
+        Advance(width);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly void Sync()
     {
-        ImGui.SetCursorPosY(Cursor.Y - Start.Y);
+        var posY = Cursor.Y - Start.Y;
+        ImGui.SetCursorPosY(posY);
         ImGui.Dummy(default);
     }
 
@@ -71,9 +75,9 @@ public unsafe ref struct UiDrawCursor
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void NewLine()
     {
-        Cursor.X = Start.X;
-        Cursor.Y += LineHeight + ItemSpacing.Y;
-        Start = Cursor;
+        var cursor = new Vector2(Start.X, Cursor.Y + LineHeight + ItemSpacing.Y);
+        Cursor = cursor;
+        Start = cursor;
         LineHeight = 0;
     }
 

@@ -3,10 +3,10 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
-public record struct Ray(in Vector3 Position, in Vector3 Direction)
+public struct Ray(Vector3 position, Vector3 direction) : IEquatable<Ray>
 {
-    public Vector3 Position = Position;
-    public Vector3 Direction = Direction;
+    public Vector3 Position = position;
+    public Vector3 Direction = direction;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Vector3 GetPointOnRay(float distance) => Position + Direction * distance;
@@ -24,4 +24,10 @@ public record struct Ray(in Vector3 Position, in Vector3 Direction)
 
         return t < 0 ? default : ray.GetPointOnRay(t);
     }
+
+    public readonly bool Equals(Ray other) => Position.Equals(other.Position) && Direction.Equals(other.Direction);
+
+    public override readonly bool Equals(object? obj) => obj is Ray other && Equals(other);
+
+    public override readonly int GetHashCode() => HashCode.Combine(Position, Direction);
 }

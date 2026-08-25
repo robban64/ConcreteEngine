@@ -6,10 +6,10 @@ using System.Text.Json.Serialization;
 namespace ConcreteEngine.Core.Common.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
-public record struct BoundingBox(Vector3 Min, Vector3 Max)
+public struct BoundingBox(Vector3 min, Vector3 max) : IEquatable<BoundingBox>
 {
-    [JsonInclude] public Vector3 Min = Min;
-    [JsonInclude] public Vector3 Max = Max;
+    [JsonInclude] public Vector3 Min = min;
+    [JsonInclude] public Vector3 Max = max;
 
     public static BoundingBox One { get; } = new(-Vector3.One, Vector3.One);
     public static BoundingBox Infinite { get; } = new(new Vector3(float.MaxValue), new Vector3(float.MinValue));
@@ -130,4 +130,10 @@ public record struct BoundingBox(Vector3 Min, Vector3 Max)
             new Vector3(worldCenter.X + wEx, worldCenter.Y + wEy, worldCenter.Z + wEz)
         );
     }
+
+    public  readonly bool Equals(BoundingBox other) => Min.Equals(other.Min) && Max.Equals(other.Max);
+
+    public override readonly bool Equals(object? obj) => obj is BoundingBox other && Equals(other);
+
+    public override readonly int GetHashCode() => HashCode.Combine(Min, Max);
 }

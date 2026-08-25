@@ -34,9 +34,10 @@ public static class VectorMath
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void UnProject(in Vector3 ndc, in Matrix4x4 invViewProjection, out Vector3 point)
+    public static void UnProject(Vector3 ndc, in Matrix4x4 invViewProjection, out Vector3 point)
     {
-        var vec = Vector4.Transform(new Vector4(ndc, 1.0f), invViewProjection);
+        var ndc4 = new Vector4(ndc, 1.0f);
+        var vec = Vector4.Transform(ndc4, invViewProjection);
 
         if (vec.W > float.Epsilon || vec.W < -float.Epsilon)
         {

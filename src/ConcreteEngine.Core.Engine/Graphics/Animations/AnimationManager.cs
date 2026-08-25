@@ -65,7 +65,7 @@ internal sealed class AnimationManager
 public sealed class AnimationInstance : IComparable<AnimationInstance>
 {
     public readonly Id16<AnimationInstance> Id;
-    public short ActiveClip { get; private set; } = -1;
+    public int ActiveClip { get; private set; } = -1;
 
     public readonly ModelRig Rig;
 
@@ -89,10 +89,10 @@ public sealed class AnimationInstance : IComparable<AnimationInstance>
     public ReadOnlySpan<RenderEntityId> GetEntitySpan() => CollectionsMarshal.AsSpan(_renderEntities);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AdvanceTime(float delta) => _animationTime.AdvanceTime(delta);
+    public void AdvanceTime(double delta) => _animationTime.AdvanceTime((float)delta);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float Interpolate(float alpha) => _animationTime.Interpolate(alpha);
+    public float Interpolate(double alpha) => _animationTime.Interpolate((float)alpha);
 
     public void AddEntity(RenderEntityId entity)
     {
@@ -102,7 +102,7 @@ public sealed class AnimationInstance : IComparable<AnimationInstance>
 
     public void RemoveEntity(RenderEntityId entity) => _renderEntities.Remove(entity);
 
-    public void SetClip(short clipIndex)
+    public void SetClip(int clipIndex)
     {
         if (ActiveClip == clipIndex) return;
         ActiveClip = clipIndex;

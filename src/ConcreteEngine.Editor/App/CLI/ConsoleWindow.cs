@@ -16,26 +16,29 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.App.CLI;
 
+
 internal sealed unsafe class ConsoleWindow : EditorWindow
 {
     private const ImGuiWindowFlags InnerFlags =
         ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
 
-    //
-    private static readonly Vector2 InputFramePad = new(8f, 6f);
-    private static readonly float InputHeight = GuiTheme.FontSizeDefault + InputFramePad.Y * 2 + GuiTheme.ItemSpacing.Y;
-    private static readonly float RowHeight = GuiTheme.FontSizeDefault + GuiTheme.ItemSpacing.Y;
-    private FrameStepper _scrollTopBottomStepper = new(8);
-
+    private const float InputFramePadHeight = 6f;
+    private const float InputBaseHeight = GuiTheme.FontSizeDefault + InputFramePadHeight * 2;
+    
+    private static float InputHeight => InputBaseHeight + GuiTheme.ItemSpacing.Y;
+    private static float RowHeight => GuiTheme.FontSizeDefault + GuiTheme.ItemSpacing.Y;
+    
     //    
     private readonly TextInput _textInput;
 
-    private NativeString _title;
+    private readonly NativeString _title;
+    private FrameStepper _scrollTopBottomStepper = new(8);
 
     public override ReadOnlySpan<byte> Id => WindowRoot.ConsoleWindowId;
 
     public ConsoleWindow(StateManager state) : base(state)
     {
+        _title = StringArena.AllocateString(80);
         _textInput = new TextInput("cli", 64, ConsoleSystem.ExecuteCommand)
             {
                 Hint = "$", Trim = true, Lowercase = true, ClearAfter = true
@@ -43,12 +46,6 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
             .WithHistory()
             .ToggleFlag(ImGuiInputTextFlags.CharsNoBlank, false)
             .ToggleFlag(ImGuiInputTextFlags.EnterReturnsTrue, true);
-    }
-
-
-    protected override void OnCreate()
-    {
-        _title = StringArena.AllocateString(80);
     }
 
     public override void OnUpdateDiagnostic()
@@ -85,13 +82,21 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         // log
         var innerWindow = ImGui.BeginChild("logs"u8, new Vector2(0, -InputHeight), ImGuiChildFlags.None, InnerFlags);
         if (innerWindow && LogService.Instance.LogCount > 0)
+        {
             DrawLogInnerWindow();
+
+            if (_scrollTopBottomStepper.Tick())
+            {
+                ImGui.SetScrollHereY(1.0f);
+                _scrollTopBottomStepper.SetIntervalTicks(0);
+            }
+        }
 
         ImGui.EndChild();
 
         // input
         ImGui.PushStyleColor(ImGuiCol.FrameBg, Palette32.SurfaceDark);
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, InputFramePad);
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8f, InputFramePadHeight));
         ImGui.SetNextItemWidth(-1f);
 
         _textInput.Draw();
@@ -100,40 +105,36 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
         ImGui.PopStyleColor(1);
     }
 
-    private void DrawLogInnerWindow()
-    {
-        var logService = LogService.Instance;
 
-        foreach (var range in AppDraw.Clipper(logService.LogCount, RowHeight, out _))
+    private static void DrawLogInnerWindow()
+    {
+        var count = LogService.Instance.LogCount;
+        foreach (var range in AppDraw.Clipper(count, RowHeight, out _))
         {
             var cursor = UiDrawCursor.Make();
-            var logs = logService.GetLogs(range.Offset, range.Length);
+            var logs = LogService.Instance.GetLogs(range.Offset, range.Length);
             for (var i = 0; i < logs.Length; i++)
             {
                 var it = logs[i];
                 if (i > 0) cursor.NewLine();
 
-                var text = logService.GetLogText(it.Handle);
-                if (it.Scope > LogScope.Command)
-                    DrawLog(text, it.Scope, it.Level, ref cursor);
-                else
-                    cursor.Text(text.SliceFrom(LogEntry.TimestampOffset));
+                var text = LogService.Instance.GetLogText(it.Handle);
+                DrawLog(text, it.Scope, it.Level, ref cursor);
             }
 
             cursor.Sync();
         }
-
-        if (_scrollTopBottomStepper.Tick())
-        {
-            ImGui.SetScrollHereY(1.0f);
-            _scrollTopBottomStepper.SetIntervalTicks(0);
-        }
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DrawLog(NativeView<byte> text, LogScope scope, LogLevel level, scoped ref UiDrawCursor cursor)
     {
+        if (scope == LogScope.Command)
+        {
+            cursor.Text(text.SliceFrom(LogEntry.TimestampOffset));
+            return;
+        }
+
         cursor.Text(text.Slice(0, LogEntry.TimestampOffset));
         cursor.SameLine();
         cursor.Text(level.ToLogText(), StyleMap.GetLogLevelColor(level));

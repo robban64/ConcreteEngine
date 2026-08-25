@@ -1,4 +1,5 @@
 using System.Text;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Common.Text;
@@ -25,7 +26,7 @@ internal sealed unsafe class TextInput : InputField
 
     private TextInputHistory? _history;
 
-    public ushort MinLength { get; private set; }
+    public int MinLength { get; private set; }
     public bool Trim, Lowercase, ClearAfter, AllowEmpty;
     public TextInputFilter Filter;
     public ImGuiInputTextFlags ImFlags = ImGuiInputTextFlags.CharsNoBlank;
@@ -58,9 +59,9 @@ internal sealed unsafe class TextInput : InputField
         return this;
     }
 
-    public TextInput WithMinLength(ushort minLength)
+    public TextInput WithMinLength(int minLength)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(minLength, Text.Capacity);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)minLength, (uint)Text.Capacity);
         MinLength = minLength;
         return this;
     }
@@ -78,16 +79,18 @@ internal sealed unsafe class TextInput : InputField
     {
         var hint = Hint;
         var strId = _stringId;
-        var changed = ImGui.InputTextEx((byte*)&strId, (byte*)&hint, Text, Text.Capacity, default, ImFlags,
+        var changed = ImGui.InputTextEx(strId._value, hint._value, Text, Text.Capacity, default, ImFlags,
             _inputCallback);
-        if (changed && ProcessInput())
+
+        if (!changed || !ProcessInput())
         {
-            InvokeCallback();
-            if (ClearAfter) Text.ClearText();
-            return true;
+            return false;
         }
 
-        return false;
+        InvokeCallback();
+        if (ClearAfter) Text.ClearText();
+        return true;
+
     }
 
     private int OnInputCallback(ImGuiInputTextCallbackData* data)

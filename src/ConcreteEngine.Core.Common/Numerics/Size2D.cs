@@ -27,7 +27,7 @@ public readonly record struct Size2D(int Width, int Height) : IEquatable<int>, I
     public static implicit operator Vector2(Size2D v) => new(v.Width, v.Height);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Size2D(Vector2 v) => new(v.X, v.Y);
+    public static explicit operator Size2D(Vector2 v) => new(v.X, v.Y);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Size2D(Size3D v) => new(v.Width, v.Height);

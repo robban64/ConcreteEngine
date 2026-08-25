@@ -42,6 +42,8 @@ public readonly struct DrawEntityIndex : IComparable<DrawEntityIndex>
         _queue = queue;
         _depthKey = depthKey;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public DrawEntityIndex WithDepth(ushort depthKey) => new (Entity, Mask, _queue, depthKey);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator RenderEntityId(DrawEntityIndex e) => e.Entity;

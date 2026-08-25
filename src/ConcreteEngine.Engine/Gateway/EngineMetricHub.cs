@@ -57,7 +57,7 @@ internal sealed class EngineMetricHub
     {
         if (_metricSystem == null) return;
 
-        var frameMeta = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha);
+        var frameMeta = new FrameMeta(EngineTime.FrameId, EngineTime.FpsF, EngineTime.GameAlphaF);
         var sceneMeta = new SceneMeta(
             SceneManager.SceneStore.ActiveCount,
             0,

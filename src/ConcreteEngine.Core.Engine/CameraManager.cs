@@ -43,7 +43,7 @@ public sealed class CameraManager
     }
 
 
-    internal void CommitFrame(float alpha)
+    internal void CommitFrame(double alpha)
     {
         Camera.Interpolate(alpha, out var translation, out var orientation);
 

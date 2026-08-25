@@ -5,18 +5,49 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.RenderEntity;
 
-public struct DrawPolicy(DrawQueue queue, PassMask passes, EntityDrawStatus status = EntityDrawStatus.Normal)
+public struct DrawPolicy
 {
-    public EntityDrawStatus Status = status;
-    public PassMask VisiblePassMask = passes;
+    public EntityDrawStatus Status;
+    public PassMask VisiblePassMask;
 
-    public readonly DrawQueue Queue = queue;
-    public readonly PassMask Passes = passes;
+    public readonly DrawQueue Queue;
+    public readonly PassMask Passes;
+
+    public DrawPolicy(DrawQueue queue, PassMask passes, EntityDrawStatus status = EntityDrawStatus.Normal)
+    {
+        Status = status;
+        VisiblePassMask = passes;
+        Queue = queue;
+        Passes = passes;
+    }
+
+    public DrawPolicy(DrawQueue queue, PassMask passes, PassMask visiblePassMask, EntityDrawStatus status)
+    {
+        Status = status;
+        VisiblePassMask = visiblePassMask;
+        Queue = queue;
+        Passes = passes;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly DrawPolicy WithMask(PassMask mask)
+    {
+        var result = this;
+        result.VisiblePassMask = mask;
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static DrawPolicy WithMask(DrawPolicy policy, PassMask mask)
+    {
+        policy.VisiblePassMask = mask;
+        return policy;
+    }
+
 }
 
 public struct RenderSource(MeshId mesh, Id16<Material> material, int meshIndex = 0, EntityDrawFlags flags = 0)
 {
-    //public uint InstanceCount;
     public MeshId Mesh = mesh;
     public Id16<Material> Material = material;
 

@@ -43,7 +43,7 @@ public sealed class VisualManager
     {
         var anyWasDirty = AnyWasDirty = false;
         anyWasDirty |= Lightning.Commit();
-        anyWasDirty |= Environment.FogSettings.Commit();
+        anyWasDirty |= Environment.Commit();
         anyWasDirty |= PostEffect.Commit();
         return AnyWasDirty = anyWasDirty;
     }

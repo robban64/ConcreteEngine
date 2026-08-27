@@ -39,7 +39,7 @@ public sealed class EngineRenderSystem : IDisposable
 
         _resolver = new RenderResolver(CameraManager.Instance.Frustum);
 
-        _drawPipeline = new DrawCommandPipeline(graphics.Gfx, _animationSystem, _materialSystem);
+        _drawPipeline = new DrawCommandPipeline(graphics.Gfx, _animationSystem, _materialSystem, _resolver);
 
         VisualSystem.Create(graphics.Gfx.Buffers);
     }
@@ -97,17 +97,20 @@ public sealed class EngineRenderSystem : IDisposable
         VisualSystem.Instance.UploadUniforms();
 
         // process and upload draw commands
+        avg1.BeginSample();
         _resolver.Execute();
+        if (avg1.EndSample() > 144) avg1.ResetAndPrint("Resolver");
+
         _particleSystem.Execute();
         _animationSystem.Execute(EngineTime.GameAlpha);
 
         // prepare buffers
         VisualSystem.Instance.UploadUniformBuffers(_resolver, _materialSystem, _animationSystem);
+        _drawPipeline.ReadyDrawCommands();
 
-        _drawPipeline.ReadyDrawCommands(_resolver.DrawIndices);
     }
 
-    private AvgFrameTimer avg;
+    private AvgFrameTimer avg1;
 
     public void ExecuteRenderPipeline()
     {

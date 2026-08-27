@@ -16,17 +16,6 @@ public static class FrustumMath
         var t = (d - nearFar.X) / (nearFar.Y - nearFar.X);
         return t * maxValueF + 0.5f;
     }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float MakeDepthKey(Vector3 forward, in Vector3 worldPos, Vector2 nearFar, float viewZ)
-    {
-        const float maxValueF = 65535f;
-        var d = Vector3.Dot(forward, worldPos) - viewZ;
-        if (d <= nearFar.X) return 0;
-        if (d >= nearFar.Y) return maxValueF;
-        var t = (d - nearFar.X) / (nearFar.Y - nearFar.X);
-        return t * maxValueF + 0.5f;
-    }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Core.Engine.Graphics;
+// ReSharper disable ReplaceWithFieldKeyword
 
 namespace ConcreteEngine.Core.Engine;
 
@@ -18,19 +18,18 @@ public sealed class Camera
     private const float MinFarPlane = 5f;
     private const float MaxFarPlane = 10_000f;
 
-    private const double MinFov = 10;
-    private const double MaxFov = 179;
+    private const float MinFov = 10f;
+    private const float MaxFov = 179f;
 
-    private const float DirtyThreshold = MetricUnits.Micrometer;
 
     internal readonly CameraTransform Transform;
 
     public bool IsDirty { get; private set; }
     public float AspectRatio { get; private set; }
-    
-    private double _fov;
-    private Vector2 _nearFarPlane;
-    
+
+    private float _fov = 70f;
+    private Vector2 _nearFarPlane = new(0.1f, 500f);
+
     private Vector3D _translation, _lastTranslation;
     private Vector2D _orientation, _lastOrientation;
 
@@ -60,7 +59,7 @@ public sealed class Camera
             IsDirty = true;
         }
     }
-    
+
     public Vector2D Orientation
     {
         get => _orientation;
@@ -70,7 +69,7 @@ public sealed class Camera
             IsDirty = true;
         }
     }
-    
+
     [InputNumber(Label = "Orientation")]
     public Vector2 OrientationF
     {
@@ -85,7 +84,7 @@ public sealed class Camera
     [InputNumber(Label = "Near & Far")]
     public Vector2 NearFarPlane
     {
-        get;
+        get => _nearFarPlane;
         set
         {
             if (VectorMath.NearlyEqual(value, _nearFarPlane, MetricUnits.Millimeter)) return;
@@ -93,19 +92,19 @@ public sealed class Camera
             _nearFarPlane.Y = float.Min(float.Max(value.Y, MinFarPlane), MaxFarPlane);
             IsDirty = true;
         }
-    } = new(0.1f, 500f);
+    }
 
     [InputNumber(InputStyle.Slider, Label = "Field of view", Min = 10f, Max = 179f)]
     public float Fov
     {
-        get;
+        get => _fov;
         set
         {
-            if (DoubleMath.NearlyEqual(value, _fov, MetricUnits.Decimeter)) return;
-            _fov = double.Clamp(value, MinFov, MaxFov);
+            if (FloatMath.NearlyEqual(value, _fov, MetricUnits.Millimeter)) return;
+            _fov = float.Clamp(value, MinFov, MaxFov);
             IsDirty = true;
         }
-    } = 70;
+    }
 
 
     //
@@ -146,7 +145,7 @@ public sealed class Camera
 
         ref var projectionMatrix = ref Transform.ProjectionMatrix;
         projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(
-            (float)DoubleMath.ToRadians(Fov * 0.5),
+            FloatMath.ToRadians(Fov * 0.5f),
             AspectRatio,
             NearFarPlane.X,
             NearFarPlane.Y

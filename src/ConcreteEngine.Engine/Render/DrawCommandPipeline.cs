@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Engine.Systems;
@@ -16,16 +17,18 @@ internal sealed class DrawCommandPipeline : IDisposable
 
     private readonly DrawCommandProcessor _drawCmd;
     private readonly RenderPassContext _passContext;
+    private readonly RenderResolver _resolver;
 
     private readonly Range32[] _passRanges;
 
-    private NativeArray<(RenderEntityId Entity, int SubmitIndex)> _drawTickets;
+    private NativeArray<int> _drawTickets;
 
-    public DrawCommandPipeline(GfxContext gfx, AnimationSystem animationSystem, MaterialSystem materialSystem)
+    public DrawCommandPipeline(GfxContext gfx, AnimationSystem animationSystem, MaterialSystem materialSystem, RenderResolver resolver)
     {
+        _resolver = resolver;
         _drawCmd = new DrawCommandProcessor(gfx, animationSystem, materialSystem);
         _passContext = new RenderPassContext(_drawCmd);
-        _drawTickets = NativeArray.Allocate<(RenderEntityId, int)>(DefaultTicketCapacity);
+        _drawTickets = NativeArray.Allocate<int>(DefaultTicketCapacity);
         _passRanges = new Range32[RenderLimits.DrawPassSlots];
     }
 
@@ -64,26 +67,26 @@ internal sealed class DrawCommandPipeline : IDisposable
         passEntry.EndPassDel?.Invoke(_passContext);
     }
 
-    private unsafe void ExecuteDrawPass(Range32 passRange)
+    private void ExecuteDrawPass(Range32 passRange)
     {
-        var sources = RenderEcs.Core.GetSourceView().Ptr;
         foreach (ref readonly var ticket in _drawTickets.Slice(passRange))
         {
-            var source = sources[ticket.Entity.Index()];
-            _drawCmd.DrawSource(source, ticket.Entity, ticket.SubmitIndex);
+            var entity = _resolver.GetEntity(ticket);
+            var source = RenderEcs.Core.GetSource(entity);
+            _drawCmd.DrawSource(source, entity, ticket);
         }
     }
 
-    public unsafe void ReadyDrawCommands(NativeView<DrawEntityIndex> indices)
+    public unsafe void ReadyDrawCommands()
     {
-        if (indices.Length <= 1) return;
+        if (_resolver.VisibleCount <= 1) return;
 
         Array.Clear(_passRanges);
 
         var heads = stackalloc int[RenderLimits.DrawPassSlots * 2];
 
         // Count pass tickets
-        CountTickets(indices, heads);
+        CountTickets(_resolver.SortIndices, heads);
 
         // Count pass ranges
         var total = CountPasses(heads);
@@ -94,18 +97,17 @@ internal sealed class DrawCommandPipeline : IDisposable
             var newSize = CapacityUtils.CapacityGrowthToFit(_drawTickets.Length, total);
             _drawTickets.ReAlloc(newSize, true);
         }
-
         // fill tickets in sorted order
-        FillTickets(indices, heads + RenderLimits.DrawPassSlots);
+        FillTickets(_resolver.SortIndices, heads + RenderLimits.DrawPassSlots);
     }
 
-    private static unsafe void CountTickets(NativeView<DrawEntityIndex> indices, int* heads)
+    private static unsafe void CountTickets(NativeView<uint> indices, int* heads)
     {
         var drawIndex = indices.Ptr;
         var drawIndexEnd = indices.EndPtr;
         while (drawIndex < drawIndexEnd)
         {
-            var mask = (uint)drawIndex->Mask;
+            var mask = (uint)(byte)*drawIndex;
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);
@@ -131,7 +133,7 @@ internal sealed class DrawCommandPipeline : IDisposable
         return total;
     }
 
-    private unsafe void FillTickets(NativeView<DrawEntityIndex> indices, int* heads)
+    private unsafe void FillTickets(NativeView<uint> indices, int* heads)
     {
         var drawTickets = _drawTickets.Ptr;
 
@@ -139,13 +141,13 @@ internal sealed class DrawCommandPipeline : IDisposable
         var drawIndexEnd = indices.EndPtr;
         while (drawIndex < drawIndexEnd)
         {
-            var mask = (uint)drawIndex->Mask;
+            var mask = (uint)(byte)*drawIndex;
             var submitIndex = (int)(drawIndex - indices);
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);
                 var w = heads[p]++;
-                drawTickets[w] = (drawIndex->Entity, submitIndex);
+                drawTickets[w] = submitIndex;
                 mask &= mask - 1;
             }
 

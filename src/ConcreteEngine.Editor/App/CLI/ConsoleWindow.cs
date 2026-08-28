@@ -81,9 +81,10 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
 
         // log
         var innerWindow = ImGui.BeginChild("logs"u8, new Vector2(0, -InputHeight), ImGuiChildFlags.None, InnerFlags);
-        if (innerWindow && LogService.Instance.LogCount > 0)
+        var logCount = LogService.Instance.LogCount;
+        if (innerWindow && logCount > 0)
         {
-            DrawLogInnerWindow();
+            DrawLogInnerWindow(logCount);
 
             if (_scrollTopBottomStepper.Tick())
             {
@@ -106,9 +107,8 @@ internal sealed unsafe class ConsoleWindow : EditorWindow
     }
 
 
-    private static void DrawLogInnerWindow()
+    private static void DrawLogInnerWindow(int count)
     {
-        var count = LogService.Instance.LogCount;
         foreach (var range in AppDraw.Clipper(count, RowHeight, out _))
         {
             var cursor = UiDrawCursor.Make();

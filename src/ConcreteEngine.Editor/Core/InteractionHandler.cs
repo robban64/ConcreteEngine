@@ -23,27 +23,29 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
             return;
         }
 
-        if (!EditorInput.IsBlockingMouse && !UpdateMouseClick(EditorInput.State))
-            UpdateDrag(EditorInput.State.IsDragging);
+        if (!EditorInput.IsBlockingMouse && !UpdateMouseClick())
+            UpdateDrag(EditorInput.IsDragging);
 
-        WasDragging = EditorInput.State.IsDragging;
+        WasDragging = EditorInput.IsDragging;
     }
 
-    private bool UpdateMouseClick(InputStateToggles inputStateToggles)
+    private bool UpdateMouseClick()
     {
-        switch (inputStateToggles)
+        if (EditorInput.IsRightClick)
         {
-            case { IsRightClick: true }:
-                OnRightClickViewport();
-                return true;
-            case { IsUsingGizmo: true, IsHoveringGizmo: true }:
-                return true;
-            case { IsLeftClick: true, IsDragging: false }:
-                OnClickViewport(EngineInput.Mouse.ViewportPos);
-                return true;
-            default:
-                return false;
+            OnRightClickViewport();
+            return true;
         }
+        if (EditorInput.IsLeftClick && !EditorInput.IsDragging)
+        {
+            OnClickViewport(EngineInput.Mouse.ViewportPos);
+            return true;
+        }
+
+        if (EditorInput.IsUsingGizmo || EditorInput.IsHoveringGizmo)
+            return true;
+
+        return false;
     }
 
     private void UpdateDrag(bool isDragging)

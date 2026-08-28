@@ -1,10 +1,12 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Attributes;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
+[EnumExt(ToUtf8 = true)]
 public enum MaterialProfileId : byte
 {
     None,

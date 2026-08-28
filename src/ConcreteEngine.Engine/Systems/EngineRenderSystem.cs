@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
+using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Render.Impl;
 using ConcreteEngine.Engine.Render.Passes;
@@ -16,13 +17,14 @@ namespace ConcreteEngine.Engine.Systems;
 public sealed class EngineRenderSystem : IDisposable
 {
     private readonly RenderResolver _resolver;
+    private readonly DrawCommandProcessor _drawCmd;
+    private readonly RenderPassContext _passContext;
 
     private readonly MaterialSystem _materialSystem;
     private readonly TerrainSystem _terrainSystem;
     private readonly ParticleSystem _particleSystem;
     private readonly AnimationSystem _animationSystem;
 
-    private readonly DrawCommandPipeline _drawPipeline;
 
 
     internal EngineRenderSystem(GraphicsRuntime graphics)
@@ -37,9 +39,10 @@ public sealed class EngineRenderSystem : IDisposable
         _particleSystem = new ParticleSystem(graphics.Gfx);
         _animationSystem = new AnimationSystem(AnimationManager.Instance);
 
+        _drawCmd = new DrawCommandProcessor(graphics.Gfx, _animationSystem, _materialSystem);
+        _passContext = new RenderPassContext(_drawCmd);
         _resolver = new RenderResolver(CameraManager.Instance.Frustum);
 
-        _drawPipeline = new DrawCommandPipeline(graphics.Gfx, _animationSystem, _materialSystem, _resolver);
 
         VisualSystem.Create(graphics.Gfx.Buffers);
     }
@@ -90,37 +93,64 @@ public sealed class EngineRenderSystem : IDisposable
     {
         RenderContext.ResetContext();
         _animationSystem.ResetFrame();
-        _drawPipeline.ResetFrame();
+        _drawCmd.ResetFrame();
+        _passContext.ResetFrame();
 
         // frame update
         CameraManager.Instance.CommitFrame(EngineTime.GameAlpha);
         VisualSystem.Instance.UploadUniforms();
 
         // process and upload draw commands
-        avg1.BeginSample();
         _resolver.Execute();
-        if (avg1.EndSample() > 144) avg1.ResetAndPrint("Resolver");
 
         _particleSystem.Execute();
         _animationSystem.Execute(EngineTime.GameAlpha);
 
         // prepare buffers
         VisualSystem.Instance.UploadUniformBuffers(_resolver, _materialSystem, _animationSystem);
-        _drawPipeline.ReadyDrawCommands();
-
+        _resolver.ReadyDrawCommands();
     }
 
-    private AvgFrameTimer avg1;
 
     public void ExecuteRenderPipeline()
     {
         var length = RenderRegistry.PassCount;
         for (var i = 0; i < length; ++i)
         {
-            _drawPipeline.RunPass(new PassId(i));
+            var passResult = BeginPass(i);
+
+            if (passResult.Op is PassOp.Draw)
+            {
+                _drawCmd.PrepareDrawPass();
+                ExecuteDrawPass(i);
+            }
+
+            EndPass(i);
+        }
+    }
+    
+    private void ExecuteDrawPass(int passId)
+    {
+        var tickets = _resolver.GetDrawTickets(passId);
+        foreach (ref readonly var ticket in tickets)
+        {
+            var source = RenderEcs.Core.GetSource(ticket.Entity);
+            _drawCmd.DrawSource(source, ticket.Entity, ticket.SubmitIndex);
         }
     }
 
+    private PassAction BeginPass(int passId)
+    {
+        var passEntry = RenderRegistry.GetPassEntry(new PassId(passId));
+        _passContext.AttachPass(passEntry);
+        return passEntry.BeginPassDel(_passContext);
+    }
+
+    private void EndPass(int passId)
+    {
+        var passEntry = RenderRegistry.GetPassEntry(new PassId(passId));
+        passEntry.EndPassDel?.Invoke(_passContext);
+    }
 
     public void Dispose()
     {

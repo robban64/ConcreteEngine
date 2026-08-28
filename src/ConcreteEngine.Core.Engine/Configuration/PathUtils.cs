@@ -19,6 +19,6 @@ public static class PathUtils
 
         if (!result) throw new InvalidOperationException("Path could not be joined");
 
-        return bytes.Writer().Append(chars.Slice(0, written)).End();
+        return bytes.AsWriter().Append(chars.Slice(0, written)).End();
     }
 }

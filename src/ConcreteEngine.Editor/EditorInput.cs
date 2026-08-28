@@ -11,16 +11,22 @@ internal static class EditorInput
 {
     public static InputLayer Layer = null!;
 
-    public static InputStateToggles State;
-
     public static DragState DragState;
 
-    public static bool IsInteracting() => State.IsDragging || State.IsUsingGizmo || State.IsHoveringGizmo;
+    public static bool IsDragging;
+    public static bool IsLeftClick;
+    public static bool IsRightClick;
 
-    public static bool IsBlockingMouse => State.IsBlockingMouse;
-    public static bool IsBlockingKeyboard => State.IsBlockingKeyboard;
-    public static bool IsBlocking => State.IsBlockingMouse || State.IsBlockingKeyboard;
+    public static bool IsUsingGizmo;
+    public static bool IsHoveringGizmo;
 
+    public static bool IsHoveringUi;
+
+    public static bool IsBlockingKeyboard;
+    public static bool IsBlockingMouse;
+    
+    public static bool IsBlocking => IsBlockingMouse || IsBlockingKeyboard;
+    public static bool IsInteracting() => IsDragging || IsUsingGizmo || IsHoveringGizmo;
     public static bool IsGizmoBlocked => DragState != DragState.None || Layer.IsKeyDown(Key.ControlLeft);
 
     public static void ToggleBlockLayers()
@@ -31,24 +37,20 @@ internal static class EditorInput
 
     public static bool UpdateInputState(bool hasGizmo)
     {
-        var isDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
+        IsDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
+        IsLeftClick = Layer.IsMouseDown(MouseButton.Left);
+        IsRightClick = Layer.IsMouseDown(MouseButton.Right);
+
         var isUsingGizmo = hasGizmo && ImGuizmo.IsUsing();
         var isIsHoveringGizmo = hasGizmo && ImGuizmo.IsOver();
         var isHovering = !ViewportWindow.IsHovering && ImGuiSystem.Io.WantCaptureMouse && !isUsingGizmo;
-
-        ref var state = ref State;
-        state.IsDragging = isDragging;
-        state.IsLeftClick = Layer.IsMouseDown(MouseButton.Left);
-        state.IsRightClick = Layer.IsMouseDown(MouseButton.Right);
-
-        state.IsUsingGizmo = isUsingGizmo;
-        state.IsHoveringGizmo = isIsHoveringGizmo;
-        state.IsHoveringUi = isHovering;
-
-        state.IsHoveringUi = isHovering;
-        state.IsBlockingKeyboard = state.IsBlockingMouse = ImGuiSystem.Io.WantTextInput || isUsingGizmo ||
-                                                           (isHovering && !isIsHoveringGizmo);
-
-        return isDragging || isUsingGizmo || isIsHoveringGizmo;
+        
+        IsUsingGizmo = isUsingGizmo;
+        IsHoveringGizmo = isIsHoveringGizmo;
+        IsHoveringUi = isHovering;
+        IsBlockingKeyboard = IsBlockingMouse = ImGuiSystem.Io.WantTextInput || isUsingGizmo ||
+                                               (isHovering && !isIsHoveringGizmo);
+        
+        return IsDragging || isUsingGizmo || isIsHoveringGizmo;
     }
 }

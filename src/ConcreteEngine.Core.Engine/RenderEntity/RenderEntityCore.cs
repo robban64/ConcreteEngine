@@ -31,7 +31,7 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
     public bool IsVisible(RenderEntityId e)
     {
         var index = e.Index();
-        return (uint)index < (uint)Capacity && _policies[index].VisiblePassMask > 0;
+        return (uint)index < (uint)Capacity && _visibility[index] != 0;
     }
 
     //
@@ -39,7 +39,9 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
     public void SetStatus(RenderEntityId entity, EntityDrawStatus status)
     {
         if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
-        _policies[entity.Index()].Status = status;
+        ref var policy = ref GetDrawPolicy(entity);
+        var newPolicy = policy.WithStatus(status);
+        policy = newPolicy;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

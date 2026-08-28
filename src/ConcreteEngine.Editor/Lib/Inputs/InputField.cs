@@ -16,7 +16,7 @@ internal abstract unsafe class InputField
     public readonly InputKind Kind;
     public InputTrigger Trigger = InputTrigger.OnChange;
 
-    protected InputField(string label, InputKind kind)
+    protected InputField(ReadOnlySpan<char> label, InputKind kind)
     {
         _id = ++_idCounter;
         Kind = kind;

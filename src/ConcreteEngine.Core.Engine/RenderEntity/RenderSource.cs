@@ -5,43 +5,24 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.RenderEntity;
 
-public struct DrawPolicy
+public readonly struct DrawPolicy
 {
-    public EntityDrawStatus Status;
-    public PassMask VisiblePassMask;
-
-    public readonly DrawQueue Queue;
+    public readonly EntityDrawStatus Status;
     public readonly PassMask Passes;
+    public readonly DrawQueue Queue;
 
     public DrawPolicy(DrawQueue queue, PassMask passes, EntityDrawStatus status = EntityDrawStatus.Normal)
     {
         Status = status;
-        VisiblePassMask = passes;
-        Queue = queue;
-        Passes = passes;
-    }
-
-    public DrawPolicy(DrawQueue queue, PassMask passes, PassMask visiblePassMask, EntityDrawStatus status)
-    {
-        Status = status;
-        VisiblePassMask = visiblePassMask;
         Queue = queue;
         Passes = passes;
     }
     
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly DrawPolicy WithMask(PassMask mask)
+    public readonly DrawPolicy WithStatus(EntityDrawStatus status)
     {
-        var result = this;
-        result.VisiblePassMask = mask;
-        return result;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static DrawPolicy WithMask(DrawPolicy policy, PassMask mask)
-    {
-        policy.VisiblePassMask = mask;
-        return policy;
+        return new DrawPolicy(Queue, Passes, status);
     }
 
 }

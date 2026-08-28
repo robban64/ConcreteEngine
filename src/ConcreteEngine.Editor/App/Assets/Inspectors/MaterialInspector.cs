@@ -20,7 +20,8 @@ internal sealed unsafe partial class MaterialInspector : Inspector<Material>
 
     public MaterialInspector()
     {
-        Sections = _fields.CreateSections();
+        var combos = new InspectSection("DrawState", [_blendCombo, _cullCombo, _depthCombo, _polygonCombo], FetchDrawState);
+        Sections = [.._fields.CreateSections(), combos];
         ApplySectionLowFetchRate();
     }
 
@@ -29,7 +30,7 @@ internal sealed unsafe partial class MaterialInspector : Inspector<Material>
         DrawHeader();
         DrawBindings();
         DrawSections();
-        DrawPipeline();
+        DrawStates();
     }
 
     private static void DrawHeader()
@@ -52,51 +53,20 @@ internal sealed unsafe partial class MaterialInspector : Inspector<Material>
         ImGui.Spacing();
     }
 
-    private void DrawPipeline()
+    private void DrawStates()
     {
         ImGui.Spacing();
-        if (ImGui.CollapsingHeader("Bindings"u8, ImGuiTreeNodeFlags.DefaultOpen))
+        if (ImGui.CollapsingHeader("DrawFlags"u8, ImGuiTreeNodeFlags.DefaultOpen))
         {
             ImGui.Spacing();
             DrawRenderFlags();
-            DrawRenderCombos();
         }
 
         ImGui.Spacing();
     }
 
-
-    private readonly ComboInput BlendCombo = ComboInput.Create("Blend Mode", BlendModeExt.Values, BlendModeExt.Names,
-        static v => Target!.State.DrawFunctions = Target!.State.DrawFunctions with { Blend = (BlendMode)v });
-
-    private readonly ComboInput CullCombo = ComboInput.Create("Cull Mode", CullModeExt.Values, CullModeExt.Names,
-        static v => Target!.State.DrawFunctions = Target!.State.DrawFunctions with { Cull = (CullMode)v });
-
-    private readonly ComboInput DepthCombo = ComboInput.Create("Depth Mode", DepthModeExt.Values, DepthModeExt.Names,
-        static v => Target!.State.DrawFunctions = Target!.State.DrawFunctions with { Depth = (DepthMode)v });
-
-    private readonly ComboInput PolygonCombo = ComboInput.Create("Polygon Offset",
-        PolygonOffsetLevelExt.Values, PolygonOffsetLevelExt.Names,
-        static v => Target!.State.DrawFunctions = Target!.State.DrawFunctions with
-        {
-            PolygonOffset = (PolygonOffsetLevel)v
-        });
-
-    private void DrawRenderCombos()
-    {
-        var drawFunc = Target!.State.DrawFunctions;
-        BlendCombo.Value = (int)drawFunc.Blend;
-        CullCombo.Value = (int)drawFunc.Cull;
-        DepthCombo.Value = (int)drawFunc.Depth;
-        PolygonCombo.Value = (int)drawFunc.PolygonOffset;
-
-        BlendCombo.Draw();
-        CullCombo.Draw();
-        DepthCombo.Draw();
-        PolygonCombo.Draw();
-    }
-
-    private unsafe void DrawRenderFlags()
+    
+    private void DrawRenderFlags()
     {
         var ogDrawState = Target!.State.DrawState;
         var drawState = ogDrawState;
@@ -110,6 +80,7 @@ internal sealed unsafe partial class MaterialInspector : Inspector<Material>
 
         if (ogDrawState != drawState)
             Target!.State.DrawState = drawState;
+        
         return;
 
         static void DrawFlagToggle(ReadOnlySpan<byte> label, GfxDrawFlags flag, ref GfxDrawState state)
@@ -130,4 +101,30 @@ internal sealed unsafe partial class MaterialInspector : Inspector<Material>
                 state = new GfxDrawState(state.Enabled ^ flag, state.Defined);
         }
     }
+
+    private readonly ComboInput _blendCombo = ComboInput.Create("Blend Mode", BlendModeExt.Values, BlendModeExt.Names,
+        static v => Target!.State.DrawFunctions = Target!.State.DrawFunctions with { Blend = (BlendMode)v });
+
+    private readonly ComboInput _cullCombo = ComboInput.Create("Cull Mode", CullModeExt.Values, CullModeExt.Names,
+        static v => Target!.State.DrawFunctions = Target!.State.DrawFunctions with { Cull = (CullMode)v });
+
+    private readonly ComboInput _depthCombo = ComboInput.Create("Depth Mode", DepthModeExt.Values, DepthModeExt.Names,
+        static v => Target!.State.DrawFunctions = Target!.State.DrawFunctions with { Depth = (DepthMode)v });
+
+    private readonly ComboInput _polygonCombo = ComboInput.Create("Polygon Offset",
+        PolygonOffsetLevelExt.Values, PolygonOffsetLevelExt.Names,
+        static v => Target!.State.DrawFunctions = Target!.State.DrawFunctions with
+        {
+            PolygonOffset = (PolygonOffsetLevel)v
+        });
+
+    private void FetchDrawState()
+    {
+        var drawFunc = Target!.State.DrawFunctions;
+        _blendCombo.Value = (int)drawFunc.Blend;
+        _cullCombo.Value = (int)drawFunc.Cull;
+        _depthCombo.Value = (int)drawFunc.Depth;
+        _polygonCombo.Value = (int)drawFunc.PolygonOffset;
+    }
+
 }

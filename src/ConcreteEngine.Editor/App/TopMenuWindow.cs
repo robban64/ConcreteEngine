@@ -21,12 +21,13 @@ internal sealed class TopMenuWindow
 
     public static TopMenuWindow Instance { get; private set; } = null!;
 
-    public static void Create()
+    public static void Create(StateManager stateManager)
     {
         if (Instance != null) throw new InvalidOperationException("Already registered");
-        Instance = new TopMenuWindow();
+        Instance = new TopMenuWindow(stateManager);
     }
-
+    
+    private readonly StateManager _stateManager;
     private readonly MenuGroup _groupLeft;
     private readonly MenuGroup _groupCenter;
     private readonly MenuGroup _groupRight;
@@ -35,8 +36,10 @@ internal sealed class TopMenuWindow
     private readonly ToolbarGroup _toolbarCenter;
     private readonly ToolbarGroup _toolbarRight;
 
-    private TopMenuWindow()
+    private TopMenuWindow(StateManager stateManager)
     {
+        _stateManager = stateManager;
+        
         _groupLeft = new MenuGroup(StringArena.AllocateString("File"), [
             new MenuItem("Test1", null, static (state) => { })
         ]);
@@ -77,20 +80,20 @@ internal sealed class TopMenuWindow
         _toolbarRight.UpdateVisibleCount();
     }
 
-    public void Draw(StateManager stateManager)
+    public void Draw()
     {
-        DrawMenu(stateManager);
-        DrawToolbar(stateManager);
+        DrawMenu();
+        DrawToolbar();
     }
 
-    public void DrawMenu(StateManager stateManager)
+    private void DrawMenu()
     {
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, GuiTheme.MenuFramePadding);
         if (ImGui.BeginMainMenuBar())
         {
-            _groupLeft.Draw(stateManager);
-            _groupCenter.Draw(stateManager);
-            _groupRight.Draw(stateManager);
+            _groupLeft.Draw(_stateManager);
+            _groupCenter.Draw(_stateManager);
+            _groupRight.Draw(_stateManager);
 
             ImGui.EndMainMenuBar();
         }
@@ -99,7 +102,7 @@ internal sealed class TopMenuWindow
     }
 
 
-    public void DrawToolbar(StateManager stateManager)
+    private void DrawToolbar()
     {
         var vp = ImGuiSystem.MainViewportPtr;
         var width = vp.WorkSize.X;
@@ -107,7 +110,8 @@ internal sealed class TopMenuWindow
         PushToolbarStyles();
         ImGui.SetNextWindowPos(vp.WorkPos);
         ImGui.SetNextWindowSize(new Vector2(width, GuiTheme.TopbarHeight));
-        if (ImGui.Begin(WindowRoot.ToolbarWindowId, TopbarFlags))
+        var visible = ImGui.Begin(WindowRoot.ToolbarWindowId, TopbarFlags);
+        if (visible)
         {
             var offsetX = GuiTheme.WindowPadding.X;
             var centerX = float.Max(width * 0.5f - _toolbarCenter.TotalWidth * 0.5f, _toolbarLeft.TotalWidth);
@@ -115,11 +119,11 @@ internal sealed class TopMenuWindow
                          _toolbarRight.VisibleCount * 6f;
 
             ImGui.SetCursorPos(new Vector2(offsetX, 0));
-            _toolbarLeft.Draw(stateManager);
+            _toolbarLeft.Draw(_stateManager);
             ImGui.SetCursorPos(new Vector2(centerX + offsetX, 0));
-            _toolbarCenter.Draw(stateManager);
+            _toolbarCenter.Draw(_stateManager);
             ImGui.SetCursorPos(new Vector2(rightX - offsetX, 0));
-            _toolbarRight.Draw(stateManager);
+            _toolbarRight.Draw(_stateManager);
         }
 
         ImGui.End();

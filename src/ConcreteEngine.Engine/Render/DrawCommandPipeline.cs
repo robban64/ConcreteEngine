@@ -11,24 +11,25 @@ using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Engine.Render;
 
+/*
 internal sealed class DrawCommandPipeline : IDisposable
 {
     private const int DefaultTicketCapacity = 1024 * 4;
-
+    
     private readonly DrawCommandProcessor _drawCmd;
     private readonly RenderPassContext _passContext;
     private readonly RenderResolver _resolver;
 
     private readonly Range32[] _passRanges;
 
-    private NativeArray<int> _drawTickets;
+    private NativeArray<DrawTicket> _drawTickets;
 
     public DrawCommandPipeline(GfxContext gfx, AnimationSystem animationSystem, MaterialSystem materialSystem, RenderResolver resolver)
     {
         _resolver = resolver;
         _drawCmd = new DrawCommandProcessor(gfx, animationSystem, materialSystem);
         _passContext = new RenderPassContext(_drawCmd);
-        _drawTickets = NativeArray.Allocate<int>(DefaultTicketCapacity);
+        _drawTickets = NativeArray.Allocate<DrawTicket>(DefaultTicketCapacity);
         _passRanges = new Range32[RenderLimits.DrawPassSlots];
     }
 
@@ -71,9 +72,8 @@ internal sealed class DrawCommandPipeline : IDisposable
     {
         foreach (ref readonly var ticket in _drawTickets.Slice(passRange))
         {
-            var entity = _resolver.GetEntity(ticket);
-            var source = RenderEcs.Core.GetSource(entity);
-            _drawCmd.DrawSource(source, entity, ticket);
+            var source = RenderEcs.Core.GetSource(ticket.Entity);
+            _drawCmd.DrawSource(source, ticket.Entity, ticket.SubmitIndex);
         }
     }
 
@@ -143,11 +143,15 @@ internal sealed class DrawCommandPipeline : IDisposable
         {
             var mask = (uint)(byte)*drawIndex;
             var submitIndex = (int)(drawIndex - indices);
+            DrawTicket ticket;
+            ticket.SubmitIndex = submitIndex;
+            ticket.Entity = _resolver.GetEntity(submitIndex);
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);
                 var w = heads[p]++;
-                drawTickets[w] = submitIndex;
+                
+                drawTickets[w] = ticket;
                 mask &= mask - 1;
             }
 
@@ -157,4 +161,4 @@ internal sealed class DrawCommandPipeline : IDisposable
 
 
     public void Dispose() => _drawTickets.Dispose();
-}
+}*/

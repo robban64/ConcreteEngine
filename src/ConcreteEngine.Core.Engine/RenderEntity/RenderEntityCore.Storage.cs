@@ -11,6 +11,7 @@ namespace ConcreteEngine.Core.Engine.RenderEntity;
 
 public sealed unsafe partial class RenderEntityCore
 {
+    private byte* _visibility;
     private DrawPolicy* _policies;
     private RenderSource* _sources;
 
@@ -18,6 +19,9 @@ public sealed unsafe partial class RenderEntityCore
     private TransformUniform* _transforms;
 
     //
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref byte GetVisibilityMask(RenderEntityId e) => ref _visibility[e.Index()];
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref RenderSource GetSource(RenderEntityId e) => ref _sources[e.Index()];
 
@@ -32,8 +36,14 @@ public sealed unsafe partial class RenderEntityCore
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref Matrix3X4 GetNormalMatrix(RenderEntityId e) => ref _transforms[e.Index()].Normal;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref TransformUniform GetTransformData(RenderEntityId e) => ref _transforms[e.Index()];
+
 
     //
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<byte> GetVisibilityView() => new(_visibility, Count);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<RenderSource> GetSourceView() => new(_sources, Count);
 
@@ -52,6 +62,7 @@ public sealed unsafe partial class RenderEntityCore
     {
         if (_policies != null || Capacity != 0) Throwers.InvalidOperation("Already allocated");
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 32);
+        _visibility = NativeArray.AllocatePointer<byte>(capacity);
         _policies = NativeArray.AllocatePointer<DrawPolicy>(capacity);
         _sources = NativeArray.AllocatePointer<RenderSource>(capacity);
         _bounds = NativeArray.AllocatePointer<BoundingAxisBox>(capacity, false);
@@ -62,6 +73,7 @@ public sealed unsafe partial class RenderEntityCore
 
     private void ClearEntityHeader(RenderEntityId e)
     {
+        _visibility[e.Index()] = 0;
         _sources[e.Index()] = default;
         _policies[e.Index()] = default;
     }
@@ -81,6 +93,7 @@ public sealed unsafe partial class RenderEntityCore
         var newSize = CapacityUtils.CapacityGrowthToFit(Capacity, required);
         Logger.Log(LogScope.Ecs, "RenderEcs resized", LogLevel.Warn);
 
+        _visibility = NativeArray.ReAlloc(_visibility, Capacity, newSize, 0, true);
         _sources = NativeArray.ReAlloc(_sources, Capacity, newSize, 0, true);
         _policies = NativeArray.ReAlloc(_policies, Capacity, newSize, 0, true);
 
@@ -94,14 +107,17 @@ public sealed unsafe partial class RenderEntityCore
 
     public void Dispose()
     {
+        NativeArray.DisposeArray(_visibility, Capacity, 0);
         NativeArray.DisposeArray(_sources, Capacity * Unsafe.SizeOf<RenderSource>(), 0);
         NativeArray.DisposeArray(_policies, Capacity * Unsafe.SizeOf<DrawPolicy>(), 0);
         NativeArray.DisposeArray(_bounds, Capacity * Unsafe.SizeOf<BoundingBox>(), 0);
         NativeArray.DisposeArray(_transforms, Capacity * Unsafe.SizeOf<TransformUniform>(), 0);
+        _visibility = null;
         _sources = null;
         _policies = null;
         _bounds = null;
         _transforms = null;
+        
 
         Count = 0;
         Capacity = 0;

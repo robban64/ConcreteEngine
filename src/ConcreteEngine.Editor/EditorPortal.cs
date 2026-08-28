@@ -23,11 +23,9 @@ public sealed class EditorPortal : IDisposable
 
     private EditorService _service = null!;
 
-
     public EditorPortal()
     {
         EditorInput.Layer = EngineInput.GetLayer(InputLayerKind.Ui);
-
         ImGuiKeyMapper.Init();
         ImGuiSystem.Setup(1);
     }
@@ -36,7 +34,9 @@ public sealed class EditorPortal : IDisposable
     public void Start()
     {
         if (Initialized) Throwers.InvalidOperation(nameof(Initialized));
-
+        
+        EditorTime.Initialize();
+        
         StyleMap.Create();
         StringArena.Create();
         ScratchBuffer.Create();

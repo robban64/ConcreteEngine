@@ -23,10 +23,6 @@ public sealed class RayCaster
         _camera = camera;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static RenderEntityCore.QueryEnumerator<BoundingAxisBox> Query() =>
-        new(RenderEcs.Core.GetDrawPolicyView(), RenderEcs.Core.GetWorldBoundView(), EntityDrawStatus.ForceHidden);
-
     public SceneObject? GetSceneObjectFromView(Vector2 screenCoords, out float distance)
     {
         ScreenPointToRay(screenCoords, out var ray);
@@ -34,10 +30,9 @@ public sealed class RayCaster
         distance = float.MaxValue;
 
         RenderEntityId closestEntity = default;
-        foreach (var query in Query())
+        foreach (var query in RenderEcs.Core.VisibilityBoundsQuery(PassMask.Main))
         {
-            if (query.Item1.VisiblePassMask == 0 || !SceneManager.Instance.IsLinkedEntity(query.Entity))
-                continue;
+            if (SceneManager.Instance.IsLinkedEntity(query.Entity)) continue;
 
             if (CollisionMethods.RayIntersectsBox(in ray, query.Item2.Min, query.Item2.Max, out var dist) &&
                 dist < distance)

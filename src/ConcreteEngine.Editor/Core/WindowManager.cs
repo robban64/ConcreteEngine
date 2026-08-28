@@ -46,7 +46,7 @@ internal sealed class WindowManager
 
     public void Setup()
     {
-        TopMenuWindow.Create();
+        TopMenuWindow.Create(_stateManager);
         RegisterDebugWindows();
 
         SceneWindow.Create();
@@ -85,7 +85,7 @@ internal sealed class WindowManager
 
         ImGui.PopStyleVar();
 
-        TopMenuWindow.Instance.Draw(_stateManager);
+        TopMenuWindow.Instance.Draw();
 
         SceneWindow.Draw();
         AssetWindow.Draw();

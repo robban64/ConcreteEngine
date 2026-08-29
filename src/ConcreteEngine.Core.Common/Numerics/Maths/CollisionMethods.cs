@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
 
 namespace ConcreteEngine.Core.Common.Numerics.Maths;
 
@@ -8,6 +9,8 @@ public static class CollisionMethods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IntersectsBox(in BoundingBox box1, in BoundingBox box2)
     {
+        //var x = Vector128.GreaterThan(box1.Min.AsVector128(), box2.Max.AsVector128());
+        //var y = Vector128.GreaterThan(box2.Min.AsVector128(), box1.Max.AsVector128());
         if (box1.Min.X > box2.Max.X || box2.Min.X > box1.Max.X) return false;
         if (box1.Min.Y > box2.Max.Y || box2.Min.Y > box1.Max.Y) return false;
         if (box1.Min.Z > box2.Max.Z || box2.Min.Z > box1.Max.Z) return false;
@@ -21,35 +24,38 @@ public static class CollisionMethods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool RayIntersectsBox(in Ray ray, Vector3 min, Vector3 max, out float t)
     {
-        var dirfrac = new Vector3
+        //var dirFrac = Vector128.Divide(Vector128.Create(1.0f), ray.Direction.AsVector128()).AsVector3();
+        float px = ray.Position.X, py = ray.Position.Y, pz = ray.Position.Z;
+        var dirFrac = new Vector3
         {
             X = 1.0f / ray.Direction.X, Y = 1.0f / ray.Direction.Y, Z = 1.0f / ray.Direction.Z
         };
-        float t1 = (min.X - ray.Position.X) * dirfrac.X;
-        float t2 = (max.X - ray.Position.X) * dirfrac.X;
-        float t3 = (min.Y - ray.Position.Y) * dirfrac.Y;
-        float t4 = (max.Y - ray.Position.Y) * dirfrac.Y;
-        float t5 = (min.Z - ray.Position.Z) * dirfrac.Z;
-        float t6 = (max.Z - ray.Position.Z) * dirfrac.Z;
 
-        float tmin = MathF.Max(MathF.Max(MathF.Min(t1, t2), MathF.Min(t3, t4)), MathF.Min(t5, t6));
-        float tmax = MathF.Min(MathF.Min(MathF.Max(t1, t2), MathF.Max(t3, t4)), MathF.Max(t5, t6));
+        float t1 = (min.X - px) * dirFrac.X;
+        float t2 = (max.X - px) * dirFrac.X;
+        float t3 = (min.Y - py) * dirFrac.Y;
+        float t4 = (max.Y - py) * dirFrac.Y;
+        float t5 = (min.Z - pz) * dirFrac.Z;
+        float t6 = (max.Z - pz) * dirFrac.Z;
+
+        float tMin = MathF.Max(MathF.Max(MathF.Min(t1, t2), MathF.Min(t3, t4)), MathF.Min(t5, t6));
+        float tMax = MathF.Min(MathF.Min(MathF.Max(t1, t2), MathF.Max(t3, t4)), MathF.Max(t5, t6));
 
         // behind
-        if (tmax < 0)
+        if (tMax < 0)
         {
-            t = tmax;
+            t = tMax;
             return false;
         }
 
         // miss
-        if (tmin > tmax)
+        if (tMin > tMax)
         {
-            t = tmax;
+            t = tMax;
             return false;
         }
 
-        t = tmin;
+        t = tMin;
         return true;
     }
 

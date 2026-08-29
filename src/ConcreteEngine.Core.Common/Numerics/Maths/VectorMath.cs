@@ -41,12 +41,10 @@ public static class VectorMath
     {
         var ndc4 = new Vector4(ndc, 1.0f);
         var vec = Vector4.Transform(ndc4, invViewProjection);
-
         if (vec.W > float.Epsilon || vec.W < -float.Epsilon)
         {
-            vec.X /= vec.W;
-            vec.Y /= vec.W;
-            vec.Z /= vec.W;
+            point = Unsafe.As<Vector4, Vector3>(ref vec) / vec.W;
+            return;
         }
 
         point = vec.AsVector3();

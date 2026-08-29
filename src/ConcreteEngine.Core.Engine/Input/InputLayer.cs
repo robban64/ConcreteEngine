@@ -29,7 +29,7 @@ public sealed class InputLayer
     public bool IsMouseDown(MouseButton button) => Enabled && Mouse.GetButton(button).IsHeld;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsMousePressed(MouseButton button) => Enabled && Mouse.GetButton(button).Pressed;
+    public bool IsMouseClicked(MouseButton button) => Enabled && Mouse.GetButton(button).Pressed;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsMouseUp(MouseButton button) => Enabled && Mouse.GetButton(button).Up;

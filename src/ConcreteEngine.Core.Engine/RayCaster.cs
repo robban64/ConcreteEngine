@@ -27,24 +27,28 @@ public sealed class RayCaster
     {
         ScreenPointToRay(screenCoords, out var ray);
 
-        distance = float.MaxValue;
-
+        var maxDistance = float.MaxValue;
         RenderEntityId closestEntity = default;
-        foreach (var query in RenderEcs.Core.VisibilityBoundsQuery(PassMask.Main))
+        foreach (var query in RenderEcs.Core.VisibilityBoundsQuery(PassMask.Main | PassMask.Effect))
         {
-            if (SceneManager.Instance.IsLinkedEntity(query.Entity)) continue;
+            if (!_sceneStore.IsLinkedEntity(query.Entity)) continue;
 
-            if (CollisionMethods.RayIntersectsBox(in ray, query.Item2.Min, query.Item2.Max, out var dist) &&
-                dist < distance)
+            ref readonly var box = ref query.Item2;
+            if (CollisionMethods.RayIntersectsBox(in ray, box.Min, box.Max, out var dist) && dist < maxDistance)
             {
-                distance = dist;
+                maxDistance = dist;
                 closestEntity = query.Entity;
             }
         }
 
-        if (!closestEntity.IsValid()) return null;
+        if (!closestEntity.IsValid())
+        {
+            distance = -1;
+            return null;
+        }
 
-        return _sceneStore.Get(SceneManager.Instance.GetByLinkedEntity(closestEntity));
+        distance = maxDistance;
+        return _sceneStore.GetByLinkedEntity(closestEntity);
     }
 
     public Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)

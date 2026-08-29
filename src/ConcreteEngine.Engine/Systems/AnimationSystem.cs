@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Core.Engine.RenderEntity;
@@ -28,7 +27,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
     private NativeArray<Matrix4x4> _scratchGlobals;
 
     private readonly AnimationManager _animations;
-    
+
     private readonly List<Id16<AnimationInstance>> _animationIds = new(32);
 
     internal AnimationSystem(AnimationManager animations)
@@ -64,7 +63,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
     public void Execute(double alpha)
     {
         _animationIds.Clear();
-        
+
         foreach (var animation in _animations)
         {
             var count = FilterEntities(_animationIds.Count + 1, animation.GetEntitySpan());
@@ -80,10 +79,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
             var time = (float)animation.Time;
             UpdateSkinned(animation.Rig, animation.ActiveClip, time);
             WriteSkeleton(animation.Rig);
-
         }
-
-
     }
 
 
@@ -139,9 +135,8 @@ internal sealed unsafe class AnimationSystem : IDisposable
 
             MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out *globals);
         }
-
     }
-    
+
     private void WriteSkeleton(ModelRig rig)
     {
         var length = rig.BoneCount;
@@ -158,7 +153,6 @@ internal sealed unsafe class AnimationSystem : IDisposable
             MatrixMath.MultiplyAffine(ref dst[i], in inverseBindPoses[i], in globals[i]);
         }
     }
-
 
 
     private void EnsureBoneCapacity(int length)

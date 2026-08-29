@@ -76,7 +76,6 @@ internal static unsafe class ImGuiSystem
         var handle = GfxRegistry.GetHandle(id);
         return texHandle.Handle == handle || SetHandle(id, handle, texHandle.TexturePtr, out texHandle);
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
         static bool SetHandle(TextureId id, NativeHandle<TextureMeta> handle, ImTextureRefPtr textureRef,
             out TexturePtrHandle result)
         {

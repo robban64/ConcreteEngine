@@ -7,23 +7,14 @@ using static ConcreteEngine.Core.Engine.RenderEntity.Queries.RenderCoreQuery;
 
 namespace ConcreteEngine.Core.Engine.RenderEntity;
 
-public sealed unsafe partial class RenderEntityCore
+public sealed partial class RenderEntityCore
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public CullQueryEnumerator CullQuery(EntityDrawStatus status, PassMask passes) =>
-        new(GetDrawPolicyView(), GetVisibilityView(), GetWorldBoundView(), status, passes);
+    public CullQueryEnumerator CullQuery(EntityDrawStatus status) =>
+        new(GetDrawPolicyView(), GetVisibilityView(), GetWorldBoundView(), status);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public VisibilityQueryEnumerator<BoundingAxisBox> VisibilityBoundsQuery(PassMask passes) =>
         new(GetVisibilityView(), GetWorldBoundView(), passes);
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public VisibilityQueryEnumerator<TransformUniform> VisibilityTransformQuery(PassMask passes) 
-        => new(GetVisibilityView(), GetTransformView(), passes);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SparseQueryEnumerator<TransformUniform> SparseTransformQuery(NativeView<RenderEntityId> sparseEntities) 
-        => new(sparseEntities, GetTransformView());
-
-    //
 }

@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Engine.Scene;
 using Silk.NET.Input;
@@ -22,7 +23,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
             EditorInput.DragState = DragState.None;
             return;
         }
-
+        
         if (!EditorInput.IsBlockingMouse && !UpdateMouseClick())
             UpdateDrag(EditorInput.IsDragging);
 
@@ -39,6 +40,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
         if (EditorInput.IsLeftClick && !EditorInput.IsDragging)
         {
             OnClickViewport(EngineInput.Mouse.ViewportPos);
+            Console.WriteLine("Click");
             return true;
         }
 
@@ -110,7 +112,11 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
     private bool OnClickViewport(Vector2 mousePos)
     {
         var selectedId = state.Context.Selection.SelectedSceneId;
+        AvgFrameTimer avg = default;
+        avg.BeginSample();
         var sceneObject = SceneManager.Instance.Raycaster.GetSceneObjectFromView(mousePos, out _);
+        avg.EndSample();
+        avg.ResetAndPrint();
         if (sceneObject is null)
         {
             if (selectedId.IsValid())

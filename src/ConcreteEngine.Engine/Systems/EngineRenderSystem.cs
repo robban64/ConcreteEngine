@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
@@ -16,7 +15,7 @@ namespace ConcreteEngine.Engine.Systems;
 
 public sealed class EngineRenderSystem : IDisposable
 {
-    private readonly RenderResolver _resolver;
+    private readonly RenderEntitySystem _renderEntitySystem;
     private readonly DrawCommandProcessor _drawCmd;
     private readonly RenderPassContext _passContext;
 
@@ -26,7 +25,6 @@ public sealed class EngineRenderSystem : IDisposable
     private readonly AnimationSystem _animationSystem;
 
 
-
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
         _ = CameraManager.Instance;
@@ -34,6 +32,8 @@ public sealed class EngineRenderSystem : IDisposable
         VisualManager.Instance.Lightning.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
 
         RenderRegistry.Create(graphics.Gfx);
+        VisualSystem.Create(graphics.Gfx.Buffers);
+
         _materialSystem = new MaterialSystem();
         _terrainSystem = new TerrainSystem(graphics.Gfx);
         _particleSystem = new ParticleSystem(graphics.Gfx);
@@ -41,10 +41,8 @@ public sealed class EngineRenderSystem : IDisposable
 
         _drawCmd = new DrawCommandProcessor(graphics.Gfx, _animationSystem, _materialSystem);
         _passContext = new RenderPassContext(_drawCmd);
-        _resolver = new RenderResolver(CameraManager.Instance.Frustum);
+        _renderEntitySystem = new RenderEntitySystem(CameraManager.Instance.Frustum);
 
-
-        VisualSystem.Create(graphics.Gfx.Buffers);
     }
 
     internal void Init()
@@ -101,14 +99,14 @@ public sealed class EngineRenderSystem : IDisposable
         VisualSystem.Instance.UploadUniforms();
 
         // process and upload draw commands
-        _resolver.Execute();
+        _renderEntitySystem.Execute();
 
         _particleSystem.Execute();
         _animationSystem.Execute(EngineTime.GameAlpha);
 
         // prepare buffers
-        VisualSystem.Instance.UploadUniformBuffers(_resolver, _materialSystem, _animationSystem);
-        _resolver.ReadyDrawCommands();
+        VisualSystem.Instance.UploadUniformBuffers(_renderEntitySystem, _materialSystem, _animationSystem);
+        _renderEntitySystem.ReadyDrawCommands();
     }
 
 
@@ -128,10 +126,10 @@ public sealed class EngineRenderSystem : IDisposable
             EndPass(i);
         }
     }
-    
+
     private void ExecuteDrawPass(int passId)
     {
-        var tickets = _resolver.GetDrawTickets(passId);
+        var tickets = _renderEntitySystem.GetDrawTickets(passId);
         foreach (ref readonly var ticket in tickets)
         {
             var source = RenderEcs.Core.GetSource(ticket.Entity);
@@ -154,7 +152,7 @@ public sealed class EngineRenderSystem : IDisposable
 
     public void Dispose()
     {
-        _resolver.Dispose();
+        _renderEntitySystem.Dispose();
         _particleSystem.Dispose();
         _animationSystem.Dispose();
         _materialSystem.Dispose();

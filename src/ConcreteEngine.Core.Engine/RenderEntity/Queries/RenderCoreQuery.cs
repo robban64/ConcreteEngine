@@ -4,13 +4,8 @@ namespace ConcreteEngine.Core.Engine.RenderEntity.Queries;
 
 public static unsafe partial class RenderCoreQuery
 {
-    public readonly ref struct CullQueryItem(
-        RenderEntityId entity,
-        ref byte visibilityMask,
-        in DrawPolicy policy,
-        in BoundingAxisBox bounds)
+    public readonly ref struct CullQueryItem(ref byte visibilityMask, in DrawPolicy policy, in BoundingAxisBox bounds)
     {
-        public readonly RenderEntityId Entity = entity;
         public readonly ref byte VisibilityMask = ref visibilityMask;
         public readonly ref readonly DrawPolicy Policy = ref policy;
         public readonly ref readonly BoundingAxisBox Bounds = ref bounds;

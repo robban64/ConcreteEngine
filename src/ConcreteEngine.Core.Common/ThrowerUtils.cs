@@ -49,7 +49,7 @@ public static class Throwers
 
     [DoesNotReturn]
     public static void InvalidHandle<T>(T handle) =>
-        throw new InvalidOperationException($"Invalid handle ({typeof(T).Name}) = {handle}");
+        throw new InvalidOperationException($"Invalid handle = {handle}");
 
     [DoesNotReturn]
     public static void BufferOverflow(string message) => throw new InsufficientMemoryException(message);

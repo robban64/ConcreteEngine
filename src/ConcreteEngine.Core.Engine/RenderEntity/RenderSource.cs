@@ -1,30 +1,22 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.RenderEntity;
 
-public readonly struct DrawPolicy
+[StructLayout(LayoutKind.Sequential)]
+public readonly struct DrawPolicy(DrawQueue queue, PassMask passes, EntityDrawStatus status = EntityDrawStatus.Normal)
 {
-    public readonly EntityDrawStatus Status;
-    public readonly PassMask Passes;
-    public readonly DrawQueue Queue;
+    public readonly EntityDrawStatus Status = status;
+    public readonly PassMask Passes = passes;
+    public readonly DrawQueue Queue = queue;
+    private readonly byte _pad = 0;
 
-    public DrawPolicy(DrawQueue queue, PassMask passes, EntityDrawStatus status = EntityDrawStatus.Normal)
-    {
-        Status = status;
-        Queue = queue;
-        Passes = passes;
-    }
-    
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly DrawPolicy WithStatus(EntityDrawStatus status)
-    {
-        return new DrawPolicy(Queue, Passes, status);
-    }
-
+    public DrawPolicy WithStatus(EntityDrawStatus status) => new(Queue, Passes, status);
 }
 
 public struct RenderSource(MeshId mesh, Id16<Material> material, int meshIndex = 0, EntityDrawFlags flags = 0)

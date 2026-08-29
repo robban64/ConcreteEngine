@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Input;
@@ -32,7 +31,6 @@ public sealed class GameEngine : IDisposable
 
     private readonly EngineGateway _gateway;
 
-    private FrameStepper _systemStepper = new(8);
 
     internal GameEngine(GfxRuntimeBundle<GL> gfxBundle, List<Func<GameScene>> sceneFactories)
     {
@@ -125,7 +123,7 @@ public sealed class GameEngine : IDisposable
 
     internal void OnSystemTick(double dt)
     {
-        var windowResized = _systemStepper.Tick() && EngineWindow.Commit();
+        var windowResized = EngineWindow.Commit();
         _renderSystem.OnSystemTick(windowResized);
 
         if (_assetSystem.PendingAssetCount > 0)
@@ -158,8 +156,8 @@ public sealed class GameEngine : IDisposable
         _gateway.Dispose();
         _sceneSystem.Shutdown();
         _renderSystem.Dispose();
-        RenderEcs.Dispose();
         _assetSystem.Shutdown();
+        RenderEcs.Dispose();
 
         EngineInput.Detach();
         _graphics.Dispose();

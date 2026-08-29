@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.RenderEntity;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -17,14 +18,18 @@ public sealed class SceneStore
     public int Count { get; private set; }
 
     private SceneObject?[] _sceneObjects = new SceneObject?[DefaultCapacity];
-
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
+    private SceneObjectId[] _renderToSceneId;
 
     private readonly Dictionary<Guid, IBlueprint> _blueprints = new(128);
 
     private readonly Stack<int> _free = [];
 
-    internal SceneStore() { }
+    internal SceneStore(int renderEntityCapacity)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(renderEntityCapacity, 32);
+        _renderToSceneId = new SceneObjectId[renderEntityCapacity];
+    }
 
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
@@ -59,7 +64,7 @@ public sealed class SceneStore
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal SceneObject GetInternal(int id)
+    internal SceneObject GetUnsafe(int id)
     {
         var index = id - 1;
         return _sceneObjects[index]!;
@@ -99,7 +104,40 @@ public sealed class SceneStore
         return _byName.TryGetValue(name, out var id) && TryGet(id, out sceneObject);
     }
 
+    public SceneObject GetByLinkedEntity(RenderEntityId e)
+    {
+        var id = GetIdByLinkedEntity(e);
+        return Get(id);
+    }
+
+    public SceneObjectId GetIdByLinkedEntity(RenderEntityId e)
+    {
+        if ((uint)e.Index() >= (uint)_renderToSceneId.Length)
+            Throwers.IndexOutOfRange(e.Index(), _renderToSceneId.Length, nameof(e));
+
+        var sceneId = _renderToSceneId[e.Index()];
+        if (!sceneId.IsValid()) Throwers.InvalidHandle(e);
+        return sceneId;
+    }
+
+    public bool IsLinkedEntity(RenderEntityId e) =>
+        (uint)e.Index() < (uint)_renderToSceneId.Length && _renderToSceneId[e.Index()].IsValid();
+
+    internal void BindSceneRenderEntity(SceneObjectId id, RenderEntityId e, int capacity)
+    {
+        if (_renderToSceneId.Length < capacity) Array.Resize(ref _renderToSceneId, capacity);
+        
+        ref var it = ref _renderToSceneId[e.Index()];
+        if(it.IsValid()) Throwers.InvalidArgument("RenderEntity already bound to SceneObject");
+        it = id;
+    }
+
+    internal void UnbindSceneRenderEntity(RenderEntityId e) => _renderToSceneId[e.Index()] = default;
+
+    //
+
     internal void RegisterBlueprint(IBlueprint blueprint) => _blueprints.TryAdd(blueprint.GId, blueprint);
+    
 
     //
     public void Rename(SceneObject sceneObject, string newName)

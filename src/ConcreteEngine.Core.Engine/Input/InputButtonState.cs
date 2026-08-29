@@ -24,4 +24,5 @@ public record struct InputButtonState
         WasDown = Down;
         if (Up) Down = false;
     }
+
 }

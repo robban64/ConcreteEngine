@@ -1,14 +1,3 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Engine.RenderEntity;
-using ConcreteEngine.Engine.Render.Passes;
-using ConcreteEngine.Engine.Systems;
-using ConcreteEngine.Graphics;
-
 namespace ConcreteEngine.Engine.Render;
 
 /*

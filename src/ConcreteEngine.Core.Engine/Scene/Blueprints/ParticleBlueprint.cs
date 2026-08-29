@@ -43,7 +43,7 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         RenderEcs.Store<EmitterLink>().Add(entity, new EmitterLink(Emitter.Id));
         RenderEcs.Store<DrawInstancedComponent>().Add(entity, new DrawInstancedComponent(Emitter.ParticleCount));
 
-        SceneManager.Instance.BindSceneHandle(entity, Owner.Id);
+        SceneManager.Instance.BindSceneHandle(Owner.Id, entity);
         RenderEntityIds.Add(entity);
 
         RenderEcs.Store<EmitterLink>().Commit();

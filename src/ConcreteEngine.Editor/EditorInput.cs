@@ -17,10 +17,10 @@ internal static class EditorInput
     public static bool IsLeftClick;
     public static bool IsRightClick;
 
+    public static bool IsHoveringUi;
+
     public static bool IsUsingGizmo;
     public static bool IsHoveringGizmo;
-
-    public static bool IsHoveringUi;
 
     public static bool IsBlockingKeyboard;
     public static bool IsBlockingMouse;
@@ -37,9 +37,9 @@ internal static class EditorInput
 
     public static bool UpdateInputState(bool hasGizmo)
     {
-        IsDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
-        IsLeftClick = Layer.IsMouseDown(MouseButton.Left);
-        IsRightClick = Layer.IsMouseDown(MouseButton.Right);
+        IsLeftClick = Layer.IsMouseClicked(MouseButton.Left);
+        IsRightClick = Layer.IsMouseClicked(MouseButton.Right);
+        var isDragging = IsDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
 
         var isUsingGizmo = hasGizmo && ImGuizmo.IsUsing();
         var isIsHoveringGizmo = hasGizmo && ImGuizmo.IsOver();
@@ -51,6 +51,6 @@ internal static class EditorInput
         IsBlockingKeyboard = IsBlockingMouse = ImGuiSystem.Io.WantTextInput || isUsingGizmo ||
                                                (isHovering && !isIsHoveringGizmo);
         
-        return IsDragging || isUsingGizmo || isIsHoveringGizmo;
+        return isDragging || isUsingGizmo || isIsHoveringGizmo;
     }
 }

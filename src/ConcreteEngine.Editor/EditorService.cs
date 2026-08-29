@@ -66,10 +66,8 @@ internal sealed class EditorService
         ImGui.PopFont();
 
         bool shouldWakeUp = EditorInput.UpdateInputState(_selectionManager.HasSceneObject);
-        if (shouldWakeUp || ImGui.IsAnyItemActive())
+        if (shouldWakeUp)
             EditorTime.FullWakeUp();
-        else if(ImGui.IsAnyItemHovered())
-            EditorTime.MediumWakeUp();
 
         _interactionHandler.Update();
 

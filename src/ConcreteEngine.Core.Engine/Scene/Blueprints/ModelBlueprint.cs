@@ -62,7 +62,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
             var source = new RenderSource(mesh.MeshId, mat.MaterialId, mesh.Info.MeshIndex);
 
             var entity = RenderEcs.Core.AddEntity(source, policy);
-            SceneManager.Instance.BindSceneHandle(entity, Owner.Id);
+            SceneManager.Instance.BindSceneHandle(Owner.Id, entity);
             RenderEntityIds.Add(entity);
         }
 

@@ -1,13 +1,10 @@
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.RenderEntity;
@@ -15,21 +12,8 @@ using ConcreteEngine.Engine.Render;
 
 namespace ConcreteEngine.Engine.Systems;
 
-[StructLayout(LayoutKind.Sequential)]
-public struct RenderEntityIndex(RenderEntityId entity, uint sortKey)
-{
-    public RenderEntityId Entity = entity;
-    public uint SortKey = sortKey;
-}
 
-[StructLayout(LayoutKind.Sequential)]
-internal struct DrawTicket(RenderEntityId entity, int submitIndex)
-{
-    public RenderEntityId Entity = entity;
-    public int SubmitIndex = submitIndex;
-}
-
-internal sealed class RenderResolver : IDisposable
+internal sealed class RenderEntitySystem : IDisposable
 {
     private const int DefaultTicketCapacity = 1024 * 4;
 
@@ -37,28 +21,34 @@ internal sealed class RenderResolver : IDisposable
 
     private readonly CameraFrustum _frustum;
 
-    private NativeArray<RenderEntityIndex> _visibleIndices;
+    // culled and sorted index
+    private NativeArray<DrawEntityIndex> _visibleIndices;
+    
+    // culled and sorted index
     private NativeArray<TransformUniform> _transforms;
 
+    // draw data
     private readonly Range32[] _passRanges;
-    private NativeArray<DrawTicket> _drawTickets;
+    private NativeArray<DrawEntityTicket> _drawTickets;
 
-    internal RenderResolver(CameraFrustum frustum)
+    internal RenderEntitySystem(CameraFrustum frustum)
     {
         ArgumentNullException.ThrowIfNull(frustum);
         _frustum = frustum;
+        
         _passRanges = new Range32[RenderLimits.DrawPassSlots];
-        _visibleIndices = NativeArray.Allocate<RenderEntityIndex>(RenderEcs.Core.Capacity);
-        _drawTickets = NativeArray.Allocate<DrawTicket>(DefaultTicketCapacity);
+        _drawTickets = NativeArray.Allocate<DrawEntityTicket>(DefaultTicketCapacity);
+
+        _visibleIndices = NativeArray.Allocate<DrawEntityIndex>(RenderEcs.Core.Capacity);
         _transforms = NativeArray.AlignedAllocate<TransformUniform>(RenderEcs.Core.Capacity, 64, false);
     }
 
-    private NativeView<RenderEntityIndex> SortIndices => _visibleIndices.Slice(0, VisibleCount);
-
+    private NativeView<DrawEntityIndex> SortIndices => _visibleIndices.Slice(0, VisibleCount);
+    
     public NativeView<TransformUniform> Transforms => _transforms.Slice(0, VisibleCount);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<DrawTicket> GetDrawTickets(int passId)
+    public NativeView<DrawEntityTicket> GetDrawTickets(int passId)
     {
         var range = _passRanges[passId];
         return _drawTickets.Slice(range);
@@ -67,39 +57,38 @@ internal sealed class RenderResolver : IDisposable
     public void Execute()
     {
         Ensure();
+        CullEntities();
+        var visibleCount = VisibleCount = BuildVisibleIndices();
 
-        Cull();
-        var visibleCount = VisibleCount = Build();
         if (visibleCount == 0) return;
         Debug.Assert((uint)visibleCount <= (uint)_visibleIndices.Length);
 
         SortIndices.Reinterpret<ulong>().AsSpan().Sort();
         SubmitTransforms();
-
     }
 
-    private void Cull()
+    private void CullEntities()
     {
-        foreach (var query in RenderEcs.Core.CullQuery(EntityDrawStatus.Normal, 0))
+        foreach (var query in RenderEcs.Core.CullQuery(EntityDrawStatus.Normal))
         {
-            var originalMask = query.Policy.Passes;
             var status = query.Policy.Status == EntityDrawStatus.AlwaysVisible;
-            var mask = status
-                ? originalMask
-                : _frustum.Intersects(originalMask, in query.Bounds);
+            var passMask = status
+                ? query.Policy.Passes
+                : _frustum.Intersects(query.Policy.Passes, in query.Bounds);
 
-            if (mask != 0)
+            var passes = query.Policy.Passes;
+            if (passMask != 0)
             {
-                query.VisibilityMask = (byte)mask;
+                query.VisibilityMask = (byte)passMask;
             }
-            else if (originalMask != mask)
+            else if (passes != passMask)
             {
                 query.VisibilityMask = 0;
             }
         }
     }
 
-    private unsafe int Build()
+    private unsafe int BuildVisibleIndices()
     {
         var nearFar = CameraManager.Instance.Camera.NearFarPlane;
         var viewZ = CameraManager.Instance.Camera.ViewMatrix.M43;
@@ -109,14 +98,10 @@ internal sealed class RenderResolver : IDisposable
         foreach (var query in RenderEcs.Core.VisibilityBoundsQuery(PassMask.Depth | PassMask.Main | PassMask.Effect))
         {
             ref readonly var center = ref query.Item2.Center;
-            var distance = FrustumMath.MakeDepthKey(forward, in center, nearFar, viewZ);
+            var distance = MakeDepthKey(forward,  in center, nearFar, viewZ);
 
-            var mask = query.Item1;
             var queue = RenderEcs.Core.GetDrawPolicy(query.Entity).Queue;
-            var sortKey = PackSortKey32(mask, distance, queue);
-            RenderEntityIndex drawIndex;
-            drawIndex.Entity = query.Entity;
-            drawIndex.SortKey = sortKey;
+            var drawIndex = DrawEntityIndex.Create(query.Entity, query.Item1, distance, queue);
             *indices++ = drawIndex;
         }
 
@@ -160,21 +145,18 @@ internal sealed class RenderResolver : IDisposable
         FillTickets(heads + RenderLimits.DrawPassSlots);
     }
 
+
     private unsafe void CountTickets(int* heads)
     {
-        var drawIndex = SortIndices.Ptr;
-        var drawIndexEnd = SortIndices.EndPtr;
-        while (drawIndex < drawIndexEnd)
+        foreach (ref readonly var it in SortIndices)
         {
-            var mask = (uint)(byte)drawIndex->SortKey;
+            var mask = (uint)(byte)it.SortKey;
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);
                 ++heads[p];
                 mask &= mask - 1;
             }
-
-            ++drawIndex;
         }
     }
 
@@ -194,20 +176,15 @@ internal sealed class RenderResolver : IDisposable
 
     private unsafe void FillTickets(int* heads)
     {
+        var submitIndex = 0;
         var drawTickets = _drawTickets.Ptr;
-
-        var indices = SortIndices;
-        var drawIndex = indices.Ptr;
-        var drawIndexEnd = indices.EndPtr;
-        while (drawIndex < drawIndexEnd)
+        foreach (ref readonly var it in SortIndices)
         {
-            var submitIndex = (int)(drawIndex - indices);
+            var mask = (uint)(byte)it.SortKey;
 
-            var entity = drawIndex->Entity;
-            var mask = (uint)(byte)drawIndex->SortKey;
-            DrawTicket ticket;
-            ticket.SubmitIndex = submitIndex;
-            ticket.Entity = entity;
+            DrawEntityTicket ticket;
+            ticket.Entity = it.Entity;
+            ticket.SubmitIndex = submitIndex++;
 
             while (mask != 0)
             {
@@ -217,8 +194,6 @@ internal sealed class RenderResolver : IDisposable
                 drawTickets[w] = ticket;
                 mask &= mask - 1;
             }
-
-            ++drawIndex;
         }
     }
 
@@ -237,53 +212,19 @@ internal sealed class RenderResolver : IDisposable
         _visibleIndices.Dispose();
         _transforms.Dispose();
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint PackSortKey32(byte mask, ushort depthKey, DrawQueue queue)
+    private static ushort MakeDepthKey(Vector4 forward, in Vector3 worldPos, Vector2 nearFar, float viewZ)
     {
-        var depth = queue < DrawQueue.Transparent ? depthKey : (ushort)(ushort.MaxValue - depthKey);
-        return mask | ((uint)depth << 8) | ((uint)queue << 24);
+        const ushort maxValue = 65535;
+        var wp = new Vector4(worldPos, 0f);
+        var d = Vector4.Dot(forward, wp) - viewZ;
+        if (d <= nearFar.X) return 0;
+        if (d >= nearFar.Y) return maxValue;
+        var t = (d - nearFar.X) / (nearFar.Y - nearFar.X);
+        return (ushort)(t * 65535f + 0.5f);
     }
+
+
 }
 
-
-/*
-
-   private unsafe int CullEntities()
-   {
-       var nearFar = CameraManager.Instance.Camera.NearFarPlane;
-       var viewZ = CameraManager.Instance.Camera.ViewMatrix.M43;
-       var forward = new Vector4(CameraManager.Instance.Camera.Forward, 0);
-
-       var indices = _indices.AsView().Ptr;
-       foreach (var query in CullQuery())
-       {
-           var alwaysVisible = query.Policy.Status == EntityDrawStatus.AlwaysVisible;
-           var mask = alwaysVisible
-               ? query.Policy.Passes
-               : _frustum.Intersects(query.Policy.Passes, in query.Item1);
-
-           var originalMask = query.Policy.Passes;
-           var queue = query.Policy.Queue;
-
-           if (mask != 0)
-           {
-               ref readonly var center = ref query.Item1.Center;
-               var depthKey = FrustumMath.MakeDepthKey(forward, in center, nearFar, viewZ);
-               RenderEntityIndex index;
-               index.Entity = query.Entity;
-               index.SortKey = PackSortKey32((byte)mask, depthKey, queue);
-               *indices++ = index;
-
-               query.VisibilityMask = (byte)mask;
-           }
-           else if (originalMask != mask)
-           {
-               query.VisibilityMask = 0;
-           }
-       }
-
-       return VisibleCount = (int)(indices - _indices.Ptr);
-   }
-
-    */

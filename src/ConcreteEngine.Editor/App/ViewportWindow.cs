@@ -17,7 +17,7 @@ internal static unsafe class ViewportWindow
 {
     private const ImGuiWindowFlags ViewportFlags =
         ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoNavFocus |
-        ImGuiWindowFlags.NoBringToFrontOnFocus |
+        ImGuiWindowFlags.NoBringToFrontOnFocus | 
         ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoCollapse;
 
     private static TexturePtrHandle _viewportTexHandle = TexturePtrHandle.Null;

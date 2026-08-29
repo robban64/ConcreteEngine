@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Core.Common.Collections;
@@ -42,7 +43,7 @@ public ref struct SparseObjectEnumerator<TId, TObj>(ReadOnlySpan<TId> idSpan, Re
     {
         while (++_i < _idSpan.Length)
         {
-            _currentIndex = _idSpan[_i].Index();
+            _currentIndex = _idSpan[_i].Index;
             if ((uint)_currentIndex < (uint)_objectSpan.Length && _objectSpan[_currentIndex] != null)
                 return true;
         }

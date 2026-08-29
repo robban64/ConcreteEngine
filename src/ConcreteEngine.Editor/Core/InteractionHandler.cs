@@ -105,7 +105,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
 
     private void OnRightClickViewport()
     {
-        if (state.Context.Selection.SelectedSceneId.IsValid())
+        if (state.Context.Selection.SelectedSceneId.IsValid)
             state.EnqueueEvent(new SelectionEvent(SceneObjectId.Empty));
     }
 
@@ -119,7 +119,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
         avg.ResetAndPrint();
         if (sceneObject is null)
         {
-            if (selectedId.IsValid())
+            if (selectedId.IsValid)
                 state.EnqueueEvent(new SelectionEvent(SceneObjectId.Empty));
 
             return false;

@@ -46,7 +46,7 @@ public abstract class AssetObject : IComparable<AssetObject>
 
     protected internal void MarkDirty(AssetDirtyFlag flag)
     {
-        if (!Id.IsValid() || (DirtyFlags & flag) != 0) return;
+        if (!Id.IsValid || (DirtyFlags & flag) != 0) return;
         DirtyFlags |= flag;
         AssetManager.Assets.MarkDirty(this);
     }

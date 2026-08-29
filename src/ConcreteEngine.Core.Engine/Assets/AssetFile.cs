@@ -39,12 +39,12 @@ public sealed class AssetFile : IComparable<AssetFile>
         DateTime lastWriteTime
     )
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(id.IsValid(), false);
+        ArgumentOutOfRangeException.ThrowIfEqual(id.IsValid, false);
         ArgumentOutOfRangeException.ThrowIfZero((int)binding, nameof(binding));
         ArgumentOutOfRangeException.ThrowIfZero((int)storage, nameof(storage));
 
-        if (assetRootId.IsValid() && gId == Guid.Empty) Throwers.InvalidArgument(nameof(gId));
-        if (assetRootId.IsValid() && binding != FileBinding.RootFile) Throwers.InvalidArgument(nameof(binding));
+        if (assetRootId.IsValid && gId == Guid.Empty) Throwers.InvalidArgument(nameof(gId));
+        if (assetRootId.IsValid && binding != FileBinding.RootFile) Throwers.InvalidArgument(nameof(binding));
 
         GId = gId;
         Id = id;

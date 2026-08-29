@@ -62,7 +62,7 @@ internal sealed class SelectionManager
     private void SelectAsset(AssetId id)
     {
         if (id == SelectedAsset?.Id) return;
-        if (!id.IsValid())
+        if (!id.IsValid)
         {
             LogService.PushMessage($"(SelectAsset) - Invalid AssetId: {id}");
             return;
@@ -75,7 +75,7 @@ internal sealed class SelectionManager
     private void DeselectAsset()
     {
         var id = SelectedAsset?.Id ?? AssetId.Empty;
-        if (!id.IsValid()) return;
+        if (!id.IsValid) return;
 
         SelectedAsset = null;
         AssetObjectInspector.Instance.DetachTarget();
@@ -84,13 +84,13 @@ internal sealed class SelectionManager
     private void SelectSceneObject(SceneObjectId id, bool showDebugBounds)
     {
         if (id == SelectedSceneObject?.Id) return;
-        if (!id.IsValid())
+        if (!id.IsValid)
         {
             LogService.PushMessage($"(SelectSceneObject) - Invalid SceneObjectId: {id}");
             return;
         }
 
-        if (SelectedSceneObject?.Id.IsValid() ?? false)
+        if (SelectedSceneObject?.Id.IsValid ?? false)
             DeselectSceneObject();
 
         var sceneObject = SceneManager.SceneStore.Get(id);
@@ -109,7 +109,7 @@ internal sealed class SelectionManager
 
     private void DeselectSceneObject()
     {
-        if (SelectedSceneObject is not { } selected || !selected.Id.IsValid()) return;
+        if (SelectedSceneObject is not { } selected || !selected.Id.IsValid) return;
         foreach (var it in selected.GetInstances())
         {
             it.ToggleSelection(false);

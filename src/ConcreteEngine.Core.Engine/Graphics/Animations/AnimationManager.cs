@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 
@@ -20,7 +21,7 @@ internal sealed class AnimationManager
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<AnimationInstance?> GetAnimationSpan() => _animations.AsSpan();
 
-    public AnimationInstance Get(Id16<AnimationInstance> id) => _animations[id.Index()]!;
+    public AnimationInstance Get(Id16<AnimationInstance> id) => _animations[id.Index]!;
 
     public void Interpolate(double alpha)
     {
@@ -53,12 +54,12 @@ internal sealed class AnimationManager
         if (animationId == 0 && TryGetFirstByRig(rig, out var firstEntry))
             animationId = firstEntry.Id;
 
-        if (animationId == 0 || !_animations.TryGet(animationId.Index(), out var animation))
+        if (animationId == 0 || !_animations.TryGet(animationId.Index, out var animation))
         {
             animationId = new Id16<AnimationInstance>(_animations.AllocateNextId() + 1);
             animation = new AnimationInstance(rig, animationId);
             animation.SetClip(0);
-            _animations[animationId.Index()] = animation;
+            _animations[animationId.Index] = animation;
         }
         else if (rig != animation.Rig)
         {

@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
@@ -46,7 +47,7 @@ internal sealed class MaterialSystem : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal NativeView<TextureBinding> GetMetaAndSlots(Id16<Material> materialId, out MaterialMeta meta)
     {
-        ref var m = ref _metas[materialId.Index()];
+        ref var m = ref _metas[materialId.Index];
         meta = m;
         return _textureSlots.Slice(m.BindingRange);
     }
@@ -81,7 +82,7 @@ internal sealed class MaterialSystem : IDisposable
 
     private void SubmitMaterial(Material material, ShaderId shaderId)
     {
-        var index = material.MaterialId.Index();
+        var index = material.MaterialId.Index;
         EnsureCapacity(index);
 
         var sources = material.GetSourceSpan();
@@ -113,7 +114,7 @@ internal sealed class MaterialSystem : IDisposable
 
     private void WriteUniform(MaterialState state)
     {
-        ref var uniform = ref _uniforms[state.MaterialId.Index()];
+        ref var uniform = ref _uniforms[state.MaterialId.Index];
         uniform.Color = state.Color;
         uniform.SpecularColor = state.SpecularColor;
         uniform.UvTransform = new Vector4(state.UvOffset.X, state.UvOffset.Y, state.UvRepeat.X, state.UvRepeat.Y);

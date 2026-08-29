@@ -36,7 +36,7 @@ public sealed class AssetSystem
     internal void EnqueueReloadAsset(AssetCommandRecord command)
     {
         ArgumentNullException.ThrowIfNull(command);
-        if (!command.Asset.IsValid()) throw new ArgumentException(nameof(command.Asset));
+        if (!command.Asset.IsValid) throw new ArgumentException(nameof(command.Asset));
         _pendingQueue.Enqueue(new AssetRecreateRequest(command.Asset, command.Kind));
     }
 

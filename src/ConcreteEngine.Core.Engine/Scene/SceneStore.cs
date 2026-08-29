@@ -51,14 +51,14 @@ public sealed class SceneStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(SceneObjectId id)
     {
-        var index = id.Index();
+        var index = id.Index;
         return (uint)index < (uint)_sceneObjects.Length && _sceneObjects[index]?.Id == id;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SceneObject Get(SceneObjectId id)
     {
-        var it = _sceneObjects[id.Index()];
+        var it = _sceneObjects[id.Index];
         if (it?.Id != id) Throwers.InvalidHandle(id);
         return it;
     }
@@ -73,7 +73,7 @@ public sealed class SceneStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGet(SceneObjectId id, [NotNullWhen(true)] out SceneObject? sceneObject)
     {
-        var index = id.Index();
+        var index = id.Index;
         if ((uint)index >= (uint)_sceneObjects.Length)
         {
             sceneObject = null;
@@ -116,19 +116,19 @@ public sealed class SceneStore
             Throwers.IndexOutOfRange(e.Index(), _renderToSceneId.Length, nameof(e));
 
         var sceneId = _renderToSceneId[e.Index()];
-        if (!sceneId.IsValid()) Throwers.InvalidHandle(e);
+        if (!sceneId.IsValid) Throwers.InvalidHandle(e);
         return sceneId;
     }
 
     public bool IsLinkedEntity(RenderEntityId e) =>
-        (uint)e.Index() < (uint)_renderToSceneId.Length && _renderToSceneId[e.Index()].IsValid();
+        (uint)e.Index() < (uint)_renderToSceneId.Length && _renderToSceneId[e.Index()].IsValid;
 
     internal void BindSceneRenderEntity(SceneObjectId id, RenderEntityId e, int capacity)
     {
         if (_renderToSceneId.Length < capacity) Array.Resize(ref _renderToSceneId, capacity);
         
         ref var it = ref _renderToSceneId[e.Index()];
-        if(it.IsValid()) Throwers.InvalidArgument("RenderEntity already bound to SceneObject");
+        if(it.IsValid) Throwers.InvalidArgument("RenderEntity already bound to SceneObject");
         it = id;
     }
 
@@ -162,7 +162,7 @@ public sealed class SceneStore
         if (!_byName.TryAdd(name, id))
             _byName.Add(MakeName(name), id);
 
-        var sceneObject = _sceneObjects[id.Index()] = new SceneObject(id, gid, name, enabled);
+        var sceneObject = _sceneObjects[id.Index] = new SceneObject(id, gid, name, enabled);
 
         foreach (var bp in blueprints)
         {

@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.RenderEntity;
@@ -77,7 +78,7 @@ internal sealed class DrawCommandProcessor
         if (_lastMaterialId == materialId) return;
         _lastMaterialId = materialId;
 
-        GfxCmd.BindUniformBufferRange<MaterialUniform>(materialId.Index(), 1);
+        GfxCmd.BindUniformBufferRange<MaterialUniform>(materialId.Index, 1);
         var textureBindings = _materialSystem.GetMetaAndSlots(materialId, out var materialMeta);
 
         GfxCmd.ApplyState(materialMeta.DrawState);

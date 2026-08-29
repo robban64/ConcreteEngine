@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Graphics.Gfx;

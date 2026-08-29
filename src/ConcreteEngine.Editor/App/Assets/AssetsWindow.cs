@@ -59,14 +59,14 @@ internal sealed unsafe class AssetsWindow : EditorWindow
 
     private void SelectAsset(AssetId id)
     {
-        _selectedFile = id.IsValid() ? AssetManager.Instance.GetAssetRootFile(id).Id : AssetFileId.Empty;
+        _selectedFile = id.IsValid ? AssetManager.Instance.GetAssetRootFile(id).Id : AssetFileId.Empty;
         _selectedAssetId = id;
     }
 
     private void OnListItemClick(AssetFileId fileId)
     {
-        if (!fileId.IsValid()) return;
-        if (!AssetManager.FileRegistry.TryGetFile(fileId, out var file) || !file.AssetRootId.IsValid()) return;
+        if (!fileId.IsValid) return;
+        if (!AssetManager.FileRegistry.TryGetFile(fileId, out var file) || !file.AssetRootId.IsValid) return;
         State.EnqueueEvent(new SelectionEvent(file.AssetRootId));
     }
 

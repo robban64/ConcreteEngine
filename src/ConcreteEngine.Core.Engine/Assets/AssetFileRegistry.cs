@@ -37,14 +37,14 @@ public sealed class AssetFileRegistry
 
     public bool HasFile(AssetFileId fileId)
     {
-        var index = fileId.Index();
+        var index = fileId.Index;
         return (uint)index < (uint)_files.Length && _files[index]?.Id == fileId;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetFile Get(AssetFileId id)
     {
-        if (_files[id.Index()] is { } file && file.Id == id) return file;
+        if (_files[id.Index] is { } file && file.Id == id) return file;
         Throwers.NotFoundBy(nameof(AssetFile), id);
         return null;
         //        
@@ -52,7 +52,7 @@ public sealed class AssetFileRegistry
 
     public bool TryGetFile(AssetFileId id, [NotNullWhen(true)] out AssetFile? entry)
     {
-        var index = id.Index();
+        var index = id.Index;
         if ((uint)index >= (uint)_files.Length || _files[index] is not { } file || file.Id != id)
         {
             entry = null;
@@ -98,13 +98,13 @@ public sealed class AssetFileRegistry
     {
         ArgumentNullException.ThrowIfNull(file);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id));
-        _files[id.Index()] = file;
+        _files[id.Index] = file;
     }
 
     internal AssetFile RegisterRoot(AssetId assetRootId, string assetName, Guid assetGuid,
         in FileScanInfo scanInfo)
     {
-        if (!assetRootId.IsValid()) Throwers.InvalidArgument(nameof(assetRootId));
+        if (!assetRootId.IsValid) Throwers.InvalidArgument(nameof(assetRootId));
         var fileId = AllocateSlot();
         var file = AssetFile.MakeRoot(fileId, assetRootId, assetName, assetGuid, in scanInfo);
         AddFile(file);
@@ -126,7 +126,7 @@ public sealed class AssetFileRegistry
 
         if (file.Storage == AssetStorage.InMemory)
         {
-            _files[file.Id.Index()] = file;
+            _files[file.Id.Index] = file;
             return;
         }
 
@@ -143,7 +143,7 @@ public sealed class AssetFileRegistry
         fileIds.Add(file.Id);
 
         _fileByPath.Add(file.RelativePath, file.Id);
-        _files[file.Id.Index()] = file;
+        _files[file.Id.Index] = file;
     }
 
     private AssetFileId AllocateSlot()

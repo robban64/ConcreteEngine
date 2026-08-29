@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.Graphics.Particles;
 
 namespace ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;

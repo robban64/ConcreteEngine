@@ -6,10 +6,10 @@ using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine.EcsRender;
+using ConcreteEngine.Core.Engine.EcsRender.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
-using ConcreteEngine.Core.Engine.RenderEntity;
-using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using static ConcreteEngine.Engine.Render.RenderLimits;
 
 namespace ConcreteEngine.Engine.Systems;
@@ -90,7 +90,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
         _boneBuffer.Dispose();
     }
 
-    private static int FilterEntities(int slot, ReadOnlySpan<RenderEntityId> entities)
+    private static int FilterEntities(int slot, ReadOnlySpan<RenderEntity> entities)
     {
         var count = 0;
         foreach (var query in RenderEcs.Store<SkinningLink>().SparseQuery(entities))

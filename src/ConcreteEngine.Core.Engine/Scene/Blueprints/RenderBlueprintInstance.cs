@@ -2,8 +2,8 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.RenderEntity;
-using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
+using ConcreteEngine.Core.Engine.EcsRender;
+using ConcreteEngine.Core.Engine.EcsRender.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -12,14 +12,14 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
     public bool IsDirty { get; private set; } = true;
 
     protected readonly SceneObject Owner = owner;
-    protected readonly List<RenderEntityId> RenderEntityIds = [];
+    protected readonly List<RenderEntity> RenderEntityIds = [];
 
     protected BoundingAxisBox WorldBounds;
 
     public abstract RenderBlueprint GetBlueprint();
     public string DisplayName => GetBlueprint().DisplayName;
     public int EntityCount => RenderEntityIds.Count;
-    public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(RenderEntityIds);
+    public ReadOnlySpan<RenderEntity> GetRenderEntities() => CollectionsMarshal.AsSpan(RenderEntityIds);
 
     public ref readonly BoundingAxisBox GetWorldBounds() => ref WorldBounds;
 

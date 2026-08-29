@@ -5,9 +5,10 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.EcsRender;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Engine.Render;
 
 namespace ConcreteEngine.Engine.Systems;
@@ -57,6 +58,7 @@ internal sealed class RenderEntitySystem : IDisposable
     public void Execute()
     {
         Ensure();
+        avg.BeginSample();
         CullEntities();
         var visibleCount = VisibleCount = BuildVisibleIndices();
 
@@ -65,8 +67,10 @@ internal sealed class RenderEntitySystem : IDisposable
 
         SortIndices.Reinterpret<ulong>().AsSpan().Sort();
         SubmitTransforms();
+        if (avg.EndSample() > 80) avg.ResetAndPrint();
     }
 
+    private AvgFrameTimer avg;
     private void CullEntities()
     {
         foreach (var query in RenderEcs.Core.CullQuery(EntityDrawStatus.Normal))
@@ -100,7 +104,7 @@ internal sealed class RenderEntitySystem : IDisposable
             ref readonly var center = ref query.Item2.Center;
             var distance = MakeDepthKey(forward,  in center, nearFar, viewZ);
 
-            var queue = RenderEcs.Core.GetDrawPolicy(query.Entity).Queue;
+            var queue = RenderEcs.Core.GetDrawPolicy((RenderEntity)query.Entity).Queue;
             var drawIndex = DrawEntityIndex.Create(query.Entity, query.Item1, distance, queue);
             *indices++ = drawIndex;
         }
@@ -114,7 +118,7 @@ internal sealed class RenderEntitySystem : IDisposable
         var src = Transforms.Ptr;
         foreach (ref readonly var it in SortIndices)
         {
-            var entity = it.Entity;
+            var entity = (RenderEntity)it.Entity;
             *src++ = RenderEcs.Core.GetTransformData(entity);
         }
     }

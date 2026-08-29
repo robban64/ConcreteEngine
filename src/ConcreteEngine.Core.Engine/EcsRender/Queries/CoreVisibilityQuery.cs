@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Graphics;
 
-namespace ConcreteEngine.Core.Engine.RenderEntity.Queries;
+namespace ConcreteEngine.Core.Engine.EcsRender.Queries;
 
 public static unsafe partial class RenderCoreQuery
 {
@@ -43,7 +43,7 @@ public static unsafe partial class RenderCoreQuery
         public readonly QueryItem<byte, T1> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(new RenderEntityId(_entity), ref *_visibilityMasks, ref *_p1);
+            get => new(new RenderEntityIndex(_entity), ref *_visibilityMasks, ref *_p1);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

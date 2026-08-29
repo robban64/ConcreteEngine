@@ -1,9 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Graphics;
 
-namespace ConcreteEngine.Core.Engine.RenderEntity.Queries;
+namespace ConcreteEngine.Core.Engine.EcsRender.Queries;
 
 public static unsafe partial class RenderCoreQuery
 {

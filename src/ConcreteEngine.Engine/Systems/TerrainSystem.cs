@@ -1,9 +1,9 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.EcsRender;
+using ConcreteEngine.Core.Engine.EcsRender.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Terrains;
-using ConcreteEngine.Core.Engine.RenderEntity;
-using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;

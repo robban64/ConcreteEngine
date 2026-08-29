@@ -2,9 +2,9 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.EcsRender;
+using ConcreteEngine.Core.Engine.EcsRender.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Engine.RenderEntity;
-using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -42,7 +42,7 @@ internal sealed class DrawCommandProcessor
         _lastMaterialId = default;
     }
 
-    public void DrawSource(RenderSource source, RenderEntityId entity, int submitIndex)
+    public void DrawSource(RenderSource source, RenderEntity entity, int submitIndex)
     {
         GfxCmd.BindUniformBufferRange<TransformUniform>(submitIndex, 1);
 
@@ -62,7 +62,7 @@ internal sealed class DrawCommandProcessor
         }
     }
 
-    public void BindSkinningSlot(RenderEntityId entity)
+    public void BindSkinningSlot(RenderEntity entity)
     {
         var slot = RenderEcs.Store<SkinningLink>().Get(entity).AnimationSlot;
         if (slot != _lastAnimationSlot)

@@ -1,11 +1,9 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
-using static ConcreteEngine.Core.Engine.RenderEntity.Queries.RenderCoreQuery;
+using static ConcreteEngine.Core.Engine.EcsRender.Queries.RenderCoreQuery;
 
-namespace ConcreteEngine.Core.Engine.RenderEntity;
+namespace ConcreteEngine.Core.Engine.EcsRender;
 
 public sealed partial class RenderEntityCore
 {

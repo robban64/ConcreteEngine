@@ -1,10 +1,10 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.EcsRender;
+using ConcreteEngine.Core.Engine.EcsRender.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Particles;
-using ConcreteEngine.Core.Engine.RenderEntity;
-using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 

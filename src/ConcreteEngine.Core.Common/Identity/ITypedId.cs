@@ -12,6 +12,6 @@ public interface ITypedHandle<T> : ITypedId<T> where T : ITypedHandle<T>
     ushort Gen { get; }
 
     static abstract ulong Pack(T handle);
-    static abstract T UnPack(ulong packedHandle);
+    static abstract T Unpack(ulong packedHandle);
 
 }

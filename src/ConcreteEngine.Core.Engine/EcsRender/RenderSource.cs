@@ -1,11 +1,10 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 
-namespace ConcreteEngine.Core.Engine.RenderEntity;
+namespace ConcreteEngine.Core.Engine.EcsRender;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawPolicy(DrawQueue queue, PassMask passes, EntityDrawStatus status = EntityDrawStatus.Normal)

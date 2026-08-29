@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 
-namespace ConcreteEngine.Core.Engine.RenderEntity;
+namespace ConcreteEngine.Core.Engine.EcsRender;
 
 public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRenderComponent<T>
 {
@@ -13,21 +13,18 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
     public VisibilityQueryEnumerator VisibilityQuery() => new(_entities, _components, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SparseQueryEnumerator SparseQuery(ReadOnlySpan<RenderEntityId> entities) => new(entities);
-
-    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-    //public JoinQueryEnumerator JoinQuery(ReadOnlySpan<RenderEntityId> entities) => new(_entities, entities);
-
-    public readonly ref struct RenderQueryItem(RenderEntityId entityId, ref T component)
+    public SparseQueryEnumerator SparseQuery(ReadOnlySpan<RenderEntity> entities) => new(entities);
+    
+    public readonly ref struct RenderQueryItem(RenderEntity entity, ref T component)
     {
-        public readonly RenderEntityId Entity = entityId;
+        public readonly RenderEntity Entity = entity;
         public readonly ref T Component = ref component;
     }
 
     public ref struct ComponentEnumerator(RenderEntityStore<T> store)
     {
         private int _i = -1;
-        private RenderEntityId _currentEntity;
+        private RenderEntity _currentEntity;
         private readonly int _count = store.Count;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -36,7 +33,7 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
             while (++_i < _count)
             {
                 var entity = store.GetEntity(_i);
-                if (entity.IsValid())
+                if (entity.IsValid)
                 {
                     _currentEntity = entity;
                     return true;
@@ -58,11 +55,11 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
 
     public ref struct VisibilityQueryEnumerator
     {
-        private RenderEntityId* _entity;
+        private RenderEntity* _entity;
         private T* _component;
-        private readonly RenderEntityId* _end;
+        private readonly RenderEntity* _end;
 
-        public VisibilityQueryEnumerator(RenderEntityId* entities, T* component, int length)
+        public VisibilityQueryEnumerator(RenderEntity* entities, T* component, int length)
         {
             _entity = entities - 1;
             _component = component - 1;
@@ -94,11 +91,11 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
 
     public ref struct SparseQueryEnumerator
     {
-        private readonly ReadOnlySpan<RenderEntityId> _entities;
-        private RenderEntityId _entity;
+        private readonly ReadOnlySpan<RenderEntity> _entities;
+        private RenderEntity _entity;
         private int _i;
 
-        public SparseQueryEnumerator(ReadOnlySpan<RenderEntityId> entities)
+        public SparseQueryEnumerator(ReadOnlySpan<RenderEntity> entities)
         {
             _entities = entities;
             _entity = default;
@@ -111,7 +108,7 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
             while (++_i < _entities.Length)
             {
                 _entity = _entities[_i];
-                if (_entity.IsValid()) return true;
+                if (_entity.IsValid) return true;
             }
 
             return false;
@@ -128,10 +125,10 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
     }
 
 
-    public ref struct JoinQueryEnumerator(NativeView<RenderEntityId> entities, ReadOnlySpan<RenderEntityId> right)
+    public ref struct JoinQueryEnumerator(NativeView<RenderEntity> entities, ReadOnlySpan<RenderEntity> right)
     {
-        private readonly NativeView<RenderEntityId> _entities = entities;
-        private readonly ReadOnlySpan<RenderEntityId> _right = right;
+        private readonly NativeView<RenderEntity> _entities = entities;
+        private readonly ReadOnlySpan<RenderEntity> _right = right;
         private readonly int _length = entities.Length;
         private int _i = -1;
 

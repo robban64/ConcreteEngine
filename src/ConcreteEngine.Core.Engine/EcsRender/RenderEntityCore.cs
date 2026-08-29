@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 
-namespace ConcreteEngine.Core.Engine.RenderEntity;
+namespace ConcreteEngine.Core.Engine.EcsRender;
 
 public sealed unsafe partial class RenderEntityCore : IDisposable
 {
@@ -21,22 +21,14 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsAlive(RenderEntityId e)
-    {
-        var index = e.Index();
-        return (uint)index < (uint)Capacity && _policies[index].Status != 0;
-    }
+    public bool IsAlive(RenderEntity e) => (uint)e.Index < (uint)Capacity && _policies[e.Index].Status != 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsVisible(RenderEntityId e)
-    {
-        var index = e.Index();
-        return (uint)index < (uint)Capacity && _visibility[index] != 0;
-    }
+    public bool IsVisible(RenderEntity e) => (uint)e.Index < (uint)Capacity && _visibility[e.Index] != 0;
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetStatus(RenderEntityId entity, EntityDrawStatus status)
+    public void SetStatus(RenderEntity entity, EntityDrawStatus status)
     {
         if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
         ref var policy = ref GetDrawPolicy(entity);
@@ -45,7 +37,7 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ToggleDrawFlag(RenderEntityId entity, EntityDrawFlags flag, bool enabled)
+    public void ToggleDrawFlag(RenderEntity entity, EntityDrawFlags flag, bool enabled)
     {
         if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
         if (enabled) GetSource(entity).DrawFlags |= flag;
@@ -53,7 +45,7 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
     }
 
 
-    public RenderEntityId AddEntity(RenderSource source, DrawPolicy policy)
+    public RenderEntity AddEntity(RenderSource source, DrawPolicy policy)
     {
         var index = SlotHelper.NextSlot(_free, Count);
         if (index < 0)
@@ -61,18 +53,19 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
             if (Count >= Capacity) EnsureCapacity(1);
             index = Count++;
         }
-
-        var entity = new RenderEntityId(index + 1);
-
+        
         if (_policies[index].Status != 0) Throwers.InvalidOperation("Entity already exists");
-        _sources[index] = source;
-        _policies[index] = policy;
-        ClearEntitySpatial(entity);
+        var gen = ++_generations[index];
+        var entity = new RenderEntity(index + 1, gen);
 
+        _policies[index] = policy;
+        _sources[index] = source;
+        
+        ClearEntitySpatial(entity);
         return entity;
     }
 
-    public void Remove(RenderEntityId entity)
+    public void Remove(RenderEntity entity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(entity.Id, Count, nameof(entity));
@@ -82,6 +75,6 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
         ClearEntityHeader(entity);
         ClearEntitySpatial(entity);
 
-        Count = SlotHelper.FreeSlot(_free, entity.Index(), Count);
+        Count = SlotHelper.FreeSlot(_free, entity.Index, Count);
     }
 }

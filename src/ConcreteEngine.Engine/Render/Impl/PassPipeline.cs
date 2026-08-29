@@ -1,8 +1,8 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.EcsRender;
+using ConcreteEngine.Core.Engine.EcsRender.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
-using ConcreteEngine.Core.Engine.RenderEntity;
-using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics.Gfx;

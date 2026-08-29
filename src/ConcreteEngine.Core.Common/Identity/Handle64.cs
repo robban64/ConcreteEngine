@@ -36,5 +36,5 @@ public readonly record struct Handle64<T>(int Id, ushort Gen)
     public int CompareTo(Handle64<T> other) => Id.CompareTo(other.Id);
     
     public static ulong Pack(Handle64<T> handle) => Unsafe.BitCast<Handle64<T>, ulong>(handle);
-    public static Handle64<T> UnPack(ulong packedHandle) => Unsafe.BitCast<ulong, Handle64<T>>(packedHandle);
+    public static Handle64<T> Unpack(ulong packedHandle) => Unsafe.BitCast<ulong, Handle64<T>>(packedHandle);
 }

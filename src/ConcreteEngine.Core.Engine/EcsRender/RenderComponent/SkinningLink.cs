@@ -1,8 +1,7 @@
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 
-namespace ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
+namespace ConcreteEngine.Core.Engine.EcsRender.RenderComponent;
 
 public struct SkinningLink(Id16<AnimationInstance> animationId) : IRenderComponent<SkinningLink>
 {

@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
+using ConcreteEngine.Core.Engine.EcsRender.RenderComponent;
 
-namespace ConcreteEngine.Core.Engine.RenderEntity;
+namespace ConcreteEngine.Core.Engine.EcsRender;
 
 public static class RenderEcs
 {

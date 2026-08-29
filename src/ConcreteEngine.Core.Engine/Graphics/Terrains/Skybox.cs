@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.EcsRender;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Terrains;
@@ -12,7 +12,7 @@ public sealed class Skybox
     public MeshId MeshId { get; } = GfxMeshes.SkyboxCube;
     public Material? Material { get; private set; }
 
-    private RenderEntityId _entity;
+    private RenderEntity _entity;
 
     private Skybox() { }
 
@@ -25,7 +25,7 @@ public sealed class Skybox
 
         Material = material;
 
-        if (!_entity.IsValid())
+        if (!_entity.IsValid)
         {
             _entity = RenderEcs.Core.AddEntity(
                 new RenderSource(MeshId, material.MaterialId),

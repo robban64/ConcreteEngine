@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.EcsRender;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -47,9 +47,9 @@ public sealed class SceneManager
 
     //
 
-    public void UnbindSceneHandle(RenderEntityId e) => Store.UnbindSceneRenderEntity(e);
+    public void UnbindSceneHandle(RenderEntity e) => Store.UnbindSceneRenderEntity(e);
 
-    public void BindSceneHandle(SceneObjectId sceneId, RenderEntityId e) =>
+    public void BindSceneHandle(SceneObjectId sceneId, RenderEntity e) =>
         Store.BindSceneRenderEntity(sceneId, e, RenderEcs.Core.Capacity);
 
     private void InvokeRenameListener(SceneObject sceneObject)

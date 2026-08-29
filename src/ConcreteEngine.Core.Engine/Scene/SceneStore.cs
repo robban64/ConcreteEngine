@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.EcsRender;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -104,38 +104,37 @@ public sealed class SceneStore
         return _byName.TryGetValue(name, out var id) && TryGet(id, out sceneObject);
     }
 
-    public SceneObject GetByLinkedEntity(RenderEntityId e)
+    public SceneObject GetByLinkedEntity(RenderEntity e)
     {
         var id = GetIdByLinkedEntity(e);
         return Get(id);
     }
 
-    public SceneObjectId GetIdByLinkedEntity(RenderEntityId e)
+    public SceneObjectId GetIdByLinkedEntity(RenderEntity e)
     {
-        if ((uint)e.Index() >= (uint)_renderToSceneId.Length)
-            Throwers.IndexOutOfRange(e.Index(), _renderToSceneId.Length, nameof(e));
+        if ((uint)e.Index >= (uint)_renderToSceneId.Length)
+            Throwers.IndexOutOfRange(e.Index, _renderToSceneId.Length, nameof(e));
 
-        var sceneId = _renderToSceneId[e.Index()];
+        var sceneId = _renderToSceneId[e.Index];
         if (!sceneId.IsValid) Throwers.InvalidHandle(e);
         return sceneId;
     }
 
-    public bool IsLinkedEntity(RenderEntityId e) =>
-        (uint)e.Index() < (uint)_renderToSceneId.Length && _renderToSceneId[e.Index()].IsValid;
+    public bool IsLinkedEntity(RenderEntity e) =>
+        (uint)e.Index < (uint)_renderToSceneId.Length && _renderToSceneId[e.Index].IsValid;
 
-    internal void BindSceneRenderEntity(SceneObjectId id, RenderEntityId e, int capacity)
+    internal void BindSceneRenderEntity(SceneObjectId id, RenderEntity e, int capacity)
     {
         if (_renderToSceneId.Length < capacity) Array.Resize(ref _renderToSceneId, capacity);
         
-        ref var it = ref _renderToSceneId[e.Index()];
+        ref var it = ref _renderToSceneId[e.Index];
         if(it.IsValid) Throwers.InvalidArgument("RenderEntity already bound to SceneObject");
         it = id;
     }
 
-    internal void UnbindSceneRenderEntity(RenderEntityId e) => _renderToSceneId[e.Index()] = default;
+    internal void UnbindSceneRenderEntity(RenderEntity e) => _renderToSceneId[e.Index] = default;
 
     //
-
     internal void RegisterBlueprint(IBlueprint blueprint) => _blueprints.TryAdd(blueprint.GId, blueprint);
     
 

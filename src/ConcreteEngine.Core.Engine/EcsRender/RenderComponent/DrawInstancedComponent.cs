@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
+namespace ConcreteEngine.Core.Engine.EcsRender.RenderComponent;
 
 public struct DrawInstancedComponent(int instances) : IRenderComponent<DrawInstancedComponent>
 {

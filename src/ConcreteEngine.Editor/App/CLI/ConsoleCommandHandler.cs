@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Core.Engine.RenderEntity;
-using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
+using ConcreteEngine.Core.Engine.EcsRender;
+using ConcreteEngine.Core.Engine.EcsRender.RenderComponent;
 using ConcreteEngine.Editor.Logging;
 
 namespace ConcreteEngine.Editor.App.CLI;

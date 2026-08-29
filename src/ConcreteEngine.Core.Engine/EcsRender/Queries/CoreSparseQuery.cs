@@ -1,17 +1,18 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 
-namespace ConcreteEngine.Core.Engine.RenderEntity.Queries;
+namespace ConcreteEngine.Core.Engine.EcsRender.Queries;
 
 public static unsafe partial class RenderCoreQuery 
 {
+    
     public ref struct SparseQueryEnumerator<T> where T : unmanaged
     {
         private readonly T* _p1;
-        private RenderEntityId* _current;
-        private readonly RenderEntityId* _end;
+        private RenderEntity* _current;
+        private readonly RenderEntity* _end;
 
-        public SparseQueryEnumerator(NativeView<RenderEntityId> entities, NativeView<T> p1)
+        public SparseQueryEnumerator(NativeView<RenderEntity> entities, NativeView<T> p1)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThan(entities.Length, p1.Length);
             _p1 = p1;
@@ -26,7 +27,7 @@ public static unsafe partial class RenderCoreQuery
         public readonly QueryItem<T> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(*_current, ref _p1[_current->Index()]);
+            get => new(new RenderEntityIndex(_current->Id), ref _p1[_current->Index]);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -38,10 +39,10 @@ public static unsafe partial class RenderCoreQuery
         private readonly T1* _p1;
         private readonly T2* _p2;
 
-        private RenderEntityId* _current;
-        private readonly RenderEntityId* _end;
+        private RenderEntity* _current;
+        private readonly RenderEntity* _end;
 
-        public SparseQueryEnumerator(NativeView<RenderEntityId> entities, NativeView<T1> p1, NativeView<T2> p2)
+        public SparseQueryEnumerator(NativeView<RenderEntity> entities, NativeView<T1> p1, NativeView<T2> p2)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThan(entities.Length, p1.Length);
             ArgumentOutOfRangeException.ThrowIfGreaterThan(entities.Length, p2.Length);
@@ -58,7 +59,7 @@ public static unsafe partial class RenderCoreQuery
         public readonly QueryItem<T1, T2> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(*_current, ref _p1[_current->Index()], ref _p2[_current->Index()]);
+            get => new(new RenderEntityIndex(_current->Id), ref _p1[_current->Index], ref _p2[_current->Index]);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

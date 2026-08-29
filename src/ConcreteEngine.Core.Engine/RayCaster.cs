@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine.EcsRender;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Terrains;
-using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Core.Engine.Scene;
 
 namespace ConcreteEngine.Core.Engine;
@@ -28,20 +28,21 @@ public sealed class RayCaster
         ScreenPointToRay(screenCoords, out var ray);
 
         var maxDistance = float.MaxValue;
-        RenderEntityId closestEntity = default;
+        RenderEntity closestEntity = default;
         foreach (var query in RenderEcs.Core.VisibilityBoundsQuery(PassMask.Main | PassMask.Effect))
         {
-            if (!_sceneStore.IsLinkedEntity(query.Entity)) continue;
+            var entity = (RenderEntity)query.Entity;
+            if (!_sceneStore.IsLinkedEntity(entity)) continue;
 
             ref readonly var box = ref query.Item2;
             if (CollisionMethods.RayIntersectsBox(in ray, box.Min, box.Max, out var dist) && dist < maxDistance)
             {
                 maxDistance = dist;
-                closestEntity = query.Entity;
+                closestEntity = entity;
             }
         }
 
-        if (!closestEntity.IsValid())
+        if (!closestEntity.IsValid)
         {
             distance = -1;
             return null;

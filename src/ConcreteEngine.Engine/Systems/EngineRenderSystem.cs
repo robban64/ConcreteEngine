@@ -3,9 +3,9 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Engine.EcsRender;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
-using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Render.Impl;
 using ConcreteEngine.Engine.Render.Passes;
@@ -132,8 +132,9 @@ public sealed class EngineRenderSystem : IDisposable
         var tickets = _renderEntitySystem.GetDrawTickets(passId);
         foreach (ref readonly var ticket in tickets)
         {
-            var source = RenderEcs.Core.GetSource(ticket.Entity);
-            _drawCmd.DrawSource(source, ticket.Entity, ticket.SubmitIndex);
+            var entity = (RenderEntity)ticket.Entity;
+            var source = RenderEcs.Core.GetSource(entity);
+            _drawCmd.DrawSource(source, entity, ticket.SubmitIndex);
         }
     }
 

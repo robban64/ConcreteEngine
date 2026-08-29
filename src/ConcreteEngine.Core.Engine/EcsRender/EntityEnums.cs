@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Engine.RenderEntity;
+namespace ConcreteEngine.Core.Engine.EcsRender;
 
 [Flags]
 public enum EntityDrawFlags : byte

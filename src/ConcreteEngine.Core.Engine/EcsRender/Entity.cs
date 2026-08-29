@@ -36,4 +36,10 @@ public readonly record struct RenderEntityIndex(int Id)
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator RenderEntity(RenderEntityIndex e) => new(e.Id, ushort.MaxValue);
+    public int Index
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Id - 1;
+    }
+
 }

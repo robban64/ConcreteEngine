@@ -40,7 +40,6 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
         if (EditorInput.IsLeftClick && !EditorInput.IsDragging)
         {
             OnClickViewport(EngineInput.Mouse.ViewportPos);
-            Console.WriteLine("Click");
             return true;
         }
 
@@ -112,11 +111,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
     private bool OnClickViewport(Vector2 mousePos)
     {
         var selectedId = state.Context.Selection.SelectedSceneId;
-        AvgFrameTimer avg = default;
-        avg.BeginSample();
         var sceneObject = SceneManager.Instance.Raycaster.GetSceneObjectFromView(mousePos, out _);
-        avg.EndSample();
-        avg.ResetAndPrint();
         if (sceneObject is null)
         {
             if (selectedId.IsValid)

@@ -2,14 +2,13 @@ namespace ConcreteEngine.Core.Common.Identity;
 
 public interface ITypedId<T> where T : ITypedId<T>
 {
-    int Id { get; }
     int Index { get; }
     bool IsValid { get; }
 }
 
 public interface ITypedHandle<T> : ITypedId<T> where T : ITypedHandle<T>
 {
-    ushort Gen { get; }
+    int Gen { get; }
 
     static abstract ulong Pack(T handle);
     static abstract T Unpack(ulong packedHandle);

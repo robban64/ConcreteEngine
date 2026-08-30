@@ -104,24 +104,24 @@ public sealed class SceneStore
         return _byName.TryGetValue(name, out var id) && TryGet(id, out sceneObject);
     }
 
-    public SceneObject GetByLinkedEntity(RenderEntity e)
+    public SceneObject GetByLinkedEntity(int e)
     {
         var id = GetIdByLinkedEntity(e);
         return Get(id);
     }
 
-    public SceneObjectId GetIdByLinkedEntity(RenderEntity e)
+    public SceneObjectId GetIdByLinkedEntity(int e)
     {
-        if ((uint)e.Index >= (uint)_renderToSceneId.Length)
-            Throwers.IndexOutOfRange(e.Index, _renderToSceneId.Length, nameof(e));
+        if ((uint)e >= (uint)_renderToSceneId.Length)
+            Throwers.IndexOutOfRange(e, _renderToSceneId.Length, nameof(e));
 
-        var sceneId = _renderToSceneId[e.Index];
+        var sceneId = _renderToSceneId[e];
         if (!sceneId.IsValid) Throwers.InvalidHandle(e);
         return sceneId;
     }
 
-    public bool IsLinkedEntity(RenderEntity e) =>
-        (uint)e.Index < (uint)_renderToSceneId.Length && _renderToSceneId[e.Index].IsValid;
+    public bool IsLinkedEntity(int e) =>
+        (uint)e < (uint)_renderToSceneId.Length && _renderToSceneId[e].IsValid;
 
     internal void BindSceneRenderEntity(SceneObjectId id, RenderEntity e, int capacity)
     {

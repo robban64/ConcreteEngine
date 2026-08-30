@@ -4,12 +4,10 @@ using System.Runtime.InteropServices;
 namespace ConcreteEngine.Core.Common.Identity;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly record struct Handle64<T>(int Id, ushort Gen)
+public readonly record struct Handle64<T>(int Id, int Gen)
     : ITypedHandle<Handle64<T>>, IComparable<int>, IComparable<Handle64<T>>
 {
     public static readonly Handle64<T> Empty = default;
-
-    public Handle64(int id, int gen) : this(id, (ushort)gen) { }
 
     public int Index
     {

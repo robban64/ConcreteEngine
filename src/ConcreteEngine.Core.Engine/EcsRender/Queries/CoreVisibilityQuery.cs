@@ -22,7 +22,7 @@ public static unsafe partial class RenderCoreQuery
             _visibilityMasks = visibilityMasks.Ptr - 1;
             _end = visibilityMasks.EndPtr;
             _p1 = p1.Ptr - 1;
-            _entity = 0;
+            _entity = -1;
             _filter = (byte)mask;
         }
 

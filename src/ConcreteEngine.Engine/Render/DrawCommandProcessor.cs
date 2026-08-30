@@ -42,7 +42,7 @@ internal sealed class DrawCommandProcessor
         _lastMaterialId = default;
     }
 
-    public void DrawSource(RenderSource source, RenderEntity entity, int submitIndex)
+    public void DrawSource(DrawSource source, RenderEntity entity, int submitIndex)
     {
         GfxCmd.BindUniformBufferRange<TransformUniform>(submitIndex, 1);
 

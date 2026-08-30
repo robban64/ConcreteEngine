@@ -21,10 +21,10 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsAlive(RenderEntity e) => (uint)e.Index < (uint)Capacity && _policies[e.Index].Status != 0;
+    public bool IsAlive(RenderEntity e) => (uint)e.Index < (uint)Count && _policies[e.Index].Status != 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsVisible(RenderEntity e) => (uint)e.Index < (uint)Capacity && _visibility[e.Index] != 0;
+    public bool IsVisible(RenderEntity e) => (uint)e.Index < (uint)Count && _visibilityMask[e.Index] != 0;
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,7 +45,7 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
     }
 
 
-    public RenderEntity AddEntity(RenderSource source, DrawPolicy policy)
+    public RenderEntity AddEntity(DrawSource source, DrawPolicy policy)
     {
         var index = SlotHelper.NextSlot(_free, Count);
         if (index < 0)
@@ -55,20 +55,20 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
         }
         
         if (_policies[index].Status != 0) Throwers.InvalidOperation("Entity already exists");
-        var gen = ++_generations[index];
-        var entity = new RenderEntity(index + 1, gen);
-
+        
         _policies[index] = policy;
         _sources[index] = source;
-        
+        var gen = ++_generations[index];
+
+        var entity = new RenderEntity(index, gen);
         ClearEntitySpatial(entity);
         return entity;
     }
 
     public void Remove(RenderEntity entity)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(entity.Id, Count, nameof(entity));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Entity, nameof(entity));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(entity.Entity, Count, nameof(entity));
 
         if (!IsAlive(entity)) Throwers.InvalidArgument(nameof(entity));
 

@@ -24,7 +24,6 @@ public static class CollisionMethods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool RayIntersectsBox(in Ray ray, Vector3 min, Vector3 max, out float t)
     {
-        //var dirFrac = Vector128.Divide(Vector128.Create(1.0f), ray.Direction.AsVector128()).AsVector3();
         float px = ray.Position.X, py = ray.Position.Y, pz = ray.Position.Z;
         var dirFrac = new Vector3
         {

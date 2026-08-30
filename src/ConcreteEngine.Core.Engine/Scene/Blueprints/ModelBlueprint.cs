@@ -59,7 +59,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
             var mesh = Model.GetMesh(i);
             var mat = Blueprint.GetMaterial(i);
             var policy = new DrawPolicy(mat.State.DrawQueue, mat.State.Passes);
-            var source = new RenderSource(mesh.MeshId, mat.MaterialId, mesh.Info.MeshIndex);
+            var source = new DrawSource(mesh.MeshId, mat.MaterialId, mesh.Info.MeshIndex);
 
             var entity = RenderEcs.Core.AddEntity(source, policy);
             SceneManager.Instance.BindSceneHandle(Owner.Id, entity);

@@ -28,7 +28,7 @@ public sealed class Skybox
         if (!_entity.IsValid)
         {
             _entity = RenderEcs.Core.AddEntity(
-                new RenderSource(MeshId, material.MaterialId),
+                new DrawSource(MeshId, material.MaterialId),
                 new DrawPolicy(DrawQueue.Skybox, PassMask.Main));
 
             RenderEcs.Core.GetWorldBounds(_entity) = default;

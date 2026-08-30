@@ -19,7 +19,7 @@ public readonly struct DrawPolicy(DrawQueue queue, PassMask passes, EntityDrawSt
     public DrawPolicy WithStatus(EntityDrawStatus status) => new(Queue, Passes, status);
 }
 
-public struct RenderSource(MeshId mesh, Id16<Material> material, int meshIndex = 0, EntityDrawFlags flags = 0)
+public struct DrawSource(MeshId mesh, Id16<Material> material, int meshIndex = 0, EntityDrawFlags flags = 0)
 {
     public MeshId Mesh = mesh;
     public Id16<Material> Material = material;

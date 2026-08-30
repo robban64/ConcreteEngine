@@ -116,7 +116,7 @@ internal sealed class RenderEntitySystem : IDisposable
         var src = RenderEcs.Core.GetTransformView().Ptr;
         foreach ( var it in SortIndices.Zip(Transforms))
         {
-            it.Item2 = src[it.Item1.Entity.Index];
+            it.Item2 = src[it.Item1.Entity];
         }
     }
 

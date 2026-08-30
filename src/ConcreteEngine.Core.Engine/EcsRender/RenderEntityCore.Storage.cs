@@ -12,19 +12,16 @@ namespace ConcreteEngine.Core.Engine.EcsRender;
 public sealed unsafe partial class RenderEntityCore
 {
     private ushort* _generations;
-    private byte* _visibility;
+    private byte* _visibilityMask;
     private DrawPolicy* _policies;
-    private RenderSource* _sources;
+    private DrawSource* _sources;
 
     private BoundingAxisBox* _bounds;
     private TransformUniform* _transforms;
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref byte GetVisibilityMask(RenderEntity e) => ref _visibility[e.Index];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref RenderSource GetSource(RenderEntity e) => ref _sources[e.Index];
+    public ref DrawSource GetSource(RenderEntity e) => ref _sources[e.Index];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref DrawPolicy GetDrawPolicy(RenderEntity e) => ref _policies[e.Index];
@@ -44,10 +41,10 @@ public sealed unsafe partial class RenderEntityCore
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<byte> GetVisibilityView() => new(_visibility, Count);
+    public NativeView<byte> GetVisibilityView() => new(_visibilityMask, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<RenderSource> GetSourceView() => new(_sources, Count);
+    public NativeView<DrawSource> GetSourceView() => new(_sources, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<DrawPolicy> GetDrawPolicyView() => new(_policies, Count);
@@ -65,9 +62,9 @@ public sealed unsafe partial class RenderEntityCore
         if (_policies != null || Capacity != 0) Throwers.InvalidOperation("Already allocated");
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 32);
         _generations = NativeArray.AllocatePointer<ushort>(capacity);
-        _visibility = NativeArray.AllocatePointer<byte>(capacity);
+        _visibilityMask = NativeArray.AllocatePointer<byte>(capacity);
         _policies = NativeArray.AllocatePointer<DrawPolicy>(capacity);
-        _sources = NativeArray.AllocatePointer<RenderSource>(capacity);
+        _sources = NativeArray.AllocatePointer<DrawSource>(capacity);
         _bounds = NativeArray.AllocatePointer<BoundingAxisBox>(capacity, false);
         _transforms = NativeArray.AllocatePointer<TransformUniform>(capacity, false);
 
@@ -77,7 +74,7 @@ public sealed unsafe partial class RenderEntityCore
     private void ClearEntityHeader(RenderEntity e)
     {
         _generations[e.Index] = 0;
-        _visibility[e.Index] = 0;
+        _visibilityMask[e.Index] = 0;
         _sources[e.Index] = default;
         _policies[e.Index] = default;
     }
@@ -98,7 +95,7 @@ public sealed unsafe partial class RenderEntityCore
         Logger.Log(LogScope.Ecs, "RenderEcs resized", LogLevel.Warn);
 
         _generations = NativeArray.ReAlloc(_generations, Capacity, newSize, 0, true);
-        _visibility = NativeArray.ReAlloc(_visibility, Capacity, newSize, 0, true);
+        _visibilityMask = NativeArray.ReAlloc(_visibilityMask, Capacity, newSize, 0, true);
         _sources = NativeArray.ReAlloc(_sources, Capacity, newSize, 0, true);
         _policies = NativeArray.ReAlloc(_policies, Capacity, newSize, 0, true);
 
@@ -112,14 +109,14 @@ public sealed unsafe partial class RenderEntityCore
 
     public void Dispose()
     {
-        NativeArray.DisposeArray(_generations, Capacity * Unsafe.SizeOf<RenderSource>(), 0);
-        NativeArray.DisposeArray(_visibility, Capacity, 0);
-        NativeArray.DisposeArray(_sources, Capacity * Unsafe.SizeOf<RenderSource>(), 0);
+        NativeArray.DisposeArray(_generations, Capacity * Unsafe.SizeOf<DrawSource>(), 0);
+        NativeArray.DisposeArray(_visibilityMask, Capacity, 0);
+        NativeArray.DisposeArray(_sources, Capacity * Unsafe.SizeOf<DrawSource>(), 0);
         NativeArray.DisposeArray(_policies, Capacity * Unsafe.SizeOf<DrawPolicy>(), 0);
         NativeArray.DisposeArray(_bounds, Capacity * Unsafe.SizeOf<BoundingBox>(), 0);
         NativeArray.DisposeArray(_transforms, Capacity * Unsafe.SizeOf<TransformUniform>(), 0);
         _generations = null;
-        _visibility = null;
+        _visibilityMask = null;
         _sources = null;
         _policies = null;
         _bounds = null;

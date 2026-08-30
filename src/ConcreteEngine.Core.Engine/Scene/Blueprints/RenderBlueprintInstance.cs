@@ -2,8 +2,8 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.EcsRender;
-using ConcreteEngine.Core.Engine.EcsRender.RenderComponent;
+using ConcreteEngine.Core.Engine.ECS.Render;
+using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 

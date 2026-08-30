@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 
-namespace ConcreteEngine.Core.Engine.EcsRender;
+namespace ConcreteEngine.Core.Engine.ECS.Render;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawPolicy(DrawQueue queue, PassMask passes, EntityDrawStatus status = EntityDrawStatus.Normal)
@@ -19,6 +19,7 @@ public readonly struct DrawPolicy(DrawQueue queue, PassMask passes, EntityDrawSt
     public DrawPolicy WithStatus(EntityDrawStatus status) => new(Queue, Passes, status);
 }
 
+[StructLayout(LayoutKind.Sequential)]
 public struct DrawSource(MeshId mesh, Id16<Material> material, int meshIndex = 0, EntityDrawFlags flags = 0)
 {
     public MeshId Mesh = mesh;

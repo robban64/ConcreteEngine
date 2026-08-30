@@ -3,37 +3,33 @@ using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Core.Common.Identity;
 
-
-
-public readonly record struct Id16<T>(ushort Value)
+public readonly record struct Id16<T>(ushort Id)
     : ITypedId<Id16<T>>, IComparable<ushort>, IComparable<Id16<T>>
 {
     public Id16(int value) : this((ushort)value) { }
 
-    public readonly ushort Value = Value;
-
-    public int Id => Value;
+    public readonly ushort Id = Id;
 
     public int Index
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Value - 1;
+        get => Id - 1;
     }
 
     public bool IsValid
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Value > 0;
+        get => Id > 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator ushort(Id16<T> slot) => slot.Value;
+    public static implicit operator ushort(Id16<T> slot) => slot.Id;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Id16<T>(ushort i) => new(i);
 
-    public int CompareTo(ushort other) => Value.CompareTo(other);
-    public int CompareTo(Id16<T> other) => Value.CompareTo(other.Value);
+    public int CompareTo(ushort other) => Id.CompareTo(other);
+    public int CompareTo(Id16<T> other) => Id.CompareTo(other.Id);
 
     public static readonly Id16<T> Empty = default;
 }

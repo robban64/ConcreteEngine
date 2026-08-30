@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine.EcsRender;
+using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Terrains;
 using ConcreteEngine.Core.Engine.Scene;
@@ -31,13 +31,13 @@ public sealed class RayCaster
         var minDistance = float.MaxValue;
         foreach (var query in RenderEcs.Core.VisibilityBoundsQuery(PassMask.Depth | PassMask.Main | PassMask.Effect))
         {
-            if (!_sceneStore.IsLinkedEntity(query.Entity.Id)) continue;
+            if (!_sceneStore.IsLinkedEntity(query.Entity)) continue;
 
-            ref readonly var box = ref query.Item2;
+            ref readonly var box = ref query.Item1;
             if (CollisionMethods.RayIntersectsBox(in ray, box.Min, box.Max, out var dist) && dist < minDistance)
             {
                 minDistance = dist;
-                closestEntity = query.Entity.Id;
+                closestEntity = query.Entity;
             }
         }
 

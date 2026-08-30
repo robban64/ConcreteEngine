@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
 
-namespace ConcreteEngine.Core.Engine.EcsRender;
+namespace ConcreteEngine.Core.Engine.ECS.Render;
 
 public interface IRenderEntityStore : IDisposable;
 

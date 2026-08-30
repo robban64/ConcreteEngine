@@ -8,7 +8,7 @@ public interface ITypedId<T> where T : ITypedId<T>
 
 public interface ITypedHandle<T> : ITypedId<T> where T : ITypedHandle<T>
 {
-    int Gen { get; }
+    int Generation { get; }
 
     static abstract ulong Pack(T handle);
     static abstract T Unpack(ulong packedHandle);

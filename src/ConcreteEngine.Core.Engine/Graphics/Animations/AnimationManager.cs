@@ -3,8 +3,8 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Identity;
-using ConcreteEngine.Core.Engine.EcsRender;
-using ConcreteEngine.Core.Engine.EcsRender.RenderComponent;
+using ConcreteEngine.Core.Engine.ECS.Render;
+using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Animations;
 
@@ -111,7 +111,7 @@ public sealed class AnimationInstance : IComparable<AnimationInstance>
     internal AnimationInstance(ModelRig rig, Id16<AnimationInstance> animationId)
     {
         ArgumentNullException.ThrowIfNull(rig);
-        ArgumentOutOfRangeException.ThrowIfZero(animationId.Value, nameof(animationId));
+        ArgumentOutOfRangeException.ThrowIfZero(animationId.Id, nameof(animationId));
         Rig = rig;
         Id = animationId;
     }

@@ -43,7 +43,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         in EmitterParams emitterParams, in ParticleParams particleParams)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id);
         ArgumentOutOfRangeException.ThrowIfLessThan(particleCount, MinCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(particleCount, MaxCount);
 
@@ -52,7 +52,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         _emitterParams = emitterParams;
         _particleParams = particleParams;
         ParticleCount = PendingParticleCount = particleCount;
-        _rng = new FastRandom((uint)Environment.TickCount + Id.Value);
+        _rng = new FastRandom((uint)Environment.TickCount + Id.Id);
 
         var length = int.Max(MinCapacity, IntMath.AlignUp(particleCount, 128));
         _particles = NativeArray.Allocate<ParticleState>(length, zeroed: true);

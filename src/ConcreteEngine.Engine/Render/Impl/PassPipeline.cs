@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.EcsRender;
-using ConcreteEngine.Core.Engine.EcsRender.RenderComponent;
+using ConcreteEngine.Core.Engine.ECS.Render;
+using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Engine.Systems;

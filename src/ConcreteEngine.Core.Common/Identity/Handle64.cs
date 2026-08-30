@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace ConcreteEngine.Core.Common.Identity;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly record struct Handle64<T>(int Id, int Gen)
+public readonly record struct Handle64<T>(int Id, int Generation)
     : ITypedHandle<Handle64<T>>, IComparable<int>, IComparable<Handle64<T>>
 {
     public static readonly Handle64<T> Empty = default;
@@ -18,7 +18,7 @@ public readonly record struct Handle64<T>(int Id, int Gen)
     public bool IsValid
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Id > 0 && Gen > 0;
+        get => Id > 0 && Generation > 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

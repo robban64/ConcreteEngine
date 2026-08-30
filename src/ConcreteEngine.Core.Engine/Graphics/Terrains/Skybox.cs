@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.EcsRender;
+using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Terrains;

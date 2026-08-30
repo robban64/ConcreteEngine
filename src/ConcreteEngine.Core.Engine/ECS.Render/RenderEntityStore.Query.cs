@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 
-namespace ConcreteEngine.Core.Engine.EcsRender;
+namespace ConcreteEngine.Core.Engine.ECS.Render;
 
 public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRenderComponent<T>
 {

@@ -7,11 +7,12 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Graphics;
 
-namespace ConcreteEngine.Core.Engine.EcsRender;
-
+namespace ConcreteEngine.Core.Engine.ECS.Render;
+/*
 public sealed unsafe partial class RenderEntityCore
 {
     private ushort* _generations;
+    
     private byte* _visibilityMask;
     private DrawPolicy* _policies;
     private DrawSource* _sources;
@@ -21,22 +22,22 @@ public sealed unsafe partial class RenderEntityCore
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawSource GetSource(RenderEntity e) => ref _sources[e.Index];
+    public ref DrawSource GetSource(RenderEntity e) => ref _sources[e.Entity];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawPolicy GetDrawPolicy(RenderEntity e) => ref _policies[e.Index];
+    public ref DrawPolicy GetDrawPolicy(RenderEntity e) => ref _policies[e.Entity];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoundingAxisBox GetWorldBounds(RenderEntity e) => ref _bounds[e.Index];
+    public ref BoundingAxisBox GetWorldBounds(RenderEntity e) => ref _bounds[e.Entity];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix4x4 GetModelMatrix(RenderEntity e) => ref _transforms[e.Index].Model;
+    public ref Matrix4x4 GetModelMatrix(RenderEntity e) => ref _transforms[e.Entity].Model;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix3X4 GetNormalMatrix(RenderEntity e) => ref _transforms[e.Index].Normal;
+    public ref Matrix3X4 GetNormalMatrix(RenderEntity e) => ref _transforms[e.Entity].Normal;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref TransformUniform GetTransformData(RenderEntity e) => ref _transforms[e.Index];
+    public ref TransformUniform GetTransformData(RenderEntity e) => ref _transforms[e.Entity];
 
 
     //
@@ -73,17 +74,17 @@ public sealed unsafe partial class RenderEntityCore
 
     private void ClearEntityHeader(RenderEntity e)
     {
-        _generations[e.Index] = 0;
-        _visibilityMask[e.Index] = 0;
-        _sources[e.Index] = default;
-        _policies[e.Index] = default;
+        _generations[e.Entity] = 0;
+        _visibilityMask[e.Entity] = 0;
+        _sources[e.Entity] = default;
+        _policies[e.Entity] = default;
     }
 
     private void ClearEntitySpatial(RenderEntity e)
     {
-        _transforms[e.Index].Model = Matrix4x4.Identity;
-        _transforms[e.Index].Normal = Matrix3X4.Identity;
-        _bounds[e.Index] = default;
+        _transforms[e.Entity].Model = Matrix4x4.Identity;
+        _transforms[e.Entity].Normal = Matrix3X4.Identity;
+        _bounds[e.Entity] = default;
     }
 
     private void EnsureCapacity(int amount)
@@ -126,4 +127,4 @@ public sealed unsafe partial class RenderEntityCore
         Count = 0;
         Capacity = 0;
     }
-}
+}*/

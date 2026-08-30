@@ -1,8 +1,9 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Graphics;
 
-namespace ConcreteEngine.Core.Engine.EcsRender.Queries;
+namespace ConcreteEngine.Core.Engine.ECS.Render.Queries;
 
 public static unsafe partial class RenderCoreQuery
 {
@@ -12,12 +13,12 @@ public static unsafe partial class RenderCoreQuery
         private DrawPolicy* _policy;
         private readonly DrawPolicy* _end;
 
-        private byte* _visibilityMasks;
+        private PassMask* _visibilityMasks;
         private BoundingAxisBox* _bounds;
 
         private readonly EntityDrawStatus _minStatus;
 
-        public CullQueryEnumerator(NativeView<DrawPolicy> policies, NativeView<byte> visibilityMasks,
+        public CullQueryEnumerator(NativeView<DrawPolicy> policies, NativeView<PassMask> visibilityMasks,
             NativeView<BoundingAxisBox> p1, EntityDrawStatus minStatus)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThan(policies.Length, p1.Length);

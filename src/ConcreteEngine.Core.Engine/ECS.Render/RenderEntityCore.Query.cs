@@ -1,9 +1,9 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
-using static ConcreteEngine.Core.Engine.EcsRender.Queries.RenderCoreQuery;
+using static ConcreteEngine.Core.Engine.ECS.Render.Queries.RenderCoreQuery;
 
-namespace ConcreteEngine.Core.Engine.EcsRender;
+namespace ConcreteEngine.Core.Engine.ECS.Render;
 
 public sealed partial class RenderEntityCore
 {
@@ -13,6 +13,6 @@ public sealed partial class RenderEntityCore
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public VisibilityQueryEnumerator<BoundingAxisBox> VisibilityBoundsQuery(PassMask passes) =>
-        new(GetVisibilityView(), GetWorldBoundView(), passes);
+        new(GetVisibilityView(), GetDrawPolicyView(), GetWorldBoundView(), passes);
     
 }

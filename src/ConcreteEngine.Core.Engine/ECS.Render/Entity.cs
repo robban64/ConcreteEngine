@@ -2,21 +2,27 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Identity;
 
-namespace ConcreteEngine.Core.Engine.EcsRender;
+namespace ConcreteEngine.Core.Engine.ECS.Render;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly record struct RenderEntity(int Entity, int Gen) : ITypedHandle<RenderEntity>, IComparable<RenderEntity>
+public readonly record struct RenderEntity : ITypedHandle<RenderEntity>, IComparable<RenderEntity>
 {
+    public readonly int Entity;
+    public readonly int Gen;
+
+    public RenderEntity(int entity, int gen)
+    {
+        Entity = entity;
+        Gen = gen;
+    }
+
+    public int Index => Entity;
+    public int Generation => Gen;
+
     public bool IsValid
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Gen > 0;
-    }
-
-    public int Index
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Entity;
+        get => Entity >= 0 && Gen > 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -32,12 +38,9 @@ public readonly record struct RenderEntity(int Entity, int Gen) : ITypedHandle<R
     public static RenderEntity Unpack(ulong packed) => Unsafe.BitCast<ulong, RenderEntity>(packed);
 }
 
-public readonly record struct RenderEntityIndex(int Id)
+public readonly record struct RenderEntityId(int Id)
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator int(RenderEntityIndex e) => e.Id;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static explicit operator RenderEntity(RenderEntityIndex e) => new(e.Id, 0);
+    public static implicit operator int(RenderEntityId e) => e.Id;
 
 }

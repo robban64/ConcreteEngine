@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.EcsRender;
+using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Engine.Render;
@@ -107,7 +107,6 @@ public sealed class EngineRenderSystem : IDisposable
 
         // prepare buffers
         VisualSystem.Instance.UploadUniformBuffers(_renderEntitySystem, _materialSystem, _animationSystem);
-        _renderEntitySystem.ReadyDrawCommands();
     }
 
 
@@ -121,19 +120,25 @@ public sealed class EngineRenderSystem : IDisposable
             if (passResult.Op is PassOp.Draw)
             {
                 _drawCmd.PrepareDrawPass();
+                avg.BeginSample();
                 ExecuteDrawPass(i);
+                avg.EndSample();
             }
 
             EndPass(i);
         }
+
+        if (avg.Ticks > 144 * 3) avg.ResetAndPrint("Draw");
     }
+
+    private AvgFrameTimer avg;
 
     private void ExecuteDrawPass(int passId)
     {
         var tickets = _renderEntitySystem.GetDrawTickets(passId);
         foreach (ref readonly var ticket in tickets)
         {
-            var entity = (RenderEntity)ticket.Entity;
+            var entity = new RenderEntity(ticket.Entity, 0);
             var source = RenderEcs.Core.GetSource(entity);
             _drawCmd.DrawSource(source, entity, ticket.SubmitIndex);
         }

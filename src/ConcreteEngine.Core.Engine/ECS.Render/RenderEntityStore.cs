@@ -72,6 +72,14 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T Get(RenderEntity entity) => ref GetByIndex(FindIndex(entity));
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref T GetUnchecked(int entity)
+    {
+        var index = FindIndex(new RenderEntity(entity, 0));
+        return ref GetByIndex(index);
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T GetOrDefault(RenderEntity entity)

@@ -5,10 +5,11 @@ namespace ConcreteEngine.Core.Engine.ECS.Render.Queries;
 
 public static unsafe partial class RenderCoreQuery
 {
-    public readonly ref struct CullQueryItem(ref PassMask visibilityMask, in DrawPolicy policy, in BoundingAxisBox bounds)
+    public readonly ref struct CullQueryItem(EntityDrawStatus status, PassMask originalPasses ,ref PassMask visibilityMask, in BoundingAxisBox bounds)
     {
+        public readonly EntityDrawStatus Status = status;
+        public readonly PassMask OriginalPasses = originalPasses;
         public readonly ref PassMask VisibilityMask = ref visibilityMask;
-        public readonly ref readonly DrawPolicy Policy = ref policy;
         public readonly ref readonly BoundingAxisBox Bounds = ref bounds;
     }
 

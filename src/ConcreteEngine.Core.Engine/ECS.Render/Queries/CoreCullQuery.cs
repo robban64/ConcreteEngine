@@ -16,6 +16,9 @@ public static unsafe partial class RenderCoreQuery
         private PassMask* _visibilityMasks;
         private BoundingAxisBox* _bounds;
 
+        private EntityDrawStatus _currentStatus;
+        private PassMask _currentPasses;
+
         private readonly EntityDrawStatus _minStatus;
 
         public CullQueryEnumerator(NativeView<DrawPolicy> policies, NativeView<PassMask> visibilityMasks,
@@ -38,8 +41,10 @@ public static unsafe partial class RenderCoreQuery
             {
                 ++_visibilityMasks;
                 ++_bounds;
-                var status = _policy->Status;
-                if (status >= _minStatus) return true;
+                var status = *_policy;
+                _currentPasses = _policy->Passes;
+                _currentStatus = _policy->Status;
+                if (_currentStatus >= _minStatus) return true;
             }
 
             return false;
@@ -48,7 +53,7 @@ public static unsafe partial class RenderCoreQuery
         public readonly CullQueryItem Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(ref *_visibilityMasks, in *_policy, in *_bounds);
+            get => new(_currentStatus, _currentPasses, ref *_visibilityMasks, in *_bounds);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

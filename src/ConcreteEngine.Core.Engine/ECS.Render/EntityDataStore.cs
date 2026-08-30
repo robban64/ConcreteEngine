@@ -10,22 +10,22 @@ namespace ConcreteEngine.Core.Engine.ECS.Render;
 public sealed partial class RenderEntityCore
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawSource GetSource(RenderEntity e) => ref _entityDataStore.GetSource(e);
+    public ref DrawSource GetSource(RenderEntity e) => ref _entityDataStore.GetSource(e.Entity);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawPolicy GetDrawPolicy(RenderEntity e) => ref _entityDataStore.GetDrawPolicy(e);
+    public ref DrawPolicy GetDrawPolicy(RenderEntity e) => ref _entityDataStore.GetDrawPolicy(e.Entity);
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoundingAxisBox GetWorldBounds(RenderEntity e) => ref _entityDataStore.GetWorldBounds(e);
+    public ref BoundingAxisBox GetWorldBounds(RenderEntity e) => ref _entityDataStore.GetWorldBounds(e.Entity);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix4x4 GetModelMatrix(RenderEntity e) => ref _entityDataStore.GetModelMatrix(e);
+    public ref Matrix4x4 GetModelMatrix(RenderEntity e) => ref _entityDataStore.GetModelMatrix(e.Entity);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix3X4 GetNormalMatrix(RenderEntity e) => ref _entityDataStore.GetNormalMatrix(e);
+    public ref Matrix3X4 GetNormalMatrix(RenderEntity e) => ref _entityDataStore.GetNormalMatrix(e.Entity);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref TransformUniform GetTransformData(RenderEntity e) => ref _entityDataStore.GetTransformData(e);
+    public ref TransformUniform GetTransformData(RenderEntity e) => ref _entityDataStore.GetTransformData(e.Entity);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<PassMask> GetVisibilityView() => _entityDataStore.GetVisibilityView();
@@ -62,22 +62,22 @@ public sealed partial class RenderEntityCore
 
         //
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref DrawSource GetSource(RenderEntity e) => ref _sources[e.Entity];
+        public ref DrawSource GetSource(int entity) => ref _sources[entity];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref DrawPolicy GetDrawPolicy(RenderEntity e) => ref _policies[e.Entity];
+        public ref DrawPolicy GetDrawPolicy(int entity) => ref _policies[entity];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref BoundingAxisBox GetWorldBounds(RenderEntity e) => ref _bounds[e.Entity];
+        public ref BoundingAxisBox GetWorldBounds(int entity) => ref _bounds[entity];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref Matrix4x4 GetModelMatrix(RenderEntity e) => ref _transforms[e.Entity].Model;
+        public ref Matrix4x4 GetModelMatrix(int entity) => ref _transforms[entity].Model;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref Matrix3X4 GetNormalMatrix(RenderEntity e) => ref _transforms[e.Entity].Normal;
+        public ref Matrix3X4 GetNormalMatrix(int entity) => ref _transforms[entity].Normal;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref TransformUniform GetTransformData(RenderEntity e) => ref _transforms[e.Entity];
+        public ref TransformUniform GetTransformData(int entity) => ref _transforms[entity];
         //
 
         //

@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.ECS.Render;
 
-public static class RenderEcs
+public  static partial class RenderEcs
 {
     private const int DefaultRenderCap = 1024;
 

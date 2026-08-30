@@ -39,12 +39,20 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsVisible(RenderEntity e) => (uint)e.Entity < (uint)Count && _entityDataStore.IsVisible(e.Entity);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public RenderEntityContext GetContext(RenderEntity e)
+    {
+        if((uint)e.Entity >= (uint)Count || !_entityDataStore.IsAlive(e.Entity)) 
+            Throwers.InvalidArgument(nameof(e));
+        
+        return new RenderEntityContext(e.Entity, _entityDataStore);
+    }
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetStatus(RenderEntity entity, EntityDrawStatus status)
     {
         if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
-        ref var policy = ref _entityDataStore.GetDrawPolicy(entity);
+        ref var policy = ref GetDrawPolicy(entity);
         var newPolicy = policy.WithStatus(status);
         policy = newPolicy;
     }
@@ -53,8 +61,8 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
     public void ToggleDrawFlag(RenderEntity entity, EntityDrawFlags flag, bool enabled)
     {
         if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
-        if (enabled) _entityDataStore.GetSource(entity).DrawFlags |= flag;
-        else _entityDataStore.GetSource(entity).DrawFlags &= ~flag;
+        if (enabled) GetSource(entity).DrawFlags |= flag;
+        else GetSource(entity).DrawFlags &= ~flag;
     }
 
 

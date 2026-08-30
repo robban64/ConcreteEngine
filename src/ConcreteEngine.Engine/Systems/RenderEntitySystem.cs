@@ -61,10 +61,10 @@ internal sealed class RenderEntitySystem : IDisposable
     public void Execute()
     {
         Ensure();
-        CullEntities();
         avg2.BeginSample();
-        var visibleCount = VisibleCount = BuildVisibleIndices();
+        CullEntities();
         if (avg2.EndSample() > 144) avg2.ResetAndPrint("Resolve");
+        var visibleCount = VisibleCount = BuildVisibleIndices();
 
         if (visibleCount == 0) return;
         Debug.Assert((uint)visibleCount <= (uint)_sortIndices.Length);
@@ -81,18 +81,15 @@ internal sealed class RenderEntitySystem : IDisposable
     {
         foreach (var query in RenderEcs.Core.CullQuery(EntityDrawStatus.Normal))
         {
-            var passes = query.Policy.Passes;
-            var status = query.Policy.Status;
-            
-            var passMask = status == EntityDrawStatus.AlwaysVisible
-                ? passes
-                : _frustum.Intersects(passes, in query.Bounds);
+            var passMask = query.Status == EntityDrawStatus.AlwaysVisible
+                ? query.OriginalPasses
+                : _frustum.Intersects(query.OriginalPasses, in query.Bounds);
 
             if (passMask != 0)
             {
                 query.VisibilityMask = passMask;
             }
-            else if (passes != passMask)
+            else if (query.OriginalPasses != passMask)
             {
                 query.VisibilityMask = 0;
             }

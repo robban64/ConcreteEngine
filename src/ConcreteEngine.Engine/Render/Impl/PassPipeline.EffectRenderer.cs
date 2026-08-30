@@ -33,7 +33,11 @@ internal static partial class PassPipeline
             ctx.GfxBuffers.UploadSingleUniform(uniform, 0);
             ctx.Gfx.BindUniformBufferRange<TransformUniform>(0, 1);
 
-            if (source.IsSkinned()) ctx.DrawCmd.BindSkinningSlot(query.Entity);
+            if (source.IsSkinned())
+            {
+                var slot = RenderEcs.Store<SkinningLink>().Get(query.Entity).AnimationSlot;
+                ctx.DrawCmd.BindSkinningSlot(slot);
+            }
 
             ctx.DrawCmd.BindMaterial(source.Material);
 

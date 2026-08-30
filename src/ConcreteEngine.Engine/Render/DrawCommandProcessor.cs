@@ -47,7 +47,7 @@ internal sealed class DrawCommandProcessor
         GfxCmd.BindUniformBufferRange<TransformUniform>(submitIndex, 1);
 
         var source = ctx.Source;
-        
+
         BindMaterial(source.Material);
 
         if ((source.DrawFlags & EntityDrawFlags.Skinned) != 0)
@@ -66,14 +66,13 @@ internal sealed class DrawCommandProcessor
             GfxCmd.DrawMeshInstanced(source.Mesh, instances);
         }
     }
+
     public void BindSkinningSlot(int slot)
     {
-        if (slot != _lastAnimationSlot)
-        {
-            _lastAnimationSlot = slot;
-            var range = _animationSystem.GetSlotRange(slot - 1);
-            GfxCmd.BindUniformBufferRange<SkinningUniform>(range.Offset, range.Length);
-        }
+        if (slot == _lastAnimationSlot) return;
+        _lastAnimationSlot = slot;
+        var range = _animationSystem.GetSlotRange(slot - 1);
+        GfxCmd.BindUniformBufferRange<SkinningUniform>(range.Offset, range.Length);
     }
 
 
@@ -82,17 +81,19 @@ internal sealed class DrawCommandProcessor
         if (_lastMaterialId == materialId) return;
         _lastMaterialId = materialId;
 
-        GfxCmd.BindUniformBufferRange<MaterialUniform>(materialId.Index, 1);
         var textureBindings = _materialSystem.GetMetaAndSlots(materialId, out var materialMeta);
+        
+        var gfxCmd = GfxCmd;
+        gfxCmd.BindUniformBufferRange<MaterialUniform>(materialId.Index, 1);
 
-        GfxCmd.ApplyState(materialMeta.DrawState);
-        GfxCmd.ApplyStateFunctions(materialMeta.DrawFunctions);
+        gfxCmd.ApplyState(materialMeta.DrawState);
+        gfxCmd.ApplyStateFunctions(materialMeta.DrawFunctions);
 
-        GfxCmd.UseShader(RenderContext.ResolveShader(materialMeta.ShaderId));
+        gfxCmd.UseShader(RenderContext.ResolveShader(materialMeta.ShaderId));
         foreach (var it in textureBindings)
         {
-            GfxCmd.BindTextureSlot(it.Texture, (byte)it.Slot);
-            GfxCmd.BindSampler(it.Profile, (byte)it.Slot);
+            gfxCmd.BindTextureSlot(it.Texture, (byte)it.Slot);
+            gfxCmd.BindSampler(it.Profile, (byte)it.Slot);
         }
     }
 }

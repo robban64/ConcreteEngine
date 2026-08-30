@@ -10,37 +10,39 @@ namespace ConcreteEngine.Core.Engine.ECS.Render;
 public sealed partial class RenderEntityCore
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawSource GetSource(RenderEntity e) => ref _entityDataStore.GetSource(e.Entity);
+    public ref DrawSource GetSource(RenderEntity e) => ref _entityDataStore.GetSource(e.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawPolicy GetDrawPolicy(RenderEntity e) => ref _entityDataStore.GetDrawPolicy(e.Entity);
+    public ref DrawPolicy GetPolicy(RenderEntity e) => ref _entityDataStore.GetPolicy(e.Id);
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoundingAxisBox GetWorldBounds(RenderEntity e) => ref _entityDataStore.GetWorldBounds(e.Entity);
+    public ref BoundingAxisBox GetWorldBounds(RenderEntity e) => ref _entityDataStore.GetWorldBounds(e.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix4x4 GetModelMatrix(RenderEntity e) => ref _entityDataStore.GetModelMatrix(e.Entity);
+    public ref Matrix4x4 GetModelMatrix(RenderEntity e) => ref _entityDataStore.GetTransform(e.Id).Model;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix3X4 GetNormalMatrix(RenderEntity e) => ref _entityDataStore.GetNormalMatrix(e.Entity);
+    public ref Matrix3X4 GetNormalMatrix(RenderEntity e) => ref _entityDataStore.GetTransform(e.Id).Normal;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref TransformUniform GetTransformData(RenderEntity e) => ref _entityDataStore.GetTransformData(e.Entity);
+    public ref TransformUniform GetTransform(RenderEntity e) => ref _entityDataStore.GetTransform(e.Id);
+
+    //
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<PassMask> VisibilityView() => _entityDataStore.VisibilityView();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<PassMask> GetVisibilityView() => _entityDataStore.GetVisibilityView();
+    public NativeView<DrawPolicy> PolicyView() => _entityDataStore.PolicyView();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<DrawPolicy> GetDrawPolicyView() => _entityDataStore.GetDrawPolicyView();
+    public NativeView<DrawSource> SourceView() => _entityDataStore.SourceView();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<BoundingAxisBox> WorldBoundView() => _entityDataStore.WorldBoundView();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<DrawSource> GetSourceView() => _entityDataStore.GetSourceView();
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<BoundingAxisBox> GetWorldBoundView() => _entityDataStore.GetWorldBoundView();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<TransformUniform> GetTransformView() => _entityDataStore.GetTransformView();
-
+    public NativeView<TransformUniform> TransformView() => _entityDataStore.TransformView();
+    //
+    
     public sealed class EntityDataStore : IDisposable
     {
         private NativeArray<PassMask> _passes;
@@ -65,66 +67,61 @@ public sealed partial class RenderEntityCore
         public ref DrawSource GetSource(int entity) => ref _sources[entity];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref DrawPolicy GetDrawPolicy(int entity) => ref _policies[entity];
+        public ref DrawPolicy GetPolicy(int entity) => ref _policies[entity];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref BoundingAxisBox GetWorldBounds(int entity) => ref _bounds[entity];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref Matrix4x4 GetModelMatrix(int entity) => ref _transforms[entity].Model;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref Matrix3X4 GetNormalMatrix(int entity) => ref _transforms[entity].Normal;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref TransformUniform GetTransformData(int entity) => ref _transforms[entity];
+        public ref TransformUniform GetTransform(int entity) => ref _transforms[entity];
         //
 
         //
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NativeView<PassMask> GetVisibilityView() => _passes.Slice(0, RenderEcs.EntityCount);
+        public NativeView<PassMask> VisibilityView() => _passes.Slice(0, RenderEcs.EntityCount);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NativeView<DrawPolicy> GetDrawPolicyView() => _policies.Slice(0, RenderEcs.EntityCount);
+        public NativeView<DrawPolicy> PolicyView() => _policies.Slice(0, RenderEcs.EntityCount);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NativeView<DrawSource> GetSourceView() => _sources.Slice(0, RenderEcs.EntityCount);
+        public NativeView<DrawSource> SourceView() => _sources.Slice(0, RenderEcs.EntityCount);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NativeView<BoundingAxisBox> GetWorldBoundView() => _bounds.Slice(0, RenderEcs.EntityCount);
+        public NativeView<BoundingAxisBox> WorldBoundView() => _bounds.Slice(0, RenderEcs.EntityCount);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NativeView<TransformUniform> GetTransformView() => _transforms.Slice(0, RenderEcs.EntityCount);
+        public NativeView<TransformUniform> TransformView() => _transforms.Slice(0, RenderEcs.EntityCount);
 
         //
 
         //
-        public void AddEntity(RenderEntity e, DrawPolicy policy, DrawSource source)
+        internal void AddEntity(RenderEntity e, DrawPolicy policy, DrawSource source)
         {
-            if (_policies[e.Entity].Status != 0) Throwers.InvalidArgument("Entity already exists");
-            _policies[e.Entity] = policy;
-            _sources[e.Entity] = source;
+            if (_policies[e.Id].Status != 0) Throwers.InvalidArgument("Entity already exists");
+            _policies[e.Id] = policy;
+            _sources[e.Id] = source;
             ClearSpatial(e);
         }
 
-        public void ClearHeader(RenderEntity e)
+        internal void ClearHeader(RenderEntity e)
         {
-            _passes[e.Entity] = 0;
-            _sources[e.Entity] = default;
-            _policies[e.Entity] = default;
+            _passes[e.Id] = 0;
+            _sources[e.Id] = default;
+            _policies[e.Id] = default;
         }
 
-        public void ClearSpatial(RenderEntity e)
+        internal void ClearSpatial(RenderEntity e)
         {
-            ref var transform = ref _transforms[e.Entity];
+            ref var transform = ref _transforms[e.Id];
             transform.Model = Matrix4x4.Identity;
             transform.Normal = Matrix3X4.Identity;
-            _bounds[e.Entity] = default;
+            _bounds[e.Id] = default;
         }
 
         //
         private void Allocate(int capacity)
         {
+            if(!_policies.IsNullOrEmpty) Throwers.InvalidOperation();
             _passes = NativeArray.Allocate<PassMask>(capacity);
             _policies = NativeArray.Allocate<DrawPolicy>(capacity);
             _sources = NativeArray.Allocate<DrawSource>(capacity);
@@ -135,7 +132,7 @@ public sealed partial class RenderEntityCore
 
         public void ReAlloc(int newSize)
         {
-            ArgumentOutOfRangeException.ThrowIfEqual(newSize, _passes.Length);
+            ArgumentOutOfRangeException.ThrowIfEqual(newSize, _policies.Length);
             _passes.ReAlloc(newSize, true);
             _policies.ReAlloc(newSize, true);
             _sources.ReAlloc(newSize, true);

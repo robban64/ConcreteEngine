@@ -127,12 +127,12 @@ public sealed class SceneStore
     {
         if (_renderToSceneId.Length < capacity) Array.Resize(ref _renderToSceneId, capacity);
         
-        ref var it = ref _renderToSceneId[e.Index];
+        ref var it = ref _renderToSceneId[e.Id];
         if(it.IsValid) Throwers.InvalidArgument("RenderEntity already bound to SceneObject");
         it = id;
     }
 
-    internal void UnbindSceneRenderEntity(RenderEntity e) => _renderToSceneId[e.Index] = default;
+    internal void UnbindSceneRenderEntity(RenderEntity e) => _renderToSceneId[e.Id] = default;
 
     //
     internal void RegisterBlueprint(IBlueprint blueprint) => _blueprints.TryAdd(blueprint.GId, blueprint);

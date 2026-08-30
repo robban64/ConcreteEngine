@@ -45,12 +45,13 @@ internal sealed class RenderEntitySystem : IDisposable
         _transformBuffer = NativeArray.AlignedAllocate<TransformUniform>(RenderEcs.Core.Capacity, 64, false);
     }
     
-
-    private NativeView<DrawEntityIndex> DrawIndices => _drawIndices.Slice(0, _drawCount).Reinterpret<DrawEntityIndex>();
+    private NativeView<ulong> SortIndices64 => _sortIndices.Slice(0, VisibleCount);
     private NativeView<DrawEntityKey> SortIndices => _sortIndices.Slice(0, VisibleCount).Reinterpret<DrawEntityKey>();
+    private NativeView<DrawEntityIndex> DrawIndices => _drawIndices.Slice(0, _drawCount).Reinterpret<DrawEntityIndex>();
 
     public NativeView<TransformUniform> Transforms => _transformBuffer.Slice(0, VisibleCount);
 
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<DrawEntityIndex> GetDrawTickets(int passId)
     {
@@ -65,14 +66,14 @@ internal sealed class RenderEntitySystem : IDisposable
         CullEntities();
         if (avg2.EndSample() > 144) avg2.ResetAndPrint("Resolve");
         var visibleCount = VisibleCount = BuildVisibleIndices();
-
         if (visibleCount == 0) return;
         Debug.Assert((uint)visibleCount <= (uint)_sortIndices.Length);
 
-        _sortIndices.Slice(0, visibleCount).AsSpan().Sort();
-        ReadyDrawCommands();
+        SortIndices64.AsSpan().Sort();
         
-        SubmitTransforms();
+        BuildDrawIndices();
+        
+        FillTransformBuffer();
     }
 
     private AvgFrameTimer avg2;
@@ -87,11 +88,11 @@ internal sealed class RenderEntitySystem : IDisposable
 
             if (passMask != 0)
             {
-                query.VisibilityMask = passMask;
+                query.DrawPasses = passMask;
             }
             else if (query.OriginalPasses != passMask)
             {
-                query.VisibilityMask = 0;
+                query.DrawPasses = 0;
             }
         }
     }
@@ -107,19 +108,17 @@ internal sealed class RenderEntitySystem : IDisposable
         {
             ref readonly var center = ref query.Item1.Center;
             var distance = MakeDepthKeyU16(forward,  in center, nearFar, viewZ);
-            var entity = new RenderEntity(query.Entity, 0);
-
-            var drawIndex = DrawEntityKey.Create(entity.Entity, query.Passes, distance, query.Queue);
-            *++indices = drawIndex;
+            var entityIndex = DrawEntityKey.Create(query.Entity, query.Passes, distance, query.Queue);
+            *indices++ = entityIndex;
         }
 
         return (int)(indices - (DrawEntityKey*)_sortIndices.Ptr);
     }
 
 
-    private unsafe void SubmitTransforms()
+    private unsafe void FillTransformBuffer()
     {
-        var src = RenderEcs.Core.GetTransformView().Ptr;
+        var src = RenderEcs.Core.TransformView().Ptr;
         foreach ( var it in SortIndices.Zip(Transforms))
         {
             it.Item2 = src[it.Item1.Entity];
@@ -127,7 +126,7 @@ internal sealed class RenderEntitySystem : IDisposable
     }
 
 
-    private unsafe void ReadyDrawCommands()
+    private unsafe void BuildDrawIndices()
     {
         Array.Clear(_passRanges);
 
@@ -139,7 +138,6 @@ internal sealed class RenderEntitySystem : IDisposable
         // Count pass ranges
         var total = _drawCount = CountPasses(heads);
 
-        // Create draw tickets
         if (_drawIndices.Length < total)
         {
             var newSize = CapacityUtils.CapacityGrowthToFit(_drawIndices.Length, total);
@@ -185,6 +183,7 @@ internal sealed class RenderEntitySystem : IDisposable
         var drawTickets = DrawIndices;
         foreach (ref readonly var it in SortIndices)
         {
+            // (byte)mask | ((uint)depth << 8) | ((uint)queue << 24)
             var mask = (uint)(byte)it.SortKey;
             var index = new DrawEntityIndex(it.Entity, submitIndex++);
             while (mask != 0)

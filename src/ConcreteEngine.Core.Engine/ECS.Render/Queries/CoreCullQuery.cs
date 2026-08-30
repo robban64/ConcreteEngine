@@ -13,23 +13,23 @@ public static unsafe partial class RenderCoreQuery
         private DrawPolicy* _policy;
         private readonly DrawPolicy* _end;
 
-        private PassMask* _visibilityMasks;
+        private PassMask* _drawPasses;
         private BoundingAxisBox* _bounds;
 
-        private EntityDrawStatus _currentStatus;
         private PassMask _currentPasses;
+        private EntityDrawStatus _currentStatus;
 
         private readonly EntityDrawStatus _minStatus;
 
-        public CullQueryEnumerator(NativeView<DrawPolicy> policies, NativeView<PassMask> visibilityMasks,
+        public CullQueryEnumerator(NativeView<DrawPolicy> policies, NativeView<PassMask> drawPasses,
             NativeView<BoundingAxisBox> p1, EntityDrawStatus minStatus)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThan(policies.Length, p1.Length);
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(policies.Length, visibilityMasks.Length);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(policies.Length, drawPasses.Length);
 
             _policy = policies.Ptr - 1;
             _end = policies.EndPtr;
-            _visibilityMasks = visibilityMasks.Ptr - 1;
+            _drawPasses = drawPasses.Ptr - 1;
             _bounds = p1.Ptr - 1;
             _minStatus = minStatus;
         }
@@ -39,12 +39,15 @@ public static unsafe partial class RenderCoreQuery
         {
             while (++_policy < _end)
             {
-                ++_visibilityMasks;
+                ++_drawPasses;
                 ++_bounds;
-                var status = *_policy;
-                _currentPasses = _policy->Passes;
-                _currentStatus = _policy->Status;
-                if (_currentStatus >= _minStatus) return true;
+                var policy = *_policy;
+                if (policy.Status >= _minStatus)
+                {
+                    _currentPasses = policy.Passes;
+                    _currentStatus = policy.Status;
+                    return true;
+                }
             }
 
             return false;
@@ -53,7 +56,7 @@ public static unsafe partial class RenderCoreQuery
         public readonly CullQueryItem Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(_currentStatus, _currentPasses, ref *_visibilityMasks, in *_bounds);
+            get => new(_currentStatus, _currentPasses, ref *_drawPasses, in *_bounds);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

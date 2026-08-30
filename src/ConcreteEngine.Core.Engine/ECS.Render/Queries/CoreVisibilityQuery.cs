@@ -10,21 +10,21 @@ public static unsafe partial class RenderCoreQuery
     {
         private readonly PassMask* _end;
 
-        private PassMask* _passes;
+        private PassMask* _drawPasses;
         private DrawPolicy* _policies;
         private T1* _p1;
 
         private int _entity;
-        private readonly PassMask _filter;
         private PassMask _current;
+        private readonly PassMask _filter;
 
-        public VisibilityQueryEnumerator(NativeView<PassMask> passes, NativeView<DrawPolicy> policies,
+        public VisibilityQueryEnumerator(NativeView<PassMask> drawPasses, NativeView<DrawPolicy> policies,
             NativeView<T1> p1, PassMask mask)
         {
-            ArgumentOutOfRangeException.ThrowIfNotEqual(passes.Length, p1.Length);
+            ArgumentOutOfRangeException.ThrowIfNotEqual(drawPasses.Length, p1.Length);
 
-            _end = passes.EndPtr;
-            _passes = passes.Ptr - 1;
+            _end = drawPasses.EndPtr;
+            _drawPasses = drawPasses.Ptr - 1;
             _p1 = p1.Ptr - 1;
             _policies = policies.Ptr - 1;
             _entity = -1;
@@ -34,13 +34,13 @@ public static unsafe partial class RenderCoreQuery
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-            while (++_passes < _end)
+            while (++_drawPasses < _end)
             {
                 ++_policies;
                 ++_p1;
                 ++_entity;
 
-                _current = *_passes;
+                _current = *_drawPasses;
                 var c = _current & _filter;
                 if (c != 0) return true;
             }

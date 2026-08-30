@@ -48,7 +48,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
         {
             var materialId = RenderEcs.Core.GetSource(entity).Material;
             if (materialId > 0 && materialId != material.MaterialId) continue;
-            RenderEcs.Core.GetDrawPolicy(entity) = new DrawPolicy(material.DrawQueue, material.Passes);
+            RenderEcs.Core.GetPolicy(entity) = new DrawPolicy(material.DrawQueue, material.Passes);
         }
     }
 

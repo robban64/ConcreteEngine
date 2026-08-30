@@ -5,31 +5,28 @@ using ConcreteEngine.Core.Common.Identity;
 namespace ConcreteEngine.Core.Engine.ECS.Render;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly record struct RenderEntity : ITypedHandle<RenderEntity>, IComparable<RenderEntity>
+public readonly record struct RenderEntity : IComparable<RenderEntity>
 {
-    public readonly int Entity;
+    public readonly int Id;
     public readonly int Gen;
 
-    public RenderEntity(int entity, int gen)
+    public RenderEntity(int id, int gen)
     {
-        Entity = entity;
+        Id = id;
         Gen = gen;
     }
-
-    public int Index => Entity;
-    public int Generation => Gen;
 
     public bool IsValid
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Entity >= 0 && Gen > 0;
+        get => Id >= 0 && Gen > 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static explicit operator int(RenderEntity e) => e.Entity;
+    public static explicit operator int(RenderEntity e) => e.Id;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int CompareTo(RenderEntity other) => Entity.CompareTo(other.Entity);
+    public int CompareTo(RenderEntity other) => Id.CompareTo(other.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong Pack(RenderEntity e) => Unsafe.BitCast<RenderEntity, ulong>(e);

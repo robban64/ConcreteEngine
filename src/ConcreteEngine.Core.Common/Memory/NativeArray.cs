@@ -21,6 +21,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     }
 
     public readonly bool IsNull => Ptr == null;
+    public readonly bool IsNullOrEmpty => Ptr == null || Length == 0;
     public readonly int SizeInBytes => Length * Unsafe.SizeOf<T>();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -27,7 +27,7 @@ public static unsafe partial class RenderCoreQuery
         public readonly QueryItem<T> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(_current->Entity, ref _p1[_current->Entity]);
+            get => new(*_current, ref _p1[_current->Id]);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -59,7 +59,7 @@ public static unsafe partial class RenderCoreQuery
         public readonly QueryItem<T1, T2> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(_current->Entity, ref _p1[_current->Entity], ref _p2[_current->Entity]);
+            get => new(*_current, ref _p1[_current->Id], ref _p2[_current->Id]);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

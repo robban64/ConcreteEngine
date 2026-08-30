@@ -117,7 +117,7 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
 
     public bool Add(RenderEntity entity, in T value)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Entity, nameof(entity));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
         if (Has(entity)) return false;
         if (Count >= Capacity) EnsureCapacity(1);
 
@@ -137,7 +137,7 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
 
     public bool Remove(RenderEntity entity)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Entity, nameof(entity));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
         if (!Has(entity)) return false;
         _removedEntities.Add(entity);
         IsDirty = true;

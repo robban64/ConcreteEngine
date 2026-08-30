@@ -31,28 +31,34 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
     public int ActiveCount => Count - _free.Count;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsValidHandle(RenderEntity e) => e.IsValid && (uint)e.Entity < (uint)Count;
+    public bool IsValidHandle(RenderEntity e) => e.IsValid && (uint)e.Id < (uint)Count;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsAlive(RenderEntity e) => (uint)e.Entity < (uint)Count && _entityDataStore.IsAlive(e.Entity);
+    public bool IsAlive(RenderEntity e) => (uint)e.Id < (uint)Count && _entityDataStore.IsAlive(e.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsVisible(RenderEntity e) => (uint)e.Entity < (uint)Count && _entityDataStore.IsVisible(e.Entity);
+    public bool IsVisible(RenderEntity e) => (uint)e.Id < (uint)Count && _entityDataStore.IsVisible(e.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntityContext GetContext(RenderEntity e)
+    public RenderEntity CreateHandle(int entityId)
     {
-        if((uint)e.Entity >= (uint)Count || !_entityDataStore.IsAlive(e.Entity)) 
-            Throwers.InvalidArgument(nameof(e));
-        
-        return new RenderEntityContext(e.Entity, _entityDataStore);
+        if((uint)entityId >= (uint)Count) Throwers.IndexOutOfRange(entityId, Count, nameof(entityId));
+        return new RenderEntity(entityId, _generations[entityId]);
     }
+
+    //TODO
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public RenderEntityContext GetContext(int entityId)
+    {
+        return new RenderEntityContext(CreateHandle(entityId), _entityDataStore);
+    }
+    
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetStatus(RenderEntity entity, EntityDrawStatus status)
     {
         if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
-        ref var policy = ref GetDrawPolicy(entity);
+        ref var policy = ref GetPolicy(entity);
         var newPolicy = policy.WithStatus(status);
         policy = newPolicy;
     }
@@ -83,15 +89,15 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
 
     public void Remove(RenderEntity entity)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Entity, nameof(entity));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(entity.Entity, Count, nameof(entity));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(entity.Id, Count, nameof(entity));
 
         if (!IsAlive(entity)) Throwers.InvalidArgument(nameof(entity));
 
         _entityDataStore.ClearHeader(entity);
         _entityDataStore.ClearSpatial(entity);
 
-        Count = SlotHelper.FreeSlot(_free, entity.Index, Count);
+        Count = SlotHelper.FreeSlot(_free, entity.Id, Count);
     }
 
     private void EnsureCapacity(int amount)

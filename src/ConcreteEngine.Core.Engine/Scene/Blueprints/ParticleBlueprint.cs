@@ -55,7 +55,7 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         if (RenderEntityIds.Count == 0) return;
         var entity = RenderEntityIds[0];
         RenderEcs.Core.GetSource(entity).Mesh = Emitter.BoundMesh;
-        RenderEcs.Core.GetDrawPolicy(entity) = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
+        RenderEcs.Core.GetPolicy(entity) = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
         RenderEcs.Store<DrawInstancedComponent>().Get(entity).Instances = (uint)Emitter.ParticleCount;
     }
 

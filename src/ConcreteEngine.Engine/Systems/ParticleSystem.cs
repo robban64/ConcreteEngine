@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using ConcreteEngine.Core.Common;
@@ -7,6 +8,7 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
@@ -70,12 +72,19 @@ internal sealed class ParticleSystem : IDisposable
         {
             if (_processedEmitters.Contains(it.Component.EmitterId)) continue;
             var emitter = _particleManager.Get(it.Component.EmitterId);
+            if (!emitter.IsAttached) continue;
+
+            avg.BeginSample();
             emitter.Simulate(simDt);
+            avg.EndSample();
 
             _processedEmitters.Add(it.Component.EmitterId);
         }
+
+        if (avg.Ticks > 40*2) avg.ResetAndPrint("CPU");
     }
 
+    private AvgFrameTimer avg, avg2;
 
     internal void Execute()
     {
@@ -83,61 +92,32 @@ internal sealed class ParticleSystem : IDisposable
         foreach (var emitterId in _processedEmitters.AsSpan())
         {
             var emitter = _particleManager.Get(emitterId);
-
-            var particles = emitter.GetParticleView();
-            ProcessEmitter(particles, in emitter.GetParticleParams(), timeOffset);
-            _particleMesh.UploadGpuData(emitter.BoundSlot, particles.Length);
+            avg2.BeginSample();
+            ProcessEmitter(emitter.GetEmitterData(), timeOffset);
+            avg2.EndSample();
+            _particleMesh.UploadGpuData(emitter.BoundSlot, emitter.ParticleCount);
         }
+
+        if (avg2.Ticks > 80*2) avg2.ResetAndPrint("GPU");
     }
 
     [SkipLocalsInit]
-    private unsafe void ProcessEmitter(
-        in NativeView<ParticleState> particles,
-        in ParticleParams param,
-        float timeOffset)
+    private unsafe void ProcessEmitter(ParticleEmitterData emitterData, float timeOffset)
     {
-        param.Deconstruct(out var startColor, out var endColor, out var sizeStartEnd);
-
-        var lut = stackalloc (float Size, ColorRgba Color)[256];
-        for (int i = 0; i < 256; i++)
+        var invLife = emitterData.ParticleInvLifeState.Ptr;
+        ref var start = ref MemoryMarshal.GetArrayDataReference(emitterData.Lut);
+        foreach (var it in ParticleEnumerator(emitterData.ParticleState))
         {
-            float t = i / 255f;
-            var size = float.Lerp(sizeStartEnd.X, sizeStartEnd.Y, t);
-            var color = LerpSse(startColor, endColor, (byte)i);
-            lut[i] = (size, color);
-        }
-
-        foreach (var it in ParticleEnumerator(particles))
-        {
-            var t = it.Item1.InvLife;
-            var idx = (byte)(t * 255f + 0.5f);
+            var idx = (byte)float.FusedMultiplyAdd(*invLife++, 255f, 0.5f);
+            var lut = Unsafe.Add(ref start, idx);
 
             var pos = it.Item1.Position + it.Item1.Velocity * timeOffset;
-            it.Item2 = new ParticleVertex(new Vector4(pos, lut[idx].Size), lut[idx].Color);
+            pos.W = lut.Size;
+            it.Item2 = new ParticleVertex(in pos, lut.Color);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private PtrEnumerator<ParticleState, ParticleVertex> ParticleEnumerator(NativeView<ParticleState> particles) =>
         new(particles, _particleMesh.GetBufferView(particles.Length));
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ColorRgba LerpSse(ColorRgba a, ColorRgba b, byte t)
-    {
-        var va = Sse41.ConvertToVector128Int32(
-            Vector128.CreateScalarUnsafe(Unsafe.As<ColorRgba, uint>(ref a)).AsByte());
-        var vb = Sse41.ConvertToVector128Int32(
-            Vector128.CreateScalarUnsafe(Unsafe.As<ColorRgba, uint>(ref b)).AsByte());
-
-        var vt = Vector128.Create((int)t);
-
-        var lerped = Sse2.Add(va, Sse2.ShiftRightArithmetic(Sse41.MultiplyLow(Sse2.Subtract(vb, va), vt), 8));
-
-        var packed = Sse2.PackUnsignedSaturate(
-            Sse2.PackSignedSaturate(lerped, Vector128<int>.Zero),
-            Vector128<short>.Zero);
-
-        uint scalar = packed.AsUInt32().ToScalar();
-        return Unsafe.As<uint, ColorRgba>(ref scalar);
-    }
 }

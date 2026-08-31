@@ -62,9 +62,9 @@ internal sealed class RenderEntitySystem : IDisposable
     public void Execute()
     {
         Ensure();
-        avg2.BeginSample();
+       // avg2.BeginSample();
         CullEntities();
-        if (avg2.EndSample() > 144) avg2.ResetAndPrint("Resolve");
+       // if (avg2.EndSample() > 144) avg2.ResetAndPrint("Resolve");
         var visibleCount = VisibleCount = BuildVisibleIndices();
         if (visibleCount == 0) return;
         Debug.Assert((uint)visibleCount <= (uint)_sortIndices.Length);
@@ -76,7 +76,7 @@ internal sealed class RenderEntitySystem : IDisposable
         FillTransformBuffer();
     }
 
-    private AvgFrameTimer avg2;
+  //  private AvgFrameTimer avg2;
 
     private void CullEntities()
     {

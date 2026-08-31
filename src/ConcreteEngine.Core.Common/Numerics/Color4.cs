@@ -91,6 +91,17 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
         result.A = (byte)(A * 255f);
         return result;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ColorRgba ToRgba(Color4 c)
+    {
+        ColorRgba result;
+        result.R = (byte)(c.R * 255f);
+        result.G = (byte)(c.G * 255f);
+        result.B = (byte)(c.B * 255f);
+        result.A = (byte)(c.A * 255f);
+        return result;
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly uint ToPackedRgba()

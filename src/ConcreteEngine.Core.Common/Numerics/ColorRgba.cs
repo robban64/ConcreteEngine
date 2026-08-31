@@ -22,7 +22,7 @@ public struct ColorRgba(byte r, byte g, byte b, byte a = 255) : IEquatable<Color
     public static ColorRgba FromPacked(uint packed) =>
         new((byte)packed, (byte)(packed >> 8), (byte)(packed >> 16), (byte)(packed >> 24));
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining), SkipLocalsInit]
     public static ColorRgba Lerp(ColorRgba a, ColorRgba b, byte t)
     {
         ColorRgba result;

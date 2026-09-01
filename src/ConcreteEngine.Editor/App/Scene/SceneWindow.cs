@@ -31,19 +31,19 @@ internal sealed unsafe class SceneWindow : EditorWindow
 
     public SceneWindow(StateManager state) : base(state)
     {
-        _browser = new SceneBrowser();
+        _title = StringArena.AllocateString(24);
+
         _kindCombo = ComboInput.Create("scene-combo", SceneObjectKindExt.Values, SceneObjectKindExt.Names,
             v => OnCategoryChange((SceneObjectKind)v));
-
         _kindCombo.SetItemName(0, "All");
 
         _searchInput = new TextInput("search", 8, Search) { AllowEmpty = true, Trim = true, Lowercase = true };
+        _browser = new SceneBrowser();
     }
 
 
     protected override void OnCreate()
     {
-        _title = StringArena.AllocateString(24);
         if (_browser.FilteredCount == 0) Search(Span<byte>.Empty);
     }
 

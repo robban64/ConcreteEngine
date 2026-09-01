@@ -12,7 +12,7 @@ public ref struct AssetEnumerator<T>(ReadOnlySpan<AssetId> assetIds, ReadOnlySpa
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < _assetIds.Length;
 
-    public readonly T Current => (T)_assets[_assetIds[_i].Index()]!;
+    public readonly T Current => (T)_assets[_assetIds[_i].Index]!;
 
     public readonly AssetEnumerator<T> GetEnumerator() => new(_assetIds, _assets);
 }

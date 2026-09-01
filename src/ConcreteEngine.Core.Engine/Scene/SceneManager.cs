@@ -1,8 +1,9 @@
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.ECS.Render;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -20,8 +21,6 @@ public sealed class SceneManager
     public readonly SceneStore Store;
     public readonly RayCaster Raycaster;
 
-    private SceneObjectId[] _renderToSceneId;
-
     private readonly List<int> _dirtyIds = new(SceneStore.DefaultCapacity);
     private readonly List<ISceneListener> _listeners = [];
 
@@ -29,11 +28,8 @@ public sealed class SceneManager
     {
         if (Instance != null!) throw new InvalidOperationException("SceneManager already created");
         Instance = this;
-
-        Store = new SceneStore();
+        Store = new SceneStore(RenderEcs.Core.Capacity);
         Raycaster = new RayCaster(Store, CameraManager.Instance.Camera.Transform);
-        _renderToSceneId = new SceneObjectId[RenderEcs.Core.Capacity];
-        if (_renderToSceneId.Length == 0) throw new InvalidOperationException("No render to scene ids");
     }
 
     public int DirtyCount => _dirtyIds.Count;
@@ -43,7 +39,7 @@ public sealed class SceneManager
         if (_dirtyIds.Count == 0) return;
         foreach (var id in CollectionsMarshal.AsSpan(_dirtyIds))
         {
-            var sceneObject = Store.GetInternal(id);
+            var sceneObject = Store.GetUnsafe(id);
             if ((sceneObject.Dirty & SceneDirtyFlags.Name) != 0)
                 InvokeRenameListener(sceneObject);
             sceneObject.Commit();
@@ -51,18 +47,11 @@ public sealed class SceneManager
     }
 
     //
-    public SceneObjectId GetByLinkedEntity(RenderEntityId e) => _renderToSceneId[e.Index()];
-    public bool IsLinkedEntity(RenderEntityId e) => e.IsValid() && _renderToSceneId[e.Index()].IsValid();
 
-    public void UnbindSceneHandle(RenderEntityId e) => _renderToSceneId[e.Index()] = SceneObjectId.Empty;
+    public void UnbindSceneHandle(RenderEntity e) => Store.UnbindSceneRenderEntity(e);
 
-    public void BindSceneHandle(RenderEntityId e, SceneObjectId sceneId)
-    {
-        if (_renderToSceneId.Length < RenderEcs.Core.Capacity)
-            Array.Resize(ref _renderToSceneId, RenderEcs.Core.Capacity);
-
-        _renderToSceneId[e.Index()] = sceneId;
-    }
+    public void BindSceneHandle(SceneObjectId sceneId, RenderEntity e) =>
+        Store.BindSceneRenderEntity(sceneId, e, RenderEcs.Core.Capacity);
 
     private void InvokeRenameListener(SceneObject sceneObject)
     {
@@ -93,7 +82,7 @@ public sealed class SceneManager
 
     internal void MarkDirty(SceneObjectId sceneObjectId)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sceneObjectId.Id, nameof(sceneObjectId));
+        if(!sceneObjectId.IsValid) Throwers.InvalidArgument(nameof(sceneObjectId));
         _dirtyIds.TryAddUniqueSorted(sceneObjectId.Id);
     }
 

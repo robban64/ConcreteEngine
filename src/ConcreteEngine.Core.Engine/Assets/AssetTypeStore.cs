@@ -57,7 +57,8 @@ public sealed class AssetTypeStore(AssetKind kind)
 
     internal void MarkDirty(AssetObject asset)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Id, nameof(asset.Id));
+        if(!asset.Id.IsValid) Throwers.InvalidArgument(nameof(asset));
+
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)asset.Kind, (int)Kind, nameof(asset));
         _dirtyIds.TryAddUniqueSorted(asset.Id.Id);
     }

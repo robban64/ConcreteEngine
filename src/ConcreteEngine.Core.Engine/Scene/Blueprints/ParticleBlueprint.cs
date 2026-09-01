@@ -1,10 +1,10 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.ECS.Render;
+using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Particles;
-using ConcreteEngine.Core.Engine.RenderEntity;
-using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -38,12 +38,12 @@ public sealed class ParticleInstance : RenderBlueprintInstance
     {
         var matId = ParticleMaterial.MaterialId;
         var policy = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
-        var source = new RenderSource(default, matId, flags: EntityDrawFlags.Instanced);
+        var source = new DrawSource(default, matId, flags: EntityDrawFlags.Instanced);
         var entity = RenderEcs.Core.AddEntity(source, policy);
         RenderEcs.Store<EmitterLink>().Add(entity, new EmitterLink(Emitter.Id));
         RenderEcs.Store<DrawInstancedComponent>().Add(entity, new DrawInstancedComponent(Emitter.ParticleCount));
 
-        SceneManager.Instance.BindSceneHandle(entity, Owner.Id);
+        SceneManager.Instance.BindSceneHandle(Owner.Id, entity);
         RenderEntityIds.Add(entity);
 
         RenderEcs.Store<EmitterLink>().Commit();
@@ -54,8 +54,9 @@ public sealed class ParticleInstance : RenderBlueprintInstance
     {
         if (RenderEntityIds.Count == 0) return;
         var entity = RenderEntityIds[0];
-        RenderEcs.Core.GetSource(entity).Mesh = Emitter.BoundMesh;
-        RenderEcs.Core.GetDrawPolicy(entity) = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
+        var ctx = RenderEcs.Core.GetEntityContext(entity);
+        ctx.Source.Mesh = Emitter.BoundMesh;
+        ctx.Policy = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
         RenderEcs.Store<DrawInstancedComponent>().Get(entity).Instances = (uint)Emitter.ParticleCount;
     }
 
@@ -65,8 +66,9 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         var entity = RenderEntityIds[0];
 
         BoundingAxisBox.GetWorldBounds(in Emitter.LocalBounds(), in rootMatrix, out WorldBounds);
-        RenderEcs.Core.GetModelMatrix(entity) = rootMatrix;
-        RenderEcs.Core.GetWorldBounds(entity) = WorldBounds;
+        var ctx = RenderEcs.Core.GetEntityContext(entity);
+        ctx.Transform.Model = rootMatrix;
+        ctx.WorldBounds = WorldBounds;
     }
 
     public void OnAssetChanged(AssetObject asset) { }

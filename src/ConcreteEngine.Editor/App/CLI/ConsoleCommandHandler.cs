@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Core.Engine.RenderEntity;
-using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
+using ConcreteEngine.Core.Engine.ECS.Render;
+using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
 using ConcreteEngine.Editor.Logging;
 
 namespace ConcreteEngine.Editor.App.CLI;
@@ -26,7 +26,7 @@ internal sealed class UtilityCommandHandler() : ConsoleCommandHandler("utility")
 
     private static void OnStructSizesCmd()
     {
-        LogService.PushMessage(StructStr<RenderSource>());
+        LogService.PushMessage(StructStr<DrawSource>());
         LogService.PushMessage(StructStr<SkinningLink>());
         LogService.PushMessage(StructStr<GpuBufferMeta>());
         LogService.PushMessage(StructStr<FrameMetric>());

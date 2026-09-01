@@ -7,6 +7,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Graphics.Particles;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Primitives;
@@ -15,10 +16,11 @@ using ConcreteEngine.Graphics.Utility;
 namespace ConcreteEngine.Engine.Mesh;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct ParticleVertex(in Vector4 positionSize, ColorRgba color)
+internal struct ParticleVertex(in Vector3 position, ParticleLut lut)
 {
-    public Vector4 PositionSize = positionSize;
-    public ColorRgba Color = color;
+    public Vector3 Position = position;
+    public float Size = lut.Size;
+    public ColorRgba Color = lut.Color;
 }
 
 internal readonly struct ParticleMeshHandle(MeshId meshId, VertexBufferId vboInstanceId)

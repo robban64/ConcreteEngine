@@ -105,8 +105,16 @@ internal sealed class MeshImportContext
 
     public BoundingBox ModelBounds;
 
-    public Mesh[] Meshes = new Mesh[16];
-    public MeshImportData[] MeshData = new MeshImportData[16];
+    public Mesh[] Meshes;
+    public MeshImportData[] MeshData;
+
+    public MeshImportContext()
+    {
+        Meshes = new Mesh[16];
+        MeshData = new MeshImportData[16];
+        for (int i = 0; i < MeshData.Length; i++)
+            MeshData[i] = new MeshImportData();
+    }
 
     public ReadOnlySpan<Mesh> Compile()
     {
@@ -126,6 +134,10 @@ internal sealed class MeshImportContext
             int length = int.Max(meta.MeshCount, Meshes.Length * 2);
             Array.Resize(ref Meshes, length);
             Array.Resize(ref MeshData, length);
+            for (int i = 0; i < MeshData.Length; i++)
+            {
+                if (MeshData[i] == null!) MeshData[i] = new MeshImportData();
+            }
         }
     }
 
@@ -136,17 +148,17 @@ internal sealed class MeshImportContext
         TotalVertexCount = 0;
         TotalFaceCount = 0;
         Array.Clear(Meshes);
-        Array.Clear(MeshData);
+        foreach (var it in MeshData) it.Clear();
     }
 
 
-    public ref MeshImportData GetMeshData(int meshIndex, out bool is16Bit)
+    public MeshImportData GetMeshData(int meshIndex, out bool is16Bit)
     {
         if (MeshCount == 0) Throwers.InvalidOperation(nameof(MeshCount));
         is16Bit = Meshes[meshIndex].Info.Has16BitIndex;
         var data = MeshData[meshIndex];
         if (data.Vertices.IsNull) Throwers.InvalidOperation(nameof(MeshData));
-        return ref MeshData[meshIndex];
+        return data;
     }
 }
 

@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Identity;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Particles;
 
@@ -34,12 +35,12 @@ internal sealed class ParticleManager : IDisposable
 
         var emitterId = new Id16<ParticleEmitter>(_emitters.AllocateNextId() + 1);
 
-        if (_emitters.Count > 0 && _emitters.GetOrNull(emitterId.Index()) != null)
+        if (_emitters.Count > 0 && _emitters.GetOrNull(emitterId.Index) != null)
             throw new InvalidOperationException($"Duplicated emitter id {emitterId}");
 
         var emitter = new ParticleEmitter(name, emitterId, particleCount, in emitterParam, in particleParam);
         _pendingEmitters.Add(emitterId);
-        _emitters.Set(emitter, emitterId.Index());
+        _emitters.Set(emitter, emitterId.Index);
         return emitter;
     }
 
@@ -62,7 +63,7 @@ internal sealed class ParticleManager : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ParticleEmitter Get(Id16<ParticleEmitter> emitterId)
     {
-        if (!_emitters.TryGet(emitterId.Index(), out var emitter))
+        if (!_emitters.TryGet(emitterId.Index, out var emitter))
             Throwers.NotFoundBy(nameof(emitterId), emitterId);
 
         return emitter;

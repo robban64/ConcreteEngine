@@ -2,8 +2,8 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.RenderEntity;
-using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
+using ConcreteEngine.Core.Engine.ECS.Render;
+using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -12,14 +12,14 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
     public bool IsDirty { get; private set; } = true;
 
     protected readonly SceneObject Owner = owner;
-    protected readonly List<RenderEntityId> RenderEntityIds = [];
+    protected readonly List<RenderEntity> RenderEntityIds = [];
 
     protected BoundingAxisBox WorldBounds;
 
     public abstract RenderBlueprint GetBlueprint();
     public string DisplayName => GetBlueprint().DisplayName;
     public int EntityCount => RenderEntityIds.Count;
-    public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(RenderEntityIds);
+    public ReadOnlySpan<RenderEntity> GetRenderEntities() => CollectionsMarshal.AsSpan(RenderEntityIds);
 
     public ref readonly BoundingAxisBox GetWorldBounds() => ref WorldBounds;
 
@@ -46,9 +46,10 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
     {
         foreach (var entity in GetRenderEntities())
         {
-            var materialId = RenderEcs.Core.GetSource(entity).Material;
+            var ctx = RenderEcs.Core.GetEntityContext(entity);
+            var materialId = ctx.Source.Material;
             if (materialId > 0 && materialId != material.MaterialId) continue;
-            RenderEcs.Core.GetDrawPolicy(entity) = new DrawPolicy(material.DrawQueue, material.Passes);
+            ctx.Policy = new DrawPolicy(material.DrawQueue, material.Passes);
         }
     }
 

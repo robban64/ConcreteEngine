@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Terrains;
-using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Core.Engine.Scene;
 
 namespace ConcreteEngine.Core.Engine;
@@ -23,33 +23,32 @@ public sealed class RayCaster
         _camera = camera;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static RenderEntityCore.QueryEnumerator<BoundingAxisBox> Query() =>
-        new(RenderEcs.Core.GetDrawPolicyView(), RenderEcs.Core.GetWorldBoundView(), EntityDrawStatus.ForceHidden);
-
     public SceneObject? GetSceneObjectFromView(Vector2 screenCoords, out float distance)
     {
         ScreenPointToRay(screenCoords, out var ray);
 
-        distance = float.MaxValue;
-
-        RenderEntityId closestEntity = default;
-        foreach (var query in Query())
+        var closestEntity = -1;
+        var minDistance = float.MaxValue;
+        foreach (var query in RenderEcs.Core.VisibilityBoundsQuery(PassMask.Depth | PassMask.Main | PassMask.Effect))
         {
-            if (query.Item1.VisiblePassMask == 0 || !SceneManager.Instance.IsLinkedEntity(query.Entity))
-                continue;
+            if (!_sceneStore.IsLinkedEntity(query.Entity)) continue;
 
-            if (CollisionMethods.RayIntersectsBox(in ray, query.Item2.Min, query.Item2.Max, out var dist) &&
-                dist < distance)
+            ref readonly var box = ref query.Item1;
+            if (CollisionMethods.RayIntersectsBox(in ray, box.Min, box.Max, out var dist) && dist < minDistance)
             {
-                distance = dist;
+                minDistance = dist;
                 closestEntity = query.Entity;
             }
         }
 
-        if (!closestEntity.IsValid()) return null;
+        if (closestEntity < 0)
+        {
+            distance = -1;
+            return null;
+        }
 
-        return _sceneStore.Get(SceneManager.Instance.GetByLinkedEntity(closestEntity));
+        distance = minDistance;
+        return _sceneStore.GetByLinkedEntity(closestEntity);
     }
 
     public Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)

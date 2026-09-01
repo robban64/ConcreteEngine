@@ -11,27 +11,38 @@ public static class EngineTime
     public static ulong FrameId;
     public static ulong GameTickId;
     public static float FrameRng;
-    public static float Time;
-    public static float DeltaTime;
-    public static float Fps;
+    
+    public static double Time;
+    public static double DeltaTime;
+    public static double Fps;
 
-    public static float GameAlpha;
-    public static float EnvironmentAlpha;
+    public static double GameDelta;
+    public static double GameAlpha;
 
-    public static float GameDelta;
-    public static float EnvironmentDelta;
+    public static double SimulationDelta;
+    public static double SimulationAlpha;
+    
+    public static float TimeF => (float)Time;
+    public static float DeltaTimeF => (float)DeltaTime;
+    public static float FpsF => (float)Fps;
+    
+    public static float GameDeltaF => (float)GameDelta;
+    public static float GameAlphaF => (float)GameAlpha;
+    
+    public static float SimulationDeltaF => (float)SimulationDelta;
+    public static float SimulationAlphaF => (float)SimulationAlpha;
 
     public const int SystemTickRate = 1;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void AdvanceFrame(float deltaTime, float gameAlpha, float envAlpha)
+    internal static void AdvanceFrame(double deltaTime, double gameAlpha, double simAlpha)
     {
         ++FrameId;
         DeltaTime = deltaTime;
         Time += deltaTime;
-        Fps = deltaTime / (deltaTime * deltaTime + FloatMath.SingularEpsilon);
+        Fps = deltaTime / (deltaTime * deltaTime + double.Epsilon);
         FrameRng = _rng.NextFloat();
         GameAlpha = gameAlpha;
-        EnvironmentAlpha = envAlpha;
+        SimulationAlpha = simAlpha;
     }
 }

@@ -99,7 +99,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
     protected override Model LoadInMemory(ModelRecord record, ImportContext ctx) => throw new NotImplementedException();
 
 
-    public MeshId UploadMesh(in MeshImportData data, bool is16Bit)
+    public MeshId UploadMesh( MeshImportData data, bool is16Bit)
     {
         var drawSize = is16Bit ? DrawElementSize.UnsignedShort : DrawElementSize.UnsignedInt;
         var indices = data.Indices.Length / (is16Bit ? sizeof(ushort) : sizeof(uint));
@@ -116,7 +116,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, GfxMeshes gfx)
         return meshId;
     }
 
-    public MeshId UploadAnimatedMesh(in MeshImportData data, bool is16Bit)
+    public MeshId UploadAnimatedMesh( MeshImportData data, bool is16Bit)
     {
         var drawSize = is16Bit ? DrawElementSize.UnsignedShort : DrawElementSize.UnsignedInt;
         var indices = data.Indices.Length / (is16Bit ? sizeof(ushort) : sizeof(uint));

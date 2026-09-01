@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Engine.Scene;
 using Silk.NET.Input;
@@ -22,28 +23,30 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
             EditorInput.DragState = DragState.None;
             return;
         }
+        
+        if (!EditorInput.IsBlockingMouse && !UpdateMouseClick())
+            UpdateDrag(EditorInput.IsDragging);
 
-        if (!EditorInput.IsBlockingMouse && !UpdateMouseClick(EditorInput.State))
-            UpdateDrag(EditorInput.State.IsDragging);
-
-        WasDragging = EditorInput.State.IsDragging;
+        WasDragging = EditorInput.IsDragging;
     }
 
-    private bool UpdateMouseClick(InputStateToggles inputStateToggles)
+    private bool UpdateMouseClick()
     {
-        switch (inputStateToggles)
+        if (EditorInput.IsRightClick)
         {
-            case { IsRightClick: true }:
-                OnRightClickViewport();
-                return true;
-            case { IsUsingGizmo: true, IsHoveringGizmo: true }:
-                return true;
-            case { IsLeftClick: true, IsDragging: false }:
-                OnClickViewport(EngineInput.Mouse.ViewportPos);
-                return true;
-            default:
-                return false;
+            OnRightClickViewport();
+            return true;
         }
+        if (EditorInput.IsLeftClick && !EditorInput.IsDragging)
+        {
+            OnClickViewport(EngineInput.Mouse.ViewportPos);
+            return true;
+        }
+
+        if (EditorInput.IsUsingGizmo || EditorInput.IsHoveringGizmo)
+            return true;
+
+        return false;
     }
 
     private void UpdateDrag(bool isDragging)
@@ -101,7 +104,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
 
     private void OnRightClickViewport()
     {
-        if (state.Context.Selection.SelectedSceneId.IsValid())
+        if (state.Context.Selection.SelectedSceneId.IsValid)
             state.EnqueueEvent(new SelectionEvent(SceneObjectId.Empty));
     }
 
@@ -111,7 +114,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
         var sceneObject = SceneManager.Instance.Raycaster.GetSceneObjectFromView(mousePos, out _);
         if (sceneObject is null)
         {
-            if (selectedId.IsValid())
+            if (selectedId.IsValid)
                 state.EnqueueEvent(new SelectionEvent(SceneObjectId.Empty));
 
             return false;

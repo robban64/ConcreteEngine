@@ -69,7 +69,7 @@ public sealed unsafe class BumpAllocator : IDisposable
         if (Remaining <= 16) Throwers.BufferOverflow(nameof(BumpAllocator));
         _hasBoundBuilder = true;
 
-        var block = new MemoryBlock(_buffer.Slice(Cursor));
+        var block = new MemoryBlock(_buffer.SliceFrom(Cursor));
 
         if (Head == null) Head = block;
         else Tail.Ptr->Next = block.Ptr;

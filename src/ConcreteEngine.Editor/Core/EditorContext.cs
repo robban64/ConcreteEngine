@@ -28,11 +28,11 @@ internal readonly record struct SelectionContext(
     SceneObjectId SelectedSceneId,
     FixedInspectorId FixedInspector)
 {
-    public bool HasAsset => SelectedAssetId.IsValid();
-    public bool HasSceneObject => SelectedSceneId.IsValid();
+    public bool HasAsset => SelectedAssetId.IsValid;
+    public bool HasSceneObject => SelectedSceneId.IsValid;
 
-    public bool IsMixed => SelectedSceneId.IsValid() || SelectedAssetId.IsValid();
-    public bool IsEmpty => !SelectedSceneId.IsValid() && !SelectedAssetId.IsValid();
+    public bool IsMixed => SelectedSceneId.IsValid || SelectedAssetId.IsValid;
+    public bool IsEmpty => !SelectedSceneId.IsValid && !SelectedAssetId.IsValid;
 
     public bool HasSelection() => IsMixed || FixedInspector > 0;
 

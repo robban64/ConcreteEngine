@@ -35,16 +35,15 @@ public sealed class AssetFileRegistry
     //
     public bool HasFilePath(string relativePath) => _fileByPath.ContainsKey(relativePath);
 
-    public bool HasFile(AssetFileId fileId)
+    public bool HasFile(AssetFileId id)
     {
-        var index = fileId.Index();
-        return (uint)index < (uint)_files.Length && _files[index]?.Id == fileId;
+        return (uint)id.Id < (uint)_files.Length && _files[id.Id]?.Id == id;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetFile Get(AssetFileId id)
     {
-        if (_files[id.Index()] is { } file && file.Id == id) return file;
+        if (_files[id.Id] is { } file && file.Id == id) return file;
         Throwers.NotFoundBy(nameof(AssetFile), id);
         return null;
         //        
@@ -52,8 +51,7 @@ public sealed class AssetFileRegistry
 
     public bool TryGetFile(AssetFileId id, [NotNullWhen(true)] out AssetFile? entry)
     {
-        var index = id.Index();
-        if ((uint)index >= (uint)_files.Length || _files[index] is not { } file || file.Id != id)
+        if ((uint)id.Id >= (uint)_files.Length || _files[id.Id] is not { } file || file.Id != id)
         {
             entry = null;
             return false;
@@ -97,14 +95,15 @@ public sealed class AssetFileRegistry
     internal void Replace(AssetFileId id, AssetFile file)
     {
         ArgumentNullException.ThrowIfNull(file);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id));
-        _files[id.Index()] = file;
+        if(!id.IsValid) Throwers.InvalidArgument(nameof(id));
+
+        _files[id.Id] = file;
     }
 
     internal AssetFile RegisterRoot(AssetId assetRootId, string assetName, Guid assetGuid,
         in FileScanInfo scanInfo)
     {
-        if (!assetRootId.IsValid()) Throwers.InvalidArgument(nameof(assetRootId));
+        if (!assetRootId.IsValid) Throwers.InvalidArgument(nameof(assetRootId));
         var fileId = AllocateSlot();
         var file = AssetFile.MakeRoot(fileId, assetRootId, assetName, assetGuid, in scanInfo);
         AddFile(file);
@@ -126,7 +125,7 @@ public sealed class AssetFileRegistry
 
         if (file.Storage == AssetStorage.InMemory)
         {
-            _files[file.Id.Index()] = file;
+            _files[file.Id.Id] = file;
             return;
         }
 
@@ -143,18 +142,18 @@ public sealed class AssetFileRegistry
         fileIds.Add(file.Id);
 
         _fileByPath.Add(file.RelativePath, file.Id);
-        _files[file.Id.Index()] = file;
+        _files[file.Id] = file;
     }
 
     private AssetFileId AllocateSlot()
     {
         var freeIndex = SlotHelper.NextSlot(_free, Count);
-        if (freeIndex >= 0) return new AssetFileId(freeIndex + 1, 1);
+        if (freeIndex >= 0) return new AssetFileId(freeIndex, 1);
 
         if (SlotHelper.EnsureCapacity(ref _files, Count, 1, out var oldSize))
             Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetFileRegistry), oldSize, _files.Length));
 
-        return new AssetFileId(++Count, 1);
+        return new AssetFileId(Count++, 1);
     }
 
     //

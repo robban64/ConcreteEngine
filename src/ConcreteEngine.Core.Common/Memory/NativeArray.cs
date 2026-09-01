@@ -21,6 +21,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     }
 
     public readonly bool IsNull => Ptr == null;
+    public readonly bool IsNullOrEmpty => Ptr == null || Length == 0;
     public readonly int SizeInBytes => Length * Unsafe.SizeOf<T>();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -46,10 +47,17 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     public readonly NativeView<T> AsView() => new(Ptr, Length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly NativeView<T> Slice(int offset, int length = 0)
+    public readonly NativeView<T> Slice(int offset, int length)
     {
         Debug.Assert((uint)offset + (uint)length <= (uint)Length);
-        return new NativeView<T>(Ptr + offset, length > 0 ? length : Length - offset);
+        return new NativeView<T>(Ptr + offset, length);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly NativeView<T> SliceFrom(int offset)
+    {
+        Debug.Assert((uint)offset < (uint)Length);
+        return new NativeView<T>(Ptr + offset, Length - offset);
     }
 
 

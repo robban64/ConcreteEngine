@@ -1,10 +1,9 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.Input;
-using ConcreteEngine.Core.Engine.RenderEntity;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
@@ -32,7 +31,6 @@ public sealed class GameEngine : IDisposable
 
     private readonly EngineGateway _gateway;
 
-    private FrameStepper _systemStepper = new(8);
 
     internal GameEngine(GfxRuntimeBundle<GL> gfxBundle, List<Func<GameScene>> sceneFactories)
     {
@@ -83,7 +81,7 @@ public sealed class GameEngine : IDisposable
         Console.WriteLine($"Total Alloc: {GC.GetTotalAllocatedBytes() / 1024.0 / 1024.0:F2}");
     }
 
-    internal void Render(float dt)
+    internal void Render(double dt)
     {
         _gateway.Metrics.StartCapture();
 
@@ -94,7 +92,8 @@ public sealed class GameEngine : IDisposable
         _tickHub.Update(dt);
 
         // Draw
-        Draw(dt);
+        Draw();
+        _gateway.RenderEditor(dt);
 
         EngineInput.Keyboard.ClearKeys();
 
@@ -102,30 +101,29 @@ public sealed class GameEngine : IDisposable
     }
 
 
-    private void Draw(float dt)
+    private void Draw()
     {
         _graphics.BeginFrame(EngineWindow.Viewport.Size);
-        _renderSystem.PrepareRenderer(EngineTime.GameAlpha);
+        _renderSystem.PrepareRenderer();
         _renderSystem.ExecuteRenderPipeline();
         _graphics.EndFrame();
 
-        _gateway.RenderEditor(dt);
     }
 
-    internal void OnGameTick(float dt)
+    internal void OnGameTick(double dt)
     {
         CameraManager.Instance.BeginUpdate();
 
-        _sceneSystem.UpdateScene(dt);
+        _sceneSystem.UpdateScene((float)dt);
         _gateway.UpdateGameTick(dt);
         _renderSystem.AfterUpdate();
     }
 
-    internal void OnSimulateTick(float dt) => _renderSystem.OnSimulate(dt);
+    internal void OnSimulateTick(double dt) => _renderSystem.OnSimulate(dt);
 
-    internal void OnSystemTick(float dt)
+    internal void OnSystemTick(double dt)
     {
-        var windowResized = _systemStepper.Tick() && EngineWindow.Commit();
+        var windowResized = EngineWindow.Commit();
         _renderSystem.OnSystemTick(windowResized);
 
         if (_assetSystem.PendingAssetCount > 0)
@@ -135,7 +133,7 @@ public sealed class GameEngine : IDisposable
             _commandBuses.DrainDispatch();
     }
 
-    internal void OnDiagnosticTick(float dt) => _gateway.UpdateDiagnostics(dt);
+    internal void OnDiagnosticTick(double dt) => _gateway.UpdateDiagnostics();
 
     internal void Close()
     {
@@ -158,8 +156,8 @@ public sealed class GameEngine : IDisposable
         _gateway.Dispose();
         _sceneSystem.Shutdown();
         _renderSystem.Dispose();
-        RenderEcs.Dispose();
         _assetSystem.Shutdown();
+        RenderEcs.Dispose();
 
         EngineInput.Detach();
         _graphics.Dispose();

@@ -1,48 +1,64 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using static ConcreteEngine.Core.Common.Numerics.Maths.FloatMath;
 
 namespace ConcreteEngine.Core.Common.Numerics.Maths;
 
 public static class RotationMath
 {
-    public static YawPitch QuaternionToYawPitch(in Quaternion q)
+    public const double PitchLimit = 89.9;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static double ClampPitch(double pitch) => double.Clamp(pitch, -PitchLimit, PitchLimit);
+    
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2D LerpYawPitch(Vector2D a, Vector2D b, double t)
     {
-        const float pitchLimit = 89f;
+        double yawDelta = b.X - a.X;
+        if (yawDelta > 180.0) yawDelta -= 360.0;
+        if (yawDelta < -180.0) yawDelta += 360.0;
 
+        Unsafe.SkipInit(out Vector2D result);
+        result.X = a.X + yawDelta * t;
+        result.Y = double.Lerp(a.Y, b.Y, t);
+        return result;
+    }
+
+    public static YawPitch QuaternionToYawPitch(Quaternion q)
+    {
         var forward = Vector3.Transform(new Vector3(0f, 0f, -1f), q);
-        float pitchRad = float.Asin(Clamp1N1(forward.Y));
+        float pitchRad = float.Asin(FloatMath.Clamp1N1(forward.Y));
         float yawRad = float.Atan2(forward.X, forward.Z);
 
-        float yawDeg = yawRad * Rad2Deg;
-        float pitchDeg = pitchRad * Rad2Deg;
+        float yawDeg = yawRad * FloatMath.Rad2Deg;
+        float pitchDeg = pitchRad * FloatMath.Rad2Deg;
 
-        if (pitchDeg > pitchLimit) pitchDeg = pitchLimit;
-        else if (pitchDeg < -pitchLimit) pitchDeg = -pitchLimit;
+        if (pitchDeg > PitchLimit) pitchDeg = (float)PitchLimit;
+        else if (pitchDeg < -PitchLimit) pitchDeg = (float)-PitchLimit;
 
         return new YawPitch(yawDeg, pitchDeg);
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Quaternion YawPitchToQuaternion(YawPitch orientation)
+    public static Quaternion YawPitchToQuaternion(Vector2D orientation)
     {
-        float yaw = orientation.Yaw * Deg2Rad;
-        float pitch = orientation.Pitch * Deg2Rad;
+        double yaw = orientation.X * DoubleMath.Deg2Rad;
+        double pitch = orientation.Y * DoubleMath.Deg2Rad;
 
-        var qy = Quaternion.CreateFromAxisAngle(Vector3.UnitY, yaw);
-        var qx = Quaternion.CreateFromAxisAngle(Vector3.UnitX, pitch);
+        var qy = Quaternion.CreateFromAxisAngle(Vector3.UnitY, (float)yaw);
+        var qx = Quaternion.CreateFromAxisAngle(Vector3.UnitX, (float)pitch);
 
         return Quaternion.Multiply(qy, qx);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Quaternion EulerDegreesToQuaternion(in Vector3 eulerDegrees)
+    public static Quaternion EulerDegreesToQuaternion(Vector3 eulerDegrees)
     {
         return Quaternion.CreateFromYawPitchRoll(
-            eulerDegrees.Y * Deg2Rad,
-            eulerDegrees.X * Deg2Rad,
-            eulerDegrees.Z * Deg2Rad
+            eulerDegrees.Y * FloatMath.Deg2Rad,
+            eulerDegrees.X * FloatMath.Deg2Rad,
+            eulerDegrees.Z * FloatMath.Deg2Rad
         );
     }
 
@@ -70,7 +86,7 @@ public static class RotationMath
 
         float yawRad, rollRad;
 
-        if (float.Abs(cosPitch) > SingularEpsilon)
+        if (float.Abs(cosPitch) > FloatMath.SingularEpsilon)
         {
             yawRad = float.Atan2(m02, m22);
             rollRad = float.Atan2(m10, m11);
@@ -78,7 +94,7 @@ public static class RotationMath
         else
         {
             // Gimbal singularity
-            if (m12 <= -1f + 1e-5f) // pitch near +90 deg
+            if (m12 <= -1f + FloatMath.DefaultEpsilon) // pitch near +90 deg
             {
                 pitchRad = MathF.PI / 2.0f;
                 yawRad = float.Atan2(m01, m00);
@@ -92,11 +108,10 @@ public static class RotationMath
             }
         }
 
-
         return new Vector3(
-            NormalizeAngleDeg(pitchRad * Rad2Deg),
-            NormalizeAngleDeg(yawRad * Rad2Deg),
-            NormalizeAngleDeg(rollRad * Rad2Deg)
+            NormalizeAngleDeg(pitchRad * FloatMath.Rad2Deg),
+            NormalizeAngleDeg(yawRad * FloatMath.Rad2Deg),
+            NormalizeAngleDeg(rollRad * FloatMath.Rad2Deg)
         );
     }
 

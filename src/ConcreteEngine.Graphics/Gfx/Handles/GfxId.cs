@@ -2,10 +2,20 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-public readonly record struct GfxId<TMeta>(ushort Id) : IComparable<GfxId<TMeta>> where TMeta : unmanaged, IResourceMeta
+public readonly record struct GfxId<TMeta> : IComparable<GfxId<TMeta>> where TMeta : unmanaged, IResourceMeta
 {
-    public GfxId(int id) : this((ushort)id) { }
+    public readonly ushort Id;
+    
+    public GfxId(ushort id)
+    {
+        Id = id;
+    }
 
+    public GfxId(int id)
+    {
+        Id = (ushort)id;
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal int Index() => Id - 1;
 

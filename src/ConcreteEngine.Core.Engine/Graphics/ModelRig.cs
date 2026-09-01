@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
@@ -8,9 +9,6 @@ namespace ConcreteEngine.Core.Engine.Graphics;
 
 public sealed class ModelRig : IDisposable
 {
-    private static ushort _idCounter;
-
-    public readonly Id16<ModelRig> Id = new(++_idCounter);
     public readonly int ClipCount;
     public readonly int BoneCount;
 
@@ -68,7 +66,20 @@ public sealed class ModelRig : IDisposable
     public ReadOnlySpan<byte> ParentIndices => _parentIndices;
     public ReadOnlySpan<Matrix4x4> BindPose => _bindPose;
     public ReadOnlySpan<Matrix4x4> InverseBindPose => _inverseBindPose;
+    public Matrix4x4[] BindPoseArray => _bindPose;
+    public Matrix4x4[] InverseBindPoseArray => _inverseBindPose;
+    public byte[] ParentIndicesArray => _parentIndices;
+    
     internal NativeClip GetClipView(int clip) => _clipsView[clip];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly Matrix4x4 GetInverseBindPose(int index) => ref Unsafe.Add(ref _inverseBindPose[0], index);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly Matrix4x4 GetBindPose(int index) => ref _bindPose[index];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public  byte GetParentIndex(int index) => _parentIndices[index];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal SkinningContext GetSkinningContext(int clip)

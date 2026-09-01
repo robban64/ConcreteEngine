@@ -1,9 +1,10 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.ECS.Render;
+using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Engine.RenderEntity;
-using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -41,14 +42,19 @@ internal sealed class DrawCommandProcessor
         _lastMaterialId = default;
     }
 
-    public void DrawSource(RenderSource source, RenderEntityId entity, int submitIndex)
+    public void DrawSource(RenderEntityCore.RenderEntityContext ctx, int submitIndex)
     {
         GfxCmd.BindUniformBufferRange<TransformUniform>(submitIndex, 1);
+
+        var source = ctx.Source;
 
         BindMaterial(source.Material);
 
         if ((source.DrawFlags & EntityDrawFlags.Skinned) != 0)
-            BindSkinningSlot(entity);
+        {
+            var slot = ctx.GetComponent<SkinningLink>().AnimationSlot;
+            BindSkinningSlot(slot);
+        }
 
         if ((source.DrawFlags & EntityDrawFlags.Instanced) == 0)
         {
@@ -56,38 +62,38 @@ internal sealed class DrawCommandProcessor
         }
         else
         {
-            var instances = RenderEcs.Store<DrawInstancedComponent>().Get(entity).Instances;
+            var instances = ctx.GetComponent<DrawInstancedComponent>().Instances;
             GfxCmd.DrawMeshInstanced(source.Mesh, instances);
         }
     }
 
-    public void BindSkinningSlot(RenderEntityId entity)
+    public void BindSkinningSlot(int slot)
     {
-        var slot = RenderEcs.Store<SkinningLink>().Get(entity).AnimationSlot;
-        if (slot != _lastAnimationSlot)
-        {
-            _lastAnimationSlot = slot;
-            var range = _animationSystem.GetSlotRange(slot - 1);
-            GfxCmd.BindUniformBufferRange<SkinningUniform>(range.Offset, range.Length);
-        }
+        if (slot == _lastAnimationSlot) return;
+        _lastAnimationSlot = slot;
+        var range = _animationSystem.GetSlotRange(slot - 1);
+        GfxCmd.BindUniformBufferRange<SkinningUniform>(range.Offset, range.Length);
     }
+
 
     public void BindMaterial(Id16<Material> materialId)
     {
         if (_lastMaterialId == materialId) return;
         _lastMaterialId = materialId;
 
-        GfxCmd.BindUniformBufferRange<MaterialUniform>(materialId.Index(), 1);
         var textureBindings = _materialSystem.GetMetaAndSlots(materialId, out var materialMeta);
+        
+        var gfxCmd = GfxCmd;
+        gfxCmd.BindUniformBufferRange<MaterialUniform>(materialId.Index, 1);
 
-        GfxCmd.ApplyState(materialMeta.DrawState);
-        GfxCmd.ApplyStateFunctions(materialMeta.DrawFunctions);
+        gfxCmd.ApplyState(materialMeta.DrawState);
+        gfxCmd.ApplyStateFunctions(materialMeta.DrawFunctions);
 
-        GfxCmd.UseShader(RenderContext.ResolveShader(materialMeta.ShaderId));
+        gfxCmd.UseShader(RenderContext.ResolveShader(materialMeta.ShaderId));
         foreach (var it in textureBindings)
         {
-            GfxCmd.BindTextureSlot(it.Texture, (byte)it.Slot);
-            GfxCmd.BindSampler(it.Profile, (byte)it.Slot);
+            gfxCmd.BindTextureSlot(it.Texture, (byte)it.Slot);
+            gfxCmd.BindSampler(it.Profile, (byte)it.Slot);
         }
     }
 }

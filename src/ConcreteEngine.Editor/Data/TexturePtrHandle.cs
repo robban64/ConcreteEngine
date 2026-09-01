@@ -9,6 +9,12 @@ internal readonly struct TexturePtrHandle(ImTextureRefPtr texturePtr, NativeHand
     public readonly ImTextureRefPtr TexturePtr = texturePtr;
     public readonly NativeHandle<TextureMeta> Handle = handle;
 
+    public readonly bool IsNull
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => TexturePtr.IsNull || Handle == 0;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe implicit operator ImTextureRef(TexturePtrHandle it) => *it.TexturePtr.Handle;
 

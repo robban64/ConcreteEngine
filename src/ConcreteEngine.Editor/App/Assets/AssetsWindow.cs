@@ -38,34 +38,35 @@ internal sealed unsafe class AssetsWindow : EditorWindow
     private AssetKind _assetFilter;
     private FileBinding _bindingsFilter;
 
-    private NativeString _breadcrumbs;
+    private readonly NativeString _breadcrumbs;
 
     public override ReadOnlySpan<byte> Id => WindowRoot.AssetWindowId;
 
     public AssetsWindow(StateManager state) : base(state)
     {
         _assetBrowser = new AssetBrowser(OnDirectoryChange);
-        _searchInput = new TextInput("search", 8, OnSearch) { AllowEmpty = true, Trim = true, Lowercase = true };
+        _breadcrumbs = StringArena.AllocateString(64);
+        _searchInput = new TextInput("search", 8, OnSearch) 
+            { AllowEmpty = true, Trim = true, Lowercase = true };
     }
-
-    private void OnSearch(Span<char> text) => _assetBrowser.Commit(text, _bindingsFilter, _assetFilter);
 
     protected override void OnCreate()
     {
-        _breadcrumbs = StringArena.AllocateString(64);
         _assetBrowser.BuildFullDirectory();
     }
+    
+    private void OnSearch(Span<char> text) => _assetBrowser.Commit(text, _bindingsFilter, _assetFilter);
 
     private void SelectAsset(AssetId id)
     {
-        _selectedFile = id.IsValid() ? AssetManager.Instance.GetAssetRootFile(id).Id : AssetFileId.Empty;
+        _selectedFile = id.IsValid ? AssetManager.Instance.GetAssetRootFile(id).Id : AssetFileId.Empty;
         _selectedAssetId = id;
     }
 
     private void OnListItemClick(AssetFileId fileId)
     {
-        if (!fileId.IsValid()) return;
-        if (!AssetManager.FileRegistry.TryGetFile(fileId, out var file) || !file.AssetRootId.IsValid()) return;
+        if (!fileId.IsValid) return;
+        if (!AssetManager.FileRegistry.TryGetFile(fileId, out var file) || !file.AssetRootId.IsValid) return;
         State.EnqueueEvent(new SelectionEvent(file.AssetRootId));
     }
 

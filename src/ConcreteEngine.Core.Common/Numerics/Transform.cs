@@ -10,14 +10,14 @@ public struct Transform
     public Quaternion Rotation;
     public Vector3 Scale;
 
-    public Transform(in Vector3 translation)
+    public Transform( Vector3 translation)
     {
         Translation = translation;
         Rotation = Quaternion.Identity;
         Scale = Vector3.One;
     }
 
-    public Transform(in Vector3 translation, in Vector3 scale, in Quaternion rotation)
+    public Transform( Vector3 translation,  Vector3 scale,  Quaternion rotation)
     {
         Translation = translation;
         Rotation = rotation;

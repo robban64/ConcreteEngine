@@ -48,6 +48,8 @@ public ref struct NativeAllocBuilder
     {
         return AllocSlice(Unsafe.SizeOf<T>() * amount).Reinterpret<T>();
     }
+
+
 }
 /*
     public NativeView<byte> AllocStringSlice(ReadOnlySpan<char> str, bool nullTerminated = true)

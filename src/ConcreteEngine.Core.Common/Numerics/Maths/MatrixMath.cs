@@ -69,9 +69,9 @@ public static class MatrixMath
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CreateModelMatrix(in Vector3 t, in Vector3 s, in Quaternion r, out Matrix4x4 dst)
+    public static void CreateModelMatrix(Vector3 t, Vector3 s, Quaternion r, out Matrix4x4 dst)
     {
-        CreateModelMatrix(new Transform(in t, in s, in r), out dst);
+        CreateModelMatrix(new Transform(t, s, r), out dst);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

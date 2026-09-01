@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Graphics.Gfx;
@@ -10,10 +11,11 @@ namespace ConcreteEngine.Core.Engine.Assets;
 public sealed class Material : AssetObject
 {
     public Id16<Material> MaterialId => State.MaterialId;
-    public MaterialProfileId ProfileId { get; private set; }
-
+    
     [InspectInclude] public readonly MaterialState State;
 
+
+    private MaterialProfileId _profileId;
     private TextureSource[] _textureSources = [];
 
     public override AssetCategory Category => AssetCategory.Renderer;
@@ -33,6 +35,14 @@ public sealed class Material : AssetObject
     {
         state?.WriteTo(State);
     }
+    
+    [InputCombo]
+    public MaterialProfileId ProfileId
+    {
+        get => _profileId;
+        set => SetProfile(value);
+    }
+
 
     public int SourceCount => _textureSources.Length;
     public ReadOnlySpan<TextureSource> GetSourceSpan() => _textureSources;
@@ -40,12 +50,12 @@ public sealed class Material : AssetObject
     public Shader BoundShader
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => AssetManager.GetMaterialProfile(ProfileId).Shader;
+        get => AssetManager.GetMaterialProfile(_profileId).Shader;
     }
 
     public void SetProfile(MaterialProfileId profileId)
     {
-        if (profileId == ProfileId) return;
+        if (profileId == _profileId) return;
         var profileEntry = AssetManager.GetMaterialProfile(profileId);
 
         if (profileEntry.SlotsCount != _textureSources.Length)
@@ -53,7 +63,7 @@ public sealed class Material : AssetObject
         else
             profileEntry.WriteSources(_textureSources);
 
-        ProfileId = profileId;
+        _profileId = profileId;
         State.SetFromProfile(profileEntry);
         MarkDirty(AssetDirtyFlag.Structure);
     }

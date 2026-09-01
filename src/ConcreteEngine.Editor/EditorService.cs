@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.App.CLI;
 using ConcreteEngine.Editor.App.Theme;
 using ConcreteEngine.Editor.Core;
@@ -57,14 +58,16 @@ internal sealed class EditorService
         _eventDispatcher.Register<ToolEvent>(EventHandler.OnToolEvent);
     }
 
+    private AvgFrameTimer avg;
     public void Draw()
     {
         AppLayout.PushFontText();
         _windowManager.Draw();
         ImGui.PopFont();
 
-        if (EditorInput.UpdateInputState(_selectionManager.HasSceneObject))
-            EditorTime.WakeUp();
+        bool shouldWakeUp = EditorInput.UpdateInputState(_selectionManager.HasSceneObject);
+        if (shouldWakeUp)
+            EditorTime.FullWakeUp();
 
         _interactionHandler.Update();
 

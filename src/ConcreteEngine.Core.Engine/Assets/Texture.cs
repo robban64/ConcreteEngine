@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Graphics.Gfx;
@@ -16,19 +17,38 @@ public sealed class Texture(
     TexturePixelFormat pixelFormat)
     : AssetObject(name, id, gid)
 {
+    
+    private TextureData? _textureData;
+
     public TextureId GfxId { get; } = gfxId;
-    public SamplerProfile Profile { get; } = profile;
+    public Size2D Size { get; } = size;
     public TextureKind TextureKind { get; } = textureKind;
     public TexturePixelFormat PixelFormat { get; } = pixelFormat;
 
-    public Size2D Size { get; } = size;
+    [InputCombo]
+    public SamplerProfile Profile
+    {
+        get;
+        set
+        {
+            if (value == field) return;
+            field = value;
+            MarkDirty(AssetDirtyFlag.State);
+        }
+    } = profile;
 
-    private TextureData? _textureData;
 
     //
     public override AssetCategory Category => AssetCategory.Graphic;
     public override AssetKind Kind => AssetKind.Texture;
 
+    public TextureSource MakeSource(SamplerSlot slot) => new(Id, GfxId, default, Profile, slot);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TextureId GetTextureIdOrDefault()
+    {
+        return GfxId.IsValid() ? GfxId : GfxTextures.Fallback.AlbedoId;
+    }
 
     public bool HasPixelData => _textureData is not null;
 

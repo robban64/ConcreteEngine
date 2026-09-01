@@ -4,10 +4,18 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.Assets.ImporterAssimp;
 
-internal struct MeshImportData
+internal sealed class MeshImportData
 {
     public NativeView<Vector3> Positions;
     public NativeView<VertexShading> Vertices;
     public NativeView<byte> Indices;
     public NativeView<SkinningData> Skinning;
+
+    public void Clear()
+    {
+        Positions = default;
+        Vertices = default;
+        Indices = default;
+        Skinning = default;
+    }
 }

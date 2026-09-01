@@ -23,11 +23,9 @@ public sealed class EditorPortal : IDisposable
 
     private EditorService _service = null!;
 
-
     public EditorPortal()
     {
         EditorInput.Layer = EngineInput.GetLayer(InputLayerKind.Ui);
-
         ImGuiKeyMapper.Init();
         ImGuiSystem.Setup(1);
     }
@@ -36,7 +34,9 @@ public sealed class EditorPortal : IDisposable
     public void Start()
     {
         if (Initialized) Throwers.InvalidOperation(nameof(Initialized));
-
+        
+        EditorTime.Initialize();
+        
         StyleMap.Create();
         StringArena.Create();
         ScratchBuffer.Create();
@@ -62,9 +62,9 @@ public sealed class EditorPortal : IDisposable
     public void UpdateInput() => ImGuiSystem.FillInput();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateGameTick(float deltaTime) => EditorCamera.Update(deltaTime);
+    public void UpdateGameTick(double deltaTime) => EditorCamera.Update(deltaTime);
 
-    public void Render(float deltaTime, TextureId outputTexture)
+    public void Render(double deltaTime, TextureId outputTexture)
     {
         if (!Initialized) return;
 

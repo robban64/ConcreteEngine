@@ -90,7 +90,7 @@ internal sealed class LogService : IDisposable
     {
         var offset = _head > 0 ? _logs[_head - 1].Handle.End + 1 : 0;
 
-        var sw = LogBufferText.SliceFrom(offset).Writer();
+        var sw = LogBufferText.SliceFrom(offset).AsWriter();
         sw.Append('[').Append(timestamp, "HH:mm:ss:ff").Append(']');
         sw.SetCursor(LogEntry.TimestampOffset);
         sw.Append(message.Truncate(LogStride - LogEntry.TimestampOffset));

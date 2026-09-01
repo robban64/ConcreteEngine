@@ -1,18 +1,14 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
+using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
 
-namespace ConcreteEngine.Core.Engine.RenderEntity;
+namespace ConcreteEngine.Core.Engine.ECS.Render;
 
-public static class RenderEcs
+public  static partial class RenderEcs
 {
     private const int DefaultRenderCap = 1024;
 
     public static readonly RenderEntityCore Core = new(DefaultRenderCap);
-    //public static readonly FrameEntityStore Frame = new(DefaultRenderCap);
-
     private static readonly List<IRenderEntityStore> All = new(8);
-    //private readonly List<Action<int>> _resizeCallbacks = [];
 
     public static int EntityCount => Core.Count;
     public static int ActiveCount => Core.ActiveCount;
@@ -39,11 +35,8 @@ public static class RenderEcs
 
     private static void CreateStore<T>(int capacity) where T : unmanaged, IRenderComponent<T>
     {
-        if (RenderEntityStore<T>.Instance != null!)
-            Throwers.InvalidArgument(nameof(T), "Store already initialized");
-
-        RenderEntityStore<T>.Instance = new RenderEntityStore<T>(capacity);
-        All.Add(RenderEntityStore<T>.Instance);
+        var store = new RenderEntityStore<T>(capacity);
+        All.Add(store);
     }
 
     public static void Dispose()

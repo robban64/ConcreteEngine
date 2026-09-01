@@ -44,20 +44,20 @@ internal sealed class EngineGateway : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void RenderEditor(float deltaTime)
+    public void RenderEditor(double deltaTime)
     {
         if (!Enabled) return;
         _editor.Render(deltaTime, RenderContext.OutputTexture);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateGameTick(float deltaTime)
+    public void UpdateGameTick(double deltaTime)
     {
         if (!Enabled) return;
         _editor.UpdateGameTick(deltaTime);
     }
 
-    public void UpdateDiagnostics(float delta)
+    public void UpdateDiagnostics()
     {
         if (!Enabled) return;
         Metrics.OnDiagnosticTick();

@@ -27,11 +27,11 @@ internal sealed unsafe class VisualSystem
         _gfx = gfx;
     }
 
-    public void UploadUniformBuffers(RenderResolver resolver, MaterialSystem materialSystem,
+    public void UploadUniformBuffers(RenderEntitySystem renderEntitySystem, MaterialSystem materialSystem,
         AnimationSystem animationSystem)
     {
         // Ensure ubo size
-        var drawCount = IntMath.AlignUp(resolver.VisibleCount, 64);
+        var drawCount = IntMath.AlignUp(renderEntitySystem.VisibleCount, 64);
         var materialCount = IntMath.AlignUp(materialSystem.Count, 16);
         var boneCount = IntMath.AlignUp(animationSystem.BoneCount, 64);
 
@@ -44,7 +44,7 @@ internal sealed unsafe class VisualSystem
         if (!GfxRegistry.GetMeta(SkinningUniform.UboId).HasCapacity(boneCount))
             _gfx.SetUniformBufferCount(SkinningUniform.UboId, boneCount);
 
-        var transforms = resolver.Transforms;
+        var transforms = renderEntitySystem.Transforms;
         if (transforms.Length > 0) _gfx.UploadUniform(transforms, 0);
 
         var materials = materialSystem.GetUniforms();
@@ -144,8 +144,8 @@ internal sealed unsafe class VisualSystem
         var data = new EngineUniformRecord(
             invResolution: EngineWindow.InvViewport,
             mouse: mouse,
-            deltaTime: EngineTime.DeltaTime,
-            time: EngineTime.Time,
+            deltaTime: EngineTime.DeltaTimeF,
+            time: EngineTime.TimeF,
             random: EngineTime.FrameRng
         );
 

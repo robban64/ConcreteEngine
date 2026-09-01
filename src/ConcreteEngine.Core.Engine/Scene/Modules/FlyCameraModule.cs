@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Engine.Input;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Core.Engine.Scene.Modules;
-
+/*
 public sealed class FlyCameraModule : GameModule
 {
     private const float BaseSpeed = 65f;
@@ -75,4 +75,4 @@ public sealed class FlyCameraModule : GameModule
         float t = 1.0f - MathF.Exp(-25 * fixedDt);
         _camera.Orientation = YawPitch.Lerp(_camera.Orientation, _targetOrientation, t);
     }
-}
+}*/

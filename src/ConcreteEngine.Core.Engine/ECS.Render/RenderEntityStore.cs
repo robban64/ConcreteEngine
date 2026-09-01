@@ -5,56 +5,59 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
 
-namespace ConcreteEngine.Core.Engine.RenderEntity;
+namespace ConcreteEngine.Core.Engine.ECS.Render;
 
 public interface IRenderEntityStore : IDisposable;
 
 public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore where T : unmanaged, IRenderComponent<T>
 {
-    public static RenderEntityStore<T> Instance { get; internal set; } = null!;
+    public static RenderEntityStore<T> Instance { get; private set; } = null!;
 
-    private static int GetAllocSize(int length) => length * (sizeof(RenderEntityId) + Unsafe.SizeOf<T>());
+    private static int GetAllocSize(int length) => length * (sizeof(RenderEntity) + Unsafe.SizeOf<T>());
 
     public bool IsDirty { get; private set; }
     public int Count { get; private set; }
     public int Capacity { get; private set; }
 
     private T* _components;
-    private RenderEntityId* _entities;
+    private RenderEntity* _entities;
 
     private NativeArray<byte> _memory;
 
-    private readonly List<RenderEntityId> _removedEntities = [];
+    private readonly List<RenderEntity> _removedEntities = [];
     private readonly List<IRenderComponentListener<T>> _listeners = [];
 
     public RenderEntityStore(int initialCapacity)
     {
+        if(Instance != null!) Throwers.InvalidOperation("Already  initialized");
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 16);
 
-        _memory = NativeArray.Allocate(GetAllocSize(initialCapacity));
-
-        var allocator = new NativeAllocBuilder(_memory);
-        _entities = allocator.AllocSlice<RenderEntityId>(initialCapacity);
-        _components = allocator.AllocSlice<T>(initialCapacity);
+        Instance = this;
+        
         Capacity = initialCapacity;
+
+        _memory = NativeArray.Allocate(GetAllocSize(initialCapacity));
+        var allocator = new NativeAllocBuilder(_memory);
+        _entities = allocator.AllocSlice<RenderEntity>(initialCapacity);
+        _components = allocator.AllocSlice<T>(initialCapacity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int FindIndex(RenderEntityId entity) =>
-        SearchMethod.BinarySearch(new ReadOnlySpan<RenderEntityId>(_entities, Count), entity);
+    private int FindIndex(RenderEntity entity) =>
+        SearchMethod.BinarySearch(new ReadOnlySpan<RenderEntity>(_entities, Count), entity);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int FindIndexLinear(RenderEntityId entity)
+    private int FindIndexLinear(RenderEntity entity)
     {
-        var view = EntitiesView().Reinterpret<int>();
-        return view.AsReadOnlySpan().IndexOf(entity.Id);
+        var span = EntitiesView().Reinterpret<ulong>().AsReadOnlySpan();
+        return span.IndexOf(RenderEntity.Pack(entity));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has(RenderEntityId entity) => FindIndexLinear(entity) >= 0;
+    public bool Has(RenderEntity entity) => FindIndexLinear(entity) >= 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntityId GetEntity(int index)
+    public RenderEntity GetEntity(int index)
     {
         if ((uint)index >= (uint)Count) Throwers.IndexOutOfRange(index, Count, nameof(index));
         return _entities[index];
@@ -68,10 +71,18 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T Get(RenderEntityId entity) => ref GetByIndex(FindIndex(entity));
+    public ref T Get(RenderEntity entity) => ref GetByIndex(FindIndex(entity));
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref T GetUnchecked(int entity)
+    {
+        var index = FindIndex(new RenderEntity(entity, 0));
+        return ref GetByIndex(index);
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T GetOrDefault(RenderEntityId entity)
+    public T GetOrDefault(RenderEntity entity)
     {
         var index = FindIndex(entity);
         if ((uint)index >= (uint)Count) return default;
@@ -79,7 +90,7 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGet(RenderEntityId entity, out ValueRef<T> value)
+    public bool TryGet(RenderEntity entity, out ValueRef<T> value)
     {
         var index = FindIndex(entity);
         if ((uint)index < (uint)Count)
@@ -93,20 +104,20 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<RenderEntityId> EntitiesView() => new(_entities, Count);
+    public NativeView<RenderEntity> EntitiesView() => new(_entities, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<T> ComponentsView() => new(_components, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<RenderEntityId> EntitySpan() => new(_entities, Count);
+    public Span<RenderEntity> EntitySpan() => new(_entities, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<T> ComponentSpan() => new(_components, Count);
 
-    public bool Add(RenderEntityId entity, in T value)
+    public bool Add(RenderEntity entity, in T value)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
+        if(!entity.IsValid) Throwers.InvalidArgument(nameof(entity));
         if (Has(entity)) return false;
         if (Count >= Capacity) EnsureCapacity(1);
 
@@ -124,9 +135,9 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
         return true;
     }
 
-    public bool Remove(RenderEntityId entity)
+    public bool Remove(RenderEntity entity)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
+        if(!entity.IsValid) Throwers.InvalidArgument(nameof(entity));
         if (!Has(entity)) return false;
         _removedEntities.Add(entity);
         IsDirty = true;

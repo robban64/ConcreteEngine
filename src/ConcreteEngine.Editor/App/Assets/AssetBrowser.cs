@@ -109,7 +109,7 @@ internal sealed class AssetBrowser
             if (assetFilter != AssetKind.Unknown)
             {
                 var rootId = file.AssetRootId;
-                if (!rootId.IsValid() || assetFilter != AssetManager.Assets.Get<AssetObject>(rootId).Kind)
+                if (!rootId.IsValid || assetFilter != AssetManager.Assets.Get<AssetObject>(rootId).Kind)
                     continue;
             }
 
@@ -141,7 +141,7 @@ internal sealed class AssetBrowser
         foreach (var file in FileRegistry.MakeSparseEnumerator(fileIds))
         {
             var kind = AssetKind.Unknown;
-            if (file.AssetRootId.IsValid()) kind = AssetManager.Assets.Get<AssetObject>(file.AssetRootId).Kind;
+            if (file.AssetRootId.IsValid) kind = AssetManager.Assets.Get<AssetObject>(file.AssetRootId).Kind;
 
             var icon = file.Binding.GetIcon(kind);
             span[count++] = new FileItem(file.LogicalName, file.Binding, file.Storage, icon);

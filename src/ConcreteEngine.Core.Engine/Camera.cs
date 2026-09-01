@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Core.Engine.Graphics;
+// ReSharper disable ReplaceWithFieldKeyword
 
 namespace ConcreteEngine.Core.Engine;
 
@@ -17,19 +18,20 @@ public sealed class Camera
     private const float MinFarPlane = 5f;
     private const float MaxFarPlane = 10_000f;
 
-    private const float MinFov = 10;
-    private const float MaxFov = 179;
+    private const float MinFov = 10f;
+    private const float MaxFov = 179f;
 
-    private const float DirtyThreshold = MetricUnits.Micrometer;
-
-    public long Version { get; private set; }
-    public bool IsDirty { get; private set; }
-    public float AspectRatio { get; private set; }
 
     internal readonly CameraTransform Transform;
 
-    private Vector3 _translation, _lastTranslation;
-    private YawPitch _orientation, _lastOrientation;
+    public bool IsDirty { get; private set; }
+    public float AspectRatio { get; private set; }
+
+    private float _fov = 70f;
+    private Vector2 _nearFarPlane = new(0.1f, 500f);
+
+    private Vector3D _translation, _lastTranslation;
+    private Vector2D _orientation, _lastOrientation;
 
     public Camera(Size2D viewport)
     {
@@ -50,22 +52,30 @@ public sealed class Camera
     [InputNumber]
     public Vector3 Translation
     {
-        get => _translation;
+        get => (Vector3)_translation;
         set
         {
-            if (VectorMath.DistanceNearlyEqual(value, _translation, DirtyThreshold)) return;
             _translation = value;
             IsDirty = true;
         }
     }
 
-    [InputNumber(IsFloat = true, Components = 2)]
-    public YawPitch Orientation
+    public Vector2D Orientation
     {
         get => _orientation;
         set
         {
-            if (YawPitch.NearlyEqual(value, _orientation)) return;
+            _orientation = value;
+            IsDirty = true;
+        }
+    }
+
+    [InputNumber(Label = "Orientation")]
+    public Vector2 OrientationF
+    {
+        get => (Vector2)_orientation;
+        set
+        {
             _orientation = value;
             IsDirty = true;
         }
@@ -74,27 +84,27 @@ public sealed class Camera
     [InputNumber(Label = "Near & Far")]
     public Vector2 NearFarPlane
     {
-        get;
+        get => _nearFarPlane;
         set
         {
-            if (VectorMath.NearlyEqual(value, field, MetricUnits.Millimeter)) return;
-            field.X = float.Min(float.Max(value.X, MinNearPlane), MaxNearPlane);
-            field.Y = float.Min(float.Max(value.Y, MinFarPlane), MaxFarPlane);
+            if (VectorMath.NearlyEqual(value, _nearFarPlane, MetricUnits.Millimeter)) return;
+            _nearFarPlane.X = float.Min(float.Max(value.X, MinNearPlane), MaxNearPlane);
+            _nearFarPlane.Y = float.Min(float.Max(value.Y, MinFarPlane), MaxFarPlane);
             IsDirty = true;
         }
-    } = new(0.1f, 500f);
+    }
 
     [InputNumber(InputStyle.Slider, Label = "Field of view", Min = 10f, Max = 179f)]
     public float Fov
     {
-        get;
+        get => _fov;
         set
         {
-            if (FloatMath.NearlyEqual(value, field, MetricUnits.Decimeter)) return;
-            field = float.Clamp(value, MinFov, MaxFov);
+            if (FloatMath.NearlyEqual(value, _fov, MetricUnits.Millimeter)) return;
+            _fov = float.Clamp(value, MinFov, MaxFov);
             IsDirty = true;
         }
-    } = 70;
+    }
 
 
     //
@@ -115,20 +125,20 @@ public sealed class Camera
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Interpolate(float alpha, out Vector3 translation, out YawPitch orientation)
+    internal void Interpolate(double alpha, out Vector3D translation, out Vector2D orientation)
     {
-        translation = Vector3.Lerp(_lastTranslation, _translation, alpha);
-        orientation = YawPitch.Lerp(_lastOrientation, _orientation, alpha);
+        translation = Vector3D.Lerp(_lastTranslation, _translation, alpha);
+        orientation = RotationMath.LerpYawPitch(_lastOrientation, _orientation, alpha);
     }
 
     internal bool Ensure()
     {
         if (!IsDirty) return false;
         IsDirty = false;
-        ++Version;
 
+        var translation = (Vector3)_translation;
         var quaternion = RotationMath.YawPitchToQuaternion(_orientation);
-        MatrixMath.CreateFixedSizeModelMatrix(_translation, in quaternion, out var modelMatrix);
+        MatrixMath.CreateFixedSizeModelMatrix(in translation, in quaternion, out var modelMatrix);
 
         ref var viewMatrix = ref Transform.ViewMatrix;
         Matrix4x4.Invert(modelMatrix, out viewMatrix);

@@ -40,13 +40,13 @@ internal static class WindowRoot
     {
         var vp = ImGuiSystem.MainViewportPtr;
 
-        WorkSize = vp.WorkSize with { Y = vp.WorkSize.Y - GuiTheme.TopbarHeight };
-        WorkPosition = vp.WorkPos with { Y = vp.WorkPos.Y + GuiTheme.TopbarHeight };
+        var workSize = WorkSize = vp.WorkSize with { Y = vp.WorkSize.Y - GuiTheme.TopbarHeight };
+        var workPos = WorkPosition = vp.WorkPos with { Y = vp.WorkPos.Y + GuiTheme.TopbarHeight };
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
 
-        ImGui.SetNextWindowSize(WorkSize);
-        ImGui.SetNextWindowPos(WorkPosition);
+        ImGui.SetNextWindowSize(workSize);
+        ImGui.SetNextWindowPos(workPos);
 
         ImGui.Begin("##Root"u8, null, DockWindowFlags);
         ImGui.PopStyleVar();
@@ -59,7 +59,7 @@ internal static class WindowRoot
         ImGui.End();
 
         var node = ImGuiP.DockBuilderGetNode(ViewportId);
-        if ((Vector2)EngineWindow.Viewport.Size != node.Size || EngineWindow.Viewport.Position != node.Pos)
+        if (EngineWindow.Viewport.Size != node.Size || EngineWindow.Viewport.Position != node.Pos)
             EngineWindow.SetViewport(new ViewportRect(node.Pos, node.Size));
     }
 

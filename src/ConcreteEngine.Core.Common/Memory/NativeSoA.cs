@@ -165,5 +165,5 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly PtrEnumerator<T1, T2, T3> GetEnumerator() => new(_ptr1, _ptr2, _ptr3, Length);
+    public readonly PtrEnumerator<T1, T2, T3> GetEnumerator() => new(View1, View2, View3);
 }

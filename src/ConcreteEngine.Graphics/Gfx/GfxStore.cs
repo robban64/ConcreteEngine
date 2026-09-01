@@ -19,20 +19,18 @@ internal interface IGfxResourceStore : IDisposable
     void BindOnUpdateCallback(Action<int> callback);
     StoreSample GetStoreSample();
 }
-
+internal struct GfxEntry<TMeta> where TMeta : unmanaged, IResourceMeta
+{
+    public NativeHandle<TMeta> Handle;
+    public TMeta Meta;
+}
 internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : unmanaged, IResourceMeta
 {
     public static GfxStore<TMeta> Instance = null!;
-
-    private struct Entry
-    {
-        public NativeHandle<TMeta> Handle;
-        public TMeta Meta;
-    }
-
+    
     public int Count { get; private set; }
 
-    private Entry* _entries;
+    private GfxEntry<TMeta>* _entries;
     private NativeArray<byte> _memory;
 
     private readonly Stack<int> _free;
@@ -48,8 +46,8 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
         if (Instance != null!) Throwers.InvalidOperation(nameof(Instance));
         Instance = this;
 
-        _memory = NativeArray.Allocate(initialCapacity * Unsafe.SizeOf<Entry>());
-        _entries = (Entry*)_memory.Ptr;
+        _memory = NativeArray.Allocate(initialCapacity * Unsafe.SizeOf<GfxEntry<TMeta>>());
+        _entries = (GfxEntry<TMeta>*)_memory.Ptr;
 
         _free = new Stack<int>();
     }
@@ -58,7 +56,7 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
 
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
-    public int Capacity => _memory.Length > 0 ? _memory.Length / Unsafe.SizeOf<Entry>() : 0;
+    public int Capacity => _memory.Length > 0 ? _memory.Length / Unsafe.SizeOf<GfxEntry<TMeta>>() : 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeHandle<TMeta> GetHandle(GfxId<TMeta> id) => _entries[id.Index()].Handle;
@@ -158,18 +156,18 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
     private void EnsureCapacity(int count)
     {
         var newCount = Count + count;
-        var sizeInBytes = newCount * Unsafe.SizeOf<Entry>();
+        var sizeInBytes = newCount * Unsafe.SizeOf<GfxEntry<TMeta>>();
         if (sizeInBytes <= _memory.Length) return;
 
         var newCap = CapacityUtils.CapacityGrowthToFit(_memory.Length, sizeInBytes);
-        if (newCap > GfxLimits.StoreLimit * Unsafe.SizeOf<Entry>())
+        if (newCap > GfxLimits.StoreLimit * Unsafe.SizeOf<GfxEntry<TMeta>>())
             Throwers.BufferOverflow(typeof(GfxStore<TMeta>).Name, newCap, GfxLimits.StoreLimit);
 
         GfxLog.Event(new LogEvent(0, 0, newCap, 0, 0, 0, LogTopic.ArrayBuffer, LogScope.Gfx, LogAction.Resize,
             LogLevel.Warn));
 
         _memory.ReAlloc(newCap, true);
-        _entries = (Entry*)_memory.Ptr;
+        _entries = (GfxEntry<TMeta>*)_memory.Ptr;
     }
 
 

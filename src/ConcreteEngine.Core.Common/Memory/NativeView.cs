@@ -24,12 +24,23 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
         EndPtr = endPtr;
     }
 
-    public int Length => (int)(EndPtr - Ptr);
     public int SizeInBytes => (int)((byte*)EndPtr - (byte*)Ptr);
+
+    public int Length
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (int)(EndPtr - Ptr);
+    }
+
 
     public bool IsNull => Ptr == null;
     public bool IsEmpty => Ptr == EndPtr;
-    public bool IsNullOrEmpty => Ptr == null || Ptr == EndPtr;
+
+    public bool IsNullOrEmpty
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Ptr == null || Ptr == EndPtr;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator T*(NativeView<T> array) => array.Ptr;
@@ -91,6 +102,7 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
     public void Clear()
     {
         if (IsNull) Throwers.NullPointer(nameof(Ptr));
+        if (IsEmpty) Throwers.InvalidOperation(nameof(IsEmpty));
         NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
     }
 
@@ -107,4 +119,5 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public PtrEnumerator<T> GetEnumerator() => new(this);
+    
 }

@@ -1,9 +1,9 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.ECS.Render;
+using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Terrains;
-using ConcreteEngine.Core.Engine.RenderEntity;
-using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -42,10 +42,12 @@ internal sealed class TerrainSystem
         {
             var chunk = MainTerrain.GetChunk(it.Slot);
 
-            var source = new RenderSource(it.TerrainMeshId, terrainMat);
+            var source = new DrawSource(it.TerrainMeshId, terrainMat);
             var drawPolicy = new DrawPolicy(DrawQueue.Terrain, PassMask.Default);
             var entity = RenderEcs.Core.AddEntity(source, drawPolicy);
-            RenderEcs.Core.GetWorldBounds(entity) = new BoundingAxisBox(in chunk.GetBounds());
+           var ctx = RenderEcs.Core.GetEntityContext(entity);
+
+           ctx.WorldBounds = new BoundingAxisBox(in chunk.GetBounds());
         }
     }
 
@@ -56,10 +58,12 @@ internal sealed class TerrainSystem
         {
             var chunk = MainTerrain.GetChunk(it.Slot);
 
-            var source = new RenderSource(it.FoliageMeshId, mat, flags: EntityDrawFlags.Instanced);
+            var source = new DrawSource(it.FoliageMeshId, mat, flags: EntityDrawFlags.Instanced);
             var drawPolicy = new DrawPolicy(DrawQueue.Transparent, PassMask.Default);
             var entity = RenderEcs.Core.AddEntity(source, drawPolicy);
-            RenderEcs.Core.GetWorldBounds(entity) = new BoundingAxisBox(in chunk.GetBounds());
+            var ctx = RenderEcs.Core.GetEntityContext(entity);
+
+            ctx.WorldBounds = new BoundingAxisBox(in chunk.GetBounds());
 
             var component = new DrawInstancedComponent { Instances = (uint)it.FoliageCount };
             RenderEcs.Store<DrawInstancedComponent>().Add(entity, component);

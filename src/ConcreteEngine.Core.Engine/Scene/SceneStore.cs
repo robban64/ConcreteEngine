@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.ECS.Render;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -17,14 +18,18 @@ public sealed class SceneStore
     public int Count { get; private set; }
 
     private SceneObject?[] _sceneObjects = new SceneObject?[DefaultCapacity];
-
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
+    private SceneObjectId[] _renderToSceneId;
 
     private readonly Dictionary<Guid, IBlueprint> _blueprints = new(128);
 
     private readonly Stack<int> _free = [];
 
-    internal SceneStore() { }
+    internal SceneStore(int renderEntityCapacity)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(renderEntityCapacity, 32);
+        _renderToSceneId = new SceneObjectId[renderEntityCapacity];
+    }
 
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
@@ -33,49 +38,43 @@ public sealed class SceneStore
     private SceneObjectId AllocateSlot()
     {
         var freeIndex = SlotHelper.NextSlot(_free, Count);
-        if (freeIndex >= 0) return new SceneObjectId(freeIndex + 1, 1);
+        if (freeIndex >= 0) return new SceneObjectId(freeIndex, 1);
 
         if (SlotHelper.EnsureCapacity(ref _sceneObjects, Count, 1, out var oldSize))
             Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetFileRegistry), oldSize,
                 _sceneObjects.Length));
 
-        return new SceneObjectId(++Count, 1);
+        return new SceneObjectId(Count++, 1);
     }
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(SceneObjectId id)
     {
-        var index = id.Index();
-        return (uint)index < (uint)_sceneObjects.Length && _sceneObjects[index]?.Id == id;
+        return (uint)id.Id < (uint)_sceneObjects.Length && _sceneObjects[id.Id]?.Id == id;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SceneObject Get(SceneObjectId id)
     {
-        var it = _sceneObjects[id.Index()];
+        var it = _sceneObjects[id.Id];
         if (it?.Id != id) Throwers.InvalidHandle(id);
         return it;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal SceneObject GetInternal(int id)
-    {
-        var index = id - 1;
-        return _sceneObjects[index]!;
-    }
+    internal SceneObject GetUnsafe(int id) => _sceneObjects[id]!;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGet(SceneObjectId id, [NotNullWhen(true)] out SceneObject? sceneObject)
     {
-        var index = id.Index();
-        if ((uint)index >= (uint)_sceneObjects.Length)
+        if ((uint)id.Id >= (uint)_sceneObjects.Length)
         {
             sceneObject = null;
             return false;
         }
 
-        if (_sceneObjects[index] is { } file && file.Id == id)
+        if (_sceneObjects[id.Id] is { } file && file.Id == id)
         {
             sceneObject = file;
             return true;
@@ -99,7 +98,39 @@ public sealed class SceneStore
         return _byName.TryGetValue(name, out var id) && TryGet(id, out sceneObject);
     }
 
+    public SceneObject GetByLinkedEntity(int e)
+    {
+        var id = GetIdByLinkedEntity(e);
+        return Get(id);
+    }
+
+    public SceneObjectId GetIdByLinkedEntity(int e)
+    {
+        if ((uint)e >= (uint)_renderToSceneId.Length)
+            Throwers.IndexOutOfRange(e, _renderToSceneId.Length, nameof(e));
+
+        var sceneId = _renderToSceneId[e];
+        if (!sceneId.IsValid) Throwers.InvalidHandle(e);
+        return sceneId;
+    }
+
+    public bool IsLinkedEntity(int e) =>
+        (uint)e < (uint)_renderToSceneId.Length && _renderToSceneId[e].IsValid;
+
+    internal void BindSceneRenderEntity(SceneObjectId id, RenderEntity e, int capacity)
+    {
+        if (_renderToSceneId.Length < capacity) Array.Resize(ref _renderToSceneId, capacity);
+        
+        ref var it = ref _renderToSceneId[e.Id];
+        if(it.IsValid) Throwers.InvalidArgument("RenderEntity already bound to SceneObject");
+        it = id;
+    }
+
+    internal void UnbindSceneRenderEntity(RenderEntity e) => _renderToSceneId[e.Id] = default;
+
+    //
     internal void RegisterBlueprint(IBlueprint blueprint) => _blueprints.TryAdd(blueprint.GId, blueprint);
+    
 
     //
     public void Rename(SceneObject sceneObject, string newName)
@@ -124,7 +155,7 @@ public sealed class SceneStore
         if (!_byName.TryAdd(name, id))
             _byName.Add(MakeName(name), id);
 
-        var sceneObject = _sceneObjects[id.Index()] = new SceneObject(id, gid, name, enabled);
+        var sceneObject = _sceneObjects[id.Id] = new SceneObject(id, gid, name, enabled);
 
         foreach (var bp in blueprints)
         {

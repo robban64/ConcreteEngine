@@ -2,13 +2,14 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine.ECS.Render;
+using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
-using ConcreteEngine.Core.Engine.RenderEntity;
-using ConcreteEngine.Core.Engine.RenderEntity.RenderComponent;
 using static ConcreteEngine.Engine.Render.RenderLimits;
 
 namespace ConcreteEngine.Engine.Systems;
@@ -27,6 +28,8 @@ internal sealed unsafe class AnimationSystem : IDisposable
     private NativeArray<Matrix4x4> _scratchGlobals;
 
     private readonly AnimationManager _animations;
+
+    private readonly List<Id16<AnimationInstance>> _animationIds = new(32);
 
     internal AnimationSystem(AnimationManager animations)
     {
@@ -53,24 +56,33 @@ internal sealed unsafe class AnimationSystem : IDisposable
         BoneCount = 0;
     }
 
-    public void Simulate(float dt)
+    public void Simulate(double dt)
     {
         foreach (var it in _animations) it.AdvanceTime(dt);
     }
 
-    public void Execute(float alpha)
+    public void Execute(double alpha)
     {
-        int slot = 1;
+        _animationIds.Clear();
+
         foreach (var animation in _animations)
         {
-            var count = FilterEntities(slot, animation.GetEntitySpan());
+            var count = FilterEntities(_animationIds.Count + 1, animation.GetEntitySpan());
             if (count == 0) continue;
 
-            var time = animation.Interpolate(alpha);
-            WriteSkinned(animation.GetSkinningContext(), time);
-            ++slot;
+            animation.Interpolate(alpha);
+            _animationIds.Add(animation.Id);
+        }
+
+        foreach (var id in _animationIds.AsSpan())
+        {
+            var animation = _animations.Get(id);
+            var time = (float)animation.Time;
+            UpdateSkinned(animation.Rig, animation.ActiveClip, time);
+            WriteSkeleton(animation.Rig);
         }
     }
+
 
     public void Dispose()
     {
@@ -78,7 +90,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
         _boneBuffer.Dispose();
     }
 
-    private static int FilterEntities(int slot, ReadOnlySpan<RenderEntityId> entities)
+    private static int FilterEntities(int slot, ReadOnlySpan<RenderEntity> entities)
     {
         var count = 0;
         foreach (var query in RenderEcs.Store<SkinningLink>().SparseQuery(entities))
@@ -103,18 +115,16 @@ internal sealed unsafe class AnimationSystem : IDisposable
         return _boneBuffer.Slice(range);
     }
 
-
-    private void WriteSkinned(SkinningContext ctx, float time)
+    private void UpdateSkinned(ModelRig rig, int clipIndex, float time)
     {
         var globals = _scratchGlobals.Ptr;
-        var track = ctx.Tracks.BoneTracks;
-        var length = ctx.Tracks.Length;
-
+        var track = rig.GetClipView(clipIndex).BoneTracks;
+        var length = rig.BoneCount;
         for (var i = 0; i < length; ++i, ++track, ++globals)
         {
             if (track->IsEmpty)
             {
-                *globals = ctx.GetBindPose(i);
+                *globals = rig.GetBindPose(i);
                 continue;
             }
 
@@ -126,17 +136,25 @@ internal sealed unsafe class AnimationSystem : IDisposable
 
             MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out *globals);
         }
+    }
 
-        globals = _scratchGlobals.Ptr;
-        var dst = NextSkinningView(length).Ptr;
-        MatrixMath.MultiplyAffine(ref *++dst, in ctx.GetInverseBindPose(0), in globals[0]);
-        for (var i = 1; i < length; ++i, ++dst)
+    private void WriteSkeleton(ModelRig rig)
+    {
+        var length = rig.BoneCount;
+        var indices = rig.ParentIndicesArray.AsSpan(0, length);
+        var inverseBindPoses = rig.InverseBindPoseArray.AsSpan(0, length);
+        var globals = _scratchGlobals.Ptr;
+        var dst = NextSkinningView(length);
+
+        MatrixMath.MultiplyAffine(ref dst[0], in inverseBindPoses[0], in globals[0]);
+        for (var i = 1; i < indices.Length; ++i)
         {
-            var p = ctx.GetParentIndices(i);
+            var p = indices[i];
             MatrixMath.MultiplyAffine(ref globals[i], in globals[p]);
-            MatrixMath.MultiplyAffine(ref *dst, in ctx.GetInverseBindPose(i), in globals[i]);
+            MatrixMath.MultiplyAffine(ref dst[i], in inverseBindPoses[i], in globals[i]);
         }
     }
+
 
     private void EnsureBoneCapacity(int length)
     {
@@ -185,7 +203,6 @@ internal sealed unsafe class AnimationSystem : IDisposable
         var i1 = times[index + 1];
         return (time - i0) / (i1 - i0);
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int FindIndex(NativeView<float> keys, float time)

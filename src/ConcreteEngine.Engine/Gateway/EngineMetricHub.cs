@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.RenderEntity;
+using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Graphics.Diagnostic;
@@ -57,7 +57,7 @@ internal sealed class EngineMetricHub
     {
         if (_metricSystem == null) return;
 
-        var frameMeta = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha);
+        var frameMeta = new FrameMeta(EngineTime.FrameId, EngineTime.FpsF, EngineTime.GameAlphaF);
         var sceneMeta = new SceneMeta(
             SceneManager.SceneStore.ActiveCount,
             0,

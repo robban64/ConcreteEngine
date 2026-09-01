@@ -46,19 +46,20 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
         return new RenderEntity(entityId, _generations[entityId]);
     }
 
-    //TODO
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntityContext GetContext(int entityId)
-    {
-        return new RenderEntityContext(CreateHandle(entityId), _entityDataStore);
-    }
-    
+    public RenderEntityContext GetEntityContext(int entity) => new(CreateHandle(entity), _entityDataStore);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public RenderEntityContext GetEntityContext(RenderEntity entity) => new(entity, _entityDataStore);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public RenderEntityHandleContext GetHandleContext() => new(_generations.Slice(0, Count));
+
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetStatus(RenderEntity entity, EntityDrawStatus status)
     {
         if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
-        ref var policy = ref GetPolicy(entity);
+        ref var policy = ref _entityDataStore.GetPolicy(entity.Id);
         var newPolicy = policy.WithStatus(status);
         policy = newPolicy;
     }
@@ -67,8 +68,8 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
     public void ToggleDrawFlag(RenderEntity entity, EntityDrawFlags flag, bool enabled)
     {
         if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
-        if (enabled) GetSource(entity).DrawFlags |= flag;
-        else GetSource(entity).DrawFlags &= ~flag;
+        if (enabled) _entityDataStore.GetSource(entity.Id).DrawFlags |= flag;
+        else _entityDataStore.GetSource(entity.Id).DrawFlags &= ~flag;
     }
 
 

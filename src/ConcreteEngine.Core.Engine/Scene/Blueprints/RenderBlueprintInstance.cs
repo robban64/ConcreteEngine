@@ -46,9 +46,10 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
     {
         foreach (var entity in GetRenderEntities())
         {
-            var materialId = RenderEcs.Core.GetSource(entity).Material;
+            var ctx = RenderEcs.Core.GetEntityContext(entity);
+            var materialId = ctx.Source.Material;
             if (materialId > 0 && materialId != material.MaterialId) continue;
-            RenderEcs.Core.GetPolicy(entity) = new DrawPolicy(material.DrawQueue, material.Passes);
+            ctx.Policy = new DrawPolicy(material.DrawQueue, material.Passes);
         }
     }
 

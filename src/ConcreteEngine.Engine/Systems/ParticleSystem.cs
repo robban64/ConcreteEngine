@@ -36,10 +36,13 @@ internal sealed class ParticleSystem : IDisposable
 
     internal void Commit()
     {
+        if (!_particleManager.HasPendingEmitters) return;
+
+        _particleManager.CommitEmitters();
         if (_particleManager.HasPendingEmitters)
             CommitPending();
 
-        _particleManager.CommitEmitters();
+        _particleManager.ClearPendingEmitters();
     }
 
     private void CommitPending()
@@ -52,8 +55,6 @@ internal sealed class ParticleSystem : IDisposable
             var meshId = _particleMesh.GetHandle(slot).MeshId;
             emitter.Attach(slot, meshId);
         }
-
-        _particleManager.ClearPendingEmitters();
     }
 
     public void Dispose()
@@ -81,7 +82,7 @@ internal sealed class ParticleSystem : IDisposable
             _processedEmitters.Add(it.Component.EmitterId);
         }
 
-        if (avg.Ticks > 40*2) avg.ResetAndPrint("CPU");
+        if (avg.Ticks > 40 * 2) avg.ResetAndPrint("CPU");
     }
 
     private AvgFrameTimer avg, avg2;
@@ -98,7 +99,7 @@ internal sealed class ParticleSystem : IDisposable
             _particleMesh.UploadGpuData(emitter.BoundSlot, emitter.ParticleCount);
         }
 
-        if (avg2.Ticks > 80*2) avg2.ResetAndPrint("GPU");
+        if (avg2.Ticks > 80 * 2) avg2.ResetAndPrint("GPU");
     }
 
     [SkipLocalsInit]
@@ -108,15 +109,17 @@ internal sealed class ParticleSystem : IDisposable
         ref var start = ref MemoryMarshal.GetArrayDataReference(emitterData.Lut);
         foreach (var it in ParticleEnumerator(emitterData.ParticleState))
         {
-            var idx = (byte)float.FusedMultiplyAdd(*invLife++, 255f, 0.5f);
-            var lut = Unsafe.Add(ref start, idx);
-
-            var pos = it.Item1.Position + it.Item1.Velocity * timeOffset;
-            pos.W = lut.Size;
-            it.Item2 = new ParticleVertex(in pos, lut.Color);
+            var position128 = Vector128.FusedMultiplyAdd(
+                Unsafe.BitCast<Vector4, Vector128<float>>(it.Item1.Velocity),
+                Vector128.Create(timeOffset),
+                Unsafe.BitCast<Vector4, Vector128<float>>(it.Item1.Position));
+            
+            position128.StoreUnsafe(ref Unsafe.As<ParticleVertex, float>(ref it.Item2));
+            Unsafe.As<float, ParticleLut>(ref it.Item2.Size) = Unsafe.Add(ref start, *invLife++);
         }
-    }
 
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private PtrEnumerator<ParticleState, ParticleVertex> ParticleEnumerator(NativeView<ParticleState> particles) =>
         new(particles, _particleMesh.GetBufferView(particles.Length));

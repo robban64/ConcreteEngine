@@ -38,49 +38,43 @@ public sealed class SceneStore
     private SceneObjectId AllocateSlot()
     {
         var freeIndex = SlotHelper.NextSlot(_free, Count);
-        if (freeIndex >= 0) return new SceneObjectId(freeIndex + 1, 1);
+        if (freeIndex >= 0) return new SceneObjectId(freeIndex, 1);
 
         if (SlotHelper.EnsureCapacity(ref _sceneObjects, Count, 1, out var oldSize))
             Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetFileRegistry), oldSize,
                 _sceneObjects.Length));
 
-        return new SceneObjectId(++Count, 1);
+        return new SceneObjectId(Count++, 1);
     }
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(SceneObjectId id)
     {
-        var index = id.Index;
-        return (uint)index < (uint)_sceneObjects.Length && _sceneObjects[index]?.Id == id;
+        return (uint)id.Id < (uint)_sceneObjects.Length && _sceneObjects[id.Id]?.Id == id;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SceneObject Get(SceneObjectId id)
     {
-        var it = _sceneObjects[id.Index];
+        var it = _sceneObjects[id.Id];
         if (it?.Id != id) Throwers.InvalidHandle(id);
         return it;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal SceneObject GetUnsafe(int id)
-    {
-        var index = id - 1;
-        return _sceneObjects[index]!;
-    }
+    internal SceneObject GetUnsafe(int id) => _sceneObjects[id]!;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGet(SceneObjectId id, [NotNullWhen(true)] out SceneObject? sceneObject)
     {
-        var index = id.Index;
-        if ((uint)index >= (uint)_sceneObjects.Length)
+        if ((uint)id.Id >= (uint)_sceneObjects.Length)
         {
             sceneObject = null;
             return false;
         }
 
-        if (_sceneObjects[index] is { } file && file.Id == id)
+        if (_sceneObjects[id.Id] is { } file && file.Id == id)
         {
             sceneObject = file;
             return true;
@@ -161,7 +155,7 @@ public sealed class SceneStore
         if (!_byName.TryAdd(name, id))
             _byName.Add(MakeName(name), id);
 
-        var sceneObject = _sceneObjects[id.Index] = new SceneObject(id, gid, name, enabled);
+        var sceneObject = _sceneObjects[id.Id] = new SceneObject(id, gid, name, enabled);
 
         foreach (var bp in blueprints)
         {

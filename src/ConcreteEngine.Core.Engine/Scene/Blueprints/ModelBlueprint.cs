@@ -83,22 +83,27 @@ public sealed class ModelInstance : RenderBlueprintInstance
         var globalBounds = BoundingBox.Infinite;
         foreach (var entity in GetRenderEntities())
         {
-            var meshIndex = RenderEcs.Core.GetSource(entity).MeshIndex;
+            var ctx = RenderEcs.Core.GetEntityContext(entity);
+            var meshIndex = ctx.Source.MeshIndex;
 
             //MatrixMath.CreateModelMatrix(in Ecs.Render.Core.GetLocalTransform(entity), out var worldMatrix);
             //MatrixMath.MultiplyAffine(ref worldMatrix, in rootMatrix);
 
-            ref var finalMatrix = ref RenderEcs.Core.GetModelMatrix(entity);
-            if (IsAnimated)
-                finalMatrix = rootMatrix;
-            else
-                MatrixMath.MultiplyAffine(ref finalMatrix, in Model.GetMesh(meshIndex).Transform, in rootMatrix);
+            ref var transform = ref ctx.Transform;
 
-            MatrixMath.CreateNormalMatrix(ref RenderEcs.Core.GetNormalMatrix(entity), in finalMatrix);
+            if (IsAnimated)
+                transform.Model = rootMatrix;
+            else
+            {
+                var mesh = Model.GetMesh(meshIndex);
+                MatrixMath.MultiplyAffine(ref transform.Model, in mesh.Transform, in rootMatrix);
+            }
+
+            MatrixMath.CreateNormalMatrix(ref transform.Normal, in transform.Model);
 
             ref readonly var localBounds = ref Model.GetMesh(meshIndex).Bounds;
-            BoundingAxisBox.GetWorldBounds(in localBounds, in finalMatrix, out var entityBounds);
-            RenderEcs.Core.GetWorldBounds(entity) = entityBounds;
+            BoundingAxisBox.GetWorldBounds(in localBounds, in transform.Model, out var entityBounds);
+            ctx.WorldBounds = entityBounds;
             globalBounds.Expand(in entityBounds);
         }
 

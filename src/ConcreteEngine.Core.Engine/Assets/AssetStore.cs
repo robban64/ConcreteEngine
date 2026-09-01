@@ -58,17 +58,16 @@ public sealed partial class AssetStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(AssetId id)
     {
-        var index = id.Index;
-        return (uint)index < (uint)_assets.Length && _assets[index]?.Id == id;
+        return (uint)id.Id < (uint)_assets.Length && _assets[id.Id]?.Id == id;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal AssetObject GetUnsafe(int id) => _assets[id - 1]!;
+    internal AssetObject GetUnsafe(int id) => _assets[id]!;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T Get<T>(AssetId id) where T : AssetObject
     {
-        if (_assets[id.Index] is T tAsset && tAsset.Id == id) return tAsset;
+        if (_assets[id.Id] is T tAsset && tAsset.Id == id) return tAsset;
         Throwers.NotFoundBy(nameof(T), id);
         return null;
     }
@@ -89,9 +88,8 @@ public sealed partial class AssetStore
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGet<T>(AssetId id, [NotNullWhen(true)] out T? asset) where T : AssetObject
-    {
-        var index = id.Index;
-        if ((uint)index >= (uint)_assets.Length || _assets[index] is not T tAsset || tAsset.Id != id)
+    { 
+        if ((uint)id.Id >= (uint)_assets.Length || _assets[id.Id] is not T tAsset || tAsset.Id != id)
         {
             asset = null;
             return false;
@@ -123,17 +121,17 @@ public sealed partial class AssetStore
     //
     public bool HasBinding(AssetId id)
     {
-        var index = id.Index;
-        return (uint)index < (uint)_bindings.Length && _bindings[index] != null;
+        return (uint)id.Id < (uint)_bindings.Length && _bindings[id.Id] != null;
     }
 
     internal void SetAssetBinding(AssetId assetId, AssetFileId fileId, int fileIndex)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Id);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fileId.Id);
-
-        var fileBinding = _bindings[assetId.Index]!;
-        if (fileBinding[fileIndex].Id > 0)
+        ArgumentOutOfRangeException.ThrowIfNegative(fileIndex);
+        if(!assetId.IsValid) Throwers.InvalidArgument(nameof(assetId));
+        if(!fileId.IsValid) Throwers.InvalidArgument(nameof(fileId));
+        
+        var fileBinding = _bindings[assetId.Id]!;
+        if (fileBinding[fileIndex].IsValid)
             Throwers.InvalidArgument($"File {fileIndex}:{fileId} already set for asset {assetId}");
 
         fileBinding[fileIndex] = fileId;
@@ -142,7 +140,7 @@ public sealed partial class AssetStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetFileId GetAssetBinding(AssetId id, int fileIndex)
     {
-        var bindings = _bindings[id.Index];
+        var bindings = _bindings[id.Id];
         if (bindings is null || (uint)fileIndex >= (uint)bindings.Length) Throwers.InvalidArgument(nameof(id));
         var fileId = bindings[fileIndex];
         if (!fileId.IsValid) Throwers.InvalidArgument(nameof(fileIndex));
@@ -151,12 +149,11 @@ public sealed partial class AssetStore
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<AssetFileId> GetAllAssetBindings(AssetId id) =>
-        _bindings[id.Index] ?? throw new ArgumentException($"Bindings not found for {id}");
+        _bindings[id.Id] ?? throw new ArgumentException($"Bindings not found for {id}");
 
     public bool TryGetFileBindings(AssetId id, out ReadOnlySpan<AssetFileId> bindings)
     {
-        var index = id.Index;
-        if ((uint)index >= (uint)_bindings.Length || _bindings[index] is not { } fileBinding)
+        if ((uint)id.Id >= (uint)_bindings.Length || _bindings[id.Id] is not { } fileBinding)
         {
             bindings = default;
             return false;
@@ -171,7 +168,7 @@ public sealed partial class AssetStore
     public void AddAsset<TAsset>(TAsset asset) where TAsset : AssetObject
     {
         ArgumentNullException.ThrowIfNull(asset);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Id);
+        if(!asset.Id.IsValid) Throwers.InvalidArgument(nameof(asset));
         ArgumentOutOfRangeException.ThrowIfEqual(asset.GId, Guid.Empty);
 
         if (Has(asset.Id))
@@ -180,7 +177,7 @@ public sealed partial class AssetStore
         if (TypeStore<TAsset>.Store.HasName(asset.Name))
             asset.Name = AssetNameUtils.IncrementName(asset.Name, typeof(TAsset), NameExistsDel);
 
-        _assets[asset.Id.Index] = asset;
+        _assets[asset.Id.Id] = asset;
         TypeStore<TAsset>.Store.Add(asset);
         MarkDirty(asset);
     }
@@ -192,14 +189,14 @@ public sealed partial class AssetStore
         ArgumentOutOfRangeException.ThrowIfGreaterThan(fileCount, 16);
 
         var assetId = AllocateSlot(gid);
-        _bindings[assetId.Index] = new AssetFileId[fileCount + 1];
+        _bindings[assetId.Id] = new AssetFileId[fileCount+1];
         return assetId;
     }
 
     private AssetId AllocateSlot(Guid gid)
     {
         var freeIndex = SlotHelper.NextSlot(_free, Count);
-        if (freeIndex >= 0) return new AssetId(freeIndex + 1, 1);
+        if (freeIndex >= 0) return new AssetId(freeIndex, 1);
 
         if (SlotHelper.EnsureCapacity(ref _assets, Count, 1, out var oldSize))
         {
@@ -207,7 +204,7 @@ public sealed partial class AssetStore
             Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(AssetStore), oldSize, _assets.Length));
         }
 
-        var assetId = new AssetId(++Count, 1);
+        var assetId = new AssetId(Count++, 1);
         _byGid.Add(gid, assetId);
         return assetId;
     }

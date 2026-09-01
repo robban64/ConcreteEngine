@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
@@ -81,7 +82,7 @@ public sealed class SceneManager
 
     internal void MarkDirty(SceneObjectId sceneObjectId)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sceneObjectId.Id, nameof(sceneObjectId));
+        if(!sceneObjectId.IsValid) Throwers.InvalidArgument(nameof(sceneObjectId));
         _dirtyIds.TryAddUniqueSorted(sceneObjectId.Id);
     }
 

@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using System.Text.Json.Serialization;
 
 namespace ConcreteEngine.Core.Common.Numerics;
@@ -52,4 +54,25 @@ public struct ColorRgba(byte r, byte g, byte b, byte a = 255) : IEquatable<Color
     public static ColorRgba White => new(255, 255, 255);
     public static ColorRgba Black => new(0, 0, 0);
     public static ColorRgba Transparent => new(0, 0, 0, 0);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ColorRgba LerpSse(ColorRgba a, ColorRgba b, byte t)
+    {
+        var va = Sse41.ConvertToVector128Int32(
+            Vector128.CreateScalarUnsafe(Unsafe.As<ColorRgba, uint>(ref a)).AsByte());
+        var vb = Sse41.ConvertToVector128Int32(
+            Vector128.CreateScalarUnsafe(Unsafe.As<ColorRgba, uint>(ref b)).AsByte());
+
+        var vt = Vector128.Create((int)t);
+
+        var lerped = Sse2.Add(va, Sse2.ShiftRightArithmetic(Sse41.MultiplyLow(Sse2.Subtract(vb, va), vt), 8));
+
+        var packed = Sse2.PackUnsignedSaturate(
+            Sse2.PackSignedSaturate(lerped, Vector128<int>.Zero),
+            Vector128<short>.Zero);
+
+        uint scalar = packed.AsUInt32().ToScalar();
+        return Unsafe.As<uint, ColorRgba>(ref scalar);
+    }
+
 }

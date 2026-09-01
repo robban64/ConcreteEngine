@@ -24,20 +24,19 @@ public sealed class Skybox
             nameof(material));
 
         Material = material;
-
-        if (!_entity.IsValid)
+        bool isValid = _entity.IsValid;
+        if (!isValid)
         {
             _entity = RenderEcs.Core.AddEntity(
                 new DrawSource(MeshId, material.MaterialId),
                 new DrawPolicy(DrawQueue.Skybox, PassMask.Main));
-
-            RenderEcs.Core.GetWorldBounds(_entity) = default;
+            
         }
-        else
-        {
-            RenderEcs.Core.GetSource(_entity).Material = material.MaterialId;
-        }
+        
+        var context = RenderEcs.Core.GetEntityContext(_entity);
+        if(isValid)
+            context.Source.Material = material.MaterialId;
 
-        RenderEcs.Core.SetStatus(_entity, EntityDrawStatus.AlwaysVisible);
+        context.SetStatus(EntityDrawStatus.AlwaysVisible);
     }
 }

@@ -22,26 +22,26 @@ internal static partial class PassPipeline
 
         foreach (var query in RenderEcs.Store<SelectionComponent>().VisibilityQuery())
         {
-            var source = RenderEcs.Core.GetSource(query.Entity);
+            var entityContext = RenderEcs.Core.GetEntityContext(query.Entity);
 
-            *effect = new EditorEffectsUniform(source.IsSkinned(), query.Component.HighlightColor);
+            *effect = new EditorEffectsUniform(entityContext.Source.IsSkinned(), query.Component.HighlightColor);
 
-            uniform->Model = RenderEcs.Core.GetModelMatrix(query.Entity);
+            uniform->Model = entityContext.Transform.Model;
             uniform->Normal = Matrix3X4.Identity;
 
             ctx.GfxBuffers.UploadSingleUniform(effect, 0);
             ctx.GfxBuffers.UploadSingleUniform(uniform, 0);
             ctx.Gfx.BindUniformBufferRange<TransformUniform>(0, 1);
 
-            if (source.IsSkinned())
+            if (entityContext.Source.IsSkinned())
             {
-                var slot = RenderEcs.Store<SkinningLink>().Get(query.Entity).AnimationSlot;
+                var slot = entityContext.GetComponent<SkinningLink>().AnimationSlot;
                 ctx.DrawCmd.BindSkinningSlot(slot);
             }
 
-            ctx.DrawCmd.BindMaterial(source.Material);
+            ctx.DrawCmd.BindMaterial(entityContext.Source.Material);
 
-            ctx.Gfx.DrawMesh(source.Mesh);
+            ctx.Gfx.DrawMesh(entityContext.Source.Mesh);
         }
     }
 
@@ -56,10 +56,12 @@ internal static partial class PassPipeline
 
         foreach (var query in RenderEcs.Store<DebugBoundsComponent>().VisibilityQuery())
         {
-            var isSkinned = RenderEcs.Core.GetSource(query.Entity).IsSkinned();
+            var entityContext = RenderEcs.Core.GetEntityContext(query.Entity);
+
+            var isSkinned = entityContext.Source.IsSkinned();
             *effect = new EditorEffectsUniform(isSkinned, query.Component.Color);
 
-            ref readonly var wb = ref RenderEcs.Core.GetWorldBounds(query.Entity);
+            ref readonly var wb = ref entityContext.WorldBounds;
             MatrixMath.CreateModelMatrix(wb.Center, wb.Extent, Quaternion.Identity, out uniform->Model);
             uniform->Normal = Matrix3X4.Identity;
 

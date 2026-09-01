@@ -139,7 +139,7 @@ public sealed class EngineRenderSystem : IDisposable
         foreach (ref readonly var ticket in tickets)
         {
             //TODO
-            var ctx = RenderEcs.Core.GetContext(ticket.Entity);
+            var ctx = RenderEcs.Core.GetEntityContext(ticket.Entity);
             _drawCmd.DrawSource(ctx, ticket.SubmitIndex);
         }
     }

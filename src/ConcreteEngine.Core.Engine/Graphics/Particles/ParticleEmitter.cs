@@ -13,68 +13,9 @@ using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Particles;
 
-internal sealed unsafe class ParticleEmitterData : IDisposable
-{
-    private const int LutLength = 256;
-    public const int MinCapacity = 128;
-    public const int MaxCapacity = 8192;
-
-    private NativeArray<ParticleState> _particleState;
-    private NativeArray<Vector2> _particleLifeState;
-    private NativeArray<float> _particleInvLifeState;
-    private NativeArray<int> _deadIndices;
-
-    public readonly ParticleLut[] Lut = new ParticleLut[LutLength];
-
-    public ParticleEmitterData(int capacity)
-    {
-        if (Unsafe.SizeOf<Vector2>() != Unsafe.SizeOf<ParticleLifeState>()) Throwers.InvalidOperation();
-
-        _particleState = NativeArray.Allocate<ParticleState>(capacity, zeroed: true);
-        _particleLifeState = NativeArray.Allocate<Vector2>(capacity, zeroed: true);
-        _particleInvLifeState = NativeArray.Allocate<float>(capacity, zeroed: true);
-        _deadIndices = NativeArray.Allocate<int>(capacity, zeroed: true);
-    }
-
-    public int Capacity => _particleState.Length;
-
-    public bool HasNullData => _particleState.IsNull || _particleLifeState.IsNull || _particleInvLifeState.IsNull ||
-                               _deadIndices.IsNull;
-
-    public NativeView<ParticleState> ParticleState => _particleState;
-
-    public NativeView<ParticleLifeState> ParticleLifeState =>
-        _particleLifeState.AsView().Reinterpret<ParticleLifeState>();
-
-    public NativeView<float> ParticleInvLifeState => _particleInvLifeState;
-    public NativeView<int> DeadIndices => _deadIndices;
-
-    public void ReAlloc(int newCapacity)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(newCapacity, MinCapacity);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(newCapacity, MaxCapacity);
-
-        _particleState.ReAlloc(newCapacity, true);
-        _particleInvLifeState.ReAlloc(newCapacity, true);
-        _particleLifeState.ReAlloc(newCapacity, true);
-        _deadIndices.ReAlloc(newCapacity, true);
-        Logger.Log(LogScope.Engine, "ParticleEmitter: resized", LogLevel.Warn);
-    }
-
-    public void Dispose()
-    {
-        _particleState.Dispose();
-        _particleLifeState.Dispose();
-        _particleInvLifeState.Dispose();
-        _deadIndices.Dispose();
-    }
-}
-
 [Inspect]
 public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<ushort>, IDisposable
 {
-    private const int LutLength = 256;
-    public const int MinCapacity = 128;
     public const int MinCount = 16;
     public const int MaxCount = 8192;
 
@@ -87,17 +28,14 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     public readonly string Name;
 
+    [InspectInclude]
+    public readonly ParticleEmitterState State;
+
     public MeshId BoundMesh { get; private set; }
     public int BoundSlot { get; private set; } = -1;
-
     public int ParticleCount { get; private set; }
     public int PendingParticleCount { get; private set; }
 
-
-    private ParticleParams _particleParams;
-    private EmitterParams _emitterParams;
-    [Segment("Simulation")] [InputNumber] public Vector3 Gravity = new Vector3(0.0f, 0.015f, 0.0f);
-    [Segment("Ambient")] [InputNumber] public float Drag;
 
     private BoundingBox _localBounds;
 
@@ -111,12 +49,11 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
         Name = name;
         Id = id;
-        _emitterParams = emitterParams;
-        _particleParams = particleParams;
+        State = new ParticleEmitterState(this, in emitterParams, in particleParams);
         ParticleCount = PendingParticleCount = particleCount;
         _rng = new FastRandom((uint)Environment.TickCount + Id.Id);
 
-        var length = int.Max(MinCapacity, IntMath.AlignUp(particleCount, 128));
+        var length = int.Max(ParticleEmitterData.MinCapacity, IntMath.AlignUp(particleCount, 128));
         _data = new ParticleEmitterData(length);
         InitializeParticles(0, ParticleCount);
     }
@@ -126,21 +63,11 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly EmitterParams GetEmitterParams() => ref _emitterParams;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly ParticleParams GetParticleParams() => ref _particleParams;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly BoundingBox LocalBounds() => ref _localBounds;
 
-    //TEMP
-    [InspectInclude]
-    public ref EmitterParams EmitterParams => ref _emitterParams;
+    public  Vector2 SpeedMinMax =>  State.SpeedMinMax;
+    public  Vector2 LifeMinMax =>  State.LifeMinMax;
 
-    [InspectInclude]
-    public ref ParticleParams ParticleParams => ref _particleParams;
-    //
 
     internal void Attach(int slot, MeshId meshId)
     {
@@ -149,26 +76,25 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         if (BoundSlot >= 0) throw new ArgumentOutOfRangeException(nameof(slot));
         BoundSlot = slot;
         BoundMesh = meshId;
-        UpdateLutFromParticleParams();
+        _data.UpdateLutFromParticleParams(State.StartColor,State.EndColor,State.SizeStartEnd);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ParticleEmitterData GetEmitterData()
     {
-        if (_data.HasNullData)
-            Throwers.InvalidOperation("ParticleEmitter: invalid particle data");
-
+        if (_data.IsNullOrEmpty) Throwers.InvalidOperation("ParticleEmitter: null or empty emitter data");
         return _data;
     }
 
+    // TODO
     public void SetCount(int count)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(count, MinCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(count, MaxCount);
 
         if (count == ParticleCount || count == PendingParticleCount) return;
-        PendingParticleCount = count;
-        _isDirty = true;
+        // PendingParticleCount = count;
+        // _isDirty = true;
     }
 
     internal void Commit()
@@ -179,7 +105,8 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
         if (PendingParticleCount == ParticleCount) return;
 
-        var newCapacity = int.Max(MinCapacity, IntMath.AlignUp(PendingParticleCount, 128));
+        var alignedCapacity = IntMath.AlignUp(PendingParticleCount, 128);
+        var newCapacity = int.Max(ParticleEmitterData.MinCapacity, alignedCapacity);
         if (newCapacity > _data.Capacity)
             _data.ReAlloc(newCapacity);
 
@@ -205,47 +132,24 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     }
 
 
-    private void UpdateLutFromParticleParams()
-    {
-        _particleParams.Deconstruct(out var startColor, out var endColor, out var sizeStartEnd);
-        var lut = _data.Lut;
-        for (int i = 0; i < LutLength; i++)
-        {
-            var size = float.Lerp(sizeStartEnd.X, sizeStartEnd.Y, i / 255f);
-            var color = ColorRgba.Lerp(startColor, endColor, (byte)i);
-            lut[i] = new ParticleLut(size, color);
-        }
-    }
-
     [SkipLocalsInit]
     internal void Simulate(float simDt)
     {
-        // avg1.BeginSample();
-        var dead = SimLife(simDt);
-        // if (avg1.EndSample() > 80) avg1.ResetAndPrint("SimLife");
+        var dead = SimulateLife(simDt);
         if (dead > 0)
         {
-            // avg2.BeginSample();
-            SimDead(_data.DeadIndices.Slice(0, dead));
-            //if (avg2.EndSample() > 80) avg2.ResetAndPrint("SimDead");
+            SimulateRespawn(_data.DeadIndices.Slice(0, dead));
         }
 
-        //avg3.BeginSample();
-        Sim2(simDt);
-        // if (avg3.EndSample() > 80) avg3.ResetAndPrint("SimPosition");
+        SimulateSpatial(simDt);
     }
 
-    //private static AvgFrameTimer avg1, avg2, avg3;
-
-    private ref readonly Vector2 SpeedMinMax => ref _emitterParams.SpeedMinMax;
-    private ref readonly Vector2 LifeMinMax => ref _emitterParams.LifeMinMax;
 
     [SkipLocalsInit]
-    private unsafe void SimDead(NativeView<int> deadIndices)
+    private unsafe void SimulateRespawn(NativeView<int> deadIndices)
     {
-        var direction = new Vector4(_emitterParams.Direction, 0);
-        var spread = _emitterParams.Spread;
-
+        var direction = new Vector4(State.Direction, 0);
+        var spread = State.Spread;
         var rng = _rng;
         var particleState = _data.ParticleState.Ptr;
         var particleLife = _data.ParticleLifeState.Ptr;
@@ -263,18 +167,17 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         _rng = rng;
     }
 
-    private unsafe int SimLife(float simDt)
+    private unsafe int SimulateLife(float simDt)
     {
         int index = 0;
         var deadIndices = _data.DeadIndices.Ptr;
         foreach (var it in _data.ParticleLifeState.Zip(_data.ParticleInvLifeState))
         {
-            var isAlive = it.Item1.Life > 0f;
-            if (isAlive)
+            float life = it.Item1.Life -= simDt;
+            if (life > 0)
             {
-                var p = it.Item1.Life * it.Item1.LifeInvMax;
-                it.Item2 = float.Clamp(1f - p, 0f, 1f);
-                it.Item1.Life -= simDt;
+                //
+                it.Item2 = it.Item1.LutIndex(life);
                 ++index;
             }
             else
@@ -288,15 +191,16 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     }
 
     [SkipLocalsInit]
-    private void Sim2(float simDt)
+    private void SimulateSpatial(float simDt)
     {
         var deltaVec4 = new Vector4(simDt);
-        var gravityStep = new Vector4(Gravity * simDt, 0f);
+        var gravityStep = new Vector4(State.Gravity * simDt, 0f);
         foreach (ref var p in _data.ParticleState)
         {
             var velocity = p.Velocity + gravityStep;
+            var position = Vector4.FusedMultiplyAdd(velocity, deltaVec4, p.Position);
             p.Velocity = velocity;
-            p.Position = Vector4.FusedMultiplyAdd(velocity, deltaVec4, p.Position);
+            p.Position = position;
         }
     }
 
@@ -306,7 +210,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
             Throwers.RangeOutOfBounds(start, length, _data.Capacity);
 
         var rng = _rng;
-        var lifeMinMax = _emitterParams.LifeMinMax;
+        var lifeMinMax = State.LifeMinMax;
         var particleLifeState = _data.ParticleLifeState;
         for (var i = 0; i < length; i++)
         {
@@ -323,35 +227,48 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     {
         var max = Vector3.One * 5;
         _localBounds = new BoundingBox(-max, max);
-        /*
-        ref readonly var param = ref _spatialParams;
-        var distance = param.LifeMinMax.Y * param.LifeMinMax.Y;
-        var extents = new Vector3(param.Spread + distance);
-        var min = -extents;
-        var gravityOffset = 0.5f * param.Gravity * (param.LifeMinMax.Y * param.LifeMinMax.Y);
-        _localBounds.Min = Vector3.Min(min, min + gravityOffset);
-        _localBounds.Max = Vector3.Max(extents, extents + gravityOffset);
-        */
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ColorRgba LerpSse(ColorRgba a, ColorRgba b, byte t)
+    public sealed class ParticleEmitterState(ParticleEmitter emitter, in EmitterParams emitterParams, in ParticleParams particleParams)
     {
-        var va = Sse41.ConvertToVector128Int32(
-            Vector128.CreateScalarUnsafe(Unsafe.As<ColorRgba, uint>(ref a)).AsByte());
-        var vb = Sse41.ConvertToVector128Int32(
-            Vector128.CreateScalarUnsafe(Unsafe.As<ColorRgba, uint>(ref b)).AsByte());
+        [InputColor]
+        [Segment("Visual")]
+        public ColorRgba StartColor { get; set => field = Set(field, value); } = particleParams.StartColor;
 
-        var vt = Vector128.Create((int)t);
+        [InputColor]
+        [Segment("Visual")]
 
-        var lerped = Sse2.Add(va, Sse2.ShiftRightArithmetic(Sse41.MultiplyLow(Sse2.Subtract(vb, va), vt), 8));
+        public ColorRgba EndColor { get; set => field = Set(field, value); } = particleParams.EndColor;
 
-        var packed = Sse2.PackUnsignedSaturate(
-            Sse2.PackSignedSaturate(lerped, Vector128<int>.Zero),
-            Vector128<short>.Zero);
+        [InputNumber]
+        [Segment("Visual")]
+        public Vector2 SizeStartEnd { get; set => field = Set(field, value); } = particleParams.SizeStartEnd;
 
-        uint scalar = packed.AsUInt32().ToScalar();
-        return Unsafe.As<uint, ColorRgba>(ref scalar);
+        [InputNumber]
+        [Segment("Simulation")]
+        public float Spread { get; set => field = Set(field, value); } = emitterParams.Spread;
+
+        [InputNumber]
+        [Segment("Simulation")]
+        public Vector3 Gravity { get; set => field = Set(field, value); } = new(0.0f, 0.015f, 0.0f);
+
+        [InputNumber]
+        [Segment("Simulation")]
+        public Vector3 Direction { get; set => field = Set(field, value); } = emitterParams.Direction;
+
+        [InputNumber]
+        [Segment("Simulation")]
+        public Vector2 SpeedMinMax { get; set => field = Set(field, value); }= emitterParams.SpeedMinMax;
+
+        [InputNumber]
+        [Segment("Simulation")]
+        public Vector2 LifeMinMax { get; set => field = Set(field, value); }= emitterParams.LifeMinMax;
+
+        private T Set<T>(T field, T value) where T : unmanaged
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value)) return field;
+            emitter._isDirty = true;
+            return value;
+        }
     }
 }

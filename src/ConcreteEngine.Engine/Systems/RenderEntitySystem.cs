@@ -40,7 +40,6 @@ internal sealed class RenderEntitySystem : IDisposable
         
         _passRanges = new Range32[RenderLimits.DrawPassSlots];
         _drawIndices = NativeArray.Allocate<ulong>(DefaultTicketCapacity);
-
         _sortIndices = NativeArray.Allocate<ulong>(RenderEcs.Core.Capacity);
         _transformBuffer = NativeArray.AlignedAllocate<TransformUniform>(RenderEcs.Core.Capacity, 64, false);
     }
@@ -180,12 +179,12 @@ internal sealed class RenderEntitySystem : IDisposable
     private unsafe void FillTickets(int* heads)
     {
         var submitIndex = 0;
-        var drawTickets = DrawIndices;
+        var drawTickets = DrawIndices.Ptr;
         foreach (ref readonly var it in SortIndices)
         {
             // (byte)mask | ((uint)depth << 8) | ((uint)queue << 24)
-            var mask = (uint)(byte)it.SortKey;
             var index = new DrawEntityIndex(it.Entity, submitIndex++);
+            var mask = (uint)(byte)it.SortKey;
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);

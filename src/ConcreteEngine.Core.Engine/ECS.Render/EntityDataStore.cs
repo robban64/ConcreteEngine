@@ -9,24 +9,6 @@ namespace ConcreteEngine.Core.Engine.ECS.Render;
 
 public sealed partial class RenderEntityCore
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawSource GetSource(RenderEntity e) => ref _entityDataStore.GetSource(e.Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawPolicy GetPolicy(RenderEntity e) => ref _entityDataStore.GetPolicy(e.Id);
-        
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoundingAxisBox GetWorldBounds(RenderEntity e) => ref _entityDataStore.GetWorldBounds(e.Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix4x4 GetModelMatrix(RenderEntity e) => ref _entityDataStore.GetTransform(e.Id).Model;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix3X4 GetNormalMatrix(RenderEntity e) => ref _entityDataStore.GetTransform(e.Id).Normal;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref TransformUniform GetTransform(RenderEntity e) => ref _entityDataStore.GetTransform(e.Id);
-
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<PassMask> VisibilityView() => _entityDataStore.VisibilityView();
@@ -36,16 +18,17 @@ public sealed partial class RenderEntityCore
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<DrawSource> SourceView() => _entityDataStore.SourceView();
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<BoundingAxisBox> WorldBoundView() => _entityDataStore.WorldBoundView();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<TransformUniform> TransformView() => _entityDataStore.TransformView();
     //
-    
+
     public sealed class EntityDataStore : IDisposable
     {
-        private NativeArray<PassMask> _passes;
+        private NativeArray<byte> _passes;
         private NativeArray<DrawPolicy> _policies;
         private NativeArray<DrawSource> _sources;
         private NativeArray<BoundingAxisBox> _bounds;
@@ -78,14 +61,14 @@ public sealed partial class RenderEntityCore
 
         //
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NativeView<PassMask> VisibilityView() => _passes.Slice(0, RenderEcs.EntityCount);
+        public NativeView<PassMask> VisibilityView() => _passes.Slice(0, RenderEcs.EntityCount).Reinterpret<PassMask>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NativeView<DrawPolicy> PolicyView() => _policies.Slice(0, RenderEcs.EntityCount);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NativeView<DrawSource> SourceView() => _sources.Slice(0, RenderEcs.EntityCount);
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NativeView<BoundingAxisBox> WorldBoundView() => _bounds.Slice(0, RenderEcs.EntityCount);
 
@@ -121,8 +104,8 @@ public sealed partial class RenderEntityCore
         //
         private void Allocate(int capacity)
         {
-            if(!_policies.IsNullOrEmpty) Throwers.InvalidOperation();
-            _passes = NativeArray.Allocate<PassMask>(capacity);
+            if (!_policies.IsNullOrEmpty) Throwers.InvalidOperation();
+            _passes = NativeArray.Allocate<byte>(capacity);
             _policies = NativeArray.Allocate<DrawPolicy>(capacity);
             _sources = NativeArray.Allocate<DrawSource>(capacity);
             _bounds = NativeArray.Allocate<BoundingAxisBox>(capacity);

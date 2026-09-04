@@ -24,19 +24,19 @@ public static class RotationMath
         return result;
     }
 
-    public static YawPitch QuaternionToYawPitch(Quaternion q)
+    public static Vector2D QuaternionToYawPitch(Quaternion q)
     {
         var forward = Vector3.Transform(new Vector3(0f, 0f, -1f), q);
-        float pitchRad = float.Asin(FloatMath.Clamp1N1(forward.Y));
-        float yawRad = float.Atan2(forward.X, forward.Z);
+        double pitchRad = double.Asin(DoubleMath.Clamp1N1(forward.Y));
+        double yawRad = double.Atan2(forward.X, forward.Z);
 
-        float yawDeg = yawRad * FloatMath.Rad2Deg;
-        float pitchDeg = pitchRad * FloatMath.Rad2Deg;
+        double yawDeg = yawRad * DoubleMath.Rad2Deg;
+        double pitchDeg = pitchRad * DoubleMath.Rad2Deg;
 
-        if (pitchDeg > PitchLimit) pitchDeg = (float)PitchLimit;
-        else if (pitchDeg < -PitchLimit) pitchDeg = (float)-PitchLimit;
+        if (pitchDeg > PitchLimit) pitchDeg = PitchLimit;
+        else if (pitchDeg < -PitchLimit) pitchDeg = -PitchLimit;
 
-        return new YawPitch(yawDeg, pitchDeg);
+        return new Vector2D(yawDeg, pitchDeg);
     }
 
 

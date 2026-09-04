@@ -13,15 +13,15 @@ public struct ParticleState
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public  struct ParticleLifeState(float life, float lifeInvMax)
+public struct ParticleLifeState(float life, float lifeInvMax)
 {
-    public  float Life = life;
-    public  float LifeInvMax = lifeInvMax;
-    
+    public float Life = life;
+    public float LifeInvMax = lifeInvMax;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool SimulateLife(float dt, out byte lutIndex)
     {
-        var l = Life =- dt;
+        var l = Life = -dt;
         if (l > 0)
         {
             var d = 1f - l * LifeInvMax;
@@ -34,13 +34,13 @@ public  struct ParticleLifeState(float life, float lifeInvMax)
             return false;
         }
     }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly  byte LutIndex(float life)
-    {
-        var l = 1f - life * LifeInvMax;
-        return (byte)float.FusedMultiplyAdd(l, 255f, 0.5f);
-    }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly float LutIndex(float life)
+    {
+        var l = float.FusedMultiplyAdd(-life, LifeInvMax, 1f);
+        return float.FusedMultiplyAdd(l, 255f, 0.5f);
+    }
 }
 
 [StructLayout(LayoutKind.Sequential)]

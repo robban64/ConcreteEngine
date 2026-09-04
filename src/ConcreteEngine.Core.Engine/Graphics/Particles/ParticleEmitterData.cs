@@ -12,15 +12,16 @@ internal sealed class ParticleEmitterData : IDisposable
     public const int MinCapacity = 128;
     public const int MaxCapacity = 8192;
 
-    private int StrideSum =>
-        Unsafe.SizeOf<ParticleState>() + Unsafe.SizeOf<ParticleLifeState>() + sizeof(float) + sizeof(int);
+    private static int LifeStrideSum => Unsafe.SizeOf<ParticleLifeState>() + sizeof(float) + sizeof(int);
 
-    private NativeArray<byte> _data;
+    private NativeArray<byte> _spatialData;
+    private NativeArray<byte> _lifeData;
 
-    private NativeView<ParticleState> _particleState;
-    private NativeView<ParticleLifeState> _particleLifeState;
-    private NativeView<byte> _particleInvLifeState;
-    private NativeView<int> _deadIndices;
+    public NativeView<ParticleState> Spatial { get; private set; }
+    public NativeView<ParticleLifeState> LifeStates { get; private set; }
+    public NativeView<byte> LifeIndices { get; private set; }
+    public NativeView<int> DeadIndices { get; private set; }
+
 
     public readonly ParticleLut[] Lut = new ParticleLut[LutLength];
 
@@ -28,38 +29,38 @@ internal sealed class ParticleEmitterData : IDisposable
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, MinCapacity);
         
-        var sizeInBytes = capacity * StrideSum;
-        _data = NativeArray.Allocate(sizeInBytes);
+        _spatialData = NativeArray.AlignedAllocate<byte>(capacity * Unsafe.SizeOf<ParticleState>(), 32);
+        Spatial = _spatialData.Reinterpret<ParticleState>();
+       
+        _lifeData = NativeArray.Allocate(capacity * LifeStrideSum);
+        var builder = new NativeAllocBuilder(_lifeData);
 
-        var builder = new NativeAllocBuilder(_data);
-        _particleState = builder.AllocSlice<ParticleState>(capacity);
-        _particleLifeState = builder.AllocSlice<ParticleLifeState>(capacity);
-        _particleInvLifeState = builder.AllocSlice<byte>(capacity);
-        _deadIndices = builder.AllocSlice<int>(capacity);
+        LifeStates = builder.AllocSlice<ParticleLifeState>(capacity);
+        LifeIndices = builder.AllocSlice<byte>(capacity);
+        DeadIndices = builder.AllocSlice<int>(capacity);
     }
 
-    public int Capacity => _particleState.Length;
-    public bool IsNullOrEmpty => _data.IsNullOrEmpty || _particleState.IsNullOrEmpty;
+    public int Capacity => Spatial.Length;
+    public bool IsNullOrEmpty => _spatialData.IsNullOrEmpty || _lifeData.IsNullOrEmpty;
 
-    public NativeView<ParticleState> ParticleState => _particleState;
-    public NativeView<ParticleLifeState> ParticleLifeState => _particleLifeState;
-    public NativeView<byte> ParticleInvLifeState => _particleInvLifeState;
-    public NativeView<int> DeadIndices => _deadIndices;
-
+    
     public void ReAlloc(int newCount)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(newCount, MinCapacity);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(newCount, MaxCapacity);
 
-        var sizeInBytes = newCount * StrideSum;
-        _data.ReAlloc(sizeInBytes, false);
-        _data.Clear();
+        _spatialData.ReAlloc(newCount, false);
+        _lifeData.ReAlloc(newCount, false);
+        _spatialData.Clear();
+        _lifeData.Clear();
 
-        var builder = new NativeAllocBuilder(_data);
-        _particleState = builder.AllocSlice<ParticleState>(newCount);
-        _particleLifeState = builder.AllocSlice<ParticleLifeState>(newCount);
-        _particleInvLifeState = builder.AllocSlice<byte>(newCount);
-        _deadIndices = builder.AllocSlice<int>(newCount);
+        Spatial = _spatialData.Reinterpret<ParticleState>();
+       
+        var builder = new NativeAllocBuilder(_lifeData);
+        LifeStates = builder.AllocSlice<ParticleLifeState>(newCount);
+        LifeIndices = builder.AllocSlice<byte>(newCount);
+        DeadIndices = builder.AllocSlice<int>(newCount);
+
         Logger.Log(LogScope.Engine, "ParticleEmitter: resized", LogLevel.Warn);
     }
 
@@ -76,11 +77,12 @@ internal sealed class ParticleEmitterData : IDisposable
 
     public void Dispose()
     {
-        _data.Dispose();
-        _particleState = default;
-        _particleLifeState = default;
-        _particleInvLifeState = default;
-        _deadIndices = default;
+        _spatialData.Dispose();
+        _lifeData.Dispose();
+        Spatial = default;
+        LifeStates = default;
+        LifeIndices = default;
+        DeadIndices = default;
 
     }
 }

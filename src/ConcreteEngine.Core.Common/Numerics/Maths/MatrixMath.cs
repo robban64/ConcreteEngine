@@ -77,6 +77,9 @@ public static class MatrixMath
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CreateModelMatrix(in Transform t, out Matrix4x4 dst)
     {
+        float sx = t.Scale.X, sy = t.Scale.Y, sz = t.Scale.Z;
+        float tx = t.Translation.X, ty = t.Translation.Y, tz = t.Translation.Z;
+        
         float x = t.Rotation.X, y = t.Rotation.Y, z = t.Rotation.Z, w = t.Rotation.W;
         float xx = x + x, yy = y + y, zz = z + z;
         float xy = x * yy, xz = x * zz, yz = y * zz;
@@ -87,27 +90,28 @@ public static class MatrixMath
         float r12 = xy + wz, r13 = xz - wy, r21 = xy - wz;
         float r23 = yz + wx, r31 = xz + wy, r32 = yz - wx;
 
+        
         // row 1 - local X Axis (Right)
-        dst.M11 = r11 * t.Scale.X;
-        dst.M12 = r12 * t.Scale.X;
-        dst.M13 = r13 * t.Scale.X;
+        dst.M11 = r11 * sx;
+        dst.M12 = r12 * sx;
+        dst.M13 = r13 * sx;
         dst.M14 = 0f;
 
         // row 2 corresponds - Local Y Axis (Up)
-        dst.M21 = r21 * t.Scale.Y;
-        dst.M22 = r22 * t.Scale.Y;
-        dst.M23 = r23 * t.Scale.Y;
+        dst.M21 = r21 * sy;
+        dst.M22 = r22 * sy;
+        dst.M23 = r23 * sy;
         dst.M24 = 0f;
 
         // row 3 corresponds - Local Z Axis (Forward)
-        dst.M31 = r31 * t.Scale.Z;
-        dst.M32 = r32 * t.Scale.Z;
-        dst.M33 = r33 * t.Scale.Z;
+        dst.M31 = r31 * sz;
+        dst.M32 = r32 * sz;
+        dst.M33 = r33 * sz;
         dst.M34 = 0f;
 
-        dst.M41 = t.Translation.X;
-        dst.M42 = t.Translation.Y;
-        dst.M43 = t.Translation.Z;
+        dst.M41 = tx;
+        dst.M42 = ty;
+        dst.M43 = tz;
         dst.M44 = 1f;
     }
 

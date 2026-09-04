@@ -43,8 +43,6 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly NativeView<T> AsView() => new(Ptr, Length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeView<T> Slice(int offset, int length)
@@ -92,6 +90,10 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         if (IsNull) return default;
         return new ReadOnlySpan<T>(Ptr + offset, length);
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly NativeView<U> Reinterpret<U>() where U : unmanaged => new((U*)Ptr, (U*)(Ptr + Length));
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear()

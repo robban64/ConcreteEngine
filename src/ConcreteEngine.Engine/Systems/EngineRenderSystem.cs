@@ -120,18 +120,13 @@ public sealed class EngineRenderSystem : IDisposable
             if (passResult.Op is PassOp.Draw)
             {
                 _drawCmd.PrepareDrawPass();
-               // avg.BeginSample();
                 ExecuteDrawPass(i);
-               // avg.EndSample();
             }
 
             EndPass(i);
         }
 
-       // if (avg.Ticks > 144 * 3) avg.ResetAndPrint("Draw");
     }
-
-   // private AvgFrameTimer avg;
 
     private void ExecuteDrawPass(int passId)
     {

@@ -28,8 +28,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     public readonly string Name;
 
-    [InspectInclude]
-    public readonly ParticleEmitterState State;
+    [InspectInclude] public readonly ParticleEmitterState State;
 
     public MeshId BoundMesh { get; private set; }
     public int BoundSlot { get; private set; } = -1;
@@ -65,9 +64,14 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly BoundingBox LocalBounds() => ref _localBounds;
 
-    public  Vector2 SpeedMinMax =>  State.SpeedMinMax;
-    public  Vector2 LifeMinMax =>  State.LifeMinMax;
+    public Vector2 SpeedMinMax => State.SpeedMinMax;
+    public Vector2 LifeMinMax => State.LifeMinMax;
 
+    internal NativeView<ParticleState> Spatial => _data.Spatial.Slice(0, ParticleCount);
+    internal NativeView<ParticleLifeState> ParticleLifeState => _data.LifeStates.Slice(0, ParticleCount);
+    internal NativeView<byte> ParticleLifeIndices => _data.LifeIndices.Slice(0, ParticleCount);
+    internal NativeView<int> DeadIndices => _data.DeadIndices.Slice(0, ParticleCount);
+    internal ParticleLut[] LutArray => _data.Lut;
 
     internal void Attach(int slot, MeshId meshId)
     {
@@ -76,7 +80,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         if (BoundSlot >= 0) throw new ArgumentOutOfRangeException(nameof(slot));
         BoundSlot = slot;
         BoundMesh = meshId;
-        _data.UpdateLutFromParticleParams(State.StartColor,State.EndColor,State.SizeStartEnd);
+        _data.UpdateLutFromParticleParams(State.StartColor, State.EndColor, State.SizeStartEnd);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -140,9 +144,15 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         {
             SimulateRespawn(_data.DeadIndices.Slice(0, dead));
         }
+        avg.BeginSample();
 
         SimulateSpatial(simDt);
+        avg.EndSample();
+        if (avg.EndSample() > 80) avg.ResetAndPrint();
+
     }
+
+    private static AvgFrameTimer avg;
 
 
     [SkipLocalsInit]
@@ -151,14 +161,16 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         var direction = new Vector4(State.Direction, 0);
         var spread = State.Spread;
         var rng = _rng;
-        var particleState = _data.ParticleState.Ptr;
-        var particleLife = _data.ParticleLifeState.Ptr;
+
+        var spatial = _data.Spatial.Ptr;
+        var particleLife = _data.LifeStates.Ptr;
         foreach (var index in deadIndices)
         {
-            ref var p = ref particleState[index];
+            var speed = rng.RandomFloat(SpeedMinMax);
             var randDir = rng.NextVector3As4(-0.5f, 0.5f);
-            p.Position = rng.NextVector3As4(-spread, spread);
-            p.Velocity = Vector4.Normalize(randDir + direction) * rng.RandomFloat(SpeedMinMax);
+            ref var currentSpatial = ref spatial[index];
+            currentSpatial.Velocity = Vector4.Normalize(randDir + direction) * speed;
+            currentSpatial.Position = rng.NextVector3As4(-spread, spread);
 
             var life = rng.RandomFloat(LifeMinMax);
             particleLife[index] = new ParticleLifeState(life, 1f / life);
@@ -170,14 +182,14 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     private unsafe int SimulateLife(float simDt)
     {
         int index = 0;
-        var deadIndices = _data.DeadIndices.Ptr;
-        foreach (var it in _data.ParticleLifeState.Zip(_data.ParticleInvLifeState))
+        var deadIndices = DeadIndices.Ptr;
+        foreach (var it in ParticleLifeState.Zip(ParticleLifeIndices))
         {
             float life = it.Item1.Life -= simDt;
             if (life > 0)
             {
-                //
-                it.Item2 = it.Item1.LutIndex(life);
+                var lut = it.Item1.LutIndex(life);
+                it.Item2 = (byte)lut;
                 ++index;
             }
             else
@@ -191,18 +203,25 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     }
 
     [SkipLocalsInit]
-    private void SimulateSpatial(float simDt)
+    private unsafe void SimulateSpatial(float simDt)
     {
-        var deltaVec4 = new Vector4(simDt);
-        var gravityStep = new Vector4(State.Gravity * simDt, 0f);
-        foreach (ref var p in _data.ParticleState)
+        var gravityStep = State.Gravity.AsVector128() * simDt;
+
+        var (current, end) = Spatial;
+        while (current < end)
         {
-            var velocity = p.Velocity + gravityStep;
-            var position = Vector4.FusedMultiplyAdd(velocity, deltaVec4, p.Position);
-            p.Velocity = velocity;
-            p.Position = position;
+            var velocity128 = Vector128.Add(Vector128.Load((float*)current), gravityStep);
+            var position128 = Vector128.FusedMultiplyAdd(velocity128, Vector128.Create(simDt),
+                Vector128.Load((float*)&current->Position));
+            
+            velocity128.Store((float*)current);
+            position128.Store((float*)&current->Position);
+
+            ++current;
         }
+
     }
+
 
     private void InitializeParticles(int start, int length)
     {
@@ -211,7 +230,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
         var rng = _rng;
         var lifeMinMax = State.LifeMinMax;
-        var particleLifeState = _data.ParticleLifeState;
+        var particleLifeState = _data.LifeStates;
         for (var i = 0; i < length; i++)
         {
             var life = rng.RandomFloat(0, rng.RandomFloat(lifeMinMax));
@@ -229,7 +248,10 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         _localBounds = new BoundingBox(-max, max);
     }
 
-    public sealed class ParticleEmitterState(ParticleEmitter emitter, in EmitterParams emitterParams, in ParticleParams particleParams)
+    public sealed class ParticleEmitterState(
+        ParticleEmitter emitter,
+        in EmitterParams emitterParams,
+        in ParticleParams particleParams)
     {
         [InputColor]
         [Segment("Visual")]
@@ -258,11 +280,11 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
         [InputNumber]
         [Segment("Simulation")]
-        public Vector2 SpeedMinMax { get; set => field = Set(field, value); }= emitterParams.SpeedMinMax;
+        public Vector2 SpeedMinMax { get; set => field = Set(field, value); } = emitterParams.SpeedMinMax;
 
         [InputNumber]
         [Segment("Simulation")]
-        public Vector2 LifeMinMax { get; set => field = Set(field, value); }= emitterParams.LifeMinMax;
+        public Vector2 LifeMinMax { get; set => field = Set(field, value); } = emitterParams.LifeMinMax;
 
         private T Set<T>(T field, T value) where T : unmanaged
         {

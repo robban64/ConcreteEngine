@@ -97,6 +97,7 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
         if (Ptr + offset + length > EndPtr) Throwers.RangeOutOfBounds(offset, length, Length);
         return IsNullOrEmpty ? default : new ReadOnlySpan<T>(Ptr + offset, length);
     }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear()
@@ -116,6 +117,13 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
 
     public override bool Equals(object? obj) => obj is NativeView<T> v && Equals(v);
     public override int GetHashCode() => HashCode.Combine((nint)Ptr, (nint)EndPtr);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Deconstruct(out T* ptr, out T* endPtr)
+    {
+        ptr = Ptr;
+        endPtr = EndPtr;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public PtrEnumerator<T> GetEnumerator() => new(this);

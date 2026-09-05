@@ -102,7 +102,7 @@ public sealed class EngineRenderSystem : IDisposable
         // process and upload draw commands
         _renderEntitySystem.Execute();
 
-        _particleSystem.Execute();
+        _particleSystem.InterpolateUpload();
         _animationSystem.Execute(EngineTime.GameAlpha);
 
         // prepare buffers

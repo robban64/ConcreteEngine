@@ -82,15 +82,11 @@ internal sealed unsafe class AnimationSystem : IDisposable
             var animation = _animations.Get(id);
             var time = (float)animation.Time;
             UpdateSkinned(animation.Rig, animation.ActiveClip, time);
-            avg.BeginSample();
             WriteSkeleton(animation.Rig);
-            avg.EndSample();
         }
 
-        if (avg.Ticks > 200) avg.ResetAndPrint();
     }
 
-    private AvgFrameTimer avg;
 
 
     public void Dispose()

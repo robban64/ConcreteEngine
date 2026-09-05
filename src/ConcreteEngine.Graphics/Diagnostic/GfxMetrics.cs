@@ -18,6 +18,12 @@ public static class GfxMetrics
         it.Instances += instances;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void AddDrawCall(uint tris)
+    {
+        FrameMeta.Draws++;
+        FrameMeta.Tris += tris;
+    }
 
     public static void DrainStoreMetrics(GfxStoreMeta[] data)
     {

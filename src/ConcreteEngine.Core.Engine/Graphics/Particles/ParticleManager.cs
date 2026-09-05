@@ -19,8 +19,9 @@ internal sealed class ParticleManager : IDisposable
 
     public int EmitterCount => _emitters.Count;
     public bool HasPendingEmitters => _pendingEmitters.Count > 0;
-    internal ReadOnlySpan<Id16<ParticleEmitter>> GetPendingEmitters() => CollectionsMarshal.AsSpan(_pendingEmitters);
-
+    internal ReadOnlySpan<Id16<ParticleEmitter>> GetPendingEmitterIds() => CollectionsMarshal.AsSpan(_pendingEmitters);
+    public ActiveObjectEnumerator<ParticleEmitter> EmitterEnumerator() => _emitters.GetEnumerator();
+    
     public ParticleEmitter CreateEmitter(
         string name,
         int particleCount,

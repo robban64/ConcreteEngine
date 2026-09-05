@@ -15,16 +15,15 @@ internal sealed class ParticleEmitterData : IDisposable
 
     private static int LifeStrideSum => Unsafe.SizeOf<ParticleLifeState>() + sizeof(float) + sizeof(int);
 
+    public readonly ParticleLut[] Lut = new ParticleLut[LutLength];
+
     private NativeArray<byte> _spatialData;
     private NativeArray<byte> _lifeData;
 
-
-    public readonly ParticleLut[] Lut = new ParticleLut[LutLength];
     private NativeView<Vector4> _velocities;
     private NativeView<Vector4> _positions;
     private NativeView<ParticleLifeState> _lifeStates;
     private NativeView<byte> _lifeIndices;
-    private NativeView<int> _deadIndices;
 
     public ParticleEmitterData(int capacity)
     {
@@ -43,24 +42,40 @@ internal sealed class ParticleEmitterData : IDisposable
 
         _lifeStates = builder.AllocSlice<ParticleLifeState>(capacity);
         _lifeIndices = builder.AllocSlice<byte>(capacity);
-        _deadIndices = builder.AllocSlice<int>(capacity);
     }
 
-    public int Capacity => Positions.Length;
-    public bool IsNullOrEmpty => _spatialData.IsNullOrEmpty || _lifeData.IsNullOrEmpty;
+    public int Capacity => _lifeStates.Length;
 
-    public NativeView<Vector4> Velocities => _velocities;
-    public NativeView<Vector4> Positions => _positions;
-    public NativeView<ParticleLifeState> LifeStates => _lifeStates;
-    public NativeView<byte> LifeIndices => _lifeIndices;
-    public NativeView<int> DeadIndices => _deadIndices;
+    public bool IsNullOrEmpty
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _spatialData.IsNullOrEmpty || _lifeData.IsNullOrEmpty;
+    }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<Vector4> VelocitySpan(int count) => _velocities.AsSpan(0, count);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<Vector4> PositionSpan(int count) => _positions.AsSpan(0, count);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<Vector4> Velocities(int count) => _velocities.Slice(0, count);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<Vector4> Positions(int count) => _positions.Slice(0, count);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<ParticleLifeState> LifeStates(int count) => _lifeStates.Slice(0, count);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<byte> LifeIndices(int count) => _lifeIndices.Slice(0, count);
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetVelocity(int index, Vector4 velocity) => _velocities[index] = velocity;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetPosition(int index, Vector4 position) => _positions[index] = position;
+    public void SetPosition(int index, Vector3 position) => _positions[index] = new Vector4(position, 0f);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetLife(int index, float life) => _lifeStates[index] = new ParticleLifeState(life, 1f / life);
@@ -83,7 +98,6 @@ internal sealed class ParticleEmitterData : IDisposable
         builder = new NativeAllocBuilder(_lifeData);
         _lifeStates = builder.AllocSlice<ParticleLifeState>(newCount);
         _lifeIndices = builder.AllocSlice<byte>(newCount);
-        _deadIndices = builder.AllocSlice<int>(newCount);
 
         Logger.Log(LogScope.Engine, "ParticleEmitter: resized", LogLevel.Warn);
     }
@@ -99,6 +113,10 @@ internal sealed class ParticleEmitterData : IDisposable
         }
     }
 
+    public PtrEnumerator<ParticleLifeState, byte> LifeEnumerator(int count) =>
+        new(LifeStates(count), LifeIndices(count));
+
+    
     public void Dispose()
     {
         _spatialData.Dispose();
@@ -107,6 +125,5 @@ internal sealed class ParticleEmitterData : IDisposable
         _positions = default;
         _lifeStates = default;
         _lifeIndices = default;
-        _deadIndices = default;
     }
 }

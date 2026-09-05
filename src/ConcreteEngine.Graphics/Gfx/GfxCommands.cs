@@ -299,30 +299,32 @@ public sealed class GfxCommands
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrawMesh(MeshId id)
     {
+        ref readonly var it = ref MeshStore.Get(id);
         if (_boundMeshId != id)
         {
             _boundMeshId = id;
-            GlStates.BindMesh(MeshStore.GetHandle(id));
+            GlStates.BindMesh(it.Handle);
         }
 
-        var meta = MeshStore.GetMeta(id);
-        GlStates.Draw(meta.Primitive, meta.ElementSize, meta.DrawCount);
-        GfxMetrics.AddDrawCall(meta.DrawCount, 0);
+        GlStates.Draw(it.Meta.Primitive,it.Meta.ElementSize, it.Meta.DrawCount);
+        GfxMetrics.AddDrawCall(it.Meta.DrawCount);
     }
 
 
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawMeshInstanced(MeshId id, uint instanceCount)
+    public void DrawMeshInstanced(MeshId id, uint instances)
     {
+        ref readonly var it = ref MeshStore.Get(id);
         if (_boundMeshId != id)
         {
             _boundMeshId = id;
-            GlStates.BindMesh(MeshStore.GetHandle(id));
+            GlStates.BindMesh(it.Handle);
         }
 
-        var meta = MeshStore.GetMeta(id);
-        instanceCount = uint.Max(meta.InstanceCount, instanceCount);
-        GlStates.DrawInstance(meta.Primitive, meta.ElementSize, meta.DrawCount, instanceCount);
-        GfxMetrics.AddDrawCall(meta.DrawCount, instanceCount);
+        var instanceCount = uint.Max(it.Meta.InstanceCount, instances);
+        GlStates.DrawInstance(it.Meta.Primitive,it.Meta.ElementSize, it.Meta.DrawCount, instanceCount);
+        GfxMetrics.AddDrawCall(it.Meta.DrawCount, instanceCount);
     }
 }

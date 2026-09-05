@@ -45,11 +45,11 @@ internal sealed class MaterialSystem : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal NativeView<TextureBinding> GetMetaAndSlots(Id16<Material> materialId, out MaterialMeta meta)
+    internal ReadOnlySpan<TextureBinding> GetMetaAndSlots(Id16<Material> materialId, out MaterialMeta meta)
     {
         ref var m = ref _metas[materialId.Index];
         meta = m;
-        return _textureSlots.Slice(m.BindingRange);
+        return _textureSlots.Slice(m.BindingRange).AsReadOnlySpan();
     }
 
     internal NativeView<MaterialUniform> GetUniforms()

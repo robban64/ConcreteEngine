@@ -63,6 +63,9 @@ internal sealed unsafe class GfxStore<TMeta> : IGfxResourceStore where TMeta : u
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly TMeta GetMeta(GfxId<TMeta> id) => ref _entries[id.Index()].Meta;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly GfxEntry<TMeta> Get(GfxId<TMeta> id) => ref _entries[id.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeHandle<TMeta> GetHandleAndMeta(GfxId<TMeta> id, out TMeta meta)

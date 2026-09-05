@@ -63,9 +63,9 @@ public sealed class ModelRig : IDisposable
 
     public AnimationClip GetClip(int clip) => _clips[clip];
 
-    public ReadOnlySpan<byte> ParentIndices => _parentIndices;
-    public ReadOnlySpan<Matrix4x4> BindPose => _bindPose;
-    public ReadOnlySpan<Matrix4x4> InverseBindPose => _inverseBindPose;
+    public ReadOnlySpan<byte> ParentIndices(int count) => new(_parentIndices, 0, count);
+    public ReadOnlySpan<Matrix4x4> BindPose(int count) => new(_bindPose, 0, count);
+    public ReadOnlySpan<Matrix4x4> InverseBindPose(int count)  => new(_inverseBindPose, 0, count);
     public Matrix4x4[] BindPoseArray => _bindPose;
     public Matrix4x4[] InverseBindPoseArray => _inverseBindPose;
     public byte[] ParentIndicesArray => _parentIndices;

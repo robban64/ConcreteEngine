@@ -115,14 +115,20 @@ internal sealed unsafe partial class ModelImporter
         var posKeys = aiChannel->MPositionKeys;
         var rotKeys = aiChannel->MRotationKeys;
 
+        var positionTimes = track.PositionTimes;
         for (var k = 0; k < track.PosCount; k++)
-            track.PositionTimes[k] = (float)posKeys[k].MTime;
+            positionTimes[k] = (float)posKeys[k].MTime;
+        
+        var rotationTimes = track.RotationTimes;
         for (var k = 0; k < track.RotCount; k++)
-            track.RotationTimes[k] = (float)rotKeys[k].MTime;
-
+            rotationTimes[k] = (float)rotKeys[k].MTime;
+        
+        var positions = track.Positions;
         for (var k = 0; k < track.PosCount; k++)
-            track.Positions[k] = posKeys[k].MValue;
+            positions[k] = posKeys[k].MValue;
+        
+        var rotations = track.Rotations;
         for (var k = 0; k < track.RotCount; k++)
-            track.Rotations[k] = rotKeys[k].MValue.AsQuaternion;
+            rotations[k] = rotKeys[k].MValue.AsQuaternion;
     }
 }

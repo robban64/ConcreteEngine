@@ -138,7 +138,7 @@ public sealed class Camera
 
         var translation = (Vector3)_translation;
         var quaternion = RotationMath.YawPitchToQuaternion(_orientation);
-        MatrixMath.CreateFixedSizeModelMatrix(in translation, in quaternion, out var modelMatrix);
+        MatrixMath.CreateFixedSizeModelMatrix( translation, in quaternion, out var modelMatrix);
 
         ref var viewMatrix = ref Transform.ViewMatrix;
         Matrix4x4.Invert(modelMatrix, out viewMatrix);

@@ -17,25 +17,9 @@ public readonly ref struct ZippedSpan<T1, T2>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Enumerator GetEnumerator() => new(this);
+    public ZipSpanEnumerator<T1,T2> GetEnumerator() => new(Span1, Span2);
 
-    public ref struct Enumerator(ZippedSpan<T1, T2> source)
-    {
-        private readonly ZippedSpan<T1, T2> _zip = source;
-        private int _i = -1;
-        private readonly int _length = source.Length;
-        
-        public readonly ref T1 Item1 => ref _zip.Span1[_i];
-        public readonly ref T2 Item2 => ref _zip.Span2[_i];
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => ++_i < _length;
 
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly Enumerator GetEnumerator() => this;
-
-    }
 }
 
 public ref struct SpanRange<T1, T2>(ReadOnlySpan<T1> range, Span<T2> dense)

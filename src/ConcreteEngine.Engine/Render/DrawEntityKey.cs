@@ -22,8 +22,8 @@ internal readonly struct DrawEntityKey(int entity, uint sortKey)
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct DrawEntityIndex(int entity, int submitIndex)
+internal readonly struct DrawEntityIndex(int entity, int submitIndex)
 {
-    public int Entity = entity;
-    public int SubmitIndex = submitIndex;
+    public readonly int Entity = entity;
+    public readonly int SubmitIndex = submitIndex;
 }

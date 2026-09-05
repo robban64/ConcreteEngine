@@ -116,7 +116,7 @@ public static class MatrixMath
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CreateFixedSizeModelMatrix(in Vector3 t, in Quaternion r, out Matrix4x4 dst)
+    public static void CreateFixedSizeModelMatrix(Vector3 t, in Quaternion r, out Matrix4x4 dst)
     {
         float x = r.X, y = r.Y, z = r.Z, w = r.W;
         float xx = x + x, yy = y + y, zz = z + z;

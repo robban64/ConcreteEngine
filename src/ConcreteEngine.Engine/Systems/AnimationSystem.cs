@@ -1,11 +1,14 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
@@ -79,9 +82,15 @@ internal sealed unsafe class AnimationSystem : IDisposable
             var animation = _animations.Get(id);
             var time = (float)animation.Time;
             UpdateSkinned(animation.Rig, animation.ActiveClip, time);
+            avg.BeginSample();
             WriteSkeleton(animation.Rig);
+            avg.EndSample();
         }
+
+        if (avg.Ticks > 200) avg.ResetAndPrint();
     }
+
+    private AvgFrameTimer avg;
 
 
     public void Dispose()
@@ -117,25 +126,28 @@ internal sealed unsafe class AnimationSystem : IDisposable
 
     private void UpdateSkinned(ModelRig rig, int clipIndex, float time)
     {
-        var globals = _scratchGlobals.Ptr;
-        var track = rig.GetClipView(clipIndex).BoneTracks;
-        var length = rig.BoneCount;
-        for (var i = 0; i < length; ++i, ++track, ++globals)
+        var trackView = rig.GetClipView(clipIndex).AsView();
+        ref var bindPoses = ref MemoryMarshal.GetArrayDataReference(rig.BindPoseArray);
+        var index = 0;
+        foreach (var it in trackView.Zip(_scratchGlobals.Slice(0, rig.BoneCount)))
         {
-            if (track->IsEmpty)
+            if (it.Item1.IsEmpty)
             {
-                *globals = rig.GetBindPose(i);
+                it.Item2 = Unsafe.Add(ref bindPoses, index++);
                 continue;
             }
 
-            var posFactor = GetIndexFactor(time, track->PositionTimes, out var posIndex);
-            var rotFactor = GetIndexFactor(time, track->RotationTimes, out var rotIndex);
+            var posFactor = GetIndexFactor(time, it.Item1.PositionTimes, out var posIndex);
+            var rotFactor = GetIndexFactor(time, it.Item1.RotationTimes, out var rotIndex);
 
-            var pos = GetPosition(posIndex, posFactor, track->Positions);
-            var rot = GetRotation(rotIndex, rotFactor, track->Rotations);
+            var pos = GetPosition(posIndex, posFactor, it.Item1.Positions);
+            var rot = GetRotation(rotIndex, rotFactor, it.Item1.Rotations);
 
-            MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out *globals);
+            MatrixMath.CreateFixedSizeModelMatrix(pos, in rot, out it.Item2);
+            ++index;
         }
+        
+
     }
 
     private void WriteSkeleton(ModelRig rig)
@@ -143,8 +155,9 @@ internal sealed unsafe class AnimationSystem : IDisposable
         var length = rig.BoneCount;
         var indices = rig.ParentIndicesArray.AsSpan(0, length);
         var inverseBindPoses = rig.InverseBindPoseArray.AsSpan(0, length);
-        var globals = _scratchGlobals.Ptr;
         var dst = NextSkinningView(length);
+
+        var globals = _scratchGlobals.Ptr;
 
         MatrixMath.MultiplyAffine(ref dst[0], in inverseBindPoses[0], in globals[0]);
         for (var i = 1; i < indices.Length; ++i)
@@ -176,17 +189,22 @@ internal sealed unsafe class AnimationSystem : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector3 GetPosition(int posIndex, float posFactor, NativeView<Vector3> positions)
     {
-        return posIndex > 0
-            ? Vector3.Lerp(positions[posIndex], positions[posIndex + 1], posFactor)
-            : positions[0];
+        if (posIndex > 0)
+        {
+            var v1 = positions[posIndex].AsVector128Unsafe();
+            var v2 = positions[posIndex + 1].AsVector128Unsafe();
+            var v128 = Vector128.Lerp(v1, v2, Vector128.Create(posFactor));
+            return v128.AsVector3();
+        }
+
+        return positions[0];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Quaternion GetRotation(int rotIndex, float rotFactor, NativeView<Quaternion> rotation)
     {
-        return rotIndex > 0
-            ? Quaternion.Slerp(rotation[rotIndex], rotation[rotIndex + 1], rotFactor)
-            : rotation[0];
+        if (rotIndex > 0) return Quaternion.Slerp(rotation[rotIndex], rotation[rotIndex + 1], rotFactor);
+        return  rotation[0];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

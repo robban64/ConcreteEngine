@@ -74,12 +74,9 @@ internal sealed class ParticleSystem : IDisposable
             if (_processedEmitters.Contains(it.Component.EmitterId)) continue;
             var emitter = _particleManager.Get(it.Component.EmitterId);
             if (!emitter.IsAttached) continue;
-            //avgCpu.BeginSample();
             emitter.Simulate(simDt);
-            //avgCpu.EndSample();
             _processedEmitters.Add(it.Component.EmitterId);
         }
-       // if (avgCpu.Ticks > 80) avgCpu.ResetAndPrint("Cpu");
 
     }
 
@@ -90,48 +87,34 @@ internal sealed class ParticleSystem : IDisposable
         foreach (var emitterId in _processedEmitters.AsSpan())
         {
             var emitter = _particleManager.Get(emitterId);
-           // avgGpu.BeginSample();
             ProcessEmitter(emitter, timeOffset);
-          //  avgGpu.EndSample();
             _particleMesh.UploadGpuData(emitter.BoundSlot, emitter.ParticleCount);
         }
 
-       // if (avgGpu.Ticks > 160) avgGpu.ResetAndPrint("Gpu");
-
     }
 
-    private AvgFrameTimer avgCpu, avgGpu;
     [SkipLocalsInit]
-    private void ProcessEmitter(ParticleEmitter emitter, float timeOffset)
+    private unsafe void ProcessEmitter(ParticleEmitter emitter, float timeOffset)
     {
-        foreach(var it in ParticleEnumerator(emitter.Spatial))
+        var lifeIndices = emitter.ParticleLifeIndices.Ptr;
+        ref var start = ref MemoryMarshal.GetArrayDataReference(emitter.LutArray);
+        foreach(var it in ParticleEnumerator(emitter.Velocities, emitter.Positions))
         {
             var position128 = Vector128.FusedMultiplyAdd(
-                Unsafe.BitCast<Vector4, Vector128<float>>(it.Item1.Velocity), // velocity
+                Unsafe.BitCast<Vector4, Vector128<float>>(it.Item1), // velocity
                 Vector128.Create(timeOffset),
-                Unsafe.BitCast<Vector4, Vector128<float>>(it.Item1.Position) // position
+                Unsafe.BitCast<Vector4, Vector128<float>>(it.Item2) // position
             );
             
-            position128.StoreUnsafe(ref Unsafe.As<ParticleVertex, float>(ref it.Item2));
-
-        }
-
-        ref var start = ref MemoryMarshal.GetArrayDataReference(emitter.LutArray);
-        foreach (var it in GetBufferView(emitter.ParticleCount).Zip(emitter.ParticleLifeIndices))
-        {
-            Unsafe.As<float, ParticleLut>(ref it.Item1.Size) = Unsafe.Add(ref start, it.Item2);
+            position128.StoreUnsafe(ref Unsafe.As<ParticleVertex, float>(ref it.Item3));
+            Unsafe.As<float, ParticleLut>(ref it.Item3.Size) = Unsafe.Add(ref start, *lifeIndices++);
         }
 
     }
-    
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private NativeView<ParticleVertex> GetBufferView(int count) => _particleMesh.GetBufferView(count);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private PtrEnumerator<ParticleState, ParticleVertex> ParticleEnumerator(NativeView<ParticleState> spatial) =>
-        new(spatial, _particleMesh.GetBufferView(spatial.Length));
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private PtrEnumerator<Vector4, Vector4, ParticleVertex> ParticleEnumerator(NativeView<Vector4> velocityView, NativeView<Vector4> positionView) =>
-        new(velocityView, positionView, _particleMesh.GetBufferView(velocityView.Length));
+    [SkipLocalsInit]
+    private PtrEnumerator<Vector4, Vector4, ParticleVertex> ParticleEnumerator(NativeView<Vector4> velocityView, NativeView<Vector4> positionView)
+    {
+        return new PtrEnumerator<Vector4, Vector4, ParticleVertex>(velocityView, positionView, _particleMesh.GetBufferView(velocityView.Length));
+    }
 }

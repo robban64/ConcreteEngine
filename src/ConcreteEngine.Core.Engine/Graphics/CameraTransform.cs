@@ -75,15 +75,13 @@ public sealed class CameraTransformSnapshot
     public Matrix4x4 ProjectionViewMatrix;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateViewMatrix(Vector3D translation, Vector2D orientation)
+    public void UpdateViewMatrix(in Vector3D translation, Vector2D orientation)
     {
-        var translationF = (Vector3)translation;
+        var translationF = Translation = (Vector3)translation;
+        var quaternion = RotationMath.YawPitchToQuaternion(orientation);
 
         ref var viewMatrix = ref ViewMatrix;
-        var quaternion = RotationMath.YawPitchToQuaternion(orientation);
-        Translation = translationF;
-
-        MatrixMath.CreateFixedSizeModelMatrix(in translationF, in quaternion, out viewMatrix);
+        MatrixMath.CreateFixedSizeModelMatrix( translationF, in quaternion, out viewMatrix);
         Matrix4x4.Invert(viewMatrix, out viewMatrix);
     }
 

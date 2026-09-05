@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
@@ -48,7 +49,7 @@ public sealed class CameraManager
         Camera.Interpolate(alpha, out var translation, out var orientation);
 
         var frameTransforms = FrameTransforms;
-        frameTransforms.UpdateViewMatrix(translation, orientation);
+        frameTransforms.UpdateViewMatrix(in translation, orientation);
         frameTransforms.ProjectionMatrix = Camera.ProjectionMatrix;
         frameTransforms.ProjectionViewMatrix = frameTransforms.ViewMatrix * frameTransforms.ProjectionMatrix;
 

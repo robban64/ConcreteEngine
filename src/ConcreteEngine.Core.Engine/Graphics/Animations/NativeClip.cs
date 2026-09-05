@@ -31,10 +31,10 @@ internal readonly unsafe struct NativeBoneTrack
 {
     public readonly int PosCount;
     public readonly int RotCount;
-    public readonly int PositionIndex;
-    public readonly int RotationIndex;
 
     private readonly float* _data;
+    private readonly Vector3* _positions;
+    private readonly Quaternion* _rotations;
 
     public NativeBoneTrack(float* data, int posCount, int rotCount)
     {
@@ -44,11 +44,13 @@ internal readonly unsafe struct NativeBoneTrack
         if (data == null && (posCount > 0 || rotCount > 0))
             Throwers.InvalidArgument(nameof(data));
 
-        _data = data;
         PosCount = posCount;
         RotCount = rotCount;
-        PositionIndex = posCount + rotCount;
-        RotationIndex = posCount + rotCount + (posCount * 3);
+
+        _data = data;
+        _positions = (Vector3*)(data + posCount + rotCount);
+        _rotations = (Quaternion*)(data + posCount + rotCount + (posCount * 3));
+
     }
 
     public bool IsNull => _data == null;
@@ -74,12 +76,12 @@ internal readonly unsafe struct NativeBoneTrack
     public NativeView<Vector3> Positions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new((Vector3*)(_data + PositionIndex), PosCount);
+        get => new(_positions, PosCount);
     }
 
     public NativeView<Quaternion> Rotations
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new((Quaternion*)(_data + RotationIndex), RotCount);
+        get => new(_rotations, RotCount);
     }
 }

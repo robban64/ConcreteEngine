@@ -113,3 +113,38 @@ public ref struct ZipRefEnumerator<T1, T2> where T1 : unmanaged where T2 : unman
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ZipRefEnumerator<T1, T2> GetEnumerator() => this;
 }
+
+
+
+public ref struct ZipSpanEnumerator<T1, T2>
+{
+    private readonly Span<T1> _span1;
+    private readonly Span<T2> _span2;
+    private int _i = -1;
+
+    public ZipSpanEnumerator(Span<T1> span1, Span<T2> span2)
+    {
+        if (span1.Length != span2.Length) Throwers.InvalidArgument(nameof(span2));
+        _span1 = span1;
+        _span2 = span2;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool MoveNext() => ++_i < _span1.Length;
+
+    public readonly EnumeratorItem Current
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(ref _span1[_i], ref _span2[_i]);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ZipSpanEnumerator<T1,T2> GetEnumerator() => this;
+        
+    public readonly ref struct EnumeratorItem(ref T1 item1, ref T2 item2)
+    {
+        public readonly ref T1 Item1 = ref item1;
+        public readonly ref T2 Item2 = ref item2;
+    }
+}

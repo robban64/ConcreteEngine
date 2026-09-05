@@ -67,7 +67,8 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public Vector2 SpeedMinMax => State.SpeedMinMax;
     public Vector2 LifeMinMax => State.LifeMinMax;
 
-    internal NativeView<ParticleState> Spatial => _data.Spatial.Slice(0, ParticleCount);
+    public NativeView<Vector4> Velocities => _data.Velocities.Slice(0, ParticleCount);
+    public NativeView<Vector4> Positions => _data.Positions.Slice(0, ParticleCount);
     internal NativeView<ParticleLifeState> ParticleLifeState => _data.LifeStates.Slice(0, ParticleCount);
     internal NativeView<byte> ParticleLifeIndices => _data.LifeIndices.Slice(0, ParticleCount);
     internal NativeView<int> DeadIndices => _data.DeadIndices.Slice(0, ParticleCount);
@@ -144,37 +145,34 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         {
             SimulateRespawn(_data.DeadIndices.Slice(0, dead));
         }
-        avg.BeginSample();
 
-        SimulateSpatial(simDt);
-        avg.EndSample();
-        if (avg.EndSample() > 80) avg.ResetAndPrint();
-
+        SimulateSpatial256(simDt);
     }
-
-    private static AvgFrameTimer avg;
 
 
     [SkipLocalsInit]
-    private unsafe void SimulateRespawn(NativeView<int> deadIndices)
+    private void SimulateRespawn(NativeView<int> deadIndices)
     {
-        var direction = new Vector4(State.Direction, 0);
-        var spread = State.Spread;
         var rng = _rng;
+        var data = _data;
 
-        var spatial = _data.Spatial.Ptr;
-        var particleLife = _data.LifeStates.Ptr;
-        foreach (var index in deadIndices)
+        var direction = new Vector4(State.Direction, 0);
+        foreach (var index in deadIndices.AsSpan())
         {
             var speed = rng.RandomFloat(SpeedMinMax);
             var randDir = rng.NextVector3As4(-0.5f, 0.5f);
-            ref var currentSpatial = ref spatial[index];
-            currentSpatial.Velocity = Vector4.Normalize(randDir + direction) * speed;
-            currentSpatial.Position = rng.NextVector3As4(-spread, spread);
-
-            var life = rng.RandomFloat(LifeMinMax);
-            particleLife[index] = new ParticleLifeState(life, 1f / life);
+            var velocity = Vector4.Normalize(randDir + direction) * speed;
+            data.SetVelocity(index, velocity);
         }
+
+        var spread = State.Spread;
+        foreach (var index in deadIndices.AsSpan())
+            data.SetPosition(index, rng.NextVector3As4(-spread, spread));
+
+
+        var lifeMinMax = LifeMinMax;
+        foreach (var index in deadIndices.AsSpan())
+            data.SetLife(index, rng.RandomFloat(lifeMinMax));
 
         _rng = rng;
     }
@@ -203,25 +201,46 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     }
 
     [SkipLocalsInit]
-    private unsafe void SimulateSpatial(float simDt)
+    private void SimulateSpatial128(float simDt)
     {
         var gravityStep = State.Gravity.AsVector128() * simDt;
 
-        var (current, end) = Spatial;
-        while (current < end)
+        foreach (var it in Velocities.Zip(Positions))
         {
-            var velocity128 = Vector128.Add(Vector128.Load((float*)current), gravityStep);
+            var velocity128 = Vector128.Add(Vector128.LoadUnsafe(ref it.Item1.X), gravityStep);
             var position128 = Vector128.FusedMultiplyAdd(velocity128, Vector128.Create(simDt),
-                Vector128.Load((float*)&current->Position));
-            
-            velocity128.Store((float*)current);
-            position128.Store((float*)&current->Position);
+                Vector128.LoadUnsafe(ref it.Item2.X));
 
-            ++current;
+            velocity128.StoreUnsafe(ref it.Item1.X);
+            position128.StoreUnsafe(ref it.Item2.X);
         }
-
     }
 
+    [SkipLocalsInit]
+    private void SimulateSpatial256(float simDt)
+    {
+        var gravityStep256 = Vector256.Create(State.Gravity.AsVector128() * simDt);
+
+        var positions = Positions.AsSpan();
+        var velocities = Velocities.AsSpan();
+        for (int i = 0; i < velocities.Length; i += 2)
+        {
+            ref var velocity = ref velocities[i];
+            var velocity256 = Vector256.Add(
+                Vector256.LoadUnsafe(ref Unsafe.As<Vector4, float>(ref velocity)),
+                gravityStep256
+            );
+            velocity256.StoreUnsafe(ref Unsafe.As<Vector4, float>(ref velocity));
+
+            ref var position = ref positions[i];
+            var position256 = Vector256.FusedMultiplyAdd(
+                velocity256,
+                Vector256.Create(simDt),
+                Vector256.LoadUnsafe(ref Unsafe.As<Vector4, float>(ref position))
+            );
+            position256.StoreUnsafe(ref Unsafe.As<Vector4, float>(ref position));
+        }
+    }
 
     private void InitializeParticles(int start, int length)
     {
@@ -231,12 +250,10 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         var rng = _rng;
         var lifeMinMax = State.LifeMinMax;
         var particleLifeState = _data.LifeStates;
-        for (var i = 0; i < length; i++)
+        for (var i = start; i < length; i++)
         {
             var life = rng.RandomFloat(0, rng.RandomFloat(lifeMinMax));
-            ref var p = ref particleLifeState[i];
-            p.Life = life;
-            p.LifeInvMax = 1f / life;
+            particleLifeState[i] = new ParticleLifeState(1, 1f / life);
         }
 
         _rng = rng;

@@ -16,11 +16,11 @@ using ConcreteEngine.Graphics.Utility;
 namespace ConcreteEngine.Engine.Mesh;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct ParticleVertex(in Vector3 position, ParticleLut lut)
+internal struct ParticleVertex(in Vector3 position, ParticleVisualState visualState)
 {
     public Vector3 Position = position;
-    public float Size = lut.Size;
-    public ColorRgba Color = lut.Color;
+    public float Size = visualState.Size;
+    public ColorRgba Color = visualState.Color;
 }
 
 internal readonly struct ParticleMeshHandle(MeshId meshId, VertexBufferId vboInstanceId)

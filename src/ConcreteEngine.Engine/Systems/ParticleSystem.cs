@@ -42,7 +42,7 @@ internal sealed class ParticleSystem : IDisposable
         if (!_particleManager.HasPendingEmitters) return;
 
         _particleManager.CommitEmitters();
-        
+
         int max = _deadIndices.Length;
         foreach (var id in _particleManager.GetPendingEmitterIds())
         {
@@ -51,16 +51,16 @@ internal sealed class ParticleSystem : IDisposable
             var slot = _particleMesh.CreateParticleMesh(emitter.ParticleCount);
             var meshId = _particleMesh.GetHandle(slot).MeshId;
             emitter.Attach(slot, meshId);
-            
+
             max = int.Max(max, emitter.ParticleCount);
         }
-        
+
         if (max > _deadIndices.Length) _deadIndices = new ushort[max];
 
         _particleManager.ClearPendingEmitters();
     }
 
-    
+
     internal void InterpolateUpload()
     {
         var timeOffset = (float)(EngineTime.SimulationDelta * EngineTime.SimulationAlpha);
@@ -71,10 +71,9 @@ internal sealed class ParticleSystem : IDisposable
 
             _particleMesh.UploadGpuData(emitter.BoundSlot, emitter.ParticleCount);
         }
-
     }
 
-    
+
     internal void Simulate(float simDt)
     {
         if (_particleManager.EmitterCount == 0) return;
@@ -88,16 +87,20 @@ internal sealed class ParticleSystem : IDisposable
 
             var emitter = _particleManager.Get(emitterId);
             if (!emitter.IsAttached) continue;
-           
-            var dead = SimulateLife(emitter.GetEmitterData(), emitter.ParticleCount, simDt);
+
+            avg1.BeginSample();
+            var dead = SimulateLife2(emitter.GetEmitterData(), emitter.ParticleCount, simDt);
             if (dead > 0) emitter.RespawnParticles(_deadIndices.AsSpan(0, dead));
             SimulateSpatial256(emitter.GetEmitterData(), emitter.ParticleCount, emitter.State.Gravity, simDt);
-           
+            avg1.EndSample();
+
             _processedEmitters.Add(emitterId);
         }
 
+        if (avg1.Ticks > 80) avg1.ResetAndPrint();
     }
 
+    private AvgFrameTimer avg1, avg2;
 
     [SkipLocalsInit]
     private unsafe void InterpolateEmitter(ParticleEmitterData data, int count, float timeOffset)
@@ -113,7 +116,7 @@ internal sealed class ParticleSystem : IDisposable
             );
 
             position128.StoreUnsafe(ref Unsafe.As<ParticleVertex, float>(ref it.Item3));
-            Unsafe.As<float, ParticleLut>(ref it.Item3.Size) = Unsafe.Add(ref start, *lifeIndices++);
+            Unsafe.As<float, ParticleVisualState>(ref it.Item3.Size) = Unsafe.Add(ref start, *lifeIndices++);
         }
     }
 
@@ -126,11 +129,11 @@ internal sealed class ParticleSystem : IDisposable
         int index = 0, deadIndex = 0;
         foreach (var it in data.LifeEnumerator(count))
         {
-            float life = it.Item1.Life -= simDt;
+            float life = it.Item1 -= simDt;
             if (life > 0)
             {
-                var l = float.FusedMultiplyAdd(-life, it.Item1.LifeInvMax, 1f);
-                it.Item2 = (byte)float.FusedMultiplyAdd(l, 255f, 0.5f);
+                var l = float.FusedMultiplyAdd(-life, it.Item2, 1f);
+                it.Item3 = (byte)float.FusedMultiplyAdd(l, 255f, 0.5f);
                 ++index;
             }
             else
@@ -141,6 +144,67 @@ internal sealed class ParticleSystem : IDisposable
         }
 
         return deadIndex;
+    }
+
+    private unsafe int SimulateLife2(ParticleEmitterData data, int count, float simDt)
+    {
+        bool hasDead = false;
+        
+        var lifeSpan = data.Life(count).AsSpan();
+        for (int i = 0; i <= lifeSpan.Length - Vector128<float>.Count; i += Vector128<float>.Count)
+        {
+            ref var life = ref lifeSpan[i];
+            var result = Vector128.Subtract(Vector128.LoadUnsafe(ref life), Vector128.Create(simDt));
+            hasDead |= Vector128.LessThanOrEqualAny(result, Vector128.Create(0f));
+            result.StoreUnsafe(ref life);
+        }
+
+        int deadIndex = 0;
+        if (hasDead)
+        {
+            ref var deadIndices = ref MemoryMarshal.GetArrayDataReference(_deadIndices);
+            for (int i = 0; i <= lifeSpan.Length - Vector128<float>.Count; i += Vector128<float>.Count)
+            {
+                var vMask = Vector128.LessThanOrEqual(Vector128.LoadUnsafe(ref lifeSpan[i]), Vector128.Create(0f));
+                if(vMask == default) continue;
+                var currentIndex = deadIndex;
+                if (vMask[0] != 0f) Unsafe.Add(ref deadIndices, currentIndex++) = (ushort)(i + 0);
+                if (vMask[1] != 0f) Unsafe.Add(ref deadIndices, currentIndex++) = (ushort)(i + 1);
+                if (vMask[2] != 0f) Unsafe.Add(ref deadIndices, currentIndex++) = (ushort)(i + 2);
+                if (vMask[3] != 0f) Unsafe.Add(ref deadIndices, currentIndex++) = (ushort)(i + 3);
+                deadIndex = currentIndex;
+                /*
+
+                    var mask = Vector128.LessThanOrEqual(vLife, Vector128.Create(0f)).ExtractMostSignificantBits();
+                   if (mask == 0) continue;
+                   while (mask != 0)
+                   {
+                       var p = BitOperations.TrailingZeroCount(mask);
+                       Unsafe.Add(ref deadIndices, deadIndex++) = (ushort)(i + p);
+                       mask &= mask - 1;
+                   }
+                */
+            }
+        }
+
+        
+        var invMaxLifeSpan = data.LifeInvMaxSpan(0, count);
+        var lifeIndexSpan = data.LifeIndicesSpan(0, count);
+        for (int i = 0; i <= lifeSpan.Length - Vector128<float>.Count; i += Vector128<float>.Count)
+        {
+            var vLife = Vector128.LoadUnsafe(ref lifeSpan[i]);
+            var vDiff = Vector128.FusedMultiplyAdd(-vLife, Vector128.LoadUnsafe(ref invMaxLifeSpan[i]), Vector128.Create(1f));
+            var vIndex = Vector128.FusedMultiplyAdd(vDiff, Vector128.Create(255f), Vector128.Create(0.5f));
+            
+            lifeIndexSpan[i + 0] = (byte)vIndex[0];
+            lifeIndexSpan[i + 1] = (byte)vIndex[1];
+            lifeIndexSpan[i + 2] = (byte)vIndex[2];
+            lifeIndexSpan[i + 3] = (byte)vIndex[3];
+        }
+
+
+        return deadIndex;
+
     }
 
     [SkipLocalsInit]

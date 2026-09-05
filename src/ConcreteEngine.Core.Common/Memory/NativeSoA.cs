@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
@@ -7,11 +8,12 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
 {
     public static int StrideSum => Unsafe.SizeOf<T1>() + Unsafe.SizeOf<T2>();
 
-    public int Length;
-    public readonly int Alignment;
-
+    public int Length { get; private set; }
+    
     private T1* _ptr1;
     private T2* _ptr2;
+    
+    private NativeArray<byte> _array;
     
     public static NativeSoA<T1,T2> Allocate(int length, bool zeroed = true) => new (length, 0, zeroed);
     public static NativeSoA<T1,T2> AlignedAllocate(int length, int alignment, bool zeroed = true)
@@ -21,24 +23,28 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
     }
 
 
-    private NativeSoA(int length, int alignment = 0, bool zeroed = true)
+    private NativeSoA(int length, int alignment, bool zeroed)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(length, 4);
 
         var capacity = length * StrideSum;
-        var array = alignment == 0
+        _array = alignment == 0
             ? NativeArray.Allocate(capacity, zeroed)
-            : NativeArray.AlignedAllocate(capacity, alignment, zeroed);
+            : NativeArray.AlignedAllocate(IntMath.AlignUp(capacity, alignment), alignment, zeroed);
 
-        var allocator = new NativeAllocBuilder(array, alignCursor: alignment);
+        var allocator = new NativeAllocBuilder(_array, alignCursor: alignment);
         _ptr1 = allocator.AllocRaw<T1>(length);
         _ptr2 = allocator.AllocRaw<T2>(length);
-
         Length = length;
-        Alignment = alignment;
+
     }
 
-    public readonly bool IsNull => _ptr1 == null;
+    public readonly int AllocatedSize => _array.Length;
+    public readonly int Alignment => _array.Alignment;
+
+    public readonly bool IsNull => _array.IsNull;
+    public readonly bool IsNullOrEmpty => _array.IsNullOrEmpty;
+
     public readonly int SizeInBytes => Length * StrideSum;
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -84,10 +90,9 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
     public void ReAlloc(int length, bool zeroed)
     {
         var capacity = length * StrideSum;
-        var array = new NativeArray<byte>((byte*)_ptr1, SizeInBytes, 0);
-        array.ReAlloc(capacity, zeroed);
+        _array.ReAlloc(capacity, zeroed);
 
-        var allocator = new NativeAllocBuilder(array);
+        var allocator = new NativeAllocBuilder(_array);
         _ptr1 = allocator.AllocRaw<T1>(length);
         _ptr2 = allocator.AllocRaw<T2>(length);
 
@@ -96,10 +101,13 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
 
     public void Dispose()
     {
-        NativeArray.DisposeArray(_ptr1, SizeInBytes, 0);
+        _array.Dispose();
         _ptr1 = null;
         _ptr2 = null;
+        Length = 0;
     }
+
+    public void Clear() => _array.Clear();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly PtrEnumerator<T1, T2> GetEnumerator() => new(View1, View2);
@@ -117,15 +125,16 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
     }
 
 
-    public int Length;
-    public readonly int Alignment;
+    public int Length { get; private set; }
 
     private T1* _ptr1;
     private T2* _ptr2;
     private T3* _ptr3;
 
-    
+    private NativeArray<byte> _array;
+
     public readonly bool IsNull => _ptr1 == null;
+    public readonly bool IsNullOrEmpty => _ptr1 == null || Length <= 0;
     public readonly int SizeInBytes => Length * StrideSum;
 
     private NativeSoA(int length, int alignment = 0, bool zeroed = true)
@@ -133,15 +142,16 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
         ArgumentOutOfRangeException.ThrowIfLessThan(length, 4);
 
         var capacity = length * StrideSum;
-        var array = NativeArray.Allocate(capacity, zeroed);
+        _array = alignment == 0
+            ? NativeArray.Allocate(capacity, zeroed)
+            : NativeArray.AlignedAllocate(IntMath.AlignUp(capacity, alignment), alignment, zeroed);
 
-        var allocator = new NativeAllocBuilder(array, alignment);
+        var allocator = new NativeAllocBuilder(_array, alignment);
         _ptr1 = allocator.AllocRaw<T1>(length);
         _ptr2 = allocator.AllocRaw<T2>(length);
         _ptr3 = allocator.AllocRaw<T3>(length);
 
         Length = length;
-        Alignment = alignment;
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -191,21 +201,20 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
         get => new(_ptr2, Length);
     }
 
-    public readonly Span<T2> Span3
+    public readonly Span<T3> Span3
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new(_ptr3, Length);
     }
 
-
+    
 
     public void ReAlloc(int length, bool zeroed)
     {
         var capacity = length * StrideSum;
-        var array = new NativeArray<byte>((byte*)_ptr1, SizeInBytes, 0);
-        array.ReAlloc(capacity, zeroed);
+        _array.ReAlloc(capacity, zeroed);
 
-        var allocator = new NativeAllocBuilder(array);
+        var allocator = new NativeAllocBuilder(_array);
         _ptr1 = allocator.AllocRaw<T1>(length);
         _ptr2 = allocator.AllocRaw<T2>(length);
         _ptr3 = allocator.AllocRaw<T3>(length);
@@ -213,12 +222,15 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
         Length = length;
     }
 
+    public void Clear() => _array.Clear();
+
     public void Dispose()
     {
-        NativeArray.DisposeArray(_ptr1, SizeInBytes, 0);
+        _array.Dispose();
         _ptr1 = null;
         _ptr2 = null;
         _ptr3 = null;
+        Length = 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

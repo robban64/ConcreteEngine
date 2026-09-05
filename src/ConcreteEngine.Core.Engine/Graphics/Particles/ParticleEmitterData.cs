@@ -13,38 +13,20 @@ internal sealed class ParticleEmitterData : IDisposable
     public const int MinCapacity = 128;
     public const int MaxCapacity = 8192;
 
-    private static int LifeStrideSum => Unsafe.SizeOf<ParticleLifeState>() + sizeof(float) + sizeof(int);
+    public readonly ParticleVisualState[] Lut = new ParticleVisualState[LutLength];
 
-    public readonly ParticleLut[] Lut = new ParticleLut[LutLength];
+    private NativeSoA<Vector4, Vector4> _spatialData;
+    private NativeSoA<float, float, byte> _lifeData;
 
-    private NativeArray<byte> _spatialData;
-    private NativeArray<byte> _lifeData;
-
-    private NativeView<Vector4> _velocities;
-    private NativeView<Vector4> _positions;
-    private NativeView<ParticleLifeState> _lifeStates;
-    private NativeView<byte> _lifeIndices;
-
-    public ParticleEmitterData(int capacity)
+    public ParticleEmitterData(int count)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(capacity, MinCapacity);
+        ArgumentOutOfRangeException.ThrowIfLessThan(count, MinCapacity);
 
-        var spatialStride = Unsafe.SizeOf<Vector4>() * 2;
-        var spatialSize = IntMath.AlignUp(capacity * spatialStride + 1023, 1024);
-        _spatialData = NativeArray.AlignedAllocate<byte>(spatialSize, 64);
-        _lifeData = NativeArray.Allocate(capacity * LifeStrideSum + 16);
-
-        var builder = new NativeAllocBuilder(_spatialData, 64);
-        _velocities = builder.AllocSlice<Vector4>(capacity);
-        _positions = builder.AllocSlice<Vector4>(capacity);
-
-        builder = new NativeAllocBuilder(_lifeData);
-
-        _lifeStates = builder.AllocSlice<ParticleLifeState>(capacity);
-        _lifeIndices = builder.AllocSlice<byte>(capacity);
+        _spatialData = NativeSoA<Vector4, Vector4>.AlignedAllocate(count, 64);
+        _lifeData = NativeSoA<float, float, byte>.Allocate(count);
     }
 
-    public int Capacity => _lifeStates.Length;
+    public int Capacity => _lifeData.Length;
 
     public bool IsNullOrEmpty
     {
@@ -53,60 +35,47 @@ internal sealed class ParticleEmitterData : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<Vector4> VelocitySpan(int count) => _velocities.AsSpan(0, count);
+    public Span<Vector4> VelocitySpan(int count) => _spatialData.Span1.Slice(0, count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<Vector4> PositionSpan(int count) => _positions.AsSpan(0, count);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<Vector4> Velocities(int count) => _velocities.Slice(0, count);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<Vector4> Positions(int count) => _positions.Slice(0, count);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<ParticleLifeState> LifeStates(int count) => _lifeStates.Slice(0, count);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<byte> LifeIndices(int count) => _lifeIndices.Slice(0, count);
+    public Span<Vector4> PositionSpan(int count) => _spatialData.Span2.Slice(0, count);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Vector4 GetVelocity(int index) => ref _velocities[index];
+    public Span<float> LifeInvMaxSpan(int start, int count) => _lifeData.Span2.Slice(start, count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Vector4 GetPosition(int index) => ref _positions[index];
+    public Span<byte> LifeIndicesSpan(int start, int count) => _lifeData.Span3.Slice(start, count);
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetVelocity(int index, Vector4 velocity) => _velocities[index] = velocity;
+    public NativeView<Vector4> Velocities(int count) => _spatialData.View1.Slice(0, count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetPosition(int index, Vector3 position) => _positions[index] = new Vector4(position, 0f);
+    public NativeView<Vector4> Positions(int count) => _spatialData.View2.Slice(0, count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetLife(int index, float life) => _lifeStates[index] = new ParticleLifeState(life, 1f / life);
+    public NativeView<float> Life(int count) => _lifeData.View1.Slice(0, count);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<float> LifeInvMax(int count) => _lifeData.View2.Slice(0, count);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<byte> LifeIndices(int count) => _lifeData.View3.Slice(0, count);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref Vector4 GetVelocity(int index) => ref _spatialData.At1(index);
 
-    public void ReAlloc(int newCount)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref Vector4 GetPosition(int index) => ref _spatialData.At2(index);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetLife(int index, float life)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(newCount, MinCapacity);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(newCount, MaxCapacity);
-
-        _spatialData.ReAlloc(newCount * Unsafe.SizeOf<Vector4>() * 2, false);
-        _lifeData.ReAlloc(newCount * LifeStrideSum, false);
-        _spatialData.Clear();
-        _lifeData.Clear();
-
-        var builder = new NativeAllocBuilder(_spatialData);
-        _velocities = builder.AllocSlice<Vector4>(newCount);
-        _positions = builder.AllocSlice<Vector4>(newCount);
-
-        builder = new NativeAllocBuilder(_lifeData);
-        _lifeStates = builder.AllocSlice<ParticleLifeState>(newCount);
-        _lifeIndices = builder.AllocSlice<byte>(newCount);
-
-        Logger.Log(LogScope.Engine, "ParticleEmitter: resized", LogLevel.Warn);
+        _lifeData.At1(index) = life;
+        _lifeData.At2(index) = 1f / life;
     }
 
+    
     public void UpdateLutFromParticleParams(ColorRgba startColor, ColorRgba endColor, Vector2 sizeStartEnd)
     {
         var lut = Lut;
@@ -114,21 +83,30 @@ internal sealed class ParticleEmitterData : IDisposable
         {
             var size = float.Lerp(sizeStartEnd.X, sizeStartEnd.Y, i / 255f);
             var color = ColorRgba.Lerp(startColor, endColor, (byte)i);
-            lut[i] = new ParticleLut(size, color);
+            lut[i] = new ParticleVisualState(size, color);
         }
     }
 
-    public PtrEnumerator<ParticleLifeState, byte> LifeEnumerator(int count) =>
-        new(LifeStates(count), LifeIndices(count));
+    public PtrEnumerator<float, float, byte> LifeEnumerator(int count) =>
+        new(Life(count), LifeInvMax(count), LifeIndices(count));
+
+    public void ReAlloc(int newCount)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(newCount, MinCapacity);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(newCount, MaxCapacity);
+
+        _spatialData.ReAlloc(newCount, false);
+        _lifeData.ReAlloc(newCount, false);
+        _spatialData.Clear();
+        _lifeData.Clear();
+
+        Logger.Log(LogScope.Engine, "ParticleEmitter: resized", LogLevel.Warn);
+    }
 
     
     public void Dispose()
     {
         _spatialData.Dispose();
         _lifeData.Dispose();
-        _velocities = default;
-        _positions = default;
-        _lifeStates = default;
-        _lifeIndices = default;
     }
 }

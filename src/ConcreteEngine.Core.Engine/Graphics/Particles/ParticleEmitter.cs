@@ -103,7 +103,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         var alignedCapacity = IntMath.AlignUp(PendingParticleCount, 128);
         var newCapacity = int.Max(ParticleEmitterData.MinCapacity, alignedCapacity);
         if (newCapacity > _data.Capacity)
-            _data.ReAlloc(newCapacity);
+          //  _data.ReAlloc(newCapacity);
 
         if (PendingParticleCount > ParticleCount)
             InitializeParticles(ParticleCount, PendingParticleCount - ParticleCount);
@@ -160,16 +160,14 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     private void InitializeParticles(int start, int length)
     {
-        if ((uint)start + (uint)length > (uint)_data.Capacity)
-            Throwers.RangeOutOfBounds(start, length, _data.Capacity);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)start + (uint)length, (uint)ParticleCount);
 
         var rng = _rng;
         var lifeMinMax = State.LifeMinMax;
-        var particleLifeState = _data.LifeStates(ParticleCount);
         for (var i = start; i < length; i++)
         {
             var life = rng.RandomFloat(0, rng.RandomFloat(lifeMinMax));
-            particleLifeState[i] = new ParticleLifeState(1, 1f / life);
+            _data.SetLife(i, life);
         }
 
         _rng = rng;

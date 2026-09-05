@@ -48,7 +48,7 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
         var vertexLength = IntMath.AlignUp(chunks.Length * VertexCapacity, 4096);
 
         _indexBuffer = NativeArray.Allocate<ushort>(IndexCount);
-        _vertexBuffer = new NativeSoA<Vector3, VertexShading>(vertexLength, false);
+        _vertexBuffer =  NativeSoA<Vector3, VertexShading>.Allocate(vertexLength, false);
 
         FillIndexBuffer(_indexBuffer);
 

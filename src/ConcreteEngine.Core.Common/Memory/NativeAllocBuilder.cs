@@ -44,11 +44,16 @@ public ref struct NativeAllocBuilder
         return view;
     }
 
-    public NativeView<T> AllocSlice<T>(int amount = 1) where T : unmanaged
+    public NativeView<T> AllocSlice<T>(int amount) where T : unmanaged
     {
         return AllocSlice(Unsafe.SizeOf<T>() * amount).Reinterpret<T>();
     }
 
+    public unsafe T* AllocRaw<T>(int amount) where T : unmanaged
+    {
+        var slice = AllocSlice(Unsafe.SizeOf<T>() * amount);
+        return (T*)slice.Ptr;
+    }
 
 }
 /*

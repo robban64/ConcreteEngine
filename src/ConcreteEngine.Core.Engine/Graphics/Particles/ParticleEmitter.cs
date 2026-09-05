@@ -127,29 +127,33 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     }
 
     [SkipLocalsInit]
-    internal void RespawnParticles(ReadOnlySpan<int> deadIndices)
+    internal void RespawnParticles(ReadOnlySpan<ushort> deadIndices)
     {
         var rng = _rng;
-        var data = _data;
 
-        var direction = new Vector4(State.Direction, 0);
+        var direction = State.Direction.AsVector128();
         var speedMinMax = State.SpeedMinMax;
         foreach (var index in deadIndices)
         {
             var speed = rng.RandomFloat(speedMinMax);
-            var randDir = rng.NextVector3As4(-0.5f, 0.5f);
-            var velocity = Vector4.Normalize(randDir + direction) * speed;
-            data.SetVelocity(index, velocity);
+            var randDir = rng.NextVector3(-0.5f, 0.5f).AsVector128();
+            var velocity = VectorMath.Normalize(randDir + direction) * speed;
+            ref var dst = ref _data.GetVelocity(index);
+            velocity.StoreUnsafe(ref Unsafe.As<Vector4, float>(ref dst));
         }
 
         var spread = State.Spread;
         foreach (var index in deadIndices)
-            data.SetPosition(index, rng.NextVector3(-spread, spread));
+        {
+            var pos = rng.NextVector3(-spread, spread);
+            ref var dst = ref _data.GetPosition(index);
+            Unsafe.As<Vector4, Vector3>(ref dst) = pos;
+        }
 
 
         var lifeMinMax = State.LifeMinMax;
         foreach (var index in deadIndices)
-            data.SetLife(index, rng.RandomFloat(lifeMinMax));
+            _data.SetLife(index, rng.RandomFloat(lifeMinMax));
 
         _rng = rng;
     }

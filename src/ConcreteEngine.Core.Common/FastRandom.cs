@@ -46,15 +46,5 @@ public static class FastRandomExtensions
             return result;
         }
 
-        [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector4 NextVector3As4(float min, float max)
-        {
-            Vector4 result = default;
-            result.X = rng.RandomFloat(min, max);
-            result.Y = rng.RandomFloat(min, max);
-            result.Z = rng.RandomFloat(min, max);
-            return result;
-        }
-
     }
 }

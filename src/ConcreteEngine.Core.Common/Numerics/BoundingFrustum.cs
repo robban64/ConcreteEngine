@@ -1,6 +1,8 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using static ConcreteEngine.Core.Common.Numerics.Maths.CollisionMethods;
 
 namespace ConcreteEngine.Core.Common.Numerics;
@@ -19,18 +21,18 @@ public struct BoundingFrustum
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void From(in Matrix4x4 transposedViewProjection, out BoundingFrustum f)
     {
-        ref Vector4 cols = ref Unsafe.As<Matrix4x4, Vector4>(ref Unsafe.AsRef(in transposedViewProjection));
-        Vector4 col1 = Unsafe.Add(ref cols, 0);
-        Vector4 col2 = Unsafe.Add(ref cols, 1);
-        Vector4 col3 = Unsafe.Add(ref cols, 2);
-        Vector4 col4 = Unsafe.Add(ref cols, 3);
+        ref var cols = ref Unsafe.As<Matrix4x4, Vector128<float>>(ref Unsafe.AsRef(in transposedViewProjection));
+        var col1 = Unsafe.Add(ref cols, 0);
+        var col2 = Unsafe.Add(ref cols, 1);
+        var col3 = Unsafe.Add(ref cols, 2);
+        var col4 = Unsafe.Add(ref cols, 3);
 
-        f.LeftPlane = NormalizePlane(col4 + col1);
-        f.RightPlane = NormalizePlane(col4 - col1);
-        f.TopPlane = NormalizePlane(col4 - col2);
-        f.BottomPlane = NormalizePlane(col4 + col2);
-        f.NearPlane = NormalizePlane(col4 + col3);
-        f.FarPlane = NormalizePlane(col4 - col3);
+        f.LeftPlane = VectorMath.Normalize(col4 + col1).AsPlane();
+        f.RightPlane = VectorMath.Normalize(col4 - col1).AsPlane();
+        f.TopPlane =VectorMath.Normalize (col4 - col2).AsPlane();
+        f.BottomPlane = VectorMath.Normalize(col4 + col2).AsPlane();
+        f.NearPlane = VectorMath.Normalize(col4 + col3).AsPlane();
+        f.FarPlane = VectorMath.Normalize(col4 - col3).AsPlane();
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void From(in Matrix4x4 transposedViewProjection, Span<Vector4> frustums)
@@ -87,12 +89,4 @@ public struct BoundingFrustum
         return p * invLength;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Plane NormalizePlane(Vector4 p)
-    {
-        var lengthSq = p.LengthSquared();
-        var invLength = 1.0f / MathF.Sqrt(lengthSq);
-        Vector4 normalized = p * invLength;
-        return Unsafe.As<Vector4, Plane>(ref normalized);
-    }
 }

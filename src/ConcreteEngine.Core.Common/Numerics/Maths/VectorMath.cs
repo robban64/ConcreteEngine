@@ -7,6 +7,14 @@ namespace ConcreteEngine.Core.Common.Numerics.Maths;
 public static class VectorMath
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector128<float> Normalize(Vector128<float> v)
+    {
+        var dot = Vector128.Create(Vector128.Dot(v, v));
+        var sqrt = Vector128.Sqrt(dot);
+        return Vector128.Divide(v, sqrt);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool NearlyEqual(Vector2 a, Vector2 b, float eps = FloatMath.DefaultEpsilon) =>
         MathF.Abs(a.X - b.X) < eps && MathF.Abs(a.Y - b.Y) < eps;
 

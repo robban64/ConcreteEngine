@@ -122,7 +122,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
 
     private void UpdateSkinned(ModelRig rig, int clipIndex, float time)
     {
-        var trackView = rig.GetClipView(clipIndex).AsView();
+        var trackView = rig.GetClipTracks(clipIndex).AsView();
         ref var bindPoses = ref MemoryMarshal.GetArrayDataReference(rig.BindPoseArray);
         var index = 0;
         foreach (var it in trackView.Zip(_scratchGlobals.Slice(0, rig.BoneCount)))

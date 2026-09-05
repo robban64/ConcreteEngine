@@ -116,10 +116,6 @@ public sealed class AnimationInstance : IComparable<AnimationInstance>
         Id = animationId;
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal SkinningContext GetSkinningContext() => Rig.GetSkinningContext(ActiveClip);
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<RenderEntity> GetEntitySpan() => CollectionsMarshal.AsSpan(_renderEntities);
 

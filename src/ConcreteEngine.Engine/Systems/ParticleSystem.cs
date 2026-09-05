@@ -26,7 +26,7 @@ internal sealed class ParticleSystem : IDisposable
     private readonly ParticleMesh _particleMesh;
     private readonly ParticleManager _particleManager;
 
-    private int[] _deadIndices;
+    private ushort[] _deadIndices;
 
     internal ParticleSystem(GfxContext gfx)
     {
@@ -34,7 +34,7 @@ internal sealed class ParticleSystem : IDisposable
         _allocated = true;
         _particleMesh = new ParticleMesh(gfx);
         _particleManager = ParticleManager.Instance;
-        _deadIndices = new int[1024];
+        _deadIndices = new ushort[1024];
     }
 
     internal void Commit()
@@ -55,7 +55,7 @@ internal sealed class ParticleSystem : IDisposable
             max = int.Max(max, emitter.ParticleCount);
         }
         
-        if (max > _deadIndices.Length) _deadIndices = new int[max];
+        if (max > _deadIndices.Length) _deadIndices = new ushort[max];
 
         _particleManager.ClearPendingEmitters();
     }
@@ -68,8 +68,10 @@ internal sealed class ParticleSystem : IDisposable
         {
             var emitter = _particleManager.Get(emitterId);
             InterpolateEmitter(emitter.GetEmitterData(), emitter.ParticleCount, timeOffset);
+
             _particleMesh.UploadGpuData(emitter.BoundSlot, emitter.ParticleCount);
         }
+
     }
 
     
@@ -86,13 +88,14 @@ internal sealed class ParticleSystem : IDisposable
 
             var emitter = _particleManager.Get(emitterId);
             if (!emitter.IsAttached) continue;
-
+           
             var dead = SimulateLife(emitter.GetEmitterData(), emitter.ParticleCount, simDt);
             if (dead > 0) emitter.RespawnParticles(_deadIndices.AsSpan(0, dead));
             SimulateSpatial256(emitter.GetEmitterData(), emitter.ParticleCount, emitter.State.Gravity, simDt);
-
+           
             _processedEmitters.Add(emitterId);
         }
+
     }
 
 
@@ -132,7 +135,7 @@ internal sealed class ParticleSystem : IDisposable
             }
             else
             {
-                _deadIndices[deadIndex++] = index;
+                _deadIndices[deadIndex++] = (ushort)index;
                 ++index;
             }
         }

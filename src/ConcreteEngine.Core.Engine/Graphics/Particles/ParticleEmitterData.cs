@@ -70,6 +70,11 @@ internal sealed class ParticleEmitterData : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<byte> LifeIndices(int count) => _lifeIndices.Slice(0, count);
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref Vector4 GetVelocity(int index) => ref _velocities[index];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref Vector4 GetPosition(int index) => ref _positions[index];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetVelocity(int index, Vector4 velocity) => _velocities[index] = velocity;

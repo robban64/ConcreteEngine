@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Time;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
@@ -23,7 +24,7 @@ public sealed class CameraFrustum
         var transposed = Matrix4x4.Transpose(projectionViewMatrix);
         BoundingFrustum.From(in transposed, out _lightFrustum);
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public PassMask Intersects(PassMask passes, in BoundingAxisBox box)
     {

@@ -65,29 +65,21 @@ public sealed class ModelRig : IDisposable
 
     public ReadOnlySpan<byte> ParentIndices(int count) => new(_parentIndices, 0, count);
     public ReadOnlySpan<Matrix4x4> BindPose(int count) => new(_bindPose, 0, count);
-    public ReadOnlySpan<Matrix4x4> InverseBindPose(int count)  => new(_inverseBindPose, 0, count);
+    public ReadOnlySpan<Matrix4x4> InverseBindPose(int count) => new(_inverseBindPose, 0, count);
     public Matrix4x4[] BindPoseArray => _bindPose;
     public Matrix4x4[] InverseBindPoseArray => _inverseBindPose;
     public byte[] ParentIndicesArray => _parentIndices;
-    
-    internal NativeClip GetClipView(int clip) => _clipsView[clip];
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly Matrix4x4 GetInverseBindPose(int index) => ref Unsafe.Add(ref _inverseBindPose[0], index);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly Matrix4x4 GetBindPose(int index) => ref _bindPose[index];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public  byte GetParentIndex(int index) => _parentIndices[index];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal SkinningContext GetSkinningContext(int clip)
+    internal NativeClip GetClipTracks(int clip)
     {
-        if ((uint)clip >= (uint)ClipCount || _clipsView.IsNull || _clipsView[clip].IsNull)
+        if ((uint)clip > (uint)ClipCount || _clipsView.IsNull)
             Throwers.InvalidOperation(nameof(_clipsBuffer));
 
-        return new SkinningContext(_parentIndices, _bindPose, _inverseBindPose, ref _clipsView[clip]);
+        var it = _clipsView[clip];
+        if (it.IsNull || it.Length == 0) 
+            Throwers.InvalidOperation(nameof(_clipsBuffer));
+
+        return it;
     }
 
     public void Dispose()

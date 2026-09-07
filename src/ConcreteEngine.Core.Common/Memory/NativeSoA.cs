@@ -27,7 +27,7 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(length, 4);
 
-        var capacity = length * StrideSum;
+        var capacity = length * StrideSum + (alignment * 2);
         _array = alignment == 0
             ? NativeArray.Allocate(capacity, zeroed)
             : NativeArray.AlignedAllocate(IntMath.AlignUp(capacity, alignment), alignment, zeroed);
@@ -141,7 +141,7 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(length, 4);
 
-        var capacity = length * StrideSum;
+        var capacity = length * StrideSum + (alignment * 3);
         _array = alignment == 0
             ? NativeArray.Allocate(capacity, zeroed)
             : NativeArray.AlignedAllocate(IntMath.AlignUp(capacity, alignment), alignment, zeroed);

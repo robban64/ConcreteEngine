@@ -67,10 +67,14 @@ internal sealed class ParticleSystem : IDisposable
         foreach (var emitterId in _processedEmitters.AsSpan())
         {
             var emitter = _particleManager.Get(emitterId);
-            InterpolateEmitter(emitter.GetEmitterData(), emitter.ParticleCount, timeOffset);
-
+            var destination = _particleMesh.GetBufferView(emitter.ParticleCount);
+            avg1.BeginSample();
+            InterpolateSubmitEmitter(emitter.GetEmitterData(), destination , timeOffset);
+            avg1.EndSample();
             _particleMesh.UploadGpuData(emitter.BoundSlot, emitter.ParticleCount);
         }
+        if (avg1.Ticks >= 200) avg1.ResetAndPrint();
+
     }
 
 
@@ -88,156 +92,118 @@ internal sealed class ParticleSystem : IDisposable
             var emitter = _particleManager.Get(emitterId);
             if (!emitter.IsAttached) continue;
 
-            avg1.BeginSample();
-            var dead = SimulateLife2(emitter.GetEmitterData(), emitter.ParticleCount, simDt);
-            if (dead > 0) emitter.RespawnParticles(_deadIndices.AsSpan(0, dead));
-            SimulateSpatial256(emitter.GetEmitterData(), emitter.ParticleCount, emitter.State.Gravity, simDt);
-            avg1.EndSample();
+            SimulateEmitter(emitter, simDt);
 
             _processedEmitters.Add(emitterId);
         }
 
-        if (avg1.Ticks > 80) avg1.ResetAndPrint();
     }
 
-    private AvgFrameTimer avg1, avg2;
+    private AvgFrameTimer avg1;
 
     [SkipLocalsInit]
-    private unsafe void InterpolateEmitter(ParticleEmitterData data, int count, float timeOffset)
+    private void InterpolateSubmitEmitter(ParticleEmitterData data, NativeView<ParticleVertex> destination, float timeOffset)
     {
-        var lifeIndices = data.LifeIndices(count).Ptr;
-        ref var start = ref MemoryMarshal.GetArrayDataReference(data.Lut);
-        foreach (var it in ParticleEnumerator(data.Velocities(count), data.Positions(count)))
+        var count = destination.Length;
+        foreach (var it in destination.Zip(data.Velocities.Slice(0, count), data.Positions.Slice(0, count)))
         {
             var position128 = Vector128.FusedMultiplyAdd(
-                Unsafe.BitCast<Vector4, Vector128<float>>(it.Item1), // velocity
+                Vector128.LoadUnsafe(ref it.Item2.X), // velocity
                 Vector128.Create(timeOffset),
-                Unsafe.BitCast<Vector4, Vector128<float>>(it.Item2) // position
+                Vector128.LoadUnsafe(ref it.Item3.X) // position
             );
 
-            position128.StoreUnsafe(ref Unsafe.As<ParticleVertex, float>(ref it.Item3));
-            Unsafe.As<float, ParticleVisualState>(ref it.Item3.Size) = Unsafe.Add(ref start, *lifeIndices++);
+            position128.StoreUnsafe(ref Unsafe.As<ParticleVertex, float>(ref it.Item1));
         }
+        
+        ref var lutRef = ref MemoryMarshal.GetArrayDataReference(data.Lut);
+        foreach (var it in destination.Zip(data.LifeIndices.Slice(0, count)))
+        {
+            Unsafe.As<float, ParticleVisualState>(ref it.Item1.Size) = Unsafe.Add(ref lutRef, it.Item2);
+        }
+        
+
+    }
+
+    private void SimulateEmitter(ParticleEmitter emitter, float simDt)
+    {
+        var count = emitter.ParticleCount;
+        var data = emitter.GetEmitterData();
+        var dead = SimulateLife(data,count, simDt);
+        if (dead > 0)
+        {
+            emitter.RespawnParticles(_deadIndices.AsSpan(0, dead));
+        }
+
+        SimulateLifeIndex(data, count);
+        SimulateSpatial(data, count, emitter.State.Gravity, simDt);
     }
 
     private int SimulateLife(ParticleEmitterData data, int count, float simDt)
     {
-        // var lifeStates = data.LifeStates(count).AsSpan();
-        // var lifeIndices = data.LifeIndices(count).AsSpan();
-        // for (int i = 0; i <= lifeStates.Length - Vector128<int>.Count; i += Vector128<int>.Count) { }
-
-        int index = 0, deadIndex = 0;
-        foreach (var it in data.LifeEnumerator(count))
-        {
-            float life = it.Item1 -= simDt;
-            if (life > 0)
-            {
-                var l = float.FusedMultiplyAdd(-life, it.Item2, 1f);
-                it.Item3 = (byte)float.FusedMultiplyAdd(l, 255f, 0.5f);
-                ++index;
-            }
-            else
-            {
-                _deadIndices[deadIndex++] = (ushort)index;
-                ++index;
-            }
-        }
-
-        return deadIndex;
-    }
-
-    private unsafe int SimulateLife2(ParticleEmitterData data, int count, float simDt)
-    {
-        bool hasDead = false;
-        
-        var lifeSpan = data.Life(count).AsSpan();
-        for (int i = 0; i <= lifeSpan.Length - Vector128<float>.Count; i += Vector128<float>.Count)
-        {
-            ref var life = ref lifeSpan[i];
-            var result = Vector128.Subtract(Vector128.LoadUnsafe(ref life), Vector128.Create(simDt));
-            hasDead |= Vector128.LessThanOrEqualAny(result, Vector128.Create(0f));
-            result.StoreUnsafe(ref life);
-        }
-
         int deadIndex = 0;
-        if (hasDead)
-        {
-            ref var deadIndices = ref MemoryMarshal.GetArrayDataReference(_deadIndices);
-            for (int i = 0; i <= lifeSpan.Length - Vector128<float>.Count; i += Vector128<float>.Count)
-            {
-                var vMask = Vector128.LessThanOrEqual(Vector128.LoadUnsafe(ref lifeSpan[i]), Vector128.Create(0f));
-                if(vMask == default) continue;
-                var currentIndex = deadIndex;
-                if (vMask[0] != 0f) Unsafe.Add(ref deadIndices, currentIndex++) = (ushort)(i + 0);
-                if (vMask[1] != 0f) Unsafe.Add(ref deadIndices, currentIndex++) = (ushort)(i + 1);
-                if (vMask[2] != 0f) Unsafe.Add(ref deadIndices, currentIndex++) = (ushort)(i + 2);
-                if (vMask[3] != 0f) Unsafe.Add(ref deadIndices, currentIndex++) = (ushort)(i + 3);
-                deadIndex = currentIndex;
-                /*
+        var lifeSpan = data.LifeState.AsSpan(0, count);
+        ref var deadIndices = ref MemoryMarshal.GetArrayDataReference(_deadIndices);
 
-                    var mask = Vector128.LessThanOrEqual(vLife, Vector128.Create(0f)).ExtractMostSignificantBits();
-                   if (mask == 0) continue;
-                   while (mask != 0)
-                   {
-                       var p = BitOperations.TrailingZeroCount(mask);
-                       Unsafe.Add(ref deadIndices, deadIndex++) = (ushort)(i + p);
-                       mask &= mask - 1;
-                   }
-                */
+        for (int i = 0; i <= lifeSpan.Length - Vector256<float>.Count; i += Vector256<float>.Count)
+        {
+            var life = lifeSpan.Slice(i, Vector256<float>.Count);
+            var vLife = Vector256.Subtract(Vector256.Create(life), Vector256.Create(simDt));
+            vLife.CopyTo(life);
+
+            var mask = Vector256.LessThanOrEqual(vLife, Vector256.Create(0f)).ExtractMostSignificantBits();
+            while (mask != 0)
+            {
+                var p = BitOperations.TrailingZeroCount(mask);
+                Unsafe.Add(ref deadIndices, deadIndex++) = (ushort)(i + p);
+                mask &= mask - 1;
             }
         }
 
-        
-        var invMaxLifeSpan = data.LifeInvMaxSpan(0, count);
-        var lifeIndexSpan = data.LifeIndicesSpan(0, count);
-        for (int i = 0; i <= lifeSpan.Length - Vector128<float>.Count; i += Vector128<float>.Count)
-        {
-            var vLife = Vector128.LoadUnsafe(ref lifeSpan[i]);
-            var vDiff = Vector128.FusedMultiplyAdd(-vLife, Vector128.LoadUnsafe(ref invMaxLifeSpan[i]), Vector128.Create(1f));
-            var vIndex = Vector128.FusedMultiplyAdd(vDiff, Vector128.Create(255f), Vector128.Create(0.5f));
-            
-            lifeIndexSpan[i + 0] = (byte)vIndex[0];
-            lifeIndexSpan[i + 1] = (byte)vIndex[1];
-            lifeIndexSpan[i + 2] = (byte)vIndex[2];
-            lifeIndexSpan[i + 3] = (byte)vIndex[3];
-        }
-
-
         return deadIndex;
-
     }
 
-    [SkipLocalsInit]
-    private void SimulateSpatial256(ParticleEmitterData emitter, int count, Vector3 gravity, float simDt)
+    private void SimulateLifeIndex(ParticleEmitterData data, int count)
+    {
+        var lifeSpan = data.LifeState.AsSpan(0, count);
+        var lifeIndexSpan = data.LifeIndices.AsSpan(0, count);
+        var invMaxLifeSpan = data.LifeInvMax.AsSpan(0, count);
+
+        if (lifeSpan.Length != invMaxLifeSpan.Length)
+            Throwers.InvalidArgument(nameof(data));
+
+        while (lifeSpan.Length >= Vector256<float>.Count)
+        {
+            var vDiff = Fma.MultiplyAddNegated(Vector256.Create(lifeSpan), Vector256.Create(invMaxLifeSpan), Vector256.Create(1f));
+            var vIndex = Fma.MultiplyAdd(vDiff, Vector256.Create(255f), Vector256.Create(0.5f));
+            
+            var vIndexInt32 = Avx.ConvertToVector256Int32(vIndex);
+            var shorts = Sse2.PackSignedSaturate(vIndexInt32.GetLower(), vIndexInt32.GetUpper());
+            var bytes = Sse2.PackUnsignedSaturate(shorts, Vector128<short>.Zero);
+
+            Unsafe.As<byte, long>(ref MemoryMarshal.GetReference(lifeIndexSpan)) = bytes.AsInt64().ToScalar();
+            
+            lifeSpan = lifeSpan.Slice(Vector256<float>.Count);
+            invMaxLifeSpan = invMaxLifeSpan.Slice(Vector256<float>.Count);
+            lifeIndexSpan = lifeIndexSpan.Slice(Vector256<float>.Count);
+        }
+    }
+
+    private void SimulateSpatial(ParticleEmitterData emitter, int count, Vector3 gravity, float simDt)
     {
         var gravityStep256 = Vector256.Create(gravity.AsVector128() * simDt);
-        var positions = emitter.PositionSpan(count);
-        var velocities = emitter.VelocitySpan(count);
-        for (int i = 0; i < velocities.Length - 1; i += 2)
+        var positions = emitter.Positions.Slice(0, count).Reinterpret<float>().AsSpan();
+        var velocities = emitter.Velocities.Slice(0, count).Reinterpret<float>().AsSpan();
+        while (velocities.Length >= Vector256<float>.Count)
         {
-            ref var velocity = ref velocities[i];
-            var velocity256 = Vector256.Add(
-                Vector256.LoadUnsafe(ref Unsafe.As<Vector4, float>(ref velocity)),
-                gravityStep256
-            );
-            velocity256.StoreUnsafe(ref Unsafe.As<Vector4, float>(ref velocity));
-
-            ref var position = ref positions[i];
-            var position256 = Vector256.FusedMultiplyAdd(
-                velocity256,
-                Vector256.Create(simDt),
-                Vector256.LoadUnsafe(ref Unsafe.As<Vector4, float>(ref position))
-            );
-            position256.StoreUnsafe(ref Unsafe.As<Vector4, float>(ref position));
+            var vVelocity = Vector256.Add(Vector256.Create(velocities), gravityStep256);
+            var vPosition = Vector256.FusedMultiplyAdd(vVelocity, Vector256.Create(simDt), Vector256.Create(positions));
+            vVelocity.CopyTo(velocities);
+            vPosition.CopyTo(positions);
+            velocities = velocities.Slice(Vector256<float>.Count);
+            positions =  positions.Slice(Vector256<float>.Count);
         }
-    }
-
-    [SkipLocalsInit]
-    private PtrEnumerator<Vector4, Vector4, ParticleVertex> ParticleEnumerator(NativeView<Vector4> velocityView,
-        NativeView<Vector4> positionView)
-    {
-        return new PtrEnumerator<Vector4, Vector4, ParticleVertex>(velocityView, positionView,
-            _particleMesh.GetBufferView(velocityView.Length));
+      
     }
 
 

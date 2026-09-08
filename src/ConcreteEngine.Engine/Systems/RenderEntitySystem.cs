@@ -90,16 +90,17 @@ internal sealed class RenderEntitySystem : IDisposable
                 ? query.OriginalPasses
                 : frustum.Intersects(query.OriginalPasses, in query.Bounds);
 
-            if (passMask != 0) 
+            if (passMask != 0)
                 query.DrawPasses = passMask;
-            else if (passMask != query.OriginalPasses) 
+            else if (passMask != query.OriginalPasses)
                 query.DrawPasses = 0;
         }
     }
+
     private unsafe int BuildVisibleIndices()
     {
         CameraManager.Instance.Camera.ExtractDepthKeyData(out var forward, out var scale, out var bias);
-        
+
         var indices = (DrawEntityKey*)_sortIndices.Ptr;
         foreach (var query in RenderEcs.Core.VisibilityBoundsQuery(PassMask.Depth | PassMask.Main | PassMask.Effect))
         {

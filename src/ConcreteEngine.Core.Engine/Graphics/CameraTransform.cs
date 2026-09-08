@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Time;
@@ -8,64 +9,69 @@ namespace ConcreteEngine.Core.Engine.Graphics;
 
 public sealed class CameraFrustum
 {
-    private BoundingFrustum _mainFrustum;
-    private BoundingFrustum _lightFrustum;
+    private readonly Vector4[] _frustumPlanes = new Vector4[12];
+
+    private Span<Vector4> MainVectors => _frustumPlanes.AsSpan(0, 6);
+    private Span<Vector4> LightVectors => _frustumPlanes.AsSpan(6);
+
+    private ref BoundingFrustum MainFrustum =>
+        ref Unsafe.As<Vector4, BoundingFrustum>(ref MemoryMarshal.GetArrayDataReference(_frustumPlanes));
+
+    private ref BoundingFrustum LightFrustum =>
+        ref Unsafe.As<Vector4, BoundingFrustum>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(_frustumPlanes),
+            6));
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void UpdateMain(in Matrix4x4 projectionViewMatrix)
     {
         var transposed = Matrix4x4.Transpose(projectionViewMatrix);
-        BoundingFrustum.From(in transposed, out _mainFrustum);
+        BoundingFrustum.From(in transposed, out MainFrustum);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void UpdateLight(in Matrix4x4 projectionViewMatrix)
     {
         var transposed = Matrix4x4.Transpose(projectionViewMatrix);
-        BoundingFrustum.From(in transposed, out _lightFrustum);
+        BoundingFrustum.From(in transposed, out LightFrustum);
     }
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public PassMask Intersects(PassMask passes, in BoundingAxisBox box)
     {
         var center = new Vector4(box.Center, 1f);
         var extent = new Vector4(box.Extent, 0f);
 
         var mask = PassMask.None;
-        if ((passes & PassMask.Main) != 0 && IntersectsMain(center, extent)) mask |= PassMask.Main;
-        if ((passes & PassMask.Depth) != 0 && IntersectsLight(center, extent)) mask |= PassMask.Depth;
+        if ((passes & PassMask.Depth) != 0)
+        {
+            var test = TestIntersect(LightVectors, in center, in extent);
+            mask |= test ? PassMask.Depth : 0;
+        }
+
+        if ((passes & PassMask.Main) != 0)
+        {
+            var test = TestIntersect(MainVectors, in center, in extent);
+            mask |= test ? PassMask.Main : 0;
+        }
         return mask;
     }
-
-
+    
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool IntersectsMain(Vector4 center4, Vector4 extent4)
+    private static bool TestIntersect(Span<Vector4> span, in Vector4 center4, in Vector4 extent4)
     {
-        ref var planes = ref Unsafe.As<BoundingFrustum, Vector4>(ref _mainFrustum);
-        ref readonly var end = ref Unsafe.Add(ref planes, 5);
-        while (Unsafe.IsAddressLessThanOrEqualTo(ref planes, in end))
+        ref var plane = ref MemoryMarshal.GetReference(span);
+        ref readonly var end = ref Unsafe.Add(ref plane, 5);
+        while (Unsafe.IsAddressLessThanOrEqualTo(ref plane, in end))
         {
-            if (CollisionMethods.IsOutsidePlane(center4, extent4, in planes)) return false;
-            planes = ref Unsafe.Add(ref planes, 1);
+            bool isOutside = CollisionMethods.IsOutsidePlane(center4, extent4, in plane);
+            if (isOutside) return false;
+            plane = ref Unsafe.Add(ref plane, 1);
         }
 
         return true;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool IntersectsLight(Vector4 center4, Vector4 extent4)
-    {
-        ref var planes = ref Unsafe.As<BoundingFrustum, Vector4>(ref _lightFrustum);
-        ref readonly var end = ref Unsafe.Add(ref planes, 5);
-        while (Unsafe.IsAddressLessThanOrEqualTo(ref planes, in end))
-        {
-            if (CollisionMethods.IsOutsidePlane(center4, extent4, in planes)) return false;
-            planes = ref Unsafe.Add(ref planes, 1);
-        }
-
-        return true;
-    }
-
+   
 }
 
 public sealed class CameraTransformSnapshot
@@ -82,7 +88,7 @@ public sealed class CameraTransformSnapshot
         var quaternion = RotationMath.YawPitchToQuaternion(orientation);
 
         ref var viewMatrix = ref ViewMatrix;
-        MatrixMath.CreateFixedSizeModelMatrix( translationF, in quaternion, out viewMatrix);
+        MatrixMath.CreateFixedSizeModelMatrix(translationF, in quaternion, out viewMatrix);
         Matrix4x4.Invert(viewMatrix, out viewMatrix);
     }
 

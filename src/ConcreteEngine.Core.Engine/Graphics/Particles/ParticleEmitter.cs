@@ -34,7 +34,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public int BoundSlot { get; private set; } = -1;
     public int ParticleCount { get; private set; }
     public int PendingParticleCount { get; private set; }
-
+    public int AlignedParticleCount => IntMath.AlignUp(ParticleCount, 16);
 
     private BoundingBox _localBounds;
 
@@ -60,7 +60,6 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public bool IsDirty => _isDirty;
     public bool IsAttached => BoundSlot >= 0;
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly BoundingBox LocalBounds() => ref _localBounds;
 
@@ -75,9 +74,9 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ParticleEmitterData GetEmitterData()
+    internal ParticleEmitterData GetData()
     {
-        if (_data.IsNullOrEmpty) Throwers.InvalidOperation("ParticleEmitter: null or empty emitter data");
+        if (_data.IsNullOrEmpty) Throwers.NullPointer("ParticleEmitter: null or empty emitter data");
         return _data;
     }
 
@@ -103,28 +102,14 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         var alignedCapacity = IntMath.AlignUp(PendingParticleCount, 128);
         var newCapacity = int.Max(ParticleEmitterData.MinCapacity, alignedCapacity);
         if (newCapacity > _data.Capacity)
-          //  _data.ReAlloc(newCapacity);
+            //  _data.ReAlloc(newCapacity);
 
-        if (PendingParticleCount > ParticleCount)
-            InitializeParticles(ParticleCount, PendingParticleCount - ParticleCount);
+            if (PendingParticleCount > ParticleCount)
+                InitializeParticles(ParticleCount, PendingParticleCount - ParticleCount);
 
         ParticleCount = PendingParticleCount;
     }
 
-    public int CompareTo(ParticleEmitter? other)
-    {
-        if (ReferenceEquals(this, other)) return 0;
-        return other is null ? 1 : Id.CompareTo(other.Id);
-    }
-
-    public int CompareTo(ushort other) => Id.CompareTo(other);
-
-    public void Dispose()
-    {
-        _data.Dispose();
-        BoundSlot = -1;
-        BoundMesh = default;
-    }
 
     [SkipLocalsInit]
     internal void RespawnParticles(ReadOnlySpan<ushort> deadIndices)
@@ -178,8 +163,21 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         var max = Vector3.One * 5;
         _localBounds = new BoundingBox(-max, max);
     }
-    
 
+    public int CompareTo(ParticleEmitter? other)
+    {
+        if (ReferenceEquals(this, other)) return 0;
+        return other is null ? 1 : Id.CompareTo(other.Id);
+    }
+
+    public int CompareTo(ushort other) => Id.CompareTo(other);
+
+    public void Dispose()
+    {
+        _data.Dispose();
+        BoundSlot = -1;
+        BoundMesh = default;
+    }
 
     public sealed class ParticleEmitterState(
         ParticleEmitter emitter,

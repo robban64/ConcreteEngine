@@ -67,13 +67,11 @@ internal sealed class ParticleSystem : IDisposable
         foreach (var emitterId in _processedEmitters.AsSpan())
         {
             var emitter = _particleManager.Get(emitterId);
-            var destination = _particleMesh.GetBufferView(emitter.ParticleCount);
-            avg1.BeginSample();
-            InterpolateSubmitEmitter(emitter.GetEmitterData(), destination , timeOffset);
-            avg1.EndSample();
+            _particleMesh.GetBufferView(emitter.AlignedParticleCount, out var positions, out var particles);
+            InterpolatePosition(emitter.GetData(), positions, timeOffset);
+            InterpolateVisual(emitter.GetData(), particles);
             _particleMesh.UploadGpuData(emitter.BoundSlot, emitter.ParticleCount);
         }
-        if (avg1.Ticks >= 200) avg1.ResetAndPrint();
 
     }
 
@@ -96,40 +94,46 @@ internal sealed class ParticleSystem : IDisposable
 
             _processedEmitters.Add(emitterId);
         }
-
     }
 
-    private AvgFrameTimer avg1;
-
-    [SkipLocalsInit]
-    private void InterpolateSubmitEmitter(ParticleEmitterData data, NativeView<ParticleVertex> destination, float timeOffset)
+    private void InterpolatePosition(ParticleEmitterData data, NativeView<Vector4> destination, float timeOffset)
     {
-        var count = destination.Length;
-        foreach (var it in destination.Zip(data.Velocities.Slice(0, count), data.Positions.Slice(0, count)))
+        var destSpan = destination.Reinterpret<float>().AsSpan();
+        var velocitiesSpan = data.Velocities.Reinterpret<float>().AsSpan(0, destSpan.Length);
+        var positionSpan = data.Positions.Reinterpret<float>().AsSpan(0, destSpan.Length);
+
+        while (destSpan.Length >= Vector256<float>.Count)
         {
-            var position128 = Vector128.FusedMultiplyAdd(
-                Vector128.LoadUnsafe(ref it.Item2.X), // velocity
-                Vector128.Create(timeOffset),
-                Vector128.LoadUnsafe(ref it.Item3.X) // position
+            var vPos = Vector256.FusedMultiplyAdd(
+                Vector256.Create(velocitiesSpan),
+                Vector256.Create(timeOffset),
+                Vector256.Create(positionSpan)
             );
 
-            position128.StoreUnsafe(ref Unsafe.As<ParticleVertex, float>(ref it.Item1));
-        }
-        
-        ref var lutRef = ref MemoryMarshal.GetArrayDataReference(data.Lut);
-        foreach (var it in destination.Zip(data.LifeIndices.Slice(0, count)))
-        {
-            Unsafe.As<float, ParticleVisualState>(ref it.Item1.Size) = Unsafe.Add(ref lutRef, it.Item2);
-        }
-        
+            vPos.CopyTo(destSpan);
 
+            destSpan = destSpan.Slice(Vector256<float>.Count);
+            positionSpan = positionSpan.Slice(Vector256<float>.Count);
+            velocitiesSpan = velocitiesSpan.Slice(Vector256<float>.Count);
+        }
+    }
+
+    private void InterpolateVisual(ParticleEmitterData data, NativeView<ParticleVertex> destination)
+    {
+        var destSpan = destination.AsSpan();
+        var lifeIndexSpan = data.LifeIndices.AsSpan(0, destSpan.Length);
+        ref var lutRef = ref MemoryMarshal.GetArrayDataReference(data.Lut);
+        for (int i = 0; i < destSpan.Length; ++i)
+        {
+            destSpan[i] = Unsafe.Add(ref lutRef, lifeIndexSpan[i]);
+        }
     }
 
     private void SimulateEmitter(ParticleEmitter emitter, float simDt)
     {
-        var count = emitter.ParticleCount;
-        var data = emitter.GetEmitterData();
-        var dead = SimulateLife(data,count, simDt);
+        var count = emitter.AlignedParticleCount;
+        var data = emitter.GetData();
+        var dead = SimulateLife(data, count, simDt);
         if (dead > 0)
         {
             emitter.RespawnParticles(_deadIndices.AsSpan(0, dead));
@@ -174,15 +178,16 @@ internal sealed class ParticleSystem : IDisposable
 
         while (lifeSpan.Length >= Vector256<float>.Count)
         {
-            var vDiff = Fma.MultiplyAddNegated(Vector256.Create(lifeSpan), Vector256.Create(invMaxLifeSpan), Vector256.Create(1f));
+            var vDiff = Fma.MultiplyAddNegated(Vector256.Create(lifeSpan), Vector256.Create(invMaxLifeSpan),
+                Vector256.Create(1f));
             var vIndex = Fma.MultiplyAdd(vDiff, Vector256.Create(255f), Vector256.Create(0.5f));
-            
+
             var vIndexInt32 = Avx.ConvertToVector256Int32(vIndex);
             var shorts = Sse2.PackSignedSaturate(vIndexInt32.GetLower(), vIndexInt32.GetUpper());
             var bytes = Sse2.PackUnsignedSaturate(shorts, Vector128<short>.Zero);
 
             Unsafe.As<byte, long>(ref MemoryMarshal.GetReference(lifeIndexSpan)) = bytes.AsInt64().ToScalar();
-            
+
             lifeSpan = lifeSpan.Slice(Vector256<float>.Count);
             invMaxLifeSpan = invMaxLifeSpan.Slice(Vector256<float>.Count);
             lifeIndexSpan = lifeIndexSpan.Slice(Vector256<float>.Count);
@@ -201,9 +206,8 @@ internal sealed class ParticleSystem : IDisposable
             vVelocity.CopyTo(velocities);
             vPosition.CopyTo(positions);
             velocities = velocities.Slice(Vector256<float>.Count);
-            positions =  positions.Slice(Vector256<float>.Count);
+            positions = positions.Slice(Vector256<float>.Count);
         }
-      
     }
 
 

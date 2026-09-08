@@ -15,18 +15,12 @@ using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Engine.Mesh;
 
-[StructLayout(LayoutKind.Sequential)]
-internal struct ParticleVertex(in Vector3 position, ParticleVisualState visualState)
-{
-    public Vector3 Position = position;
-    public float Size = visualState.Size;
-    public ColorRgba Color = visualState.Color;
-}
 
-internal readonly struct ParticleMeshHandle(MeshId meshId, VertexBufferId vboInstanceId)
+internal readonly struct ParticleMeshHandle(MeshId meshId, VertexBufferId positionVbo, VertexBufferId particleVbo)
 {
     public readonly MeshId MeshId = meshId;
-    public readonly VertexBufferId VboInstanceId = vboInstanceId;
+    public readonly VertexBufferId PositionVbo = positionVbo;
+    public readonly VertexBufferId ParticleVbo = particleVbo;
 }
 
 internal sealed class ParticleMesh : IDisposable
@@ -40,6 +34,7 @@ internal sealed class ParticleMesh : IDisposable
     public int Count { get; private set; }
 
     private ParticleMeshHandle[] _handles;
+    private NativeArray<Vector4> _positionData;
     private NativeArray<ParticleVertex> _particleData;
 
     private readonly GfxContext _gfx;
@@ -50,6 +45,7 @@ internal sealed class ParticleMesh : IDisposable
             throw new InvalidOperationException($"{nameof(ParticleMesh)} is already initialized");
 
         _handles = new ParticleMeshHandle[DefaultHandleCap];
+        _positionData = NativeArray.Allocate<Vector4>(DefaultParticleCap, false);
         _particleData = NativeArray.Allocate<ParticleVertex>(DefaultParticleCap, false);
 
         _gfx = gfx;
@@ -59,12 +55,12 @@ internal sealed class ParticleMesh : IDisposable
     public int HandleCapacity => _handles.Length;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<ParticleVertex> GetBufferView(int count)
+    public void GetBufferView(int count, out NativeView<Vector4> positions, out NativeView<ParticleVertex> particles)
     {
-        if (_particleData.IsNull) Throwers.NullPointer(nameof(_particleData));
-
+        if (_particleData.IsNull || _positionData.IsNull) Throwers.NullPointer(nameof(_particleData));
         EnsureCapacity(count);
-        return _particleData.Slice(0, count);
+        positions = _positionData.Slice(0, count);
+        particles = _particleData.Slice(0, count);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -77,11 +73,13 @@ internal sealed class ParticleMesh : IDisposable
     public void UploadGpuData(int slot, int count)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)count, (uint)_particleData.Length, nameof(count));
-        var vboId = GetHandle(slot).VboInstanceId;
+        var handle = GetHandle(slot);
 
-        if (!vboId.IsValid()) Throwers.InvalidHandle(vboId);
+        if (!handle.PositionVbo.IsValid() || !handle.ParticleVbo.IsValid()) Throwers.InvalidArgument(nameof(slot));
 
-        _gfx.Buffers.UploadVertexBuffer(vboId, _particleData.Slice(0, count), 0);
+        _gfx.Buffers.UploadVertexBuffer(handle.PositionVbo, _positionData.Slice(0, count), 0);
+        _gfx.Buffers.UploadVertexBuffer(handle.ParticleVbo, _particleData.Slice(0, count), 0);
+
     }
 
 
@@ -108,18 +106,21 @@ internal sealed class ParticleMesh : IDisposable
         var vertexBuilder = new VertexAttributeMaker();
         var particleBuilder = new VertexAttributeMaker();
 
-        var meshId = gfxMeshes.CreateEmptyMesh(in props, 2, [
+        var meshId = gfxMeshes.CreateEmptyMesh(in props, 3, [
             vertexBuilder.Make<Vector2>(0), vertexBuilder.Make<Vector2>(1),
-            particleBuilder.Make<Vector4>(2, 1), particleBuilder.Make<ColorRgba>(3, 1, VertexFormat.UByte, true)
+            new VertexAttributeMaker().Make<Vector4>(2, 1), 
+            particleBuilder.Make<float>(3, 2), particleBuilder.Make<ColorRgba>(4, 2, VertexFormat.UByte, true)
         ]);
         gfxMeshes.CreateAttachVertexBuffer(meshId, vertices, CreateVboArgs.MakeDefault(0));
-        gfxMeshes.CreateAttachVertexBuffer(meshId, NativeView<ParticleVertex>.MakeNull(),
+        gfxMeshes.CreateAttachVertexBuffer(meshId, NativeView<Vector4>.MakeNull(),
             CreateVboArgs.MakeInstance(1, 2, particleCapacity));
+        gfxMeshes.CreateAttachVertexBuffer(meshId, NativeView<ParticleVertex>.MakeNull(),
+            CreateVboArgs.MakeInstance(2, 2, particleCapacity));
 
         var details = gfxMeshes.GetMeshDetails(meshId, out _);
 
         var index = Count++;
-        _handles[index] = new ParticleMeshHandle(meshId, details.VboIds[1]);
+        _handles[index] = new ParticleMeshHandle(meshId, details.VboIds[1], details.VboIds[2]);
         return index;
     }
 

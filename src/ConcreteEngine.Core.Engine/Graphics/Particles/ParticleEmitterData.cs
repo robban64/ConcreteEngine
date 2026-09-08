@@ -13,7 +13,7 @@ internal sealed class ParticleEmitterData : IDisposable
     public const int MinCapacity = 128;
     public const int MaxCapacity = 8192;
 
-    public readonly ParticleVisualState[] Lut = new ParticleVisualState[LutLength];
+    public readonly ParticleVertex[] Lut = new ParticleVertex[LutLength];
 
     private NativeSoA<Vector4, Vector4> _spatialData;
     private NativeSoA<float, float, byte> _lifeData;
@@ -60,7 +60,7 @@ internal sealed class ParticleEmitterData : IDisposable
         {
             var size = float.Lerp(sizeStartEnd.X, sizeStartEnd.Y, i / 255f);
             var color = ColorRgba.Lerp(startColor, endColor, (byte)i);
-            lut[i] = new ParticleVisualState(size, color);
+            lut[i] = new ParticleVertex(size, color);
         }
     }
 

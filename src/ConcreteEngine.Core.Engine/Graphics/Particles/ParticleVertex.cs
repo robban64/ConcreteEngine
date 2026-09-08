@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Common.Numerics;
 namespace ConcreteEngine.Core.Engine.Graphics.Particles;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct ParticleVisualState(float size, ColorRgba color)
+internal readonly struct ParticleVertex(float size, ColorRgba color)
 {
     public readonly float Size = size;
     public readonly ColorRgba Color = color;

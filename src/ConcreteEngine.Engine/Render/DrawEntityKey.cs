@@ -6,19 +6,20 @@ using ConcreteEngine.Core.Engine.Graphics;
 namespace ConcreteEngine.Engine.Render;
 
 [StructLayout(LayoutKind.Sequential)]
-internal readonly struct DrawEntityKey(int entity, uint sortKey)
+internal struct DrawEntityKey(int entity, uint sortKey)
 {
-    public readonly int Entity = entity;
-    public readonly uint SortKey = sortKey;
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static DrawEntityKey Create(int entity, PassMask mask, ushort depthKey, DrawQueue queue)
-    {
-        var depth = queue < DrawQueue.Transparent ? depthKey : (ushort)(ushort.MaxValue - depthKey);
-        var sortKey = (byte)mask | ((uint)depth << 8) | ((uint)queue << 24);
-        return new DrawEntityKey(entity, sortKey);
-    }
+    public int Entity = entity;
+    public uint SortKey = sortKey;
 
+    [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static DrawEntityKey Create(int entity, PassMask passMask, ushort distance, DrawQueue queue)
+    {
+        if (queue >= DrawQueue.Transparent) distance ^= ushort.MaxValue;
+        DrawEntityKey result;
+        result.Entity = entity;
+        result.SortKey = (byte)passMask | ((uint)distance << 8) | ((uint)queue << 24);
+        return result;
+    }
 }
 
 [StructLayout(LayoutKind.Sequential)]

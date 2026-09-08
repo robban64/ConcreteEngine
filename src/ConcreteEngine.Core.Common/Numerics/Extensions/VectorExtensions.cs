@@ -4,11 +4,9 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Common.Numerics.Extensions;
 
-public static class VectorExtensions
+public static partial class VectorExtensions
 {
-    public static Int2 ToVec2Int(this Vector2D<int> v) => new(v.X, v.Y);
 
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2D AsVector2D(this Vector256<double> value)
     {

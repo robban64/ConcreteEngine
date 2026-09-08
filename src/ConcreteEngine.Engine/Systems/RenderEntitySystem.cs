@@ -1,9 +1,12 @@
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Extensions;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
@@ -61,8 +64,12 @@ internal sealed class RenderEntitySystem : IDisposable
     public void Execute()
     {
         Ensure();
+        avg.BeginSample();
         CullEntities();
+        if (avg.EndSample() > 100) avg.ResetAndPrint();
+
         var visibleCount = VisibleCount = BuildVisibleIndices();
+
         if (visibleCount == 0) return;
         Debug.Assert((uint)visibleCount <= (uint)_sortIndices.Length);
 
@@ -71,6 +78,8 @@ internal sealed class RenderEntitySystem : IDisposable
         BuildDrawIndices();
         FillTransformBuffer();
     }
+
+    private AvgFrameTimer avg;
 
     private void CullEntities()
     {
@@ -81,31 +90,22 @@ internal sealed class RenderEntitySystem : IDisposable
                 ? query.OriginalPasses
                 : frustum.Intersects(query.OriginalPasses, in query.Bounds);
 
-            if (passMask != 0)
-            {
+            if (passMask != 0) 
                 query.DrawPasses = passMask;
-            }
-            else if (query.OriginalPasses != passMask)
-            {
+            else if (passMask != query.OriginalPasses) 
                 query.DrawPasses = 0;
-            }
         }
     }
-
-
     private unsafe int BuildVisibleIndices()
     {
-        var nearFar = CameraManager.Instance.Camera.NearFarPlane;
-        var viewZ = CameraManager.Instance.Camera.ViewMatrix.M43;
-        var forward = new Vector4(CameraManager.Instance.Camera.Forward, 0);
-
+        CameraManager.Instance.Camera.ExtractDepthKeyData(out var forward, out var scale, out var bias);
+        
         var indices = (DrawEntityKey*)_sortIndices.Ptr;
         foreach (var query in RenderEcs.Core.VisibilityBoundsQuery(PassMask.Depth | PassMask.Main | PassMask.Effect))
         {
-            ref readonly var center = ref query.Item1.Center;
-            var distance = MakeDepthKeyU16(forward, in center, nearFar, viewZ);
-            var entityIndex = DrawEntityKey.Create(query.Entity, query.Passes, distance, query.Queue);
-            *indices++ = entityIndex;
+            var d = Vector4.Dot(forward, Unsafe.As<BoundingAxisBox, Vector4>(ref query.Item1));
+            ushort distance = CalculateDepthKey(d, scale, bias);
+            *indices++ = DrawEntityKey.Create(query.Entity, query.Passes, distance, query.Queue);
         }
 
         return (int)(indices - (DrawEntityKey*)_sortIndices.Ptr);
@@ -179,7 +179,6 @@ internal sealed class RenderEntitySystem : IDisposable
         var span = SortIndicesSpan;
         for (int i = 0; i < span.Length; ++i)
         {
-            // (byte)mask | ((uint)depth << 8) | ((uint)queue << 24)
             ref readonly var it = ref span[i];
             var index = new DrawEntityIndex(it.Entity, i);
             var mask = (uint)(byte)it.SortKey;
@@ -192,7 +191,6 @@ internal sealed class RenderEntitySystem : IDisposable
                 mask &= mask - 1;
             }
         }
-
     }
 
     private void Ensure()
@@ -213,14 +211,22 @@ internal sealed class RenderEntitySystem : IDisposable
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ushort MakeDepthKeyU16(Vector4 forward, in Vector3 worldPos, Vector2 nearFar, float viewZ)
+    private static ushort CalculateDepthKey(float dot, float scale, float bias)
+    {
+        const float maxValue = 65535f;
+        float key = float.FusedMultiplyAdd(dot, scale, bias);
+        return (ushort)float.MinNative(0f, float.MaxNative(key, maxValue));
+    }
+/*
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ushort MakeDepthKeyU16(Vector3 forward, Vector3 worldPos, Vector2 nearFar, float viewZ)
     {
         const ushort maxValue = 65535;
-        var wp = new Vector4(worldPos, 0f);
-        var d = Vector4.Dot(forward, wp) - viewZ;
+        var d = Vector3.Dot(forward, worldPos) - viewZ;
         if (d <= nearFar.X) return 0;
         if (d >= nearFar.Y) return maxValue;
         var t = (d - nearFar.X) / (nearFar.Y - nearFar.X);
         return (ushort)(t * 65535f + 0.5f);
     }
+    */
 }

@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Extensions;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Core.Engine.Graphics;
@@ -155,5 +156,13 @@ public sealed class Camera
         Transform.InverseProjectionViewMatrix = invProjection * modelMatrix;
 
         return IsDirty;
+    }
+
+    internal void ExtractDepthKeyData(out Vector4 forward, out float scale, out float bias)
+    {
+        var viewZ = ViewMatrix.M43;
+        forward = Forward.AsVector4();
+        scale = 65535f / _nearFarPlane.Range();
+        bias = 0.5f - (viewZ + _nearFarPlane.X) * scale;
     }
 }

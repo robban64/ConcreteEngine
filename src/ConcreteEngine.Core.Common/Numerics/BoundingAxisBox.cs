@@ -1,9 +1,11 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
+[StructLayout(LayoutKind.Sequential)]
 public struct BoundingAxisBox : IEquatable<BoundingAxisBox>
 {
     [JsonInclude] public Vector3 Center;

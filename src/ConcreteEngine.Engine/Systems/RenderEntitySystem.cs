@@ -23,7 +23,7 @@ internal sealed class RenderEntitySystem : IDisposable
     public int VisibleCount { get; private set; }
     private int _drawCount;
 
-    private readonly CameraFrustum _frustum;
+    private readonly RenderFrustum _frustum;
 
     // draw data
     private readonly Range32[] _passRanges;
@@ -35,7 +35,7 @@ internal sealed class RenderEntitySystem : IDisposable
     // culled and sorted index
     private NativeArray<TransformUniform> _transformBuffer;
 
-    internal RenderEntitySystem(CameraFrustum frustum)
+    internal RenderEntitySystem(RenderFrustum frustum)
     {
         ArgumentNullException.ThrowIfNull(frustum);
         _frustum = frustum;
@@ -64,10 +64,7 @@ internal sealed class RenderEntitySystem : IDisposable
     public void Execute()
     {
         Ensure();
-        avg.BeginSample();
         CullEntities();
-        if (avg.EndSample() > 100) avg.ResetAndPrint();
-
         var visibleCount = VisibleCount = BuildVisibleIndices();
 
         if (visibleCount == 0) return;
@@ -79,7 +76,6 @@ internal sealed class RenderEntitySystem : IDisposable
         FillTransformBuffer();
     }
 
-    private AvgFrameTimer avg;
 
     private void CullEntities()
     {

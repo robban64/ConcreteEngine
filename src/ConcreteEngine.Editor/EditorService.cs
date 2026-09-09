@@ -58,7 +58,6 @@ internal sealed class EditorService
         _eventDispatcher.Register<ToolEvent>(EventHandler.OnToolEvent);
     }
 
-    private AvgFrameTimer avg;
     public void Draw()
     {
         AppLayout.PushFontText();

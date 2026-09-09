@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Graphics.Animations;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 

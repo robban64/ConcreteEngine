@@ -1,13 +1,4 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.Graphics;
-
-namespace ConcreteEngine.Core.Engine.ECS.Render;
+namespace ConcreteEngine.Core.Engine.ECS.Render.Legacy;
 /*
 public sealed unsafe partial class RenderEntityCore
 {

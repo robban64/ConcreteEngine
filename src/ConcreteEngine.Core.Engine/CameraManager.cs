@@ -13,7 +13,7 @@ public sealed class CameraManager
 
     public readonly Camera Camera;
 
-    internal readonly CameraFrustum Frustum;
+    internal readonly RenderFrustum Frustum;
     internal readonly CameraTransformSnapshot FrameTransforms;
     internal readonly CameraTransformSnapshot LightTransforms;
 
@@ -25,7 +25,7 @@ public sealed class CameraManager
             throw new InvalidOperationException($"{nameof(CameraManager)} is already initialized");
 
         Camera = new Camera(EngineSettings.Current.Display.WindowSize);
-        Frustum = new CameraFrustum();
+        Frustum = new RenderFrustum();
         FrameTransforms = new CameraTransformSnapshot();
         LightTransforms = new CameraTransformSnapshot();
     }

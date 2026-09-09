@@ -12,7 +12,6 @@ public readonly struct DrawPolicy(DrawQueue queue, PassMask passes, EntityDrawSt
     public readonly EntityDrawStatus Status = status;
     public readonly PassMask Passes = passes;
     public readonly DrawQueue Queue = queue;
-    private readonly byte _pad = 0;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

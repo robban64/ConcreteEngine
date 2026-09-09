@@ -118,9 +118,11 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
         var rng = _rng;
         var lifeMinMax = State.LifeMinMax;
-        var lifeState = _data.LifeState;
-        var lifeMaxInverse = _data.LifeMaxInverse;
-        for (var i = start; i < length; i++)
+        
+        var lifeState = _data.LifeState.AsSpan(start, length);
+        var lifeMaxInverse = _data.LifeMaxInverse.AsSpan(start, length);
+        
+        for (var i = 0; i < lifeState.Length; i++)
         {
             var life = rng.RandomFloat(lifeMinMax);
             lifeState[i] = life;

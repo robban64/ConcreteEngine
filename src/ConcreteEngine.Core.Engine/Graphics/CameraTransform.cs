@@ -1,6 +1,8 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Time;
@@ -11,15 +13,14 @@ public sealed class CameraFrustum
 {
     private readonly Vector4[] _frustumPlanes = new Vector4[12];
 
-    private Span<Vector4> MainVectors => _frustumPlanes.AsSpan(0, 6);
-    private Span<Vector4> LightVectors => _frustumPlanes.AsSpan(6);
+    private Span<Vector4> LightPlanes => _frustumPlanes.AsSpan(0, 6);
+    private Span<Vector4> ScenePlanes => _frustumPlanes.AsSpan(6);
 
-    private ref BoundingFrustum MainFrustum =>
-        ref Unsafe.As<Vector4, BoundingFrustum>(ref MemoryMarshal.GetArrayDataReference(_frustumPlanes));
+    private ref BoundingFrustum LightFrustum
+        => ref Unsafe.As<Vector4, BoundingFrustum>(ref MemoryMarshal.GetArrayDataReference(_frustumPlanes));
 
-    private ref BoundingFrustum LightFrustum =>
-        ref Unsafe.As<Vector4, BoundingFrustum>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(_frustumPlanes),
-            6));
+    private ref BoundingFrustum MainFrustum => ref Unsafe.As<Vector4, BoundingFrustum>
+        (ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(_frustumPlanes), 6));
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -35,7 +36,7 @@ public sealed class CameraFrustum
         var transposed = Matrix4x4.Transpose(projectionViewMatrix);
         BoundingFrustum.From(in transposed, out LightFrustum);
     }
-    
+
     public PassMask Intersects(PassMask passes, in BoundingAxisBox box)
     {
         var center = new Vector4(box.Center, 1f);
@@ -44,19 +45,20 @@ public sealed class CameraFrustum
         var mask = PassMask.None;
         if ((passes & PassMask.Depth) != 0)
         {
-            var test = TestIntersect(LightVectors, in center, in extent);
+            var test = TestIntersect(LightPlanes, in center, in extent);
             mask |= test ? PassMask.Depth : 0;
         }
 
         if ((passes & PassMask.Main) != 0)
         {
-            var test = TestIntersect(MainVectors, in center, in extent);
+            var test = TestIntersect(ScenePlanes, in center, in extent);
             mask |= test ? PassMask.Main : 0;
         }
+
         return mask;
     }
-    
-    
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool TestIntersect(Span<Vector4> span, in Vector4 center4, in Vector4 extent4)
     {
@@ -71,7 +73,6 @@ public sealed class CameraFrustum
 
         return true;
     }
-   
 }
 
 public sealed class CameraTransformSnapshot

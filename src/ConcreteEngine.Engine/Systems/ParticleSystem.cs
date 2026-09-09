@@ -67,9 +67,10 @@ internal sealed class ParticleSystem : IDisposable
         foreach (var emitterId in _processedEmitters.AsSpan())
         {
             var emitter = _particleManager.Get(emitterId);
+            var data = emitter.GetData();
             _particleMesh.GetBufferView(emitter.AlignedParticleCount, out var positions, out var particles);
-            InterpolatePosition(emitter.GetData(), positions, timeOffset);
-            InterpolateVisual(emitter.GetData(), particles);
+            InterpolatePosition(data, positions, timeOffset);
+            InterpolateVisual(data, particles);
             _particleMesh.UploadGpuData(emitter.BoundSlot, emitter.ParticleCount);
         }
 
@@ -121,8 +122,8 @@ internal sealed class ParticleSystem : IDisposable
     private void InterpolateVisual(ParticleEmitterData data, NativeView<ParticleVertex> destination)
     {
         var destSpan = destination.AsSpan();
-        var lifeIndexSpan = data.LifeIndices.AsSpan(0, destSpan.Length);
-        ref var lutRef = ref MemoryMarshal.GetArrayDataReference(data.Lut);
+        var lifeIndexSpan = data.GetLutIndices(destSpan.Length);
+        ref var lutRef = ref data.GetLutRef();
         for (int i = 0; i < destSpan.Length; ++i)
         {
             destSpan[i] = Unsafe.Add(ref lutRef, lifeIndexSpan[i]);
@@ -167,13 +168,13 @@ internal sealed class ParticleSystem : IDisposable
         return deadIndex;
     }
 
-    private void SimulateLifeIndex(ParticleEmitterData data, int count)
+    private static void SimulateLifeIndex(ParticleEmitterData data, int count)
     {
         var lifeSpan = data.LifeState.AsSpan(0, count);
-        var lifeIndexSpan = data.LifeIndices.AsSpan(0, count);
-        var invMaxLifeSpan = data.LifeInvMax.AsSpan(0, count);
+        var invMaxLifeSpan = data.LifeMaxInverse.AsSpan(0, count);
+        var lutIndexSpan = data.GetLutIndices(count);
 
-        if (lifeSpan.Length != invMaxLifeSpan.Length)
+        if (lifeSpan.Length != invMaxLifeSpan.Length || lifeSpan.Length != lutIndexSpan.Length)
             Throwers.InvalidArgument(nameof(data));
 
         while (lifeSpan.Length >= Vector256<float>.Count)
@@ -186,15 +187,15 @@ internal sealed class ParticleSystem : IDisposable
             var shorts = Sse2.PackSignedSaturate(vIndexInt32.GetLower(), vIndexInt32.GetUpper());
             var bytes = Sse2.PackUnsignedSaturate(shorts, Vector128<short>.Zero);
 
-            Unsafe.As<byte, long>(ref MemoryMarshal.GetReference(lifeIndexSpan)) = bytes.AsInt64().ToScalar();
+            Unsafe.As<byte, long>(ref MemoryMarshal.GetReference(lutIndexSpan)) = bytes.AsInt64().ToScalar();
 
             lifeSpan = lifeSpan.Slice(Vector256<float>.Count);
             invMaxLifeSpan = invMaxLifeSpan.Slice(Vector256<float>.Count);
-            lifeIndexSpan = lifeIndexSpan.Slice(Vector256<float>.Count);
+            lutIndexSpan = lutIndexSpan.Slice(Vector256<float>.Count);
         }
     }
 
-    private void SimulateSpatial(ParticleEmitterData emitter, int count, Vector3 gravity, float simDt)
+    private static void SimulateSpatial(ParticleEmitterData emitter, int count, Vector3 gravity, float simDt)
     {
         var gravityStep256 = Vector256.Create(gravity.AsVector128() * simDt);
         var positions = emitter.Positions.Slice(0, count).Reinterpret<float>().AsSpan();

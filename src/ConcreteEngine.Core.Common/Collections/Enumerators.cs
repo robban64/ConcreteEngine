@@ -124,7 +124,7 @@ public ref struct ZipSpanEnumerator<T1, T2>
 
     public ZipSpanEnumerator(Span<T1> span1, Span<T2> span2)
     {
-        if (span1.Length != span2.Length) Throwers.InvalidArgument(nameof(span2));
+        ArgumentOutOfRangeException.ThrowIfNotEqual(span1.Length, span2.Length);
         _span1 = span1;
         _span2 = span2;
     }
@@ -132,7 +132,7 @@ public ref struct ZipSpanEnumerator<T1, T2>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < _span1.Length;
 
-    public readonly EnumeratorItem Current
+    public readonly TupleRef<T1, T2> Current
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new(ref _span1[_i], ref _span2[_i]);
@@ -142,9 +142,4 @@ public ref struct ZipSpanEnumerator<T1, T2>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ZipSpanEnumerator<T1,T2> GetEnumerator() => this;
         
-    public readonly ref struct EnumeratorItem(ref T1 item1, ref T2 item2)
-    {
-        public readonly ref T1 Item1 = ref item1;
-        public readonly ref T2 Item2 = ref item2;
-    }
 }

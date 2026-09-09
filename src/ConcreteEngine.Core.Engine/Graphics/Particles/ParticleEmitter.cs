@@ -18,23 +18,23 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 {
     public const int MinCount = 16;
     public const int MaxCount = 8192;
+    public const int CountAlignment = 16;
 
     private bool _isDirty;
     private FastRandom _rng;
-
-    private readonly ParticleEmitterData _data;
-
+    
     public readonly Id16<ParticleEmitter> Id;
 
     public readonly string Name;
 
     [InspectInclude] public readonly ParticleEmitterState State;
+    
+    private readonly ParticleEmitterData _data;
 
     public MeshId BoundMesh { get; private set; }
     public int BoundSlot { get; private set; } = -1;
     public int ParticleCount { get; private set; }
     public int PendingParticleCount { get; private set; }
-    public int AlignedParticleCount => IntMath.AlignUp(ParticleCount, 16);
 
     private BoundingBox _localBounds;
 
@@ -48,20 +48,21 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
         Name = name;
         Id = id;
-        State = new ParticleEmitterState(this, in emitterParams, in particleParams);
         ParticleCount = PendingParticleCount = particleCount;
+        State = new ParticleEmitterState(this, in emitterParams, in particleParams);
         _rng = new FastRandom((uint)Environment.TickCount + Id.Id);
 
-        var length = int.Max(ParticleEmitterData.MinCapacity, IntMath.AlignUp(particleCount, 128));
+        var length = int.Max(ParticleEmitterData.MinCapacity, IntMath.AlignUp(particleCount, CountAlignment));
         _data = new ParticleEmitterData(length);
         InitializeParticles(0, ParticleCount);
     }
 
+    public int AlignedParticleCount => IntMath.AlignUp(ParticleCount, 16);
+
     public bool IsDirty => _isDirty;
     public bool IsAttached => BoundSlot >= 0;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly BoundingBox LocalBounds() => ref _localBounds;
+    public ref readonly BoundingBox LocalBounds => ref _localBounds;
 
     internal void Attach(int slot, MeshId meshId)
     {
@@ -80,15 +81,14 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         return _data;
     }
 
-    // TODO
     public void SetCount(int count)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(count, MinCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(count, MaxCount);
 
         if (count == ParticleCount || count == PendingParticleCount) return;
-        // PendingParticleCount = count;
-        // _isDirty = true;
+        PendingParticleCount = count;
+        _isDirty = true;
     }
 
     internal void Commit()
@@ -97,19 +97,38 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
         UpdateLocalBounds();
 
-        if (PendingParticleCount == ParticleCount) return;
+        if (PendingParticleCount != ParticleCount)
+        {
+            int prevCount = ParticleCount, newCount = PendingParticleCount;
+            var alignedCount = IntMath.AlignUp(newCount, CountAlignment);
+            _data.EnsureAllocate(alignedCount);
 
-        var alignedCapacity = IntMath.AlignUp(PendingParticleCount, 128);
-        var newCapacity = int.Max(ParticleEmitterData.MinCapacity, alignedCapacity);
-        if (newCapacity > _data.Capacity)
-            //  _data.ReAlloc(newCapacity);
-
-            if (PendingParticleCount > ParticleCount)
-                InitializeParticles(ParticleCount, PendingParticleCount - ParticleCount);
-
-        ParticleCount = PendingParticleCount;
+            ParticleCount = newCount;
+            PendingParticleCount = 0;
+            
+            if (newCount > prevCount)
+                InitializeParticles(prevCount, newCount - prevCount);
+        }
     }
+    
+    
+    private void InitializeParticles(int start, int length)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)start + (uint)length, (uint)ParticleCount);
 
+        var rng = _rng;
+        var lifeMinMax = State.LifeMinMax;
+        var lifeState = _data.LifeState;
+        var lifeMaxInverse = _data.LifeMaxInverse;
+        for (var i = start; i < length; i++)
+        {
+            var life = rng.RandomFloat(lifeMinMax);
+            lifeState[i] = life;
+            lifeMaxInverse[i] = 1f / life;
+        }
+
+        _rng = rng;
+    }
 
     [SkipLocalsInit]
     internal void RespawnParticles(ReadOnlySpan<ushort> deadIndices)
@@ -118,41 +137,34 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
         var direction = State.Direction.AsVector128();
         var speedMinMax = State.SpeedMinMax;
+        var velocities = _data.Velocities;
         foreach (var index in deadIndices)
         {
             var speed = rng.RandomFloat(speedMinMax);
             var randDir = rng.NextVector3(-0.5f, 0.5f).AsVector128();
             var velocity = VectorMath.Normalize(randDir + direction) * speed;
-            ref var dst = ref _data.GetVelocity(index);
+            ref var dst = ref velocities[index];
             velocity.StoreUnsafe(ref Unsafe.As<Vector4, float>(ref dst));
         }
 
         var spread = State.Spread;
+        var positions = _data.Positions;
         foreach (var index in deadIndices)
         {
             var pos = rng.NextVector3(-spread, spread);
-            ref var dst = ref _data.GetPosition(index);
+            ref var dst = ref positions[index];
             Unsafe.As<Vector4, Vector3>(ref dst) = pos;
         }
 
 
         var lifeMinMax = State.LifeMinMax;
+        var lifeState = _data.LifeState;
+        var lifeMaxInverse = _data.LifeMaxInverse;
         foreach (var index in deadIndices)
-            _data.SetLife(index, rng.RandomFloat(lifeMinMax));
-
-        _rng = rng;
-    }
-
-    private void InitializeParticles(int start, int length)
-    {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)start + (uint)length, (uint)ParticleCount);
-
-        var rng = _rng;
-        var lifeMinMax = State.LifeMinMax;
-        for (var i = start; i < length; i++)
         {
-            var life = rng.RandomFloat(0, rng.RandomFloat(lifeMinMax));
-            _data.SetLife(i, life);
+            var life = rng.RandomFloat(lifeMinMax);
+            lifeState[index] = life;
+            lifeMaxInverse[index] = 1f / life;
         }
 
         _rng = rng;

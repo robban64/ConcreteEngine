@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 namespace ConcreteEngine.Core.Common.Memory;
 
 // ReSharper disable OutParameterValueIsAlwaysDiscarded.Local
+/*
 public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where T2 : unmanaged
 {
     public static int StrideSum => Unsafe.SizeOf<T1>() + Unsafe.SizeOf<T2>();
@@ -30,7 +31,7 @@ public unsafe struct NativeSoA<T1, T2> : IDisposable where T1 : unmanaged where 
         var capacity = length * StrideSum + (alignment * 2);
         _array = alignment == 0
             ? NativeArray.Allocate(capacity, zeroed)
-            : NativeArray.AlignedAllocate(IntMath.AlignUp(capacity, alignment), alignment, zeroed);
+            : NativeArray.AlignedAllocate(capacity, alignment, zeroed);
 
         var allocator = new NativeAllocBuilder(_array, alignCursor: alignment);
         _ptr1 = allocator.AllocRaw<T1>(length);
@@ -236,3 +237,4 @@ public unsafe struct NativeSoA<T1, T2, T3> : IDisposable where T1 : unmanaged wh
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly PtrEnumerator<T1, T2, T3> GetEnumerator() => new(View1, View2, View3);
 }
+*/

@@ -22,22 +22,21 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
 
     private TerrainChunkMesh[] _meshChunks = [];
 
-    private NativeSoA<Vector3, VertexShading> _vertexBuffer;
-    private NativeArray<ushort> _indexBuffer = NativeArray<ushort>.MakeNull();
-    private NativeArray<FoliageVertex> _foliageBuffer = NativeArray<FoliageVertex>.MakeNull();
+    private NativeArray<Vector3> _positionBuffer;
+    private NativeArray<VertexShading> _shadingBuffer;
+    private NativeArray<ushort> _indexBuffer;
+    
+    private NativeArray<FoliageVertex> _foliageBuffer;
 
     internal ReadOnlySpan<TerrainChunkMesh> GetMeshChunks() => _meshChunks;
 
-    public int TerrainChunkCount => _meshChunks.Length;
-    public int IndexBufferCapacity => _indexBuffer.Length;
-    public int VertexBufferCapacity => _vertexBuffer.Length;
-    public int FoliageBufferCapacity => _foliageBuffer.Length;
     public bool HasFoliage => _foliageBuffer.Length > 0;
 
     public void Dispose()
     {
         _indexBuffer.Dispose();
-        _vertexBuffer.Dispose();
+        _positionBuffer.Dispose();
+        _shadingBuffer.Dispose();
         _foliageBuffer.Dispose();
     }
 
@@ -48,7 +47,8 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
         var vertexLength = IntMath.AlignUp(chunks.Length * VertexCapacity, 4096);
 
         _indexBuffer = NativeArray.Allocate<ushort>(IndexCount);
-        _vertexBuffer =  NativeSoA<Vector3, VertexShading>.Allocate(vertexLength, false);
+        _positionBuffer =  NativeArray.Allocate<Vector3>(vertexLength, false);
+        _shadingBuffer =  NativeArray.Allocate<VertexShading>(vertexLength, false);
 
         FillIndexBuffer(_indexBuffer);
 
@@ -62,8 +62,8 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
         {
             var it = chunks[i];
             var meshChunk = _meshChunks[i] = new TerrainChunkMesh(i);
-            meshChunk.GenerateHeightBuffer(it, _vertexBuffer.View1, _vertexBuffer.View2, data, dimension, maxHeight);
-            meshChunk.CreateChunkMesh(gfxMeshes, terrainIboId, _vertexBuffer.View1, _vertexBuffer.View2, IndexCount);
+            meshChunk.GenerateHeightBuffer(it, _positionBuffer, _shadingBuffer, data, dimension, maxHeight);
+            meshChunk.CreateChunkMesh(gfxMeshes, terrainIboId, _positionBuffer, _shadingBuffer, IndexCount);
         }
     }
 

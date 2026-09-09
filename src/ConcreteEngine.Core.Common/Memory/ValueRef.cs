@@ -18,10 +18,11 @@ public readonly ref struct ValueRef<T>(ref T value) where T : unmanaged
         get => new(ref Unsafe.NullRef<T>());
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator bool(ValueRef<T> it) => !Unsafe.IsNullRef(ref it.Value);
 }
 
-public readonly ref struct TupleRef<T1, T2>(ref T1 it1, ref T2 it2) where T1 : unmanaged where T2 : unmanaged
+public readonly ref struct TupleRef<T1, T2>(ref T1 it1, ref T2 it2)
 {
     public readonly ref T1 Item1 = ref it1;
     public readonly ref T2 Item2 = ref it2;
@@ -40,7 +41,6 @@ public readonly ref struct TupleRef<T1, T2>(ref T1 it1, ref T2 it2) where T1 : u
 }
 
 public readonly ref struct TripleRef<T1, T2, T3>(ref T1 it1, ref T2 it2, ref T3 it3)
-    where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
 {
     public readonly ref T1 Item1 = ref it1;
     public readonly ref T2 Item2 = ref it2;

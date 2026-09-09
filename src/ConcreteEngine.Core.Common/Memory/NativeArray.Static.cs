@@ -12,18 +12,7 @@ public static unsafe class NativeArray
 
     public static float AllocSizeInMb => AllocSizeInBytes > 0 ? AllocSizeInBytes / 1024.0f / 1024.0f : 0;
 
-    public static NativeArray<byte> Allocate(int capacity, bool zeroed = true)
-    {
-        var ptr = AllocMemory(capacity, stride: 1, alignment: 0, zeroed: zeroed);
-        return new NativeArray<byte>((byte*)ptr, capacity, 0);
-    }
-    
-    public static NativeArray<byte> AlignedAllocate(int capacity, int alignment, bool zeroed = true)
-    {
-        var ptr = AllocMemory(capacity, stride: 1, alignment: alignment, zeroed: zeroed);
-        return new NativeArray<byte>((byte*)ptr, capacity, alignment);
-    }
-
+    public static NativeArray<byte> Allocate(int capacity, bool zeroed = true) => Allocate<byte>(capacity, zeroed);
 
     public static NativeArray<T> Allocate<T>(int capacity, bool zeroed = true) where T : unmanaged
     {
@@ -31,18 +20,18 @@ public static unsafe class NativeArray
         return new NativeArray<T>((T*)ptr, capacity, 0);
     }
 
+    public static NativeArray<byte> AlignedAllocate(int capacity, int alignment, bool zeroed = true) =>
+        AlignedAllocate<byte>(capacity, alignment, zeroed);
+
     public static NativeArray<T> AlignedAllocate<T>(int capacity, int alignment, bool zeroed = true)
         where T : unmanaged
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(alignment);
+        capacity = IntMath.AlignUp(capacity, alignment);
+
         var ptr = AllocMemory(capacity, Unsafe.SizeOf<T>(), alignment, zeroed);
         return new NativeArray<T>((T*)ptr, capacity, alignment);
     }
-
-    public static T* ReAlloc<T>(T* ptr, int length, int newLength, int alignment, bool zeroed) where T : unmanaged
-    {
-        return (T*)ReAlloc(ptr, length, newLength, Unsafe.SizeOf<T>(), alignment, zeroed);
-    }
-
 
     public static NativeArray<T> CreateFrom<T>(T* ptr, int length, int alignment = 0) where T : unmanaged
     {
@@ -74,6 +63,7 @@ public static unsafe class NativeArray
             ? NativeMemory.AllocZeroed((nuint)length, (nuint)stride)
             : NativeMemory.Alloc((nuint)length, (nuint)stride);
     }
+
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void* ReAlloc(void* ptr, int length, int newLength, int stride, int alignment,
@@ -131,10 +121,11 @@ public static unsafe class NativeArray
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(length, 4);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(stride);
-        if (alignment != 0)
-        {
-            ArgumentOutOfRangeException.ThrowIfLessThan(alignment, 16);
-            ArgumentOutOfRangeException.ThrowIfEqual(IntMath.IsPowerOfTwo(alignment), false, nameof(alignment));
-        }
+
+        if (alignment == 0) return;
+
+        ArgumentOutOfRangeException.ThrowIfLessThan(alignment, 16);
+        ArgumentOutOfRangeException.ThrowIfEqual(IntMath.IsPowerOfTwo(alignment), false, nameof(alignment));
+        ArgumentOutOfRangeException.ThrowIfNotEqual(length, IntMath.AlignUp(length, alignment));
     }
 }

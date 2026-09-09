@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
@@ -105,6 +106,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void ReAlloc(int newLength, bool zeroed)
     {
+        if(Alignment > 0) newLength = IntMath.AlignUp(newLength, Alignment);
         Ptr = (T*)NativeArray.ReAlloc(Ptr, Length, newLength, Unsafe.SizeOf<T>(), Alignment, zeroed);
         Length = newLength;
     }

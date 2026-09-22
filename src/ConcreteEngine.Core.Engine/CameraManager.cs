@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
@@ -17,8 +18,6 @@ public sealed class CameraManager
     internal readonly CameraTransformSnapshot FrameTransforms;
     internal readonly CameraTransformSnapshot LightTransforms;
 
-    private long _shadowVersion;
-
     private CameraManager()
     {
         if (Instance != null)
@@ -33,14 +32,12 @@ public sealed class CameraManager
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void BeginUpdate() => Camera.BeginUpdate();
 
-    internal void CommitUpdate()
+    internal void CommitUpdate(LightingSettings lightning)
     {
-        var shadow = VisualManager.Instance.Lightning.Shadow;
-        if (!Camera.Ensure() && shadow.Version == _shadowVersion) return;
-        _shadowVersion = shadow.Version;
-        var lightDir = VisualManager.Instance.Lightning.Sun.Direction;
-        UpdateLightView(shadow.ShadowMapSize, shadow.Distance, shadow.ZPad, lightDir);
-        Frustum.UpdateLight(in LightTransforms.ProjectionViewMatrix);
+        Camera.Ensure();
+        var shadow = lightning.Shadow;
+        var lightDir = lightning.Sun.DirectionNormalized;
+        CreateLightView(shadow.ShadowMapSize, shadow.Distance, shadow.ZPad, lightDir);
     }
 
 
@@ -57,20 +54,19 @@ public sealed class CameraManager
     }
 
     [SkipLocalsInit]
-    private void UpdateLightView(int shadowSize, float shadowDist, float shadowZPad, Vector3 lightDirection)
+    private void CreateLightView(int shadowSize, float shadowDist, float shadowZPad, Vector3 lightDir)
     {
         Span<Vector3> corners = stackalloc Vector3[8];
-        FillFrustumCorners(corners, Camera, shadowDist);
+
+        Camera.FillFrustumCorners(corners, shadowDist);
         var center = GetFrustumCenter(corners);
 
         var farthestDistSqr = CalculateDistance(corners, center);
-
         var diameter = float.Sqrt(farthestDistSqr) * 2.0f;
 
-        var dir = Vector3.Normalize(lightDirection);
-        var worldUp = float.Abs(Vector3.Dot(dir, Vector3.UnitY)) > 0.99f ? Vector3.UnitX : Vector3.UnitY;
+        var worldUp = float.Abs(Vector3.Dot(lightDir, Vector3.UnitY)) > 0.99f ? Vector3.UnitX : Vector3.UnitY;
 
-        var shadowRotation = Matrix4x4.CreateLookAt(default, -dir, worldUp);
+        var shadowRotation = Matrix4x4.CreateLookAt(Vector3.Zero, -lightDir, worldUp);
         Matrix4x4.Invert(shadowRotation, out var invShadowRotation);
 
         var centerLs = Vector3.Transform(center, shadowRotation);
@@ -81,11 +77,19 @@ public sealed class CameraManager
         var snappedCenterLs = new Vector3(snappedX, snappedY, centerLs.Z);
         var snappedCenterWorld = Vector3.Transform(snappedCenterLs, invShadowRotation);
 
-        var eye = snappedCenterWorld - dir * shadowDist * 0.5f;
+        var eye = snappedCenterWorld - lightDir * shadowDist * 0.5f;
 
-        ref var viewMatrix = ref LightTransforms.ViewMatrix;
-        viewMatrix = Matrix4x4.CreateLookAt(eye, snappedCenterWorld, worldUp);
+        var viewMatrix = Matrix4x4.CreateLookAt(eye, snappedCenterWorld, worldUp);
+        var projectionMatrix = CreateLightProjection(corners, diameter, shadowZPad, viewMatrix);
 
+        LightTransforms.ViewMatrix = viewMatrix;
+        LightTransforms.ProjectionMatrix = projectionMatrix;
+        LightTransforms.ProjectionViewMatrix = viewMatrix * projectionMatrix;
+        Frustum.UpdateLight(in LightTransforms.ProjectionViewMatrix);
+    }
+
+    private static Matrix4x4 CreateLightProjection(Span<Vector3> corners, float diameter, float shadowZPad, Matrix4x4 viewMatrix)
+    {
         var minZ = float.MaxValue;
         var maxZ = float.MinValue;
         foreach (ref readonly var c in corners)
@@ -94,12 +98,11 @@ public sealed class CameraManager
             minZ = float.Min(minZ, z);
             maxZ = float.Max(maxZ, z);
         }
-
+        
         var nearLs = -maxZ - shadowZPad;
         var farLs = -minZ + shadowZPad;
 
-        LightTransforms.ProjectionMatrix = Matrix4x4.CreateOrthographic(diameter, diameter, nearLs, farLs);
-        LightTransforms.ProjectionViewMatrix = viewMatrix * LightTransforms.ProjectionMatrix;
+        return Matrix4x4.CreateOrthographic(diameter, diameter, nearLs, farLs);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -118,38 +121,8 @@ public sealed class CameraManager
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector3 GetFrustumCenter(Span<Vector3> corners)
     {
-        Vector3 s = default;
+        var s = Vector3.Zero;
         foreach (ref readonly var c in corners) s += c;
         return s / corners.Length;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void FillFrustumCorners(Span<Vector3> corners, Camera camera, float distance)
-    {
-        var tan = camera.Transform.Tan;
-
-        var near = camera.NearFarPlane.X;
-        var far = float.Min(camera.NearFarPlane.Y, near + distance);
-
-        // extents at near/far
-        float nx = near * tan.X, ny = near * tan.Y;
-        float fx = far * tan.X, fy = far * tan.Y;
-
-        Vector3 translation = camera.Translation, forward = camera.Forward, up = camera.Up, right = camera.Right;
-
-        var nc = translation + forward * near;
-        var fc = translation + forward * far;
-
-        // NearPlane plane
-        corners[0] = nc + up * ny - right * nx; // NT-L
-        corners[1] = nc + up * ny + right * nx; // NT-R
-        corners[2] = nc - up * ny - right * nx; // NB-L
-        corners[3] = nc - up * ny + right * nx; // NB-R
-
-        // FarPlane plane
-        corners[4] = fc + up * fy - right * fx; // FT-L
-        corners[5] = fc + up * fy + right * fx; // FT-R
-        corners[6] = fc - up * fy - right * fx; // FB-L
-        corners[7] = fc - up * fy + right * fx; // FB-R
     }
 }

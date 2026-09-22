@@ -13,7 +13,7 @@ public sealed class VisualManager
 
     public bool AnyWasDirty { get; private set; }
 
-    public readonly LightingSettings Lightning;
+    public readonly LightingSettings Lighting;
     public readonly EnvironmentSettings Environment;
     public readonly PostEffectSettings PostEffect;
 
@@ -22,7 +22,7 @@ public sealed class VisualManager
         if (Instance != null)
             throw new InvalidOperationException($"{nameof(VisualManager)} is already initialized");
 
-        Lightning = new LightingSettings();
+        Lighting = new LightingSettings();
         Environment = new EnvironmentSettings();
         PostEffect = new PostEffectSettings();
     }
@@ -30,8 +30,8 @@ public sealed class VisualManager
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool CommitShadowSize()
     {
-        var hasPendingShadowSize = Lightning.Shadow.HasPendingShadowSize;
-        if (hasPendingShadowSize) Lightning.Shadow.HasPendingShadowSize = false;
+        var hasPendingShadowSize = Lighting.Shadow.HasPendingShadowSize;
+        if (hasPendingShadowSize) Lighting.Shadow.HasPendingShadowSize = false;
         return hasPendingShadowSize;
     }
 
@@ -42,7 +42,7 @@ public sealed class VisualManager
     public bool Commit()
     {
         var anyWasDirty = AnyWasDirty = false;
-        anyWasDirty |= Lightning.Commit();
+        anyWasDirty |= Lighting.Commit();
         anyWasDirty |= Environment.Commit();
         anyWasDirty |= PostEffect.Commit();
         return AnyWasDirty = anyWasDirty;

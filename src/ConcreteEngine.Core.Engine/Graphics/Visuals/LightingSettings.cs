@@ -24,6 +24,8 @@ public sealed class LightingSettings
 
 public sealed class SunSettings : VisualSettings
 {
+    public Vector3 DirectionNormalized => Vector3.Normalize(Direction);
+    
     [InputNumber(Format = "%.3f", Speed = 0.01f, Min = -1f, Max = 1f)]
     public Vector3 Direction
     {

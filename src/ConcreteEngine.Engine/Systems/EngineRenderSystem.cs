@@ -30,7 +30,7 @@ public sealed class EngineRenderSystem : IDisposable
     {
         _ = CameraManager.Instance;
         _ = VisualManager.Instance;
-        VisualManager.Instance.Lightning.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
+        VisualManager.Instance.Lighting.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
 
         RenderRegistry.Create(graphics.Gfx);
         VisualSystem.Create(graphics.Gfx.Buffers);
@@ -53,11 +53,11 @@ public sealed class EngineRenderSystem : IDisposable
         PassPipeline.RegisterPassPipeline();
         VisualSystem.Instance.UploadPointLight();
     }
-
+    
     internal void AfterUpdate()
     {
         VisualManager.Instance.Commit();
-        CameraManager.Instance.CommitUpdate();
+        CameraManager.Instance.CommitUpdate(VisualManager.Instance.Lighting);
         _materialSystem.Commit();
     }
 
@@ -76,7 +76,7 @@ public sealed class EngineRenderSystem : IDisposable
         if (VisualManager.Instance.CommitShadowSize())
         {
             Logger.Log(LogScope.Engine, "Recreating shadow framebuffers");
-            var size = new Size2D(VisualManager.Instance.Lightning.Shadow.ShadowMapSize);
+            var size = new Size2D(VisualManager.Instance.Lighting.Shadow.ShadowMapSize);
             RenderRegistry.Instance.RecreateFixedFrameBuffer<ShadowTarget>(FboVariant.V0, size);
         }
     }
@@ -97,6 +97,7 @@ public sealed class EngineRenderSystem : IDisposable
 
         // frame update
         CameraManager.Instance.CommitFrame(EngineTime.GameAlpha);
+
         VisualSystem.Instance.UploadUniforms();
 
         // process and upload draw commands

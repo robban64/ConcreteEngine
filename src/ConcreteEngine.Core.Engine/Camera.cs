@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Extensions;
@@ -21,7 +22,6 @@ public sealed class Camera
 
     private const float MinFov = 10f;
     private const float MaxFov = 179f;
-
 
     internal readonly CameraTransform Transform;
 
@@ -164,5 +164,33 @@ public sealed class Camera
         forward = Forward.AsVector4();
         scale = 65535f / _nearFarPlane.Range();
         bias = 0.5f - (viewZ + _nearFarPlane.X) * scale;
+    }
+    
+    internal void FillFrustumCorners(Span<Vector3> corners, float distance)
+    {
+        var tan = Transform.Tan;
+        var nearFar = _nearFarPlane;
+        nearFar.Y = float.Min(nearFar.Y, nearFar.X + distance);
+
+        // extents at near/far
+        float nx = nearFar.X * tan.X, ny = nearFar.X * tan.Y;
+        float fx = nearFar.Y * tan.X, fy = nearFar.Y * tan.Y;
+
+        var nc = Translation + Forward * nearFar.X;
+        var fc = Translation + Forward * nearFar.Y;
+
+        Vector3 up = Up, right = Right;
+
+        // NearPlane plane
+        corners[0] = nc + up * ny - right * nx; // NT-L
+        corners[1] = nc + up * ny + right * nx; // NT-R
+        corners[2] = nc - up * ny - right * nx; // NB-L
+        corners[3] = nc - up * ny + right * nx; // NB-R
+
+        // FarPlane plane
+        corners[4] = fc + up * fy - right * fx; // FT-L
+        corners[5] = fc + up * fy + right * fx; // FT-R
+        corners[6] = fc - up * fy - right * fx; // FB-L
+        corners[7] = fc - up * fy + right * fx; // FB-R
     }
 }

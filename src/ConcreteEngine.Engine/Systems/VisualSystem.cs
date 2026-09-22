@@ -54,9 +54,6 @@ internal sealed unsafe class VisualSystem
         if (boneData.Length > 0) _gfx.UploadUniform(boneData, 0);
     }
 
-    private void UploadDirtyUniforms()
-    {
-    }
 
     public void UploadUniforms()
     {
@@ -67,9 +64,9 @@ internal sealed unsafe class VisualSystem
         var visualManager = VisualManager;
         if (!VisualManager.AnyWasDirty) return;
 
-        if (visualManager.Lightning.Sun.Version != _sunVersion)
+        if (visualManager.Lighting.Sun.Version != _sunVersion)
         {
-            _sunVersion = visualManager.Lightning.Sun.Version;
+            _sunVersion = visualManager.Lighting.Sun.Version;
             UploadLightningUniform();
         }
 
@@ -95,6 +92,21 @@ internal sealed unsafe class VisualSystem
         _gfx.UploadSingleUniform(&data, 0);
     }
 
+    [SkipLocalsInit]
+    private void UploadEngineUniform()
+    {
+        var mouse = CoordinateMath.ToUvCoords(EngineInput.Mouse.ViewportPos, EngineWindow.ViewportSize);
+        var data = new EngineUniformRecord(
+            invResolution: EngineWindow.InvViewport,
+            mouse: mouse,
+            deltaTime: EngineTime.DeltaTimeF,
+            time: EngineTime.TimeF,
+            random: EngineTime.FrameRng
+        );
+
+        _gfx.UploadSingleUniform(&data, 0);
+    }
+    
     [SkipLocalsInit]
     public void UploadMainView()
     {
@@ -124,13 +136,13 @@ internal sealed unsafe class VisualSystem
     }
 
     [SkipLocalsInit]
-    public void UploadShadow()
+    private void UploadShadow()
     {
+        var shadow = VisualManager.Lighting.Shadow;
+        var size = shadow.InvMapSize;
+
         ShadowUniform data;
         data.LightViewProjectionMatrix = CameraManager.LightTransforms.ProjectionViewMatrix;
-
-        var shadow = VisualManager.Lightning.Shadow;
-        var size = shadow.InvMapSize;
         data.ShadowParams0 = new Vector4(size, size, shadow.ConstBias, shadow.SlopeBias);
         data.ShadowParams1 = new Vector4(shadow.Strength, shadow.PcfRadius, 0.03f, shadow.Distance);
 
@@ -138,32 +150,16 @@ internal sealed unsafe class VisualSystem
     }
 
     [SkipLocalsInit]
-    private void UploadEngineUniform()
-    {
-        var mouse = CoordinateMath.ToUvCoords(EngineInput.Mouse.ViewportPos, EngineWindow.ViewportSize);
-        var data = new EngineUniformRecord(
-            invResolution: EngineWindow.InvViewport,
-            mouse: mouse,
-            deltaTime: EngineTime.DeltaTimeF,
-            time: EngineTime.TimeF,
-            random: EngineTime.FrameRng
-        );
-
-        _gfx.UploadSingleUniform(&data, 0);
-    }
-
-    [SkipLocalsInit]
     private void UploadEnvironmentUniform()
     {
-        EnvironmentUniform data;
-
         var ambient = VisualManager.Environment.Ambient;
-        data.Ambient = new Vector4(ambient.Ambient, ambient.Exposure);
-        data.AmbientGround = new Vector4(ambient.AmbientGround, 0.0f);
-
         var fog = VisualManager.Environment.FogSettings;
         float kExp2 = 1f / (fog.Density * fog.Density);
         float kHeight = 1f / MathF.Max(fog.HeightFalloff, 1e-6f);
+
+        EnvironmentUniform data;
+        data.Ambient = new Vector4(ambient.Ambient, ambient.Exposure);
+        data.AmbientGround = new Vector4(ambient.AmbientGround, 0.0f);
         data.FogColor = new Vector4(fog.FogColor, fog.Scattering);
         data.FogParams0 = new Vector4(kExp2, kHeight, fog.BaseHeight, fog.Strength);
         data.FogParams1 = new Vector4(fog.DistanceWeight, fog.HeightWeight, fog.MaxDistance, 0.0f);
@@ -174,9 +170,9 @@ internal sealed unsafe class VisualSystem
     [SkipLocalsInit]
     private void UploadLightningUniform()
     {
-        LightningUniform data;
+        var it = VisualManager.Lighting.Sun;
 
-        var it = VisualManager.Lightning.Sun;
+        LightningUniform data;
         data.Direction = it.Direction.AsVector4();
         data.Diffuse = new Vector4(it.Diffuse, it.Intensity);
         data.Specular = new Vector4(it.Specular, 0.0f, 0.0f, 0.0f);

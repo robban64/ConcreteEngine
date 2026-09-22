@@ -34,23 +34,6 @@ public struct BoundingFrustum
         f.NearPlane = VectorMath.Normalize(col4 + col3).AsPlane();
         f.FarPlane = VectorMath.Normalize(col4 - col3).AsPlane();
     }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void From(in Matrix4x4 transposedViewProjection, Span<Vector4> frustums)
-    {
-        ref Vector4 cols = ref Unsafe.As<Matrix4x4, Vector4>(ref Unsafe.AsRef(in transposedViewProjection));
-        Vector4 col1 = Unsafe.Add(ref cols, 0);
-        Vector4 col2 = Unsafe.Add(ref cols, 1);
-        Vector4 col3 = Unsafe.Add(ref cols, 2);
-        Vector4 col4 = Unsafe.Add(ref cols, 3);
-
-        frustums[0]   = NormalizePlaneV(col4 + col1);
-        frustums[1]   = NormalizePlaneV(col4 - col1);
-        frustums[2]   = NormalizePlaneV(col4 - col2);
-        frustums[3]   = NormalizePlaneV(col4 + col2);
-        frustums[4]   = NormalizePlaneV(col4 + col3);
-        frustums[5]   = NormalizePlaneV(col4 - col3);
-    }
-
 
     public static void FromCorners(ReadOnlySpan<Vector3> corners, out BoundingFrustum f)
     {
@@ -80,13 +63,6 @@ public struct BoundingFrustum
         var normal = Vector3.Normalize(Vector3.Cross(b - a, c - a));
         var d = -Vector3.Dot(normal, a);
         return new Plane(normal, d);
-    }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector4 NormalizePlaneV(Vector4 p)
-    {
-        var lengthSq = p.LengthSquared();
-        var invLength = 1.0f / MathF.Sqrt(lengthSq);
-        return p * invLength;
     }
 
 }

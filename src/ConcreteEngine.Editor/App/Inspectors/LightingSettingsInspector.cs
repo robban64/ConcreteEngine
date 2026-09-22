@@ -15,6 +15,6 @@ internal sealed partial class LightingSettingsInspector : Inspector<LightingSett
     {
         _fields.SectionShadow.SetFetchRateLow();
         Sections = _fields.CreateSections();
-        AttachTarget(VisualManager.Instance.Lightning);
+        AttachTarget(VisualManager.Instance.Lighting);
     }
 }

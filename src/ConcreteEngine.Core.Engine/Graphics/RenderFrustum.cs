@@ -20,21 +20,19 @@ public sealed class RenderFrustum
     private ref BoundingFrustum MainFrustum => ref Unsafe.As<Vector4, BoundingFrustum>
         (ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(_frustumPlanes), 6));
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    
     internal void UpdateMain(in Matrix4x4 projectionViewMatrix)
     {
         var transposed = Matrix4x4.Transpose(projectionViewMatrix);
         BoundingFrustum.From(in transposed, out MainFrustum);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void UpdateLight(in Matrix4x4 projectionViewMatrix)
     {
         var transposed = Matrix4x4.Transpose(projectionViewMatrix);
         BoundingFrustum.From(in transposed, out LightFrustum);
     }
-
+    
     public PassMask Intersects(PassMask passes, in BoundingAxisBox box)
     {
         var center = new Vector4(box.Center, 1f);
@@ -71,4 +69,5 @@ public sealed class RenderFrustum
 
         return true;
     }
+    
 }

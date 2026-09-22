@@ -45,6 +45,12 @@ public sealed class CameraTransformSnapshot
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new(-ViewMatrix.M13, -ViewMatrix.M23, -ViewMatrix.M33);
     }
+    
+    public Vector2 Tan
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(1f / ProjectionMatrix.M11, 1f / ProjectionMatrix.M22);
+    }
 }
 
 public sealed class CameraTransform

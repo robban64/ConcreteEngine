@@ -27,6 +27,7 @@ public struct Ray(Vector3 position, Vector3 direction) : IEquatable<Ray>
         float t = (planeY - ray.Position.Y) / denom;
         return t < 0 ? default : ray.GetPointOnRay(t);
     }
+    
 
     public readonly bool Equals(Ray other) => Position == other.Position && Direction == other.Direction;
 

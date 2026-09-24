@@ -182,22 +182,22 @@ public sealed class Terrain
 
     public Vector3 GetPointOnTerrainPlane(in Ray ray)
     {
-        var n = Vector3.UnitY;
-        Vector3 p0 = default;
+        var numerator = Vector3.Dot(-ray.Position, Vector3.UnitY);
+        var denominator = Vector3.Dot(ray.Direction, Vector3.UnitY);
 
-        var numerator = Vector3.Dot(p0 - ray.Position, n);
-        var denominator = Vector3.Dot(ray.Direction, n);
-
-        if (float.Abs(denominator) < 1e-6f)
+        if (float.Abs(denominator) < 1e-6f) 
             return Vector3.Zero;
 
         var t = numerator / denominator;
-        if (t < 0) return Vector3.Zero;
-        var pointOnPlane = ray.GetPointOnRay(t);
-
-        if (pointOnPlane.X < 0 || pointOnPlane.Z < 0 || pointOnPlane.X >= Dimension - 1 ||
-            pointOnPlane.Z >= Dimension - 1)
+        if (t < 0) 
             return Vector3.Zero;
+        
+        var pointOnPlane = ray.GetPointOnRay(t);
+        if (pointOnPlane.X < 0 || pointOnPlane.Z < 0 ||
+            pointOnPlane.X >= Dimension - 1 || pointOnPlane.Z >= Dimension - 1)
+        {
+            return Vector3.Zero;
+        }
 
         var terrainHeight = GetSmoothHeight(pointOnPlane.X, pointOnPlane.Z);
 

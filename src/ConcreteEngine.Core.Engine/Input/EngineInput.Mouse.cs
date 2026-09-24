@@ -14,6 +14,8 @@ public static partial class EngineInput
 
         private static readonly InputButtonState[] MouseButtonState = new InputButtonState[ButtonCapacity];
 
+        private static int _activeMouseButtonCount;
+
         private static Vector2 _screenPos;
         private static Vector2 _viewportPos;
         private static Vector2 _delta;
@@ -24,8 +26,6 @@ public static partial class EngineInput
         private static Vector2 _accScroll;
         private static Vector2 _lastMouseScroll;
 
-        private static int _activeMouseButtonCount;
-
         public static Vector2 ScreenPos => _screenPos;
         public static Vector2 ViewportPos => _viewportPos;
         public static Vector2 Delta => _delta;
@@ -35,7 +35,7 @@ public static partial class EngineInput
         public static InputButtonState GetButton(MouseButton button) => MouseButtonState[(int)button];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ReadOnlySpan<InputButtonState> GetButtonSpan() => MouseButtonState.AsSpan();
+        public static ReadOnlySpan<InputButtonState> GetButtonSpan() => MouseButtonState;
 
         internal static void UpdateMouse()
         {
@@ -54,8 +54,11 @@ public static partial class EngineInput
             _delta = _screenPos - _lastScreenPos;
             _lastScreenPos = _screenPos;
             _viewportPos = _screenPos - EngineWindow.Viewport.Position;
+            
+            var activeCount = _activeMouseButtonCount;
+            if(activeCount == 0) return;
 
-            foreach (ref var state in MouseButtonState.AsSpan(0, _activeMouseButtonCount))
+            foreach (ref var state in MouseButtonState.AsSpan())
             {
                 if (state is { Down: false, WasDown: false, Up: false }) continue;
                 state.Update();
@@ -63,11 +66,11 @@ public static partial class EngineInput
                 if (state is { Up: true, WasDown: false })
                 {
                     state = default;
-                    _activeMouseButtonCount--;
+                    activeCount--;
                 }
             }
 
-            if (_activeMouseButtonCount < 0) _activeMouseButtonCount = 0;
+            _activeMouseButtonCount = activeCount;
         }
 
         // Mouse callbacks
@@ -82,8 +85,7 @@ public static partial class EngineInput
             if ((uint)index >= (uint)MouseButtonState.Length) return;
 
             ref var buttonState = ref MouseButtonState[index];
-            if (!buttonState.Down)
-                _activeMouseButtonCount++;
+            if (!buttonState.Down) _activeMouseButtonCount++;
 
             buttonState.Down = true;
             buttonState.Up = false;
@@ -95,6 +97,7 @@ public static partial class EngineInput
             if ((uint)index >= (uint)MouseButtonState.Length) return;
             MouseButtonState[index].Up = true;
         }
+
 
         internal static void Attach(IMouse mouse)
         {

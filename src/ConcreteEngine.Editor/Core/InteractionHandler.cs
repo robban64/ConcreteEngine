@@ -13,38 +13,39 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
     public Vector3 DragStart;
     public bool WasDragging;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Update()
     {
-        if (EditorInput.Layer.IsKeyDown(Key.Escape))
+        var blocked = EditorInput.IsBlockingMouse || EditorInput.Layer.IsKeyDown(Key.Escape);
+        if (blocked)
         {
             WasDragging = false;
             DragStart = Vector3.Zero;
             EditorInput.DragState = DragState.None;
             return;
         }
-        
-        if (!EditorInput.IsBlockingMouse && !UpdateMouseClick())
-            UpdateDrag(EditorInput.IsDragging);
 
-        WasDragging = EditorInput.IsDragging;
+        var isDragging = EditorInput.IsDragging;
+        if (!UpdateMouseClick(isDragging))
+            UpdateDrag(isDragging);
+
+        WasDragging = isDragging;
     }
 
-    private bool UpdateMouseClick()
+    private bool UpdateMouseClick(bool isDragging)
     {
         if (EditorInput.IsRightClick)
         {
             OnRightClickViewport();
             return true;
         }
-        if (EditorInput.IsLeftClick && !EditorInput.IsDragging)
+        if (EditorInput.IsUsingGizmo || EditorInput.IsHoveringGizmo)
+            return true;
+        if (EditorInput.IsLeftClick && !isDragging)
         {
             OnClickViewport(EngineInput.Mouse.ViewportPos);
             return true;
         }
 
-        if (EditorInput.IsUsingGizmo || EditorInput.IsHoveringGizmo)
-            return true;
 
         return false;
     }
@@ -79,7 +80,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
         {
             case DragState.None: break;
             case DragState.DragStart:
-                if (!RaycastTerrain(mousePos, out var dragStart))
+                if (!SceneManager.Instance.Raycaster.TryGetPointOnTerrain(mousePos, out var dragStart))
                 {
                     dragState = DragState.None;
                     break;
@@ -124,12 +125,6 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
             state.EnqueueEvent(new SelectionEvent(sceneObject.Id));
 
         return true;
-    }
-
-    private bool RaycastTerrain(Vector2 mousePos, out Vector3 point)
-    {
-        point = SceneManager.Instance.Raycaster.GetPointOnTerrain(mousePos, out _);
-        return point != default;
     }
 
     private void OnDragTerrain(Vector2 mousePos, Vector3 origin)

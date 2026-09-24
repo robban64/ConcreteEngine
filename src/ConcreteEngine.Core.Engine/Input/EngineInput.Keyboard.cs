@@ -44,21 +44,9 @@ public static partial class EngineInput
         internal static void ClearKeys() => KeyChars.Clear();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int FindIndex(int key)
-        {
-            var length = _keyState.Length;
-            for (var i = 0; i < length; i++)
-            {
-                if (key == _keyState[i].Button) return i;
-            }
-
-            return -1;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ref InputButtonState GetRefOrNull(int key, out int index)
         {
-            index = FindIndex(key);
+            index = _keyState.AsSpan().FindIndex(key);
             if (index >= 0) return ref _keyState[index];
             return ref Unsafe.NullRef<InputButtonState>();
         }
@@ -104,7 +92,7 @@ public static partial class EngineInput
         // Keyboard callbacks
         private static void OnKeyDown(IKeyboard keyboard, Key key, int scancode)
         {
-            var index = FindIndex((int)key);
+            var index = _keyState.AsSpan().FindIndex((int)key);
             if (index == -1)
             {
                 if (_keyStateCount >= _keyState.Length)

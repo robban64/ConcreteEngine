@@ -7,7 +7,7 @@ namespace ConcreteEngine.Core.Common.Identity;
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct Handle64<T> : ITypedId<Handle64<T>>, IComparable<int>, IComparable<Handle64<T>>
 {
-    public static readonly Handle64<T> Empty = default;
+    public static readonly Handle64<T> Empty = new(0, 0);
 
     [JsonInclude] public readonly int Id;
     [JsonInclude] public readonly int Gen;

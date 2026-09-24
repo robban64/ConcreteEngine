@@ -58,17 +58,21 @@ internal sealed class EditorService
         _eventDispatcher.Register<ToolEvent>(EventHandler.OnToolEvent);
     }
 
+   // private AvgFrameTimer avg;
+
     public void Draw()
     {
         AppLayout.PushFontText();
         _windowManager.Draw();
         ImGui.PopFont();
 
+       // avg.BeginSample();
         bool shouldWakeUp = EditorInput.UpdateInputState(_selectionManager.HasSceneObject);
         if (shouldWakeUp)
             EditorTime.FullWakeUp();
 
         _interactionHandler.Update();
+       // if (avg.EndSample() > 40) avg.ResetAndPrint();
 
         _eventDispatcher.DrainQueue(_stateManager);
     }

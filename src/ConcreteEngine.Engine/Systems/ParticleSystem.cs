@@ -73,7 +73,6 @@ internal sealed class ParticleSystem : IDisposable
             InterpolateVisual(data, particles);
             _particleMesh.UploadGpuData(emitter.BoundSlot, emitter.ParticleCount);
         }
-
     }
 
 
@@ -130,6 +129,7 @@ internal sealed class ParticleSystem : IDisposable
         }
     }
 
+
     private void SimulateEmitter(ParticleEmitter emitter, float simDt)
     {
         var count = emitter.AlignedParticleCount;
@@ -147,14 +147,14 @@ internal sealed class ParticleSystem : IDisposable
     private int SimulateLife(ParticleEmitterData data, int count, float simDt)
     {
         int deadIndex = 0;
-        var lifeSpan = data.LifeState.AsSpan(0, count);
         ref var deadIndices = ref MemoryMarshal.GetArrayDataReference(_deadIndices);
 
+        var lifeSpan = data.LifeState.AsSpan(0, count);
         for (int i = 0; i <= lifeSpan.Length - Vector256<float>.Count; i += Vector256<float>.Count)
         {
-            var life = lifeSpan.Slice(i, Vector256<float>.Count);
-            var vLife = Vector256.Subtract(Vector256.Create(life), Vector256.Create(simDt));
-            vLife.CopyTo(life);
+            ref var life = ref lifeSpan[i];
+            var vLife = Vector256.Subtract(Vector256.LoadUnsafe(ref life), Vector256.Create(simDt));
+            vLife.StoreUnsafe(ref life);
 
             var mask = Vector256.LessThanOrEqual(vLife, Vector256.Create(0f)).ExtractMostSignificantBits();
             while (mask != 0)
@@ -170,44 +170,36 @@ internal sealed class ParticleSystem : IDisposable
 
     private static void SimulateLifeIndex(ParticleEmitterData data, int count)
     {
-        var lifeSpan = data.LifeState.AsSpan(0, count);
-        var invMaxLifeSpan = data.LifeMaxInverse.AsSpan(0, count);
-        var lutIndexSpan = data.GetLutIndices(count);
-
-        if (lifeSpan.Length != invMaxLifeSpan.Length || lifeSpan.Length != lutIndexSpan.Length)
-            Throwers.InvalidArgument(nameof(data));
-
-        while (lifeSpan.Length >= Vector256<float>.Count)
+        ref var lutIndices = ref MemoryMarshal.GetReference(data.GetLutIndices(count));
+        var lifeState = data.LifeState.Slice(0, count).Reinterpret<Vector256<float>>();
+        var invMaxLifeState = data.LifeMaxInverse.Slice(0, count).Reinterpret<Vector256<float>>();
+        foreach (var it in lifeState.Zip(invMaxLifeState))
         {
-            var vDiff = Fma.MultiplyAddNegated(Vector256.Create(lifeSpan), Vector256.Create(invMaxLifeSpan),
-                Vector256.Create(1f));
+            var vDiff = Fma.MultiplyAddNegated(it.Item1, it.Item2, Vector256.Create(1f));
             var vIndex = Fma.MultiplyAdd(vDiff, Vector256.Create(255f), Vector256.Create(0.5f));
 
             var vIndexInt32 = Avx.ConvertToVector256Int32(vIndex);
             var shorts = Sse2.PackSignedSaturate(vIndexInt32.GetLower(), vIndexInt32.GetUpper());
             var bytes = Sse2.PackUnsignedSaturate(shorts, Vector128<short>.Zero);
 
-            Unsafe.As<byte, long>(ref MemoryMarshal.GetReference(lutIndexSpan)) = bytes.AsInt64().ToScalar();
-
-            lifeSpan = lifeSpan.Slice(Vector256<float>.Count);
-            invMaxLifeSpan = invMaxLifeSpan.Slice(Vector256<float>.Count);
-            lutIndexSpan = lutIndexSpan.Slice(Vector256<float>.Count);
+            Unsafe.As<byte, long>(ref lutIndices) = bytes.AsInt64().ToScalar();
+            lutIndices = ref Unsafe.Add(ref lutIndices, Vector256<float>.Count);
         }
     }
 
     private static void SimulateSpatial(ParticleEmitterData emitter, int count, Vector3 gravity, float simDt)
     {
         var gravityStep256 = Vector256.Create(gravity.AsVector128() * simDt);
-        var positions = emitter.Positions.Slice(0, count).Reinterpret<float>().AsSpan();
-        var velocities = emitter.Velocities.Slice(0, count).Reinterpret<float>().AsSpan();
-        while (velocities.Length >= Vector256<float>.Count)
+
+        var velocities = emitter.Velocities.Slice(0, count).Reinterpret<Vector256<float>>();
+        var positions = emitter.Positions.Slice(0, count).Reinterpret<Vector256<float>>();
+
+        foreach (var it in velocities.Zip(positions))
         {
-            var vVelocity = Vector256.Add(Vector256.Create(velocities), gravityStep256);
-            var vPosition = Vector256.FusedMultiplyAdd(vVelocity, Vector256.Create(simDt), Vector256.Create(positions));
-            vVelocity.CopyTo(velocities);
-            vPosition.CopyTo(positions);
-            velocities = velocities.Slice(Vector256<float>.Count);
-            positions = positions.Slice(Vector256<float>.Count);
+            var vVelocity = Vector256.Add(it.Item1, gravityStep256);
+            var vPosition = Fma.MultiplyAdd(vVelocity, Vector256.Create(simDt), it.Item2);
+            it.Item1 = vVelocity;
+            it.Item2 = vPosition;
         }
     }
 

@@ -26,7 +26,7 @@ internal static class EditorInput
     public static bool IsBlockingMouse;
     
     public static bool IsBlocking => IsBlockingMouse || IsBlockingKeyboard;
-    public static bool IsInteracting() => IsDragging || IsUsingGizmo || IsHoveringGizmo;
+    public static bool IsInteracting => IsDragging || IsUsingGizmo || IsHoveringGizmo;
     public static bool IsGizmoBlocked => DragState != DragState.None || Layer.IsKeyDown(Key.ControlLeft);
 
     public static void ToggleBlockLayers()

@@ -45,8 +45,8 @@ internal sealed class ParticleMesh : IDisposable
             throw new InvalidOperationException($"{nameof(ParticleMesh)} is already initialized");
 
         _handles = new ParticleMeshHandle[DefaultHandleCap];
-        _positionData = NativeArray.Allocate<Vector4>(DefaultParticleCap, false);
-        _particleData = NativeArray.Allocate<ParticleVertex>(DefaultParticleCap, false);
+        _positionData = NativeArray.AlignedAllocate<Vector4>(DefaultParticleCap,  64, false);
+        _particleData = NativeArray.AlignedAllocate<ParticleVertex>(DefaultParticleCap, 64, false);
 
         _gfx = gfx;
     }
@@ -136,6 +136,7 @@ internal sealed class ParticleMesh : IDisposable
             }
         }
 
+        _positionData.Dispose();
         _particleData.Dispose();
         _handles = null!;
         Count = 0;

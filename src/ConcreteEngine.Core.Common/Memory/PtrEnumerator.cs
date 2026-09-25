@@ -47,7 +47,7 @@ public unsafe ref struct PtrEnumerator<T1, T2> where T1 : unmanaged where T2 : u
         return ++_p1 < _end;
     }
 
-    public readonly TupleRef<T1, T2> Current
+    public readonly ValueRef<T1, T2> Current
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new(ref *_p1, ref *_p2);
@@ -83,7 +83,7 @@ public unsafe ref struct PtrEnumerator<T1, T2, T3> where T1 : unmanaged where T2
         return ++_p1 < _end;
     }
 
-    public readonly TripleRef<T1, T2, T3> Current
+    public readonly ValueRef<T1, T2, T3> Current
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new(ref *_p1, ref *_p2, ref *_p3);

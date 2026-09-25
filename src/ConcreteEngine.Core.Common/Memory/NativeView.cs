@@ -110,9 +110,13 @@ public readonly unsafe struct NativeView<T> : IEquatable<NativeView<T>> where T 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<U> Reinterpret<U>() where U : unmanaged => new((U*)Ptr, (U*)EndPtr);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator ==(NativeView<T> left, NativeView<T> right) => left.Equals(right);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator !=(NativeView<T> left, NativeView<T> right) => !(left == right);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Equals(NativeView<T> other) => Ptr == other.Ptr && EndPtr == other.EndPtr;
 
     public override bool Equals(object? obj) => obj is NativeView<T> v && Equals(v);

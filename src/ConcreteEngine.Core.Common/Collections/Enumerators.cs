@@ -104,7 +104,7 @@ public ref struct ZipRefEnumerator<T1, T2> where T1 : unmanaged where T2 : unman
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < _length;
 
-    public readonly TupleRef<T1, T2> Current
+    public readonly ValueRef<T1, T2> Current
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new(ref Unsafe.Add(ref _start1, _i), ref Unsafe.Add(ref _start2, _i));
@@ -121,6 +121,9 @@ public ref struct ZipSpanEnumerator<T1, T2>
     private readonly Span<T1> _span1;
     private readonly Span<T2> _span2;
     private int _i = -1;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ZipSpanEnumerator<T1, T2> Make(Span<T1> span1,  Span<T2> span2) => new(span1, span2);
 
     public ZipSpanEnumerator(Span<T1> span1, Span<T2> span2)
     {
@@ -132,7 +135,7 @@ public ref struct ZipSpanEnumerator<T1, T2>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < _span1.Length;
 
-    public readonly TupleRef<T1, T2> Current
+    public readonly ValueRef<T1, T2> Current
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new(ref _span1[_i], ref _span2[_i]);
@@ -141,5 +144,42 @@ public ref struct ZipSpanEnumerator<T1, T2>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ZipSpanEnumerator<T1,T2> GetEnumerator() => this;
+        
+}
+
+
+public ref struct ZipSpanEnumerator<T1, T2, T3>
+{
+    private readonly Span<T1> _span1;
+    private readonly Span<T2> _span2;
+    private readonly Span<T3> _span3;
+
+    private int _i = -1;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ZipSpanEnumerator<T1, T2, T3> Make(Span<T1> span1,  Span<T2> span2, Span<T3> span3) => new(span1, span2, span3);
+
+    public ZipSpanEnumerator(Span<T1> span1, Span<T2> span2, Span<T3> span3)
+    {
+        ArgumentOutOfRangeException.ThrowIfNotEqual(span1.Length, span2.Length);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(span1.Length, span3.Length);
+        _span1 = span1;
+        _span2 = span2;
+        _span3 = span3;
+
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool MoveNext() => ++_i < _span1.Length;
+
+    public readonly ValueRef<T1, T2, T3> Current
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(ref _span1[_i], ref _span2[_i], ref _span3[_i]);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ZipSpanEnumerator<T1,T2, T3> GetEnumerator() => this;
         
 }

@@ -12,7 +12,7 @@ public static class NativeExtensions
     extension<T>(NativeView<T> it) where T : unmanaged
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NativeView<T> Slice(RangeU16 range) => it.Slice(range.Offset16, range.Length16);
+        public NativeView<T> Slice(RangeU16 range) => it.Slice(range.Offset, range.Length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NativeView<T> Slice(Range32 range) => it.Slice(range.Offset, range.Length);
@@ -29,7 +29,7 @@ public static class NativeExtensions
     extension<T>(NativeArray<T> it) where T : unmanaged
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NativeView<T> Slice(RangeU16 range) => it.Slice(range.Offset16, range.Length16);
+        public NativeView<T> Slice(RangeU16 range) => it.Slice(range.Offset, range.Length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NativeView<T> Slice(Range32 range) => it.Slice(range.Offset, range.Length);

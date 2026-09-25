@@ -17,35 +17,48 @@ internal sealed class ParticleEmitterData : IDisposable
     public const int Alignment = 64;
     public const int CountAlignment = 16;
 
-    private static int StrideSum => Unsafe.SizeOf<Vector4>() * 2 + sizeof(float) * 2;
-    private static int GetCapacity(int count) => count * StrideSum + (Alignment * 3);
+    private static int StrideSum => Unsafe.SizeOf<Vector4>() * 2 + sizeof(float) * 2 + sizeof(byte);
+    private static int GetCapacity(int count) => count * StrideSum + (Alignment * 4);
 
     //
-    
+
     private readonly ParticleVertex[] _lut = new ParticleVertex[LutLength];
 
-    private byte[] _lifeLutIndices = null!;
-    
     private NativeArray<byte> _buffer;
 
-    public NativeView<Vector4> Velocities { get; private set; }
-    public NativeView<Vector4> Positions { get; private set; }
-    public NativeView<float> LifeState { get; private set; }
-    public NativeView<float> LifeMaxInverse { get; private set; }
+    private NativeView<Vector4> _velocities;
+    private NativeView<Vector4> _positions;
+    private NativeView<float> _lifeState;
+    private NativeView<float> _lifeMaxInverse;
+    private NativeView<byte> _lifeLutIndices;
 
 
     public ParticleEmitterData(int count)
     {
         EnsureAllocate(count);
     }
+    
+    public NativeView<Vector4> Velocities => _velocities;
+    public NativeView<Vector4> Positions => _positions;
+    public NativeView<float> LifeState => _lifeState;
+    public NativeView<float> LifeMaxInverse => _lifeMaxInverse;
+    public NativeView<byte> LifeLutIndices => _lifeLutIndices;
 
     public int Capacity => _buffer.Length;
-    public int Count => Velocities.Length;
+    public int Count => _velocities.Length;
     public bool IsNullOrEmpty => _buffer.IsNullOrEmpty;
 
-    public Span<byte> GetLutIndices(int count) => _lifeLutIndices.AsSpan(0,count);
     public ref ParticleVertex GetLutRef() => ref MemoryMarshal.GetArrayDataReference(_lut);
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Set(int index, Vector3 velocity, Vector3 position, float life)
+    {
+        _velocities[index] = velocity.AsVector4();
+        _positions[index] = position.AsVector4();
+        _lifeState[index] = life;
+        _lifeMaxInverse[index] = 1f / life;
+    }
+    
     public void UpdateLutFromParticleParams(ColorRgba startColor, ColorRgba endColor, Vector2 sizeStartEnd)
     {
         var lut = _lut;
@@ -65,7 +78,7 @@ internal sealed class ParticleEmitterData : IDisposable
 
         count = IntMath.AlignUp(count, CountAlignment);
         var capacity = GetCapacity(count);
-        
+
         var isFirstAlloc = _buffer.IsNull;
         if (!isFirstAlloc && capacity <= _buffer.Length) return false;
 
@@ -75,23 +88,23 @@ internal sealed class ParticleEmitterData : IDisposable
             _buffer.ReAlloc(capacity, true);
 
         var allocator = new NativeAllocBuilder(_buffer, alignCursor: Alignment);
-        Velocities = allocator.AllocSlice<Vector4>(count);
-        Positions = allocator.AllocSlice<Vector4>(count);
-        LifeState = allocator.AllocSlice<float>(count);
-        LifeMaxInverse = allocator.AllocSlice<float>(count);
+        _velocities = allocator.AllocSlice<Vector4>(count);
+        _positions = allocator.AllocSlice<Vector4>(count);
+        _lifeState = allocator.AllocSlice<float>(count);
+        _lifeMaxInverse = allocator.AllocSlice<float>(count);
+        _lifeLutIndices = allocator.AllocSlice<byte>(count);
 
-        _lifeLutIndices = new byte[count];
-
-        if(!isFirstAlloc) Logger.Log(LogScope.Engine, "ParticleEmitterData: resized", LogLevel.Warn);
+        if (!isFirstAlloc) Logger.Log(LogScope.Engine, "ParticleEmitterData: resized", LogLevel.Warn);
         return true;
     }
 
     public void Dispose()
     {
         _buffer.Dispose();
-        Velocities = default;
-        Positions = default;
-        LifeState = default;
-        LifeMaxInverse = default;
+        _velocities = default;
+        _positions = default;
+        _lifeState = default;
+        _lifeMaxInverse = default;
+        _lifeLutIndices = default;
     }
 }

@@ -96,7 +96,7 @@ public sealed class EngineRenderSystem : IDisposable
         _passContext.ResetFrame();
 
         // frame update
-        CameraManager.Instance.CommitFrame(EngineTime.GameAlpha);
+        CameraManager.Instance.CommitFrame(EngineTime.GameAlphaF);
 
         VisualSystem.Instance.UploadUniforms();
 

@@ -221,8 +221,8 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         {
             var life = rng.RandomFloat(lifeMinMax);
             var speed = rng.RandomFloat(speedMinMax);
-            var position = rng.NextVector3(-spread, spread);
-            var randDir = rng.NextVector3(-0.5f, 0.5f);
+            var position = rng.RandomVector3(-spread, spread);
+            var randDir = rng.RandomVector3(-0.5f, 0.5f);
             var velocity = Vector3.Normalize(randDir + direction) * speed;
             data.Set(index, velocity, position, life);
         }
@@ -242,9 +242,9 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         for (var i = start; i < length; i++)
         {
             var speed = rng.RandomFloat(speedMinMax);
-            var randDir = rng.NextVector3(-0.5f, 0.5f);
+            var randDir = rng.RandomVector3(-0.5f, 0.5f);
             var velocity = Vector3.Normalize(randDir + direction) * speed;
-            _data.Set(i, velocity, rng.NextVector3(-spread, spread), rng.RandomFloat(lifeMinMax));
+            _data.Set(i, velocity, rng.RandomVector3(-spread, spread), rng.RandomFloat(lifeMinMax));
         }
 
         _rng = rng;

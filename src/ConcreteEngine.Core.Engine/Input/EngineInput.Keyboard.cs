@@ -10,7 +10,7 @@ public static partial class EngineInput
     public static class Keyboard
     {
         private static int _keyStateCount;
-        private static InputButtonState[] _keyState = new InputButtonState[16];
+        private static readonly (int Key, InputButtonState State)[] KeyState = new(int, InputButtonState)[32];
 
         private static readonly List<int> ActiveKeys = new(16);
         private static readonly List<int> KeysToRemove = new(16);
@@ -29,10 +29,10 @@ public static partial class EngineInput
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryGet(Key key, out InputButtonState state)
         {
-            ref var it = ref GetRefOrNull((int)key, out var index);
+            var index = FindIndex((int)key);
             if (index != -1)
             {
-                state = it;
+                state = KeyState[index].State;
                 return true;
             }
 
@@ -43,32 +43,23 @@ public static partial class EngineInput
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void ClearKeys() => KeyChars.Clear();
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ref InputButtonState GetRefOrNull(int key, out int index)
-        {
-            index = _keyState.AsSpan().FindIndex(key);
-            if (index >= 0) return ref _keyState[index];
-            return ref Unsafe.NullRef<InputButtonState>();
-        }
-
-
         internal static void UpdateKeys()
         {
             var removeCount = 0;
             for (var i = 0; i < KeysToRemove.Count; i++)
             {
-                ref var it = ref GetRefOrNull(KeysToRemove[i], out var index);
+                var index = FindIndex(KeysToRemove[i]);
                 if (index != -1)
                 {
+                    KeyState[index] = default;
                     ++removeCount;
-                    it = default;
                 }
             }
 
             if (removeCount > 0)
             {
                 var count = _keyStateCount;
-                while (count > 0 && _keyState[count - 1] == default) count--;
+                while (count > 0 && KeyState[count - 1] == default) count--;
                 _keyStateCount = count;
             }
 
@@ -78,39 +69,46 @@ public static partial class EngineInput
             var length = _keyStateCount;
             for (var i = 0; i < length; i++)
             {
-                ref var key = ref _keyState[i];
-                if (key == default) continue;
+                ref var keyState = ref KeyState[i];
+                if (keyState == default) continue;
+                keyState.State.Update();
+                if (keyState.State is { Up: true, Pressed: false })
+                    KeysToRemove.Add(keyState.Key);
 
-                key.Update();
-                if (key is { Up: true, Pressed: false })
-                    KeysToRemove.Add(key.Button);
-
-                ActiveKeys.Add(key.Button);
+                ActiveKeys.Add(keyState.Key);
             }
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int FindIndex(int key)
+        {
+            var keys = KeyState;
+            for (var i = 0; i < keys.Length; i++)
+            {
+                if (key == keys[i].Key) return i;
+            }
+
+            return -1;
+        }
+
 
         // Keyboard callbacks
         private static void OnKeyDown(IKeyboard keyboard, Key key, int scancode)
         {
-            var index = _keyState.AsSpan().FindIndex((int)key);
+            var index = FindIndex((int)key);
             if (index == -1)
             {
-                if (_keyStateCount >= _keyState.Length)
-                {
-                    if (_keyState.Length >= 128) Throwers.InvalidOperation("Too many keys");
-                    Array.Resize(ref _keyState, _keyState.Length * 2);
-                }
-
+                if (_keyStateCount >= KeyState.Length) Throwers.InvalidOperation("Too many keys");
                 index = _keyStateCount++;
             }
 
-            _keyState[index] = new InputButtonState { Button = (int)key, Down = true, Up = false };
+            KeyState[index] = ((int)key, new InputButtonState { Down = true, Up = false });
         }
-
+        
         private static void OnKeyUp(IKeyboard keyboard, Key key, int scancode)
         {
-            ref var keyState = ref GetRefOrNull((int)key, out var index);
-            if (index != -1) keyState.Up = true;
+            var index = FindIndex((int)key);
+            if (index != -1) KeyState[index].State.Up = true;
         }
 
         private static void OnKeyChar(IKeyboard keyboard, char key) => KeyChars.Add(key);

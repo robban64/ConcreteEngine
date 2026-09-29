@@ -9,7 +9,7 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IIn
 {
     public readonly InputStyle Style;
 
-    private readonly T* _value;
+    public T Value;
     public float Speed, Min, Max;
 
     private readonly String8Utf8 _format;
@@ -31,26 +31,22 @@ internal sealed unsafe class FloatInput<T> : InputField where T : unmanaged, IIn
         Speed = speed;
         Min = min;
         Max = max;
-
-        _value = (T*)StringArena.Instance.AllocBytes(Unsafe.SizeOf<T>()).Ptr;
     }
-
-    public ref T Value => ref *_value;
 
     public override bool Draw()
     {
-        var strId = _stringId;
-        var strIdPtr = strId._value;
+        var strId = StringId;
+        var value = Value;
         var changed = Style switch
         {
-            InputStyle.Input => T.DrawFloatInput(strIdPtr, _value, _format),
-            InputStyle.Slider => T.DrawFloatSlider(strIdPtr, _value, _format, Min, Max),
-            InputStyle.Drag => T.DrawFloatDrag(strIdPtr, _value, _format, Speed, Min, Max),
+            InputStyle.Input => T.DrawFloatInput(strId._value, &value, _format),
+            InputStyle.Slider => T.DrawFloatSlider(strId._value, &value, _format, Min, Max),
+            InputStyle.Drag => T.DrawFloatDrag(strId._value, &value, _format, Speed, Min, Max),
             _ => false
         };
         if (changed && ShouldTrigger())
         {
-            _setter(*_value);
+            _setter(Value = value);
             return true;
         }
 
@@ -62,7 +58,7 @@ internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IInpu
 {
     public readonly InputStyle Style;
 
-    private readonly T* _value;
+    public  T Value;
     public int Min, Max;
     public float Speed;
 
@@ -81,28 +77,24 @@ internal sealed unsafe class IntInput<T> : InputField where T : unmanaged, IInpu
         Speed = speed;
         Min = min;
         Max = max;
-
-        _value = (T*)StringArena.Instance.AllocBytes(Unsafe.SizeOf<T>()).Ptr;
     }
-
-    public ref T Value => ref *_value;
 
     public override bool Draw()
     {
-        var strId = _stringId;
-        var strIdPtr = strId._value;
+        var strId = StringId;
+        var value = Value;
 
         var changed = Style switch
         {
-            InputStyle.Input => T.DrawIntInput(strIdPtr, _value),
-            InputStyle.Slider => T.DrawIntSlider(strIdPtr, _value, Min, Max),
-            InputStyle.Drag => T.DrawIntDrag(strIdPtr, _value, Speed, Min, Max),
+            InputStyle.Input => T.DrawIntInput(strId._value, &value),
+            InputStyle.Slider => T.DrawIntSlider(strId._value, &value, Min, Max),
+            InputStyle.Drag => T.DrawIntDrag(strId._value, &value, Speed, Min, Max),
             _ => false
         };
 
         if (changed && ShouldTrigger())
         {
-            _setter(*_value);
+            _setter(Value = value);
             return true;
         }
 

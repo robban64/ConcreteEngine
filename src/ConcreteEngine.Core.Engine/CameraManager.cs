@@ -41,12 +41,12 @@ public sealed class CameraManager
     }
 
 
-    internal void CommitFrame(double alpha)
+    internal void CommitFrame(float alpha)
     {
         Camera.Interpolate(alpha, out var translation, out var orientation);
 
         var frameTransforms = FrameTransforms;
-        frameTransforms.UpdateViewMatrix(in translation, orientation);
+        frameTransforms.UpdateViewMatrix(translation, orientation);
         frameTransforms.ProjectionMatrix = Camera.ProjectionMatrix;
         frameTransforms.ProjectionViewMatrix = frameTransforms.ViewMatrix * frameTransforms.ProjectionMatrix;
 

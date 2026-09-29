@@ -7,17 +7,12 @@ public struct FastRandom(uint seed)
 {
     private uint _seed = seed == 0 ? 420_1337 : seed;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetSeed(uint seed) => _seed = seed;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void IncrementSeed() => _seed++;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float RandomFloat(float min, float max) => min + NextFloat() * (max - min);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float RandomFloat(Vector2 minMax) => minMax.X + NextFloat() * (minMax.Y - minMax.X);
-
+    
     // Xorshift algorithm
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float NextFloat()
@@ -30,21 +25,23 @@ public struct FastRandom(uint seed)
 
         return (x & 0x7FFFFFFF) / (float)int.MaxValue;
     }
-}
 
-public static class FastRandomExtensions
-{
-    extension(ref FastRandom rng)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float RandomFloat(float min, float max) => min + NextFloat() * (max - min);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float RandomFloat(Vector2 minMax) => minMax.X + NextFloat() * (minMax.Y - minMax.X);
+    
+    [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector3 RandomVector3(float min, float max)
     {
-        [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector3 NextVector3(float min, float max)
-        {
-            Vector3 result;
-            result.X = rng.RandomFloat(min, max);
-            result.Y = rng.RandomFloat(min, max);
-            result.Z = rng.RandomFloat(min, max);
-            return result;
-        }
-
+        var rng = this;
+        Vector3 result;
+        result.X = rng.RandomFloat(min, max);
+        result.Y = rng.RandomFloat(min, max);
+        result.Z = rng.RandomFloat(min, max);
+        this = rng;
+        return result;
     }
+
 }

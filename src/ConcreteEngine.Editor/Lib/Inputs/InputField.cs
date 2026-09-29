@@ -8,8 +8,8 @@ internal abstract unsafe class InputField
 {
     private static int _idCounter;
 
-    protected readonly int _id;
-    protected readonly String8Utf8 _stringId;
+    protected readonly int Id;
+    protected readonly String8Utf8 StringId;
 
     public readonly NativeString Label;
 
@@ -18,16 +18,16 @@ internal abstract unsafe class InputField
 
     protected InputField(ReadOnlySpan<char> label, InputKind kind)
     {
-        _id = ++_idCounter;
+        Id = ++_idCounter;
         Kind = kind;
-        Label = StringArena.AllocateStringId(label, "lbl", _id);
+        Label = StringArena.AllocateStringId(label, "lbl", Id);
 
         String8Utf8 strId = default;
         var sw = new NativeSpanWriter((byte*)&strId, 8);
-        sw.AppendAscii('#', '#').AppendAscii('i', 'f').Append(_id);
+        sw.AppendAscii('#', '#').AppendAscii('i', 'f').Append(Id);
         strId._value[String8Utf8.TextLength] = 0;
 
-        _stringId = strId;
+        StringId = strId;
     }
 
     public abstract bool Draw();

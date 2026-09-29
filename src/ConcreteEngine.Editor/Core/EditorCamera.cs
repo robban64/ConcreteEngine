@@ -10,18 +10,18 @@ namespace ConcreteEngine.Editor.Core;
 internal static class EditorCamera
 {
     private const float BaseSpeed = 65f;
-    private const double RotationSpeed = 165.0;
+    private const float RotationSpeed = 165.0f;
 
     private static Camera Camera => CameraManager.Instance.Camera;
 
     private static Vector3 _currentVelocity;
-    private static Vector2D _targetOrientation;
+    private static Vector2 _targetOrientation;
 
 
-    public static void Update(double dt)
+    public static void Update(float dt)
     {
         if (EditorInput.IsBlockingKeyboard) return;
-        MovementController((float)dt, BaseSpeed);
+        MovementController(dt, BaseSpeed);
         RotateController(dt, RotationSpeed);
     }
 
@@ -46,13 +46,13 @@ internal static class EditorCamera
         Camera.Translation += _currentVelocity * dt;
     }
 
-    private static void RotateController(double fixedDt, double rotateSpeed)
+    private static void RotateController(float fixedDt, float rotateSpeed)
     {
         var speed = rotateSpeed * fixedDt;
 
         var target = _targetOrientation;
 
-        if (!VectorMath.NearlyEqual(Camera.Orientation.AsVector256(), _targetOrientation.AsVector256()))
+        if (!VectorMath.NearlyEqual(Camera.Orientation, _targetOrientation))
             target = Camera.Orientation;
 
         if (EditorInput.Layer.IsKeyDown(Key.A))
@@ -66,8 +66,8 @@ internal static class EditorCamera
 
         target.Y = RotationMath.ClampPitch(target.Y);
 
-        double t = 1.0 - double.Exp(-25 * fixedDt);
-        Camera.Orientation = Vector2D.Lerp(Camera.Orientation, target, t);
+        float t = 1.0f - float.Exp(-25 * fixedDt);
+        Camera.Orientation = Vector2.Lerp(Camera.Orientation, target, t);
         _targetOrientation = target;
     }
 }

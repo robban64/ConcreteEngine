@@ -31,8 +31,8 @@ public sealed class Camera
     private float _fov = 70f;
     private Vector2 _nearFarPlane = new(0.1f, 500f);
 
-    private Vector3D _translation, _lastTranslation;
-    private Vector2D _orientation, _lastOrientation;
+    private Vector3 _translation, _lastTranslation;
+    private Vector2 _orientation, _lastOrientation;
 
     public Camera(Size2D viewport)
     {
@@ -53,7 +53,7 @@ public sealed class Camera
     [InputNumber]
     public Vector3 Translation
     {
-        get => (Vector3)_translation;
+        get => _translation;
         set
         {
             _translation = value;
@@ -61,20 +61,10 @@ public sealed class Camera
         }
     }
 
-    public Vector2D Orientation
+    [InputNumber(Label = "Orientation")]
+    public Vector2 Orientation
     {
         get => _orientation;
-        set
-        {
-            _orientation = value;
-            IsDirty = true;
-        }
-    }
-
-    [InputNumber(Label = "Orientation")]
-    public Vector2 OrientationF
-    {
-        get => (Vector2)_orientation;
         set
         {
             _orientation = value;
@@ -126,9 +116,9 @@ public sealed class Camera
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Interpolate(double alpha, out Vector3D translation, out Vector2D orientation)
+    internal void Interpolate(float alpha, out Vector3 translation, out Vector2 orientation)
     {
-        translation = Vector3D.Lerp(_lastTranslation, _translation, alpha);
+        translation = Vector3.Lerp(_lastTranslation, _translation, alpha);
         orientation = RotationMath.LerpYawPitch(_lastOrientation, _orientation, alpha);
     }
 
@@ -137,20 +127,15 @@ public sealed class Camera
         if (!IsDirty) return false;
         IsDirty = false;
 
-        var translation = (Vector3)_translation;
+        var fov = FloatMath.ToRadians(Fov * 0.5f);
         var quaternion = RotationMath.YawPitchToQuaternion(_orientation);
-        MatrixMath.CreateFixedSizeModelMatrix( translation, in quaternion, out var modelMatrix);
+        MatrixMath.CreateFixedSizeModelMatrix(_translation, in quaternion, out var modelMatrix);
 
         ref var viewMatrix = ref Transform.ViewMatrix;
         Matrix4x4.Invert(modelMatrix, out viewMatrix);
 
         ref var projectionMatrix = ref Transform.ProjectionMatrix;
-        projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(
-            FloatMath.ToRadians(Fov * 0.5f),
-            AspectRatio,
-            NearFarPlane.X,
-            NearFarPlane.Y
-        );
+        projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fov, AspectRatio, _nearFarPlane.X, _nearFarPlane.Y);
 
         Matrix4x4.Invert(projectionMatrix, out var invProjection);
         Transform.InverseProjectionViewMatrix = invProjection * modelMatrix;

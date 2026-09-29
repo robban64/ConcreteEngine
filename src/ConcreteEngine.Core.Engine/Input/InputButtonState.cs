@@ -4,7 +4,6 @@ namespace ConcreteEngine.Core.Engine.Input;
 
 public record struct InputButtonState
 {
-    public int Button;
     public bool Down;
     public bool Up;
     public bool WasDown;
@@ -25,4 +24,9 @@ public record struct InputButtonState
         if (Up) Down = false;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public InputButtonState Update2()
+    {
+        return this with { Pressed = Down && !WasDown, WasDown = Down, Down = !Up && Down };
+    }
 }

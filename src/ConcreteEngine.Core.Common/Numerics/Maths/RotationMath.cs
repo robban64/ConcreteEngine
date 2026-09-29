@@ -5,50 +5,47 @@ namespace ConcreteEngine.Core.Common.Numerics.Maths;
 
 public static class RotationMath
 {
-    public const double PitchLimit = 89.9;
+    public const float PitchLimit = 89.9f;
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static double ClampPitch(double pitch) => double.Clamp(pitch, -PitchLimit, PitchLimit);
-    
+    public static float ClampPitch(float pitch) => float.Clamp(pitch, -PitchLimit, PitchLimit);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2D LerpYawPitch(Vector2D a, Vector2D b, double t)
+    public static Vector2 LerpYawPitch(Vector2 a, Vector2 b, double t)
     {
         double yawDelta = b.X - a.X;
         if (yawDelta > 180.0) yawDelta -= 360.0;
         if (yawDelta < -180.0) yawDelta += 360.0;
 
-        Unsafe.SkipInit(out Vector2D result);
-        result.X = a.X + yawDelta * t;
-        result.Y = double.Lerp(a.Y, b.Y, t);
-        return result;
+        var x = (float)(a.X + yawDelta * t);
+        var y = (float)double.Lerp(a.Y, b.Y, t);
+        return new Vector2(x, y);
     }
 
-    public static Vector2D QuaternionToYawPitch(Quaternion q)
+    public static Vector2 QuaternionToYawPitch(Quaternion q)
     {
         var forward = Vector3.Transform(new Vector3(0f, 0f, -1f), q);
-        double pitchRad = double.Asin(DoubleMath.Clamp1N1(forward.Y));
+        double pitchRad = double.Asin(FloatMath.Clamp1N1(forward.Y));
         double yawRad = double.Atan2(forward.X, forward.Z);
 
-        double yawDeg = yawRad * DoubleMath.Rad2Deg;
-        double pitchDeg = pitchRad * DoubleMath.Rad2Deg;
+        float yawDeg = (float)(yawRad * FloatMath.Rad2Deg);
+        float pitchDeg = (float)(pitchRad * FloatMath.Rad2Deg);
 
         if (pitchDeg > PitchLimit) pitchDeg = PitchLimit;
         else if (pitchDeg < -PitchLimit) pitchDeg = -PitchLimit;
 
-        return new Vector2D(yawDeg, pitchDeg);
+        return new Vector2(yawDeg, pitchDeg);
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Quaternion YawPitchToQuaternion(Vector2D orientation)
+    public static Quaternion YawPitchToQuaternion(Vector2 orientation)
     {
-        double yaw = orientation.X * DoubleMath.Deg2Rad;
-        double pitch = orientation.Y * DoubleMath.Deg2Rad;
+        var yaw = orientation.X * FloatMath.Deg2Rad;
+        var pitch = orientation.Y * FloatMath.Deg2Rad;
 
-        var qy = Quaternion.CreateFromAxisAngle(Vector3.UnitY, (float)yaw);
-        var qx = Quaternion.CreateFromAxisAngle(Vector3.UnitX, (float)pitch);
-
+        var qy = Quaternion.CreateFromAxisAngle(Vector3.UnitY, yaw);
+        var qx = Quaternion.CreateFromAxisAngle(Vector3.UnitX, pitch);
         return Quaternion.Multiply(qy, qx);
     }
 
@@ -130,7 +127,7 @@ public static class RotationMath
         reference %= 360f;
 
         float diff = reference - angle;
-        float shift = (float)Math.Round(diff / 360f);
+        float shift = float.Round(diff / 360f);
         angle += shift * 360f;
 
         float d = angle - reference;

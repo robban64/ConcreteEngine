@@ -31,7 +31,7 @@ internal sealed unsafe class CheckboxInput : InputField
     {
         var value = Value;
 
-        var strId = _stringId;
+        var strId = StringId;
         var changed = ImGui.Checkbox((byte*)&strId, &value);
         if (changed)
         {

@@ -8,11 +8,10 @@ public static partial class EngineInput
 {
     public static class Mouse
     {
-        private const int ButtonCapacity = 16;
         private const float SmoothFactor = 0.2f;
         private const float Epsilon = 0.001f;
 
-        private static readonly InputButtonState[] MouseButtonState = new InputButtonState[ButtonCapacity];
+        private static readonly InputButtonState[] MouseButtonState = new InputButtonState[16];
 
         private static int _activeMouseButtonCount;
 
@@ -40,9 +39,9 @@ public static partial class EngineInput
         internal static void UpdateMouse()
         {
             var step = (_accScroll - _lastMouseScroll) * SmoothFactor;
-            _scroll = step;
             if (float.Abs(step.X) > Epsilon || float.Abs(step.Y) > Epsilon)
             {
+                _scroll = step;
                 _lastMouseScroll += step;
             }
             else

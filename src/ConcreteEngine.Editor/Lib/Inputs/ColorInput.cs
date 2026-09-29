@@ -9,7 +9,7 @@ internal sealed unsafe class ColorInput : InputField
 {
     public bool HasAlpha;
 
-    private readonly Color4* _value;
+    public Color4 Value;
 
     private readonly Action<Color4> _setter;
 
@@ -18,21 +18,19 @@ internal sealed unsafe class ColorInput : InputField
     {
         _setter = setter;
         HasAlpha = hasAlpha;
-        _value = (Color4*)StringArena.Instance.AllocBytes(Unsafe.SizeOf<Color4>()).Ptr;
     }
-
-    public ref Color4 Value => ref *_value;
 
     public override bool Draw()
     {
-        var strId = _stringId;
+        var strId = StringId;
+        var value = Value;
         var changed = HasAlpha
-            ? ImGui.ColorEdit4(strId._value, &_value->R)
-            : ImGui.ColorEdit3(strId._value, &_value->R);
+            ? ImGui.ColorEdit4(strId._value, &value.R)
+            : ImGui.ColorEdit3(strId._value, &value.R);
 
         if (changed && ShouldTrigger())
         {
-            _setter(*_value);
+            _setter(Value = value);
             return true;
         }
 

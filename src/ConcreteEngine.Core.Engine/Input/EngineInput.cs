@@ -56,32 +56,4 @@ public static partial class EngineInput
         if (_mouseSource is not null)
             Mouse.Detach(_mouseSource);
     }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int FindIndex(this Span<InputButtonState> span, int key)
-    {
-        for (var i = 0; i < span.Length; i++)
-        {
-            if (key == span[i].Button) return i;
-        }
-
-        return -1;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ref InputButtonState TryGetButtonState(this Span<InputButtonState> span, int key, out int index)
-    {
-        for (var i = 0; i < span.Length; i++)
-        {
-            if (key == span[i].Button)
-            {
-                index = i;
-                return ref span[i];
-            }
-        }
-
-        index = -1;
-        return ref Unsafe.NullRef<InputButtonState>();
-    }
-
 }

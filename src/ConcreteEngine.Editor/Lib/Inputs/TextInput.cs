@@ -78,7 +78,7 @@ internal sealed unsafe class TextInput : InputField
     public override bool Draw()
     {
         var hint = Hint;
-        var strId = _stringId;
+        var strId = StringId;
         var changed = ImGui.InputTextEx(strId._value, hint._value, Text, Text.Capacity, default, ImFlags,
             _inputCallback);
 

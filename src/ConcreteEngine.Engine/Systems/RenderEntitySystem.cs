@@ -7,6 +7,7 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Extensions;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
@@ -61,11 +62,16 @@ internal sealed class RenderEntitySystem : IDisposable
         return DrawIndices.Slice(range);
     }
 
+    private AvgFrameTimer avg;
+
     public void Execute()
     {
         Ensure();
-        CullEntities();
-        var visibleCount = VisibleCount = BuildVisibleIndices();
+        avg.BeginSample();
+        //CullEntities();
+        //var visibleCount = VisibleCount = BuildVisibleIndices();
+        var visibleCount = VisibleCount = CullEntities();
+        if (avg.EndSample() > 144) avg.ResetAndPrint();
 
         if (visibleCount == 0) return;
         Debug.Assert((uint)visibleCount <= (uint)_sortIndices.Length);
@@ -76,7 +82,46 @@ internal sealed class RenderEntitySystem : IDisposable
         FillTransformBuffer();
     }
 
+    private unsafe int CullEntities()
+    {
+        var frustum = _frustum;
+        var indices = (DrawEntityKey*)_sortIndices.Ptr;
 
+        var policies = RenderEcs.Core.PolicyView();
+        var worldBounds = RenderEcs.Core.WorldBoundView();
+
+        var entityCount = RenderEcs.Core.Count;
+        var blockCount = RenderEcs.Core.VisibleSet.BlockCount;
+
+        for (int blockIndex = 0; blockIndex < blockCount; ++blockIndex)
+        {
+            var start = blockIndex * 64;
+            if (start >= entityCount) break;
+
+            var end = start + 64 <= entityCount ? start + 64 : start + entityCount % 64;
+            BitBlock block = default;
+            for (int index = start; index < end; ++index)
+            {
+                var policy = policies[index];
+                if (policy.Status < EntityDrawStatus.Normal) continue;
+
+                ref readonly var bounds = ref worldBounds[index];
+                var passes = frustum.Intersects(policy.Passes, policy.Status, in bounds, out var distance);
+                if (passes != 0)
+                {
+                    block.ToggleOn(index);
+                    *indices++ = DrawEntityKey.Create(index, passes, distance, policy.Queue);
+                }
+            }
+
+            RenderEcs.Core.VisibleSet.SetBlock(blockIndex, block.Block);
+        }
+
+        return (int)(indices - (DrawEntityKey*)_sortIndices.Ptr);
+    }
+
+
+/*
     private void CullEntities()
     {
         var frustum = _frustum;
@@ -92,7 +137,6 @@ internal sealed class RenderEntitySystem : IDisposable
                 query.DrawPasses = 0;
         }
     }
-
     private unsafe int BuildVisibleIndices()
     {
         CameraManager.Instance.Camera.ExtractDepthKeyData(out var forward, out var scale, out var bias);
@@ -107,7 +151,7 @@ internal sealed class RenderEntitySystem : IDisposable
 
         return (int)(indices - (DrawEntityKey*)_sortIndices.Ptr);
     }
-
+*/
 
     private unsafe void FillTransformBuffer()
     {
@@ -214,6 +258,8 @@ internal sealed class RenderEntitySystem : IDisposable
         float key = float.FusedMultiplyAdd(dot, scale, bias);
         return (ushort)float.MinNative(0f, float.MaxNative(key, maxValue));
     }
+
+
 /*
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ushort MakeDepthKeyU16(Vector3 forward, Vector3 worldPos, Vector2 nearFar, float viewZ)

@@ -26,7 +26,7 @@ public sealed class RayCaster
 
         var closestEntity = -1;
         var minDistance = float.MaxValue;
-        foreach (var query in RenderEcs.Core.VisibilityBoundsQuery(PassMask.Depth | PassMask.Main | PassMask.Effect))
+        foreach (var query in RenderEcs.Core.VisibilityBoundsQuery())
         {
             if (!_sceneStore.IsLinkedEntity(query.Entity)) continue;
 
@@ -46,6 +46,7 @@ public sealed class RayCaster
 
         distance = minDistance;
         return _sceneStore.GetByLinkedEntity(closestEntity);
+      
     }
 
     public Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)

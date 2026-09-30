@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.ECS.Render;
 
-public  static partial class RenderEcs
+public static class RenderEcs
 {
     private const int DefaultRenderCap = 1024;
 
@@ -14,9 +14,7 @@ public  static partial class RenderEcs
     public static int ActiveCount => Core.ActiveCount;
     public static int StoreCount => All.Count;
 
-    internal static void OnResize(int newSize)
-    {
-    }
+    internal static void OnResize(int newSize) { }
 
     internal static void Init()
     {

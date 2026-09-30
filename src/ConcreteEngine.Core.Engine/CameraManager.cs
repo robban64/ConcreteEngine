@@ -50,7 +50,8 @@ public sealed class CameraManager
         frameTransforms.ProjectionMatrix = Camera.ProjectionMatrix;
         frameTransforms.ProjectionViewMatrix = frameTransforms.ViewMatrix * frameTransforms.ProjectionMatrix;
 
-        Frustum.UpdateMain(in frameTransforms.ProjectionViewMatrix);
+        Frustum.Update(Camera);
+        Frustum.UpdateMain( in frameTransforms.ProjectionViewMatrix);
     }
 
     [SkipLocalsInit]

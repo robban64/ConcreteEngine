@@ -17,6 +17,8 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
 
     private readonly EntityDataStore _entityDataStore;
 
+    private readonly BitSet _visibleSet;
+
     internal RenderEntityCore(int initialCapacity)
     {
         if (!_generations.IsNull || Capacity != 0) Throwers.InvalidOperation("Already allocated");
@@ -25,11 +27,15 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
 
         _generations = NativeArray.Allocate<ushort>(initialCapacity);
         _entityDataStore = new EntityDataStore(initialCapacity);
+        _visibleSet = new BitSet(initialCapacity);
     }
 
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
-
+    public EntityDataStore Data => _entityDataStore;
+    
+    public ref readonly BitSet VisibleSet => ref _visibleSet;
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsValidHandle(RenderEntity e) => e.IsValid && (uint)e.Id < (uint)Count;
 
@@ -37,7 +43,7 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
     public bool IsAlive(RenderEntity e) => (uint)e.Id < (uint)Count && _entityDataStore.IsAlive(e.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsVisible(RenderEntity e) => (uint)e.Id < (uint)Count && _entityDataStore.IsVisible(e.Id);
+    public bool IsVisible(RenderEntity e) => _visibleSet[e.Id];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderEntity CreateHandle(int entityId)

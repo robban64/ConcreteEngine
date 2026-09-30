@@ -10,8 +10,8 @@ namespace ConcreteEngine.Core.Engine.ECS.Render;
 public sealed partial class RenderEntityCore
 {
     //
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<PassMask> VisibilityView() => _entityDataStore.VisibilityView();
+    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+   // public NativeView<PassMask> VisibilityView() => _entityDataStore.VisibilityView();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<DrawPolicy> PolicyView() => _entityDataStore.PolicyView();
@@ -42,8 +42,8 @@ public sealed partial class RenderEntityCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsAlive(int entity) => _policies[entity].Status != 0;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsVisible(int entity) => _passes[entity] != 0;
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public bool IsVisible(int entity) => _passes[entity] != 0;
 
         //
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -60,8 +60,8 @@ public sealed partial class RenderEntityCore
         //
 
         //
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NativeView<PassMask> VisibilityView() => _passes.Slice(0, RenderEcs.EntityCount).Reinterpret<PassMask>();
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public NativeView<PassMask> VisibilityView() => _passes.Slice(0, RenderEcs.EntityCount).Reinterpret<PassMask>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NativeView<DrawPolicy> PolicyView() => _policies.Slice(0, RenderEcs.EntityCount);

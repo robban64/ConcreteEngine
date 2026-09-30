@@ -24,6 +24,20 @@ public sealed partial class RenderEntityCore
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<TransformUniform> TransformView() => _entityDataStore.TransformView();
+    
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<DrawPolicy> PolicySpan() => _entityDataStore.PolicyView().AsSpan();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<DrawSource> SourceSpan() => _entityDataStore.SourceView().AsSpan();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<BoundingAxisBox> WorldBoundSpan() => _entityDataStore.WorldBoundView().AsSpan();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<TransformUniform> TransformSpan() => _entityDataStore.TransformView().AsSpan();
+
     //
 
     public sealed class EntityDataStore : IDisposable

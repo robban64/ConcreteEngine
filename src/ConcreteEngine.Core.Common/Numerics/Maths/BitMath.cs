@@ -12,5 +12,5 @@ public static class BitMath
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong ByteMaskU64(int byteIdx) => 0xFFUL << (byteIdx * 8);
-
+    
 }

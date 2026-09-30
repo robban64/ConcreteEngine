@@ -3,9 +3,9 @@ using System.Runtime.Intrinsics;
 
 namespace ConcreteEngine.Core.Common.Collections;
 
-public struct BitBlock
+public struct BitBlock(ulong block)
 {
-    public ulong Block;
+    public ulong Block = block;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool Get(int index)
@@ -29,24 +29,34 @@ public struct BitBlock
 
 public readonly struct BitSet
 {
-    private readonly int _count;
     private readonly ulong[] _bits;
 
     public BitSet(int capacity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
-        _count = capacity;
         _bits = new ulong[(capacity + 63) / 64];
     }
 
-    public int Count => _count;
-    public int BlockCount => _bits.Length;
+    public int BlockCount
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _bits.Length;
+    }
+
+    public int BitCount
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _bits.Length * 64;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public BitBlock GetBlock(int blockIndex) => Unsafe.BitCast<ulong, BitBlock>(_bits[blockIndex]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetBlock(int blockIndex, ulong block) => _bits[blockIndex] = block;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetBlockAt(int index, ulong block) => _bits[index >> 6] = block;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool GetUnchecked(int index)
@@ -68,14 +78,14 @@ public readonly struct BitSet
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_count);
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_bits.Length);
             return GetUnchecked(index);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set
         {
-            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_count);
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_bits.Length);
             SetUnchecked(index, value);
         }
     }
@@ -89,22 +99,14 @@ public readonly struct BitSet
 
     public void SetAll(bool value)
     {
-        if (value)
-        {
-            Array.Fill(_bits, ulong.MaxValue);
-            ClearUnusedBits();
-        }
-        else
-        {
-            Clear();
-        }
+        if (value) Array.Fill(_bits, ulong.MaxValue);
+        else Clear();
     }
 
     public void Invert()
     {
         var bits = _bits.AsSpan();
         for (int i = 0; i < bits.Length; i++) bits[i] = ~bits[i];
-        ClearUnusedBits();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -119,22 +121,12 @@ public readonly struct BitSet
     public int CountFalse()
     {
         var countTrue = CountTrue();
-        return _count - countTrue;
+        return BitCount - countTrue;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear() => Array.Clear(_bits, 0, _bits.Length);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ClearUnusedBits()
-    {
-        int remaining = _count & 63;
-        if (remaining > 0)
-        {
-            ulong mask = (1UL << remaining) - 1;
-            _bits[^1] &= mask;
-        }
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Enumerator GetEnumerator() => new(_bits);

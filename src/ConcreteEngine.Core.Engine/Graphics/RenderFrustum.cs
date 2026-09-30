@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Extensions;
 using ConcreteEngine.Core.Common.Numerics.Maths;
@@ -16,7 +17,7 @@ public sealed class RenderFrustum
     private Vector2 _scaleBias;
 
     private Span<Vector4> LightPlanes => _frustumPlanes.AsSpan(0, 6);
-    private Span<Vector4> ScenePlanes => _frustumPlanes.AsSpan(6, 12);
+    private Span<Vector4> ScenePlanes => _frustumPlanes.AsSpan(6, 6);
 
     private ref Vector4 LightPlaneRef => ref MemoryMarshal.GetArrayDataReference(_frustumPlanes);
     private ref Vector4 ScenePlaneRef => ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(_frustumPlanes), 6);
@@ -45,16 +46,13 @@ public sealed class RenderFrustum
         BoundingFrustum.From(in transposed, out LightFrustum);
     }
 
-    public PassMask Intersects(PassMask passes, EntityDrawStatus status, in BoundingAxisBox box, out ushort distance)
+    public PassMask Intersects(PassMask passes, in BoundingAxisBox box, out float distance)
     {
         var center = new Vector4(box.Center, 1f);
         var extent = new Vector4(box.Extent, 0f);
-
-        distance = CalculateDepthKey(in center);
-
-        if (status == EntityDrawStatus.AlwaysVisible) return passes;
-
+        
         var culledPasses = PassMask.None;
+        
         ref var plane = ref MemoryMarshal.GetArrayDataReference(_frustumPlanes);
         if ((passes & PassMask.Depth) != 0)
         {
@@ -65,25 +63,21 @@ public sealed class RenderFrustum
         if ((passes & PassMask.Main) != 0)
         {
             var test = TestIntersect(ref Unsafe.Add(ref plane, 6), in center, in extent, PassMask.Main);
+            var dist = CalcDistance(center, extent, in Unsafe.Add(ref plane, 10));
+            distance = dist;
             culledPasses |= test;
         }
-
+        else
+        {
+            distance = 0;
+        }
         //if((passes & PassMask.Effect) != 0) mask |= PassMask.Effect;
+
         return culledPasses;
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ushort CalculateDepthKey(in Vector4 center)
-    {
-        const float maxValue = 65535f;
-        var dot = Vector4.Dot(_forward, center);
-        var scaleBias = _scaleBias;
-        var key = float.FusedMultiplyAdd(dot, scaleBias.X, scaleBias.Y);
-        return (ushort)float.Min(0f, float.Max(key, maxValue));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private  PassMask TestIntersect(ref Vector4 frustum, in Vector4 center4, in Vector4 extent4, PassMask pass)
+    private static PassMask TestIntersect(ref Vector4 frustum, in Vector4 center4, in Vector4 extent4, PassMask pass)
     {
         ref var plane = ref frustum;
         ref readonly var end = ref Unsafe.Add(ref plane, 5);
@@ -96,6 +90,35 @@ public sealed class RenderFrustum
 
         return pass;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static float CalcDistance(Vector4 center4, Vector4 extent4, in Vector4 plane)
+    {
+        var d1 = Vector256.Create(center4.AsVector128(), extent4.AsVector128());
+        var d2 = Vector256.Create(plane.AsVector128(), Vector128.Abs(plane.AsVector128()));
+        return Vector256.Dot(d1, d2);
+    }
+
+    public ushort GetNearDistance(in BoundingAxisBox bounds)
+    {
+        var vPlane = _frustumPlanes[10].AsVector128();
+        var d1 = Vector256.Create(bounds.Center.AsVector128(), bounds.Extent.AsVector128());
+        var d2 = Vector256.Create(vPlane, Vector128.Abs(vPlane));
+        var d = Vector256.Dot(d1, d2);
+        return (ushort)float.Min(0f, float.Max(d, 65535f));
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private ushort CalculateDepthKey(in Vector4 center)
+    {
+        const float maxValue = 65535f;
+        var dot = Vector4.Dot(_forward, center);
+        var scaleBias = _scaleBias;
+        var key = float.FusedMultiplyAdd(dot, scaleBias.X, scaleBias.Y);
+        return (ushort)float.Min(0f, float.Max(key, maxValue));
+    }
+
 /*
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static PassMask TestIntersect(Span<Vector4> span, in Vector4 center4, in Vector4 extent4, PassMask pass)

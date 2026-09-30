@@ -89,7 +89,8 @@ internal sealed class RenderEntitySystem : IDisposable
         {
             var start = blockIndex * 64;
             var end = start + 64 <= policies.Length ? start + 64 : start + policies.Length & 63;
-            if (start >= policies.Length) break;
+            
+            if ((uint)start >= (uint)policies.Length) break;
 
             BitBlock block = default;
             for (int index = start; index < end; ++index)
@@ -98,11 +99,14 @@ internal sealed class RenderEntitySystem : IDisposable
                 if (policy.Status < EntityDrawStatus.Normal) continue;
 
                 ref readonly var bounds = ref worldBounds[index];
-                var passes = frustum.Intersects(policy.Passes, policy.Status, in bounds, out var distance);
+                var passes = frustum.Intersects(policy.Passes, in bounds, out var distance);
+                passes = policy.Status == EntityDrawStatus.AlwaysVisible ? policy.Passes : passes;
+
                 if (passes != 0)
                 {
+                    ushort depthKey = (ushort)float.Min(0f, float.Max(distance, 65535f));
+                    *indices++ = DrawEntityKey.Create(index, passes, depthKey, policy.Queue);
                     block.ToggleOn(index);
-                    *indices++ = DrawEntityKey.Create(index, passes, distance, policy.Queue);
                 }
             }
 
@@ -180,7 +184,7 @@ internal sealed class RenderEntitySystem : IDisposable
         var span = SortKeys.AsReadOnlySpan();
         for (int i = 0; i < span.Length; ++i)
         {
-            var key =  span[i];
+            var key = span[i];
             var index = new DrawEntityIndex(key.Entity, i);
             var mask = (uint)(byte)key.SortKey;
             while (mask != 0)

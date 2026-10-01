@@ -49,7 +49,7 @@ internal sealed class AnimationManager
 
         return count;
     }
-    public void AttachEntity(ModelRig rig, RenderEntity entity, Id16<AnimationInstance> animationId = default)
+    public void AttachEntity(ModelRig rig, RenderEntityCore.RenderEntityContext ctx, Id16<AnimationInstance> animationId = default)
     {
         if (animationId == 0 && TryGetFirstByRig(rig, out var firstEntry))
             animationId = firstEntry.Id;
@@ -66,10 +66,9 @@ internal sealed class AnimationManager
             Throwers.InvalidArgument(nameof(rig));
         }
 
-
-        animation.AddEntity(entity);
-        RenderEcs.Core.ToggleDrawFlag(entity, EntityDrawFlags.Skinned, true);
-        RenderEcs.Store<SkinningLink>().Add(entity, new SkinningLink(animation.Id));
+        animation.AddEntity(ctx.Entity);
+        ctx.ToggleDrawFlag(EntityDrawFlags.Skinned, true);
+        ctx.AddComponent(new SkinningLink(animation.Id));
     }
 
     private bool TryGetFirstByRig(ModelRig rig, out AnimationInstance animation)

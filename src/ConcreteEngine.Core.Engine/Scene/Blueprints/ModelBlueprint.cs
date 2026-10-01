@@ -70,8 +70,9 @@ public sealed class ModelInstance : RenderBlueprintInstance
         {
             foreach (var entity in GetRenderEntities())
             {
-                RenderEcs.Core.ToggleDrawFlag(entity, EntityDrawFlags.Skinned, true);
-                AnimationManager.Instance.AttachEntity(rig, entity);
+                var ctx = RenderEcs.Core.GetEntityContext(entity);
+                ctx.ToggleDrawFlag(EntityDrawFlags.Skinned, true);
+                AnimationManager.Instance.AttachEntity(rig, ctx);
             }
 
             RenderEcs.Store<SkinningLink>().Commit();

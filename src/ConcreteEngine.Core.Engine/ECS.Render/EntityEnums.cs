@@ -10,8 +10,7 @@ public enum EntityDrawFlags : byte
 
 public enum EntityDrawStatus : byte
 {
-    Unset = 0,
-    ForceHidden = 1,
-    Normal = 2,
-    AlwaysVisible = 3,
+    Normal = 0,
+    AlwaysVisible = 1,
+    ForceHidden = 2,
 }

@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 
@@ -14,7 +15,6 @@ public sealed class CameraManager
 
     public readonly Camera Camera;
 
-    internal readonly RenderFrustum Frustum;
     internal readonly CameraTransformSnapshot FrameTransforms;
     internal readonly CameraTransformSnapshot LightTransforms;
 
@@ -24,7 +24,6 @@ public sealed class CameraManager
             throw new InvalidOperationException($"{nameof(CameraManager)} is already initialized");
 
         Camera = new Camera(EngineSettings.Current.Display.WindowSize);
-        Frustum = new RenderFrustum();
         FrameTransforms = new CameraTransformSnapshot();
         LightTransforms = new CameraTransformSnapshot();
     }
@@ -49,9 +48,7 @@ public sealed class CameraManager
         frameTransforms.UpdateViewMatrix(translation, orientation);
         frameTransforms.ProjectionMatrix = Camera.ProjectionMatrix;
         frameTransforms.ProjectionViewMatrix = frameTransforms.ViewMatrix * frameTransforms.ProjectionMatrix;
-
-        Frustum.Update(Camera);
-        Frustum.UpdateMain( in frameTransforms.ProjectionViewMatrix);
+        RenderEcs.Core.RenderSystem.BuildFrustum(frameTransforms, LightTransforms);
     }
 
     [SkipLocalsInit]
@@ -86,7 +83,6 @@ public sealed class CameraManager
         LightTransforms.ViewMatrix = viewMatrix;
         LightTransforms.ProjectionMatrix = projectionMatrix;
         LightTransforms.ProjectionViewMatrix = viewMatrix * projectionMatrix;
-        Frustum.UpdateLight(in LightTransforms.ProjectionViewMatrix);
     }
 
     private static Matrix4x4 CreateLightProjection(Span<Vector3> corners, float diameter, float shadowZPad, Matrix4x4 viewMatrix)

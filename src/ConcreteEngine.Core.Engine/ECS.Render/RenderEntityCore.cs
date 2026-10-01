@@ -3,107 +3,71 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.ECS.Render;
 
-public sealed unsafe partial class RenderEntityCore : IDisposable
+public sealed partial class RenderEntityCore : IDisposable
 {
     public int Count { get; private set; }
-    public int Capacity { get; private set; }
-
-    private NativeArray<ushort> _generations;
 
     private readonly Stack<int> _free = [];
 
     private readonly EntityDataStore _entityDataStore;
 
-    private readonly BitSet _visibleSet;
+    public readonly RenderEcsSystem RenderSystem;
 
     internal RenderEntityCore(int initialCapacity)
     {
-        if (!_generations.IsNull || Capacity != 0) Throwers.InvalidOperation("Already allocated");
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 64);
-        Capacity = initialCapacity;
-
-        _generations = NativeArray.Allocate<ushort>(initialCapacity);
         _entityDataStore = new EntityDataStore(initialCapacity);
-        _visibleSet = new BitSet(initialCapacity);
+        RenderSystem = new RenderEcsSystem(_entityDataStore);
     }
 
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
-    public EntityDataStore Data => _entityDataStore;
-    
-    public ref readonly BitSet VisibleSet => ref _visibleSet;
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsValidHandle(RenderEntity e) => e.IsValid && (uint)e.Id < (uint)Count;
+    public int Capacity => _entityDataStore.Capacity;
 
+    public NativeView<TransformUniform> TransformView() => _entityDataStore.TransformView(Count);
+    public NativeView<DrawEntityKey> SortKeys() => RenderSystem.SortKeys();
+
+    public ref readonly BitSet VisibleSet => ref _entityDataStore.VisibleSet;
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsAlive(RenderEntity e) => (uint)e.Id < (uint)Count && _entityDataStore.IsAlive(e.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsVisible(RenderEntity e) => _visibleSet[e.Id];
+    public bool IsVisible(RenderEntity e) => _entityDataStore.IsVisible(e.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntity CreateHandle(int entityId)
+    public RenderEntityContext GetEntityContext(int entity)
     {
-        if((uint)entityId >= (uint)Count) Throwers.IndexOutOfRange(entityId, Count, nameof(entityId));
-        return new RenderEntity(entityId, _generations[entityId]);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)entity, (uint)Count);
+        var e = new RenderEntity(entity, _entityDataStore.GetGeneration(entity));
+        return new RenderEntityContext(e, _entityDataStore);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntityContext GetEntityContext(int entity) => new(CreateHandle(entity), _entityDataStore);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderEntityContext GetEntityContext(RenderEntity entity) => new(entity, _entityDataStore);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntityHandleContext GetHandleContext() => new(_generations.Slice(0, Count));
-
     //
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetStatus(RenderEntity entity, EntityDrawStatus status)
-    {
-        if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
-        ref var policy = ref _entityDataStore.GetPolicy(entity.Id);
-        var newPolicy = policy.WithStatus(status);
-        policy = newPolicy;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ToggleDrawFlag(RenderEntity entity, EntityDrawFlags flag, bool enabled)
-    {
-        if (!IsAlive(entity)) Throwers.InvalidOperation(nameof(entity));
-        if (enabled) _entityDataStore.GetSource(entity.Id).DrawFlags |= flag;
-        else _entityDataStore.GetSource(entity.Id).DrawFlags &= ~flag;
-    }
-
-
     public RenderEntity AddEntity(DrawSource source, DrawPolicy policy)
     {
-        var index = SlotHelper.NextSlot(_free, Count);
-        if (index < 0)
+        var entityId = SlotHelper.NextSlot(_free, Count);
+        if (entityId < 0)
         {
             if (Count >= Capacity) EnsureCapacity(1);
-            index = Count++;
+            entityId = Count++;
         }
 
-        var gen = ++_generations[index];
-        var entity = new RenderEntity(index, gen);
-        _entityDataStore.AddEntity(entity, policy, source);
-        return entity;
+        return _entityDataStore.AddEntity(entityId, policy, source);
     }
 
-    public void Remove(RenderEntity entity)
+    public void RemoveEntity(RenderEntity entity)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(entity.Id, Count, nameof(entity));
-
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)entity.Id, (uint)Count, nameof(entity));
         if (!IsAlive(entity)) Throwers.InvalidArgument(nameof(entity));
-
-        _entityDataStore.ClearHeader(entity);
-        _entityDataStore.ClearSpatial(entity);
-
+        _entityDataStore.RemoveEntity(entity);
         Count = SlotHelper.FreeSlot(_free, entity.Id, Count);
     }
 
@@ -113,18 +77,20 @@ public sealed unsafe partial class RenderEntityCore : IDisposable
         if (Capacity >= required) return;
 
         var newSize = CapacityUtils.CapacityGrowthToFit(Capacity, required);
-        Capacity = newSize;
-
         Logger.Log(LogScope.Ecs, "RenderEcs resized", LogLevel.Warn);
 
-        _generations.ReAlloc(newSize, true);
         _entityDataStore.ReAlloc(newSize);
         RenderEcs.OnResize(newSize);
     }
 
     public void Dispose()
     {
-        _generations.Dispose();
         _entityDataStore.Dispose();
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ValidateHandle(RenderEntity entity)
+    {
+        if((uint)entity.Id >= (uint)Count || entity.Gen == 0) Throwers.InvalidOperation(nameof(entity));
     }
 }

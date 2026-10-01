@@ -56,7 +56,11 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
     public void ToggleVisibility(bool visible)
     {
         var flag = visible ? EntityDrawStatus.Normal : EntityDrawStatus.ForceHidden;
-        foreach (var entity in GetRenderEntities()) RenderEcs.Core.SetStatus(entity, flag);
+        foreach (var entity in GetRenderEntities())
+        {
+            var ctx = RenderEcs.Core.GetEntityContext(entity);
+            ctx.SetStatus(flag);
+        }
     }
 
     public void ToggleSelection(bool isSelected)
@@ -65,16 +69,18 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
         {
             foreach (var entity in GetRenderEntities())
             {
-                RenderEcs.Store<SelectionComponent>().Add(entity, SelectionComponent.DefaultHighlight);
-                RenderEcs.Core.SetStatus(entity, EntityDrawStatus.ForceHidden);
+                var ctx = RenderEcs.Core.GetEntityContext(entity);
+                ctx.SetStatus(EntityDrawStatus.ForceHidden);
+                ctx.AddComponent(SelectionComponent.DefaultHighlight);
             }
         }
         else
         {
             foreach (var entity in GetRenderEntities())
             {
-                RenderEcs.Store<SelectionComponent>().Remove(entity);
-                RenderEcs.Core.SetStatus(entity, EntityDrawStatus.Normal);
+                var ctx = RenderEcs.Core.GetEntityContext(entity);
+                ctx.SetStatus(EntityDrawStatus.Normal);
+                ctx.RemoveComponent<SelectionComponent>();
             }
         }
 

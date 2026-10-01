@@ -15,9 +15,9 @@ public sealed partial class RenderEntityCore
 
     [SkipLocalsInit]
     public VisibilityQueryEnumerator<BoundingAxisBox> VisibilityBoundsQuery() =>
-        new(_visibleSet, PolicyView(), WorldBoundView());
+        new(VisibleSet, _entityDataStore.PolicyView(Count), _entityDataStore.WorldBoundView(Count));
 
     [SkipLocalsInit]
     public VisibilityQueryEnumerator<TransformUniform> VisibilityTransformQuery() =>
-        new(_visibleSet, PolicyView(), TransformView());
+        new(VisibleSet, _entityDataStore.PolicyView(Count), TransformView());
 }

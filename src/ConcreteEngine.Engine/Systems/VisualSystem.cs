@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Core.Engine.Input;
@@ -27,11 +28,11 @@ internal sealed unsafe class VisualSystem
         _gfx = gfx;
     }
 
-    public void UploadUniformBuffers(RenderEntitySystem renderEntitySystem, MaterialSystem materialSystem,
+    public void UploadUniformBuffers(RenderDispatcher renderDispatcher, MaterialSystem materialSystem,
         AnimationSystem animationSystem)
     {
         // Ensure ubo size
-        var drawCount = IntMath.AlignUp(renderEntitySystem.VisibleCount, 64);
+        var drawCount = IntMath.AlignUp(RenderEcs.Core.RenderSystem.VisibleCount, 64);
         var materialCount = IntMath.AlignUp(materialSystem.Count, 16);
         var boneCount = IntMath.AlignUp(animationSystem.BoneCount, 64);
 
@@ -44,7 +45,7 @@ internal sealed unsafe class VisualSystem
         if (!GfxRegistry.GetMeta(SkinningUniform.UboId).HasCapacity(boneCount))
             _gfx.SetUniformBufferCount(SkinningUniform.UboId, boneCount);
 
-        var transforms = renderEntitySystem.Transforms;
+        var transforms = renderDispatcher.Transforms;
         if (transforms.Length > 0) _gfx.UploadUniform(transforms, 0);
 
         var materials = materialSystem.GetUniforms();

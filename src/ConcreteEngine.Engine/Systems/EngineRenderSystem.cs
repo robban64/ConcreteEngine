@@ -16,7 +16,7 @@ namespace ConcreteEngine.Engine.Systems;
 
 public sealed class EngineRenderSystem : IDisposable
 {
-    private readonly RenderEntitySystem _renderEntitySystem;
+    private readonly RenderDispatcher _renderDispatcher;
     private readonly DrawCommandProcessor _drawCmd;
     private readonly RenderPassContext _passContext;
 
@@ -42,7 +42,7 @@ public sealed class EngineRenderSystem : IDisposable
 
         _drawCmd = new DrawCommandProcessor(graphics.Gfx, _animationSystem, _materialSystem);
         _passContext = new RenderPassContext(_drawCmd);
-        _renderEntitySystem = new RenderEntitySystem(CameraManager.Instance.Frustum);
+        _renderDispatcher = new RenderDispatcher();
 
     }
 
@@ -101,13 +101,14 @@ public sealed class EngineRenderSystem : IDisposable
         VisualSystem.Instance.UploadUniforms();
 
         // process and upload draw commands
-        _renderEntitySystem.Execute();
+        RenderEcs.Core.RenderSystem.Execute();
+        _renderDispatcher.Execute();
 
         _particleSystem.InterpolateUpload();
         _animationSystem.Execute(EngineTime.GameAlpha);
 
         // prepare buffers
-        VisualSystem.Instance.UploadUniformBuffers(_renderEntitySystem, _materialSystem, _animationSystem);
+        VisualSystem.Instance.UploadUniformBuffers(_renderDispatcher, _materialSystem, _animationSystem);
     }
 
 
@@ -131,7 +132,7 @@ public sealed class EngineRenderSystem : IDisposable
 
     private void ExecuteDrawPass(int passId)
     {
-        var tickets = _renderEntitySystem.GetDrawTickets(passId);
+        var tickets = _renderDispatcher.GetDrawTickets(passId);
         foreach (ref readonly var ticket in tickets)
         {
             //TODO
@@ -155,7 +156,7 @@ public sealed class EngineRenderSystem : IDisposable
 
     public void Dispose()
     {
-        _renderEntitySystem.Dispose();
+        _renderDispatcher.Dispose();
         _particleSystem.Dispose();
         _animationSystem.Dispose();
         _materialSystem.Dispose();

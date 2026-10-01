@@ -20,26 +20,26 @@ public sealed  partial class RenderEntityCore
         public void SetStatus(EntityDrawStatus status)
         {
             ref var policy = ref Policy;
-            var newPolicy = policy.WithStatus(status);
-            policy = newPolicy;
+            policy = policy.WithStatus(status);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ToggleDrawFlag(EntityDrawFlags flag, bool enabled)
+        {
+            if (enabled) Source.DrawFlags |= flag;
+            else Source.DrawFlags &= ~flag;
         }
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref T GetComponent<T>() where T : unmanaged, IRenderComponent<T> 
             => ref RenderEcs.Store<T>().GetUnchecked(Entity.Id);
-    }
-    
-    public readonly ref struct RenderEntityHandleContext(NativeView<ushort> generations)
-    {
-        private readonly NativeView<ushort> _generations = generations;
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public RenderEntity MakeHandle(int entityId)
-        {
-            if((uint)entityId >= (uint)_generations.Length) Throwers.InvalidArgument(nameof(entityId));
-            return new RenderEntity(entityId, _generations[entityId]);
-        }
-    }
+        public bool AddComponent<T>(T t) where T : unmanaged, IRenderComponent<T> 
+            => RenderEcs.Store<T>().Add(Entity, in t);
 
+        public bool RemoveComponent<T>() where T : unmanaged, IRenderComponent<T> 
+            => RenderEcs.Store<T>().Remove(Entity);
+
+    }
 }

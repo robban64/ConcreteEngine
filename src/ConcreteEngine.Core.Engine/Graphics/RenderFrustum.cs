@@ -63,7 +63,7 @@ public sealed class RenderFrustum
         if ((passes & PassMask.Main) != 0)
         {
             var test = TestIntersect(ref Unsafe.Add(ref plane, 6), in center, in extent, PassMask.Main);
-            var dist = CalcDistance(center, extent, in Unsafe.Add(ref plane, 10));
+            var dist = DistanceFromPlane(center, extent, in Unsafe.Add(ref plane, 10));
             distance = dist;
             culledPasses |= test;
         }
@@ -71,7 +71,6 @@ public sealed class RenderFrustum
         {
             distance = 0;
         }
-        //if((passes & PassMask.Effect) != 0) mask |= PassMask.Effect;
 
         return culledPasses;
     }
@@ -92,23 +91,14 @@ public sealed class RenderFrustum
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static float CalcDistance(Vector4 center4, Vector4 extent4, in Vector4 plane)
+    private static float DistanceFromPlane(Vector4 center4, Vector4 extent4, in Vector4 plane)
     {
         var d1 = Vector256.Create(center4.AsVector128(), extent4.AsVector128());
         var d2 = Vector256.Create(plane.AsVector128(), Vector128.Abs(plane.AsVector128()));
         return Vector256.Dot(d1, d2);
     }
-
-    public ushort GetNearDistance(in BoundingAxisBox bounds)
-    {
-        var vPlane = _frustumPlanes[10].AsVector128();
-        var d1 = Vector256.Create(bounds.Center.AsVector128(), bounds.Extent.AsVector128());
-        var d2 = Vector256.Create(vPlane, Vector128.Abs(vPlane));
-        var d = Vector256.Dot(d1, d2);
-        return (ushort)float.Min(0f, float.Max(d, 65535f));
-    }
-
-
+    
+/*
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ushort CalculateDepthKey(in Vector4 center)
     {
@@ -119,7 +109,7 @@ public sealed class RenderFrustum
         return (ushort)float.Min(0f, float.Max(key, maxValue));
     }
 
-/*
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static PassMask TestIntersect(Span<Vector4> span, in Vector4 center4, in Vector4 extent4, PassMask pass)
     {

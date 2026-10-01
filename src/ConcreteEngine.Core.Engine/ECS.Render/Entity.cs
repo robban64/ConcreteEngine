@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Identity;
+using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.ECS.Render;
 
@@ -39,5 +40,22 @@ public readonly record struct RenderEntityId(int Id)
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator int(RenderEntityId e) => e.Id;
+}
 
+
+[StructLayout(LayoutKind.Sequential)]
+public struct DrawEntityKey(int entity, uint sortKey)
+{
+    public int Entity = entity;
+    public uint SortKey = sortKey;
+
+    [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static DrawEntityKey Create(int entity, PassMask passMask, ushort distance, DrawQueue queue)
+    {
+        if (queue >= DrawQueue.Transparent) distance ^= ushort.MaxValue;
+        DrawEntityKey result;
+        result.Entity = entity;
+        result.SortKey = (byte)passMask | ((uint)distance << 8) | ((uint)queue << 24);
+        return result;
+    }
 }

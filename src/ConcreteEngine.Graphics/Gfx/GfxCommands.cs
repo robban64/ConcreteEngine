@@ -268,7 +268,7 @@ public sealed class GfxCommands
     public void UnbindAllTextures()
     {
         _boundTextures = default;
-        GlStates.UnbindAllTextures();
+        GlStates.UnbindAllTextureSampler();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

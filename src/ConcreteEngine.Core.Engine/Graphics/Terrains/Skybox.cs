@@ -36,6 +36,6 @@ public sealed class Skybox
         if(isValid)
             context.Source.Material = material.MaterialId;
 
-        context.SetStatus(EntityDrawStatus.AlwaysVisible);
+        context.SetStatus(DrawStatus.AlwaysVisible);
     }
 }

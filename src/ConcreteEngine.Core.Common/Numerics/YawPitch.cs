@@ -1,11 +1,11 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text.Json.Serialization;
-using ConcreteEngine.Core.Common.Numerics.Maths;
-
-namespace ConcreteEngine.Core.Common.Numerics;
-
+/*
+ using System.Numerics;
+   using System.Runtime.CompilerServices;
+   using System.Runtime.InteropServices;
+   using System.Text.Json.Serialization;
+   
+   namespace ConcreteEngine.Core.Common.Numerics;
+   
 [StructLayout(LayoutKind.Sequential)]
 public struct YawPitch : IEquatable<YawPitch>
 {
@@ -91,3 +91,4 @@ public struct YawPitch : IEquatable<YawPitch>
     
 
 }
+*/

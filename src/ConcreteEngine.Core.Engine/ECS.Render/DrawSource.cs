@@ -7,14 +7,14 @@ using ConcreteEngine.Core.Engine.Graphics;
 namespace ConcreteEngine.Core.Engine.ECS.Render;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawPolicy(DrawQueue queue, PassMask passes, EntityDrawStatus status = EntityDrawStatus.Normal)
+public readonly struct DrawPolicy(DrawQueue queue, PassMask passes, DrawStatus status = DrawStatus.Normal)
 {
-    public readonly EntityDrawStatus Status = status;
+    public readonly DrawStatus Status = status;
     public readonly PassMask Passes = passes;
     public readonly DrawQueue Queue = queue;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DrawPolicy WithStatus(EntityDrawStatus status) => new(Queue, Passes, status);
+    public DrawPolicy WithStatus(DrawStatus status) => new(Queue, Passes, status);
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -28,7 +28,6 @@ public struct DrawSource(MeshId mesh, Id16<Material> material, int meshIndex = 0
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool IsSkinned() => (DrawFlags & EntityDrawFlags.Skinned) != 0;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool IsInstanced() => (DrawFlags & EntityDrawFlags.Instanced) != 0;
 }

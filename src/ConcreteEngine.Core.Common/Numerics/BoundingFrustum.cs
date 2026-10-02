@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using static ConcreteEngine.Core.Common.Numerics.Maths.CollisionMethods;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 

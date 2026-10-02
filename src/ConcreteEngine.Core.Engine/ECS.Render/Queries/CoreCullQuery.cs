@@ -17,12 +17,12 @@ public static unsafe partial class RenderCoreQuery
         private BoundingAxisBox* _bounds;
 
         private PassMask _currentPasses;
-        private EntityDrawStatus _currentStatus;
+        private DrawStatus _currentStatus;
 
-        private readonly EntityDrawStatus _minStatus;
+        private readonly DrawStatus _minStatus;
 
         public CullQueryEnumerator(NativeView<DrawPolicy> policies, NativeView<PassMask> drawPasses,
-            NativeView<BoundingAxisBox> p1, EntityDrawStatus minStatus)
+            NativeView<BoundingAxisBox> p1, DrawStatus minStatus)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThan(policies.Length, p1.Length);
             ArgumentOutOfRangeException.ThrowIfGreaterThan(policies.Length, drawPasses.Length);

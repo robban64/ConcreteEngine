@@ -8,7 +8,7 @@ public enum EntityDrawFlags : byte
     Instanced = 1 << 1,
 }
 
-public enum EntityDrawStatus : byte
+public enum DrawStatus : byte
 {
     Normal = 0,
     AlwaysVisible = 1,

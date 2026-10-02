@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
-using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Common.Numerics.Extensions;
 

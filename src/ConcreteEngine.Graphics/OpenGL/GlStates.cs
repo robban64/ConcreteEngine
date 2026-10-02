@@ -123,7 +123,7 @@ internal static class GlStates
         Gl.FrontFace(front);
     }
 
-    public static unsafe void UnbindAllTextures()
+    public static unsafe void UnbindAllTextureSampler()
     {
         Span<uint> handles = stackalloc uint[GfxLimits.TextureSlots];
         Gl.BindTextures(0, handles);
@@ -131,23 +131,12 @@ internal static class GlStates
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void BindTexture(NativeHandle<TextureMeta> textureHandle, int slot) =>
-        Gl.BindTextureUnit((uint)slot, textureHandle);
+    public static void BindTexture(NativeHandle<TextureMeta> textureHandle, byte slot) =>
+        Gl.BindTextureUnit(slot, textureHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void BindSampler(NativeHandle<SamplerMeta> samplerHandle, int slot) =>
-        Gl.BindSampler((uint)slot, samplerHandle);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void BindTextureSampler(NativeHandle<TextureMeta> textureHandle,
-        NativeHandle<SamplerMeta> samplerHandle, int slot)
-    {
-        Gl.BindSampler((uint)slot, samplerHandle);
-        Gl.BindTextureUnit((uint)slot, textureHandle);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void UnbindTextureSlot(int slot) => Gl.BindTextureUnit((uint)slot, 0);
+    public static void BindSampler(NativeHandle<SamplerMeta> samplerHandle, byte slot) =>
+        Gl.BindSampler(slot, samplerHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void BindFrameBuffer(NativeHandle<FrameBufferMeta> fboHandle) =>

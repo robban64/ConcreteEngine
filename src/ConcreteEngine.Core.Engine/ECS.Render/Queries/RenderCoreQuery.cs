@@ -6,12 +6,12 @@ namespace ConcreteEngine.Core.Engine.ECS.Render.Queries;
 public static partial class RenderCoreQuery
 {
     public readonly ref struct CullQueryItem(
-        EntityDrawStatus status,
+        DrawStatus status,
         PassMask originalPasses,
         ref PassMask drawPasses,
         in BoundingAxisBox bounds)
     {
-        public readonly EntityDrawStatus Status = status;
+        public readonly DrawStatus Status = status;
         public readonly PassMask OriginalPasses = originalPasses;
         public readonly ref PassMask DrawPasses = ref drawPasses;
         public readonly ref readonly BoundingAxisBox Bounds = ref bounds;

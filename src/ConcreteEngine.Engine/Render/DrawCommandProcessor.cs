@@ -71,10 +71,10 @@ internal sealed class DrawCommandProcessor
     {
         if (slot == _lastAnimationSlot) return;
         _lastAnimationSlot = slot;
+
         var range = _animationSystem.GetSlotRange(slot - 1);
         GfxCmd.BindUniformBufferRange<SkinningUniform>(range.Offset, range.Length);
     }
-
 
     public void BindMaterial(Id16<Material> materialId)
     {

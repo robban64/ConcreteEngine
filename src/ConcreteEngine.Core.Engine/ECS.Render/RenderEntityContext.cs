@@ -1,6 +1,4 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 
@@ -14,7 +12,7 @@ public readonly ref struct RenderEntityContext(RenderEntity entity, EntityDataSt
     public ref TransformUniform Transform => ref data.GetTransform(Entity.Id);
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetStatus(EntityDrawStatus status)
+    public void SetStatus(DrawStatus status)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(Entity.Gen, 0);
         ref var policy = ref Policy;

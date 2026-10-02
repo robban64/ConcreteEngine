@@ -1,17 +1,16 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
 
 namespace ConcreteEngine.Core.Common.Collections;
 
 public struct BitBlock(ulong block)
 {
     public ulong Block = block;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator ulong(BitBlock b) => b.Block;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool Get(int index)
-    {
-        return (Block & (1UL << (index & 63))) != 0;
-    }
+    public readonly bool Get(int index) => (Block & (1UL << (index & 63))) != 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Set(int index, bool value)
@@ -21,10 +20,13 @@ public struct BitBlock(ulong block)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ToggleOn(int index) => Block |= 1UL << index;
+    public void Enable(int index) => Block |= 1UL << index;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ToggleOff(int index) => Block &= ~(1UL << index);
+    public void Disable(int index) => Block &= ~(1UL << index);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ClearLowerBits() => Block &= Block - 1;
 }
 
 public readonly struct BitSet
@@ -52,13 +54,16 @@ public readonly struct BitSet
     public Span<ulong> AsSpan() => _bits;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public BitBlock GetBlock(int blockIndex) => Unsafe.BitCast<ulong, BitBlock>(_bits[blockIndex]);
+    public ulong GetRawBlock(int blockIndex) => _bits[blockIndex];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public BitBlock GetBlockAtBit(int index) => Unsafe.BitCast<ulong, BitBlock>(_bits[index >> 6]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetBlock(int blockIndex, ulong block) => _bits[blockIndex] = block;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetBlockAt(int index, ulong block) => _bits[index >> 6] = block;
+    public void SetBlockAtBit(int index, ulong block) => _bits[index >> 6] = block;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool GetUnchecked(int index)

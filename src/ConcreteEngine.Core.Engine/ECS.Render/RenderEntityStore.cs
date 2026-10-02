@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Diagnostics.Logging;
 
 namespace ConcreteEngine.Core.Engine.ECS.Render;
 
@@ -29,27 +28,31 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
 
     public RenderEntityStore(int initialCapacity)
     {
-        if(Instance != null!) Throwers.InvalidOperation("Already  initialized");
+        if (Instance != null!) Throwers.InvalidOperation("Already  initialized");
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 16);
 
         Instance = this;
-        
+
         Capacity = initialCapacity;
 
         _memory = NativeArray.Allocate(GetAllocSize(initialCapacity));
+
         var allocator = new NativeAllocBuilder(_memory);
         _entities = allocator.AllocSlice<RenderEntity>(initialCapacity);
         _components = allocator.AllocSlice<T>(initialCapacity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int FindIndex(RenderEntity entity) =>
-        SearchMethod.BinarySearch(new ReadOnlySpan<RenderEntity>(_entities, Count), entity);
+    private int FindIndex(RenderEntity entity)
+    {
+        var span = new ReadOnlySpan<RenderEntity>(_entities, Count);
+        return SearchMethod.BinarySearch(span, entity);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int FindIndexLinear(RenderEntity entity)
     {
-        var span = EntitiesView().Reinterpret<ulong>().AsReadOnlySpan();
+        var span = new ReadOnlySpan<ulong>((ulong*)_entities, Count);
         return span.IndexOf(RenderEntity.Pack(entity));
     }
 
@@ -72,14 +75,13 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T Get(RenderEntity entity) => ref GetByIndex(FindIndex(entity));
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T GetUnchecked(int entity)
     {
         var index = FindIndex(new RenderEntity(entity, 0));
         return ref GetByIndex(index);
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T GetOrDefault(RenderEntity entity)
@@ -104,12 +106,6 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<RenderEntity> EntitiesView() => new(_entities, Count);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<T> ComponentsView() => new(_components, Count);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<RenderEntity> EntitySpan() => new(_entities, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -117,7 +113,7 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
 
     public bool Add(RenderEntity entity, in T value)
     {
-        if(!entity.IsValid) Throwers.InvalidArgument(nameof(entity));
+        if (!entity.IsValid) Throwers.InvalidArgument(nameof(entity));
         if (Has(entity)) return false;
         if (Count >= Capacity) EnsureCapacity(1);
 
@@ -137,7 +133,7 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
 
     public bool Remove(RenderEntity entity)
     {
-        if(!entity.IsValid) Throwers.InvalidArgument(nameof(entity));
+        if (!entity.IsValid) Throwers.InvalidArgument(nameof(entity));
         if (!Has(entity)) return false;
         _removedEntities.Add(entity);
         IsDirty = true;
@@ -187,12 +183,15 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
         var length = Count + amount;
         if (Capacity >= length) return;
 
+        throw new NotImplementedException();
+        /*
         var newLength = CapacityUtils.CapacityGrowthToFit(Capacity, length);
         _memory.ReAlloc(GetAllocSize(newLength), true);
 
         Logger.Log(LogScope.Ecs, $"{nameof(T)}: resized {newLength}", LogLevel.Warn);
 
         Capacity = newLength;
+        */
     }
 
     public void Dispose()

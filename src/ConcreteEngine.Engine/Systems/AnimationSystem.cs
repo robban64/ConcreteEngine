@@ -8,7 +8,6 @@ using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;

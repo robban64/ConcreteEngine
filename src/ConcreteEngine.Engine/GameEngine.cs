@@ -112,7 +112,7 @@ public sealed class GameEngine : IDisposable
 
     internal void OnGameTick(double dt)
     {
-        CameraManager.Instance.BeginUpdate();
+        Camera.Main.BeginUpdate();
 
         _sceneSystem.UpdateScene((float)dt);
         _gateway.UpdateGameTick(dt);

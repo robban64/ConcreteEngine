@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine.ECS.Render.Queries;
 using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.ECS.Render;
@@ -32,18 +33,21 @@ public sealed partial class RenderEntityCore : IDisposable
     public bool IsAlive(RenderEntity e) => (uint)e.Id < (uint)Count && Data.IsAlive(e.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsVisible(RenderEntity e) => Data.IsVisible(e.Id);
+    public bool IsVisible(RenderEntity e) => (uint)e.Id < (uint)Count && Data.IsVisible(e.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntityContext GetEntityContext(int entity)
+    internal RenderEntityContext GetSimpleContext(int entity)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)entity, (uint)Count);
-        var e = new RenderEntity(entity, Data.GetGeneration(entity));
-        return new RenderEntityContext(e, Data);
+        return new RenderEntityContext(new RenderEntity(entity, 0), Data);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntityContext GetEntityContext(RenderEntity entity) => new(entity, Data);
+    public RenderEntityContext GetContext(RenderEntity entity)
+    {
+        ValidateHandle(entity);
+        return new RenderEntityContext(entity, Data);
+    }
 
     //
     public RenderEntity AddEntity(DrawSource source, DrawPolicy policy)
@@ -60,8 +64,7 @@ public sealed partial class RenderEntityCore : IDisposable
 
     public void RemoveEntity(RenderEntity entity)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)entity.Id, (uint)Count, nameof(entity));
-        if (!IsAlive(entity)) Throwers.InvalidArgument(nameof(entity));
+        ValidateHandle(entity);
         Data.RemoveEntity(entity);
         Count = SlotHelper.FreeSlot(_free, entity.Id, Count);
     }
@@ -87,4 +90,8 @@ public sealed partial class RenderEntityCore : IDisposable
     {
         if((uint)entity.Id >= (uint)Count || entity.Gen == 0) Throwers.InvalidOperation(nameof(entity));
     }
+    
+    public RenderCoreQuery.VisibilityQueryEnumerator<BoundingAxisBox> VisibilityBoundsQuery() =>
+        new(Data.VisibleSet, Data.Policies.Slice(0, Count), Data.WorldBounds.Slice(0, Count));
+
 }

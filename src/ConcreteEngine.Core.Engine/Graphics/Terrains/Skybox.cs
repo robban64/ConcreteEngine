@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS.Render;
@@ -33,7 +32,7 @@ public sealed class Skybox
             
         }
         
-        var context = RenderEcs.Core.GetEntityContext(_entity);
+        var context = RenderEcs.Core.GetContext(_entity);
         if(isValid)
             context.Source.Material = material.MaterialId;
 

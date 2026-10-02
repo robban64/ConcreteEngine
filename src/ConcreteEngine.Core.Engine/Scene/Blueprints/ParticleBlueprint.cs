@@ -54,7 +54,7 @@ public sealed class ParticleInstance : RenderBlueprintInstance
     {
         if (RenderEntityIds.Count == 0) return;
         var entity = RenderEntityIds[0];
-        var ctx = RenderEcs.Core.GetEntityContext(entity);
+        var ctx = RenderEcs.Core.GetContext(entity);
         ctx.Source.Mesh = Emitter.BoundMesh;
         ctx.Policy = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
         RenderEcs.Store<DrawInstancedComponent>().Get(entity).Instances = (uint)Emitter.ParticleCount;
@@ -66,7 +66,7 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         var entity = RenderEntityIds[0];
 
         BoundingAxisBox.GetWorldBounds(in Emitter.LocalBounds, in rootMatrix, out WorldBounds);
-        var ctx = RenderEcs.Core.GetEntityContext(entity);
+        var ctx = RenderEcs.Core.GetContext(entity);
         ctx.Transform.Model = rootMatrix;
         ctx.WorldBounds = WorldBounds;
     }

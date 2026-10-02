@@ -43,7 +43,7 @@ internal sealed class DrawCommandProcessor
         _lastMaterialId = default;
     }
 
-    public void DrawSource(RenderEntityCore.RenderEntityContext ctx, int submitIndex)
+    public void DrawSource(RenderEntityContext ctx, int submitIndex)
     {
         GfxCmd.BindUniformBufferRange<TransformUniform>(submitIndex, 1);
 
@@ -57,15 +57,14 @@ internal sealed class DrawCommandProcessor
             BindSkinningSlot(slot);
         }
 
-        if ((source.DrawFlags & EntityDrawFlags.Instanced) == 0)
-        {
-            GfxCmd.DrawMesh(source.Mesh);
-        }
-        else
+        if ((source.DrawFlags & EntityDrawFlags.Instanced) != 0)
         {
             var instances = ctx.GetComponent<DrawInstancedComponent>().Instances;
             GfxCmd.DrawMeshInstanced(source.Mesh, instances);
+            return;
         }
+
+        GfxCmd.DrawMesh(source.Mesh);
     }
 
     public void BindSkinningSlot(int slot)
@@ -83,7 +82,7 @@ internal sealed class DrawCommandProcessor
         _lastMaterialId = materialId;
 
         var textureBindings = _materialSystem.GetMetaAndSlots(materialId, out var materialMeta);
-        
+
         var gfxCmd = GfxCmd;
         gfxCmd.BindUniformBufferRange<MaterialUniform>(materialId.Index, 1);
 

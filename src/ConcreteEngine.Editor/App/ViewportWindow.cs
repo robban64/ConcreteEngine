@@ -66,8 +66,8 @@ internal static unsafe class ViewportWindow
         var proj = &matrices[1];
         var model = &matrices[2];
 
-        *view = CameraManager.Instance.Camera.ViewMatrix;
-        *proj = CameraManager.Instance.Camera.ProjectionMatrix;
+        *view = Camera.Main.ViewMatrix;
+        *proj = Camera.Main.ProjectionMatrix;
         MatrixMath.CreateModelMatrix(in sceneTransform.GetTransform(), out *model);
 
         var changed = ImGuizmo.Manipulate(

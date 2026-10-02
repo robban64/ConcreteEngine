@@ -11,9 +11,7 @@ internal static class EditorCamera
 {
     private const float BaseSpeed = 65f;
     private const float RotationSpeed = 165.0f;
-
-    private static Camera Camera => CameraManager.Instance.Camera;
-
+    
     private static Vector3 _currentVelocity;
     private static Vector2 _targetOrientation;
 
@@ -30,31 +28,35 @@ internal static class EditorCamera
         const float acceleration = 12.0f;
         const float friction = 12.0f;
 
+        var camera = Camera.Main;
+
         Vector3 targetVelocity = default;
 
         if (EditorInput.Layer.IsKeyDown(Key.W))
-            targetVelocity += Camera.Forward;
+            targetVelocity += camera.Forward;
         if (EditorInput.Layer.IsKeyDown(Key.S))
-            targetVelocity -= Camera.Forward;
+            targetVelocity -= camera.Forward;
 
         if (targetVelocity.LengthSquared() > 0)
             targetVelocity = Vector3.Normalize(targetVelocity) * speed;
 
         float t = 1.0f - MathF.Exp(-acceleration * dt);
         if (targetVelocity == Vector3.Zero) t = 1.0f - MathF.Exp(-friction * dt);
+        
         _currentVelocity = Vector3.Lerp(_currentVelocity, targetVelocity, t);
-        Camera.Translation += _currentVelocity * dt;
+        camera.Translation += _currentVelocity * dt;
     }
 
     private static void RotateController(float fixedDt, float rotateSpeed)
     {
         var speed = rotateSpeed * fixedDt;
 
+        var camera = Camera.Main;
         var target = _targetOrientation;
 
-        if (!VectorMath.NearlyEqual(Camera.Orientation, _targetOrientation))
-            target = Camera.Orientation;
-
+        if (!VectorMath.NearlyEqual(camera.Orientation, _targetOrientation))
+            target = camera.Orientation;
+        
         if (EditorInput.Layer.IsKeyDown(Key.A))
             target.X += speed;
         if (EditorInput.Layer.IsKeyDown(Key.D))
@@ -67,7 +69,7 @@ internal static class EditorCamera
         target.Y = RotationMath.ClampPitch(target.Y);
 
         float t = 1.0f - float.Exp(-25 * fixedDt);
-        Camera.Orientation = Vector2.Lerp(Camera.Orientation, target, t);
+        camera.Orientation = Vector2.Lerp(camera.Orientation, target, t);
         _targetOrientation = target;
     }
 }

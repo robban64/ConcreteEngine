@@ -49,7 +49,7 @@ internal sealed class AnimationManager
 
         return count;
     }
-    public void AttachEntity(ModelRig rig, RenderEntityCore.RenderEntityContext ctx, Id16<AnimationInstance> animationId = default)
+    public void AttachEntity(ModelRig rig, RenderEntityContext ctx, Id16<AnimationInstance> animationId = default)
     {
         if (animationId == 0 && TryGetFirstByRig(rig, out var firstEntry))
             animationId = firstEntry.Id;

@@ -1,11 +1,9 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS.Render;
-using ConcreteEngine.Core.Engine.GameEntity;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Engine.Render;
@@ -17,6 +15,7 @@ namespace ConcreteEngine.Engine.Systems;
 
 public sealed class EngineRenderSystem : IDisposable
 {
+    private readonly Camera _renderCamera;
     private readonly RenderDispatcher _renderDispatcher;
     private readonly DrawCommandProcessor _drawCmd;
     private readonly RenderPassContext _passContext;
@@ -29,7 +28,7 @@ public sealed class EngineRenderSystem : IDisposable
 
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
-        _ = CameraManager.Instance;
+        _renderCamera = new Camera(EngineSettings.Current.Display.WindowSize);
         _ = VisualManager.Instance;
         VisualManager.Instance.Lighting.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
 
@@ -57,8 +56,10 @@ public sealed class EngineRenderSystem : IDisposable
     
     internal void AfterUpdate()
     {
-        VisualManager.Instance.Commit();
-        CameraManager.Instance.CommitUpdate(VisualManager.Instance.Lighting);
+        var visuals = VisualManager.Instance;
+        visuals.Commit();
+        
+        _renderCamera.Commit(visuals.Lighting);
         _materialSystem.Commit();
     }
 
@@ -71,7 +72,7 @@ public sealed class EngineRenderSystem : IDisposable
         {
             Logger.Log(LogScope.Engine, "Recreating screen framebuffers");
             RenderRegistry.Instance.RecreateScreenDependentFbo(EngineWindow.Viewport.Size);
-            CameraManager.Instance.Camera.SetAspectRatio(EngineWindow.AspectRatio);
+            _renderCamera.SetAspectRatio(EngineWindow.AspectRatio);
         }
 
         if (VisualManager.Instance.CommitShadowSize())
@@ -97,18 +98,18 @@ public sealed class EngineRenderSystem : IDisposable
         _passContext.ResetFrame();
 
         // frame update
-        CameraManager.Instance.CommitFrame(EngineTime.GameAlphaF);
+        _renderCamera.UpdateFrame(EngineTime.GameAlphaF);
 
-        VisualSystem.Instance.UploadUniforms();
 
         // process and upload draw commands
-        RenderEcs.Core.CullSystem.Execute();
+        RenderEcs.Core.CullSystem.Execute(_renderCamera.FrameTransforms, _renderCamera.LightTransforms);
         _renderDispatcher.Execute();
 
-        _particleSystem.InterpolateUpload();
+        _particleSystem.Execute();
         _animationSystem.Execute(EngineTime.GameAlpha);
 
         // prepare buffers
+        VisualSystem.Instance.UploadUniforms();
         VisualSystem.Instance.UploadUniformBuffers(_renderDispatcher, _materialSystem, _animationSystem);
     }
 
@@ -137,7 +138,7 @@ public sealed class EngineRenderSystem : IDisposable
         foreach (ref readonly var ticket in tickets)
         {
             //TODO
-            var ctx = RenderEcs.Core.GetEntityContext(ticket.Entity);
+            var ctx = RenderEcs.Core.GetSimpleContext(ticket.Entity);
             _drawCmd.DrawSource(ctx, ticket.SubmitIndex);
         }
     }

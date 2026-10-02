@@ -14,7 +14,7 @@ namespace ConcreteEngine.Core.Engine.ECS.Render;
 
 public sealed class EcsCullSystem
 {
-    public long Version { get; private set; }
+    public ulong Version { get; private set; }
     public int VisibleCount { get; private set; }
 
     private readonly EntityDataStore _data;
@@ -31,20 +31,14 @@ public sealed class EcsCullSystem
     private ref Vector4 ScenePlaneRef => ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(_frustumPlanes), 6);
     private ref BoundingFrustum LightFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref LightPlaneRef);
     private ref BoundingFrustum SceneFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref ScenePlaneRef);
-
-    internal void BuildFrustum(CameraTransformSnapshot sceneTransform, CameraTransformSnapshot lightTransform)
-    {
-        var transposed = Matrix4x4.Transpose(lightTransform.ProjectionViewMatrix);
-        BoundingFrustum.From(in transposed, out LightFrustum);
-
-        transposed = Matrix4x4.Transpose(sceneTransform.ProjectionViewMatrix);
-        BoundingFrustum.From(in transposed, out SceneFrustum);
-    }
-
-    internal void Execute()
+    
+    //
+    internal void Execute(CameraTransformSnapshot sceneTransform, CameraTransformSnapshot lightTransform)
     {
         ++Version;
 
+        BuildFrustum(sceneTransform, lightTransform);
+        
         var visibleCount = CullEntities(RenderEcs.EntityCount);
         VisibleCount = visibleCount;
 
@@ -53,6 +47,14 @@ public sealed class EcsCullSystem
         _data.RawSortKeys.AsSpan(0, visibleCount).Sort();
     }
 
+    private void BuildFrustum(CameraTransformSnapshot sceneTransform, CameraTransformSnapshot lightTransform)
+    {
+        var transposed = Matrix4x4.Transpose(lightTransform.ProjectionViewMatrix);
+        BoundingFrustum.From(in transposed, out LightFrustum);
+
+        transposed = Matrix4x4.Transpose(sceneTransform.ProjectionViewMatrix);
+        BoundingFrustum.From(in transposed, out SceneFrustum);
+    }
 
     private int CullEntities(int length)
     {

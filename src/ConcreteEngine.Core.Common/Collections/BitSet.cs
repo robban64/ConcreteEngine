@@ -48,6 +48,8 @@ public readonly struct BitSet
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _bits.Length * 64;
     }
+    
+    public Span<ulong> AsSpan() => _bits;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public BitBlock GetBlock(int blockIndex) => Unsafe.BitCast<ulong, BitBlock>(_bits[blockIndex]);

@@ -8,8 +8,6 @@ using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Particles;

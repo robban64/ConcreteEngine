@@ -29,7 +29,7 @@ public sealed class SceneManager
         if (Instance != null!) throw new InvalidOperationException("SceneManager already created");
         Instance = this;
         Store = new SceneStore(RenderEcs.Core.Capacity);
-        Raycaster = new RayCaster(Store, CameraManager.Instance.Camera.Transform);
+        Raycaster = new RayCaster(Store, Camera.Main.Transform);
     }
 
     public int DirtyCount => _dirtyIds.Count;

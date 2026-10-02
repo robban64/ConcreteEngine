@@ -1,14 +1,6 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Identity;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
@@ -80,7 +72,7 @@ internal sealed class ParticleSystem : IDisposable
 
     }
 
-    internal void InterpolateUpload()
+    internal void Execute()
     {
         var timeOffset = (float)(EngineTime.SimulationDelta * EngineTime.SimulationAlpha);
         foreach (var emitterId in _processedEmitters.AsSpan())

@@ -14,7 +14,6 @@ internal sealed unsafe class VisualSystem
 {
     public static void Create(GfxBuffers gfx) => Instance = new VisualSystem(gfx);
     public static VisualSystem Instance { get; private set; } = null!;
-    private static CameraManager CameraManager => CameraManager.Instance;
     private static VisualManager VisualManager => VisualManager.Instance;
 
     private readonly GfxBuffers _gfx;
@@ -31,28 +30,36 @@ internal sealed unsafe class VisualSystem
     public void UploadUniformBuffers(RenderDispatcher renderDispatcher, MaterialSystem materialSystem,
         AnimationSystem animationSystem)
     {
-        // Ensure ubo size
-        var drawCount = IntMath.AlignUp(RenderEcs.Core.CullSystem.VisibleCount, 64);
-        var materialCount = IntMath.AlignUp(materialSystem.Count, 16);
-        var boneCount = IntMath.AlignUp(animationSystem.BoneCount, 64);
-
-        if (!GfxRegistry.GetMeta(TransformUniform.UboId).HasCapacity(drawCount))
-            _gfx.SetUniformBufferCount(TransformUniform.UboId, drawCount);
-
-        if (!GfxRegistry.GetMeta(MaterialUniform.UboId).HasCapacity(materialCount))
-            _gfx.SetUniformBufferCount(MaterialUniform.UboId, materialCount);
-
-        if (!GfxRegistry.GetMeta(SkinningUniform.UboId).HasCapacity(boneCount))
-            _gfx.SetUniformBufferCount(SkinningUniform.UboId, boneCount);
-
         var transforms = renderDispatcher.Transforms;
-        if (transforms.Length > 0) _gfx.UploadUniform(transforms, 0);
+        if (transforms.Length > 0)
+        {
+            var drawCount = IntMath.AlignUp(transforms.Length, 64);
+
+            if (!GfxRegistry.GetMeta(TransformUniform.UboId).HasCapacity(drawCount))
+                _gfx.SetUniformBufferCount(TransformUniform.UboId, drawCount);
+
+            _gfx.UploadUniform(transforms, 0);
+        }
 
         var materials = materialSystem.GetUniforms();
-        if (materials.Length > 0) _gfx.UploadUniform(materials, 0);
+        if (materials.Length > 0)
+        {
+            var materialCount = IntMath.AlignUp(materials.Length, 16);
+            if (!GfxRegistry.GetMeta(MaterialUniform.UboId).HasCapacity(materialCount))
+                _gfx.SetUniformBufferCount(MaterialUniform.UboId, materialCount);
+
+            _gfx.UploadUniform(materials, 0);
+        }
 
         var boneData = animationSystem.GetUniforms();
-        if (boneData.Length > 0) _gfx.UploadUniform(boneData, 0);
+        if (boneData.Length > 0)
+        {
+            var boneCount = IntMath.AlignUp(animationSystem.BoneCount, 64);
+            if (!GfxRegistry.GetMeta(SkinningUniform.UboId).HasCapacity(boneCount))
+                _gfx.SetUniformBufferCount(SkinningUniform.UboId, boneCount);
+
+            _gfx.UploadUniform(boneData, 0);
+        }
     }
 
 
@@ -107,11 +114,11 @@ internal sealed unsafe class VisualSystem
 
         _gfx.UploadSingleUniform(&data, 0);
     }
-    
+
     [SkipLocalsInit]
     public void UploadMainView()
     {
-        var t = CameraManager.FrameTransforms;
+        var t = Camera.Main.FrameTransforms;
         CameraUniform data;
         data.ViewMatrix = t.ViewMatrix;
         data.ProjectionMatrix = t.ProjectionMatrix;
@@ -125,7 +132,7 @@ internal sealed unsafe class VisualSystem
     [SkipLocalsInit]
     public void UploadLightView()
     {
-        var t = CameraManager.LightTransforms;
+        var t = Camera.Main.LightTransforms;
         CameraUniform data;
         data.ViewMatrix = t.ViewMatrix;
         data.ProjectionMatrix = t.ProjectionMatrix;
@@ -143,7 +150,7 @@ internal sealed unsafe class VisualSystem
         var size = shadow.InvMapSize;
 
         ShadowUniform data;
-        data.LightViewProjectionMatrix = CameraManager.LightTransforms.ProjectionViewMatrix;
+        data.LightViewProjectionMatrix = Camera.Main.LightTransforms.ProjectionViewMatrix;
         data.ShadowParams0 = new Vector4(size, size, shadow.ConstBias, shadow.SlopeBias);
         data.ShadowParams1 = new Vector4(shadow.Strength, shadow.PcfRadius, 0.03f, shadow.Distance);
 

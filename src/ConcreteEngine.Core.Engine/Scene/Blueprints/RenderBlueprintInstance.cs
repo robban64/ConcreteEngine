@@ -46,7 +46,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
     {
         foreach (var entity in GetRenderEntities())
         {
-            var ctx = RenderEcs.Core.GetEntityContext(entity);
+            var ctx = RenderEcs.Core.GetContext(entity);
             var materialId = ctx.Source.Material;
             if (materialId > 0 && materialId != material.MaterialId) continue;
             ctx.Policy = new DrawPolicy(material.DrawQueue, material.Passes);
@@ -58,7 +58,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
         var flag = visible ? EntityDrawStatus.Normal : EntityDrawStatus.ForceHidden;
         foreach (var entity in GetRenderEntities())
         {
-            var ctx = RenderEcs.Core.GetEntityContext(entity);
+            var ctx = RenderEcs.Core.GetContext(entity);
             ctx.SetStatus(flag);
         }
     }
@@ -69,7 +69,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
         {
             foreach (var entity in GetRenderEntities())
             {
-                var ctx = RenderEcs.Core.GetEntityContext(entity);
+                var ctx = RenderEcs.Core.GetContext(entity);
                 ctx.SetStatus(EntityDrawStatus.ForceHidden);
                 ctx.AddComponent(SelectionComponent.DefaultHighlight);
             }
@@ -78,7 +78,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
         {
             foreach (var entity in GetRenderEntities())
             {
-                var ctx = RenderEcs.Core.GetEntityContext(entity);
+                var ctx = RenderEcs.Core.GetContext(entity);
                 ctx.SetStatus(EntityDrawStatus.Normal);
                 ctx.RemoveComponent<SelectionComponent>();
             }

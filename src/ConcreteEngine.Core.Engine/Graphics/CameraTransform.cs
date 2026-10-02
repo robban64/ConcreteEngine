@@ -1,14 +1,8 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
-
 
 public sealed class CameraTransformSnapshot
 {
@@ -16,16 +10,17 @@ public sealed class CameraTransformSnapshot
     public Matrix4x4 ViewMatrix;
     public Matrix4x4 ProjectionMatrix;
     public Matrix4x4 ProjectionViewMatrix;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateViewMatrix(Vector3 translation, Vector2 orientation)
+    
+    public void From(Vector3 translation, Vector2 orientation, in Matrix4x4 projectionMatrix)
     {
         var quaternion = RotationMath.YawPitchToQuaternion(orientation);
-
-        ref var viewMatrix = ref ViewMatrix;
-        MatrixMath.CreateFixedSizeModelMatrix(translation, in quaternion, out viewMatrix);
+        MatrixMath.CreateFixedSizeModelMatrix(translation, in quaternion, out var viewMatrix);
         Matrix4x4.Invert(viewMatrix, out viewMatrix);
+        
         Translation = translation;
+        ViewMatrix = viewMatrix;
+        ProjectionMatrix = projectionMatrix;
+        ProjectionViewMatrix = viewMatrix * projectionMatrix;
     }
 
     public Vector3 Right

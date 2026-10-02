@@ -87,6 +87,8 @@ public sealed class EntityDataStore : IDisposable
 
     internal void RemoveEntity(RenderEntity entity)
     {
+        if (!IsAlive(entity.Id)) Throwers.InvalidArgument("Entity is already dead", nameof(entity));
+
         var generation = _generations[entity.Id];
         if (entity.Gen != generation) Throwers.InvalidArgument(nameof(entity), "Entity generation mismatch");
         _entitySet[entity.Id] = false;
@@ -125,10 +127,14 @@ public sealed class EntityDataStore : IDisposable
         _transforms.ReAlloc(newSize, false);
 
         _sortKeys.ReAlloc(newSize, true);
+
         if (newSize > _entitySet.BitCount)
         {
+            var entitySet = _entitySet;
             _entitySet = new BitSet(newSize);
             _visibleSet = new BitSet(newSize);
+
+            entitySet.AsSpan().CopyTo(_entitySet.AsSpan());
         }
 
         Capacity = newSize;

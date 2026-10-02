@@ -16,6 +16,6 @@ internal sealed partial class CameraInspector : Inspector<Camera>
         _fields.SectionRoot.SetFetchRateHigh();
 
         Sections = _fields.CreateSections();
-        AttachTarget(CameraManager.Instance.Camera);
+        AttachTarget(Camera.Main);
     }
 }

@@ -10,13 +10,12 @@ namespace ConcreteEngine.Core.Common.Numerics;
 [StructLayout(LayoutKind.Sequential)]
 public struct BoundingFrustum
 {
+    public Plane FarPlane;
     public Plane LeftPlane;
     public Plane RightPlane;
     public Plane TopPlane;
     public Plane BottomPlane;
     public Plane NearPlane;
-    public Plane FarPlane;
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void From(in Matrix4x4 transposedViewProjection, out BoundingFrustum f)
@@ -27,14 +26,15 @@ public struct BoundingFrustum
         var col3 = Unsafe.Add(ref cols, 2);
         var col4 = Unsafe.Add(ref cols, 3);
 
+        f.FarPlane = VectorMath.Normalize(col4 - col3).AsPlane();
         f.LeftPlane = VectorMath.Normalize(col4 + col1).AsPlane();
         f.RightPlane = VectorMath.Normalize(col4 - col1).AsPlane();
         f.TopPlane =VectorMath.Normalize (col4 - col2).AsPlane();
         f.BottomPlane = VectorMath.Normalize(col4 + col2).AsPlane();
         f.NearPlane = VectorMath.Normalize(col4 + col3).AsPlane();
-        f.FarPlane = VectorMath.Normalize(col4 - col3).AsPlane();
     }
 
+    /*
     public static void FromCorners(ReadOnlySpan<Vector3> corners, out BoundingFrustum f)
     {
         f.LeftPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[2], corners[4]));
@@ -64,5 +64,5 @@ public struct BoundingFrustum
         var d = -Vector3.Dot(normal, a);
         return new Plane(normal, d);
     }
-
+    */
 }

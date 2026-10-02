@@ -14,8 +14,6 @@ public static class RenderEcs
     public static int ActiveCount => Core.ActiveCount;
     public static int StoreCount => All.Count;
 
-    internal static void OnResize(int newSize) { }
-
     internal static void Init()
     {
         if (All.Count > 0) throw new InvalidOperationException("ECS already initialized");

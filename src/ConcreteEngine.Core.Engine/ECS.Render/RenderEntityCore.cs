@@ -15,11 +15,13 @@ public sealed partial class RenderEntityCore : IDisposable
     private readonly Stack<int> _free = [];
 
     public readonly EntityDataStore Data;
+    public readonly EcsCullSystem CullSystem;
 
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 64);
         Data = new EntityDataStore(initialCapacity);
+        CullSystem = new EcsCullSystem(Data);
     }
 
     public int FreeCount => _free.Count;
@@ -73,7 +75,6 @@ public sealed partial class RenderEntityCore : IDisposable
         Logger.Log(LogScope.Ecs, "RenderEcs resized", LogLevel.Warn);
 
         Data.ReAlloc(newSize);
-        RenderEcs.OnResize(newSize);
     }
 
     public void Dispose()

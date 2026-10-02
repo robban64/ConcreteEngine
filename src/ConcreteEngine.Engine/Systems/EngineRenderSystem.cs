@@ -43,7 +43,7 @@ public sealed class EngineRenderSystem : IDisposable
 
         _drawCmd = new DrawCommandProcessor(graphics.Gfx, _animationSystem, _materialSystem);
         _passContext = new RenderPassContext(_drawCmd);
-        _renderDispatcher = new RenderDispatcher(RenderEcs.Core.Data, CameraManager.Instance.Frustum);
+        _renderDispatcher = new RenderDispatcher(RenderEcs.Core.Data);
 
     }
 
@@ -102,6 +102,7 @@ public sealed class EngineRenderSystem : IDisposable
         VisualSystem.Instance.UploadUniforms();
 
         // process and upload draw commands
+        RenderEcs.Core.CullSystem.Execute();
         _renderDispatcher.Execute();
 
         _particleSystem.InterpolateUpload();

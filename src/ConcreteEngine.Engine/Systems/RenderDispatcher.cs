@@ -22,8 +22,6 @@ internal sealed class RenderDispatcher : IDisposable
 {
     private const int DefaultTicketCapacity = 1024 * 4;
 
-    public int VisibleCount { get; private set; }
-
     private int _drawCount;
 
     // draw data
@@ -31,15 +29,12 @@ internal sealed class RenderDispatcher : IDisposable
     private NativeArray<ulong> _drawIndices;
     private NativeArray<TransformUniform> _transformBuffer;
 
-    private readonly RenderFrustum _frustum;
     private readonly EntityDataStore _renderData;
 
-    internal RenderDispatcher(EntityDataStore renderData, RenderFrustum frustum)
+    internal RenderDispatcher(EntityDataStore renderData)
     {
         ArgumentNullException.ThrowIfNull(renderData);
-        ArgumentNullException.ThrowIfNull(frustum);
 
-        _frustum = frustum;
         _renderData = renderData;
 
         _passRanges = new Range32[RenderLimits.DrawPassSlots];
@@ -50,7 +45,7 @@ internal sealed class RenderDispatcher : IDisposable
 
 
     private NativeView<DrawEntityIndex> DrawIndices => _drawIndices.Slice(0, _drawCount).Reinterpret<DrawEntityIndex>();
-    public NativeView<TransformUniform> Transforms => _transformBuffer.Slice(0, VisibleCount);
+    public NativeView<TransformUniform> Transforms => _transformBuffer.Slice(0, RenderEcs.Core.CullSystem.VisibleCount);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<DrawEntityIndex> GetDrawTickets(int passId)
@@ -59,67 +54,23 @@ internal sealed class RenderDispatcher : IDisposable
         return DrawIndices.Slice(range);
     }
 
-    private AvgFrameTimer avg;
 
     public void Execute()
     {
         Ensure();
         
-        avg.BeginSample();
-        var visibleCount = CullEntities(RenderEcs.Core.Count);
-        VisibleCount = visibleCount;
-        if (avg.EndSample() > 144) avg.ResetAndPrint();
-
+        var visibleCount = RenderEcs.Core.CullSystem.VisibleCount;
         if (visibleCount == 0) return;
-
-        _renderData.RawSortKeys.AsSpan(0, visibleCount).Sort();
         
-        BuildDrawIndices();
-        FillTransformBuffer();
+        var sortKeys = _renderData.SortKeys.Slice(0, visibleCount);
+        
+        BuildDrawIndices(sortKeys);
+        FillTransformBuffer(sortKeys);
     }
-
-    private int CullEntities(int length)
-    {
-        var frustum = _frustum;
-        var sortKeys = _renderData.SortKeys.AsSpan().Slice(0, length);
-        var policies = _renderData.Policies.AsReadOnlySpan().Slice(0, length);
-        var worldBounds = _renderData.WorldBounds.AsReadOnlySpan().Slice(0, length);
-        var visibilitySet = _renderData.VisibleSet;
-
-        int count = 0;
-        int blockCount = visibilitySet.BlockCount;
-        for (int blockIndex = 0; blockIndex < blockCount; ++blockIndex)
-        {
-            var start = blockIndex * 64;
-            var end = int.Min(start + 64, policies.Length);
-
-            BitBlock block = default;
-            for (int index = start; index < end; ++index)
-            {
-                var policy = policies[index];
-                if (policy.Status == EntityDrawStatus.ForceHidden) continue;
-
-                ref readonly var bounds = ref worldBounds[index];
-                var culledPasses = frustum.Intersects(policy.Passes, in bounds, out var distance);
-                var passes = policy.Status == EntityDrawStatus.AlwaysVisible ? policy.Passes : culledPasses;
-
-                if (passes != 0)
-                {
-                    sortKeys[count++] = DrawEntityKey.Create(index, passes, distance, policy.Queue);
-                    block.ToggleOn(index);
-                }
-            }
-
-            visibilitySet.SetBlock(blockIndex, block.Block);
-        }
-
-        return count;
-    }
-
-    private unsafe void FillTransformBuffer()
+    
+    private unsafe void FillTransformBuffer(NativeView<DrawEntityKey> sortKeys)
     {
         var src = _renderData.Transforms.Ptr;
-        var sortKeys = _renderData.SortKeys.Slice(0, VisibleCount);
         foreach (var it in sortKeys.Zip(Transforms))
         {
             it.Item2 = src[it.Item1.Entity];
@@ -127,16 +78,14 @@ internal sealed class RenderDispatcher : IDisposable
     }
 
 
-    private unsafe void BuildDrawIndices()
+    private unsafe void BuildDrawIndices(NativeView<DrawEntityKey> sortKeys)
     {
-        var sortKeys = _renderData.SortKeys.AsSpan(0, VisibleCount);
-        
         Array.Clear(_passRanges);
 
         var heads = stackalloc int[RenderLimits.DrawPassSlots * 2];
 
         // Count pass tickets
-        CountTickets(sortKeys, heads);
+        CountTickets(sortKeys.AsSpan(), heads);
 
         // Count pass ranges
         var total = _drawCount = CountPasses(heads);
@@ -148,7 +97,7 @@ internal sealed class RenderDispatcher : IDisposable
         }
 
         // fill tickets in sorted order
-        FillTickets(sortKeys,heads + RenderLimits.DrawPassSlots);
+        FillTickets(sortKeys.AsSpan(), heads + RenderLimits.DrawPassSlots);
     }
 
 

@@ -14,139 +14,124 @@ namespace ConcreteEngine.Core.Engine.ECS.Render;
 
 public sealed class EcsCullSystem
 {
-    public long Version {get; private set;}
+    public long Version { get; private set; }
     public int VisibleCount { get; private set; }
+
+    private readonly EntityDataStore _data;
 
     private readonly Vector4[] _frustumPlanes = new Vector4[12];
 
-    private readonly EntityDataStore _entityDataStore;
-
-    public EcsCullSystem(EntityDataStore entityDataStore)
+    public EcsCullSystem(EntityDataStore data)
     {
-        _entityDataStore = entityDataStore;
+        ArgumentNullException.ThrowIfNull(data);
+        _data = data;
     }
-    
+
     private ref Vector4 LightPlaneRef => ref MemoryMarshal.GetArrayDataReference(_frustumPlanes);
     private ref Vector4 ScenePlaneRef => ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(_frustumPlanes), 6);
-
     private ref BoundingFrustum LightFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref LightPlaneRef);
     private ref BoundingFrustum SceneFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref ScenePlaneRef);
 
     internal void BuildFrustum(CameraTransformSnapshot sceneTransform, CameraTransformSnapshot lightTransform)
     {
         var transposed = Matrix4x4.Transpose(lightTransform.ProjectionViewMatrix);
-        BoundingFrustum.From(in transposed, out Unsafe.As<Vector4, BoundingFrustum>(ref LightPlaneRef));
+        BoundingFrustum.From(in transposed, out LightFrustum);
 
         transposed = Matrix4x4.Transpose(sceneTransform.ProjectionViewMatrix);
-        BoundingFrustum.From(in transposed, out Unsafe.As<Vector4, BoundingFrustum>(ref ScenePlaneRef));
+        BoundingFrustum.From(in transposed, out SceneFrustum);
     }
-
-    private AvgFrameTimer avg;
 
     internal void Execute()
     {
-        avg.BeginSample();
+        ++Version;
+
         var visibleCount = CullEntities(RenderEcs.EntityCount);
         VisibleCount = visibleCount;
-        if (avg.EndSample() > 144) avg.ResetAndPrint();
 
-        if (visibleCount > 1)
-            _entityDataStore.RawSortKeys.AsSpan(0, visibleCount).Sort();
-        
-        ++Version;
+        if (visibleCount == 0) return;
+
+        _data.RawSortKeys.AsSpan(0, visibleCount).Sort();
     }
-    
 
-    private unsafe int CullEntities(int length)
+
+    private int CullEntities(int length)
     {
-        var indicesStart = _entityDataStore.SortKeys.Ptr;
-        var indices = indicesStart;
-        
-        var policies = _entityDataStore.Policies.AsSpan(0, length);
-        var worldBounds = _entityDataStore.WorldBounds.AsSpan(0, length);
-        var visibilitySet = _entityDataStore.VisibleSet;
+        var sortKeys = _data.SortKeys.AsSpan();
+        var policies = _data.Policies.AsReadOnlySpan();
+        var worldBounds = _data.WorldBounds.AsReadOnlySpan();
+        var visibilitySet = _data.VisibleSet;
 
-        int blockCount = visibilitySet.BlockCount;
-        
-        for (int blockIndex = 0; blockIndex < blockCount; ++blockIndex)
+        int visibleCount = 0;
+        for (int start = 0; start < length; start += 64)
         {
-            var start = blockIndex * 64;
-            var end = start + 64 <= policies.Length ? start + 64 : start + policies.Length & 63;
+            int end = int.Min(start + 64, length);
 
-            if ((uint)start >= (uint)policies.Length) break;
-
-            BitBlock block = default;
+            BitBlock visibilityBits = default;
             for (int index = start; index < end; ++index)
             {
-                ref readonly var bounds = ref worldBounds[index];
-                var center = new Vector4(bounds.Center, 1f);
-                var extent = new Vector4(bounds.Extent, 0f);
-
                 var policy = policies[index];
-
-                PassMask passes = policy.Status switch
-                {
-                    EntityDrawStatus.Normal => Intersects(policy.Passes, center, extent),
-                    EntityDrawStatus.AlwaysVisible => policy.Passes,
-                    _ => 0
-                };
+                if (policy.Status == EntityDrawStatus.ForceHidden) continue;
+                
+                ref readonly var bounds = ref worldBounds[index];
+                var passes = Intersects(policy.Passes, policy.Status, in bounds, out float distance);
 
                 if (passes != 0)
                 {
-                    var distance = DistanceFromPlane(in _frustumPlanes[10], center, extent);
-                    ushort depthKey = (ushort)float.Min(0f, float.Max(distance, 65535f));
-                    *indices++ = DrawEntityKey.Create(index, passes, depthKey, policy.Queue);
-                    block.ToggleOn(index);
+                    sortKeys[visibleCount++] = DrawEntityKey.Create(index, passes, distance, policy.Queue);
+                    visibilityBits.ToggleOn(index);
                 }
             }
 
-            visibilitySet.SetBlock(blockIndex, block.Block);
+            visibilitySet.SetBlockAt(start, visibilityBits.Block);
         }
 
-        return (int)(indices - indicesStart);
+        return visibleCount;
     }
-    
-    private PassMask Intersects(PassMask passes, Vector4 center, Vector4 extent)
+
+    private PassMask Intersects(PassMask passes, EntityDrawStatus status, in BoundingAxisBox bounds, out float distance)
     {
-        var culledPasses = PassMask.None;
-        
+        var center = new Vector4(bounds.Center, 1f).AsVector128();
+        var extent = new Vector4(bounds.Extent, 0f).AsVector128();
+
         ref var plane = ref MemoryMarshal.GetArrayDataReference(_frustumPlanes);
-        if ((passes & PassMask.Depth) != 0)
+        if (status == EntityDrawStatus.AlwaysVisible)
         {
-            var test = TestIntersect(ref plane, in center, in extent, PassMask.Depth);
-            culledPasses |= test;
+            distance = DistanceFromPlane(in Unsafe.Add(ref plane, 11), center, extent);
+            return passes;
         }
 
-        if ((passes & PassMask.Main) != 0)
-        {
-            var test = TestIntersect(ref Unsafe.Add(ref plane, 6), in center, in extent, PassMask.Main);
-            culledPasses |= test;
-        }
+        var depthTest = (passes & PassMask.Depth) != 0 && TestIntersect(ref plane, center, extent);
+        var sceneTest = (passes & PassMask.Main) != 0 && TestIntersect(ref Unsafe.Add(ref plane, 6), center, extent);
 
-        return culledPasses;
+        distance = DistanceFromPlane(in Unsafe.Add(ref plane, 11), center, extent);
+
+        byte culledMask = 0;
+        culledMask |= (byte)(-Unsafe.BitCast<bool, byte>(depthTest) & (int)PassMask.Depth);
+        culledMask |= (byte)(-Unsafe.BitCast<bool, byte>(sceneTest) & (int)PassMask.Main);
+        return (PassMask)culledMask;
+        
     }
-    
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static PassMask TestIntersect(ref Vector4 frustum, in Vector4 center4, in Vector4 extent4, PassMask pass)
+    private static bool TestIntersect(ref Vector4 frustum, Vector128<float> center4, Vector128<float> extent4)
     {
         ref var plane = ref frustum;
         ref readonly var end = ref Unsafe.Add(ref plane, 5);
         while (Unsafe.IsAddressLessThanOrEqualTo(ref plane, in end))
         {
-            bool isOutside = CollisionMethods.IsOutsidePlane(center4, extent4, in plane);
-            if (isOutside) return 0;
+            var d = DistanceFromPlane(in plane, center4, extent4);
+            if (d <= 0f) return false;
             plane = ref Unsafe.Add(ref plane, 1);
         }
 
-        return pass;
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static float DistanceFromPlane(in Vector4 plane, Vector4 center4, Vector4 extent4)
-    {
-        var d1 = Vector256.Create(center4.AsVector128(), extent4.AsVector128());
-        var d2 = Vector256.Create(plane.AsVector128(), Vector128.Abs(plane.AsVector128()));
-        return Vector256.Dot(d1, d2);
+        return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static float DistanceFromPlane(in Vector4 plane, Vector128<float> center4, Vector128<float> extent4)
+    {
+        var p = plane.AsVector128();
+        return Vector256.Dot(Vector256.Create(center4, extent4), Vector256.Create(p, Vector128.Abs(p)));
+    }
 }

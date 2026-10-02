@@ -32,7 +32,7 @@ internal sealed unsafe class VisualSystem
         AnimationSystem animationSystem)
     {
         // Ensure ubo size
-        var drawCount = IntMath.AlignUp(renderDispatcher.VisibleCount, 64);
+        var drawCount = IntMath.AlignUp(RenderEcs.Core.CullSystem.VisibleCount, 64);
         var materialCount = IntMath.AlignUp(materialSystem.Count, 16);
         var boneCount = IntMath.AlignUp(animationSystem.BoneCount, 64);
 

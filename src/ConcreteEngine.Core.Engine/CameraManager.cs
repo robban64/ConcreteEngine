@@ -14,7 +14,6 @@ public sealed class CameraManager
     public static readonly CameraManager Instance = new();
 
     public readonly Camera Camera;
-    internal readonly RenderFrustum Frustum;
     internal readonly CameraTransformSnapshot FrameTransforms;
     internal readonly CameraTransformSnapshot LightTransforms;
 
@@ -24,7 +23,6 @@ public sealed class CameraManager
             throw new InvalidOperationException($"{nameof(CameraManager)} is already initialized");
 
         Camera = new Camera(EngineSettings.Current.Display.WindowSize);
-        Frustum = new RenderFrustum();
 
         FrameTransforms = new CameraTransformSnapshot();
         LightTransforms = new CameraTransformSnapshot();
@@ -50,7 +48,7 @@ public sealed class CameraManager
         frameTransforms.UpdateViewMatrix(translation, orientation);
         frameTransforms.ProjectionMatrix = Camera.ProjectionMatrix;
         frameTransforms.ProjectionViewMatrix = frameTransforms.ViewMatrix * frameTransforms.ProjectionMatrix;
-        Frustum.Update(frameTransforms, LightTransforms);
+        RenderEcs.Core.CullSystem.BuildFrustum(frameTransforms, LightTransforms);
     }
 
     [SkipLocalsInit]

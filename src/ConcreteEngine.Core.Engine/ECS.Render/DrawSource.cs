@@ -13,7 +13,6 @@ public readonly struct DrawPolicy(DrawQueue queue, PassMask passes, EntityDrawSt
     public readonly PassMask Passes = passes;
     public readonly DrawQueue Queue = queue;
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public DrawPolicy WithStatus(EntityDrawStatus status) => new(Queue, Passes, status);
 }

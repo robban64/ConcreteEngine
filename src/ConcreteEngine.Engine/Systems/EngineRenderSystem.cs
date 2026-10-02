@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS.Render;
+using ConcreteEngine.Core.Engine.GameEntity;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Engine.Render;
@@ -42,7 +43,7 @@ public sealed class EngineRenderSystem : IDisposable
 
         _drawCmd = new DrawCommandProcessor(graphics.Gfx, _animationSystem, _materialSystem);
         _passContext = new RenderPassContext(_drawCmd);
-        _renderDispatcher = new RenderDispatcher();
+        _renderDispatcher = new RenderDispatcher(RenderEcs.Core.Data, CameraManager.Instance.Frustum);
 
     }
 
@@ -101,7 +102,6 @@ public sealed class EngineRenderSystem : IDisposable
         VisualSystem.Instance.UploadUniforms();
 
         // process and upload draw commands
-        RenderEcs.Core.RenderSystem.Execute();
         _renderDispatcher.Execute();
 
         _particleSystem.InterpolateUpload();

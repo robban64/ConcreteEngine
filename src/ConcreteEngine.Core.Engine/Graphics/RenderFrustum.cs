@@ -12,10 +12,7 @@ namespace ConcreteEngine.Core.Engine.Graphics;
 public sealed class RenderFrustum
 {
     private readonly Vector4[] _frustumPlanes = new Vector4[12];
-
-    private Vector4 _forward;
-    private Vector2 _scaleBias;
-
+    
     private Span<Vector4> LightPlanes => _frustumPlanes.AsSpan(0, 6);
     private Span<Vector4> ScenePlanes => _frustumPlanes.AsSpan(6, 6);
 
@@ -25,26 +22,15 @@ public sealed class RenderFrustum
     private ref BoundingFrustum LightFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref LightPlaneRef);
     private ref BoundingFrustum MainFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref ScenePlaneRef);
 
-    internal void Update(Camera camera)
+    internal void Update(CameraTransformSnapshot sceneTransform, CameraTransformSnapshot lightTransform)
     {
-        var viewZ = camera.ViewMatrix.M43;
-        var scale = 65535f / camera.NearFarPlane.Range();
-        var bias = 0.5f - (viewZ + camera.NearFarPlane.X) * scale;
-        _forward = camera.Forward.AsVector4();
-        _scaleBias = new Vector2(scale, bias);
+        var transposed = Matrix4x4.Transpose(lightTransform.ProjectionViewMatrix);
+        BoundingFrustum.From(in transposed, out Unsafe.As<Vector4, BoundingFrustum>(ref LightPlaneRef));
+
+        transposed = Matrix4x4.Transpose(sceneTransform.ProjectionViewMatrix);
+        BoundingFrustum.From(in transposed, out Unsafe.As<Vector4, BoundingFrustum>(ref ScenePlaneRef));
     }
 
-    internal void UpdateMain(in Matrix4x4 projectionViewMatrix)
-    {
-        var transposed = Matrix4x4.Transpose(projectionViewMatrix);
-        BoundingFrustum.From(in transposed, out MainFrustum);
-    }
-
-    internal void UpdateLight(in Matrix4x4 projectionViewMatrix)
-    {
-        var transposed = Matrix4x4.Transpose(projectionViewMatrix);
-        BoundingFrustum.From(in transposed, out LightFrustum);
-    }
 
     public PassMask Intersects(PassMask passes, in BoundingAxisBox box, out float distance)
     {

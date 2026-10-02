@@ -42,20 +42,18 @@ public readonly record struct RenderEntityId(int Id)
     public static implicit operator int(RenderEntityId e) => e.Id;
 }
 
-
 [StructLayout(LayoutKind.Sequential)]
-public struct DrawEntityKey(int entity, uint sortKey)
+public readonly struct DrawEntityKey(int entity, uint sortKey)
 {
-    public int Entity = entity;
-    public uint SortKey = sortKey;
+    public readonly int Entity = entity;
+    public readonly uint SortKey = sortKey;
 
     [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static DrawEntityKey Create(int entity, PassMask passMask, ushort distance, DrawQueue queue)
+    public static DrawEntityKey Create(int entity, PassMask passMask, float distance, DrawQueue queue)
     {
-        if (queue >= DrawQueue.Transparent) distance ^= ushort.MaxValue;
-        DrawEntityKey result;
-        result.Entity = entity;
-        result.SortKey = (byte)passMask | ((uint)distance << 8) | ((uint)queue << 24);
-        return result;
+        uint clampedDistance = (uint)float.Clamp(distance, 0f, 65535f);
+        uint depthKey = queue < DrawQueue.Transparent ? clampedDistance : clampedDistance ^ ushort.MaxValue;
+        var sortKey = (byte)passMask | (depthKey << 8) | ((uint)queue << 24);
+        return new DrawEntityKey(entity, sortKey);
     }
 }

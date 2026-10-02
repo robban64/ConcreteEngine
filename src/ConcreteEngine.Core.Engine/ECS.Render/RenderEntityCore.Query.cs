@@ -7,17 +7,6 @@ namespace ConcreteEngine.Core.Engine.ECS.Render;
 
 public sealed partial class RenderEntityCore
 {
-    /*
-    [SkipLocalsInit]
-    public CullQueryEnumerator CullQuery(EntityDrawStatus status) =>
-        new(PolicyView(), VisibilityView(), WorldBoundView(), status);
-    */
-
-    [SkipLocalsInit]
     public VisibilityQueryEnumerator<BoundingAxisBox> VisibilityBoundsQuery() =>
-        new(VisibleSet, _entityDataStore.PolicyView(Count), _entityDataStore.WorldBoundView(Count));
-
-    [SkipLocalsInit]
-    public VisibilityQueryEnumerator<TransformUniform> VisibilityTransformQuery() =>
-        new(VisibleSet, _entityDataStore.PolicyView(Count), TransformView());
+        new(Data.VisibleSet, Data.Policies.Slice(0, Count), Data.WorldBounds.Slice(0, Count));
 }

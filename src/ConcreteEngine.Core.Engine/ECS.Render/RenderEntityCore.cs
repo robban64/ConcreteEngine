@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Graphics;
 
@@ -13,42 +14,34 @@ public sealed partial class RenderEntityCore : IDisposable
 
     private readonly Stack<int> _free = [];
 
-    private readonly EntityDataStore _entityDataStore;
-
-    public readonly RenderEcsSystem RenderSystem;
+    public readonly EntityDataStore Data;
 
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 64);
-        _entityDataStore = new EntityDataStore(initialCapacity);
-        RenderSystem = new RenderEcsSystem(_entityDataStore);
+        Data = new EntityDataStore(initialCapacity);
     }
 
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
-    public int Capacity => _entityDataStore.Capacity;
-
-    public NativeView<TransformUniform> TransformView() => _entityDataStore.TransformView(Count);
-    public NativeView<DrawEntityKey> SortKeys() => RenderSystem.SortKeys();
-
-    public ref readonly BitSet VisibleSet => ref _entityDataStore.VisibleSet;
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsAlive(RenderEntity e) => (uint)e.Id < (uint)Count && _entityDataStore.IsAlive(e.Id);
+    public int Capacity => Data.Capacity;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsVisible(RenderEntity e) => _entityDataStore.IsVisible(e.Id);
+    public bool IsAlive(RenderEntity e) => (uint)e.Id < (uint)Count && Data.IsAlive(e.Id);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsVisible(RenderEntity e) => Data.IsVisible(e.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderEntityContext GetEntityContext(int entity)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)entity, (uint)Count);
-        var e = new RenderEntity(entity, _entityDataStore.GetGeneration(entity));
-        return new RenderEntityContext(e, _entityDataStore);
+        var e = new RenderEntity(entity, Data.GetGeneration(entity));
+        return new RenderEntityContext(e, Data);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntityContext GetEntityContext(RenderEntity entity) => new(entity, _entityDataStore);
+    public RenderEntityContext GetEntityContext(RenderEntity entity) => new(entity, Data);
 
     //
     public RenderEntity AddEntity(DrawSource source, DrawPolicy policy)
@@ -60,14 +53,14 @@ public sealed partial class RenderEntityCore : IDisposable
             entityId = Count++;
         }
 
-        return _entityDataStore.AddEntity(entityId, policy, source);
+        return Data.AddEntity(entityId, policy, source);
     }
 
     public void RemoveEntity(RenderEntity entity)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)entity.Id, (uint)Count, nameof(entity));
         if (!IsAlive(entity)) Throwers.InvalidArgument(nameof(entity));
-        _entityDataStore.RemoveEntity(entity);
+        Data.RemoveEntity(entity);
         Count = SlotHelper.FreeSlot(_free, entity.Id, Count);
     }
 
@@ -79,13 +72,13 @@ public sealed partial class RenderEntityCore : IDisposable
         var newSize = CapacityUtils.CapacityGrowthToFit(Capacity, required);
         Logger.Log(LogScope.Ecs, "RenderEcs resized", LogLevel.Warn);
 
-        _entityDataStore.ReAlloc(newSize);
+        Data.ReAlloc(newSize);
         RenderEcs.OnResize(newSize);
     }
 
     public void Dispose()
     {
-        _entityDataStore.Dispose();
+        Data.Dispose();
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

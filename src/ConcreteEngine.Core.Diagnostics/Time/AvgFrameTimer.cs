@@ -10,11 +10,9 @@ public struct AvgFrameTimer
     private long _accumulatedTicks;
     public int Ticks { get; private set; }
 
-    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void BeginSample() => _startTicks = Stopwatch.GetTimestamp();
 
-   // [MethodImpl(MethodImplOptions.AggressiveInlining)]
    [MethodImpl(MethodImplOptions.NoInlining)]
     public int EndSample()
     {
@@ -23,7 +21,6 @@ public struct AvgFrameTimer
         return ++Ticks;
     }
 
-   // [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float Reset()
     {
         if (Ticks == 0)

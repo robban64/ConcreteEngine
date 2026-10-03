@@ -1,6 +1,10 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
@@ -21,6 +25,7 @@ internal sealed class ParticleEmitterData : IDisposable
     private static int GetCapacity(int count) => count * StrideSum + (Alignment * 4);
 
     //
+    public int Count { get; private set; }
 
     private readonly ParticleVertex[] _lut = new ParticleVertex[LutLength];
 
@@ -32,33 +37,61 @@ internal sealed class ParticleEmitterData : IDisposable
     private NativeView<float> _lifeMaxInverse;
     private NativeView<byte> _lifeLutIndices;
 
+    private FastRandom _rng = new(1337);
 
     public ParticleEmitterData(int count)
     {
         EnsureAllocate(count);
     }
-    
+
     public NativeView<Vector4> Velocities => _velocities;
     public NativeView<Vector4> Positions => _positions;
     public NativeView<float> LifeState => _lifeState;
     public NativeView<float> LifeMaxInverse => _lifeMaxInverse;
     public NativeView<byte> LifeLutIndices => _lifeLutIndices;
 
-    public int Capacity => _buffer.Length;
-    public int Count => _velocities.Length;
-    public bool IsNullOrEmpty => _buffer.IsNullOrEmpty;
+    public int SizeInBytes => _buffer.Length;
+    public bool IsNullOrEmpty => Count == 0 || _buffer.IsNullOrEmpty;
 
-    public ref ParticleVertex GetLutRef() => ref MemoryMarshal.GetArrayDataReference(_lut);
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Set(int index, Vector3 velocity, Vector3 position, float life)
     {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)Count);
         _velocities[index] = velocity.AsVector4();
         _positions[index] = position.AsVector4();
         _lifeState[index] = life;
         _lifeMaxInverse[index] = 1f / life;
+        _lifeLutIndices[index] = 0;
     }
-    
+
+    public void Respawn(int index, ParticleEmitter.ParticleEmitterState state)
+    {
+        var random = _rng;
+        var spread = state.Spread;
+        var life = random.RandomFloat(state.LifeMinMax);
+        var speed = random.RandomFloat(state.SpeedMinMax);
+        var randDir = random.RandomVector3(-0.5f, 0.5f);
+        var position = random.RandomVector3(-spread, spread);
+        var velocity = Vector3.Normalize(randDir + state.Direction) * speed;
+        Set(index, velocity, position, life);
+        _rng = random;
+    }
+
+    public void RespawnParticles(int deadCount, ParticleEmitter.ParticleEmitterState state, Span<BitBlock> deadBits)
+    {
+        for (int start = 0; start < deadCount; start += 64)
+        {
+            var block = deadBits[start >> 6];
+            if (block == 0) continue;
+            while (block.IsSet)
+            {
+                var index = BitOperations.TrailingZeroCount(block) + start;
+                block.ClearLowerBits();
+                Respawn(index, state);
+            }
+        }
+    }
+
     public void UpdateLutFromParticleParams(ColorRgba startColor, ColorRgba endColor, Vector2 sizeStartEnd)
     {
         var lut = _lut;
@@ -71,12 +104,120 @@ internal sealed class ParticleEmitterData : IDisposable
     }
 
 
-    internal bool EnsureAllocate(int count)
+    public unsafe int SimulateLife(int count, float simDt, Span<BitBlock> deadBits)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(count, MinCapacity);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(count, MaxCapacity);
+        var lifeState = LifeState;
+        var invMaxLifeState = LifeMaxInverse;
+        var lutIndices = LifeLutIndices;
 
-        count = IntMath.AlignUp(count, CountAlignment);
+        var deadIndex = 0;
+
+        var length = count - Vector256<float>.Count;
+        for (int i = 0; i <= length; i += Vector256<float>.Count)
+        {
+            var life = lifeState + i;
+            var invMaxLife =  invMaxLifeState + i;
+            ref var lut = ref Unsafe.As<byte, long>(ref lutIndices[i]);
+
+            var vLife = Vector256.Subtract(Vector256.LoadAligned(life), Vector256.Create(simDt));
+            var vDiff = Fma.MultiplyAddNegated(vLife, Vector256.LoadAligned(invMaxLife), Vector256<float>.One);
+            var vIndex = Fma.MultiplyAdd(vDiff, Vector256.Create(255f), Vector256.Create(0.5f));
+
+            var vIndexInt32 = Avx.ConvertToVector256Int32(vIndex);
+            var bytes = Sse2.PackUnsignedSaturate(
+                Sse2.PackSignedSaturate(vIndexInt32.GetLower(), vIndexInt32.GetUpper()),
+                Vector128<short>.Zero
+            );
+
+            var mask = Vector256.LessThanOrEqual(vLife, Vector256<float>.Zero).ExtractMostSignificantBits();
+
+            vLife.StoreAligned(life);
+            lut = bytes.AsInt64().ToScalar();
+            if (mask != 0) deadIndex = UpdateDeadBits(i, mask, deadBits);
+        }
+
+        return deadIndex;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static int UpdateDeadBits(int i, uint bitMask, Span<BitBlock> deadBits)
+        {
+            ref var blockRef = ref deadBits[i >> 6];
+
+            var block = blockRef;
+            var bitIndex = 0;
+            var mask = bitMask;
+            while (mask != 0)
+            {
+                var index = BitOperations.TrailingZeroCount(mask) + i;
+                mask &= mask - 1;
+
+                bitIndex = index;
+                block.Enable(index);
+            }
+
+            blockRef = block;
+            return bitIndex;
+        }
+    }
+
+    public unsafe void SimulateSpatial(int count, Vector3 gravity, float simDt)
+    {
+        var velocities = Velocities.Slice(0, count).Reinterpret<float>();
+        var positions = Positions.Slice(0, count).Reinterpret<float>();
+        var length = velocities.Length - Vector256<float>.Count;
+        
+        var vGravityStep = Vector256.Create(gravity.AsVector128() * simDt);
+        for (int i = 0; i < length; i += Vector256<float>.Count)
+        {
+            var velocity = velocities + i;
+            var position = positions + i;
+            var vVelocity = Vector256.Add(Vector256.LoadAligned(velocity), vGravityStep);
+            var vPosition = Fma.MultiplyAdd(vVelocity, Vector256.Create(simDt), Vector256.LoadAligned(position));
+            vVelocity.StoreAligned(velocity);
+            vPosition.StoreAligned(position);
+        }
+    }
+
+    //
+    public unsafe void InterpolatePosition(NativeView<Vector4> destination, float timeOffset)
+    {
+        var dst = destination.Reinterpret<float>();
+        var velocities = Velocities.Reinterpret<float>();
+        var positions = Positions.Reinterpret<float>();
+
+        var length = dst.Length - Vector256<float>.Count;
+        
+        var vTimeOffset = Vector256.Create(timeOffset);
+        for (int i = 0; i < length; i += Vector256<float>.Count)
+        {
+            var vVelocity = Vector256.LoadAligned(velocities + i);
+            var vPosition = Vector256.LoadAligned(positions + i);
+            var vPos = Fma.MultiplyAdd(vVelocity, vTimeOffset, vPosition);
+            vPos.StoreAligned(dst + i);
+        }
+
+    }
+    public void InterpolateVisual(NativeView<ParticleVertex> destination)
+    {
+        var count = destination.Length;
+        var destSpan = destination.AsSpan(0, count);
+        var lifeLutIndices = _lifeLutIndices.AsSpan(0, count);
+        if(destSpan.Length != lifeLutIndices.Length) Throwers.InvalidOperation();
+            
+        var lut = _lut;
+        for (int i = 0; i < count; ++i)
+        {
+            destSpan[i] = lut[lifeLutIndices[i]];
+        }
+    }
+    //
+
+    public bool EnsureAllocate(int length)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(length, MinCapacity);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(length, MaxCapacity);
+
+        var count = IntMath.AlignUp(length, CountAlignment);
         var capacity = GetCapacity(count);
 
         var isFirstAlloc = _buffer.IsNull;
@@ -94,6 +235,8 @@ internal sealed class ParticleEmitterData : IDisposable
         _lifeMaxInverse = allocator.AllocSlice<float>(count);
         _lifeLutIndices = allocator.AllocSlice<byte>(count);
 
+        Count = count;
+
         if (!isFirstAlloc) Logger.Log(LogScope.Engine, "ParticleEmitterData: resized", LogLevel.Warn);
         return true;
     }
@@ -106,5 +249,7 @@ internal sealed class ParticleEmitterData : IDisposable
         _lifeState = default;
         _lifeMaxInverse = default;
         _lifeLutIndices = default;
+
+        Count = 0;
     }
 }

@@ -7,7 +7,7 @@ using ConcreteEngine.Core.Engine.ECS.Render.Queries;
 
 namespace ConcreteEngine.Core.Engine.ECS.Render;
 
-public sealed partial class RenderEntityCore : IDisposable
+public sealed class RenderEntityCore : IDisposable
 {
     public int Count { get; private set; }
 
@@ -90,6 +90,6 @@ public sealed partial class RenderEntityCore : IDisposable
     }
     
     public RenderCoreQuery.VisibilityQueryEnumerator<BoundingAxisBox> VisibilityBoundsQuery() =>
-        new(Data.VisibleSet, Data.Policies.Slice(0, Count), Data.WorldBounds.Slice(0, Count));
+        new(Data.VisibleSet, Data.WorldBounds.Slice(0, Count));
 
 }

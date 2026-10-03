@@ -1,11 +1,18 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Common.Collections;
 
-public struct BitBlock(ulong block)
+public record struct BitBlock(ulong Block)
 {
-    public ulong Block = block;
+    public ulong Block = Block;
     
+    public readonly bool IsSet
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Block != 0;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator ulong(BitBlock b) => b.Block;
 
@@ -33,10 +40,13 @@ public readonly struct BitSet
 {
     private readonly ulong[] _bits;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetBlockCapacity(int bits) => (bits + 63) / 64;
+
     public BitSet(int capacity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
-        _bits = new ulong[(capacity + 63) / 64];
+        _bits = new ulong[GetBlockCapacity(capacity)];
     }
 
     public int BlockCount
@@ -136,9 +146,6 @@ public readonly struct BitSet
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Enumerator GetEnumerator() => new(_bits);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public BitBlockEnumerator EnumerateBlocks(int count) => new(_bits, count);
 
 
@@ -150,7 +157,7 @@ public readonly struct BitSet
         i = (i + (i >> 4)) & 0x0F0F0F0F0F0F0F0FUL;
         return ((i * 0x0101010101010101UL) >> 56);
     }
-
+/*
     public ref struct Enumerator
     {
         private readonly ReadOnlySpan<ulong> _bits;
@@ -159,9 +166,10 @@ public readonly struct BitSet
         private int _index;
         private int _blockIndex;
 
-        internal Enumerator(ReadOnlySpan<ulong> bits)
+        internal Enumerator(ReadOnlySpan<ulong> bits, int elementCount)
         {
             _bits = bits;
+            _elementCount = elementCount;
             _currentBlock = 0;
 
             _index = -1;
@@ -171,7 +179,7 @@ public readonly struct BitSet
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-            if (_index + 1 >= _bits.Length) return false;
+            if (_index + 1 >= _elementCount) return false;
             if ((++_index & 63) == 0) _currentBlock = _bits[_blockIndex++];
             return true;
         }
@@ -185,41 +193,42 @@ public readonly struct BitSet
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Enumerator GetEnumerator() => this;
     }
-}
-
-public ref struct BitBlockEnumerator
-{
-    private readonly ReadOnlySpan<ulong> _blocks;
-    private readonly int _elementCount;
-    private int _blockIndex;
-
-    public (int Start, int End, ulong Block) Current { get; private set; }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public BitBlockEnumerator(ReadOnlySpan<ulong> blocks, int elementCount)
+    */
+    
+    public ref struct BitBlockEnumerator
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(elementCount, blocks.Length * 64);
-        _blocks = blocks;
-        _elementCount = elementCount;
-        _blockIndex = -1;
-        Current = default;
+        private readonly ReadOnlySpan<ulong> _blocks;
+        private readonly int _elementCount;
+        private int _blockIndex;
+
+        public (int Start, int End, ulong Block) Current { get; private set; }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public BitBlockEnumerator(ReadOnlySpan<ulong> blocks, int elementCount)
+        {
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(elementCount, blocks.Length * 64);
+            _blocks = blocks;
+            _elementCount = elementCount;
+            _blockIndex = -1;
+            Current = default;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext()
+        {
+            int nextBlock = _blockIndex + 1;
+            int start = nextBlock << 6; // nextBlock * 64
+
+            if (start >= _elementCount) return false;
+
+            _blockIndex = nextBlock;
+            int end = int.Min(start + 64, _elementCount);
+
+            Current = (start, end, _blocks[nextBlock]);
+            return true;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public BitBlockEnumerator GetEnumerator() => this;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool MoveNext()
-    {
-        int nextBlock = _blockIndex + 1;
-        int start = nextBlock << 6; // nextBlock * 64
-
-        if (start >= _elementCount) return false;
-
-        _blockIndex = nextBlock;
-        int end = int.Min(start + 64, _elementCount);
-
-        Current = (start, end, _blocks[nextBlock]);
-        return true;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public BitBlockEnumerator GetEnumerator() => this;
 }

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 
@@ -11,17 +12,15 @@ public static unsafe partial class RenderCoreQuery
         private int _entity;
         private readonly int _length;
         private readonly BitSet _visibilitySet;
-        private DrawPolicy* _policies;
         private T1* _p1;
 
 
-        public VisibilityQueryEnumerator(BitSet visibilitySet, NativeView<DrawPolicy> policies, NativeView<T1> p1)
+        public VisibilityQueryEnumerator(BitSet visibilitySet, NativeView<T1> p1)
         {
-            ArgumentOutOfRangeException.ThrowIfNotEqual(policies.Length, p1.Length);
+            if(p1.IsNullOrEmpty) Throwers.InvalidArgument(nameof(p1));
             _entity = -1;
-            _length = policies.Length;
+            _length = p1.Length;
             _visibilitySet = visibilitySet;
-            _policies = policies.Ptr - 1;
             _p1 = p1.Ptr - 1;
         }
 
@@ -30,9 +29,8 @@ public static unsafe partial class RenderCoreQuery
         {
             while (++_entity < _length)
             {
-                ++_policies;
                 ++_p1;
-                return _visibilitySet.GetUnchecked(_entity);
+                if (_visibilitySet.GetUnchecked(_entity)) return true;
             }
 
             return false;
@@ -41,16 +39,15 @@ public static unsafe partial class RenderCoreQuery
         public readonly Item Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(_entity,  *_policies, ref *_p1);
+            get => new(_entity, ref *_p1);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly VisibilityQueryEnumerator<T1> GetEnumerator() => this;
 
-        public readonly ref struct Item(int entity, DrawPolicy policy, ref T1 item1)
+        public readonly ref struct Item(int entity, ref T1 item1)
         {
             public readonly int Entity = entity;
-            public readonly DrawPolicy Policy = policy;
             public readonly ref T1 Item1 = ref item1;
         }
     }

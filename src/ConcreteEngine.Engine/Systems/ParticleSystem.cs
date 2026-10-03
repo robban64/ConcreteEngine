@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Identity;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
@@ -18,15 +19,12 @@ internal sealed class ParticleSystem : IDisposable
     private readonly ParticleMesh _particleMesh;
     private readonly ParticleManager _particleManager;
 
-    private ushort[] _deadIndices;
-
     internal ParticleSystem(GfxContext gfx)
     {
         if (_allocated) Throwers.InvalidOperation("ParticleSystem already active");
         _allocated = true;
         _particleMesh = new ParticleMesh(gfx);
         _particleManager = ParticleManager.Instance;
-        _deadIndices = new ushort[1024];
     }
 
     internal void Commit()
@@ -35,7 +33,6 @@ internal sealed class ParticleSystem : IDisposable
 
         _particleManager.CommitEmitters();
 
-        int max = _deadIndices.Length;
         foreach (var id in _particleManager.GetPendingEmitterIds())
         {
             var emitter = _particleManager.Get(id);
@@ -43,11 +40,7 @@ internal sealed class ParticleSystem : IDisposable
             var slot = _particleMesh.CreateParticleMesh(emitter.ParticleCount);
             var meshId = _particleMesh.GetHandle(slot).MeshId;
             emitter.Attach(slot, meshId);
-
-            max = int.Max(max, emitter.ParticleCount);
         }
-
-        if (max > _deadIndices.Length) _deadIndices = new ushort[max];
 
         _particleManager.ClearPendingEmitters();
     }
@@ -66,7 +59,7 @@ internal sealed class ParticleSystem : IDisposable
             var emitter = _particleManager.Get(emitterId);
             if (!emitter.IsAttached) continue;
 
-            emitter.Simulate(_deadIndices, simDt);
+            emitter.Simulate(simDt);
             _processedEmitters.Add(emitterId);
         }
 
@@ -79,10 +72,14 @@ internal sealed class ParticleSystem : IDisposable
         {
             var emitter = _particleManager.Get(emitterId);
             _particleMesh.GetBufferView(emitter.AlignedParticleCount, out var positions, out var particles);
-            emitter.InterpolatePosition(positions, timeOffset);
-            emitter.InterpolateVisual(particles);
+
+            var emitterData = emitter.GetData();
+            emitterData.InterpolatePosition(positions, timeOffset);
+            emitterData.InterpolateVisual(particles);
+            
             _particleMesh.UploadGpuData(emitter.BoundSlot, emitter.ParticleCount);
         }
+
     }
 
 

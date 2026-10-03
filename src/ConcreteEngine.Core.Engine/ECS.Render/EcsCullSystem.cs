@@ -17,7 +17,7 @@ public sealed class EcsCullSystem
 
     private readonly EntityDataStore _data;
 
-    private readonly Vector4[] _frustumPlanes = new Vector4[12];
+    private readonly Vector4[] _frustum = new Vector4[12];
 
     public EcsCullSystem(EntityDataStore data)
     {
@@ -25,10 +25,8 @@ public sealed class EcsCullSystem
         _data = data;
     }
 
-    private ref BoundingFrustum LightFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustumPlanes[0]);
-    private ref BoundingFrustum SceneFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustumPlanes[6]);
-
-    private AvgFrameTimer avg;
+    private ref BoundingFrustum LightFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustum[0]);
+    private ref BoundingFrustum SceneFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustum[6]);
 
     //
     internal void Execute(CameraTransformSnapshot sceneTransform, CameraTransformSnapshot lightTransform)
@@ -37,10 +35,8 @@ public sealed class EcsCullSystem
 
         BuildFrustum(sceneTransform, lightTransform);
 
-        avg.BeginSample();
         var visibleCount = CullEntities(RenderEcs.EntityCount);
         VisibleCount = visibleCount;
-        if (avg.EndSample() > 100) avg.ResetAndPrint();
 
         if (visibleCount == 0) return;
 
@@ -56,20 +52,10 @@ public sealed class EcsCullSystem
         BoundingFrustum.From(in transposed, out SceneFrustum);
     }
 
-    private static ulong Filter(BitBlock bits, ReadOnlySpan<DrawPolicy> span)
-    {
-        var entityBits = bits;
-        for (int i = 0; i < span.Length; ++i)
-        {
-            if (span[i].Status == DrawStatus.ForceHidden) entityBits.Disable(i);
-        }
-
-        return entityBits;
-    }
 
     private int CullEntities(int entityCount)
     {
-        var sortKeys = _data.SortKeys.AsSpan(0, entityCount);
+        var sortKeys = _data.SortKeys.Slice(0, entityCount);
         var policies = _data.Policies.AsReadOnlySpan(0, entityCount);
         var worldBounds = _data.WorldBounds.AsReadOnlySpan(0, entityCount);
         var visibilitySet = _data.VisibleSet;
@@ -96,6 +82,7 @@ public sealed class EcsCullSystem
 
                 var policy = innerPolices[i];
                 ref readonly var bounds = ref innerBounds[i];
+
                 var passes = Intersects(policy.Passes, policy.Status, in bounds, out float distance);
 
                 if (passes != 0)
@@ -117,45 +104,54 @@ public sealed class EcsCullSystem
     {
         var center = new Vector4(bounds.Center, 1f).AsVector128();
         var extent = new Vector4(bounds.Extent, 0f).AsVector128();
+        var centerExtent = Vector256.Create(center, extent);
 
-        ref var plane = ref MemoryMarshal.GetArrayDataReference(_frustumPlanes);
+        Span<Vector4> span = _frustum;
         if (status == DrawStatus.AlwaysVisible)
         {
-            distance = DistanceFromPlane(in Unsafe.Add(ref plane, 11), center, extent);
+            distance = DistanceFromPlane(in span[^1], in centerExtent);
             return passes;
         }
 
-        var depthTest = (passes & PassMask.Depth) != 0 && TestIntersect(ref plane, center, extent);
-        var sceneTest = (passes & PassMask.Main) != 0 && TestIntersect(ref Unsafe.Add(ref plane, 6), center, extent);
+        var depthTest = (passes & PassMask.Depth) != 0 && TestIntersect(span.Slice(0, 6), in centerExtent);
+        var sceneTest = (passes & PassMask.Main) != 0 && TestIntersect(span.Slice(6, 6), in centerExtent);
 
-        distance = DistanceFromPlane(in Unsafe.Add(ref plane, 11), center, extent);
+        distance = DistanceFromPlane(in span[^1], in centerExtent);
 
-        byte culledMask = 0;
-        culledMask |= (byte)(-Unsafe.BitCast<bool, byte>(depthTest) & (int)PassMask.Depth);
-        culledMask |= (byte)(-Unsafe.BitCast<bool, byte>(sceneTest) & (int)PassMask.Main);
-        return (PassMask)culledMask;
+        PassMask culledMask = 0;
+        culledMask |= depthTest ? PassMask.Depth : 0;
+        culledMask |= sceneTest ? PassMask.Main : 0;
+        return culledMask;
     }
 
+    private static ulong Filter(BitBlock bits, ReadOnlySpan<DrawPolicy> span)
+    {
+        var entityBits = bits;
+        for (int i = 0; i < span.Length; ++i)
+        {
+            var status = span[i].Status;
+            if (status == DrawStatus.ForceHidden) bits.Disable(i);
+        }
+
+        return entityBits;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool TestIntersect(ref Vector4 frustum, Vector128<float> center4, Vector128<float> extent4)
+    private static bool TestIntersect(Span<Vector4> frustum, in Vector256<float> centerExtent)
     {
-        ref var plane = ref frustum;
-        ref readonly var end = ref Unsafe.Add(ref plane, 5);
-        while (Unsafe.IsAddressLessThanOrEqualTo(ref plane, in end))
+        foreach (var plane in frustum)
         {
-            var d = DistanceFromPlane(in plane, center4, extent4);
+            var d = DistanceFromPlane(in plane, in centerExtent);
             if (d <= 0f) return false;
-            plane = ref Unsafe.Add(ref plane, 1);
         }
 
         return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static float DistanceFromPlane(in Vector4 plane, Vector128<float> center4, Vector128<float> extent4)
+    private static float DistanceFromPlane(in Vector4 plane, in Vector256<float> centerExtent)
     {
         var p = plane.AsVector128();
-        return Vector256.Dot(Vector256.Create(center4, extent4), Vector256.Create(p, Vector128.Abs(p)));
+        return Vector256.Dot(centerExtent, Vector256.Create(p, Vector128.Abs(p)));
     }
 }

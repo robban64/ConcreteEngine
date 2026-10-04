@@ -26,7 +26,7 @@ public sealed class RayCaster
 
         var closestEntity = -1;
         var minDistance = float.MaxValue;
-        foreach (var query in RenderEcs.Core.VisibilityBoundsQuery())
+        foreach (var query in RenderWorld.Core.VisibilityBoundsQuery())
         {
             if (!_sceneStore.IsLinkedEntity(query.Entity)) continue;
 

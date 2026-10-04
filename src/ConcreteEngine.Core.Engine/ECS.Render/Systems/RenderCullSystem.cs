@@ -7,16 +7,15 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.ECS.Render.Systems;
 
-public sealed class RenderCullSystem
+public sealed class RenderCullSystem : RenderWorldSystem
 {
-    public ulong Version { get; private set; }
     public int VisibleCount { get; private set; }
 
-    private readonly EntityDataStore _data;
+    private readonly RenderData _data;
 
     private readonly Vector4[] _frustum = new Vector4[12];
 
-    public RenderCullSystem(EntityDataStore data)
+    public RenderCullSystem(RenderData data)
     {
         ArgumentNullException.ThrowIfNull(data);
         _data = data;
@@ -26,13 +25,12 @@ public sealed class RenderCullSystem
     private ref BoundingFrustum SceneFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustum[6]);
 
     //
-    internal void Execute(CameraTransformSnapshot sceneTransform, CameraTransformSnapshot lightTransform)
+    internal void Execute(long frameId, Camera camera)
     {
-        ++Version;
+        FrameVersion = frameId;
+        BuildFrustum(camera);
 
-        BuildFrustum(sceneTransform, lightTransform);
-
-        var visibleCount = CullEntities(RenderEcs.EntityCount);
+        var visibleCount = CullEntities(RenderWorld.Core.Count);
         VisibleCount = visibleCount;
 
         if (visibleCount == 0) return;
@@ -40,12 +38,12 @@ public sealed class RenderCullSystem
         _data.RawSortKeys.AsSpan(0, visibleCount).Sort();
     }
 
-    private void BuildFrustum(CameraTransformSnapshot sceneTransform, CameraTransformSnapshot lightTransform)
+    private void BuildFrustum(Camera camera)
     {
-        var transposed = Matrix4x4.Transpose(lightTransform.ProjectionViewMatrix);
+        var transposed = Matrix4x4.Transpose(camera.LightTransforms.ProjectionViewMatrix);
         BoundingFrustum.From(in transposed, out LightFrustum);
 
-        transposed = Matrix4x4.Transpose(sceneTransform.ProjectionViewMatrix);
+        transposed = Matrix4x4.Transpose(camera.FrameTransforms.ProjectionViewMatrix);
         BoundingFrustum.From(in transposed, out SceneFrustum);
     }
 
@@ -148,4 +146,6 @@ public sealed class RenderCullSystem
         var p = plane.AsVector128();
         return Vector256.Dot(centerExtent, Vector256.Create(p, Vector128.Abs(p)));
     }
+
+    public override void Dispose() {}
 }

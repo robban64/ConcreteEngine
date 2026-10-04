@@ -15,22 +15,22 @@ internal sealed class RenderTransformBuffer : IDisposable
 {
     private NativeArray<TransformUniform> _transformBuffer;
 
-    private readonly EntityDataStore _renderData;
+    private readonly RenderData _renderData;
 
-    internal RenderTransformBuffer(EntityDataStore renderData)
+    internal RenderTransformBuffer(RenderData renderData)
     {
         ArgumentNullException.ThrowIfNull(renderData);
         _renderData = renderData;
-        _transformBuffer = NativeArray.AlignedAllocate<TransformUniform>(RenderEcs.Core.Capacity, 64, false);
+        _transformBuffer = NativeArray.AlignedAllocate<TransformUniform>(RenderWorld.Core.Capacity, 64, false);
     }
 
-    public NativeView<TransformUniform> Transforms => _transformBuffer.Slice(0, RenderEcs.Core.CullSystem.VisibleCount);
+    public NativeView<TransformUniform> Transforms => _transformBuffer.Slice(0, RenderWorld.Core.CullSystem.VisibleCount);
 
     public void Execute()
     {
         Ensure();
         
-        var visibleCount = RenderEcs.Core.CullSystem.VisibleCount;
+        var visibleCount = RenderWorld.Core.CullSystem.VisibleCount;
         if (visibleCount == 0) return;
 
         var dst = _transformBuffer.Slice(0, visibleCount);
@@ -46,7 +46,7 @@ internal sealed class RenderTransformBuffer : IDisposable
 
     private void Ensure()
     {
-        var capacity = RenderEcs.Core.Capacity;
+        var capacity = RenderWorld.Core.Capacity;
         if (capacity == _transformBuffer.Length) return;
 
         _transformBuffer.ReAlloc(capacity, false);

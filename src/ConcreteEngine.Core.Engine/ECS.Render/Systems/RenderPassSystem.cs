@@ -1,14 +1,13 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.ECS.Render.Systems;
 
-public sealed class RenderPassSystem : IDisposable
+public sealed class RenderPassSystem : RenderWorldSystem
 {
     private const int DefaultTicketCapacity = 1024 * 4;
 
@@ -17,10 +16,10 @@ public sealed class RenderPassSystem : IDisposable
     private readonly Range32[] _passRanges;
     private NativeArray<ulong> _drawIndices;
 
-    private readonly EntityDataStore _renderData;
+    private readonly RenderData _renderData;
     private readonly RenderCullSystem _cullSystem;
 
-    internal RenderPassSystem(EntityDataStore renderData, RenderCullSystem cullSystem)
+    internal RenderPassSystem(RenderData renderData, RenderCullSystem cullSystem)
     {
         ArgumentNullException.ThrowIfNull(renderData);
         ArgumentNullException.ThrowIfNull(cullSystem);
@@ -33,7 +32,7 @@ public sealed class RenderPassSystem : IDisposable
         
     }
 
-    private NativeView<DrawEntityIndex> DrawIndices => _drawIndices.Slice(0, _drawCount).Reinterpret<DrawEntityIndex>();
+    private NativeView<DrawEntityIndex> DrawIndices => _drawIndices.Reinterpret<DrawEntityIndex>();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<DrawEntityIndex> GetDrawTickets(int passId)
@@ -42,8 +41,12 @@ public sealed class RenderPassSystem : IDisposable
         return DrawIndices.Slice(range);
     }
 
-    public void Execute()
+    public void Execute(long frameId)
     {
+        FrameVersion = frameId;
+        
+        if(_cullSystem.FrameVersion != frameId) Throwers.InvalidOperation();
+
         var visibleCount = _cullSystem.VisibleCount;
         if (visibleCount == 0) return;
         
@@ -105,7 +108,7 @@ public sealed class RenderPassSystem : IDisposable
 
     private unsafe void FillTickets(Span<DrawEntityKey> sortKeys, int* heads)
     {
-        var drawTickets = DrawIndices.Ptr;
+        var drawTickets = DrawIndices;
         for (int i = 0; i < sortKeys.Length; ++i)
         {
             var key = sortKeys[i];
@@ -123,5 +126,5 @@ public sealed class RenderPassSystem : IDisposable
     }
 
 
-    public void Dispose() => _drawIndices.Dispose();
+    public override void Dispose() => _drawIndices.Dispose();
 }

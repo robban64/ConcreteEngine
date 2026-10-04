@@ -35,6 +35,10 @@ public static class Throwers
         throw new ArgumentException($"{message} [{id}] not found", name);
 
     [DoesNotReturn]
+    public static void InvalidArgumentHandle<T>(T handle) => throw new ArgumentException($"Invalid handle = {handle}");
+
+
+    [DoesNotReturn]
     public static void Unreachable(string name) => throw new UnreachableException(name);
 
     [DoesNotReturn]

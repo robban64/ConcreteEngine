@@ -39,7 +39,8 @@ public sealed class GameEngine : IDisposable
         var gpuCapabilities = _graphics.Initialize(gfxBundle.Config, out var version);
         EngineSettings.Current.LoadGraphicsSettings(version, gpuCapabilities);
 
-        RenderEcs.Init();
+        var renderEcs = new RenderWorld();
+        renderEcs.Init();
 
         _assetSystem = new AssetSystem(gfxBundle.Graphics.Gfx);
         _renderSystem = new EngineRenderSystem(gfxBundle.Graphics);
@@ -157,7 +158,7 @@ public sealed class GameEngine : IDisposable
         _sceneSystem.Shutdown();
         _renderSystem.Dispose();
         _assetSystem.Shutdown();
-        RenderEcs.Dispose();
+        RenderWorld.Core.Dispose();
 
         EngineInput.Detach();
         _graphics.Dispose();

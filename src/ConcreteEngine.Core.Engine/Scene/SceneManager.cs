@@ -28,7 +28,7 @@ public sealed class SceneManager
     {
         if (Instance != null!) throw new InvalidOperationException("SceneManager already created");
         Instance = this;
-        Store = new SceneStore(RenderEcs.Core.Capacity);
+        Store = new SceneStore(RenderWorld.Core.Capacity);
         Raycaster = new RayCaster(Store, Camera.Main.Transform);
     }
 
@@ -51,7 +51,7 @@ public sealed class SceneManager
     public void UnbindSceneHandle(RenderEntity e) => Store.UnbindSceneRenderEntity(e);
 
     public void BindSceneHandle(SceneObjectId sceneId, RenderEntity e) =>
-        Store.BindSceneRenderEntity(sceneId, e, RenderEcs.Core.Capacity);
+        Store.BindSceneRenderEntity(sceneId, e, RenderWorld.Core.Capacity);
 
     private void InvokeRenameListener(SceneObject sceneObject)
     {

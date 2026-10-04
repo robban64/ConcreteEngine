@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.ECS.Render.Components;
 using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.ECS.Render;
@@ -11,10 +12,10 @@ public readonly ref struct DrawEntityContext(int entity, DrawSource source)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T GetComponent<T>() where T : unmanaged, IRenderComponent<T> =>
-        ref RenderEcs.Store<T>().GetUnchecked(Entity);
+        ref RenderWorld.Store<T>().GetUnchecked(Entity);
 }
 
-public readonly ref struct RenderEntityContext(RenderEntity entity, EntityDataStore data)
+public readonly ref struct RenderEntityContext(RenderEntity entity, RenderData data)
 {
     public readonly RenderEntity Entity = entity;
     public ref DrawSource Source => ref data.GetSource(Entity.Id);
@@ -37,9 +38,9 @@ public readonly ref struct RenderEntityContext(RenderEntity entity, EntityDataSt
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T GetComponent<T>() where T : unmanaged, IRenderComponent<T> => ref RenderEcs.Store<T>().Get(Entity);
+    public ref T GetComponent<T>() where T : unmanaged, IRenderComponent<T> => ref RenderWorld.Store<T>().Get(Entity);
 
-    public bool AddComponent<T>(T t) where T : unmanaged, IRenderComponent<T> => RenderEcs.Store<T>().Add(Entity, in t);
+    public bool AddComponent<T>(T t) where T : unmanaged, IRenderComponent<T> => RenderWorld.Store<T>().Add(Entity, in t);
 
-    public bool RemoveComponent<T>() where T : unmanaged, IRenderComponent<T> => RenderEcs.Store<T>().Remove(Entity);
+    public bool RemoveComponent<T>() where T : unmanaged, IRenderComponent<T> => RenderWorld.Store<T>().Remove(Entity);
 }

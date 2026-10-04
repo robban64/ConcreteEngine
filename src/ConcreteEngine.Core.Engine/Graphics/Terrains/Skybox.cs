@@ -26,13 +26,13 @@ public sealed class Skybox
         bool isValid = _entity.IsValid;
         if (!isValid)
         {
-            _entity = RenderEcs.Core.AddEntity(
+            _entity = RenderWorld.Core.AddEntity(
                 new DrawSource(MeshId, material.MaterialId),
                 new DrawPolicy(DrawQueue.Skybox, PassMask.Main));
             
         }
         
-        var context = RenderEcs.Core.GetContext(_entity);
+        var context = RenderWorld.Core.GetContext(_entity);
         if(isValid)
             context.Source.Material = material.MaterialId;
 

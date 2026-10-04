@@ -46,7 +46,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
     {
         foreach (var entity in GetRenderEntities())
         {
-            var ctx = RenderEcs.Core.GetContext(entity);
+            var ctx = RenderWorld.Core.GetContext(entity);
             var materialId = ctx.Source.Material;
             if (materialId > 0 && materialId != material.MaterialId) continue;
             ctx.Policy = new DrawPolicy(material.DrawQueue, material.Passes);
@@ -58,7 +58,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
         var flag = visible ? DrawStatus.Normal : DrawStatus.ForceHidden;
         foreach (var entity in GetRenderEntities())
         {
-            var ctx = RenderEcs.Core.GetContext(entity);
+            var ctx = RenderWorld.Core.GetContext(entity);
             ctx.SetStatus(flag);
         }
     }
@@ -69,7 +69,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
         {
             foreach (var entity in GetRenderEntities())
             {
-                var ctx = RenderEcs.Core.GetContext(entity);
+                var ctx = RenderWorld.Core.GetContext(entity);
                 ctx.SetStatus(DrawStatus.ForceHidden);
                 ctx.AddComponent(SelectionComponent.DefaultHighlight);
             }
@@ -78,18 +78,18 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
         {
             foreach (var entity in GetRenderEntities())
             {
-                var ctx = RenderEcs.Core.GetContext(entity);
+                var ctx = RenderWorld.Core.GetContext(entity);
                 ctx.SetStatus(DrawStatus.Normal);
                 ctx.RemoveComponent<SelectionComponent>();
             }
         }
 
-        RenderEcs.Store<SelectionComponent>().Commit();
+        RenderWorld.Store<SelectionComponent>().Commit();
     }
 
     public void ToggleDebugBounds(bool isSelected)
     {
-        var debugStore = RenderEcs.Store<DebugBoundsComponent>();
+        var debugStore = RenderWorld.Store<DebugBoundsComponent>();
         var span = GetRenderEntities();
         for (var i = 0; i < span.Length; i++)
         {

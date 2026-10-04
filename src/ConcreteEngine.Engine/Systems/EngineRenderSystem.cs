@@ -5,12 +5,14 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS.Render;
+using ConcreteEngine.Core.Engine.ECS.Render.Components;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Render.Impl;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Graphics;
+using RenderStore = ConcreteEngine.Engine.Render.RenderStore;
 
 namespace ConcreteEngine.Engine.Systems;
 
@@ -26,11 +28,11 @@ public sealed class EngineRenderSystem : IDisposable
     private readonly ParticleSystem _particleSystem;
     private readonly AnimationSystem _animationSystem;
 
-    private readonly RenderEntityCore _renderEcs;
+    private readonly RenderWorld _renderWorld;
 
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
-        _renderEcs = RenderEcs.Core ?? throw new InvalidOperationException();
+        _renderWorld = RenderWorld.Core ?? throw new InvalidOperationException();
         
         _renderCamera = new Camera(EngineSettings.Current.Display.WindowSize);
         _ = VisualManager.Instance;
@@ -46,7 +48,7 @@ public sealed class EngineRenderSystem : IDisposable
 
         _drawCmd = new DrawCommandProcessor(graphics.Gfx, _animationSystem, _materialSystem);
         _passContext = new RenderPassContext(_drawCmd);
-        _transformBuffer = new RenderTransformBuffer(RenderEcs.Core.Data);
+        _transformBuffer = new RenderTransformBuffer(RenderWorld.Core.Data);
 
     }
 
@@ -103,23 +105,20 @@ public sealed class EngineRenderSystem : IDisposable
         // frame update
         _renderCamera.UpdateFrame(EngineTime.GameAlphaF);
 
-
         // process and upload draw commands
-        _renderEcs.CullSystem.Execute(_renderCamera.FrameTransforms, _renderCamera.LightTransforms);
-        _renderEcs.PassSystem.Execute();
-        avg.BeginSample();
+        var frameId = EngineTime.FrameId;
+        _renderWorld.CullSystem.Execute(frameId, _renderCamera);
+        _renderWorld.PassSystem.Execute(frameId);
+        
         _transformBuffer.Execute();
-        if (avg.EndSample() > 100) avg.ResetAndPrint();
-
         _particleSystem.Execute();
         _animationSystem.Execute(EngineTime.GameAlpha);
 
         // prepare buffers
         VisualSystem.Instance.UploadUniforms();
         VisualSystem.Instance.UploadUniformBuffers(_transformBuffer, _materialSystem, _animationSystem);
-    }
 
-    private AvgFrameTimer avg;
+    }
 
     public void ExecuteRenderPipeline()
     {
@@ -141,11 +140,11 @@ public sealed class EngineRenderSystem : IDisposable
 
     private void ExecuteDrawPass(int passId)
     {
-        var tickets = _renderEcs.PassSystem.GetDrawTickets(passId);
+        var tickets = _renderWorld.PassSystem.GetDrawTickets(passId);
         foreach (ref readonly var ticket in tickets)
         {
             //TODO
-            var ctx = RenderEcs.Core.GetDrawContext(ticket.Entity);
+            var ctx = RenderWorld.Core.GetDrawContext(ticket.Entity);
             _drawCmd.DrawSource(ctx, ticket.SubmitIndex);
         }
     }

@@ -8,8 +8,8 @@ public static class EngineTime
 {
     private static FastRandom _rng = new(12323);
 
-    public static ulong FrameId;
-    public static ulong GameTickId;
+    public static long FrameId;
+    public static long GameTickId;
     public static float FrameRng;
     
     public static double Time;

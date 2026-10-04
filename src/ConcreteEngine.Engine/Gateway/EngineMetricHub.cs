@@ -57,13 +57,10 @@ internal sealed class EngineMetricHub
     {
         if (_metricSystem == null) return;
 
+        var ecsCount = RenderWorld.Core.ActiveCount;
+        var activeCount = SceneManager.SceneStore.ActiveCount;
+        var sceneMeta = new SceneMeta(activeCount, 0, 0, ecsCount);
         var frameMeta = new FrameMeta(EngineTime.FrameId, EngineTime.FpsF, EngineTime.GameAlphaF);
-        var sceneMeta = new SceneMeta(
-            SceneManager.SceneStore.ActiveCount,
-            0,
-            0,
-            RenderEcs.ActiveCount
-        );
 
         _metricSystem.PushMeta(in frameMeta, in sceneMeta);
         _metricSystem.TickDiagnostic();

@@ -5,16 +5,10 @@ using ConcreteEngine.Core.Engine.Graphics;
 namespace ConcreteEngine.Core.Engine.ECS.Render;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly record struct RenderEntity : IComparable<RenderEntity>
+public readonly record struct RenderEntity(int Id, int Gen) : IComparable<RenderEntity>
 {
-    public readonly int Id;
-    public readonly int Gen;
-
-    public RenderEntity(int id, int gen)
-    {
-        Id = id;
-        Gen = gen;
-    }
+    public readonly int Id = Id;
+    public readonly int Gen = Gen;
 
     public bool IsValid
     {
@@ -24,21 +18,20 @@ public readonly record struct RenderEntity : IComparable<RenderEntity>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator int(RenderEntity e) => e.Id;
+    
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ulong AsPacked() => Unsafe.BitCast<RenderEntity, ulong>(this);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(RenderEntity other) => Id.CompareTo(other.Id);
 
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong Pack(RenderEntity e) => Unsafe.BitCast<RenderEntity, ulong>(e);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static RenderEntity Unpack(ulong packed) => Unsafe.BitCast<ulong, RenderEntity>(packed);
-}
-
-public readonly record struct RenderEntityId(int Id)
-{
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator int(RenderEntityId e) => e.Id;
 }
 
 [StructLayout(LayoutKind.Sequential)]

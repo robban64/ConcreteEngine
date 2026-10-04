@@ -20,9 +20,9 @@ internal static partial class PassPipeline
         ctx.Gfx.UseShader(RenderStore.HighlightShader);
         RenderContext.OverrideShader = RenderStore.HighlightShader;
 
-        foreach (var query in RenderEcs.Store<SelectionComponent>().VisibilityQuery())
+        foreach (var query in RenderWorld.Store<SelectionComponent>().VisibilityQuery())
         {
-            var entityContext = RenderEcs.Core.GetContext(query.Entity);
+            var entityContext = RenderWorld.Core.GetContext(query.Entity);
 
             *effect = new EditorEffectsUniform(entityContext.Source.IsSkinned(), query.Component.HighlightColor);
 
@@ -54,9 +54,9 @@ internal static partial class PassPipeline
         var materialId = AssetStore.Core.DebugBoundsMaterial.MaterialId;
         ctx.Gfx.UseShader(RenderStore.BoundingBoxShader);
 
-        foreach (var query in RenderEcs.Store<DebugBoundsComponent>().VisibilityQuery())
+        foreach (var query in RenderWorld.Store<DebugBoundsComponent>().VisibilityQuery())
         {
-            var entityContext = RenderEcs.Core.GetContext(query.Entity);
+            var entityContext = RenderWorld.Core.GetContext(query.Entity);
 
             var isSkinned = entityContext.Source.IsSkinned();
             *effect = new EditorEffectsUniform(isSkinned, query.Component.Color);

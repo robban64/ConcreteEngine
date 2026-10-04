@@ -8,15 +8,15 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.ECS.Render;
 
-public sealed class EntityDataStore : IDisposable
+
+
+public sealed class RenderData : IDisposable
 {
     public int Capacity { get; private set; }
 
     private BitSet _entitySet;
     private BitSet _visibleSet;
-
-    private NativeArray<ulong> _sortKeys;
-
+    
     private NativeArray<ushort> _generations;
 
     private NativeArray<DrawPolicy> _policies;
@@ -25,7 +25,9 @@ public sealed class EntityDataStore : IDisposable
     private NativeArray<BoundingAxisBox> _bounds;
     private NativeArray<TransformUniform> _transforms;
 
-    internal EntityDataStore(int capacity)
+    private NativeArray<ulong> _sortKeys;
+
+    internal RenderData(int capacity)
     {
         Allocate(capacity);
     }
@@ -115,8 +117,7 @@ public sealed class EntityDataStore : IDisposable
         Capacity = capacity;
     }
 
-
-    public void ReAlloc(int newSize)
+    internal void ReAlloc(int newSize)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(newSize, _policies.Length);
         _generations.ReAlloc(newSize, true);
@@ -129,11 +130,8 @@ public sealed class EntityDataStore : IDisposable
 
         if (newSize > _entitySet.BitCount)
         {
-            var entitySet = _entitySet;
-            _entitySet = new BitSet(newSize);
-            _visibleSet = new BitSet(newSize);
-
-            entitySet.AsSpan().CopyTo(_entitySet.AsSpan());
+            _entitySet = _entitySet.Resized(newSize);
+            _visibleSet = _visibleSet.Resized(newSize);
         }
 
         Capacity = newSize;
@@ -148,6 +146,7 @@ public sealed class EntityDataStore : IDisposable
         _bounds.Dispose();
         _transforms.Dispose();
         _sortKeys.Dispose();
+        
         Capacity = 0;
     }
 }

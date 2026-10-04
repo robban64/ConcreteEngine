@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Engine.ECS.Render;
+namespace ConcreteEngine.Core.Engine.ECS.Render.Components;
 
 public interface IRenderComponent<T> where T : unmanaged, IRenderComponent<T>;
 

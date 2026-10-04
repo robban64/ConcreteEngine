@@ -61,7 +61,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
             var policy = new DrawPolicy(mat.State.DrawQueue, mat.State.Passes);
             var source = new DrawSource(mesh.MeshId, mat.MaterialId, mesh.Info.MeshIndex);
 
-            var entity = RenderEcs.Core.AddEntity(source, policy);
+            var entity = RenderWorld.Core.AddEntity(source, policy);
             SceneManager.Instance.BindSceneHandle(Owner.Id, entity);
             RenderEntityIds.Add(entity);
         }
@@ -70,12 +70,12 @@ public sealed class ModelInstance : RenderBlueprintInstance
         {
             foreach (var entity in GetRenderEntities())
             {
-                var ctx = RenderEcs.Core.GetContext(entity);
+                var ctx = RenderWorld.Core.GetContext(entity);
                 ctx.ToggleDrawFlag(EntityDrawFlags.Skinned, true);
                 AnimationManager.Instance.AttachEntity(rig, ctx);
             }
 
-            RenderEcs.Store<SkinningLink>().Commit();
+            RenderWorld.Store<SkinningLink>().Commit();
         }
     }
 
@@ -84,7 +84,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
         var globalBounds = BoundingBox.Infinite;
         foreach (var entity in GetRenderEntities())
         {
-            var ctx = RenderEcs.Core.GetContext(entity);
+            var ctx = RenderWorld.Core.GetContext(entity);
             var meshIndex = ctx.Source.MeshIndex;
 
             //MatrixMath.CreateModelMatrix(in Ecs.Render.Core.GetLocalTransform(entity), out var worldMatrix);

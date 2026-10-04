@@ -42,15 +42,15 @@ public record struct BitBlock(ulong Block)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearLowerBits() => Block &= Block - 1;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly BitEnumerator GetEnumerator() => new (this);
+    public readonly BitEnumerator GetEnumerator() => new(this);
 
     public ref struct BitEnumerator(BitBlock bits)
     {
         private BitBlock _bits = bits;
         public int Current { get; private set; } = 0;
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
@@ -60,9 +60,10 @@ public record struct BitBlock(ulong Block)
                 _bits.ClearLowerBits();
                 return true;
             }
+
             return false;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly BitEnumerator GetEnumerator() => this;
     }
@@ -80,6 +81,14 @@ public readonly struct BitSet
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
         _bits = new ulong[GetBlockCapacity(capacity)];
     }
+    
+    public BitSet(ulong[] array)
+    {
+        ArgumentNullException.ThrowIfNull(array);
+        ArgumentOutOfRangeException.ThrowIfZero(array.Length);
+        _bits = array;
+    }
+
 
     public int BlockCount
     {
@@ -95,6 +104,24 @@ public readonly struct BitSet
 
     public Span<ulong> AsSpan() => _bits;
 
+    public bool this[int index]
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            ulong block = _bits[index >> 6];
+            return (block & (1UL << (index & 63))) != 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        set
+        {
+            ulong mask = 1UL << index;
+            if (value) _bits[index >> 6] |= mask;
+            else _bits[index >> 6] &= ~mask;
+        }
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ulong GetRawBlock(int blockIndex) => _bits[blockIndex];
 
@@ -106,38 +133,6 @@ public readonly struct BitSet
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetBlockAtBit(int index, ulong block) => _bits[index >> 6] = block;
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool GetUnchecked(int index)
-    {
-        ulong block = _bits[index >> 6];
-        return (block & (1UL << (index & 63))) != 0;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUnchecked(int index, bool value)
-    {
-        ulong mask = 1UL << index;
-        if (value) _bits[index >> 6] |= mask;
-        else _bits[index >> 6] &= ~mask;
-    }
-
-    public bool this[int index]
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)BitCount);
-            return GetUnchecked(index);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        set
-        {
-            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)BitCount);
-            SetUnchecked(index, value);
-        }
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Toggle(int index)
@@ -145,10 +140,10 @@ public readonly struct BitSet
         var bit = this[index];
         this[index] = !bit;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnableBit(int index) => this[index] = true;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DisableBit(int index) => this[index] = false;
 
@@ -181,6 +176,17 @@ public readonly struct BitSet
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear() => Array.Clear(_bits, 0, _bits.Length);
+    
+    public BitSet Resized(int newSize)
+    {
+        if(_bits is null) Throwers.NullReference(nameof(_bits));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newSize);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(newSize, _bits.Length);
+
+        var newArray = new ulong[newSize];
+        Array.Copy(_bits, newArray, int.Min(_bits.Length, newSize));
+        return new BitSet(newArray);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public BitBlockEnumerator EnumerateBlocks(int count) => new(_bits, count);

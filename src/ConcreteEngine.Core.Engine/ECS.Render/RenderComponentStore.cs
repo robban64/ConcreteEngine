@@ -3,14 +3,14 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Engine.ECS.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.ECS.Render;
 
-public interface IRenderEntityStore : IDisposable;
-
-public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore where T : unmanaged, IRenderComponent<T>
+public sealed unsafe partial class RenderComponentStore<T> : RenderStore where T : unmanaged, IRenderComponent<T>
 {
-    public static RenderEntityStore<T> Instance { get; private set; } = null!;
+    // ReSharper disable once StaticMemberInGenericType
+    public static bool IsActive { get; private set; }
 
     private static int GetAllocSize(int length) => length * (sizeof(RenderEntity) + Unsafe.SizeOf<T>());
 
@@ -22,17 +22,19 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     private NativeView<T> _components;
     private NativeView<RenderEntity> _entities;
 
-    private readonly BitSet _entitySet = new(4096);
+    private BitSet _entitySet;
 
     private readonly List<RenderEntity> _removedEntities = [];
     private readonly List<IRenderComponentListener<T>> _listeners = [];
 
-    public RenderEntityStore(int initialCapacity)
+    public RenderComponentStore(int initialCapacity, int coreCapacity)
     {
-        if (Instance != null!) Throwers.InvalidOperation("Already  initialized");
+        if (IsActive) Throwers.InvalidOperation("Already initialized");
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 16);
 
-        Instance = this;
+        IsActive = true;
+        
+        _entitySet = new BitSet(coreCapacity);
         
         _memory = NativeArray.Allocate(GetAllocSize(initialCapacity));
         
@@ -52,12 +54,15 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int FindIndex(RenderEntity entity)
     {
-        return SearchMethod.BinarySearch(_entities.AsReadOnlySpan(0, Count), entity);
+        if(!entity.IsValid) Throwers.InvalidArgumentHandle(entity);
+        var span = _entities.Reinterpret<ulong>().AsReadOnlySpan(0, Count);
+        return SearchMethod.BinarySearch(span, RenderEntity.Pack(entity));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int FindIndexLinear(RenderEntity entity)
     {
+        if(!entity.IsValid) Throwers.InvalidArgumentHandle(entity);
         var span = _entities.Reinterpret<ulong>().AsReadOnlySpan(0, Count);
         return span.IndexOf(RenderEntity.Pack(entity));
     }
@@ -78,18 +83,19 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
         if ((uint)index >= (uint)Count) Throwers.IndexOutOfRange(index, Count, nameof(index));
         return ref _components[index];
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref T GetUnchecked(int entity)
+    {
+        if(!_entitySet[entity]) Throwers.InvalidArgumentHandle(entity);
+        var index = SearchMethod.BinarySearch(_entities.AsReadOnlySpan(0, Count), new RenderEntity(entity, 0));
+        return ref GetByIndex(index);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T Get(RenderEntity entity)
     {
         var index = FindIndex(entity);
-        return ref GetByIndex(index);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T GetUnchecked(int entity)
-    {
-        var index = FindIndex(new RenderEntity(entity, 0));
         return ref GetByIndex(index);
     }
 
@@ -118,8 +124,7 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
 
     public bool Add(RenderEntity entity, in T value)
     {
-        if (!entity.IsValid) Throwers.InvalidArgument(nameof(entity));
-        if (Has(entity)) return false;
+        if (!entity.IsValid || Has(entity)) Throwers.InvalidArgument(nameof(entity));
         if (Count >= Capacity) EnsureCapacity(1);
 
         var index = Count++;
@@ -140,8 +145,8 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
 
     public bool Remove(RenderEntity entity)
     {
-        if (!entity.IsValid) Throwers.InvalidArgument(nameof(entity));
-        if (!Has(entity)) return false;
+        if (!entity.IsValid || !Has(entity)) Throwers.InvalidArgument(nameof(entity));
+
         _entitySet.DisableBit(entity.Id);
         _removedEntities.Add(entity);
         IsDirty = true;
@@ -155,7 +160,12 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
 
         if (_removedEntities.Count > 0) CommitRemoved();
 
-        EntitySpan().Sort(ComponentSpan());
+        var entitySpan = EntitySpan();
+        entitySpan.Sort(ComponentSpan());
+
+        var entitySet = _entitySet;
+        entitySet.Clear();
+        foreach (var entity in entitySpan) entitySet.EnableBit(entity.Id);
     }
 
     private void CommitRemoved()
@@ -203,11 +213,17 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
         */
     }
 
-    public void Dispose()
+    public override void OnCoreResize(int newSize)
+    {
+        if(newSize > _entitySet.BitCount) _entitySet = _entitySet.Resized(newSize);
+    }
+
+    public override void Dispose()
     {
         _memory.Dispose();
         _entities = default;
         _components = default;
         Count = 0;
+        IsActive = false;
     }
 }

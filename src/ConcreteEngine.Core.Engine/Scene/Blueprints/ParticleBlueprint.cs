@@ -39,25 +39,25 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         var matId = ParticleMaterial.MaterialId;
         var policy = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
         var source = new DrawSource(default, matId, flags: EntityDrawFlags.Instanced);
-        var entity = RenderEcs.Core.AddEntity(source, policy);
-        RenderEcs.Store<EmitterLink>().Add(entity, new EmitterLink(Emitter.Id));
-        RenderEcs.Store<DrawInstancedComponent>().Add(entity, new DrawInstancedComponent(Emitter.ParticleCount));
+        var entity = RenderWorld.Core.AddEntity(source, policy);
+        RenderWorld.Store<EmitterLink>().Add(entity, new EmitterLink(Emitter.Id));
+        RenderWorld.Store<DrawInstancedComponent>().Add(entity, new DrawInstancedComponent(Emitter.ParticleCount));
 
         SceneManager.Instance.BindSceneHandle(Owner.Id, entity);
         RenderEntityIds.Add(entity);
 
-        RenderEcs.Store<EmitterLink>().Commit();
-        RenderEcs.Store<DrawInstancedComponent>().Commit();
+        RenderWorld.Store<EmitterLink>().Commit();
+        RenderWorld.Store<DrawInstancedComponent>().Commit();
     }
 
     protected override void OnCommit()
     {
         if (RenderEntityIds.Count == 0) return;
         var entity = RenderEntityIds[0];
-        var ctx = RenderEcs.Core.GetContext(entity);
+        var ctx = RenderWorld.Core.GetContext(entity);
         ctx.Source.Mesh = Emitter.BoundMesh;
         ctx.Policy = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
-        RenderEcs.Store<DrawInstancedComponent>().Get(entity).Instances = (uint)Emitter.ParticleCount;
+        RenderWorld.Store<DrawInstancedComponent>().Get(entity).Instances = (uint)Emitter.ParticleCount;
     }
 
     internal override void ApplyTransform(in Matrix4x4 rootMatrix)
@@ -66,7 +66,7 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         var entity = RenderEntityIds[0];
 
         BoundingAxisBox.GetWorldBounds(in Emitter.LocalBounds, in rootMatrix, out WorldBounds);
-        var ctx = RenderEcs.Core.GetContext(entity);
+        var ctx = RenderWorld.Core.GetContext(entity);
         ctx.Transform.Model = rootMatrix;
         ctx.WorldBounds = WorldBounds;
     }

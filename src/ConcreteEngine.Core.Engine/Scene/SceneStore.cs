@@ -58,7 +58,7 @@ public sealed class SceneStore
     public SceneObject Get(SceneObjectId id)
     {
         var it = _sceneObjects[id.Id];
-        if (it?.Id != id) Throwers.InvalidHandle(id);
+        if (it?.Id != id) Throwers.InvalidArgumentHandle(id);
         return it;
     }
 
@@ -110,7 +110,7 @@ public sealed class SceneStore
             Throwers.IndexOutOfRange(e, _renderToSceneId.Length, nameof(e));
 
         var sceneId = _renderToSceneId[e];
-        if (!sceneId.IsValid) Throwers.InvalidHandle(e);
+        if (!sceneId.IsValid) Throwers.InvalidArgumentHandle(e);
         return sceneId;
     }
 

@@ -2,9 +2,9 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Diagnostics.Metrics;
 
-public readonly struct FrameMeta(ulong frameId, float fps, float alpha)
+public readonly struct FrameMeta(long frameId, float fps, float alpha)
 {
-    public readonly ulong FrameId = frameId;
+    public readonly long FrameId = frameId;
     public readonly float Fps = fps;
     public readonly float Alpha = alpha;
 }

@@ -3,32 +3,69 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine.ECS.Render.Components;
 using ConcreteEngine.Core.Engine.ECS.Render.Queries;
 using ConcreteEngine.Core.Engine.ECS.Render.Systems;
 
 namespace ConcreteEngine.Core.Engine.ECS.Render;
 
-public sealed class RenderEntityCore : IDisposable
+public sealed class RenderWorld : IDisposable
 {
+    public static RenderWorld Core { get; private set; } = null!;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RenderComponentStore<T> Store<T>() where T : unmanaged, IRenderComponent<T> => ComponentStores<T>.Store;
+
+    private static class ComponentStores<T> where T : unmanaged, IRenderComponent<T>
+    {
+        public static RenderComponentStore<T> Store = null!;
+    }
+    
+    public void CreateStore<T>(int capacity) where T : unmanaged, IRenderComponent<T>
+    {
+        if(ComponentStores<T>.Store != null!) Throwers.InvalidOperation();
+        ComponentStores<T>.Store = new RenderComponentStore<T>(capacity, Data.Capacity);
+        _stores.Add(ComponentStores<T>.Store);
+    }
+    
+    internal void Init()
+    {
+        if (_stores.Count > 0) throw new InvalidOperationException("ECS already initialized");
+        CreateStore<DrawInstancedComponent>(32);
+        CreateStore<SkinningLink>(16);
+        CreateStore<EmitterLink>(16);
+        CreateStore<SelectionComponent>(16);
+        CreateStore<DebugBoundsComponent>(16);
+    }
+
+    //
     public int Count { get; private set; }
-
-    private readonly Stack<int> _free = [];
-
-    public readonly EntityDataStore Data;
+    
+    public readonly RenderData Data;
     public readonly RenderCullSystem CullSystem;
     public readonly RenderPassSystem PassSystem;
 
-    internal RenderEntityCore(int initialCapacity)
+    private readonly Stack<int> _free = [];
+
+    private readonly List<RenderStore> _stores = new(8);
+    private readonly List<RenderWorldSystem> _systems;
+    
+    internal RenderWorld(int initialCapacity = 1024)
     {
+        if(Core != null!) Throwers.InvalidOperation();
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 64);
-        Data = new EntityDataStore(initialCapacity);
+
+        Core = this;
+        Data = new RenderData(initialCapacity);
         CullSystem = new RenderCullSystem(Data);
         PassSystem = new RenderPassSystem(Data, CullSystem);
+        _systems = [CullSystem, PassSystem];
     }
 
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
     public int Capacity => Data.Capacity;
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsAlive(RenderEntity e) => (uint)e.Id < (uint)Count && Data.IsAlive(e.Id);
@@ -79,10 +116,15 @@ public sealed class RenderEntityCore : IDisposable
         Logger.Log(LogScope.Ecs, "RenderEcs resized", LogLevel.Warn);
 
         Data.ReAlloc(newSize);
+
+        foreach (var system in _stores) system.OnCoreResize(newSize);
+        foreach (var system in _systems) system.OnCoreResize(newSize);
     }
 
     public void Dispose()
     {
+        foreach (var system in _systems) system.Dispose();
+        foreach (var store in _stores) store.Dispose();
         Data.Dispose();
     }
     

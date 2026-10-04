@@ -56,3 +56,10 @@ public readonly struct DrawEntityKey(int entity, uint sortKey)
         return new DrawEntityKey(entity, sortKey);
     }
 }
+
+[StructLayout(LayoutKind.Sequential)]
+public readonly struct DrawEntityIndex(int entity, int submitIndex)
+{
+    public readonly int Entity = entity;
+    public readonly int SubmitIndex = submitIndex;
+}

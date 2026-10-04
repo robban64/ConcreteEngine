@@ -14,7 +14,6 @@ public static unsafe partial class RenderCoreQuery
         private readonly BitSet _visibilitySet;
         private T1* _p1;
 
-
         public VisibilityQueryEnumerator(BitSet visibilitySet, NativeView<T1> p1)
         {
             if(p1.IsNullOrEmpty) Throwers.InvalidArgument(nameof(p1));
@@ -30,7 +29,7 @@ public static unsafe partial class RenderCoreQuery
             while (++_entity < _length)
             {
                 ++_p1;
-                if (_visibilitySet.GetUnchecked(_entity)) return true;
+                if (_visibilitySet[_entity]) return true;
             }
 
             return false;

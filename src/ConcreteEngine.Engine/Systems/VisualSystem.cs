@@ -27,10 +27,10 @@ internal sealed unsafe class VisualSystem
         _gfx = gfx;
     }
 
-    public void UploadUniformBuffers(RenderDispatcher renderDispatcher, MaterialSystem materialSystem,
+    public void UploadUniformBuffers(RenderTransformBuffer _transformBuffer, MaterialSystem materialSystem,
         AnimationSystem animationSystem)
     {
-        var transforms = renderDispatcher.Transforms;
+        var transforms = _transformBuffer.Transforms;
         if (transforms.Length > 0)
         {
             var drawCount = IntMath.AlignUp(transforms.Length, 64);

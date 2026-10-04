@@ -22,6 +22,8 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     private NativeView<T> _components;
     private NativeView<RenderEntity> _entities;
 
+    private readonly BitSet _entitySet = new(4096);
+
     private readonly List<RenderEntity> _removedEntities = [];
     private readonly List<IRenderComponentListener<T>> _listeners = [];
 
@@ -61,7 +63,7 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has(RenderEntity entity) => FindIndexLinear(entity) >= 0;
+    public bool Has(RenderEntity entity) => _entitySet[entity.Id];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderEntity GetEntity(int index)
@@ -78,7 +80,11 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T Get(RenderEntity entity) => ref GetByIndex(FindIndex(entity));
+    public ref T Get(RenderEntity entity)
+    {
+        var index = FindIndex(entity);
+        return ref GetByIndex(index);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T GetUnchecked(int entity)
@@ -120,6 +126,8 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
         _entities[index] = entity;
         _components[index] = value;
 
+        _entitySet.EnableBit(entity.Id);
+
         if (_listeners.Count > 0)
         {
             foreach (var listener in CollectionsMarshal.AsSpan(_listeners))
@@ -134,6 +142,7 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     {
         if (!entity.IsValid) Throwers.InvalidArgument(nameof(entity));
         if (!Has(entity)) return false;
+        _entitySet.DisableBit(entity.Id);
         _removedEntities.Add(entity);
         IsDirty = true;
         return true;

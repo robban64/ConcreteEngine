@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Render;
+namespace ConcreteEngine.Core.Engine.ECS.Render;
 
 public static class RenderLimits
 {

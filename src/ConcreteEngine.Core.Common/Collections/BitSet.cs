@@ -106,7 +106,7 @@ public readonly struct BitSet
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetBlockAtBit(int index, ulong block) => _bits[index >> 6] = block;
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool GetUnchecked(int index)
     {
@@ -142,9 +142,15 @@ public readonly struct BitSet
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Toggle(int index)
     {
-        var bit = GetUnchecked(index);
-        SetUnchecked(index, !bit);
+        var bit = this[index];
+        this[index] = !bit;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void EnableBit(int index) => this[index] = true;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DisableBit(int index) => this[index] = false;
 
     public void SetAll(bool value)
     {
@@ -154,7 +160,7 @@ public readonly struct BitSet
 
     public void Invert()
     {
-        var bits = _bits.AsSpan();
+        var bits = _bits;
         for (int i = 0; i < bits.Length; i++) bits[i] = ~bits[i];
     }
 
@@ -162,7 +168,7 @@ public readonly struct BitSet
     public int CountTrue()
     {
         ulong count = 0;
-        foreach (var bit in _bits.AsSpan()) count += PopCount(bit);
+        foreach (var bit in _bits) count += PopCount(bit);
         return (int)count;
     }
 
@@ -175,7 +181,6 @@ public readonly struct BitSet
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear() => Array.Clear(_bits, 0, _bits.Length);
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public BitBlockEnumerator EnumerateBlocks(int count) => new(_bits, count);

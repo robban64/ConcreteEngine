@@ -4,14 +4,11 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Engine.Render;
 
-namespace ConcreteEngine.Engine.Systems;
+namespace ConcreteEngine.Core.Engine.ECS.Render.Systems;
 
-internal sealed class RenderDispatcher : IDisposable
+public sealed class RenderPassSystem : IDisposable
 {
     private const int DefaultTicketCapacity = 1024 * 4;
 
@@ -19,24 +16,24 @@ internal sealed class RenderDispatcher : IDisposable
 
     private readonly Range32[] _passRanges;
     private NativeArray<ulong> _drawIndices;
-    private NativeArray<TransformUniform> _transformBuffer;
 
     private readonly EntityDataStore _renderData;
+    private readonly RenderCullSystem _cullSystem;
 
-    internal RenderDispatcher(EntityDataStore renderData)
+    internal RenderPassSystem(EntityDataStore renderData, RenderCullSystem cullSystem)
     {
         ArgumentNullException.ThrowIfNull(renderData);
+        ArgumentNullException.ThrowIfNull(cullSystem);
 
         _renderData = renderData;
+        _cullSystem = cullSystem;
 
         _passRanges = new Range32[RenderLimits.DrawPassSlots];
         _drawIndices = NativeArray.Allocate<ulong>(DefaultTicketCapacity);
         
-        _transformBuffer = NativeArray.AlignedAllocate<TransformUniform>(RenderEcs.Core.Capacity, 64, false);
     }
 
     private NativeView<DrawEntityIndex> DrawIndices => _drawIndices.Slice(0, _drawCount).Reinterpret<DrawEntityIndex>();
-    public NativeView<TransformUniform> Transforms => _transformBuffer.Slice(0, RenderEcs.Core.CullSystem.VisibleCount);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<DrawEntityIndex> GetDrawTickets(int passId)
@@ -45,38 +42,24 @@ internal sealed class RenderDispatcher : IDisposable
         return DrawIndices.Slice(range);
     }
 
-
     public void Execute()
     {
-        Ensure();
-        
-        var visibleCount = RenderEcs.Core.CullSystem.VisibleCount;
+        var visibleCount = _cullSystem.VisibleCount;
         if (visibleCount == 0) return;
         
-        var sortKeys = _renderData.SortKeys.Slice(0, visibleCount);
+        var sortKeys = _renderData.SortKeys.AsSpan(0, visibleCount);
         
         BuildDrawIndices(sortKeys);
-        FillTransformBuffer(sortKeys);
-    }
-    
-    private unsafe void FillTransformBuffer(NativeView<DrawEntityKey> sortKeys)
-    {
-        var src = _renderData.Transforms.Ptr;
-        foreach (var it in sortKeys.Zip(Transforms))
-        {
-            it.Item2 = src[it.Item1.Entity];
-        }
     }
 
-
-    private unsafe void BuildDrawIndices(NativeView<DrawEntityKey> sortKeys)
+    private unsafe void BuildDrawIndices(Span<DrawEntityKey> sortKeys)
     {
         Array.Clear(_passRanges);
 
         var heads = stackalloc int[RenderLimits.DrawPassSlots * 2];
 
         // Count pass tickets
-        CountTickets(sortKeys.AsSpan(), heads);
+        CountTickets(sortKeys, heads);
 
         // Count pass ranges
         var total = _drawCount = CountPasses(heads);
@@ -88,11 +71,11 @@ internal sealed class RenderDispatcher : IDisposable
         }
 
         // fill tickets in sorted order
-        FillTickets(sortKeys.AsSpan(), heads + RenderLimits.DrawPassSlots);
+        FillTickets(sortKeys, heads + RenderLimits.DrawPassSlots);
     }
 
 
-    private unsafe void CountTickets(Span<DrawEntityKey> sortKeys, int* heads)
+    private static unsafe void CountTickets(Span<DrawEntityKey> sortKeys, int* heads)
     {
         foreach (var it in sortKeys)
         {
@@ -139,19 +122,6 @@ internal sealed class RenderDispatcher : IDisposable
         }
     }
 
-    private void Ensure()
-    {
-        var capacity = RenderEcs.Core.Capacity;
-        if (capacity == _transformBuffer.Length) return;
 
-        _transformBuffer.ReAlloc(capacity, false);
-        Logger.Log(LogScope.Ecs, "Transform uniform buffer resized", LogLevel.Warn);
-    }
-
-    public void Dispose()
-    {
-        _transformBuffer.Dispose();
-        _drawIndices.Dispose();
-    }
-
+    public void Dispose() => _drawIndices.Dispose();
 }

@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Engine.Render.Passes;
 
 // ReSharper disable StaticMemberInGenericType

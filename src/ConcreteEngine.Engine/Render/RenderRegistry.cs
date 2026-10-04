@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Render.Passes;
 using ConcreteEngine.Graphics;

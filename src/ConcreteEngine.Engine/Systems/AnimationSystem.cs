@@ -12,7 +12,7 @@ using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.ECS.Render.Components;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
-using static ConcreteEngine.Engine.Render.RenderLimits;
+using static ConcreteEngine.Core.Engine.ECS.Render.RenderLimits;
 
 namespace ConcreteEngine.Engine.Systems;
 

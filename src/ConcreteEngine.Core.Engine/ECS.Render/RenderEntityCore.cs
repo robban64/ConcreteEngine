@@ -16,12 +16,14 @@ public sealed class RenderEntityCore : IDisposable
 
     public readonly EntityDataStore Data;
     public readonly RenderCullSystem CullSystem;
+    public readonly RenderPassSystem PassSystem;
 
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 64);
         Data = new EntityDataStore(initialCapacity);
         CullSystem = new RenderCullSystem(Data);
+        PassSystem = new RenderPassSystem(Data, CullSystem);
     }
 
     public int FreeCount => _free.Count;
@@ -35,10 +37,10 @@ public sealed class RenderEntityCore : IDisposable
     public bool IsVisible(RenderEntity e) => (uint)e.Id < (uint)Count && Data.IsVisible(e.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal RenderEntityContext GetSimpleContext(int entity)
+    internal DrawEntityContext GetDrawContext(int entity)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)entity, (uint)Count);
-        return new RenderEntityContext(new RenderEntity(entity, 0), Data);
+        return new DrawEntityContext(entity, Data.GetSource(entity));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

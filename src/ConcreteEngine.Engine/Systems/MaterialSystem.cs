@@ -10,7 +10,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Graphics.Gfx;
-using static ConcreteEngine.Engine.Render.RenderLimits;
+using static ConcreteEngine.Core.Engine.ECS.Render.RenderLimits;
 
 namespace ConcreteEngine.Engine.Systems;
 

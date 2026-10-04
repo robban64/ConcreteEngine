@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.ECS.Render;
+using ConcreteEngine.Core.Engine.Render;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -28,7 +28,7 @@ public sealed class SceneManager
     {
         if (Instance != null!) throw new InvalidOperationException("SceneManager already created");
         Instance = this;
-        Store = new SceneStore(RenderWorld.Core.Capacity);
+        Store = new SceneStore(RenderWorld.Instance.Capacity);
         Raycaster = new RayCaster(Store, Camera.Main.Transform);
     }
 
@@ -51,7 +51,7 @@ public sealed class SceneManager
     public void UnbindSceneHandle(RenderEntity e) => Store.UnbindSceneRenderEntity(e);
 
     public void BindSceneHandle(SceneObjectId sceneId, RenderEntity e) =>
-        Store.BindSceneRenderEntity(sceneId, e, RenderWorld.Core.Capacity);
+        Store.BindSceneRenderEntity(sceneId, e, RenderWorld.Instance.Capacity);
 
     private void InvokeRenameListener(SceneObject sceneObject)
     {

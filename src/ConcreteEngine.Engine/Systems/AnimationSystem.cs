@@ -8,11 +8,11 @@ using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine.ECS.Render;
-using ConcreteEngine.Core.Engine.ECS.Render.Components;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
-using static ConcreteEngine.Core.Engine.ECS.Render.RenderLimits;
+using ConcreteEngine.Core.Engine.Render;
+using ConcreteEngine.Core.Engine.Render.Components;
+using static ConcreteEngine.Core.Engine.Render.RenderLimits;
 
 namespace ConcreteEngine.Engine.Systems;
 
@@ -97,9 +97,10 @@ internal sealed unsafe class AnimationSystem : IDisposable
     private static int FilterEntities(int slot, ReadOnlySpan<RenderEntity> entities)
     {
         var count = 0;
-        foreach (var query in RenderWorld.Store<SkinningLink>().SparseQuery(entities))
+        
+        foreach (var query in RenderWorld.RenderQuery.SparseQuery<SkinningLink>(entities))
         {
-            if (!RenderWorld.Core.IsVisible(query.Entity)) continue;
+            if (!RenderWorld.Instance.IsVisible(query.Entity)) continue;
             query.Component.AnimationSlot = (ushort)slot;
             ++count;
         }

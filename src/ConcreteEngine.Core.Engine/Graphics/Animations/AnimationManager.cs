@@ -3,8 +3,8 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Identity;
-using ConcreteEngine.Core.Engine.ECS.Render;
-using ConcreteEngine.Core.Engine.ECS.Render.Components;
+using ConcreteEngine.Core.Engine.Render;
+using ConcreteEngine.Core.Engine.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Animations;
 
@@ -40,9 +40,9 @@ internal sealed class AnimationManager
     private static int FilterEntities(int slot, ReadOnlySpan<RenderEntity> entities)
     {
         var count = 0;
-        foreach (var query in RenderWorld.Store<SkinningLink>().SparseQuery(entities))
+        foreach (var query in RenderWorld.RenderQuery.SparseQuery<SkinningLink>(entities))
         {
-            if (!RenderWorld.Core.IsVisible(query.Entity)) continue;
+            if (!RenderWorld.Instance.IsVisible(query.Entity)) continue;
             query.Component.AnimationSlot = (ushort)slot;
             ++count;
         }

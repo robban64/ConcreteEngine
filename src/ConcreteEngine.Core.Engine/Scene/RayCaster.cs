@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Terrains;
+using ConcreteEngine.Core.Engine.Render;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -26,15 +26,15 @@ public sealed class RayCaster
 
         var closestEntity = -1;
         var minDistance = float.MaxValue;
-        foreach (var query in RenderWorld.Core.VisibilityBoundsQuery())
+        foreach (var query in RenderWorld.RenderQuery.VisibilityBoundsQuery())
         {
-            if (!_sceneStore.IsLinkedEntity(query.Entity)) continue;
+            if (!_sceneStore.IsLinkedEntity(query.Entity.Id)) continue;
 
-            ref readonly var box = ref query.Item1;
+            ref readonly var box = ref query.Component;
             if (CollisionMethods.RayIntersectsBox(in ray, box.Min, box.Max, out var dist) && dist < minDistance)
             {
                 minDistance = dist;
-                closestEntity = query.Entity;
+                closestEntity = query.Entity.Id;
             }
         }
 

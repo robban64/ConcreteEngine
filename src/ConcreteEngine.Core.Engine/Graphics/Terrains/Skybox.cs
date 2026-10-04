@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.ECS.Render;
+using ConcreteEngine.Core.Engine.Render;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Terrains;
@@ -26,13 +26,13 @@ public sealed class Skybox
         bool isValid = _entity.IsValid;
         if (!isValid)
         {
-            _entity = RenderWorld.Core.AddEntity(
+            _entity = RenderWorld.Instance.AddEntity(
                 new DrawSource(MeshId, material.MaterialId),
                 new DrawPolicy(DrawQueue.Skybox, PassMask.Main));
             
         }
         
-        var context = RenderWorld.Core.GetContext(_entity);
+        var context = RenderWorld.Instance.GetContext(_entity);
         if(isValid)
             context.Source.Material = material.MaterialId;
 

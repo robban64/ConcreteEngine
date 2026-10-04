@@ -2,8 +2,8 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.ECS.Render;
-using ConcreteEngine.Core.Engine.ECS.Render.Components;
+using ConcreteEngine.Core.Engine.Render;
+using ConcreteEngine.Core.Engine.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -46,7 +46,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
     {
         foreach (var entity in GetRenderEntities())
         {
-            var ctx = RenderWorld.Core.GetContext(entity);
+            var ctx = RenderWorld.Instance.GetContext(entity);
             var materialId = ctx.Source.Material;
             if (materialId > 0 && materialId != material.MaterialId) continue;
             ctx.Policy = new DrawPolicy(material.DrawQueue, material.Passes);
@@ -58,7 +58,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
         var flag = visible ? DrawStatus.Normal : DrawStatus.ForceHidden;
         foreach (var entity in GetRenderEntities())
         {
-            var ctx = RenderWorld.Core.GetContext(entity);
+            var ctx = RenderWorld.Instance.GetContext(entity);
             ctx.SetStatus(flag);
         }
     }
@@ -69,7 +69,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
         {
             foreach (var entity in GetRenderEntities())
             {
-                var ctx = RenderWorld.Core.GetContext(entity);
+                var ctx = RenderWorld.Instance.GetContext(entity);
                 ctx.SetStatus(DrawStatus.ForceHidden);
                 ctx.AddComponent(SelectionComponent.DefaultHighlight);
             }
@@ -78,7 +78,7 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
         {
             foreach (var entity in GetRenderEntities())
             {
-                var ctx = RenderWorld.Core.GetContext(entity);
+                var ctx = RenderWorld.Instance.GetContext(entity);
                 ctx.SetStatus(DrawStatus.Normal);
                 ctx.RemoveComponent<SelectionComponent>();
             }

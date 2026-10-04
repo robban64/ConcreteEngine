@@ -3,9 +3,9 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.ECS.Render;
-using ConcreteEngine.Core.Engine.ECS.Render.Components;
 using ConcreteEngine.Core.Engine.Graphics.Particles;
+using ConcreteEngine.Core.Engine.Render;
+using ConcreteEngine.Core.Engine.Render.Components;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
 
@@ -14,10 +14,11 @@ namespace ConcreteEngine.Engine.Systems;
 internal sealed class ParticleSystem : IDisposable
 {
     private static bool _allocated;
-    private readonly List<Id16<ParticleEmitter>> _processedEmitters = new(16);
 
     private readonly ParticleMesh _particleMesh;
     private readonly ParticleManager _particleManager;
+
+    private readonly List<Id16<ParticleEmitter>> _processedEmitters = new(16);
 
     internal ParticleSystem(GfxContext gfx)
     {
@@ -51,7 +52,7 @@ internal sealed class ParticleSystem : IDisposable
 
         _processedEmitters.Clear();
 
-        foreach (var it in RenderWorld.Store<EmitterLink>().VisibilityQuery())
+        foreach (var it in RenderWorld.RenderQuery.VisibilityQuery<EmitterLink>())
         {
             var emitterId = it.Component.EmitterId;
             if (_processedEmitters.Contains(emitterId)) continue;

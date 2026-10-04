@@ -5,9 +5,8 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.ECS.Render;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Engine.Render;
+using ConcreteEngine.Core.Engine.Render;
 
 namespace ConcreteEngine.Engine.Systems;
 
@@ -21,16 +20,16 @@ internal sealed class RenderTransformBuffer : IDisposable
     {
         ArgumentNullException.ThrowIfNull(renderData);
         _renderData = renderData;
-        _transformBuffer = NativeArray.AlignedAllocate<TransformUniform>(RenderWorld.Core.Capacity, 64, false);
+        _transformBuffer = NativeArray.AlignedAllocate<TransformUniform>(RenderWorld.Instance.Capacity, 64, false);
     }
 
-    public NativeView<TransformUniform> Transforms => _transformBuffer.Slice(0, RenderWorld.Core.CullSystem.VisibleCount);
+    public NativeView<TransformUniform> Transforms => _transformBuffer.Slice(0, RenderWorld.Instance.CullSystem.VisibleCount);
 
     public void Execute()
     {
         Ensure();
         
-        var visibleCount = RenderWorld.Core.CullSystem.VisibleCount;
+        var visibleCount = RenderWorld.Instance.CullSystem.VisibleCount;
         if (visibleCount == 0) return;
 
         var dst = _transformBuffer.Slice(0, visibleCount);
@@ -46,7 +45,7 @@ internal sealed class RenderTransformBuffer : IDisposable
 
     private void Ensure()
     {
-        var capacity = RenderWorld.Core.Capacity;
+        var capacity = RenderWorld.Instance.Capacity;
         if (capacity == _transformBuffer.Length) return;
 
         _transformBuffer.ReAlloc(capacity, false);

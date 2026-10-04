@@ -1,9 +1,9 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.ECS.Render;
-using ConcreteEngine.Core.Engine.ECS.Render.Components;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Terrains;
+using ConcreteEngine.Core.Engine.Render;
+using ConcreteEngine.Core.Engine.Render.Components;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -44,8 +44,8 @@ internal sealed class TerrainSystem
 
             var source = new DrawSource(it.TerrainMeshId, terrainMat);
             var drawPolicy = new DrawPolicy(DrawQueue.Terrain, PassMask.Default);
-            var entity = RenderWorld.Core.AddEntity(source, drawPolicy);
-           var ctx = RenderWorld.Core.GetContext(entity);
+            var entity = RenderWorld.Instance.AddEntity(source, drawPolicy);
+           var ctx = RenderWorld.Instance.GetContext(entity);
 
            ctx.WorldBounds = new BoundingAxisBox(in chunk.GetBounds());
         }
@@ -60,8 +60,8 @@ internal sealed class TerrainSystem
 
             var source = new DrawSource(it.FoliageMeshId, mat, flags: EntityDrawFlags.Instanced);
             var drawPolicy = new DrawPolicy(DrawQueue.Transparent, PassMask.Default);
-            var entity = RenderWorld.Core.AddEntity(source, drawPolicy);
-            var ctx = RenderWorld.Core.GetContext(entity);
+            var entity = RenderWorld.Instance.AddEntity(source, drawPolicy);
+            var ctx = RenderWorld.Instance.GetContext(entity);
 
             ctx.WorldBounds = new BoundingAxisBox(in chunk.GetBounds());
 

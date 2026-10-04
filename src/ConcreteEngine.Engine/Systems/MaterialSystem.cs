@@ -8,9 +8,9 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Engine.Render;
+using ConcreteEngine.Engine.RenderPipeline;
 using ConcreteEngine.Graphics.Gfx;
-using static ConcreteEngine.Core.Engine.ECS.Render.RenderLimits;
+using static ConcreteEngine.Core.Engine.Render.RenderLimits;
 
 namespace ConcreteEngine.Engine.Systems;
 

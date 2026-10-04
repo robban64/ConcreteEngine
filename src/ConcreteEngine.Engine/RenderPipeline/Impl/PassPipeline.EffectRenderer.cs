@@ -1,0 +1,75 @@
+using System.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Render;
+using ConcreteEngine.Core.Engine.Render.Components;
+using ConcreteEngine.Graphics.Gfx;
+
+namespace ConcreteEngine.Engine.RenderPipeline.Impl;
+
+internal static partial class PassPipeline
+{
+    private static unsafe void SelectionRenderer(RenderPassContext ctx)
+    {
+        TransformUniform* uniform = stackalloc TransformUniform[1];
+        EditorEffectsUniform* effect = stackalloc EditorEffectsUniform[1];
+
+        ctx.Gfx.UseShader(RenderStore.HighlightShader);
+        RenderContext.OverrideShader = RenderStore.HighlightShader;
+
+        foreach (var query in RenderWorld.RenderQuery.VisibilityQuery<SelectionComponent>())
+        {
+            var entityContext = RenderWorld.Instance.GetContext(query.Entity);
+
+            *effect = new EditorEffectsUniform(entityContext.Source.IsSkinned(), query.Component.HighlightColor);
+
+            uniform->Model = entityContext.Transform.Model;
+            uniform->Normal = Matrix3X4.Identity;
+
+            ctx.GfxBuffers.UploadSingleUniform(effect, 0);
+            ctx.GfxBuffers.UploadSingleUniform(uniform, 0);
+            ctx.Gfx.BindUniformBufferRange<TransformUniform>(0, 1);
+
+            if (entityContext.Source.IsSkinned())
+            {
+                var slot = entityContext.GetComponent<SkinningLink>().AnimationSlot;
+                ctx.DrawCmd.BindSkinningSlot(slot);
+            }
+
+            ctx.DrawCmd.BindMaterial(entityContext.Source.Material);
+
+            ctx.Gfx.DrawMesh(entityContext.Source.Mesh);
+        }
+    }
+
+    private static unsafe void DebugBoundsRenderer(RenderPassContext ctx)
+    {
+        TransformUniform* uniform = stackalloc TransformUniform[1];
+        EditorEffectsUniform* effect = stackalloc EditorEffectsUniform[1];
+        RenderContext.OverrideShader = RenderStore.BoundingBoxShader;
+
+        var materialId = AssetStore.Core.DebugBoundsMaterial.MaterialId;
+        ctx.Gfx.UseShader(RenderStore.BoundingBoxShader);
+        
+        foreach (var query in RenderWorld.RenderQuery.VisibilityQuery<DebugBoundsComponent>())
+        {
+            var entityContext = RenderWorld.Instance.GetContext(query.Entity);
+
+            var isSkinned = entityContext.Source.IsSkinned();
+            *effect = new EditorEffectsUniform(isSkinned, query.Component.Color);
+
+            ref readonly var wb = ref entityContext.WorldBounds;
+            MatrixMath.CreateModelMatrix(wb.Center, wb.Extent, Quaternion.Identity, out uniform->Model);
+            uniform->Normal = Matrix3X4.Identity;
+
+            ctx.GfxBuffers.UploadSingleUniform(effect, 0);
+            ctx.GfxBuffers.UploadSingleUniform(uniform, 0);
+            ctx.Gfx.BindUniformBufferRange<TransformUniform>(0, 1);
+
+            ctx.DrawCmd.BindMaterial(materialId);
+            ctx.Gfx.DrawMesh(GfxMeshes.Cube);
+        }
+    }
+}

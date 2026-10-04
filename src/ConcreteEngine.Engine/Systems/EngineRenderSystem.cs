@@ -4,15 +4,13 @@ using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.ECS.Render;
-using ConcreteEngine.Core.Engine.ECS.Render.Components;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
-using ConcreteEngine.Engine.Render;
-using ConcreteEngine.Engine.Render.Impl;
-using ConcreteEngine.Engine.Render.Passes;
+using ConcreteEngine.Core.Engine.Render;
+using ConcreteEngine.Engine.RenderPipeline;
+using ConcreteEngine.Engine.RenderPipeline.Impl;
 using ConcreteEngine.Graphics;
-using RenderStore = ConcreteEngine.Engine.Render.RenderStore;
+using RenderStore = ConcreteEngine.Engine.RenderPipeline.RenderStore;
 
 namespace ConcreteEngine.Engine.Systems;
 
@@ -32,7 +30,7 @@ public sealed class EngineRenderSystem : IDisposable
 
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
-        _renderWorld = RenderWorld.Core ?? throw new InvalidOperationException();
+        _renderWorld = RenderWorld.Instance ?? throw new InvalidOperationException();
         
         _renderCamera = new Camera(EngineSettings.Current.Display.WindowSize);
         _ = VisualManager.Instance;
@@ -48,7 +46,7 @@ public sealed class EngineRenderSystem : IDisposable
 
         _drawCmd = new DrawCommandProcessor(graphics.Gfx, _animationSystem, _materialSystem);
         _passContext = new RenderPassContext(_drawCmd);
-        _transformBuffer = new RenderTransformBuffer(RenderWorld.Core.Data);
+        _transformBuffer = new RenderTransformBuffer(RenderWorld.Instance.Data);
 
     }
 
@@ -144,7 +142,7 @@ public sealed class EngineRenderSystem : IDisposable
         foreach (ref readonly var ticket in tickets)
         {
             //TODO
-            var ctx = RenderWorld.Core.GetDrawContext(ticket.Entity);
+            var ctx = RenderWorld.Instance.GetDrawContext(ticket.Entity);
             _drawCmd.DrawSource(ctx, ticket.SubmitIndex);
         }
     }

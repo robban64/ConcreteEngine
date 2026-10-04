@@ -1,0 +1,11 @@
+using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Identity;
+using ConcreteEngine.Core.Engine.Graphics.Particles;
+
+namespace ConcreteEngine.Core.Engine.Render.Components;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct EmitterLink(Id16<ParticleEmitter> emitterId) : IRenderComponent<EmitterLink>
+{
+    public Id16<ParticleEmitter> EmitterId = emitterId;
+}

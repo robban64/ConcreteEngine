@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.ECS.Render;
+using ConcreteEngine.Core.Engine.Render;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -114,8 +114,10 @@ public sealed class SceneStore
         return sceneId;
     }
 
-    public bool IsLinkedEntity(int e) =>
-        (uint)e < (uint)_renderToSceneId.Length && _renderToSceneId[e].IsValid;
+    public bool IsLinkedEntity(int e)
+    {
+        return (uint)e < (uint)_renderToSceneId.Length && _renderToSceneId[e].IsValid;
+    }
 
     internal void BindSceneRenderEntity(SceneObjectId id, RenderEntity e, int capacity)
     {

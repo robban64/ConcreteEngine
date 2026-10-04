@@ -2,9 +2,9 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.ECS.Render;
-using ConcreteEngine.Core.Engine.ECS.Render.Components;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
+using ConcreteEngine.Core.Engine.Render;
+using ConcreteEngine.Core.Engine.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -61,7 +61,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
             var policy = new DrawPolicy(mat.State.DrawQueue, mat.State.Passes);
             var source = new DrawSource(mesh.MeshId, mat.MaterialId, mesh.Info.MeshIndex);
 
-            var entity = RenderWorld.Core.AddEntity(source, policy);
+            var entity = RenderWorld.Instance.AddEntity(source, policy);
             SceneManager.Instance.BindSceneHandle(Owner.Id, entity);
             RenderEntityIds.Add(entity);
         }
@@ -70,7 +70,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
         {
             foreach (var entity in GetRenderEntities())
             {
-                var ctx = RenderWorld.Core.GetContext(entity);
+                var ctx = RenderWorld.Instance.GetContext(entity);
                 ctx.ToggleDrawFlag(EntityDrawFlags.Skinned, true);
                 AnimationManager.Instance.AttachEntity(rig, ctx);
             }
@@ -84,7 +84,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
         var globalBounds = BoundingBox.Infinite;
         foreach (var entity in GetRenderEntities())
         {
-            var ctx = RenderWorld.Core.GetContext(entity);
+            var ctx = RenderWorld.Instance.GetContext(entity);
             var meshIndex = ctx.Source.MeshIndex;
 
             //MatrixMath.CreateModelMatrix(in Ecs.Render.Core.GetLocalTransform(entity), out var worldMatrix);

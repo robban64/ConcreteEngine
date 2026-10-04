@@ -1,10 +1,10 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.ECS.Render;
-using ConcreteEngine.Core.Engine.ECS.Render.Components;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Particles;
+using ConcreteEngine.Core.Engine.Render;
+using ConcreteEngine.Core.Engine.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -39,7 +39,7 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         var matId = ParticleMaterial.MaterialId;
         var policy = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
         var source = new DrawSource(default, matId, flags: EntityDrawFlags.Instanced);
-        var entity = RenderWorld.Core.AddEntity(source, policy);
+        var entity = RenderWorld.Instance.AddEntity(source, policy);
         RenderWorld.Store<EmitterLink>().Add(entity, new EmitterLink(Emitter.Id));
         RenderWorld.Store<DrawInstancedComponent>().Add(entity, new DrawInstancedComponent(Emitter.ParticleCount));
 
@@ -54,7 +54,7 @@ public sealed class ParticleInstance : RenderBlueprintInstance
     {
         if (RenderEntityIds.Count == 0) return;
         var entity = RenderEntityIds[0];
-        var ctx = RenderWorld.Core.GetContext(entity);
+        var ctx = RenderWorld.Instance.GetContext(entity);
         ctx.Source.Mesh = Emitter.BoundMesh;
         ctx.Policy = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
         RenderWorld.Store<DrawInstancedComponent>().Get(entity).Instances = (uint)Emitter.ParticleCount;
@@ -66,7 +66,7 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         var entity = RenderEntityIds[0];
 
         BoundingAxisBox.GetWorldBounds(in Emitter.LocalBounds, in rootMatrix, out WorldBounds);
-        var ctx = RenderWorld.Core.GetContext(entity);
+        var ctx = RenderWorld.Instance.GetContext(entity);
         ctx.Transform.Model = rootMatrix;
         ctx.WorldBounds = WorldBounds;
     }

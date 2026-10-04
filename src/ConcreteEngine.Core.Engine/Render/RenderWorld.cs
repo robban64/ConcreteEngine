@@ -15,13 +15,14 @@ public sealed partial class RenderWorld : IDisposable
     public static RenderWorld Instance { get; private set; } = null!;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static RenderComponentStore<T> Store<T>() where T : unmanaged, IRenderComponent<T> => ComponentStores<T>.Store;
+    public static RenderComponentStore<T> Store<T>() where T : unmanaged, IRenderComponent<T> =>
+        ComponentStores<T>.Store;
 
     private static class ComponentStores<T> where T : unmanaged, IRenderComponent<T>
     {
         public static RenderComponentStore<T> Store = null!;
     }
-    
+
     internal void SetupTestStores()
     {
         if (_stores.Count > 0) throw new InvalidOperationException("ECS already initialized");
@@ -32,17 +33,17 @@ public sealed partial class RenderWorld : IDisposable
         CreateStore<DebugBoundsComponent>(16);
     }
 
-    
+
     public void CreateStore<T>(int capacity) where T : unmanaged, IRenderComponent<T>
     {
-        if(ComponentStores<T>.Store != null!) Throwers.InvalidOperation();
+        if (ComponentStores<T>.Store != null!) Throwers.InvalidOperation();
         ComponentStores<T>.Store = new RenderComponentStore<T>(capacity, Data.Capacity);
         _stores.Add(ComponentStores<T>.Store);
     }
-    
+
     //
     public int Count { get; private set; }
-    
+
     public readonly RenderData Data;
     public readonly RenderCullSystem CullSystem;
     public readonly RenderPassSystem PassSystem;
@@ -51,10 +52,10 @@ public sealed partial class RenderWorld : IDisposable
 
     private readonly List<RenderStore> _stores = new(8);
     private readonly List<RenderWorldSystem> _systems;
-    
+
     internal RenderWorld(int initialCapacity = 1024)
     {
-        if(Instance != null!) Throwers.InvalidOperation();
+        if (Instance != null!) Throwers.InvalidOperation();
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 64);
 
         Instance = this;
@@ -129,12 +130,10 @@ public sealed partial class RenderWorld : IDisposable
         foreach (var store in _stores) store.Dispose();
         Data.Dispose();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ValidateHandle(RenderEntity entity)
     {
-        if((uint)entity.Id >= (uint)Count || entity.Gen == 0) Throwers.InvalidOperation(nameof(entity));
+        if ((uint)entity.Id >= (uint)Count || entity.Gen == 0) Throwers.InvalidOperation(nameof(entity));
     }
-    
-
 }

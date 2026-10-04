@@ -14,12 +14,8 @@ internal sealed class RenderTransformBuffer : IDisposable
 {
     private NativeArray<TransformUniform> _transformBuffer;
 
-    private readonly RenderData _renderData;
-
-    internal RenderTransformBuffer(RenderData renderData)
+    internal RenderTransformBuffer()
     {
-        ArgumentNullException.ThrowIfNull(renderData);
-        _renderData = renderData;
         _transformBuffer = NativeArray.AlignedAllocate<TransformUniform>(RenderWorld.Instance.Capacity, 64, false);
     }
 
@@ -34,8 +30,8 @@ internal sealed class RenderTransformBuffer : IDisposable
 
         var dst = _transformBuffer.Slice(0, visibleCount);
 
-        var src = _renderData.Transforms;
-        var sortKeys = _renderData.SortKeys.Slice(0, visibleCount);
+        var src = RenderWorld.CoreData.Transforms;
+        var sortKeys = RenderWorld.CoreData.SortKeys.Slice(0, visibleCount);
         foreach (var it in sortKeys.Zip(dst))
         {
             it.Item2 = src[it.Item1.Entity];

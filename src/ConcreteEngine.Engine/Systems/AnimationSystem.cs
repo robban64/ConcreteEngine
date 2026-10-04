@@ -98,7 +98,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
     {
         var count = 0;
         
-        foreach (var query in RenderWorld.RenderQuery.SparseQuery<SkinningLink>(entities))
+        foreach (var query in RenderWorld.Queries.SparseQuery<SkinningLink>(entities))
         {
             if (!RenderWorld.Instance.IsVisible(query.Entity)) continue;
             query.Component.AnimationSlot = (ushort)slot;

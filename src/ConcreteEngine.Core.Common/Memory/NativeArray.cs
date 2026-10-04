@@ -48,14 +48,14 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeView<T> Slice(int offset, int length)
     {
-        Debug.Assert((uint)offset + (uint)length <= (uint)Length);
+        if ((uint)offset + (uint)length > (uint)Length) Throwers.RangeOutOfBounds(offset, length, Length);
         return new NativeView<T>(Ptr + offset, length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeView<T> SliceFrom(int offset)
     {
-        Debug.Assert((uint)offset < (uint)Length);
+        if ((uint)offset >= (uint)Length) Throwers.IndexOutOfRange(offset, Length);
         return new NativeView<T>(Ptr + offset, Length - offset);
     }
 
@@ -63,7 +63,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<T> AsSpan(int offset = 0)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset, (uint)Length);
+        if ((uint)offset >= (uint)Length) Throwers.IndexOutOfRange(offset, Length);
         if (IsNull) return default;
         return new Span<T>(Ptr + offset, Length - offset);
     }
@@ -71,7 +71,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<T> AsSpan(int offset, int length)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset + (uint)length, (uint)Length);
+        if ((uint)offset + (uint)length > (uint)Length) Throwers.RangeOutOfBounds(offset, length, Length);
         if (IsNull) return default;
         return new Span<T>(Ptr + offset, length);
     }
@@ -79,7 +79,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ReadOnlySpan<T> AsReadOnlySpan(int offset = 0)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset, (uint)Length);
+        if ((uint)offset >= (uint)Length) Throwers.IndexOutOfRange(offset, Length);
         if (IsNull) return default;
         return new ReadOnlySpan<T>(Ptr + offset, Length - offset);
     }
@@ -87,26 +87,26 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ReadOnlySpan<T> AsReadOnlySpan(int offset, int length)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)offset + (uint)length, (uint)Length);
+        if ((uint)offset + (uint)length > (uint)Length) Throwers.RangeOutOfBounds(offset, length, Length);
         if (IsNull) return default;
         return new ReadOnlySpan<T>(Ptr + offset, length);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeView<U> Reinterpret<U>() where U : unmanaged => new((U*)Ptr, (U*)(Ptr + Length));
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Clear()
+    public readonly void Clear()
     {
-        if (IsNull) Throwers.NullPointer(nameof(Ptr));
+        if (IsNullOrEmpty) Throwers.NullPointer(nameof(Ptr));
         NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void ReAlloc(int newLength, bool zeroed)
     {
-        if(Alignment > 0) newLength = IntMath.AlignUp(newLength, Alignment);
+        if (Alignment > 0) newLength = IntMath.AlignUp(newLength, Alignment);
         Ptr = (T*)NativeArray.ReAlloc(Ptr, Length, newLength, Unsafe.SizeOf<T>(), Alignment, zeroed);
         Length = newLength;
     }

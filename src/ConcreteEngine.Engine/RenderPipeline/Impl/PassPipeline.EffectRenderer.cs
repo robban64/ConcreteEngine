@@ -19,7 +19,7 @@ internal static partial class PassPipeline
         ctx.Gfx.UseShader(RenderStore.HighlightShader);
         RenderContext.OverrideShader = RenderStore.HighlightShader;
 
-        foreach (var query in RenderWorld.RenderQuery.VisibilityQuery<SelectionComponent>())
+        foreach (var query in RenderWorld.Queries.VisibilityQuery<SelectionComponent>())
         {
             var entityContext = RenderWorld.Instance.GetContext(query.Entity);
 
@@ -53,7 +53,7 @@ internal static partial class PassPipeline
         var materialId = AssetStore.Core.DebugBoundsMaterial.MaterialId;
         ctx.Gfx.UseShader(RenderStore.BoundingBoxShader);
         
-        foreach (var query in RenderWorld.RenderQuery.VisibilityQuery<DebugBoundsComponent>())
+        foreach (var query in RenderWorld.Queries.VisibilityQuery<DebugBoundsComponent>())
         {
             var entityContext = RenderWorld.Instance.GetContext(query.Entity);
 

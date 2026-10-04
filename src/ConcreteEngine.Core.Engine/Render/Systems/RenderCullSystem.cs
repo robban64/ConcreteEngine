@@ -79,7 +79,7 @@ public sealed class RenderCullSystem : RenderWorldSystem
                 var policy = innerPolices[i];
                 ref readonly var bounds = ref innerBounds[i];
 
-                var passes = Intersects(policy.Passes, policy.Status, in bounds, out float distance);
+                var passes = Intersects(policy.Passes, policy.Cull, in bounds, out float distance);
 
                 if (passes != 0)
                 {
@@ -96,14 +96,14 @@ public sealed class RenderCullSystem : RenderWorldSystem
         return visibleCount;
     }
 
-    private PassMask Intersects(PassMask passes, DrawStatus status, in BoundingAxisBox bounds, out float distance)
+    private PassMask Intersects(PassMask passes, EntityCullStatus status, in BoundingAxisBox bounds, out float distance)
     {
         var center = new Vector4(bounds.Center, 1f).AsVector128();
         var extent = new Vector4(bounds.Extent, 0f).AsVector128();
         var centerExtent = Vector256.Create(center, extent);
 
         Span<Vector4> span = _frustum;
-        if (status == DrawStatus.AlwaysVisible)
+        if (status == EntityCullStatus.AlwaysVisible)
         {
             distance = DistanceFromPlane(in span[^1], in centerExtent);
             return passes;
@@ -125,8 +125,8 @@ public sealed class RenderCullSystem : RenderWorldSystem
         var entityBits = bits;
         for (int i = 0; i < span.Length; ++i)
         {
-            var status = span[i].Status;
-            if (status == DrawStatus.ForceHidden) bits.Disable(i);
+            var status = span[i].Cull;
+            if (status == EntityCullStatus.ForceHidden) bits.Disable(i);
         }
 
         return entityBits;

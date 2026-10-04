@@ -4,111 +4,117 @@ using ConcreteEngine.Core.Engine.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Render;
 
-public ref struct ComponentEnumerator<T1> where T1 : unmanaged, IRenderComponent<T1>
+public sealed partial class RenderWorld
 {
-    private int _i = -1;
-    private readonly int _length;
-    private readonly RenderComponentStore<T1> _store;
-
-    public ComponentEnumerator()
+    public static partial class Queries
     {
-        _store = RenderWorld.Store<T1>();
-        _length = _store.Count;
-    }
-
-    public RenderWorld.RenderQuery.QueryItem<T1> Current { get; private set; }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool MoveNext()
-    {
-        while (++_i < _length)
+        public ref struct ComponentEnumerator<T1> where T1 : unmanaged, IRenderComponent<T1>
         {
-            var entity = _store.GetEntity(_i);
-            if (entity.IsValid)
+            private int _i = -1;
+            private readonly int _length;
+            private readonly RenderComponentStore<T1> _store;
+
+            public ComponentEnumerator()
             {
-                Current = new RenderWorld.RenderQuery.QueryItem<T1>(entity, ref _store.GetByIndex(_i));
-                return true;
+                _store = Store<T1>();
+                _length = _store.Count;
             }
+
+            public QueryItem<T1> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                while (++_i < _length)
+                {
+                    var entity = _store.GetEntity(_i);
+                    if (entity.IsValid)
+                    {
+                        Current = new QueryItem<T1>(entity, ref _store.GetByIndex(_i));
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public readonly ComponentEnumerator<T1> GetEnumerator() => this;
         }
 
-        return false;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ComponentEnumerator<T1> GetEnumerator() => this;
-}
-
-public ref struct BitSetComponentEnumerator<T1> where T1 : unmanaged, IRenderComponent<T1>
-{
-    private int _i;
-    private readonly int _length;
-    private readonly BitSet _bits;
-    private readonly RenderComponentStore<T1> _store;
-
-    public RenderWorld.RenderQuery.QueryItem<T1> Current { get; private set; }
-
-    public BitSetComponentEnumerator(BitSet bits)
-    {
-        _i = -1;
-        _store = RenderWorld.Store<T1>();
-        _length = _store.Count;
-        _bits = bits;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool MoveNext()
-    {
-        while (++_i < _length)
+        public ref struct FilteredComponentEnumerator<T1> where T1 : unmanaged, IRenderComponent<T1>
         {
-            var entity = _store.GetEntity(_i);
-            if (_bits[entity.Id])
+            private int _i;
+            private readonly int _length;
+            private readonly BitSet _filter;
+            private readonly RenderComponentStore<T1> _store;
+
+            public QueryItem<T1> Current { get; private set; }
+
+            public FilteredComponentEnumerator(BitSet filter)
             {
-                Current = new RenderWorld.RenderQuery.QueryItem<T1>(entity, ref _store.GetByIndex(_i));
-                return true;
+                _i = -1;
+                _store = Store<T1>();
+                _length = _store.Count;
+                _filter = filter;
             }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                while (++_i < _length)
+                {
+                    var entity = _store.GetEntity(_i);
+                    if (_filter[entity.Id])
+                    {
+                        Current = new QueryItem<T1>(entity, ref _store.GetByIndex(_i));
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public readonly FilteredComponentEnumerator<T1> GetEnumerator() => this;
         }
 
-        return false;
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly BitSetComponentEnumerator<T1> GetEnumerator() => this;
-}
-
-public ref struct SparseComponentEnumerator<T1> where T1 : unmanaged, IRenderComponent<T1>
-{
-    private int _i;
-    private readonly ReadOnlySpan<RenderEntity> _entities;
-
-    public RenderWorld.RenderQuery.QueryItem<T1> Current { get; private set; }
-
-    public SparseComponentEnumerator(ReadOnlySpan<RenderEntity> entities)
-    {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(entities.Length, RenderWorld.Store<T1>().Count);
-        _i = -1;
-        _entities = entities;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool MoveNext()
-    {
-        while (++_i < _entities.Length)
+        public ref struct SparseComponentEnumerator<T1> where T1 : unmanaged, IRenderComponent<T1>
         {
-            var entity = _entities[_i];
-            if (entity.IsValid)
+            private int _i;
+            private readonly ReadOnlySpan<RenderEntity> _entities;
+
+            public QueryItem<T1> Current { get; private set; }
+
+            public SparseComponentEnumerator(ReadOnlySpan<RenderEntity> entities)
             {
-                Current = new RenderWorld.RenderQuery.QueryItem<T1>(entity, ref RenderWorld.Store<T1>().Get(entity));
-                return true;
+                ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(entities.Length, Store<T1>().Count);
+                _i = -1;
+                _entities = entities;
             }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                while (++_i < _entities.Length)
+                {
+                    var entity = _entities[_i];
+                    if (entity.IsValid)
+                    {
+                        Current = new QueryItem<T1>(entity, ref Store<T1>().Get(entity));
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public readonly SparseComponentEnumerator<T1> GetEnumerator() => this;
         }
-
-        return false;
     }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly SparseComponentEnumerator<T1> GetEnumerator() => this;
 }
 
 /*

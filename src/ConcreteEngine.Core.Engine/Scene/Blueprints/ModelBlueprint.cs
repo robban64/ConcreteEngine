@@ -71,7 +71,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
             foreach (var entity in GetRenderEntities())
             {
                 var ctx = RenderWorld.Instance.GetContext(entity);
-                ctx.ToggleDrawFlag(EntityDrawFlags.Skinned, true);
+                ctx.ToggleDrawFlag(EntityDrawMask.Skinned, true);
                 AnimationManager.Instance.AttachEntity(rig, ctx);
             }
 

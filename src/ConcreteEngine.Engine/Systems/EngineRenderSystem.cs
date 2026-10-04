@@ -46,7 +46,7 @@ public sealed class EngineRenderSystem : IDisposable
 
         _drawCmd = new DrawCommandProcessor(graphics.Gfx, _animationSystem, _materialSystem);
         _passContext = new RenderPassContext(_drawCmd);
-        _transformBuffer = new RenderTransformBuffer(RenderWorld.Instance.Data);
+        _transformBuffer = new RenderTransformBuffer();
 
     }
 

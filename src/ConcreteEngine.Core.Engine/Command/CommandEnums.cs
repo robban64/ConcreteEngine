@@ -14,10 +14,3 @@ public enum CommandAssetAction : byte
     None = 0,
     Reload = 1,
 }
-
-public enum CommandFboAction : byte
-{
-    None = 0,
-    ScreenSize = 1,
-    ShadowSize = 2
-}

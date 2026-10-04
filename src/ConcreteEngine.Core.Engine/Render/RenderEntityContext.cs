@@ -24,17 +24,17 @@ public readonly ref struct RenderEntityContext(RenderEntity entity, RenderData d
     public ref TransformUniform Transform => ref data.GetTransform(Entity.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetStatus(DrawStatus status)
+    public void SetStatus(EntityCullStatus status)
     {
         ref var policy = ref Policy;
         policy = policy.WithStatus(status);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ToggleDrawFlag(EntityDrawFlags flag, bool enabled)
+    public void ToggleDrawFlag(EntityDrawMask drawMask, bool enabled)
     {
-        if (enabled) Source.DrawFlags |= flag;
-        else Source.DrawFlags &= ~flag;
+        if (enabled) Source.DrawMask |= drawMask;
+        else Source.DrawMask &= ~drawMask;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

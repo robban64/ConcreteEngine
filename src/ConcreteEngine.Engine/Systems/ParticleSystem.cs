@@ -52,7 +52,7 @@ internal sealed class ParticleSystem : IDisposable
 
         _processedEmitters.Clear();
 
-        foreach (var it in RenderWorld.RenderQuery.VisibilityQuery<EmitterLink>())
+        foreach (var it in RenderWorld.Queries.VisibilityQuery<EmitterLink>())
         {
             var emitterId = it.Component.EmitterId;
             if (_processedEmitters.Contains(emitterId)) continue;

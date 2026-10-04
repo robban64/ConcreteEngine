@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
-using static ConcreteEngine.Core.Engine.Render.RenderWorld.RenderQuery;
+using static ConcreteEngine.Core.Engine.Render.RenderWorld.Queries;
 
 namespace ConcreteEngine.Core.Engine.Render;
 
@@ -16,6 +16,7 @@ public ref struct BitSetCoreEnumerator<T1> where T1 : unmanaged
 
     public BitSetCoreEnumerator(BitSet filter, Span<T1> data, Span<ushort> generations)
     {
+        ArgumentOutOfRangeException.ThrowIfNotEqual(data.Length, generations.Length);
         _entity = -1;
         _filter = filter;
         _generations = generations;

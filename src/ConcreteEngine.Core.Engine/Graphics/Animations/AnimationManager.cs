@@ -40,7 +40,7 @@ internal sealed class AnimationManager
     private static int FilterEntities(int slot, ReadOnlySpan<RenderEntity> entities)
     {
         var count = 0;
-        foreach (var query in RenderWorld.RenderQuery.SparseQuery<SkinningLink>(entities))
+        foreach (var query in RenderWorld.Queries.SparseQuery<SkinningLink>(entities))
         {
             if (!RenderWorld.Instance.IsVisible(query.Entity)) continue;
             query.Component.AnimationSlot = (ushort)slot;
@@ -67,7 +67,7 @@ internal sealed class AnimationManager
         }
 
         animation.AddEntity(ctx.Entity);
-        ctx.ToggleDrawFlag(EntityDrawFlags.Skinned, true);
+        ctx.ToggleDrawFlag(EntityDrawMask.Skinned, true);
         ctx.AddComponent(new SkinningLink(animation.Id));
     }
 

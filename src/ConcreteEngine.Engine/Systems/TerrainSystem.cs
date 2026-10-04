@@ -58,7 +58,7 @@ internal sealed class TerrainSystem
         {
             var chunk = MainTerrain.GetChunk(it.Slot);
 
-            var source = new DrawSource(it.FoliageMeshId, mat, flags: EntityDrawFlags.Instanced);
+            var source = new DrawSource(it.FoliageMeshId, mat, DrawMask: EntityDrawMask.Instanced);
             var drawPolicy = new DrawPolicy(DrawQueue.Transparent, PassMask.Default);
             var entity = RenderWorld.Instance.AddEntity(source, drawPolicy);
             var ctx = RenderWorld.Instance.GetContext(entity);

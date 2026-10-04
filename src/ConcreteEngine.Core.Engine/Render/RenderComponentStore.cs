@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Render;
@@ -196,21 +197,34 @@ public sealed class RenderComponentStore<T> : RenderStore where T : unmanaged, I
     public void BindListener(IRenderComponentListener<T> listener) => _listeners.Add(listener);
     public void UnbindListener(IRenderComponentListener<T> listener) => _listeners.Remove(listener);
 
-    // TODO
     public void EnsureCapacity(int amount)
     {
-        var length = Count + amount;
-        if (Capacity >= length) return;
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
+        
+        var capacity = Capacity;
+        var required = Count + amount;
+        if (capacity >= required) return;
 
-        throw new NotImplementedException();
-        /*
-        var newLength = CapacityUtils.CapacityGrowthToFit(Capacity, length);
+        var newLength = CapacityUtils.CapacityGrowthToFit(capacity, required);
+
+        var srcOffsetInBytes = _entities.SizeInBytes;
+        var srcCountInBytes = Count * Unsafe.SizeOf<T>();
+
         _memory.ReAlloc(GetAllocSize(newLength), true);
 
-        Logger.Log(LogScope.Ecs, $"{nameof(T)}: resized {newLength}", LogLevel.Warn);
+        var allocator = new NativeAllocBuilder(_memory);
+        var newEntities = allocator.AllocSlice<RenderEntity>(newLength);
+        var newComponents = allocator.AllocSlice<T>(newLength);
 
-        Capacity = newLength;
-        */
+        var srcSpan = _memory.AsSpan().Slice(srcOffsetInBytes, srcCountInBytes);
+        var dstSpan = newComponents.Reinterpret<byte>().AsSpan();
+        srcSpan.CopyTo(dstSpan);
+        srcSpan.Clear();
+
+        _entities = newEntities;
+        _components = newComponents;
+
+        Logger.Log(LogScope.Ecs, $"{typeof(T).Name}: resized {newLength}", LogLevel.Warn);
     }
 
     internal override void OnCoreResize(int newSize)
@@ -229,5 +243,5 @@ public sealed class RenderComponentStore<T> : RenderStore where T : unmanaged, I
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ComponentEnumerator<T> GetEnumerator() => new();
+    public RenderWorld.Queries.ComponentEnumerator<T> GetEnumerator() => new();
 }

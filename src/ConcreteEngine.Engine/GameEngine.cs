@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Engine.Render;
+using ConcreteEngine.Core.Engine.Render.Components;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
@@ -11,6 +12,7 @@ using ConcreteEngine.Engine.Gateway;
 using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
+using Silk.NET.Input;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Engine;
@@ -114,7 +116,7 @@ public sealed class GameEngine : IDisposable
     internal void OnGameTick(double dt)
     {
         Camera.Main.BeginUpdate();
-
+            
         _sceneSystem.UpdateScene((float)dt);
         _gateway.UpdateGameTick(dt);
         _renderSystem.AfterUpdate();

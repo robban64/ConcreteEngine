@@ -38,7 +38,7 @@ public sealed class ParticleInstance : RenderBlueprintInstance
     {
         var matId = ParticleMaterial.MaterialId;
         var policy = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
-        var source = new DrawSource(default, matId, flags: EntityDrawFlags.Instanced);
+        var source = new DrawSource(default, matId, DrawMask: EntityDrawMask.Instanced);
         var entity = RenderWorld.Instance.AddEntity(source, policy);
         RenderWorld.Store<EmitterLink>().Add(entity, new EmitterLink(Emitter.Id));
         RenderWorld.Store<DrawInstancedComponent>().Add(entity, new DrawInstancedComponent(Emitter.ParticleCount));

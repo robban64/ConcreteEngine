@@ -47,14 +47,14 @@ internal sealed class DrawCommandProcessor
 
         BindMaterial(ctx.Source.Material);
 
-        var drawFlags = ctx.Source.DrawFlags;
-        if ((drawFlags & EntityDrawFlags.Skinned) != 0)
+        var drawFlags = ctx.Source.DrawMask;
+        if ((drawFlags & EntityDrawMask.Skinned) != 0)
         {
             var slot = ctx.GetComponent<SkinningLink>().AnimationSlot;
             BindSkinningSlot(slot);
         }
 
-        if ((drawFlags & EntityDrawFlags.Instanced) != 0)
+        if ((drawFlags & EntityDrawMask.Instanced) != 0)
         {
             var instances = ctx.GetComponent<DrawInstancedComponent>().Instances;
             GfxCmd.DrawMeshInstanced(ctx.Source.Mesh, instances);

@@ -6,7 +6,7 @@ namespace ConcreteEngine.Core.Engine.Render;
 
 public sealed partial class RenderWorld
 {
-    public static class RenderQuery
+    public static partial class Queries
     {
         public readonly ref struct QueryItem<T1>(RenderEntity entity, ref T1 component) where T1 : unmanaged
         {
@@ -31,9 +31,9 @@ public sealed partial class RenderWorld
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static BitSetComponentEnumerator<T1> VisibilityQuery<T1>() where T1 : unmanaged, IRenderComponent<T1>
+        public static FilteredComponentEnumerator<T1> VisibilityQuery<T1>() where T1 : unmanaged, IRenderComponent<T1>
         {
-            return new BitSetComponentEnumerator<T1>(CoreData.VisibleSet);
+            return new FilteredComponentEnumerator<T1>(CoreData.VisibleSet);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

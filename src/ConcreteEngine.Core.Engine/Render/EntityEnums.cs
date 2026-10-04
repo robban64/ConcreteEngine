@@ -1,14 +1,14 @@
 namespace ConcreteEngine.Core.Engine.Render;
 
 [Flags]
-public enum EntityDrawFlags : byte
+public enum EntityDrawMask : byte
 {
     None = 0,
     Skinned = 1 << 0,
     Instanced = 1 << 1,
 }
 
-public enum DrawStatus : byte
+public enum EntityCullStatus : byte
 {
     Normal = 0,
     AlwaysVisible = 1,

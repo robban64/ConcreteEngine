@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.ECS.Render;
-using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
+using ConcreteEngine.Core.Engine.ECS.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Animations;
 

@@ -14,14 +14,14 @@ internal sealed class ParticleManager : IDisposable
     private readonly SlotArray<ParticleEmitter> _emitters = new(8);
     private readonly List<Id16<ParticleEmitter>> _pendingEmitters = new(4);
 
-
     private ParticleManager() { }
 
     public int EmitterCount => _emitters.Count;
     public bool HasPendingEmitters => _pendingEmitters.Count > 0;
-    internal ReadOnlySpan<Id16<ParticleEmitter>> GetPendingEmitterIds() => CollectionsMarshal.AsSpan(_pendingEmitters);
-    public ActiveObjectEnumerator<ParticleEmitter> EmitterEnumerator() => _emitters.GetEnumerator();
     
+    public ActiveObjectEnumerator<ParticleEmitter> EmitterEnumerator() => _emitters.GetEnumerator();
+    internal ReadOnlySpan<Id16<ParticleEmitter>> GetPendingEmitterIds() => CollectionsMarshal.AsSpan(_pendingEmitters);
+
     public ParticleEmitter CreateEmitter(
         string name,
         int particleCount,
@@ -74,7 +74,7 @@ internal sealed class ParticleManager : IDisposable
     {
         foreach (var emitter in _emitters)
         {
-            if (!emitter.IsDirty) emitter.Commit();
+            if (emitter.IsDirty) emitter.Commit();
         }
     }
 

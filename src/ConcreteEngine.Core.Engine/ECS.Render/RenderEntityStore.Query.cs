@@ -55,12 +55,14 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
 
     public ref struct VisibilityQueryEnumerator
     {
+        private readonly EntityDataStore _data;
         private RenderEntity* _entity;
         private T* _component;
         private readonly RenderEntity* _end;
 
         public VisibilityQueryEnumerator(RenderEntity* entities, T* component, int length)
         {
+            _data = RenderEcs.Core.Data;
             _entity = entities - 1;
             _component = component - 1;
             _end = entities + length;
@@ -72,7 +74,7 @@ public sealed unsafe partial class RenderEntityStore<T> where T : unmanaged, IRe
             while (++_entity < _end)
             {
                 ++_component;
-                if (RenderEcs.Core.IsVisible(*_entity)) return true;
+                if (_data.IsVisible(_entity->Id)) return true;
             }
 
             return false;

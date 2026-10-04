@@ -21,11 +21,12 @@ internal sealed class ParticleEmitterData : IDisposable
     public const int Alignment = 64;
     public const int CountAlignment = 16;
 
-    private static int StrideSum => Unsafe.SizeOf<Vector4>() * 2 + sizeof(float) * 2 + sizeof(byte);
     private static int GetCapacity(int count) => count * StrideSum + (Alignment * 4);
+    private static int StrideSum => Unsafe.SizeOf<Vector4>() * 2 + sizeof(float) * 2 + sizeof(byte);
 
     //
-    public int Count { get; private set; }
+
+    public int Capacity { get; private set; }
 
     private readonly ParticleVertex[] _lut = new ParticleVertex[LutLength];
 
@@ -51,48 +52,10 @@ internal sealed class ParticleEmitterData : IDisposable
     public NativeView<byte> LifeLutIndices => _lifeLutIndices;
 
     public int SizeInBytes => _buffer.Length;
-    public bool IsNullOrEmpty => Count == 0 || _buffer.IsNullOrEmpty;
+    public bool IsNullOrEmpty => Capacity == 0 || _buffer.IsNullOrEmpty;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Set(int index, Vector3 velocity, Vector3 position, float life)
-    {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)Count);
-        _velocities[index] = velocity.AsVector4();
-        _positions[index] = position.AsVector4();
-        _lifeState[index] = life;
-        _lifeMaxInverse[index] = 1f / life;
-        _lifeLutIndices[index] = 0;
-    }
 
-    public void Respawn(int index, ParticleEmitter.ParticleEmitterState state)
-    {
-        var random = _rng;
-        var spread = state.Spread;
-        var life = random.RandomFloat(state.LifeMinMax);
-        var speed = random.RandomFloat(state.SpeedMinMax);
-        var randDir = random.RandomVector3(-0.5f, 0.5f);
-        var position = random.RandomVector3(-spread, spread);
-        var velocity = Vector3.Normalize(randDir + state.Direction) * speed;
-        Set(index, velocity, position, life);
-        _rng = random;
-    }
-
-    public void RespawnParticles(int deadCount, ParticleEmitter.ParticleEmitterState state, Span<BitBlock> deadBits)
-    {
-        for (int start = 0; start < deadCount; start += 64)
-        {
-            var block = deadBits[start >> 6];
-            if (block == 0) continue;
-            while (block.IsSet)
-            {
-                var index = BitOperations.TrailingZeroCount(block) + start;
-                block.ClearLowerBits();
-                Respawn(index, state);
-            }
-        }
-    }
-
-    public void UpdateLutFromParticleParams(ColorRgba startColor, ColorRgba endColor, Vector2 sizeStartEnd)
+    public void UpdateLut(ColorRgba startColor, ColorRgba endColor, Vector2 sizeStartEnd)
     {
         var lut = _lut;
         for (int i = 0; i < lut.Length; i++)
@@ -102,10 +65,50 @@ internal sealed class ParticleEmitterData : IDisposable
             lut[i] = new ParticleVertex(size, color);
         }
     }
+    
+    public void Respawn(int index, ParticleEmitterState state)
+    {
+        var random = _rng;
+        var spread = state.Spread;
+
+        var randDir = random.RandomVector3(-0.5f, 0.5f);
+        var speed = random.RandomFloat(state.SpeedMinMax);
+        var velocity = Vector3.Normalize(randDir + state.Direction) * speed;
+        var position = random.RandomVector3(-spread, spread);
+        var life = random.RandomFloat(state.LifeMinMax);
+        Set(index, velocity, position, life);
+        _rng = random;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Set(int index, Vector3 velocity, Vector3 position, float life)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)Capacity);
+        _velocities[index] = velocity.AsVector4();
+        _positions[index] = position.AsVector4();
+        _lifeState[index] = life;
+        _lifeMaxInverse[index] = 1f / life;
+        _lifeLutIndices[index] = 0;
+    }
+
+
+    public void RespawnParticles(int deadCount, ParticleEmitterState state, Span<BitBlock> deadBits)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)deadCount, (uint)Capacity);
+
+        for (int start = 0; start < deadCount; start += 64)
+        {
+            var block = deadBits[start >> 6];
+            if (block == 0) continue;
+            foreach (var p in block) Respawn(start + p, state);
+        }
+    }
 
 
     public unsafe int SimulateLife(int count, float simDt, Span<BitBlock> deadBits)
     {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)count, (uint)Capacity);
+
         var lifeState = LifeState;
         var invMaxLifeState = LifeMaxInverse;
         var lutIndices = LifeLutIndices;
@@ -116,7 +119,7 @@ internal sealed class ParticleEmitterData : IDisposable
         for (int i = 0; i <= length; i += Vector256<float>.Count)
         {
             var life = lifeState + i;
-            var invMaxLife =  invMaxLifeState + i;
+            var invMaxLife = invMaxLifeState + i;
             ref var lut = ref Unsafe.As<byte, long>(ref lutIndices[i]);
 
             var vLife = Vector256.Subtract(Vector256.LoadAligned(life), Vector256.Create(simDt));
@@ -162,10 +165,12 @@ internal sealed class ParticleEmitterData : IDisposable
 
     public unsafe void SimulateSpatial(int count, Vector3 gravity, float simDt)
     {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)count, (uint)Capacity);
+
         var velocities = Velocities.Slice(0, count).Reinterpret<float>();
         var positions = Positions.Slice(0, count).Reinterpret<float>();
         var length = velocities.Length - Vector256<float>.Count;
-        
+
         var vGravityStep = Vector256.Create(gravity.AsVector128() * simDt);
         for (int i = 0; i < length; i += Vector256<float>.Count)
         {
@@ -181,10 +186,11 @@ internal sealed class ParticleEmitterData : IDisposable
     //
     public unsafe void InterpolatePosition(NativeView<Vector4> destination, float timeOffset)
     {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)destination.Length, (uint)Capacity);
+
         var dst = destination.Reinterpret<float>();
         var velocities = Velocities.Reinterpret<float>();
         var positions = Positions.Reinterpret<float>();
-
         var length = dst.Length - Vector256<float>.Count;
         
         var vTimeOffset = Vector256.Create(timeOffset);
@@ -195,15 +201,16 @@ internal sealed class ParticleEmitterData : IDisposable
             var vPos = Fma.MultiplyAdd(vVelocity, vTimeOffset, vPosition);
             vPos.StoreAligned(dst + i);
         }
-
     }
+
     public void InterpolateVisual(NativeView<ParticleVertex> destination)
     {
         var count = destination.Length;
         var destSpan = destination.AsSpan(0, count);
         var lifeLutIndices = _lifeLutIndices.AsSpan(0, count);
-        if(destSpan.Length != lifeLutIndices.Length) Throwers.InvalidOperation();
-            
+        
+        if (destSpan.Length != lifeLutIndices.Length) Throwers.InvalidOperation();
+
         var lut = _lut;
         for (int i = 0; i < count; ++i)
         {
@@ -235,7 +242,7 @@ internal sealed class ParticleEmitterData : IDisposable
         _lifeMaxInverse = allocator.AllocSlice<float>(count);
         _lifeLutIndices = allocator.AllocSlice<byte>(count);
 
-        Count = count;
+        Capacity = count;
 
         if (!isFirstAlloc) Logger.Log(LogScope.Engine, "ParticleEmitterData: resized", LogLevel.Warn);
         return true;
@@ -250,6 +257,6 @@ internal sealed class ParticleEmitterData : IDisposable
         _lifeMaxInverse = default;
         _lifeLutIndices = default;
 
-        Count = 0;
+        Capacity = 0;
     }
 }

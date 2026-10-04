@@ -16,12 +16,11 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
 
     public bool IsDirty { get; private set; }
     public int Count { get; private set; }
-    public int Capacity { get; private set; }
-
-    private T* _components;
-    private RenderEntity* _entities;
-
+    
     private NativeArray<byte> _memory;
+
+    private NativeView<T> _components;
+    private NativeView<RenderEntity> _entities;
 
     private readonly List<RenderEntity> _removedEntities = [];
     private readonly List<IRenderComponentListener<T>> _listeners = [];
@@ -32,27 +31,32 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 16);
 
         Instance = this;
-
-        Capacity = initialCapacity;
-
+        
         _memory = NativeArray.Allocate(GetAllocSize(initialCapacity));
-
+        
         var allocator = new NativeAllocBuilder(_memory);
         _entities = allocator.AllocSlice<RenderEntity>(initialCapacity);
         _components = allocator.AllocSlice<T>(initialCapacity);
     }
+    
+    public int Capacity => _entities.Length;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<T> ComponentSpan() => _components.AsSpan(0, Count);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<RenderEntity> EntitySpan() => _entities.AsSpan(0, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int FindIndex(RenderEntity entity)
     {
-        var span = new ReadOnlySpan<RenderEntity>(_entities, Count);
-        return SearchMethod.BinarySearch(span, entity);
+        return SearchMethod.BinarySearch(_entities.AsReadOnlySpan(0, Count), entity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int FindIndexLinear(RenderEntity entity)
     {
-        var span = new ReadOnlySpan<ulong>((ulong*)_entities, Count);
+        var span = _entities.Reinterpret<ulong>().AsReadOnlySpan(0, Count);
         return span.IndexOf(RenderEntity.Pack(entity));
     }
 
@@ -105,11 +109,6 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
         return false;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<RenderEntity> EntitySpan() => new(_entities, Count);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<T> ComponentSpan() => new(_components, Count);
 
     public bool Add(RenderEntity entity, in T value)
     {
@@ -178,6 +177,7 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     public void BindListener(IRenderComponentListener<T> listener) => _listeners.Add(listener);
     public void UnbindListener(IRenderComponentListener<T> listener) => _listeners.Remove(listener);
 
+    // TODO
     public void EnsureCapacity(int amount)
     {
         var length = Count + amount;
@@ -197,10 +197,8 @@ public sealed unsafe partial class RenderEntityStore<T> : IRenderEntityStore whe
     public void Dispose()
     {
         _memory.Dispose();
-        _memory = default;
-        _entities = null;
-        _components = null;
+        _entities = default;
+        _components = default;
         Count = 0;
-        Capacity = 0;
     }
 }

@@ -1,16 +1,13 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Graphics;
 
-namespace ConcreteEngine.Core.Engine.ECS.Render;
+namespace ConcreteEngine.Core.Engine.ECS.Render.Systems;
 
-public sealed class EcsCullSystem
+public sealed class RenderCullSystem
 {
     public ulong Version { get; private set; }
     public int VisibleCount { get; private set; }
@@ -19,7 +16,7 @@ public sealed class EcsCullSystem
 
     private readonly Vector4[] _frustum = new Vector4[12];
 
-    public EcsCullSystem(EntityDataStore data)
+    public RenderCullSystem(EntityDataStore data)
     {
         ArgumentNullException.ThrowIfNull(data);
         _data = data;
@@ -71,15 +68,12 @@ public sealed class EcsCullSystem
             var innerPolices = policies.Slice(start, length);
             var innerBounds = worldBounds.Slice(start, length);
 
-            ulong entityBits = Filter(entitySet.GetBlockAtBit(start), innerPolices);
+            var entityBits = Filter(entitySet.GetBlockAtBit(start), innerPolices);
 
             int visibleIndex = 0;
             BitBlock visibilityBits = default;
-            while (entityBits != 0)
+            foreach (var i in entityBits)
             {
-                var i = BitOperations.TrailingZeroCount(entityBits);
-                entityBits &= entityBits - 1;
-
                 var policy = innerPolices[i];
                 ref readonly var bounds = ref innerBounds[i];
 
@@ -92,7 +86,7 @@ public sealed class EcsCullSystem
                     visibilityBits.Enable(entity);
                 }
             }
-
+          
             visibilitySet.SetBlockAtBit(start, visibilityBits);
             visibleCount += visibleIndex;
         }
@@ -124,7 +118,7 @@ public sealed class EcsCullSystem
         return culledMask;
     }
 
-    private static ulong Filter(BitBlock bits, ReadOnlySpan<DrawPolicy> span)
+    private static BitBlock Filter(BitBlock bits, ReadOnlySpan<DrawPolicy> span)
     {
         var entityBits = bits;
         for (int i = 0; i < span.Length; ++i)

@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
+using ConcreteEngine.Core.Engine.ECS.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.ECS.Render;
 

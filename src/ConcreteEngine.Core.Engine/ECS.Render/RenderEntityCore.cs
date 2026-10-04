@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS.Render.Queries;
+using ConcreteEngine.Core.Engine.ECS.Render.Systems;
 
 namespace ConcreteEngine.Core.Engine.ECS.Render;
 
@@ -14,13 +15,13 @@ public sealed class RenderEntityCore : IDisposable
     private readonly Stack<int> _free = [];
 
     public readonly EntityDataStore Data;
-    public readonly EcsCullSystem CullSystem;
+    public readonly RenderCullSystem CullSystem;
 
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 64);
         Data = new EntityDataStore(initialCapacity);
-        CullSystem = new EcsCullSystem(Data);
+        CullSystem = new RenderCullSystem(Data);
     }
 
     public int FreeCount => _free.Count;

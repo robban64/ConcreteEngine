@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS.Render;
-using ConcreteEngine.Core.Engine.ECS.Render.RenderComponent;
+using ConcreteEngine.Core.Engine.ECS.Render.Components;
 using ConcreteEngine.Core.Engine.Graphics.Particles;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;

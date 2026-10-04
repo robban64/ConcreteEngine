@@ -6,7 +6,7 @@ namespace ConcreteEngine.Core.Common.Collections;
 public record struct BitBlock(ulong Block)
 {
     public ulong Block = Block;
-    
+
     public readonly bool IsSet
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -15,6 +15,14 @@ public record struct BitBlock(ulong Block)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator ulong(BitBlock b) => b.Block;
+
+    public bool this[int index]
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        readonly get => Get(index);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        set => Set(index, value);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool Get(int index) => (Block & (1UL << (index & 63))) != 0;
@@ -31,9 +39,33 @@ public record struct BitBlock(ulong Block)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Disable(int index) => Block &= ~(1UL << index);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearLowerBits() => Block &= Block - 1;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly BitEnumerator GetEnumerator() => new (this);
+
+    public ref struct BitEnumerator(BitBlock bits)
+    {
+        private BitBlock _bits = bits;
+        public int Current { get; private set; } = 0;
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext()
+        {
+            if (_bits.IsSet)
+            {
+                Current = BitOperations.TrailingZeroCount(_bits);
+                _bits.ClearLowerBits();
+                return true;
+            }
+            return false;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly BitEnumerator GetEnumerator() => this;
+    }
 }
 
 public readonly struct BitSet
@@ -60,7 +92,7 @@ public readonly struct BitSet
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _bits.Length * 64;
     }
-    
+
     public Span<ulong> AsSpan() => _bits;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -194,7 +226,7 @@ public readonly struct BitSet
         public Enumerator GetEnumerator() => this;
     }
     */
-    
+
     public ref struct BitBlockEnumerator
     {
         private readonly ReadOnlySpan<ulong> _blocks;

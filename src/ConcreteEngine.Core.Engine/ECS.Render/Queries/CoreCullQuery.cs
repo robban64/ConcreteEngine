@@ -7,7 +7,6 @@ namespace ConcreteEngine.Core.Engine.ECS.Render.Queries;
 
 public static unsafe partial class RenderCoreQuery
 {
-
     public ref struct CullQueryEnumerator
     {
         private DrawPolicy* _policy;

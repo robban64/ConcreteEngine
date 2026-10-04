@@ -43,7 +43,6 @@ public sealed class EntityDataStore : IDisposable
 
     //
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsAlive(int entity) => _entitySet[entity];
 

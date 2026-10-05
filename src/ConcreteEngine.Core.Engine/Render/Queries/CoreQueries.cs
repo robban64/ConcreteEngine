@@ -10,11 +10,11 @@ public ref struct BitSetCoreEnumerator<T1> where T1 : unmanaged
     private readonly BitSet _filter;
 
     private readonly Span<T1> _data;
-    private readonly Span<ushort> _generations;
+    private readonly ReadOnlySpan<ushort> _generations;
 
     public QueryItem<T1> Current { get; private set; }
 
-    public BitSetCoreEnumerator(BitSet filter, Span<T1> data, Span<ushort> generations)
+    public BitSetCoreEnumerator(BitSet filter, Span<T1> data, ReadOnlySpan<ushort> generations)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(data.Length, generations.Length);
         _entity = -1;

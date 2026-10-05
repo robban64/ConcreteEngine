@@ -16,14 +16,14 @@ public readonly ref struct DrawEntityContext(int entity, DrawSource source)
         ref RenderWorld.Store<T>().GetUnchecked(Entity);
 }
 
-public readonly ref struct RenderEntityContext(RenderEntity entity, RenderData data)
+public readonly ref struct RenderEntityContext(RenderEntity entity)
 {
     public readonly RenderEntity Entity = entity;
-    public ref DrawSource Source => ref data.GetSource(Entity.Id);
-    public ref DrawPolicy Policy => ref data.GetPolicy(Entity.Id);
-    public ref BoundingAxisBox WorldBounds => ref data.GetWorldBounds(Entity.Id);
-    public ref Matrix4x4 Transform => ref data.GetTransform(Entity.Id);
-    public ref Matrix3X4 Normal => ref data.GetNormal(Entity.Id);
+    public ref DrawSource Source => ref RenderWorld.CoreData.Sources[Entity.Id];
+    public ref DrawPolicy Policy => ref RenderWorld.CoreData.Policies[Entity.Id];
+    public ref BoundingAxisBox WorldBounds => ref RenderWorld.CoreData.WorldBounds[Entity.Id];
+    public ref Matrix4x4 Transform => ref RenderWorld.CoreData.Transforms[Entity.Id];
+    public ref Matrix3X4 Normal => ref RenderWorld.CoreData.Normals[Entity.Id];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetStatus(EntityCullStatus status)

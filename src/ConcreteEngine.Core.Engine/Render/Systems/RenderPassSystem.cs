@@ -38,7 +38,7 @@ public sealed class RenderPassSystem : RenderWorldSystem
     public NativeView<DrawEntityIndex> GetDrawTickets(int passId)
     {
         var range = _passRanges[passId];
-        return DrawIndices.Slice(range);
+        return DrawIndices.Slice(range.Offset, range.Length);
     }
 
     public void Execute(long frameId)

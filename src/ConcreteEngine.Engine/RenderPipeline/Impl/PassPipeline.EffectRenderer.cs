@@ -21,7 +21,7 @@ internal static partial class PassPipeline
 
         foreach (var query in RenderWorld.Queries.VisibilityQuery<SelectionComponent>())
         {
-            var entityContext = RenderWorld.Instance.GetContext(query.Entity);
+            var entityContext = query.Entity.GetContext();
 
             *effect = new EditorEffectsUniform(entityContext.Source.IsSkinned(), query.Component.HighlightColor);
 
@@ -55,7 +55,7 @@ internal static partial class PassPipeline
         
         foreach (var query in RenderWorld.Queries.VisibilityQuery<DebugBoundsComponent>())
         {
-            var entityContext = RenderWorld.Instance.GetContext(query.Entity);
+            var entityContext = query.Entity.GetContext();
 
             var isSkinned = entityContext.Source.IsSkinned();
             *effect = new EditorEffectsUniform(isSkinned, query.Component.Color);

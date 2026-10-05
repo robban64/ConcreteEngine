@@ -26,8 +26,8 @@ public sealed partial class RenderWorld
         public static BitSetCoreEnumerator<BoundingAxisBox> VisibilityBoundsQuery()
         {
             return new BitSetCoreEnumerator<BoundingAxisBox>(CoreData.VisibleSet,
-                CoreData.WorldBounds.AsSpan(0, EntityCount),
-                CoreData.Generations.AsSpan(0, EntityCount));
+                CoreData.WorldBounds.AsSpan(),
+                CoreData.GenerationSpan);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

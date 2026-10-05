@@ -8,88 +8,88 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Render;
 
-public sealed class RenderCoreArray<T> : IDisposable where T : unmanaged 
-{
-    private NativeArray<T> _data;
-    
-    public NativeView<T> Data => _data;
-    public Span<T> AsSpan() => _data.AsSpan(0, RenderWorld.EntityCount);
-    public ReadOnlySpan<T> AsReadOnlySpan() => _data.AsReadOnlySpan(0, RenderWorld.EntityCount);
-    
-    public ref T Get(int entity)
-    {
-        if((uint)entity >= (uint)_data.Length) Throwers.IndexOutOfRange(entity, _data.Length, nameof(entity));
-        return ref _data[entity];
-    }
-
-    public void Dispose() => _data.Dispose();
-}
 
 public sealed class RenderData : IDisposable
 {
+    public const int MinCapacity = 128;
+
+    private static class CoreArrays<T> where T : unmanaged
+    {
+        public static RenderCoreArray<T> Array { get; private set; } = null!;
+
+        public static RenderCoreArray<T> Create(int capacity, bool zeroed)
+        {
+            if (Array != null!) Throwers.InvalidOperation("CoreArray already created");
+            Array = new RenderCoreArray<T>(capacity, zeroed);
+            _coreArrays.Add(Array);
+            return Array;
+        }
+    }
+
+    private static readonly List<RenderCoreArray> _coreArrays = new(8);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RenderCoreArray<T> GetArray<T>() where T : unmanaged => CoreArrays<T>.Array;
+
     public int Capacity { get; private set; }
 
     private BitSet _entitySet;
     private BitSet _visibleSet;
-    
-    private NativeArray<ushort> _generations;
 
-    private NativeArray<DrawPolicy> _policies;
-    private NativeArray<DrawSource> _sources;
-
-    private NativeArray<BoundingAxisBox> _bounds;
-    private NativeArray<Matrix4x4> _transforms;
-    private NativeArray<Matrix3X4> _normals;
-
+    private ushort[] _generations;
     private NativeArray<ulong> _sortKeys;
+
+    public readonly RenderCoreArray<DrawPolicy> Policies;
+    public readonly RenderCoreArray<DrawSource> Sources;
+
+    public readonly RenderCoreArray<BoundingAxisBox> WorldBounds;
+    public readonly RenderCoreArray<Matrix4x4> Transforms;
+    public readonly RenderCoreArray<Matrix3X4> Normals;
+
 
     internal RenderData(int capacity)
     {
-        Allocate(capacity);
+        ArgumentOutOfRangeException.ThrowIfLessThan(capacity, MinCapacity);
+
+        Capacity = capacity;
+
+        _ = _coreArrays;
+        
+        _entitySet = new BitSet(capacity);
+        _visibleSet = new BitSet(capacity);
+
+        _generations = new ushort[capacity];
+        _sortKeys = NativeArray.Allocate<ulong>(capacity);
+
+        Policies = CoreArrays<DrawPolicy>.Create(capacity, true);
+        Sources = CoreArrays<DrawSource>.Create(capacity, true);
+        WorldBounds = CoreArrays<BoundingAxisBox>.Create(capacity, false);
+        Transforms = CoreArrays<Matrix4x4>.Create(capacity, false);
+        Normals = CoreArrays<Matrix3X4>.Create(capacity, false);
+        
+        RenderCoreArray<Matrix4x4>.DefaultValue = Matrix4x4.Identity;
+        RenderCoreArray<Matrix3X4>.DefaultValue = Matrix3X4.Identity;
+
     }
 
     //
     public BitSet EntitySet => _entitySet;
     public BitSet VisibleSet => _visibleSet;
-    
-    public NativeView<ushort> Generations => _generations;
 
-    public NativeView<DrawPolicy> Policies => _policies;
-    public NativeView<DrawSource> Sources => _sources;
-    public NativeView<BoundingAxisBox> WorldBounds => _bounds;
-    public NativeView<Matrix4x4> Transforms => _transforms;
-    public NativeView<Matrix3X4> Normals => _normals;
+    public ReadOnlySpan<ushort> GenerationSpan => new(_generations, 0, RenderWorld.EntityCount);
 
     public NativeView<ulong> RawSortKeys => _sortKeys;
     public NativeView<DrawEntityKey> SortKeys => RawSortKeys.Reinterpret<DrawEntityKey>();
 
     //
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsAlive(int entity) => _entitySet[entity];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsVisible(int entity) => _visibleSet[entity];
 
-    //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ushort GetGeneration(int entity) => _generations[entity];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawSource GetSource(int entity) => ref _sources[entity];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawPolicy GetPolicy(int entity) => ref _policies[entity];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoundingAxisBox GetWorldBounds(int entity) => ref _bounds[entity];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix4x4 GetTransform(int entity) => ref _transforms[entity];
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix3X4 GetNormal(int entity) => ref _normals[entity];
-
     //
 
 
@@ -98,11 +98,12 @@ public sealed class RenderData : IDisposable
     {
         if (_entitySet[entity]) Throwers.InvalidArgument("Entity already exists");
         _entitySet[entity] = true;
-        _policies[entity] = policy;
-        _sources[entity] = source;
-        _bounds[entity] = default;
-        _transforms[entity] = Matrix4x4.Identity;
-        _normals[entity] = Matrix3X4.Identity;
+
+        Policies[entity] = policy;
+        Sources[entity] = source;
+        WorldBounds[entity] = default;
+        Transforms[entity] = Matrix4x4.Identity;
+        Normals[entity] = Matrix3X4.Identity;
 
         var gen = ++_generations[entity];
         return new RenderEntity(entity, gen);
@@ -115,42 +116,22 @@ public sealed class RenderData : IDisposable
         var generation = _generations[entity.Id];
         if (entity.Gen != generation) Throwers.InvalidArgument(nameof(entity), "Entity generation mismatch");
         _entitySet[entity.Id] = false;
-        _sources[entity.Id] = default;
-        _policies[entity.Id] = default;
+        Policies[entity.Id] = default;
+        Sources[entity.Id] = default;
     }
 
 
     //
-    private void Allocate(int capacity)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
-        if (!_generations.IsNullOrEmpty) Throwers.InvalidOperation();
-
-        _generations = NativeArray.Allocate<ushort>(capacity);
-        _policies = NativeArray.Allocate<DrawPolicy>(capacity);
-        _sources = NativeArray.Allocate<DrawSource>(capacity);
-        _bounds = NativeArray.Allocate<BoundingAxisBox>(capacity);
-        _transforms = NativeArray.Allocate<Matrix4x4>(capacity);
-        _normals = NativeArray.Allocate<Matrix3X4>(capacity);
-
-        _sortKeys = NativeArray.Allocate<ulong>(capacity);
-
-        _entitySet = new BitSet(capacity);
-        _visibleSet = new BitSet(capacity);
-        Capacity = capacity;
-    }
 
     internal void ReAlloc(int newSize)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(newSize, _policies.Length);
-        _generations.ReAlloc(newSize, true);
-        _policies.ReAlloc(newSize, true);
-        _sources.ReAlloc(newSize, true);
-        _bounds.ReAlloc(newSize, false);
-        _transforms.ReAlloc(newSize, false);
-        _normals.ReAlloc(newSize, false);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(newSize, Capacity);
 
+        Array.Resize(ref _generations, newSize);
         _sortKeys.ReAlloc(newSize, true);
+
+        foreach (var array in _coreArrays)
+            array.Resize(newSize);
 
         if (newSize > _entitySet.BitCount)
         {
@@ -164,14 +145,13 @@ public sealed class RenderData : IDisposable
 
     public void Dispose()
     {
-        _generations.Dispose();
-        _policies.Dispose();
-        _sources.Dispose();
-        _bounds.Dispose();
-        _transforms.Dispose();
-        _normals.Dispose();
+        foreach (var array in _coreArrays)
+        {
+            array.Dispose();
+        }
+
         _sortKeys.Dispose();
-        
+
         Capacity = 0;
     }
 }

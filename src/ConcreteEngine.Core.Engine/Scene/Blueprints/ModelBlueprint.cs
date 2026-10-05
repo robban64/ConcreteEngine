@@ -70,7 +70,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
         {
             foreach (var entity in GetRenderEntities())
             {
-                var ctx = RenderWorld.Instance.GetContext(entity);
+                var ctx = entity.GetContext();
                 ctx.ToggleDrawFlag(EntityDrawMask.Skinned, true);
                 AnimationManager.Instance.AttachEntity(rig, ctx);
             }
@@ -84,7 +84,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
         var globalBounds = BoundingBox.Infinite;
         foreach (var entity in GetRenderEntities())
         {
-            var ctx = RenderWorld.Instance.GetContext(entity);
+            var ctx = entity.GetContext();
             var meshIndex = ctx.Source.MeshIndex;
 
             //MatrixMath.CreateModelMatrix(in Ecs.Render.Core.GetLocalTransform(entity), out var worldMatrix);

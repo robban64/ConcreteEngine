@@ -41,27 +41,26 @@ internal sealed class DrawCommandProcessor
         _lastMaterialId = default;
     }
 
-    public void DrawSource(DrawEntityContext ctx, int submitIndex)
+    public void DrawSource(DrawSource source, DrawEntityIndex entity)
     {
-        GfxCmd.BindUniformBufferRange<TransformUniform>(submitIndex, 1);
+        GfxCmd.BindUniformBufferRange<TransformUniform>(entity.SubmitIndex, 1);
 
-        BindMaterial(ctx.Source.Material);
+        BindMaterial(source.Material);
 
-        var drawFlags = ctx.Source.DrawMask;
-        if ((drawFlags & EntityDrawMask.Skinned) != 0)
+        if ((source.DrawMask & EntityDrawMask.Skinned) != 0)
         {
-            var slot = ctx.GetComponent<SkinningLink>().AnimationSlot;
+            var slot = RenderWorld.Store<SkinningLink>().GetUnchecked(entity.Entity).AnimationSlot;
             BindSkinningSlot(slot);
         }
 
-        if ((drawFlags & EntityDrawMask.Instanced) != 0)
+        if ((source.DrawMask & EntityDrawMask.Instanced) != 0)
         {
-            var instances = ctx.GetComponent<DrawInstancedComponent>().Instances;
-            GfxCmd.DrawMeshInstanced(ctx.Source.Mesh, instances);
+            var instances = RenderWorld.Store<DrawInstancedComponent>().GetUnchecked(entity.Entity).Instances;
+            GfxCmd.DrawMeshInstanced(source.Mesh, instances);
             return;
         }
 
-        GfxCmd.DrawMesh(ctx.Source.Mesh);
+        GfxCmd.DrawMesh(source.Mesh);
     }
 
     public void BindSkinningSlot(int slot)

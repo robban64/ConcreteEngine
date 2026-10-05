@@ -26,12 +26,9 @@ public sealed class EngineRenderSystem : IDisposable
     private readonly ParticleSystem _particleSystem;
     private readonly AnimationSystem _animationSystem;
 
-    private readonly RenderWorld _renderWorld;
 
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
-        _renderWorld = RenderWorld.Instance ?? throw new InvalidOperationException();
-        
         _renderCamera = new Camera(EngineSettings.Current.Display.WindowSize);
         _ = VisualManager.Instance;
         VisualManager.Instance.Lighting.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
@@ -105,8 +102,8 @@ public sealed class EngineRenderSystem : IDisposable
 
         // process and upload draw commands
         var frameId = EngineTime.FrameId;
-        _renderWorld.CullSystem.Execute(frameId, _renderCamera);
-        _renderWorld.PassSystem.Execute(frameId);
+        RenderWorld.Instance.CullSystem.Execute(frameId, _renderCamera);
+        RenderWorld.Instance.PassSystem.Execute(frameId);
         
         _transformBuffer.Execute();
         _particleSystem.Execute();
@@ -121,7 +118,6 @@ public sealed class EngineRenderSystem : IDisposable
         //if (avg.Ticks > 100) avg.ResetAndPrint();
 
     }
-    private AvgFrameTimer avg;
 
     public void ExecuteRenderPipeline()
     {
@@ -138,17 +134,19 @@ public sealed class EngineRenderSystem : IDisposable
 
             EndPass(i);
         }
-
     }
+
+
 
     private void ExecuteDrawPass(int passId)
     {
-        var tickets = _renderWorld.PassSystem.GetDrawTickets(passId);
+        var drawCmd = _drawCmd;
+        var sources = RenderWorld.CoreData.Sources.AsView();
+        var tickets = RenderWorld.Instance.PassSystem.GetDrawTickets(passId);
         foreach (ref readonly var ticket in tickets)
         {
-            //TODO
-            var ctx = RenderWorld.Instance.GetDrawContext(ticket.Entity);
-            _drawCmd.DrawSource(ctx, ticket.SubmitIndex);
+            var t = ticket;
+            drawCmd.DrawSource(sources[t.Entity], t);
         }
     }
 

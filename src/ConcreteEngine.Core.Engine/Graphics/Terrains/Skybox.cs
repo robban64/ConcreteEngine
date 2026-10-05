@@ -32,7 +32,7 @@ public sealed class Skybox
             
         }
         
-        var context = RenderWorld.Instance.GetContext(_entity);
+        var context = _entity.GetContext();
         if(isValid)
             context.Source.Material = material.MaterialId;
 

@@ -45,9 +45,9 @@ internal sealed class TerrainSystem
             var source = new DrawSource(it.TerrainMeshId, terrainMat);
             var drawPolicy = new DrawPolicy(DrawQueue.Terrain, PassMask.Default);
             var entity = RenderWorld.Instance.AddEntity(source, drawPolicy);
-           var ctx = RenderWorld.Instance.GetContext(entity);
-
-           ctx.WorldBounds = new BoundingAxisBox(in chunk.GetBounds());
+            
+            var ctx = entity.GetContext();
+            ctx.WorldBounds = new BoundingAxisBox(in chunk.GetBounds());
         }
     }
 
@@ -61,8 +61,8 @@ internal sealed class TerrainSystem
             var source = new DrawSource(it.FoliageMeshId, mat, DrawMask: EntityDrawMask.Instanced);
             var drawPolicy = new DrawPolicy(DrawQueue.Transparent, PassMask.Default);
             var entity = RenderWorld.Instance.AddEntity(source, drawPolicy);
-            var ctx = RenderWorld.Instance.GetContext(entity);
-
+            
+            var ctx = entity.GetContext();
             ctx.WorldBounds = new BoundingAxisBox(in chunk.GetBounds());
 
             var component = new DrawInstancedComponent { Instances = (uint)it.FoliageCount };

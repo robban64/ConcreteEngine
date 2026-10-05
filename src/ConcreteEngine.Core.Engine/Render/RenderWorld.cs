@@ -73,14 +73,14 @@ public sealed partial class RenderWorld : IDisposable
     internal DrawEntityContext GetDrawContext(int entity)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)entity, (uint)Count);
-        return new DrawEntityContext(entity, Data.GetSource(entity));
+        return new DrawEntityContext(entity, Data.Sources[entity]);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderEntityContext GetContext(RenderEntity entity)
     {
         ValidateHandle(entity);
-        return new RenderEntityContext(entity, Data);
+        return new RenderEntityContext(entity);
     }
 
     //

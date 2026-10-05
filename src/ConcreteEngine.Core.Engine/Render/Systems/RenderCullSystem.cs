@@ -55,8 +55,8 @@ public sealed class RenderCullSystem : RenderWorldSystem
     private int CullEntities(int entityCount)
     {
         var sortKeys = _data.SortKeys.Slice(0, entityCount);
-        var policies = _data.Policies.AsReadOnlySpan(0, entityCount);
-        var worldBounds = _data.WorldBounds.AsReadOnlySpan(0, entityCount);
+        var policies = _data.Policies.AsReadOnlySpan();
+        var worldBounds = _data.WorldBounds.AsReadOnlySpan();
         var visibilitySet = _data.VisibleSet;
         var entitySet = _data.EntitySet;
 

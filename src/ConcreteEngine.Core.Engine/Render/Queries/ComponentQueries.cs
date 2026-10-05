@@ -6,17 +6,17 @@ namespace ConcreteEngine.Core.Engine.Render;
 
 public sealed partial class RenderWorld
 {
-    public static partial class Queries
+    public static partial class Query
     {
         public ref struct ComponentEnumerator<T1> where T1 : unmanaged, IRenderComponent<T1>
         {
             private int _i = -1;
             private readonly int _length;
-            private readonly RenderComponentStore<T1> _store;
+            private readonly SparseStore<T1> _store;
 
             public ComponentEnumerator()
             {
-                _store = Store<T1>();
+                _store = Sparse<T1>();
                 _length = _store.Count;
             }
 
@@ -47,15 +47,13 @@ public sealed partial class RenderWorld
             private int _i;
             private readonly int _length;
             private readonly BitSet _filter;
-            private readonly RenderComponentStore<T1> _store;
 
             public QueryItem<T1> Current { get; private set; }
 
             public FilteredComponentEnumerator(BitSet filter)
             {
                 _i = -1;
-                _store = Store<T1>();
-                _length = _store.Count;
+                _length = Sparse<T1>().Count;
                 _filter = filter;
             }
 
@@ -64,10 +62,10 @@ public sealed partial class RenderWorld
             {
                 while (++_i < _length)
                 {
-                    var entity = _store.GetEntity(_i);
+                    var entity = Sparse<T1>().GetEntity(_i);
                     if (_filter[entity.Id])
                     {
-                        Current = new QueryItem<T1>(entity, ref _store.GetByIndex(_i));
+                        Current = new QueryItem<T1>(entity, ref Sparse<T1>().GetByIndex(_i));
                         return true;
                     }
                 }
@@ -89,7 +87,7 @@ public sealed partial class RenderWorld
 
             public SparseComponentEnumerator(ReadOnlySpan<RenderEntity> entities)
             {
-                ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(entities.Length, Store<T1>().Count);
+                ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(entities.Length, Sparse<T1>().Count);
                 _i = -1;
                 _entities = entities;
             }
@@ -102,7 +100,7 @@ public sealed partial class RenderWorld
                     var entity = _entities[_i];
                     if (entity.IsValid)
                     {
-                        Current = new QueryItem<T1>(entity, ref Store<T1>().Get(entity));
+                        Current = new QueryItem<T1>(entity, ref Sparse<T1>().Get(entity));
                         return true;
                     }
                 }

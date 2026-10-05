@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
@@ -35,10 +36,10 @@ internal sealed class RenderTransformBuffer : IDisposable
         if (visibleCount == 0) return;
 
         var dst = _transformBuffer.AsSpan(0, visibleCount);
-        var sortKeys = RenderWorld.CoreData.SortKeys.AsReadOnlySpan(0, visibleCount);
+        var sortKeys = RenderWorld.MetaStore.SortKeys.AsReadOnlySpan(0, visibleCount);
 
-        var srcTransforms = RenderWorld.CoreData.Transforms.AsReadOnlySpan();
-        var srcNormals = RenderWorld.CoreData.Normals.AsReadOnlySpan();
+        var srcTransforms = MemoryMarshal.Cast<WorldTransform, Matrix4x4>(RenderWorld.MetaStore.Transforms.AsReadOnlySpan());
+        var srcNormals = MemoryMarshal.Cast<NormalMatrix, Matrix3X4>(RenderWorld.MetaStore.Normals.AsReadOnlySpan());
         
         for (int i = 0; i < visibleCount; i++)
         {

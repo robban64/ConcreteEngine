@@ -16,15 +16,15 @@ public sealed class RenderPassSystem : RenderWorldSystem
     private readonly Range32[] _passRanges;
     private NativeArray<ulong> _drawIndices;
 
-    private readonly RenderData _renderData;
+    private readonly RenderMetaStore _metaStore;
     private readonly RenderCullSystem _cullSystem;
 
-    internal RenderPassSystem(RenderData renderData, RenderCullSystem cullSystem)
+    internal RenderPassSystem(RenderMetaStore metaStore, RenderCullSystem cullSystem)
     {
-        ArgumentNullException.ThrowIfNull(renderData);
+        ArgumentNullException.ThrowIfNull(metaStore);
         ArgumentNullException.ThrowIfNull(cullSystem);
 
-        _renderData = renderData;
+        _metaStore = metaStore;
         _cullSystem = cullSystem;
 
         _passRanges = new Range32[RenderLimits.DrawPassSlots];
@@ -35,10 +35,10 @@ public sealed class RenderPassSystem : RenderWorldSystem
     private NativeView<DrawEntityIndex> DrawIndices => _drawIndices.Reinterpret<DrawEntityIndex>();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<DrawEntityIndex> GetDrawTickets(int passId)
+    public ReadOnlySpan<DrawEntityIndex> GetDrawTickets(int passId)
     {
         var range = _passRanges[passId];
-        return DrawIndices.Slice(range.Offset, range.Length);
+        return DrawIndices.AsReadOnlySpan(range.Offset, range.Length);
     }
 
     public void Execute(long frameId)
@@ -50,7 +50,7 @@ public sealed class RenderPassSystem : RenderWorldSystem
         var visibleCount = _cullSystem.VisibleCount;
         if (visibleCount == 0) return;
         
-        var sortKeys = _renderData.SortKeys.AsSpan(0, visibleCount);
+        var sortKeys = _metaStore.SortKeys.AsSpan(0, visibleCount);
         
         BuildDrawIndices(sortKeys);
     }

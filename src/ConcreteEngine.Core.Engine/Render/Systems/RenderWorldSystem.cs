@@ -4,6 +4,6 @@ public abstract class RenderWorldSystem : IDisposable
 {
     public long FrameVersion { get; protected set; }
 
-    public virtual void OnCoreResize(int newSize) {}
+    public virtual void OnDenseResized(int newSize) {}
     public abstract void Dispose();
 }

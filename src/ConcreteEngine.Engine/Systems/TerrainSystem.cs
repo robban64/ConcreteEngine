@@ -47,7 +47,7 @@ internal sealed class TerrainSystem
             var entity = RenderWorld.Instance.AddEntity(source, drawPolicy);
             
             var ctx = entity.GetContext();
-            ctx.WorldBounds = new BoundingAxisBox(in chunk.GetBounds());
+            ctx.WorldBounds = new WorldBox(in chunk.GetBounds());
         }
     }
 
@@ -63,10 +63,10 @@ internal sealed class TerrainSystem
             var entity = RenderWorld.Instance.AddEntity(source, drawPolicy);
             
             var ctx = entity.GetContext();
-            ctx.WorldBounds = new BoundingAxisBox(in chunk.GetBounds());
+            ctx.WorldBounds = new WorldBox(in chunk.GetBounds());
 
             var component = new DrawInstancedComponent { Instances = (uint)it.FoliageCount };
-            RenderWorld.Store<DrawInstancedComponent>().Add(entity, component);
+            RenderWorld.Sparse<DrawInstancedComponent>().Add(entity, component);
         }
     }
 

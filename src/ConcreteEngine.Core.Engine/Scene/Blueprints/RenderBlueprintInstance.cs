@@ -84,12 +84,12 @@ public abstract class RenderBlueprintInstance(SceneObject owner)
             }
         }
 
-        RenderWorld.Store<SelectionComponent>().Commit();
+        RenderWorld.Sparse<SelectionComponent>().Commit();
     }
 
     public void ToggleDebugBounds(bool isSelected)
     {
-        var debugStore = RenderWorld.Store<DebugBoundsComponent>();
+        var debugStore = RenderWorld.Sparse<DebugBoundsComponent>();
         var span = GetRenderEntities();
         for (var i = 0; i < span.Length; i++)
         {

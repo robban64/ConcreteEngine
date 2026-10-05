@@ -8,7 +8,7 @@ using ConcreteEngine.Core.Engine.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Render;
 
-public sealed class RenderComponentStore<T> : RenderStore where T : unmanaged, IRenderComponent<T>
+public sealed class SparseStore<T> : RenderStore where T : unmanaged, IRenderComponent<T>
 {
     // ReSharper disable once StaticMemberInGenericType
     public static bool IsActive { get; private set; }
@@ -28,7 +28,7 @@ public sealed class RenderComponentStore<T> : RenderStore where T : unmanaged, I
     private readonly List<RenderEntity> _removedEntities = [];
     private readonly List<IRenderComponentListener<T>> _listeners = [];
 
-    public RenderComponentStore(int initialCapacity, int coreCapacity)
+    public SparseStore(int initialCapacity, int coreCapacity)
     {
         if (IsActive) Throwers.InvalidOperation("Already initialized");
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 16);
@@ -227,7 +227,7 @@ public sealed class RenderComponentStore<T> : RenderStore where T : unmanaged, I
         Logger.Log(LogScope.Ecs, $"{typeof(T).Name}: resized {newLength}", LogLevel.Warn);
     }
 
-    internal override void OnCoreResize(int newSize)
+    internal override void OnDenseResized(int newSize)
     {
         if (newSize > _entitySet.BitCount) _entitySet = _entitySet.Resized(newSize);
     }
@@ -243,5 +243,5 @@ public sealed class RenderComponentStore<T> : RenderStore where T : unmanaged, I
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderWorld.Queries.ComponentEnumerator<T> GetEnumerator() => new();
+    public RenderWorld.Query.ComponentEnumerator<T> GetEnumerator() => new();
 }

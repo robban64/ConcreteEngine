@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Render.Components;
 
@@ -6,7 +7,7 @@ namespace ConcreteEngine.Core.Engine.Render;
 
 public sealed partial class RenderWorld
 {
-    public static partial class Queries
+    public static partial class Query
     {
         public readonly ref struct QueryItem<T1>(RenderEntity entity, ref T1 component) where T1 : unmanaged
         {
@@ -21,19 +22,19 @@ public sealed partial class RenderWorld
             public readonly ref T1 Component1 = ref component1;
             public readonly ref T2 Component2 = ref component2;
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static BitSetCoreEnumerator<BoundingAxisBox> VisibilityBoundsQuery()
+        public static QueryBuilder<T1> New<T1>() where T1 : unmanaged, IRenderComponent<T1> => new();
+        
+        public readonly ref struct QueryBuilder<T1> where T1 : unmanaged, IRenderComponent<T1>
         {
-            return new BitSetCoreEnumerator<BoundingAxisBox>(CoreData.VisibleSet,
-                CoreData.WorldBounds.AsSpan(),
-                CoreData.GenerationSpan);
+            public FilterQuery<T1> Filter(BitSet filter) => new(filter);
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FilteredComponentEnumerator<T1> VisibilityQuery<T1>() where T1 : unmanaged, IRenderComponent<T1>
         {
-            return new FilteredComponentEnumerator<T1>(CoreData.VisibleSet);
+            return new FilteredComponentEnumerator<T1>(MetaStore.VisibleSet);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

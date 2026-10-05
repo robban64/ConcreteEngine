@@ -40,14 +40,14 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         var policy = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
         var source = new DrawSource(default, matId, DrawMask: EntityDrawMask.Instanced);
         var entity = RenderWorld.Instance.AddEntity(source, policy);
-        RenderWorld.Store<EmitterLink>().Add(entity, new EmitterLink(Emitter.Id));
-        RenderWorld.Store<DrawInstancedComponent>().Add(entity, new DrawInstancedComponent(Emitter.ParticleCount));
+        RenderWorld.Sparse<EmitterLink>().Add(entity, new EmitterLink(Emitter.Id));
+        RenderWorld.Sparse<DrawInstancedComponent>().Add(entity, new DrawInstancedComponent(Emitter.ParticleCount));
 
         SceneManager.Instance.BindSceneHandle(Owner.Id, entity);
         RenderEntityIds.Add(entity);
 
-        RenderWorld.Store<EmitterLink>().Commit();
-        RenderWorld.Store<DrawInstancedComponent>().Commit();
+        RenderWorld.Sparse<EmitterLink>().Commit();
+        RenderWorld.Sparse<DrawInstancedComponent>().Commit();
     }
 
     protected override void OnCommit()
@@ -67,10 +67,13 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         if (RenderEntityIds.Count == 0) return;
         var entity = RenderEntityIds[0];
 
-        BoundingAxisBox.GetWorldBounds(in Emitter.LocalBounds, in rootMatrix, out WorldBounds);
+        
+        BoundingAxisBox.GetWorldBounds(in Emitter.LocalBounds, in rootMatrix, out var bounds);
         var ctx = entity.GetContext();
         ctx.Transform = rootMatrix;
-        ctx.WorldBounds = WorldBounds;
+        ctx.WorldBounds = new WorldBox(in  bounds);
+        WorldBounds = bounds;
+
     }
 
     public void OnAssetChanged(AssetObject asset) { }

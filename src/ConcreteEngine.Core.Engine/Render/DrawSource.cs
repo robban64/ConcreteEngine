@@ -1,13 +1,17 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 using ConcreteEngine.Core.Common.Identity;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Render;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly record struct DrawPolicy(DrawQueue Queue, PassMask Passes, EntityCullStatus Cull = EntityCullStatus.Normal)
+public readonly record struct DrawPolicy(DrawQueue Queue, PassMask Passes, EntityCullStatus Cull = EntityCullStatus.Normal) : IRenderComponent<DrawPolicy>
 {
     public readonly EntityCullStatus Cull = Cull;
     public readonly PassMask Passes = Passes;
@@ -19,7 +23,7 @@ public readonly record struct DrawPolicy(DrawQueue Queue, PassMask Passes, Entit
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public record struct DrawSource(MeshId Mesh, Id16<Material> Material, byte MeshIndex = 0, EntityDrawMask DrawMask = 0)
+public record struct DrawSource(MeshId Mesh, Id16<Material> Material, byte MeshIndex = 0, EntityDrawMask DrawMask = 0) : IRenderComponent<DrawSource>
 {
     public MeshId Mesh = Mesh;
     public Id16<Material> Material = Material;

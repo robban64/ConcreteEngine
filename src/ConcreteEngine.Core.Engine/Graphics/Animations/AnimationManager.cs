@@ -40,9 +40,9 @@ internal sealed class AnimationManager
     private static int FilterEntities(int slot, ReadOnlySpan<RenderEntity> entities)
     {
         var count = 0;
-        foreach (var query in RenderWorld.Queries.SparseQuery<SkinningLink>(entities))
+        foreach (var query in RenderWorld.Query.SparseQuery<SkinningLink>(entities))
         {
-            if (!RenderWorld.CoreData.IsVisible(query.Entity.Id)) continue;
+            if (!RenderWorld.MetaStore.IsVisible(query.Entity.Id)) continue;
             query.Component.AnimationSlot = (ushort)slot;
             ++count;
         }

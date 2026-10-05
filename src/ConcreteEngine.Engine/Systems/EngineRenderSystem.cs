@@ -136,12 +136,10 @@ public sealed class EngineRenderSystem : IDisposable
         }
     }
 
-
-
     private void ExecuteDrawPass(int passId)
     {
         var drawCmd = _drawCmd;
-        var sources = RenderWorld.CoreData.Sources.AsView();
+        var sources = RenderWorld.MetaStore.Sources.AsView();
         var tickets = RenderWorld.Instance.PassSystem.GetDrawTickets(passId);
         foreach (ref readonly var ticket in tickets)
         {

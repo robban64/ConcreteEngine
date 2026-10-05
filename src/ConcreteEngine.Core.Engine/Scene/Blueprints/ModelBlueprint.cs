@@ -75,7 +75,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
                 AnimationManager.Instance.AttachEntity(rig, ctx);
             }
 
-            RenderWorld.Store<SkinningLink>().Commit();
+            RenderWorld.Sparse<SkinningLink>().Commit();
         }
     }
 
@@ -104,7 +104,7 @@ public sealed class ModelInstance : RenderBlueprintInstance
 
             ref readonly var localBounds = ref Model.GetMesh(meshIndex).Bounds;
             BoundingAxisBox.GetWorldBounds(in localBounds, in transform, out var entityBounds);
-            ctx.WorldBounds = entityBounds;
+            ctx.WorldBounds = new WorldBox(in entityBounds);
             globalBounds.Expand(in entityBounds);
         }
 

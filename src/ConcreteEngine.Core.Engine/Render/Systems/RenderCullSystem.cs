@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Render.Systems;
@@ -11,20 +12,21 @@ public sealed class RenderCullSystem : RenderWorldSystem
 {
     public int VisibleCount { get; private set; }
 
-    private readonly RenderData _data;
+    private readonly RenderMetaStore _metaStore;
 
     private readonly Vector4[] _frustum = new Vector4[12];
 
-    public RenderCullSystem(RenderData data)
+    public RenderCullSystem(RenderMetaStore metaStore)
     {
-        ArgumentNullException.ThrowIfNull(data);
-        _data = data;
+        ArgumentNullException.ThrowIfNull(metaStore);
+        _metaStore = metaStore;
     }
 
     private ref BoundingFrustum LightFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustum[0]);
     private ref BoundingFrustum SceneFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustum[6]);
 
     //
+
     internal void Execute(long frameId, Camera camera)
     {
         FrameVersion = frameId;
@@ -39,7 +41,7 @@ public sealed class RenderCullSystem : RenderWorldSystem
 
         if (visibleCount == 0) return;
 
-        _data.RawSortKeys.AsSpan(0, visibleCount).Sort();
+        _metaStore.RawSortKeys.AsSpan(0, visibleCount).Sort();
     }
 
     private void BuildFrustum(Camera camera)
@@ -54,11 +56,11 @@ public sealed class RenderCullSystem : RenderWorldSystem
 
     private int CullEntities(int entityCount)
     {
-        var sortKeys = _data.SortKeys.Slice(0, entityCount);
-        var policies = _data.Policies.AsReadOnlySpan();
-        var worldBounds = _data.WorldBounds.AsReadOnlySpan();
-        var visibilitySet = _data.VisibleSet;
-        var entitySet = _data.EntitySet;
+        var sortKeys = _metaStore.SortKeys.Slice(0, entityCount);
+        var policies = _metaStore.Policies.AsReadOnlySpan();
+        var worldBounds = _metaStore.WorldBounds.AsReadOnlySpan();
+        var visibilitySet = _metaStore.VisibleSet;
+        var entitySet = _metaStore.EntitySet;
 
         int visibleCount = 0;
 
@@ -77,9 +79,11 @@ public sealed class RenderCullSystem : RenderWorldSystem
             foreach (var i in entityBits)
             {
                 var policy = innerPolices[i];
-                ref readonly var bounds = ref innerBounds[i];
+                var alwaysVisible = policy.Cull == EntityCullStatus.AlwaysVisible;
 
-                var passes = Intersects(policy.Passes, policy.Cull, in bounds, out float distance);
+                var cullPasses = alwaysVisible ? 0 : policy.Passes;
+                var testPasses = Intersects(cullPasses, in innerBounds[i], out float distance);
+                var passes = alwaysVisible ? policy.Passes : testPasses;
 
                 if (passes != 0)
                 {
@@ -96,23 +100,18 @@ public sealed class RenderCullSystem : RenderWorldSystem
         return visibleCount;
     }
 
-    private PassMask Intersects(PassMask passes, EntityCullStatus status, in BoundingAxisBox bounds, out float distance)
+    private PassMask Intersects(PassMask passes, in WorldBox box, out float distance)
     {
-        var center = new Vector4(bounds.Center, 1f).AsVector128();
-        var extent = new Vector4(bounds.Extent, 0f).AsVector128();
-        var centerExtent = Vector256.Create(center, extent);
+        //var center = new Vector4(bounds.Center, 1f).AsVector128();
+        //var extent = new Vector4(bounds.Extent, 0f).AsVector128();
+        //var centerExtent = Vector256.Create(center, extent);
 
-        Span<Vector4> span = _frustum;
-        if (status == EntityCullStatus.AlwaysVisible)
-        {
-            distance = DistanceFromPlane(in span[^1], in centerExtent);
-            return passes;
-        }
+        var centerExtent = Unsafe.BitCast<WorldBox, Vector256<float>>(box);
+        ReadOnlySpan<Vector4> planes = _frustum;
+        var depthTest = (passes & PassMask.Depth) != 0 && TestIntersect(planes.Slice(0, 6), in centerExtent);
+        var sceneTest = (passes & PassMask.Main) != 0 && TestIntersect(planes.Slice(6, 6), in centerExtent);
 
-        var depthTest = (passes & PassMask.Depth) != 0 && TestIntersect(span.Slice(0, 6), in centerExtent);
-        var sceneTest = (passes & PassMask.Main) != 0 && TestIntersect(span.Slice(6, 6), in centerExtent);
-
-        distance = DistanceFromPlane(in span[^1], in centerExtent);
+        distance = DistanceFromPlane(in planes[^1], in centerExtent);
 
         PassMask culledMask = 0;
         culledMask |= depthTest ? PassMask.Depth : 0;
@@ -133,9 +132,9 @@ public sealed class RenderCullSystem : RenderWorldSystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool TestIntersect(Span<Vector4> frustum, in Vector256<float> centerExtent)
+    private static bool TestIntersect(ReadOnlySpan<Vector4> frustum, in Vector256<float> centerExtent)
     {
-        foreach (var plane in frustum)
+        foreach (ref readonly var plane in frustum)
         {
             var d = DistanceFromPlane(in plane, in centerExtent);
             if (d <= 0f) return false;

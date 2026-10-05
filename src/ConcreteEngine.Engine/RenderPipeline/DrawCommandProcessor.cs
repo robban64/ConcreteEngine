@@ -49,13 +49,13 @@ internal sealed class DrawCommandProcessor
 
         if ((source.DrawMask & EntityDrawMask.Skinned) != 0)
         {
-            var slot = RenderWorld.Store<SkinningLink>().GetUnchecked(entity.Entity).AnimationSlot;
+            var slot = RenderWorld.Sparse<SkinningLink>().GetUnchecked(entity.Entity).AnimationSlot;
             BindSkinningSlot(slot);
         }
 
         if ((source.DrawMask & EntityDrawMask.Instanced) != 0)
         {
-            var instances = RenderWorld.Store<DrawInstancedComponent>().GetUnchecked(entity.Entity).Instances;
+            var instances = RenderWorld.Sparse<DrawInstancedComponent>().GetUnchecked(entity.Entity).Instances;
             GfxCmd.DrawMeshInstanced(source.Mesh, instances);
             return;
         }

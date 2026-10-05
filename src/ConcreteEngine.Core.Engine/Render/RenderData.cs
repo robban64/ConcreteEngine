@@ -8,6 +8,23 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Render;
 
+public sealed class RenderCoreArray<T> : IDisposable where T : unmanaged 
+{
+    private NativeArray<T> _data;
+    
+    public NativeView<T> Data => _data;
+    public Span<T> AsSpan() => _data.AsSpan(0, RenderWorld.EntityCount);
+    public ReadOnlySpan<T> AsReadOnlySpan() => _data.AsReadOnlySpan(0, RenderWorld.EntityCount);
+    
+    public ref T Get(int entity)
+    {
+        if((uint)entity >= (uint)_data.Length) Throwers.IndexOutOfRange(entity, _data.Length, nameof(entity));
+        return ref _data[entity];
+    }
+
+    public void Dispose() => _data.Dispose();
+}
+
 public sealed class RenderData : IDisposable
 {
     public int Capacity { get; private set; }
@@ -21,7 +38,8 @@ public sealed class RenderData : IDisposable
     private NativeArray<DrawSource> _sources;
 
     private NativeArray<BoundingAxisBox> _bounds;
-    private NativeArray<TransformUniform> _transforms;
+    private NativeArray<Matrix4x4> _transforms;
+    private NativeArray<Matrix3X4> _normals;
 
     private NativeArray<ulong> _sortKeys;
 
@@ -39,7 +57,9 @@ public sealed class RenderData : IDisposable
     public NativeView<DrawPolicy> Policies => _policies;
     public NativeView<DrawSource> Sources => _sources;
     public NativeView<BoundingAxisBox> WorldBounds => _bounds;
-    public NativeView<TransformUniform> Transforms => _transforms;
+    public NativeView<Matrix4x4> Transforms => _transforms;
+    public NativeView<Matrix3X4> Normals => _normals;
+
     public NativeView<ulong> RawSortKeys => _sortKeys;
     public NativeView<DrawEntityKey> SortKeys => RawSortKeys.Reinterpret<DrawEntityKey>();
 
@@ -65,7 +85,11 @@ public sealed class RenderData : IDisposable
     public ref BoundingAxisBox GetWorldBounds(int entity) => ref _bounds[entity];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref TransformUniform GetTransform(int entity) => ref _transforms[entity];
+    public ref Matrix4x4 GetTransform(int entity) => ref _transforms[entity];
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref Matrix3X4 GetNormal(int entity) => ref _normals[entity];
+
     //
 
 
@@ -77,10 +101,8 @@ public sealed class RenderData : IDisposable
         _policies[entity] = policy;
         _sources[entity] = source;
         _bounds[entity] = default;
-
-        ref var transform = ref _transforms[entity];
-        transform.Model = Matrix4x4.Identity;
-        transform.Normal = Matrix3X4.Identity;
+        _transforms[entity] = Matrix4x4.Identity;
+        _normals[entity] = Matrix3X4.Identity;
 
         var gen = ++_generations[entity];
         return new RenderEntity(entity, gen);
@@ -108,7 +130,8 @@ public sealed class RenderData : IDisposable
         _policies = NativeArray.Allocate<DrawPolicy>(capacity);
         _sources = NativeArray.Allocate<DrawSource>(capacity);
         _bounds = NativeArray.Allocate<BoundingAxisBox>(capacity);
-        _transforms = NativeArray.Allocate<TransformUniform>(capacity);
+        _transforms = NativeArray.Allocate<Matrix4x4>(capacity);
+        _normals = NativeArray.Allocate<Matrix3X4>(capacity);
 
         _sortKeys = NativeArray.Allocate<ulong>(capacity);
 
@@ -125,6 +148,7 @@ public sealed class RenderData : IDisposable
         _sources.ReAlloc(newSize, true);
         _bounds.ReAlloc(newSize, false);
         _transforms.ReAlloc(newSize, false);
+        _normals.ReAlloc(newSize, false);
 
         _sortKeys.ReAlloc(newSize, true);
 
@@ -145,6 +169,7 @@ public sealed class RenderData : IDisposable
         _sources.Dispose();
         _bounds.Dispose();
         _transforms.Dispose();
+        _normals.Dispose();
         _sortKeys.Dispose();
         
         Capacity = 0;

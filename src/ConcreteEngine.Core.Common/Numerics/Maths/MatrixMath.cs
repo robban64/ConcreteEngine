@@ -67,7 +67,7 @@ public static class MatrixMath
         row = Vector128.FusedMultiplyAdd(Vector128.Create(dst.M43), bRow3, row);
         row.StoreUnsafe(ref dst.M41);
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CreateModelMatrix(Vector3 t, Vector3 s, Quaternion r, out Matrix4x4 dst)
     {
@@ -192,5 +192,50 @@ public static class MatrixMath
         dst.M31 = C13 * s;
         dst.M32 = C23 * s;
         dst.M33 = C33 * s;
+    }
+    
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void CreateNormalMatrix(in Matrix4x4 m, out Matrix3X4 n)
+    {
+        float a = m.M11, b = m.M12, c = m.M13;
+        float d = m.M21, e = m.M22, f = m.M23;
+        float g = m.M31, h = m.M32, k = m.M33;
+
+        float C11 = e * k - f * h;
+        float C12 = -(d * k - f * g);
+        float C13 = d * h - e * g;
+
+        float C21 = -(b * k - c * h);
+        float C22 = a * k - c * g;
+        float C23 = -(a * h - b * g);
+
+        float C31 = b * f - c * e;
+        float C32 = -(a * f - c * d);
+        float C33 = a * e - b * d;
+
+        float det = MathF.FusedMultiplyAdd(a, C11, MathF.FusedMultiplyAdd(b, C12, c * C13));
+
+        if (MathF.Abs(det) < 1e-8f)
+        {
+            n = Matrix3X4.Identity;
+            return;
+        }
+
+        float s = 1f / det;
+        n.M11 = C11 * s;
+        n.M12 = C21 * s;
+        n.M13 = C31 * s;
+        n.M14 = 0;
+
+        n.M21 = C12 * s;
+        n.M22 = C22 * s;
+        n.M23 = C32 * s;
+        n.M24 = 0;
+
+        n.M31 = C13 * s;
+        n.M32 = C23 * s;
+        n.M33 = C33 * s;
+        n.M34 = 0;
     }
 }

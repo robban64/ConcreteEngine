@@ -1,9 +1,12 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Render;
@@ -16,28 +19,35 @@ internal sealed class RenderTransformBuffer : IDisposable
 
     internal RenderTransformBuffer()
     {
+        var capacity = RenderWorld.Instance.Capacity;
+        if(capacity == 0) Throwers.InvalidOperation(nameof(capacity));
         _transformBuffer = NativeArray.AlignedAllocate<TransformUniform>(RenderWorld.Instance.Capacity, 64, false);
     }
 
-    public NativeView<TransformUniform> Transforms => _transformBuffer.Slice(0, RenderWorld.Instance.CullSystem.VisibleCount);
+    public NativeView<TransformUniform> Transforms =>
+        _transformBuffer.Slice(0, RenderWorld.Instance.CullSystem.VisibleCount);
 
     public void Execute()
     {
         Ensure();
-        
+
         var visibleCount = RenderWorld.Instance.CullSystem.VisibleCount;
         if (visibleCount == 0) return;
 
-        var dst = _transformBuffer.Slice(0, visibleCount);
+        var dst = _transformBuffer.AsSpan(0, visibleCount);
+        var sortKeys = RenderWorld.CoreData.SortKeys.AsReadOnlySpan(0, visibleCount);
 
-        var src = RenderWorld.CoreData.Transforms;
-        var sortKeys = RenderWorld.CoreData.SortKeys.Slice(0, visibleCount);
-        foreach (var it in sortKeys.Zip(dst))
+        var srcTransforms = RenderWorld.CoreData.Transforms.AsReadOnlySpan();
+        var srcNormals = RenderWorld.CoreData.Normals.AsReadOnlySpan();
+        
+        for (int i = 0; i < visibleCount; i++)
         {
-            it.Item2 = src[it.Item1.Entity];
+            var entityKey = sortKeys[i];
+            dst[i].Model = srcTransforms[entityKey.Entity];
+            dst[i].Normal = srcNormals[entityKey.Entity];
         }
+
     }
-    
 
     private void Ensure()
     {
@@ -52,5 +62,4 @@ internal sealed class RenderTransformBuffer : IDisposable
     {
         _transformBuffer.Dispose();
     }
-
 }

@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
@@ -21,7 +22,8 @@ public readonly ref struct RenderEntityContext(RenderEntity entity, RenderData d
     public ref DrawSource Source => ref data.GetSource(Entity.Id);
     public ref DrawPolicy Policy => ref data.GetPolicy(Entity.Id);
     public ref BoundingAxisBox WorldBounds => ref data.GetWorldBounds(Entity.Id);
-    public ref TransformUniform Transform => ref data.GetTransform(Entity.Id);
+    public ref Matrix4x4 Transform => ref data.GetTransform(Entity.Id);
+    public ref Matrix3X4 Normal => ref data.GetNormal(Entity.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetStatus(EntityCullStatus status)

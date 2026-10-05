@@ -21,6 +21,8 @@ internal readonly unsafe struct NativeClip
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<NativeBoneTrack> AsView() => new (BoneTracks, Length);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<NativeBoneTrack> AsSpan() => new (BoneTracks, Length);
 
     public bool IsNull => BoneTracks == null;
 
@@ -31,10 +33,10 @@ internal readonly unsafe struct NativeBoneTrack
 {
     public readonly int PosCount;
     public readonly int RotCount;
+    public readonly int PositionIndex;
+    public readonly int RotationIndex;
 
     private readonly float* _data;
-    private readonly Vector3* _positions;
-    private readonly Quaternion* _rotations;
 
     public NativeBoneTrack(float* data, int posCount, int rotCount)
     {
@@ -44,13 +46,11 @@ internal readonly unsafe struct NativeBoneTrack
         if (data == null && (posCount > 0 || rotCount > 0))
             Throwers.InvalidArgument(nameof(data));
 
+        _data = data;
         PosCount = posCount;
         RotCount = rotCount;
-
-        _data = data;
-        _positions = (Vector3*)(data + posCount + rotCount);
-        _rotations = (Quaternion*)(data + posCount + rotCount + (posCount * 3));
-
+        PositionIndex = posCount + rotCount;
+        RotationIndex = posCount + rotCount + (posCount * 3);
     }
 
     public bool IsNull => _data == null;
@@ -60,6 +60,26 @@ internal readonly unsafe struct NativeBoneTrack
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (PosCount == 0 && RotCount == 0) || _data == null;
     }
+    public float* PositionTimesPtr => _data;
+    
+    public float* RotationTimesPtr
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _data + PosCount;
+    }
+    
+    public Vector3* PositionPtr
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (Vector3*)(_data + PositionIndex);
+    }
+
+    public Quaternion* RotationPtr
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (Quaternion*)(_data + RotationIndex);
+    }
+    
 
     public NativeView<float> PositionTimes
     {
@@ -70,18 +90,18 @@ internal readonly unsafe struct NativeBoneTrack
     public NativeView<float> RotationTimes
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(_data + PosCount, RotCount);
+        get => new(RotationTimesPtr, RotCount);
     }
 
     public NativeView<Vector3> Positions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(_positions, PosCount);
+        get => new(PositionPtr, PosCount);
     }
 
     public NativeView<Quaternion> Rotations
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(_rotations, RotCount);
+        get => new(RotationPtr, RotCount);
     }
 }

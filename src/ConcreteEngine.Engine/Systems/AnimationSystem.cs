@@ -8,6 +8,7 @@ using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
 using ConcreteEngine.Core.Engine.Render;
@@ -66,7 +67,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
     public void Execute(double alpha)
     {
         _animationIds.Clear();
-
+        
         foreach (var animation in _animations)
         {
             var count = FilterEntities(_animationIds.Count + 1, animation.GetEntitySpan());
@@ -79,14 +80,11 @@ internal sealed unsafe class AnimationSystem : IDisposable
         foreach (var id in _animationIds.AsSpan())
         {
             var animation = _animations.Get(id);
-            var time = (float)animation.Time;
-            UpdateSkinned(animation.Rig, animation.ActiveClip, time);
+            UpdateSkinned(animation);
             WriteSkeleton(animation.Rig);
         }
 
     }
-
-
 
     public void Dispose()
     {
@@ -97,10 +95,9 @@ internal sealed unsafe class AnimationSystem : IDisposable
     private static int FilterEntities(int slot, ReadOnlySpan<RenderEntity> entities)
     {
         var count = 0;
-        
         foreach (var query in RenderWorld.Queries.SparseQuery<SkinningLink>(entities))
         {
-            if (!RenderWorld.Instance.IsVisible(query.Entity)) continue;
+            if (!RenderWorld.CoreData.IsVisible(query.Entity.Id)) continue;
             query.Component.AnimationSlot = (ushort)slot;
             ++count;
         }
@@ -109,7 +106,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private NativeView<Matrix4x4> NextSkinningView(int bones)
+    private Span<Matrix4x4> NextSkinningView(int bones)
     {
         var count = Count++;
         var range = new Range32(BoneCount, bones);
@@ -117,49 +114,59 @@ internal sealed unsafe class AnimationSystem : IDisposable
         if (count >= _slotRanges.Length) EnsureSlotCapacity(count);
         BoneCount += bones;
         _slotRanges[count] = range;
-        return _boneBuffer.Slice(range);
+        return _boneBuffer.AsSpan(range.Offset, range.Length);
     }
 
-    private void UpdateSkinned(ModelRig rig, int clipIndex, float time)
+    private void UpdateSkinned(AnimationInstance animation)
     {
-        var trackView = rig.GetClipTracks(clipIndex).AsView();
-        ref var bindPoses = ref MemoryMarshal.GetArrayDataReference(rig.BindPoseArray);
-        var index = 0;
-        foreach (var it in trackView.Zip(_scratchGlobals.Slice(0, rig.BoneCount)))
+        var time = (float)animation.Time;
+
+        var rig = animation.Rig;
+        var length = animation.Rig.BoneCount;
+        var currentTrack = animation.GetActiveClip().BoneTracks;
+        
+        var dst = _scratchGlobals.AsSpan(0, length);
+
+        for (int i = 0; i < length; ++i)
         {
-            if (it.Item1.IsEmpty)
+            var track = currentTrack[i];
+            if (track.IsEmpty)
             {
-                it.Item2 = Unsafe.Add(ref bindPoses, index++);
+                dst[i] = rig.GetBindPose(i);
                 continue;
             }
 
-            var posFactor = GetIndexFactor(time, it.Item1.PositionTimes, out var posIndex);
-            var rotFactor = GetIndexFactor(time, it.Item1.RotationTimes, out var rotIndex);
+            var posFactor = GetIndexFactor(time, track.PositionTimesPtr, track.PosCount, out var posIndex);
+            var rotFactor = GetIndexFactor(time, track.RotationTimesPtr, track.RotCount, out var rotIndex);
 
-            var pos = GetPosition(posIndex, posFactor, it.Item1.Positions);
-            var rot = GetRotation(rotIndex, rotFactor, it.Item1.Rotations);
+            var pos = GetPosition(posIndex, posFactor, track.PositionPtr);
+            var rot = GetRotation(rotIndex, rotFactor, track.RotationPtr);
 
-            MatrixMath.CreateFixedSizeModelMatrix(pos, in rot, out it.Item2);
-            ++index;
+            MatrixMath.CreateFixedSizeModelMatrix(pos, in rot, out dst[i]);
         }
-        
-
     }
 
     private void WriteSkeleton(ModelRig rig)
     {
         var length = rig.BoneCount;
-        var indices = rig.ParentIndicesArray.AsSpan(0, length);
-        var inverseBindPoses = rig.InverseBindPoseArray.AsSpan(0, length);
+
+        var indices = rig.ParentIndices().Slice(0, length);
+        var inverseBindPoses = rig.InverseBindPose().Slice(0, length);
+
         var dst = NextSkinningView(length);
+        var globals = _scratchGlobals;
 
-        var globals = _scratchGlobals.Ptr;
+        if((uint)length > (uint)globals.Length || (uint)length > (uint)dst.Length) Throwers.InvalidOperation();
 
-        MatrixMath.MultiplyAffine(ref dst[0], in inverseBindPoses[0], in globals[0]);
-        for (var i = 1; i < indices.Length; ++i)
+        Matrix4x4 parentTransform;
+        for (var i = 1; i < length; ++i)
         {
-            var p = indices[i];
-            MatrixMath.MultiplyAffine(ref globals[i], in globals[p]);
+            parentTransform = globals[indices[i]];
+            MatrixMath.MultiplyAffine(ref globals[i], in parentTransform);
+        }
+
+        for (var i = 0; i < length; ++i)
+        {
             MatrixMath.MultiplyAffine(ref dst[i], in inverseBindPoses[i], in globals[i]);
         }
     }
@@ -183,43 +190,38 @@ internal sealed unsafe class AnimationSystem : IDisposable
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector3 GetPosition(int posIndex, float posFactor, NativeView<Vector3> positions)
+    private static Vector3 GetPosition(int posIndex, float posFactor, Vector3* positions)
     {
-        if (posIndex > 0)
-        {
-            var v1 = positions[posIndex].AsVector128Unsafe();
-            var v2 = positions[posIndex + 1].AsVector128Unsafe();
-            var v128 = Vector128.Lerp(v1, v2, Vector128.Create(posFactor));
-            return v128.AsVector3();
-        }
-
-        return positions[0];
+        if (posIndex > 0) return Vector3.Lerp(positions[posIndex], positions[posIndex + 1], posFactor);
+        return *positions;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Quaternion GetRotation(int rotIndex, float rotFactor, NativeView<Quaternion> rotation)
+    private static Quaternion GetRotation(int rotIndex, float rotFactor, Quaternion* rotation)
     {
         if (rotIndex > 0) return Quaternion.Slerp(rotation[rotIndex], rotation[rotIndex + 1], rotFactor);
-        return  rotation[0];
+        return *rotation;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static float GetIndexFactor(float time, NativeView<float> times, out int index)
+    private static float GetIndexFactor(float time, float* times, int length, out int index)
     {
-        if (times.Length == 1)
+        if (length == 1)
         {
             index = -1;
             return 0;
         }
 
-        index = FindIndex(times, time);
-        var i0 = times[index];
-        var i1 = times[index + 1];
+        var idx = FindIndex(new ReadOnlySpan<float>(times, length), time);
+        var i0 = times[idx];
+        var i1 = times[idx + 1];
+
+        index = idx;
         return (time - i0) / (i1 - i0);
     }
 
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int FindIndex(NativeView<float> keys, float time)
+    private static int FindIndex(ReadOnlySpan<float> keys, float time)
     {
         if (time >= keys[keys.Length - 1]) return keys.Length - 2;
         if (time <= keys[0]) return 0;

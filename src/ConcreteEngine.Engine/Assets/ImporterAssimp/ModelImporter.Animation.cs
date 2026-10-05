@@ -60,7 +60,7 @@ internal sealed unsafe partial class ModelImporter
 
                 if (floatCount == 0)
                 {
-                    tracks[boneIndex] = new NativeBoneTrack(default, 0, 0);
+                    tracks[boneIndex] = new NativeBoneTrack(null, 0, 0);
                     continue;
                 }
 

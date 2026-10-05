@@ -42,7 +42,7 @@ internal sealed class AnimationManager
         var count = 0;
         foreach (var query in RenderWorld.Queries.SparseQuery<SkinningLink>(entities))
         {
-            if (!RenderWorld.Instance.IsVisible(query.Entity)) continue;
+            if (!RenderWorld.CoreData.IsVisible(query.Entity.Id)) continue;
             query.Component.AnimationSlot = (ushort)slot;
             ++count;
         }
@@ -97,15 +97,13 @@ public sealed class AnimationInstance : IComparable<AnimationInstance>
 
     public readonly ModelRig Rig;
     
+    public float Duration;
+    public float TicksPerSecond;
+
     public double Time;
-
-    public double Duration;
-    public double TicksPerSecond;
-
     private double _prevTime;
     
     private readonly List<RenderEntity> _renderEntities = [];
-
 
     internal AnimationInstance(ModelRig rig, Id16<AnimationInstance> animationId)
     {
@@ -114,6 +112,8 @@ public sealed class AnimationInstance : IComparable<AnimationInstance>
         Rig = rig;
         Id = animationId;
     }
+    
+    internal NativeClip GetActiveClip() => Rig.GetClipTracks(ActiveClip);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<RenderEntity> GetEntitySpan() => CollectionsMarshal.AsSpan(_renderEntities);
@@ -129,10 +129,12 @@ public sealed class AnimationInstance : IComparable<AnimationInstance>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public double Interpolate(double alpha)
     {
-        if (Time < _prevTime)
-            return double.Lerp(_prevTime, Time + Duration, alpha) % Duration;
+        double time = Time, prevTime = _prevTime;
+        
+        if (time < prevTime)
+            return double.Lerp(prevTime, time + Duration, alpha) % Duration;
 
-        return double.Lerp(_prevTime, Time, alpha);
+        return double.Lerp(prevTime, time, alpha);
 
     }
 

@@ -110,13 +110,18 @@ public sealed class EngineRenderSystem : IDisposable
         
         _transformBuffer.Execute();
         _particleSystem.Execute();
+        //avg.BeginSample();
         _animationSystem.Execute(EngineTime.GameAlpha);
+        //avg.EndSample();
 
         // prepare buffers
         VisualSystem.Instance.UploadUniforms();
         VisualSystem.Instance.UploadUniformBuffers(_transformBuffer, _materialSystem, _animationSystem);
 
+        //if (avg.Ticks > 100) avg.ResetAndPrint();
+
     }
+    private AvgFrameTimer avg;
 
     public void ExecuteRenderPipeline()
     {

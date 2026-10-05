@@ -93,17 +93,17 @@ public sealed class ModelInstance : RenderBlueprintInstance
             ref var transform = ref ctx.Transform;
 
             if (IsAnimated)
-                transform.Model = rootMatrix;
+                transform = rootMatrix;
             else
             {
                 var mesh = Model.GetMesh(meshIndex);
-                MatrixMath.MultiplyAffine(ref transform.Model, in mesh.Transform, in rootMatrix);
+                MatrixMath.MultiplyAffine(ref transform, in mesh.Transform, in rootMatrix);
             }
-
-            MatrixMath.CreateNormalMatrix(ref transform.Normal, in transform.Model);
+            
+            MatrixMath.CreateNormalMatrix(ref ctx.Normal, in transform);
 
             ref readonly var localBounds = ref Model.GetMesh(meshIndex).Bounds;
-            BoundingAxisBox.GetWorldBounds(in localBounds, in transform.Model, out var entityBounds);
+            BoundingAxisBox.GetWorldBounds(in localBounds, in transform, out var entityBounds);
             ctx.WorldBounds = entityBounds;
             globalBounds.Expand(in entityBounds);
         }

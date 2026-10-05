@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 
@@ -60,12 +61,19 @@ public sealed class ModelRig : IDisposable
 
     public AnimationClip GetClip(int clip) => _clips[clip];
 
-    public ReadOnlySpan<byte> ParentIndices(int count) => new(_parentIndices, 0, count);
-    public ReadOnlySpan<Matrix4x4> BindPose(int count) => new(_bindPose, 0, count);
-    public ReadOnlySpan<Matrix4x4> InverseBindPose(int count) => new(_inverseBindPose, 0, count);
-    public Matrix4x4[] BindPoseArray => _bindPose;
-    public Matrix4x4[] InverseBindPoseArray => _inverseBindPose;
-    public byte[] ParentIndicesArray => _parentIndices;
+    public ReadOnlySpan<byte> ParentIndices() => _parentIndices;
+    public ReadOnlySpan<Matrix4x4> BindPose() => _bindPose;
+    public ReadOnlySpan<Matrix4x4> InverseBindPose() => _inverseBindPose;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte GetParentIndex(int i) => _parentIndices[i];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly Matrix4x4 GetBindPose(int i) => ref _bindPose[i];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly Matrix4x4 GetInverseBindPose(int i) => ref _inverseBindPose[i];
+
 
     internal NativeClip GetClipTracks(int clip)
     {
@@ -73,7 +81,7 @@ public sealed class ModelRig : IDisposable
             Throwers.InvalidOperation(nameof(_clipsBuffer));
 
         var it = _clipsView[clip];
-        if (it.IsNull || it.Length == 0) 
+        if (it.IsNull || it.Length == 0)
             Throwers.InvalidOperation(nameof(_clipsBuffer));
 
         return it;

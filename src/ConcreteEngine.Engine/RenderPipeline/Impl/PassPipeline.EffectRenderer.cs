@@ -25,7 +25,7 @@ internal static partial class PassPipeline
 
             *effect = new EditorEffectsUniform(entityContext.Source.IsSkinned(), query.Component.HighlightColor);
 
-            uniform->Model = entityContext.Transform.Model;
+            uniform->Model = entityContext.Transform;
             uniform->Normal = Matrix3X4.Identity;
 
             ctx.GfxBuffers.UploadSingleUniform(effect, 0);

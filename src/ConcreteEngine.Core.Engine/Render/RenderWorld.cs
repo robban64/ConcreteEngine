@@ -69,13 +69,6 @@ public sealed partial class RenderWorld : IDisposable
     public int ActiveCount => Count - _free.Count;
     public int Capacity => Data.Capacity;
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsAlive(RenderEntity e) => (uint)e.Id < (uint)Count && Data.IsAlive(e.Id);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsVisible(RenderEntity e) => (uint)e.Id < (uint)Count && Data.IsVisible(e.Id);
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal DrawEntityContext GetDrawContext(int entity)
     {

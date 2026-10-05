@@ -39,6 +39,10 @@ public readonly struct DrawEntityKey(int entity, uint sortKey)
 {
     public readonly int Entity = entity;
     public readonly uint SortKey = sortKey;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator int(DrawEntityKey e) => e.Entity;
+ 
 
     [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static DrawEntityKey Create(int entity, PassMask passMask, float distance, DrawQueue queue)

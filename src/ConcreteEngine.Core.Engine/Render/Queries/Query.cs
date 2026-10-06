@@ -26,14 +26,27 @@ public sealed partial class RenderWorld
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static QueryBuilder<T1> New<T1>() where T1 : unmanaged, IRenderComponent<T1> => new();
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static QueryBuilder<T1,T2> New<T1,T2>() 
+            where T1 : unmanaged, IRenderComponent<T1>
+            where T2 : unmanaged, IRenderComponent<T2> => new();
+
         public readonly ref struct QueryBuilder<T1> where T1 : unmanaged, IRenderComponent<T1>
         {
-            public FilterQuery<T1> Filter(BitSet filter) => new(filter);
+            public FilterQuery<T1> Filter(BitSet64 filter1, BitSet64 filter2 = default) => new(filter1, filter2);
+
             
-            public SparseFilterQuery<T1> SparseFilter(BitSet filter) => new(filter);
+            public SparseFilterQuery<T1> SparseFilter(BitSet64 filter) => new(filter);
 
-            public SparseEntityFilterQuery<T1> SparseEntityFilter(ReadOnlySpan<RenderEntity> entities, BitSet filter = default) => new(entities, filter);
-
+            public SparseEntityFilterQuery<T1> SparseEntityFilter(ReadOnlySpan<RenderEntity> entities, BitSet64 filter = default) => new(entities, filter);
         }
+        
+        public readonly ref struct QueryBuilder<T1, T2> 
+            where T1 : unmanaged, IRenderComponent<T1>
+            where T2 : unmanaged, IRenderComponent<T2>
+        {
+            public FilterQuery<T1,T2> Filter(BitSet64 filter1, BitSet64 filter2 = default) => new(filter1, filter2);
+        }
+
     }
 }

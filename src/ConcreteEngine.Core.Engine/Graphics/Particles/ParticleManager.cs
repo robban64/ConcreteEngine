@@ -98,7 +98,7 @@ internal sealed class ParticleManager : IDisposable
 
         _processedEmitters.Clear();
 
-        foreach (var it in RenderWorld.Query.New<EmitterLink>().SparseFilter(RenderWorld.MetaStore.VisibleSet))
+        foreach (var it in RenderWorld.Query.New<EmitterLink>().SparseFilter(RenderWorld.Meta.VisibleSet))
         {
             var emitterId = it.Component.EmitterId;
             if (_processedEmitters.Contains(emitterId)) continue;

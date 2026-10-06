@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Common.Collections;
 
-public record struct BitBlock(ulong Block)
+public record struct Bit64(ulong Block)
 {
     public ulong Block = Block;
 
@@ -14,7 +14,10 @@ public record struct BitBlock(ulong Block)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator ulong(BitBlock b) => b.Block;
+    public static implicit operator ulong(Bit64 b) => b.Block;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static explicit operator Bit64(ulong b) => Unsafe.BitCast<ulong, Bit64>(b);
 
     public bool this[int index]
     {
@@ -43,12 +46,23 @@ public record struct BitBlock(ulong Block)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearLowerBits() => Block &= Block - 1;
 
+
+    //
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly Bit64 And(Bit64 other) => Unsafe.BitCast<ulong, Bit64>(this & other);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly Bit64 Or(Bit64 other) => Unsafe.BitCast<ulong, Bit64>(this | other);
+
+    //
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly BitEnumerator GetEnumerator() => new(this);
 
-    public ref struct BitEnumerator(BitBlock bits)
+    public ref struct BitEnumerator(Bit64 bits)
     {
-        private BitBlock _bits = bits;
+        private Bit64 _bits = bits;
         public int Current { get; private set; } = 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -69,27 +83,30 @@ public record struct BitBlock(ulong Block)
     }
 }
 
-public readonly record struct BitSet
+public readonly record struct BitSet64
 {
     private readonly ulong[] _bits;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetBlockCapacity(int bits) => (bits + 63) / 64;
 
-    public BitSet(int capacity)
+    public BitSet64(int bitCount)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
-        _bits = new ulong[GetBlockCapacity(capacity)];
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bitCount);
+        _bits = new ulong[GetBlockCapacity(bitCount)];
     }
-    
-    public BitSet(ulong[] array)
+
+    public BitSet64(ulong[] array)
     {
         ArgumentNullException.ThrowIfNull(array);
         ArgumentOutOfRangeException.ThrowIfZero(array.Length);
         _bits = array;
     }
 
-    public bool IsDefault => _bits is null;
+    public bool IsNull => _bits is null;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool GetOrTrue(int index) => _bits is null || this[index];
 
     public int BlockCount
     {
@@ -128,7 +145,13 @@ public readonly record struct BitSet
     public ulong GetRawBlock(int blockIndex) => _bits[blockIndex];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public BitBlock GetBlockAtBit(int index) => Unsafe.BitCast<ulong, BitBlock>(_bits[index >> 6]);
+    public ulong GetRawBlockAtBits(int index) => _bits[index >> 6];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Bit64 GetBlock(int blockIndex) => Unsafe.BitCast<ulong, Bit64>(_bits[blockIndex]);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Bit64 GetBlockAtBit(int index) => Unsafe.BitCast<ulong, Bit64>(_bits[index >> 6]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetBlock(int blockIndex, ulong block) => _bits[blockIndex] = block;
@@ -176,18 +199,32 @@ public readonly record struct BitSet
         return BitCount - countTrue;
     }
 
+    //
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Bit64 And(int blockIndex, BitSet64 b1, BitSet64 b2)
+    {
+        //var x = b1.GetBlockAtBit(i).And(b2.GetBlockAtBit(i));
+        //var y = b2.GetBlockAtBit(i);
+        return b1.GetBlock(blockIndex).And(b2.GetBlock(blockIndex));
+//        return Unsafe.BitCast<ulong, BitBlock>(b1._bits[i >> 6] & b2._bits[i >> 6]);
+    }
+    // Unsafe.BitCast<ulong, BitBlock>(b1.GetRawBlockAtBits(i) & b2.GetRawBlockAtBits(i));
+
+    //
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear() => Array.Clear(_bits, 0, _bits.Length);
-    
-    public BitSet Resized(int newSize)
+
+    public BitSet64 Resized(int newSize)
     {
-        if(_bits is null) Throwers.NullReference(nameof(_bits));
+        if (_bits is null) Throwers.NullReference(nameof(_bits));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newSize);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(newSize, _bits.Length);
 
         var newArray = new ulong[newSize];
         Array.Copy(_bits, newArray, int.Min(_bits.Length, newSize));
-        return new BitSet(newArray);
+        return new BitSet64(newArray);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

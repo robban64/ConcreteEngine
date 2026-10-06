@@ -32,6 +32,16 @@ public sealed unsafe class DenseStore<T> : RenderStore where T : unmanaged, IRen
         }
     }
     
+    public ref T this[RenderEntity entity]
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            if ((uint)entity.Id >= (uint)Capacity) Throwers.IndexOutOfRange(entity.Id, Capacity, nameof(entity));
+            return ref _ptr[entity.Id];
+        }
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<T> AsSpan() => new(_ptr, RenderWorld.EntityCount);
     

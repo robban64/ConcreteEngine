@@ -1,9 +1,11 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Render;
+using ConcreteEngine.Core.Engine.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -28,7 +30,7 @@ public sealed class SceneManager
     {
         if (Instance != null!) throw new InvalidOperationException("SceneManager already created");
         Instance = this;
-        Store = new SceneStore(RenderWorld.Instance.Capacity);
+        Store = new SceneStore();
         Raycaster = new RayCaster(Store, Camera.Main.Transform);
     }
 
@@ -39,7 +41,7 @@ public sealed class SceneManager
         if (_dirtyIds.Count == 0) return;
         foreach (var id in CollectionsMarshal.AsSpan(_dirtyIds))
         {
-            var sceneObject = Store.GetUnsafe(id);
+            var sceneObject = Store.GetUnchecked(id);
             if ((sceneObject.Dirty & SceneDirtyFlags.Name) != 0)
                 InvokeRenameListener(sceneObject);
             sceneObject.Commit();
@@ -48,10 +50,40 @@ public sealed class SceneManager
 
     //
 
-    public void UnbindSceneHandle(RenderEntity e) => Store.UnbindSceneRenderEntity(e);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsLinked(int e) => RenderWorld.Dense<SceneLink>()[e].IsLinked;
+    
+    public SceneObject GetByLinkedEntity(int e)
+    {
+        var id = GetIdByLinkedEntity(e);
+        return Store.Get(id);
+    }
 
-    public void BindSceneHandle(SceneObjectId sceneId, RenderEntity e) =>
-        Store.BindSceneRenderEntity(sceneId, e, RenderWorld.Instance.Capacity);
+    public SceneObjectId GetIdByLinkedEntity(int e)
+    {
+        var sceneLink = RenderWorld.Dense<SceneLink>()[e];
+        if (!sceneLink.IsLinked) Throwers.InvalidArgumentHandle(e);
+        return sceneLink.SceneId;
+    }
+    
+    
+    public void BindSceneHandle(SceneObjectId sceneId, RenderEntity e)
+    {
+        e.ValidateEntity();
+        ref var sceneLink = ref RenderWorld.Dense<SceneLink>()[e];
+        if(sceneLink.IsLinked) Throwers.InvalidArgument("RenderEntity already bound to SceneObject");
+        sceneLink = new SceneLink(sceneId);
+    }
+
+    public void UnbindSceneHandle(RenderEntity e)
+    {
+        e.ValidateEntity();
+        ref var sceneLink = ref RenderWorld.Dense<SceneLink>()[e];
+        if(!sceneLink.IsLinked) Throwers.InvalidArgument("RenderEntity not bound to SceneObject");
+        sceneLink = default;
+    }
+
+
 
     private void InvokeRenameListener(SceneObject sceneObject)
     {

@@ -92,7 +92,7 @@ internal sealed class ParticleEmitterData : IDisposable
     }
 
 
-    public void RespawnParticles(int deadCount, ParticleEmitterState state, Span<BitBlock> deadBits)
+    public void RespawnParticles(int deadCount, ParticleEmitterState state, Span<Bit64> deadBits)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)deadCount, (uint)Capacity);
 
@@ -105,7 +105,7 @@ internal sealed class ParticleEmitterData : IDisposable
     }
 
 
-    public unsafe int SimulateLife(int count, float simDt, Span<BitBlock> deadBits)
+    public unsafe int SimulateLife(int count, float simDt, Span<Bit64> deadBits)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)count, (uint)Capacity);
 
@@ -142,7 +142,7 @@ internal sealed class ParticleEmitterData : IDisposable
         return deadIndex;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static int UpdateDeadBits(int i, uint bitMask, Span<BitBlock> deadBits)
+        static int UpdateDeadBits(int i, uint bitMask, Span<Bit64> deadBits)
         {
             ref var blockRef = ref deadBits[i >> 6];
 

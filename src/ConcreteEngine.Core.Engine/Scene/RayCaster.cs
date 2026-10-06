@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Graphics.Terrains;
 using ConcreteEngine.Core.Engine.Render;
+using ConcreteEngine.Core.Engine.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -26,15 +27,19 @@ public sealed class RayCaster
 
         var closestEntity = -1;
         var minDistance = float.MaxValue;
-        foreach (var query in RenderWorld.Query.New<WorldBox>().Filter(RenderWorld.MetaStore.VisibleSet))
+        foreach (var query in RenderWorld.Query.New<SceneLink,WorldBox>().Filter(RenderWorld.Meta.VisibleSet))
         {
-            if (!_sceneStore.IsLinkedEntity(query.Entity)) continue;
-
-            ref readonly var box = ref query.Component;
-            if (CollisionMethods.RayIntersectsBox(in ray, box.Min, box.Max, out var dist) && dist < minDistance)
+            foreach (var it in query)
             {
-                minDistance = dist;
-                closestEntity = query.Entity;
+                if (!it.Component1.IsLinked) continue;
+
+                ref readonly var box = ref it.Component2;
+                if (CollisionMethods.RayIntersectsBox(in ray, box.Min, box.Max, out var dist) && dist < minDistance)
+                {
+                    minDistance = dist;
+                    closestEntity = it.Entity;
+                }
+
             }
         }
 
@@ -45,7 +50,7 @@ public sealed class RayCaster
         }
 
         distance = minDistance;
-        return _sceneStore.GetByLinkedEntity(closestEntity);
+        return SceneManager.Instance.GetByLinkedEntity(closestEntity);
       
     }
 

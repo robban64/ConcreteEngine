@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Render;
@@ -37,5 +38,12 @@ public readonly record struct RenderEntity(int Id, int Gen) : IComparable<Render
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderEntityContext GetContext() => RenderWorld.Instance.GetContext(this);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ValidateHandle() => RenderWorld.ValidateHandle(this);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ValidateEntity() => RenderWorld.ValidateEntity(this);
+
     
 }

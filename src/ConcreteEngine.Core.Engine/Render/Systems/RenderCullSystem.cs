@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Graphics;
@@ -14,8 +15,13 @@ public sealed class RenderCullSystem : RenderWorldSystem
 
     private readonly Vector4[] _frustum = new Vector4[12];
 
+    //private NativeArray<ulong> _drawKeys;
+
+    //private Span<DrawEntityKey> DrawKeys => _drawKeys.Reinterpret<DrawEntityKey>().AsSpan();
     private ref BoundingFrustum LightFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustum[0]);
     private ref BoundingFrustum SceneFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustum[6]);
+
+   // public override void OnDenseResized(int newSize) => _drawKeys.ReAlloc(newSize, false);
 
     //
     internal void Execute(long frameId, Camera camera)
@@ -52,8 +58,8 @@ public sealed class RenderCullSystem : RenderWorldSystem
         var policies = RenderWorld.Dense<DrawPolicy>().AsReadOnlySpan();
         var worldBounds = RenderWorld.Dense<WorldBox>().AsReadOnlySpan();
         
-        var entitySet = RenderWorld.MetaStore.EntitySet;
-        var visibilitySet = RenderWorld.MetaStore.VisibleSet;
+        var entitySet = RenderWorld.Meta.EntitySet;
+        var visibilitySet = RenderWorld.Meta.VisibleSet;
 
         int visibleCount = 0;
 
@@ -68,7 +74,7 @@ public sealed class RenderCullSystem : RenderWorldSystem
             var entityBits = Filter(entitySet.GetBlockAtBit(start), innerPolices);
 
             int visibleIndex = 0;
-            BitBlock visibilityBits = default;
+            Bit64 visibilityBits = new(0);
             foreach (var i in entityBits)
             {
                 var policy = innerPolices[i];
@@ -112,7 +118,7 @@ public sealed class RenderCullSystem : RenderWorldSystem
         return culledMask;
     }
 
-    private static BitBlock Filter(BitBlock bits, ReadOnlySpan<DrawPolicy> span)
+    private static Bit64 Filter(Bit64 bits, ReadOnlySpan<DrawPolicy> span)
     {
         var entityBits = bits;
         for (int i = 0; i < span.Length; ++i)

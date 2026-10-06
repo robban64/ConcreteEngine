@@ -17,8 +17,10 @@ public sealed class RenderMetaStore : IDisposable
 
     private ushort[] _generations;
 
-    private BitSet _entitySet;
-    private BitSet _visibleSet;
+    private BitSet64 _entitySet;
+    private BitSet64 _visibleSet;
+    
+    private BitSet64 _trueSet;
 
     internal RenderMetaStore(int capacity)
     {
@@ -28,26 +30,29 @@ public sealed class RenderMetaStore : IDisposable
 
         _generations = new ushort[capacity];
 
-        _entitySet = new BitSet(capacity);
-        _visibleSet = new BitSet(capacity);
+        _entitySet = new BitSet64(capacity);
+        _visibleSet = new BitSet64(capacity);
+        _trueSet = new BitSet64(capacity);
+        _trueSet.SetAll(true);
     }
 
     //
-    public BitSet EntitySet => _entitySet;
-    public BitSet VisibleSet => _visibleSet;
+    public BitSet64 EntitySet => _entitySet;
+    public BitSet64 VisibleSet => _visibleSet;
+    public BitSet64 TrueSet => _trueSet;
 
     public ReadOnlySpan<ushort> GenerationSpan() => new(_generations, 0, RenderWorld.EntityCount);
 
     //
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int GetGeneration(int entity) => _generations[entity];
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsAlive(int entity) => _entitySet[entity];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsVisible(int entity) => _visibleSet[entity];
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ushort GetGeneration(int entity) => _generations[entity];
-    //
 
     //
     internal RenderEntity AddEntity(int entity, DrawPolicy policy, DrawSource source)
@@ -88,6 +93,8 @@ public sealed class RenderMetaStore : IDisposable
         {
             _entitySet = _entitySet.Resized(newSize);
             _visibleSet = _visibleSet.Resized(newSize);
+            _trueSet = _trueSet.Resized(newSize);
+            _trueSet.SetAll(true);
         }
 
         Capacity = newSize;

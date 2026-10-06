@@ -12,13 +12,13 @@ namespace ConcreteEngine.Core.Engine.Render;
 public sealed partial class RenderWorld : IDisposable
 {
     public static int EntityCount => Instance.Count;
-    public static RenderMetaStore MetaStore => Instance.Meta;
+    public static RenderMetaStore Meta => Instance._meta;
     public static RenderWorld Instance { get; private set; } = null!;
 
     //
     public int Count { get; private set; }
 
-    public readonly RenderMetaStore Meta;
+    private readonly RenderMetaStore _meta;
     
     private readonly List<RenderStore> _stores = new(8);
     private readonly List<RenderStore> _denseStores = new(8);
@@ -32,12 +32,12 @@ public sealed partial class RenderWorld : IDisposable
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 64);
 
         Instance = this;
-        Meta = new RenderMetaStore(initialCapacity);
+        _meta = new RenderMetaStore(initialCapacity);
     }
 
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
-    public int Capacity => Meta.Capacity;
+    public int Capacity => _meta.Capacity;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderEntityContext GetContext(RenderEntity entity)
@@ -56,13 +56,13 @@ public sealed partial class RenderWorld : IDisposable
             entityId = Count++;
         }
 
-        return Meta.AddEntity(entityId, policy, source);
+        return _meta.AddEntity(entityId, policy, source);
     }
 
     public void RemoveEntity(RenderEntity entity)
     {
         ValidateHandle(entity);
-        Meta.RemoveEntity(entity);
+        _meta.RemoveEntity(entity);
         Count = SlotHelper.FreeSlot(_free, entity.Id, Count);
     }
 
@@ -74,7 +74,7 @@ public sealed partial class RenderWorld : IDisposable
         var newSize = CapacityUtils.CapacityGrowthToFit(Capacity, required);
         Logger.Log(LogScope.Ecs, "RenderEcs resized", LogLevel.Warn);
 
-        Meta.Resize(newSize);
+        _meta.Resize(newSize);
 
         foreach (var dense in _denseStores) dense.OnDenseResized(newSize);
         foreach (var sparse in _stores) sparse.OnDenseResized(newSize);
@@ -87,15 +87,9 @@ public sealed partial class RenderWorld : IDisposable
         foreach (var sparse in _stores) sparse.Dispose();
         foreach (var dense in _denseStores) dense.Dispose();
 
-        Meta.Dispose();
+        _meta.Dispose();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ValidateHandle(RenderEntity entity)
-    {
-        if ((uint)entity.Id >= (uint)Count || entity.Gen == 0) Throwers.InvalidOperation(nameof(entity));
-    }
-    
     
     //
     
@@ -110,6 +104,8 @@ public sealed partial class RenderWorld : IDisposable
         CreateDenseStore<WorldBox>(Capacity, false);
         CreateDenseStore<WorldTransform>(Capacity, false);
         CreateDenseStore<NormalMatrix>(Capacity, false);
+        
+        CreateDenseStore<SceneLink>(Capacity, true);
 
         CreateComponentStore<DrawInstanced>(32);
         CreateComponentStore<SkinningLink>(16);
@@ -131,11 +127,11 @@ public sealed partial class RenderWorld : IDisposable
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T System<T>() where T : RenderWorldSystem => WorldSystems<T>.System;
-
+    
     private void CreateComponentStore<T>(int capacity) where T : unmanaged, IRenderComponent<T>
     {
         if (SparseStores<T>.Store != null!) Throwers.InvalidOperation();
-        SparseStores<T>.Store = new SparseStore<T>(capacity, Meta.Capacity);
+        SparseStores<T>.Store = new SparseStore<T>(capacity, _meta.Capacity);
         _stores.Add(SparseStores<T>.Store);
     }
 
@@ -169,4 +165,18 @@ public sealed partial class RenderWorld : IDisposable
         public static T System = null!;
     }
 
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ValidateEntity(RenderEntity entity)
+    {
+        if ((uint)entity.Id >= (uint)EntityCount) Throwers.InvalidOperation(nameof(entity));
+        if(entity.Gen == 0 || entity.Gen != Meta.GetGeneration(entity.Id)) Throwers.InvalidOperation(nameof(entity));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ValidateHandle(RenderEntity entity)
+    {
+        if ((uint)entity.Id >= (uint)EntityCount || entity.Gen == 0) Throwers.InvalidOperation(nameof(entity));
+    }
+    
 }

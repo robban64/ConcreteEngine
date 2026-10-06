@@ -46,7 +46,6 @@ public sealed class EngineRenderSystem : IDisposable
         _drawCmd = new DrawCommandProcessor(graphics.Gfx, _animationSystem, _materialSystem);
         _passContext = new RenderPassContext(_drawCmd);
         _transformBuffer = new RenderTransformBuffer();
-
     }
 
     internal void Init()
@@ -56,12 +55,12 @@ public sealed class EngineRenderSystem : IDisposable
         PassPipeline.RegisterPassPipeline();
         VisualSystem.Instance.UploadPointLight();
     }
-    
+
     internal void AfterUpdate()
     {
         var visuals = VisualManager.Instance;
         visuals.Commit();
-        
+
         _renderCamera.Commit(visuals.Lighting);
         _materialSystem.Commit();
     }
@@ -91,7 +90,8 @@ public sealed class EngineRenderSystem : IDisposable
         AnimationManager.Instance.Simulate(dt);
         ParticleManager.Instance.Simulate((float)dt);
     }
-    
+
+
     public void PrepareRenderer()
     {
         RenderContext.ResetContext();
@@ -105,19 +105,14 @@ public sealed class EngineRenderSystem : IDisposable
         // process and upload draw commands
         RenderWorld.System<RenderCullSystem>().Execute(EngineTime.FrameId, _renderCamera);
         RenderWorld.System<RenderPassSystem>().Execute(EngineTime.FrameId);
-        
+
         _transformBuffer.Execute();
         _particleSystem.Execute();
-        //avg.BeginSample();
         _animationSystem.Execute(EngineTime.GameAlpha);
-        //avg.EndSample();
 
         // prepare buffers
         VisualSystem.Instance.UploadUniforms();
         VisualSystem.Instance.UploadUniformBuffers(_transformBuffer, _materialSystem, _animationSystem);
-
-        //if (avg.Ticks > 100) avg.ResetAndPrint();
-
     }
 
     public void ExecuteRenderPipeline()
@@ -135,7 +130,6 @@ public sealed class EngineRenderSystem : IDisposable
 
             EndPass(i);
         }
-
     }
 
     private void ExecuteDrawPass(int passId)

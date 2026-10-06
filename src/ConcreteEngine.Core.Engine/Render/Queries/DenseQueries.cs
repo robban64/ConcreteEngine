@@ -14,9 +14,7 @@ public sealed partial class RenderWorld
         {
             private int _entity;
             private readonly BitSet _filter;
-
             private readonly Span<T1> _data;
-            private readonly ReadOnlySpan<ushort> _generations;
 
             public QueryItem<T1> Current { get; private set; }
 
@@ -24,7 +22,6 @@ public sealed partial class RenderWorld
             {
                 _entity = -1;
                 _filter = filter;
-                _generations = MetaStore.GenerationSpan();
                 _data = Dense<T1>().AsSpan();
             }
 
@@ -35,7 +32,7 @@ public sealed partial class RenderWorld
                 {
                     if (_filter[_entity])
                     {
-                        Current = new QueryItem<T1>(new RenderEntity(_entity, _generations[_entity]), ref _data[_entity]);
+                        Current = new QueryItem<T1>(_entity, ref _data[_entity]);
                         return true;
                     }
                 }

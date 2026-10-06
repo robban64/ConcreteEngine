@@ -65,8 +65,8 @@ internal sealed class TerrainSystem
             var ctx = entity.GetContext();
             ctx.WorldBounds = new WorldBox(in chunk.GetBounds());
 
-            var component = new DrawInstancedComponent { Instances = (uint)it.FoliageCount };
-            RenderWorld.Sparse<DrawInstancedComponent>().Add(entity, component);
+            var component = new DrawInstanced { Instances = (uint)it.FoliageCount };
+            RenderWorld.Sparse<DrawInstanced>().Add(entity, component);
         }
     }
 

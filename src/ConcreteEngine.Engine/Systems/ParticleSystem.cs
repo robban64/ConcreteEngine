@@ -18,8 +18,6 @@ internal sealed class ParticleSystem : IDisposable
     private readonly ParticleMesh _particleMesh;
     private readonly ParticleManager _particleManager;
 
-    private readonly List<Id16<ParticleEmitter>> _processedEmitters = new(16);
-
     internal ParticleSystem(GfxContext gfx)
     {
         if (_allocated) Throwers.InvalidOperation("ParticleSystem already active");
@@ -46,30 +44,11 @@ internal sealed class ParticleSystem : IDisposable
         _particleManager.ClearPendingEmitters();
     }
 
-    internal void Simulate(float simDt)
-    {
-        if (_particleManager.EmitterCount == 0) return;
-
-        _processedEmitters.Clear();
-
-        foreach (var it in RenderWorld.Query.VisibilityQuery<EmitterLink>())
-        {
-            var emitterId = it.Component.EmitterId;
-            if (_processedEmitters.Contains(emitterId)) continue;
-
-            var emitter = _particleManager.Get(emitterId);
-            if (!emitter.IsAttached) continue;
-
-            emitter.Simulate(simDt);
-            _processedEmitters.Add(emitterId);
-        }
-
-    }
-
     internal void Execute()
     {
         var timeOffset = (float)(EngineTime.SimulationDelta * EngineTime.SimulationAlpha);
-        foreach (var emitterId in _processedEmitters.AsSpan())
+        
+        foreach (var emitterId in _particleManager.GetProcessedEmitterIds())
         {
             var emitter = _particleManager.Get(emitterId);
             _particleMesh.GetBufferView(emitter.AlignedParticleCount, out var positions, out var particles);

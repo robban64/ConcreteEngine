@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Render;
 using ConcreteEngine.Core.Engine.Render.Components;
+using ConcreteEngine.Core.Engine.Render.Systems;
 using ConcreteEngine.Engine.Systems;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -55,7 +56,7 @@ internal sealed class DrawCommandProcessor
 
         if ((source.DrawMask & EntityDrawMask.Instanced) != 0)
         {
-            var instances = RenderWorld.Sparse<DrawInstancedComponent>().GetUnchecked(entity.Entity).Instances;
+            var instances = RenderWorld.Sparse<DrawInstanced>().GetUnchecked(entity.Entity).Instances;
             GfxCmd.DrawMeshInstanced(source.Mesh, instances);
             return;
         }

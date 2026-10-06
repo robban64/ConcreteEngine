@@ -41,13 +41,13 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         var source = new DrawSource(default, matId, DrawMask: EntityDrawMask.Instanced);
         var entity = RenderWorld.Instance.AddEntity(source, policy);
         RenderWorld.Sparse<EmitterLink>().Add(entity, new EmitterLink(Emitter.Id));
-        RenderWorld.Sparse<DrawInstancedComponent>().Add(entity, new DrawInstancedComponent(Emitter.ParticleCount));
+        RenderWorld.Sparse<DrawInstanced>().Add(entity, new DrawInstanced(Emitter.ParticleCount));
 
         SceneManager.Instance.BindSceneHandle(Owner.Id, entity);
         RenderEntityIds.Add(entity);
 
         RenderWorld.Sparse<EmitterLink>().Commit();
-        RenderWorld.Sparse<DrawInstancedComponent>().Commit();
+        RenderWorld.Sparse<DrawInstanced>().Commit();
     }
 
     protected override void OnCommit()
@@ -59,7 +59,7 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         var ctx = entity.GetContext();
         ctx.Source.Mesh = Emitter.BoundMesh;
         ctx.Policy = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
-        ctx.GetComponent<DrawInstancedComponent>().Instances = (uint)Emitter.ParticleCount;
+        ctx.GetComponent<DrawInstanced>().Instances = (uint)Emitter.ParticleCount;
     }
 
     internal override void ApplyTransform(in Matrix4x4 rootMatrix)

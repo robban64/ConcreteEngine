@@ -23,32 +23,11 @@ internal sealed class AnimationManager
 
     public AnimationInstance Get(Id16<AnimationInstance> id) => _animations[id.Index]!;
 
-    public void Interpolate(double alpha)
+    public void Simulate(double dt)
     {
-        int slot = 1;
-        foreach (var animation in GetEnumerator())
-        {
-            var count = FilterEntities(slot, animation.GetEntitySpan());
-            if (count == 0) continue;
-
-            var time = animation.Interpolate(alpha);
-            ++slot;
-        }
-
+        foreach (var it in _animations) it.AdvanceTime(dt);
     }
-        
-    private static int FilterEntities(int slot, ReadOnlySpan<RenderEntity> entities)
-    {
-        var count = 0;
-        foreach (var query in RenderWorld.Query.SparseQuery<SkinningLink>(entities))
-        {
-            if (!RenderWorld.MetaStore.IsVisible(query.Entity.Id)) continue;
-            query.Component.AnimationSlot = (ushort)slot;
-            ++count;
-        }
 
-        return count;
-    }
     public void AttachEntity(ModelRig rig, RenderEntityContext ctx, Id16<AnimationInstance> animationId = default)
     {
         if (animationId == 0 && TryGetFirstByRig(rig, out var firstEntry))

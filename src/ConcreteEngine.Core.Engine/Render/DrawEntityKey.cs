@@ -1,12 +1,13 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Render;
 
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawEntityKey(int entity, uint sortKey)
+public readonly struct DrawEntityKey(int entity, uint sortKey) : IRenderComponent<DrawEntityKey>
 {
     public readonly int Entity = entity;
     public readonly uint SortKey = sortKey;
@@ -24,9 +25,3 @@ public readonly struct DrawEntityKey(int entity, uint sortKey)
     }
 }
 
-[StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawEntityIndex(int entity, int submitIndex)
-{
-    public readonly int Entity = entity;
-    public readonly int SubmitIndex = submitIndex;
-}

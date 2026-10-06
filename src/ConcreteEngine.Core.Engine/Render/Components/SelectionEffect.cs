@@ -2,9 +2,9 @@ using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Engine.Render.Components;
 
-public struct SelectionComponent(ColorRgba highlightColor) : IRenderComponent<SelectionComponent>
+public struct SelectionEffect(ColorRgba highlightColor) : IRenderComponent<SelectionEffect>
 {
-    public static SelectionComponent DefaultHighlight => new(new ColorRgba(46, 163, 242));
+    public static SelectionEffect DefaultHighlight => new(new ColorRgba(46, 163, 242));
 
     public ColorRgba HighlightColor = highlightColor;
 

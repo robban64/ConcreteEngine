@@ -33,6 +33,9 @@ public readonly record struct RenderEntity(int Id, int Gen) : IComparable<Render
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static RenderEntity Unpack(ulong packed) => Unsafe.BitCast<ulong, RenderEntity>(packed);
 
+    //
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderEntityContext GetContext() => RenderWorld.Instance.GetContext(this);
     
 }

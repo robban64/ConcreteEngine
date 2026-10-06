@@ -59,11 +59,6 @@ internal sealed unsafe class AnimationSystem : IDisposable
         BoneCount = 0;
     }
 
-    public void Simulate(double dt)
-    {
-        foreach (var it in _animations) it.AdvanceTime(dt);
-    }
-
     public void Execute(double alpha)
     {
         _animationIds.Clear();
@@ -95,9 +90,8 @@ internal sealed unsafe class AnimationSystem : IDisposable
     private static int FilterEntities(int slot, ReadOnlySpan<RenderEntity> entities)
     {
         var count = 0;
-        foreach (var query in RenderWorld.Query.SparseQuery<SkinningLink>(entities))
+        foreach (var query in RenderWorld.Query.New<SkinningLink>().SparseEntityFilter(entities, RenderWorld.MetaStore.VisibleSet))
         {
-            if (!RenderWorld.MetaStore.IsVisible(query.Entity.Id)) continue;
             query.Component.AnimationSlot = (ushort)slot;
             ++count;
         }

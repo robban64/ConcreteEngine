@@ -61,8 +61,8 @@ internal static partial class PassPipeline
             {
                 ctx.MutatePass<SceneTarget>(FboVariant.V1, ctx.TargetFbo);
 
-                var selectionCount = RenderWorld.Sparse<SelectionComponent>().Count;
-                var debugBoundsCount = RenderWorld.Sparse<DebugBoundsComponent>().Count;
+                var selectionCount = RenderWorld.Sparse<SelectionEffect>().Count;
+                var debugBoundsCount = RenderWorld.Sparse<DebugBoundsEffect>().Count;
                 if (selectionCount + debugBoundsCount == 0) return;
 
                 ctx.Gfx.BindFramebuffer(ctx.TargetFbo);

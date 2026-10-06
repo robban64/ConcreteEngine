@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Engine.Render.Components;
 namespace ConcreteEngine.Core.Engine.Render;
 
 public sealed unsafe class DenseStore<T> : RenderStore where T : unmanaged, IRenderComponent<T>
-{
+{ 
     public int Capacity { get; private set; }
     
     private T* _ptr;

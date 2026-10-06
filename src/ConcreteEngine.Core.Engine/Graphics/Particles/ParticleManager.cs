@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Identity;
+using ConcreteEngine.Core.Engine.Render;
+using ConcreteEngine.Core.Engine.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Graphics.Particles;
 
@@ -12,7 +14,8 @@ internal sealed class ParticleManager : IDisposable
     public static readonly ParticleManager Instance = new();
 
     private readonly SlotArray<ParticleEmitter> _emitters = new(8);
-    private readonly List<Id16<ParticleEmitter>> _pendingEmitters = new(4);
+    private readonly List<Id16<ParticleEmitter>> _pendingEmitters = new(8);
+    private readonly List<Id16<ParticleEmitter>> _processedEmitters = new(8);
 
     private ParticleManager() { }
 
@@ -20,7 +23,8 @@ internal sealed class ParticleManager : IDisposable
     public bool HasPendingEmitters => _pendingEmitters.Count > 0;
     
     public ActiveObjectEnumerator<ParticleEmitter> EmitterEnumerator() => _emitters.GetEnumerator();
-    internal ReadOnlySpan<Id16<ParticleEmitter>> GetPendingEmitterIds() => CollectionsMarshal.AsSpan(_pendingEmitters);
+    internal ReadOnlySpan<Id16<ParticleEmitter>> GetPendingEmitterIds() => _pendingEmitters.AsSpan();
+    internal ReadOnlySpan<Id16<ParticleEmitter>> GetProcessedEmitterIds() => _processedEmitters.AsSpan();
 
     public ParticleEmitter CreateEmitter(
         string name,
@@ -86,6 +90,25 @@ internal sealed class ParticleManager : IDisposable
         }
 
         _pendingEmitters.Clear();
+    }
+    
+    internal void Simulate(float simDt)
+    {
+        if (EmitterCount == 0) return;
+
+        _processedEmitters.Clear();
+
+        foreach (var it in RenderWorld.Query.New<EmitterLink>().SparseFilter(RenderWorld.MetaStore.VisibleSet))
+        {
+            var emitterId = it.Component.EmitterId;
+            if (_processedEmitters.Contains(emitterId)) continue;
+
+            var emitter = Get(emitterId);
+            if (!emitter.IsAttached) continue;
+
+            emitter.Simulate(simDt);
+            _processedEmitters.Add(emitterId);
+        }
     }
 
     public void Dispose()

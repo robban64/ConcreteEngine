@@ -9,19 +9,16 @@ using ConcreteEngine.Core.Engine.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Render;
 
-
 public sealed class RenderMetaStore : IDisposable
 {
     public const int MinCapacity = 128;
-    
+
     public int Capacity { get; private set; }
 
     private ushort[] _generations;
 
     private BitSet _entitySet;
     private BitSet _visibleSet;
-    
-    private NativeArray<ulong> _sortKeys;
 
     internal RenderMetaStore(int capacity)
     {
@@ -29,11 +26,10 @@ public sealed class RenderMetaStore : IDisposable
 
         Capacity = capacity;
 
+        _generations = new ushort[capacity];
+
         _entitySet = new BitSet(capacity);
         _visibleSet = new BitSet(capacity);
-
-        _generations = new ushort[capacity];
-        _sortKeys = NativeArray.Allocate<ulong>(capacity);
     }
 
     //
@@ -41,9 +37,6 @@ public sealed class RenderMetaStore : IDisposable
     public BitSet VisibleSet => _visibleSet;
 
     public ReadOnlySpan<ushort> GenerationSpan() => new(_generations, 0, RenderWorld.EntityCount);
-
-    public NativeView<ulong> RawSortKeys => _sortKeys;
-    public NativeView<DrawEntityKey> SortKeys => RawSortKeys.Reinterpret<DrawEntityKey>();
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -62,11 +55,11 @@ public sealed class RenderMetaStore : IDisposable
         if (_entitySet[entity]) Throwers.InvalidArgument("Entity already exists");
         _entitySet[entity] = true;
 
-        Policies[entity] = policy;
-        Sources[entity] = source;
-        WorldBounds[entity] = default;
-        Transforms[entity].Transform = Matrix4x4.Identity;
-        Normals[entity].Normal = Matrix3X4.Identity;
+        RenderWorld.Dense<DrawPolicy>()[entity] = policy;
+        RenderWorld.Dense<DrawSource>()[entity] = source;
+        RenderWorld.Dense<WorldBox>()[entity] = default;
+        RenderWorld.Dense<WorldTransform>()[entity].Transform = Matrix4x4.Identity;
+        RenderWorld.Dense<NormalMatrix>()[entity].Normal = Matrix3X4.Identity;
 
         var gen = ++_generations[entity];
         return new RenderEntity(entity, gen);
@@ -79,8 +72,8 @@ public sealed class RenderMetaStore : IDisposable
         var generation = _generations[entity.Id];
         if (entity.Gen != generation) Throwers.InvalidArgument(nameof(entity), "Bug: Entity generation mismatch");
         _entitySet[entity.Id] = false;
-        Policies[entity.Id] = default;
-        Sources[entity.Id] = default;
+        RenderWorld.Dense<DrawPolicy>()[entity.Id] = default;
+        RenderWorld.Dense<DrawSource>()[entity.Id] = default;
     }
 
 
@@ -90,7 +83,6 @@ public sealed class RenderMetaStore : IDisposable
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(newSize, Capacity);
 
         Array.Resize(ref _generations, newSize);
-        _sortKeys.ReAlloc(newSize, true);
 
         if (newSize > _entitySet.BitCount)
         {
@@ -104,14 +96,7 @@ public sealed class RenderMetaStore : IDisposable
 
     public void Dispose()
     {
-        _sortKeys.Dispose();
         Capacity = 0;
     }
-    
-    public  DenseStore<DrawPolicy> Policies => RenderWorld.Dense<DrawPolicy>();
-    public  DenseStore<DrawSource> Sources => RenderWorld.Dense<DrawSource>();
-    public  DenseStore<WorldBox> WorldBounds => RenderWorld.Dense<WorldBox>();
-    public  DenseStore<WorldTransform> Transforms => RenderWorld.Dense<WorldTransform>();
-    public  DenseStore<NormalMatrix> Normals => RenderWorld.Dense<NormalMatrix>();
 
 }

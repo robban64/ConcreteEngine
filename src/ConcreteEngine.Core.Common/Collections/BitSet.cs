@@ -69,7 +69,7 @@ public record struct BitBlock(ulong Block)
     }
 }
 
-public readonly struct BitSet
+public readonly record struct BitSet
 {
     private readonly ulong[] _bits;
 
@@ -89,6 +89,7 @@ public readonly struct BitSet
         _bits = array;
     }
 
+    public bool IsDefault => _bits is null;
 
     public int BlockCount
     {
@@ -102,6 +103,7 @@ public readonly struct BitSet
         get => _bits.Length * 64;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<ulong> AsSpan() => _bits;
 
     public bool this[int index]

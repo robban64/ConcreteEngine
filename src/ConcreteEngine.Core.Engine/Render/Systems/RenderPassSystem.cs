@@ -1,11 +1,19 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Engine.Render.Systems;
+
+[StructLayout(LayoutKind.Sequential)]
+public readonly struct DrawEntityIndex(int entity, int submitIndex)
+{
+    public readonly int Entity = entity;
+    public readonly int SubmitIndex = submitIndex;
+}
 
 public sealed class RenderPassSystem : RenderWorldSystem
 {
@@ -16,20 +24,10 @@ public sealed class RenderPassSystem : RenderWorldSystem
     private readonly Range32[] _passRanges;
     private NativeArray<ulong> _drawIndices;
 
-    private readonly RenderMetaStore _metaStore;
-    private readonly RenderCullSystem _cullSystem;
-
-    internal RenderPassSystem(RenderMetaStore metaStore, RenderCullSystem cullSystem)
+    public RenderPassSystem()
     {
-        ArgumentNullException.ThrowIfNull(metaStore);
-        ArgumentNullException.ThrowIfNull(cullSystem);
-
-        _metaStore = metaStore;
-        _cullSystem = cullSystem;
-
         _passRanges = new Range32[RenderLimits.DrawPassSlots];
         _drawIndices = NativeArray.Allocate<ulong>(DefaultTicketCapacity);
-        
     }
 
     private NativeView<DrawEntityIndex> DrawIndices => _drawIndices.Reinterpret<DrawEntityIndex>();
@@ -45,12 +43,12 @@ public sealed class RenderPassSystem : RenderWorldSystem
     {
         FrameVersion = frameId;
         
-        if(_cullSystem.FrameVersion != frameId) Throwers.InvalidOperation();
+        if(RenderWorld.System<RenderCullSystem>().FrameVersion != frameId) Throwers.InvalidOperation();
 
-        var visibleCount = _cullSystem.VisibleCount;
+        var visibleCount = RenderWorld.System<RenderCullSystem>().VisibleCount;
         if (visibleCount == 0) return;
         
-        var sortKeys = _metaStore.SortKeys.AsSpan(0, visibleCount);
+        var sortKeys = RenderWorld.Dense<DrawEntityKey>().AsSpan().Slice(0, visibleCount);
         
         BuildDrawIndices(sortKeys);
     }

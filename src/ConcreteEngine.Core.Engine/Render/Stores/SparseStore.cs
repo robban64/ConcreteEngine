@@ -200,7 +200,7 @@ public sealed class SparseStore<T> : RenderStore where T : unmanaged, IRenderCom
     public void EnsureCapacity(int amount)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
-        
+
         var capacity = Capacity;
         var required = Count + amount;
         if (capacity >= required) return;
@@ -243,5 +243,40 @@ public sealed class SparseStore<T> : RenderStore where T : unmanaged, IRenderCom
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderWorld.Query.ComponentEnumerator<T> GetEnumerator() => new();
+    public Enumerator GetEnumerator() => new();
+
+    //
+    public ref struct Enumerator
+    {
+        private int _i = -1;
+        private readonly int _length;
+        private readonly SparseStore<T> _store;
+
+        public Enumerator()
+        {
+            _store = RenderWorld.Sparse<T>();
+            _length = _store.Count;
+        }
+
+        public RenderWorld.Query.SparseQueryItem<T> Current { get; private set; }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext()
+        {
+            while (++_i < _length)
+            {
+                var entity = _store.GetEntity(_i);
+                if (entity.IsValid)
+                {
+                    Current = new RenderWorld.Query.SparseQueryItem<T>(entity, ref _store.GetByIndex(_i));
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Enumerator GetEnumerator() => this;
+    }
 }

@@ -2,7 +2,7 @@ using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Engine.Render.Components;
 
-public struct DebugBoundsComponent(ColorRgba color) : IRenderComponent<DebugBoundsComponent>
+public struct DebugBoundsEffect(ColorRgba color) : IRenderComponent<DebugBoundsEffect>
 {
     public static readonly ColorRgba[] DefaultColors =
     [

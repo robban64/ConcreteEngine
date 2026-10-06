@@ -19,15 +19,12 @@ public sealed partial class RenderWorld : IDisposable
     public int Count { get; private set; }
 
     public readonly RenderMetaStore Meta;
-    public readonly RenderCullSystem CullSystem;
-    public readonly RenderPassSystem PassSystem;
-
-    private readonly Stack<int> _free = [];
-
+    
     private readonly List<RenderStore> _stores = new(8);
     private readonly List<RenderStore> _denseStores = new(8);
+    private readonly List<RenderWorldSystem> _systems = new(8);
 
-    private readonly List<RenderWorldSystem> _systems;
+    private readonly Stack<int> _free = [];
 
     internal RenderWorld(int initialCapacity = 1024)
     {
@@ -36,9 +33,6 @@ public sealed partial class RenderWorld : IDisposable
 
         Instance = this;
         Meta = new RenderMetaStore(initialCapacity);
-        CullSystem = new RenderCullSystem(Meta);
-        PassSystem = new RenderPassSystem(Meta, CullSystem);
-        _systems = [CullSystem, PassSystem];
     }
 
     public int FreeCount => _free.Count;
@@ -105,21 +99,26 @@ public sealed partial class RenderWorld : IDisposable
     
     //
     
-    internal void SetupTestStores()
+    internal void SetupTest()
     {
         if (_stores.Count > 0 || _denseStores.Count > 0) throw new InvalidOperationException("ECS already initialized");
 
         CreateDenseStore<DrawPolicy>(Capacity, true);
         CreateDenseStore<DrawSource>(Capacity, true);
+        CreateDenseStore<DrawEntityKey>(Capacity, true);
+
         CreateDenseStore<WorldBox>(Capacity, false);
         CreateDenseStore<WorldTransform>(Capacity, false);
         CreateDenseStore<NormalMatrix>(Capacity, false);
 
-        CreateComponentStore<DrawInstancedComponent>(32);
+        CreateComponentStore<DrawInstanced>(32);
         CreateComponentStore<SkinningLink>(16);
         CreateComponentStore<EmitterLink>(16);
-        CreateComponentStore<SelectionComponent>(16);
-        CreateComponentStore<DebugBoundsComponent>(16);
+        CreateComponentStore<SelectionEffect>(16);
+        CreateComponentStore<DebugBoundsEffect>(16);
+        
+        CreateSystem<RenderCullSystem>();
+        CreateSystem<RenderPassSystem>();
     }
     
     //
@@ -130,6 +129,9 @@ public sealed partial class RenderWorld : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static DenseStore<T> Dense<T>() where T : unmanaged, IRenderComponent<T> => DenseStores<T>.Store;
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T System<T>() where T : RenderWorldSystem => WorldSystems<T>.System;
+
     private void CreateComponentStore<T>(int capacity) where T : unmanaged, IRenderComponent<T>
     {
         if (SparseStores<T>.Store != null!) Throwers.InvalidOperation();
@@ -144,6 +146,14 @@ public sealed partial class RenderWorld : IDisposable
         _denseStores.Add(DenseStores<T>.Store);
     }
     
+    private void CreateSystem<T>() where T : RenderWorldSystem, new()
+    {
+        if (WorldSystems<T>.System != null!) Throwers.InvalidOperation();
+        WorldSystems<T>.System = new T();
+        _systems.Add(WorldSystems<T>.System);
+    }
+
+    
     private static class SparseStores<T> where T : unmanaged, IRenderComponent<T>
     {
         public static SparseStore<T> Store = null!;
@@ -152,6 +162,11 @@ public sealed partial class RenderWorld : IDisposable
     private static class DenseStores<T> where T : unmanaged, IRenderComponent<T>
     {
         public static DenseStore<T> Store = null!;
+    }
+    
+    private static class WorldSystems<T> where T : RenderWorldSystem
+    {
+        public static T System = null!;
     }
 
 }

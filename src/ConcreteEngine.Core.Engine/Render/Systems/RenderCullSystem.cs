@@ -12,21 +12,12 @@ public sealed class RenderCullSystem : RenderWorldSystem
 {
     public int VisibleCount { get; private set; }
 
-    private readonly RenderMetaStore _metaStore;
-
     private readonly Vector4[] _frustum = new Vector4[12];
-
-    public RenderCullSystem(RenderMetaStore metaStore)
-    {
-        ArgumentNullException.ThrowIfNull(metaStore);
-        _metaStore = metaStore;
-    }
 
     private ref BoundingFrustum LightFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustum[0]);
     private ref BoundingFrustum SceneFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustum[6]);
 
     //
-
     internal void Execute(long frameId, Camera camera)
     {
         FrameVersion = frameId;
@@ -41,7 +32,8 @@ public sealed class RenderCullSystem : RenderWorldSystem
 
         if (visibleCount == 0) return;
 
-        _metaStore.RawSortKeys.AsSpan(0, visibleCount).Sort();
+        var sortKeys64 = RenderWorld.Dense<DrawEntityKey>().AsView().Reinterpret<ulong>().AsSpan(0, visibleCount);
+        sortKeys64.Sort();
     }
 
     private void BuildFrustum(Camera camera)
@@ -56,11 +48,12 @@ public sealed class RenderCullSystem : RenderWorldSystem
 
     private int CullEntities(int entityCount)
     {
-        var sortKeys = _metaStore.SortKeys.Slice(0, entityCount);
-        var policies = _metaStore.Policies.AsReadOnlySpan();
-        var worldBounds = _metaStore.WorldBounds.AsReadOnlySpan();
-        var visibilitySet = _metaStore.VisibleSet;
-        var entitySet = _metaStore.EntitySet;
+        var sortKeys = RenderWorld.Dense<DrawEntityKey>().AsSpan();
+        var policies = RenderWorld.Dense<DrawPolicy>().AsReadOnlySpan();
+        var worldBounds = RenderWorld.Dense<WorldBox>().AsReadOnlySpan();
+        
+        var entitySet = RenderWorld.MetaStore.EntitySet;
+        var visibilitySet = RenderWorld.MetaStore.VisibleSet;
 
         int visibleCount = 0;
 

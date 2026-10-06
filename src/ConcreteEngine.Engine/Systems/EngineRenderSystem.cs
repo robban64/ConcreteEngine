@@ -5,8 +5,10 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics.Animations;
+using ConcreteEngine.Core.Engine.Graphics.Particles;
 using ConcreteEngine.Core.Engine.Graphics.Visuals;
 using ConcreteEngine.Core.Engine.Render;
+using ConcreteEngine.Core.Engine.Render.Systems;
 using ConcreteEngine.Engine.RenderPipeline;
 using ConcreteEngine.Engine.RenderPipeline.Impl;
 using ConcreteEngine.Graphics;
@@ -86,8 +88,8 @@ public sealed class EngineRenderSystem : IDisposable
 
     internal void OnSimulate(double dt)
     {
-        _animationSystem.Simulate(dt);
-        _particleSystem.Simulate((float)dt);
+        AnimationManager.Instance.Simulate(dt);
+        ParticleManager.Instance.Simulate((float)dt);
     }
     
     public void PrepareRenderer()
@@ -101,9 +103,8 @@ public sealed class EngineRenderSystem : IDisposable
         _renderCamera.UpdateFrame(EngineTime.GameAlphaF);
 
         // process and upload draw commands
-        var frameId = EngineTime.FrameId;
-        RenderWorld.Instance.CullSystem.Execute(frameId, _renderCamera);
-        RenderWorld.Instance.PassSystem.Execute(frameId);
+        RenderWorld.System<RenderCullSystem>().Execute(EngineTime.FrameId, _renderCamera);
+        RenderWorld.System<RenderPassSystem>().Execute(EngineTime.FrameId);
         
         _transformBuffer.Execute();
         _particleSystem.Execute();
@@ -134,17 +135,17 @@ public sealed class EngineRenderSystem : IDisposable
 
             EndPass(i);
         }
+
     }
 
     private void ExecuteDrawPass(int passId)
     {
-        var drawCmd = _drawCmd;
-        var sources = RenderWorld.MetaStore.Sources.AsView();
-        var tickets = RenderWorld.Instance.PassSystem.GetDrawTickets(passId);
-        foreach (ref readonly var ticket in tickets)
+        var sources = RenderWorld.Dense<DrawSource>().AsView();
+        var tickets = RenderWorld.System<RenderPassSystem>().GetDrawTickets(passId);
+        foreach (var ticket in tickets)
         {
-            var t = ticket;
-            drawCmd.DrawSource(sources[t.Entity], t);
+            ref readonly var source = ref sources[ticket.Entity];
+            _drawCmd.DrawSource(source, ticket);
         }
     }
 

@@ -11,6 +11,7 @@ using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Render;
+using ConcreteEngine.Core.Engine.Render.Systems;
 
 namespace ConcreteEngine.Engine.Systems;
 
@@ -26,20 +27,20 @@ internal sealed class RenderTransformBuffer : IDisposable
     }
 
     public NativeView<TransformUniform> Transforms =>
-        _transformBuffer.Slice(0, RenderWorld.Instance.CullSystem.VisibleCount);
+        _transformBuffer.Slice(0, RenderWorld.System<RenderCullSystem>().VisibleCount);
 
     public void Execute()
     {
         Ensure();
 
-        var visibleCount = RenderWorld.Instance.CullSystem.VisibleCount;
+        var visibleCount = RenderWorld.System<RenderCullSystem>().VisibleCount;
         if (visibleCount == 0) return;
 
         var dst = _transformBuffer.AsSpan(0, visibleCount);
-        var sortKeys = RenderWorld.MetaStore.SortKeys.AsReadOnlySpan(0, visibleCount);
+        var sortKeys = RenderWorld.Dense<DrawEntityKey>().AsReadOnlySpan().Slice(0, visibleCount);
 
-        var srcTransforms = MemoryMarshal.Cast<WorldTransform, Matrix4x4>(RenderWorld.MetaStore.Transforms.AsReadOnlySpan());
-        var srcNormals = MemoryMarshal.Cast<NormalMatrix, Matrix3X4>(RenderWorld.MetaStore.Normals.AsReadOnlySpan());
+        var srcTransforms = MemoryMarshal.Cast<WorldTransform, Matrix4x4>(RenderWorld.Dense<WorldTransform>().AsReadOnlySpan());
+        var srcNormals = MemoryMarshal.Cast<NormalMatrix, Matrix3X4>(RenderWorld.Dense<NormalMatrix>().AsReadOnlySpan());
         
         for (int i = 0; i < visibleCount; i++)
         {

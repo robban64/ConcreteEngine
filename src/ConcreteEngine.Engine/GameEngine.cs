@@ -42,7 +42,7 @@ public sealed class GameEngine : IDisposable
         EngineSettings.Current.LoadGraphicsSettings(version, gpuCapabilities);
 
         var renderEcs = new RenderWorld();
-        renderEcs.SetupTestStores();
+        renderEcs.SetupTest();
 
         _assetSystem = new AssetSystem(gfxBundle.Graphics.Gfx);
         _renderSystem = new EngineRenderSystem(gfxBundle.Graphics);

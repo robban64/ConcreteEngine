@@ -28,13 +28,13 @@ public sealed class RayCaster
         var minDistance = float.MaxValue;
         foreach (var query in RenderWorld.Query.New<WorldBox>().Filter(RenderWorld.MetaStore.VisibleSet))
         {
-            if (!_sceneStore.IsLinkedEntity(query.Entity.Id)) continue;
+            if (!_sceneStore.IsLinkedEntity(query.Entity)) continue;
 
             ref readonly var box = ref query.Component;
             if (CollisionMethods.RayIntersectsBox(in ray, box.Min, box.Max, out var dist) && dist < minDistance)
             {
                 minDistance = dist;
-                closestEntity = query.Entity.Id;
+                closestEntity = query.Entity;
             }
         }
 

@@ -92,6 +92,7 @@ public sealed class EngineRenderSystem : IDisposable
     }
 
 
+    private bool abc = false;
     public void PrepareRenderer()
     {
         RenderContext.ResetContext();
@@ -105,6 +106,12 @@ public sealed class EngineRenderSystem : IDisposable
         // process and upload draw commands
         RenderWorld.System<RenderCullSystem>().Execute(EngineTime.FrameId, _renderCamera);
         RenderWorld.System<RenderPassSystem>().Execute(EngineTime.FrameId);
+
+        
+        TestAll();
+        abc = true;
+
+        
 
         _transformBuffer.Execute();
         _particleSystem.Execute();
@@ -173,4 +180,68 @@ public sealed class EngineRenderSystem : IDisposable
         RenderStore.HighlightShader = store.GetByName<Shader>("Highlight").GfxId;
         RenderStore.BoundingBoxShader = store.GetByName<Shader>("BoundingBox").GfxId;
     }
+    
+    
+    private AvgFrameTimer avg1, avg2;
+
+    private void TestAll()
+    {
+        avg1.BeginSample();
+        Test();
+        avg1.EndSample();
+        avg2.BeginSample();
+        Test1();
+        avg2.EndSample();
+
+        if (entity1 != entity2)
+            throw new InvalidOperationException($"Entity: {entity1} - {entity2}; Iter: {iteration1} - {iteration2}");
+        if (iteration1 != iteration2)
+            throw new InvalidOperationException($"Iter: {iteration1} - {iteration2}");
+
+
+        if (avg1.Ticks > 100)
+        {
+            avg1.ResetAndPrint("Test0");
+            avg2.ResetAndPrint("Test1");
+        }
+    }
+
+
+    private static int iteration1, iteration2, entity1, entity2;
+    private static int Test()
+    {
+        iteration1 = 0;
+        var x = 0;
+        foreach (var filter in RenderWorld.Query.New<DrawPolicy, DrawSource>()
+                     .Filter(RenderWorld.Meta.EntitySet, RenderWorld.Meta.VisibleSet))
+        {
+            var xx = 0;
+            foreach (var query in filter)
+            {
+                entity1 = query.Entity;
+                xx += (int)query.Component1.Passes + query.Component2.MeshIndex;
+                ++iteration1;
+            }
+
+            x += xx;
+        }
+
+        return x;
+    }
+
+    private static void Test1()
+    {
+        iteration2 = 0;
+        foreach (var filter in RenderWorld.Query.New<DrawPolicy>()
+                     .Filter(RenderWorld.Meta.EntitySet, RenderWorld.Meta.VisibleSet))
+        {
+            foreach (var query in filter)
+            {
+                entity2 = query.Entity;
+                ++iteration2;
+            }
+        }
+    }
+
+
 }

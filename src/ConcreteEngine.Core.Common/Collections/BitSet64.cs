@@ -1,5 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Collections;
 
@@ -12,6 +14,13 @@ public record struct Bit64(ulong Block)
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => Block != 0;
     }
+    
+    public readonly bool IsEmpty
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Block == 0;
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator ulong(Bit64 b) => b.Block;
@@ -46,14 +55,15 @@ public record struct Bit64(ulong Block)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearLowerBits() => Block &= Block - 1;
 
-
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Bit64 And(Bit64 other) => Unsafe.BitCast<ulong, Bit64>(this & other);
+    public readonly Bit64 And(Bit64 other) => Unsafe.BitCast<ulong, Bit64>(Block & other);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly Bit64 And(ulong other) => Unsafe.BitCast<ulong, Bit64>(Block & other);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Bit64 Or(Bit64 other) => Unsafe.BitCast<ulong, Bit64>(this | other);
-
+    public readonly Bit64 Or(Bit64 other) => Unsafe.BitCast<ulong, Bit64>(Block | other);
     //
 
 
@@ -85,15 +95,15 @@ public record struct Bit64(ulong Block)
 
 public readonly record struct BitSet64
 {
-    private readonly ulong[] _bits;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetBlockCapacity(int bits) => (bits + 63) / 64;
+    public static int GetCapacity256(int bits) => IntMath.AlignUp((bits + 63) / 64, 4);
 
+    private readonly ulong[] _bits;
+    
     public BitSet64(int bitCount)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bitCount);
-        _bits = new ulong[GetBlockCapacity(bitCount)];
+        _bits = new ulong[GetCapacity256(bitCount)];
     }
 
     public BitSet64(ulong[] array)
@@ -145,11 +155,8 @@ public readonly record struct BitSet64
     public ulong GetRawBlock(int blockIndex) => _bits[blockIndex];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ulong GetRawBlockAtBits(int index) => _bits[index >> 6];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bit64 GetBlock(int blockIndex) => Unsafe.BitCast<ulong, Bit64>(_bits[blockIndex]);
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bit64 GetBlockAtBit(int index) => Unsafe.BitCast<ulong, Bit64>(_bits[index >> 6]);
 
@@ -158,6 +165,18 @@ public readonly record struct BitSet64
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetBlockAtBit(int index, ulong block) => _bits[index >> 6] = block;
+    
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector256<ulong> GetBlock256(int blockIndex)
+    {
+        return Vector256.LoadUnsafe(ref _bits[blockIndex]);
+        //return Unsafe.As<ulong, Vector256<ulong>>(ref _bits[blockIndex]);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetBlock256(int blockIndex, Vector256<ulong> block) => block.StoreUnsafe(ref _bits[blockIndex]);
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Toggle(int index)
@@ -198,18 +217,6 @@ public readonly record struct BitSet64
         var countTrue = CountTrue();
         return BitCount - countTrue;
     }
-
-    //
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Bit64 And(int blockIndex, BitSet64 b1, BitSet64 b2)
-    {
-        //var x = b1.GetBlockAtBit(i).And(b2.GetBlockAtBit(i));
-        //var y = b2.GetBlockAtBit(i);
-        return b1.GetBlock(blockIndex).And(b2.GetBlock(blockIndex));
-//        return Unsafe.BitCast<ulong, BitBlock>(b1._bits[i >> 6] & b2._bits[i >> 6]);
-    }
-    // Unsafe.BitCast<ulong, BitBlock>(b1.GetRawBlockAtBits(i) & b2.GetRawBlockAtBits(i));
 
     //
 

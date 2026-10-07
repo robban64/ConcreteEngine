@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Render.Components;
 using ConcreteEngine.Core.Engine.Render.Systems;
@@ -68,7 +69,7 @@ public sealed partial class RenderWorld : IDisposable
 
     private void EnsureCapacity(int amount)
     {
-        var required = Count + amount;
+        var required = IntMath.AlignUp(Count + amount, 64);
         if (Capacity >= required) return;
 
         var newSize = CapacityUtils.CapacityGrowthToFit(Capacity, required);

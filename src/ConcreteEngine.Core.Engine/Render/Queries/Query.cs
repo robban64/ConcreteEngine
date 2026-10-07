@@ -34,7 +34,6 @@ public sealed partial class RenderWorld
         public readonly ref struct QueryBuilder<T1> where T1 : unmanaged, IRenderComponent<T1>
         {
             public FilterQuery<T1> Filter(BitSet64 filter1, BitSet64 filter2 = default) => new(filter1, filter2);
-
             
             public SparseFilterQuery<T1> SparseFilter(BitSet64 filter) => new(filter);
 

@@ -120,7 +120,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         if (_data.IsNullOrEmpty) Throwers.NullPointer("ParticleEmitter: null or empty emitter data");
 
         var count = AlignedParticleCount;
-        var capacity = BitSet64.GetBlockCapacity(count);
+        var capacity = BitSet64.GetCapacity256(count);
         if (capacity == 0 || (uint)capacity > MaxBlockCount) Throwers.InvalidOperation(nameof(capacity));
 
         Span<Bit64> deadBits = stackalloc Bit64[capacity];

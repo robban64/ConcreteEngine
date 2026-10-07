@@ -1,13 +1,20 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Collections;
 
-public record struct Bit64(ulong Block)
+[StructLayout(LayoutKind.Sequential)]
+public record struct Bit64
 {
-    public ulong Block = Block;
+    public static Bit64 All { get; } = new (ulong.MaxValue);
+    
+    public ulong Block;
+
+    public Bit64(ulong block) => Block = block;
 
     public readonly bool IsSet
     {
@@ -91,22 +98,72 @@ public record struct Bit64(ulong Block)
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly BitEnumerator GetEnumerator() => this;
     }
+
 }
 
-public readonly record struct BitSet64
+
+[StructLayout(LayoutKind.Sequential)]
+public struct Bit256
+{
+    public static Bit256 Zero { get; } = default;
+
+    public static Bit256 AllBitsSet { get; } = Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256<ulong>.AllBitsSet);
+    
+    public const int Capacity = 256;
+    private const ulong HighBit = 1UL << 63;
+
+    public Vector256<ulong> Vector;
+    
+    public readonly bool IsSet
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Vector != Vector256<ulong>.Zero;
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly Bit64 GetBit64(int lane) => Unsafe.BitCast<ulong, Bit64>(Vector.GetElement(lane));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly bool GetBit(int bitIndex) => GetBit64(bitIndex >> 6)[bitIndex];
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Enable(ref Bit256 it, int index)
+    {
+        ref var lane = ref Unsafe.Add(ref Unsafe.As<Bit256, Bit64>(ref it), index >> 6);
+        lane.Enable(index);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Disable(ref Bit256 it, int index)
+    {
+        ref var lane = ref Unsafe.Add(ref Unsafe.As<Bit256, Bit64>(ref it), index >> 6);
+        lane.Disable(index);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Bit256 And(in Bit256 b1, in Bit256 b2) =>
+        Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.BitwiseAnd(b1.Vector, b2.Vector));
+
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public readonly record struct BitSet
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetCapacity256(int bits) => IntMath.AlignUp((bits + 63) / 64, 4);
 
     private readonly ulong[] _bits;
     
-    public BitSet64(int bitCount)
+    public BitSet(int bitCount)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bitCount);
-        _bits = new ulong[GetCapacity256(bitCount)];
+        int count = GetCapacity256(bitCount);
+        _bits = new ulong[count];
     }
 
-    public BitSet64(ulong[] array)
+    public BitSet(ulong[] array)
     {
         ArgumentNullException.ThrowIfNull(array);
         ArgumentOutOfRangeException.ThrowIfZero(array.Length);
@@ -152,9 +209,6 @@ public readonly record struct BitSet64
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ulong GetRawBlock(int blockIndex) => _bits[blockIndex];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bit64 GetBlock(int blockIndex) => Unsafe.BitCast<ulong, Bit64>(_bits[blockIndex]);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -168,6 +222,16 @@ public readonly record struct BitSet64
     
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly Bit256 GetBit256(int blockIndex) => ref Unsafe.As<ulong, Bit256>(ref _bits[blockIndex]);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetBit256(int blockIndex, Bit256 block)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)blockIndex, (uint)_bits.Length);
+        Unsafe.As<ulong, Bit256>(ref _bits[blockIndex]) = block;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector256<ulong> GetBlock256(int blockIndex)
     {
         return Vector256.LoadUnsafe(ref _bits[blockIndex]);
@@ -176,7 +240,6 @@ public readonly record struct BitSet64
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetBlock256(int blockIndex, Vector256<ulong> block) => block.StoreUnsafe(ref _bits[blockIndex]);
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Toggle(int index)
@@ -223,15 +286,17 @@ public readonly record struct BitSet64
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear() => Array.Clear(_bits, 0, _bits.Length);
 
-    public BitSet64 Resized(int newSize)
+    public BitSet Resized(int newBitCount)
     {
         if (_bits is null) Throwers.NullReference(nameof(_bits));
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newSize);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(newSize, _bits.Length);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newBitCount);
 
-        var newArray = new ulong[newSize];
-        Array.Copy(_bits, newArray, int.Min(_bits.Length, newSize));
-        return new BitSet64(newArray);
+        var blockCount = GetCapacity256(newBitCount);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(blockCount, _bits.Length);
+
+        var newArray = new ulong[blockCount];
+        Array.Copy(_bits, newArray, int.Min(_bits.Length, blockCount));
+        return new BitSet(newArray);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

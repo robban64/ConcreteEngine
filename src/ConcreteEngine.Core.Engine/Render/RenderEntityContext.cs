@@ -14,7 +14,7 @@ public readonly ref struct RenderEntityContext(RenderEntity entity)
     public ref DrawPolicy Policy => ref Dense<DrawPolicy>()[Entity.Id];
     public ref WorldBox WorldBounds => ref Dense<WorldBox>()[Entity.Id];
     public ref Matrix4x4 Transform => ref Unsafe.As<WorldTransform, Matrix4x4>(ref Dense<WorldTransform>()[Entity.Id]);
-    public ref Matrix3X4 Normal => ref Unsafe.As<NormalMatrix, Matrix3X4>(ref Dense<NormalMatrix>()[Entity.Id]);
+    public ref Matrix3X4 Normal => ref Unsafe.As<WorldNormal, Matrix3X4>(ref Dense<WorldNormal>()[Entity.Id]);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

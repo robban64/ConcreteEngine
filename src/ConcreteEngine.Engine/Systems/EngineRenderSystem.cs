@@ -92,7 +92,6 @@ public sealed class EngineRenderSystem : IDisposable
     }
 
 
-    private bool abc = false;
     public void PrepareRenderer()
     {
         RenderContext.ResetContext();
@@ -106,13 +105,7 @@ public sealed class EngineRenderSystem : IDisposable
         // process and upload draw commands
         RenderWorld.System<RenderCullSystem>().Execute(EngineTime.FrameId, _renderCamera);
         RenderWorld.System<RenderPassSystem>().Execute(EngineTime.FrameId);
-
         
-        TestAll();
-        abc = true;
-
-        
-
         _transformBuffer.Execute();
         _particleSystem.Execute();
         _animationSystem.Execute(EngineTime.GameAlpha);
@@ -216,7 +209,7 @@ public sealed class EngineRenderSystem : IDisposable
                      .Filter(RenderWorld.Meta.EntitySet, RenderWorld.Meta.VisibleSet))
         {
             var xx = 0;
-            foreach (var query in filter)
+            foreach (var query in filter.Enumerator)
             {
                 entity1 = query.Entity;
                 xx += (int)query.Component1.Passes + query.Component2.MeshIndex;
@@ -235,7 +228,7 @@ public sealed class EngineRenderSystem : IDisposable
         foreach (var filter in RenderWorld.Query.New<DrawPolicy>()
                      .Filter(RenderWorld.Meta.EntitySet, RenderWorld.Meta.VisibleSet))
         {
-            foreach (var query in filter)
+            foreach (var query in filter.Enumerator)
             {
                 entity2 = query.Entity;
                 ++iteration2;

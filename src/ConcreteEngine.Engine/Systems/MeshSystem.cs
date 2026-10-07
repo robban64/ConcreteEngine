@@ -1,29 +1,23 @@
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Identity;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Graphics.Particles;
-using ConcreteEngine.Core.Engine.Render;
-using ConcreteEngine.Core.Engine.Render.Components;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Engine.Systems;
-
-internal sealed class ParticleSystem : IDisposable
+/*
+internal sealed class MeshSystem : IDisposable
 {
-    private static bool _allocated;
+    public readonly ParticleMesh _particleMesh;
 
-    private readonly ParticleMesh _particleMesh;
-    private readonly ParticleManager _particleManager;
-
-    internal ParticleSystem(GfxContext gfx)
+    internal MeshSystem(GfxContext gfx)
     {
-        if (_allocated) Throwers.InvalidOperation("ParticleSystem already active");
-        _allocated = true;
         _particleMesh = new ParticleMesh(gfx);
-        _particleManager = ParticleManager.Instance;
+    }
+
+    internal void BindParticleMesh(int count)
+    {
+        var slot = _particleMesh.CreateParticleMesh(count);
+        var meshId = _particleMesh.GetHandle(slot).MeshId;
     }
 
     internal void Commit()
@@ -36,8 +30,9 @@ internal sealed class ParticleSystem : IDisposable
         {
             var emitter = _particleManager.Get(id);
             if (emitter.ParticleCount <= 0) Throwers.InvalidOperation(nameof(emitter.ParticleCount));
-            var meshId = _particleMesh.CreateParticleMesh(emitter.ParticleCount);
-            emitter.Attach(meshId);
+            var slot = _particleMesh.CreateParticleMesh(emitter.ParticleCount);
+            var meshId = _particleMesh.GetHandle(slot).MeshId;
+            emitter.Attach(slot, meshId);
         }
 
         _particleManager.ClearPendingEmitters();
@@ -56,7 +51,7 @@ internal sealed class ParticleSystem : IDisposable
             emitterData.InterpolatePosition(positions, timeOffset);
             emitterData.InterpolateVisual(particles);
             
-            _particleMesh.UploadGpuData(emitter.BoundMesh, emitter.ParticleCount);
+            _particleMesh.UploadGpuData(emitter.BoundSlot, emitter.ParticleCount);
         }
 
     }
@@ -68,4 +63,4 @@ internal sealed class ParticleSystem : IDisposable
         _particleManager.Dispose();
         _particleMesh.Dispose();
     }
-}
+}*/

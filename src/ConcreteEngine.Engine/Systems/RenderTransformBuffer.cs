@@ -40,7 +40,7 @@ internal sealed class RenderTransformBuffer : IDisposable
         var sortKeys = RenderWorld.Dense<DrawEntityKey>().AsReadOnlySpan().Slice(0, visibleCount);
 
         var srcTransforms = MemoryMarshal.Cast<WorldTransform, Matrix4x4>(RenderWorld.Dense<WorldTransform>().AsReadOnlySpan());
-        var srcNormals = MemoryMarshal.Cast<NormalMatrix, Matrix3X4>(RenderWorld.Dense<NormalMatrix>().AsReadOnlySpan());
+        var srcNormals = MemoryMarshal.Cast<WorldNormal, Matrix3X4>(RenderWorld.Dense<WorldNormal>().AsReadOnlySpan());
         
         for (int i = 0; i < visibleCount; i++)
         {

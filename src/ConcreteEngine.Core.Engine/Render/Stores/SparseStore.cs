@@ -23,7 +23,7 @@ public sealed class SparseStore<T> : RenderStore where T : unmanaged, IRenderCom
     private NativeView<T> _components;
     private NativeView<RenderEntity> _entities;
 
-    private BitSet64 _entitySet;
+    private BitSet _entitySet;
 
     private readonly List<RenderEntity> _removedEntities = [];
     private readonly List<IRenderComponentListener<T>> _listeners = [];
@@ -35,7 +35,7 @@ public sealed class SparseStore<T> : RenderStore where T : unmanaged, IRenderCom
 
         IsActive = true;
 
-        _entitySet = new BitSet64(coreCapacity);
+        _entitySet = new BitSet(coreCapacity);
 
         _memory = NativeArray.Allocate(GetAllocSize(initialCapacity));
 

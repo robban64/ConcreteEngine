@@ -13,32 +13,35 @@ namespace ConcreteEngine.Core.Engine.Render;
 public sealed partial class RenderWorld : IDisposable
 {
     public static int EntityCount => Instance.Count;
+    public static int EntityCapacity => Instance.Capacity;
+
     public static RenderMetaStore Meta => Instance._meta;
     public static RenderWorld Instance { get; private set; } = null!;
 
     //
     public int Count { get; private set; }
+    public int Capacity { get; private set; }
 
     private readonly RenderMetaStore _meta;
     
     private readonly List<RenderStore> _stores = new(8);
     private readonly List<RenderStore> _denseStores = new(8);
     private readonly List<RenderWorldSystem> _systems = new(8);
-
+    private readonly List<RenderBitSet> _bitSets = new(16);
     private readonly Stack<int> _free = [];
 
     internal RenderWorld(int initialCapacity = 1024)
     {
         if (Instance != null!) Throwers.InvalidOperation();
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 64);
-
+        ArgumentOutOfRangeException.ThrowIfNotEqual(IntMath.AlignUp(initialCapacity, 64), IntMath.AlignDown(initialCapacity, 64));
+        Capacity = initialCapacity;
         Instance = this;
         _meta = new RenderMetaStore(initialCapacity);
     }
 
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
-    public int Capacity => _meta.Capacity;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderEntityContext GetContext(RenderEntity entity)
@@ -73,10 +76,16 @@ public sealed partial class RenderWorld : IDisposable
         if (Capacity >= required) return;
 
         var newSize = CapacityUtils.CapacityGrowthToFit(Capacity, required);
+        Capacity = newSize;
+        
         Logger.Log(LogScope.Ecs, "RenderEcs resized", LogLevel.Warn);
 
-        _meta.Resize(newSize);
-
+        var resizeSets = _meta.Resize(newSize);
+        if (resizeSets)
+        {
+            var bitCount = _meta.EntitySet.BitCount;
+            foreach (var set in _bitSets) set.Resize(bitCount);
+        }
         foreach (var dense in _denseStores) dense.OnDenseResized(newSize);
         foreach (var sparse in _stores) sparse.OnDenseResized(newSize);
         foreach (var system in _systems) system.OnDenseResized(newSize);
@@ -100,11 +109,11 @@ public sealed partial class RenderWorld : IDisposable
 
         CreateDenseStore<DrawPolicy>(Capacity, true);
         CreateDenseStore<DrawSource>(Capacity, true);
-        CreateDenseStore<DrawEntityKey>(Capacity, true);
+        CreateDenseStore<DrawEntityKey>(Capacity, true); // Remove
 
         CreateDenseStore<WorldBox>(Capacity, false);
         CreateDenseStore<WorldTransform>(Capacity, false);
-        CreateDenseStore<NormalMatrix>(Capacity, false);
+        CreateDenseStore<WorldNormal>(Capacity, false);
         
         CreateDenseStore<SceneLink>(Capacity, true);
 
@@ -132,7 +141,7 @@ public sealed partial class RenderWorld : IDisposable
     private void CreateComponentStore<T>(int capacity) where T : unmanaged, IRenderComponent<T>
     {
         if (SparseStores<T>.Store != null!) Throwers.InvalidOperation();
-        SparseStores<T>.Store = new SparseStore<T>(capacity, _meta.Capacity);
+        SparseStores<T>.Store = new SparseStore<T>(capacity, Capacity);
         _stores.Add(SparseStores<T>.Store);
     }
 

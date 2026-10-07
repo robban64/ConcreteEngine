@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
@@ -13,29 +14,41 @@ public sealed class RenderCullSystem : RenderWorldSystem
 {
     public int VisibleCount { get; private set; }
 
+    private readonly RenderWorld.RenderBitSet _depthSet;
+    private readonly RenderWorld.RenderBitSet _sceneSet;
+
     private readonly Vector4[] _frustum = new Vector4[12];
 
-    //private NativeArray<ulong> _drawKeys;
+    public RenderCullSystem()
+    {
+        _depthSet = RenderWorld.CreateSet();
+        _sceneSet = RenderWorld.CreateSet();
+    }
 
-    //private Span<DrawEntityKey> DrawKeys => _drawKeys.Reinterpret<DrawEntityKey>().AsSpan();
     private ref BoundingFrustum LightFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustum[0]);
     private ref BoundingFrustum SceneFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustum[6]);
 
-   // public override void OnDenseResized(int newSize) => _drawKeys.ReAlloc(newSize, false);
+
+    private AvgFrameTimer avg;
 
     //
     internal void Execute(long frameId, Camera camera)
     {
+        _depthSet.Set.Clear();
+        _sceneSet.Set.Clear();
+
         FrameVersion = frameId;
 
         BuildFrustum(camera);
 
         var entityCount = RenderWorld.EntityCount;
         if (entityCount == 0) return;
+        avg.BeginSample();
+        CullFilter();
+        if (avg.EndSample() > 100) avg.ResetAndPrint();
 
         var visibleCount = CullEntities(entityCount);
         VisibleCount = visibleCount;
-
         if (visibleCount == 0) return;
 
         var sortKeys64 = RenderWorld.Dense<DrawEntityKey>().AsView().Reinterpret<ulong>().AsSpan(0, visibleCount);
@@ -51,13 +64,63 @@ public sealed class RenderCullSystem : RenderWorldSystem
         BoundingFrustum.From(in transposed, out SceneFrustum);
     }
 
+    private void CullFilter()
+    {
+        var depthSet = _depthSet.Set;
+        var sceneSet = _sceneSet.Set;
+        foreach (var query in RenderWorld.Query.New<DrawPolicy>().Filter(RenderWorld.Meta.EntitySet))
+        {
+            var depthBits = Bit256.Zero;
+            var sceneBits = Bit256.Zero;
+            foreach (var it in query.Enumerator)
+            {
+                var passes = it.Component.Passes;
+                if ((passes & PassMask.Depth) != 0) Bit256.Enable(ref depthBits, it.BitIdx);
+                if ((passes & PassMask.Main) != 0) Bit256.Enable(ref sceneBits, it.BitIdx);
+            }
+
+            depthSet.SetBit256(query.BlockIndex, depthBits);
+            sceneSet.SetBit256(query.BlockIndex, sceneBits);
+        }
+
+        /*
+        var entitySet = RenderWorld.Meta.EntitySet;
+        var policies = RenderWorld.Dense<DrawPolicy>().AsReadOnlySpan();
+        int entityCount = RenderWorld.EntityCount;
+        for(int i = 0; i < entityCount; i++)
+        {
+            if(!entitySet[i]) continue;
+            var passes = policies[i].Passes;
+            if(depthSet[i] != ((passes & PassMask.Depth) != 0)) Throwers.InvalidOperation();
+            if(sceneSet[i] != ((passes & PassMask.Main) != 0)) Throwers.InvalidOperation();
+        }
+        */
+    }
+
+    private int Cull2(int entityCount)
+    {
+        var visibilitySet = RenderWorld.Meta.VisibleSet;
+
+        foreach (var query in RenderWorld.Query.New<DrawPolicy>().Filter(_depthSet.Set))
+        {
+            var visibilityBits = visibilitySet.GetBlock256(query.BlockIndex << 2);
+            foreach (var it in query.Enumerator)
+            {
+            }
+
+            visibilitySet.SetBlock256(query.BlockIndex << 2, visibilityBits);
+        }
+
+        return 0;
+    }
+
 
     private int CullEntities(int entityCount)
     {
         var sortKeys = RenderWorld.Dense<DrawEntityKey>().AsSpan();
         var policies = RenderWorld.Dense<DrawPolicy>().AsReadOnlySpan();
         var worldBounds = RenderWorld.Dense<WorldBox>().AsReadOnlySpan();
-        
+
         var entitySet = RenderWorld.Meta.EntitySet;
         var visibilitySet = RenderWorld.Meta.VisibleSet;
 

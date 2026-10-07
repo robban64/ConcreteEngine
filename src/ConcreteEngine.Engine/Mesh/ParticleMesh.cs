@@ -15,7 +15,6 @@ using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Engine.Mesh;
 
-
 internal readonly struct ParticleMeshHandle(MeshId meshId, VertexBufferId positionVbo, VertexBufferId particleVbo)
 {
     public readonly MeshId MeshId = meshId;
@@ -33,7 +32,7 @@ internal sealed class ParticleMesh : IDisposable
 
     public int Count { get; private set; }
 
-    private ParticleMeshHandle[] _handles;
+    private MeshId[] _handles;
     private NativeArray<Vector4> _positionData;
     private NativeArray<ParticleVertex> _particleData;
 
@@ -44,8 +43,8 @@ internal sealed class ParticleMesh : IDisposable
         if (!_particleData.IsNull)
             throw new InvalidOperationException($"{nameof(ParticleMesh)} is already initialized");
 
-        _handles = new ParticleMeshHandle[DefaultHandleCap];
-        _positionData = NativeArray.AlignedAllocate<Vector4>(DefaultParticleCap,  64, false);
+        _handles = new MeshId[DefaultHandleCap];
+        _positionData = NativeArray.AlignedAllocate<Vector4>(DefaultParticleCap, 64, false);
         _particleData = NativeArray.AlignedAllocate<ParticleVertex>(DefaultParticleCap, 64, false);
 
         _gfx = gfx;
@@ -64,26 +63,31 @@ internal sealed class ParticleMesh : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly ParticleMeshHandle GetHandle(int slot)
+    public bool HasHandle(MeshId meshId)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_handles.Length, nameof(slot));
-        return ref _handles[slot];
+        foreach (var it in _handles.AsSpan(0, Count))
+        {
+            if (meshId == it) return true;
+        }
+
+        return false;
     }
 
-    public void UploadGpuData(int slot, int count)
+    public void UploadGpuData(MeshId meshId, int count)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)count, (uint)_particleData.Length, nameof(count));
-        var handle = GetHandle(slot);
 
-        if (!handle.PositionVbo.IsValid() || !handle.ParticleVbo.IsValid()) Throwers.InvalidArgument(nameof(slot));
+        var vboIds = _gfx.Meshes.GetMeshEntry(meshId).VboIds;
+        var positionVbo = vboIds[1];
+        var particleVbo = vboIds[2];
+        if (!positionVbo.IsValid() || !particleVbo.IsValid()) Throwers.InvalidArgument(nameof(meshId));
 
-        _gfx.Buffers.UploadVertexBuffer(handle.PositionVbo, _positionData.Slice(0, count), 0);
-        _gfx.Buffers.UploadVertexBuffer(handle.ParticleVbo, _particleData.Slice(0, count), 0);
-
+        _gfx.Buffers.UploadVertexBuffer(positionVbo, _positionData.Slice(0, count), 0);
+        _gfx.Buffers.UploadVertexBuffer(particleVbo, _particleData.Slice(0, count), 0);
     }
 
 
-    public unsafe int CreateParticleMesh(int particleCapacity)
+    public unsafe MeshId CreateParticleMesh(int particleCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(particleCapacity);
         EnsureCapacity(particleCapacity);
@@ -108,7 +112,7 @@ internal sealed class ParticleMesh : IDisposable
 
         var meshId = gfxMeshes.CreateEmptyMesh(in props, 3, [
             vertexBuilder.Make<Vector2>(0), vertexBuilder.Make<Vector2>(1),
-            new VertexAttributeMaker().Make<Vector4>(2, 1), 
+            new VertexAttributeMaker().Make<Vector4>(2, 1),
             particleBuilder.Make<float>(3, 2), particleBuilder.Make<ColorRgba>(4, 2, VertexFormat.UByte, true)
         ]);
         gfxMeshes.CreateAttachVertexBuffer(meshId, vertices, CreateVboArgs.MakeDefault(0));
@@ -117,11 +121,8 @@ internal sealed class ParticleMesh : IDisposable
         gfxMeshes.CreateAttachVertexBuffer(meshId, NativeView<ParticleVertex>.MakeNull(),
             CreateVboArgs.MakeInstance(2, 2, particleCapacity));
 
-        var details = gfxMeshes.GetMeshDetails(meshId, out _);
-
-        var index = Count++;
-        _handles[index] = new ParticleMeshHandle(meshId, details.VboIds[1], details.VboIds[2]);
-        return index;
+        _handles[Count++] = meshId;
+        return meshId;
     }
 
 
@@ -132,7 +133,7 @@ internal sealed class ParticleMesh : IDisposable
         {
             foreach (var handle in _handles)
             {
-                if (handle.MeshId.IsValid()) _gfx.Disposer.EnqueueRemoval(handle.MeshId);
+                if (handle.IsValid()) _gfx.Disposer.EnqueueRemoval(handle);
             }
         }
 

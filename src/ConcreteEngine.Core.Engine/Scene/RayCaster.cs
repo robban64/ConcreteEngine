@@ -29,7 +29,7 @@ public sealed class RayCaster
         var minDistance = float.MaxValue;
         foreach (var query in RenderWorld.Query.New<SceneLink,WorldBox>().Filter(RenderWorld.Meta.VisibleSet))
         {
-            foreach (var it in query)
+            foreach (var it in query.Enumerator)
             {
                 if (!it.Component1.IsLinked) continue;
 

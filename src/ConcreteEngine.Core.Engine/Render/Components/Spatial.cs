@@ -12,7 +12,7 @@ public struct WorldTransform : IRenderComponent<WorldTransform>
     public Matrix4x4 Transform;
 }
 
-public struct NormalMatrix : IRenderComponent<NormalMatrix>
+public struct WorldNormal : IRenderComponent<WorldNormal>
 {
     public Matrix3X4 Normal;
 }

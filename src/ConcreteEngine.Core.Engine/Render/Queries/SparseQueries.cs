@@ -26,11 +26,11 @@ public sealed partial class RenderWorld
         {
             private int _i;
             private readonly int _length;
-            private readonly BitSet64 _filter;
+            private readonly BitSet _filter;
 
             public SparseQueryItem<T1> Current { get; private set; }
 
-            public SparseFilterQuery(BitSet64 filter)
+            public SparseFilterQuery(BitSet filter)
             {
                 _i = -1;
                 _length = Sparse<T1>().Count;
@@ -61,12 +61,12 @@ public sealed partial class RenderWorld
         public ref struct SparseEntityFilterQuery<T1> where T1 : unmanaged, IRenderComponent<T1>
         {
             private int _i;
-            private readonly BitSet64 _filter;
+            private readonly BitSet _filter;
             private readonly ReadOnlySpan<RenderEntity> _entities;
             
             public SparseQueryItem<T1> Current { get; private set; }
 
-            public SparseEntityFilterQuery(ReadOnlySpan<RenderEntity> entities, BitSet64 filter = default)
+            public SparseEntityFilterQuery(ReadOnlySpan<RenderEntity> entities, BitSet filter = default)
             {
                 ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(entities.Length, Sparse<T1>().Count);
                 _i = -1;

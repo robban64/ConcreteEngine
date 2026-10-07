@@ -34,7 +34,6 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     private readonly ParticleEmitterData _data;
 
     public MeshId BoundMesh { get; private set; }
-    public int BoundSlot { get; private set; } = -1;
     public int ParticleCount { get; private set; }
     public int PendingParticleCount { get; private set; }
 
@@ -61,7 +60,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     public int AlignedParticleCount => IntMath.AlignUp(ParticleCount, CountAlignment);
 
-    public bool IsAttached => BoundSlot >= 0;
+    public bool IsAttached => BoundMesh >= 0;
     public bool IsDirty => PendingParticleCount > 0 || State.HasDirtyVisual;
 
     public ref readonly BoundingBox LocalBounds => ref _localBounds;
@@ -84,12 +83,10 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     }
 
 
-    internal void Attach(int slot, MeshId meshId)
+    internal void Attach(MeshId meshId)
     {
-        if (BoundSlot >= 0) Throwers.InvalidOperation(nameof(BoundSlot));
-        ArgumentOutOfRangeException.ThrowIfNegative(slot);
-        ArgumentOutOfRangeException.ThrowIfZero(meshId.Id);
-        BoundSlot = slot;
+        if (BoundMesh.IsValid()) Throwers.InvalidOperation(nameof(BoundMesh));
+        if(!meshId.IsValid())  Throwers.InvalidArgumentHandle(meshId);
         BoundMesh = meshId;
         UpdateLocalBounds();
     }
@@ -120,7 +117,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         if (_data.IsNullOrEmpty) Throwers.NullPointer("ParticleEmitter: null or empty emitter data");
 
         var count = AlignedParticleCount;
-        var capacity = BitSet64.GetCapacity256(count);
+        var capacity = BitSet.GetCapacity256(count);
         if (capacity == 0 || (uint)capacity > MaxBlockCount) Throwers.InvalidOperation(nameof(capacity));
 
         Span<Bit64> deadBits = stackalloc Bit64[capacity];
@@ -159,7 +156,6 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public void Dispose()
     {
         _data.Dispose();
-        BoundSlot = -1;
         BoundMesh = default;
     }
 

@@ -43,6 +43,10 @@ public sealed unsafe class DenseStore<T> : RenderStore where T : unmanaged, IRen
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref T AsRef() => ref *_ptr;
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<T> AsSpan() => new(_ptr, RenderWorld.EntityCount);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

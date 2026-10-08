@@ -229,7 +229,7 @@ public sealed class SparseStore<T> : RenderStore where T : unmanaged, IRenderCom
 
     internal override void OnDenseResized(int newSize)
     {
-        if (newSize > _entitySet.BitCount) _entitySet = _entitySet.Resized(newSize);
+        if (newSize > _entitySet.BitCapacity) _entitySet = _entitySet.Resized(newSize);
     }
 
     public override void Dispose()

@@ -87,7 +87,7 @@ public sealed partial class RenderWorld
 
             Array.Resize(ref _generations, newSize);
 
-            if (newSize > _entitySet.BitCount)
+            if (newSize > _entitySet.BitCapacity)
             {
                 _entitySet = _entitySet.Resized(newSize);
                 _visibleSet = _visibleSet.Resized(newSize);

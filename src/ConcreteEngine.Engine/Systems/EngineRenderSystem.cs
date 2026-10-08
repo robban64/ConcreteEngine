@@ -106,7 +106,7 @@ public sealed class EngineRenderSystem : IDisposable
         // process and upload draw commands
         RenderWorld.System<RenderCullSystem>().Execute(EngineTime.FrameId, _renderCamera);
         RenderWorld.System<RenderPassSystem>().Execute(EngineTime.FrameId);
-        TestAll();
+        //TestAll();
         _transformBuffer.Execute();
         _particleSystem.Execute();
         _animationSystem.Execute(EngineTime.GameAlpha);
@@ -175,7 +175,7 @@ public sealed class EngineRenderSystem : IDisposable
         RenderStore.BoundingBoxShader = store.GetByName<Shader>("BoundingBox").GfxId;
     }
 
-    
+    /*
 
     private AvgFrameTimer avg1, avg2;
 
@@ -264,6 +264,6 @@ public sealed class EngineRenderSystem : IDisposable
         }
 
     }
-
+*/
 
 }

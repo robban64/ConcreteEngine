@@ -19,6 +19,12 @@ public struct Bit256
 
     public Bit256(Vector256<ulong> bits) => _bits = bits;
 
+    public readonly bool IsEmpty
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _bits == Vector256<ulong>.Zero;
+    }
+
     public readonly bool IsSet
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -31,11 +37,15 @@ public struct Bit256
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Bit256(Vector256<ulong> b) => Unsafe.BitCast<Vector256<ulong>, Bit256>(b);
 
+    //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private readonly ref Bit64 AsReadRef64() => ref Unsafe.As<Vector256<ulong>, Bit64>(ref Unsafe.AsRef(in _bits));
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Bit64 GetBit64(int lane) => Unsafe.Add(ref AsReadRef64(), lane);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetBit64(int lane, Bit64 bits) => Unsafe.Add(ref Unsafe.As<Vector256<ulong>, Bit64>(ref _bits), lane) = bits;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool HasBit(int bit) => GetBit64(bit >> 6)[bit];
@@ -96,29 +106,29 @@ public record struct Bit64
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Bit64(ulong b) => Unsafe.BitCast<ulong, Bit64>(b);
 
-    public bool this[int index]
+    public bool this[int bit]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        readonly get => Get(index);
+        readonly get => Get(bit);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        set => Set(index, value);
+        set => Set(bit, value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool Get(int index) => (Bits & (1UL << (index & 63))) != 0;
+    public readonly bool Get(int bit) => (Bits & (1UL << (bit & 63))) != 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Set(int index, bool value)
+    public void Set(int bit, bool value)
     {
-        if (value) Bits |= 1UL << index;
-        else Bits &= ~(1UL << index);
+        if (value) Bits |= 1UL << bit;
+        else Bits &= ~(1UL << bit);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Enable(int index) => Bits |= 1UL << index;
+    public void Enable(int bit) => Bits |= 1UL << bit;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Disable(int index) => Bits &= ~(1UL << index);
+    public void Disable(int bit) => Bits &= ~(1UL << bit);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearLowerBits() => Bits &= Bits - 1;
@@ -136,9 +146,9 @@ public record struct Bit64
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly BitEnumerator GetEnumerator() => new(this);
+    public readonly TrailBitEnumerator GetEnumerator() => new(this);
 
-    public ref struct BitEnumerator(Bit64 bits)
+    public ref struct TrailBitEnumerator(Bit64 bits)
     {
         private Bit64 _bits = bits;
         public int Current { get; private set; } = 0;
@@ -157,6 +167,6 @@ public record struct Bit64
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly BitEnumerator GetEnumerator() => this;
+        public readonly TrailBitEnumerator GetEnumerator() => this;
     }
 }

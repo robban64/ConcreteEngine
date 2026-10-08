@@ -83,7 +83,7 @@ public sealed partial class RenderWorld : IDisposable
         var resizeSets = _meta.Resize(newSize);
         if (resizeSets)
         {
-            var bitCount = _meta.EntitySet.BitCount;
+            var bitCount = _meta.EntitySet.BitCapacity;
             foreach (var set in _bitSets) set.Resize(bitCount);
         }
         foreach (var dense in _denseStores) dense.OnDenseResized(newSize);

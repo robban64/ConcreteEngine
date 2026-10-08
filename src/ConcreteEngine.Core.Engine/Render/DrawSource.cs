@@ -10,6 +10,7 @@ using ConcreteEngine.Core.Engine.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Render;
 
+
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct DrawPolicy(DrawQueue Queue, PassMask Passes, EntityCullStatus Cull = EntityCullStatus.Normal) : IRenderComponent<DrawPolicy>
 {

@@ -13,16 +13,19 @@ namespace ConcreteEngine.Core.Engine.Render.Systems;
 public sealed class RenderCullSystem : RenderWorldSystem
 {
     public int VisibleCount { get; private set; }
+    
+    private readonly Vector4[] _frustum = new Vector4[12];
 
     private readonly RenderWorld.RenderBitSet _depthSet;
     private readonly RenderWorld.RenderBitSet _sceneSet;
 
-    private readonly Vector4[] _frustum = new Vector4[12];
+    private readonly RenderWorld.RenderBitSet _transparentSet;
 
     public RenderCullSystem()
     {
         _depthSet = RenderWorld.CreateSet();
         _sceneSet = RenderWorld.CreateSet();
+        _transparentSet = RenderWorld.CreateSet();
     }
 
     private ref BoundingFrustum LightFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustum[0]);
@@ -34,15 +37,15 @@ public sealed class RenderCullSystem : RenderWorldSystem
     //
     internal void Execute(long frameId, Camera camera)
     {
-        _depthSet.Set.Clear();
-        _sceneSet.Set.Clear();
-
         FrameVersion = frameId;
 
         BuildFrustum(camera);
 
         var entityCount = RenderWorld.EntityCount;
         if (entityCount == 0) return;
+        
+        _depthSet.Set.Clear();
+        _sceneSet.Set.Clear();
         avg.BeginSample();
         CullFilter();
         if (avg.EndSample() > 100) avg.ResetAndPrint();
@@ -68,20 +71,30 @@ public sealed class RenderCullSystem : RenderWorldSystem
     {
         var depthSet = _depthSet.Set;
         var sceneSet = _sceneSet.Set;
-        foreach (var query in RenderWorld.Query.New<DrawPolicy>().Filter(RenderWorld.Meta.EntitySet))
+        var transparent = _transparentSet.Set;
+
+        foreach (var query in RenderWorld.Query.New<DrawPolicy>().Filter())
         {
-            var depthBits = Bit256.Zero;
-            var sceneBits = Bit256.Zero;
-            foreach (var it in query.Enumerator)
+            var depthBits = Bit64.Zero;
+            var sceneBits = Bit64.Zero;
+            var transparentBits = Bit64.Zero;
+
+            foreach (var it in query)
             {
+                if(it.Component.Cull == EntityCullStatus.ForceHidden) continue;
+                
+                if(it.Component.Queue >= DrawQueue.Transparent) transparentBits.Enable(it.EntityBit);
+
                 var passes = it.Component.Passes;
-                if ((passes & PassMask.Depth) != 0) Bit256.Enable(ref depthBits, it.BitIdx);
-                if ((passes & PassMask.Main) != 0) Bit256.Enable(ref sceneBits, it.BitIdx);
+                if ((passes & PassMask.Depth) != 0) depthBits.Enable(it.EntityBit);
+                if ((passes & PassMask.Main) != 0) sceneBits.Enable(it.EntityBit);
             }
 
-            depthSet.SetBit256(query.BlockIndex, depthBits);
-            sceneSet.SetBit256(query.BlockIndex, sceneBits);
+            depthSet.SetBit64(query.WordIndex, depthBits);
+            sceneSet.SetBit64(query.WordIndex, sceneBits);
+            transparent.SetBit64(query.WordIndex, transparentBits);
         }
+
 
         /*
         var entitySet = RenderWorld.Meta.EntitySet;
@@ -96,24 +109,6 @@ public sealed class RenderCullSystem : RenderWorldSystem
         }
         */
     }
-
-    private int Cull2(int entityCount)
-    {
-        var visibilitySet = RenderWorld.Meta.VisibleSet;
-
-        foreach (var query in RenderWorld.Query.New<DrawPolicy>().Filter(_depthSet.Set))
-        {
-            var visibilityBits = visibilitySet.GetBlock256(query.BlockIndex << 2);
-            foreach (var it in query.Enumerator)
-            {
-            }
-
-            visibilitySet.SetBlock256(query.BlockIndex << 2, visibilityBits);
-        }
-
-        return 0;
-    }
-
 
     private int CullEntities(int entityCount)
     {
@@ -134,7 +129,7 @@ public sealed class RenderCullSystem : RenderWorldSystem
             var innerPolices = policies.Slice(start, length);
             var innerBounds = worldBounds.Slice(start, length);
 
-            var entityBits = Filter(entitySet.GetBlockAtBit(start), innerPolices);
+            var entityBits = Filter(entitySet.GetAtBit64(start), innerPolices);
 
             int visibleIndex = 0;
             Bit64 visibilityBits = new(0);
@@ -155,7 +150,7 @@ public sealed class RenderCullSystem : RenderWorldSystem
                 }
             }
 
-            visibilitySet.SetBlockAtBit(start, visibilityBits);
+            visibilitySet.SetAtBit64(start, visibilityBits);
             visibleCount += visibleIndex;
         }
 

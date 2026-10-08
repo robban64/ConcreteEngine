@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Render.Components;
 using static ConcreteEngine.Core.Engine.Render.RenderWorld.Query;
 
@@ -16,62 +17,71 @@ public sealed partial class RenderWorld
             where T1 : unmanaged, IRenderComponent<T1>
             where T2 : unmanaged, IRenderComponent<T2>
         {
-            private int _blockIndex;
+            private int _lane;
+            private int _blockCursor;
+            private int _wordIndex;
+            private readonly int _count;
+
+            private Bit64 _currentBits;
+            private Bit256 _bit256;
 
             private readonly BitSet _filter1;
             private readonly BitSet _filter2;
 
-            private readonly Span<T1> _data1;
-            private readonly Span<T2> _data2;
-            public FilterQueryItem<T1, T2> Current { get; private set; }
-
             public FilterQuery(BitSet filter1, BitSet filter2)
             {
-                _blockIndex = -1;
-
+                _lane = -1;
+                _blockCursor = 0;
+                _wordIndex = 0;
+                _count = EntityBlockCount;
                 _filter1 = filter1;
                 _filter2 = filter2.IsNull ? Meta.TrueSet : filter2;
-
-                _data1 = Dense<T1>().AsSpan();
-                _data2 = Dense<T2>().AsSpan();
-
-                if (_data1.Length != _data2.Length) Throwers.InvalidOperation();
+                _bit256 = filter1.GetBit256(0).And(filter2.GetBit256(0));
+            }
+            
+            public readonly FilterQueryItem<T1,T2> Current
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => new(_wordIndex << 6, _wordIndex, _currentBits);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
-                var remaining = _data1.Length & 255;
-                var blockCount = (_data1.Length + 255) >> 8;
-
-                while (++_blockIndex < blockCount)
+                while (true)
                 {
-                    var bit256 = _filter1.GetBlock256(_blockIndex << 2) & _filter2.GetBlock256(_blockIndex << 2);
-                    if (bit256 != default)
+                    while (++_lane < 4)
                     {
-                        int start = _blockIndex << 8;
-                        int length = _blockIndex + 1 == blockCount && remaining != 0 ? remaining : 256;
-                        Current = new FilterQueryItem<T1, T2>(_blockIndex, new FilterEnumerator<T1, T2>(bit256, start,
-                            _data1.Slice(start, length),
-                            _data2.Slice(start, length)));
+                        _currentBits = _bit256.GetBit64(_lane);
+                        if (_currentBits.IsEmpty) continue;
+                        _wordIndex = (_blockCursor << 2) + _lane;
                         return true;
                     }
+
+                    if (++_blockCursor >= _count) return false;
+                    
+                    var b1 = _filter1.GetBit256(_blockCursor << 2);
+                    var b2 = _filter2.GetBit256(_blockCursor << 2);
+                    _bit256 = b1.And(b2);
+                    _lane = -1;
                 }
 
-                return false;
             }
-
+          
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public readonly FilterQuery<T1, T2> GetEnumerator() => this;
         }
 
-        public ref struct FilterQueryItem<T1, T2>(int blockIndex, FilterEnumerator<T1, T2> enumerator)
+        public readonly ref struct FilterQueryItem<T1, T2>(int start, int blockIndex, Bit64 bits)
             where T1 : unmanaged, IRenderComponent<T1>
             where T2 : unmanaged, IRenderComponent<T2>
 
         {
+            public readonly int Start = start;
             public readonly int BlockIndex = blockIndex;
-            public readonly FilterEnumerator<T1, T2> Enumerator = enumerator;
+            public readonly Bit64 Bits  = bits;
+        
+            public FilterEnumerator<T1,T2> Enumerator => new(Bits, Start, Dense<T1>().AsSpan().Slice(Start), Dense<T2>().AsSpan().Slice(Start));
         }
 
         public ref struct FilterEnumerator<T1, T2>
@@ -79,50 +89,40 @@ public sealed partial class RenderWorld
             where T2 : unmanaged, IRenderComponent<T2>
 
         {
-            private ulong _currentBits;
-
+            private int _bit;
             private readonly int _start;
-            private int _lane;
-
-            private readonly Vector256<ulong> _bit256;
+        
+            private Bit64 _currentBits;
 
             private readonly Span<T1> _data1;
             private readonly Span<T2> _data2;
 
-            public QueryItem<T1, T2> Current { get; private set; }
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public FilterEnumerator(Vector256<ulong> bit256, int start, Span<T1> data1, Span<T2> data2)
+            public FilterEnumerator(Bit64 entityBits, int start, Span<T1> data1, Span<T2> data2)
             {
+                ArgumentOutOfRangeException.ThrowIfNotEqual(data1.Length, data2.Length);
+                _bit = 0;
+                _start = start;
+                _currentBits = entityBits;
                 _data1 = data1;
                 _data2 = data2;
-                _bit256 = bit256;
-                _start = start;
-                _lane = -1;
-                _currentBits = 0;
             }
-
+            
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
-                while (_currentBits == 0)
-                {
-                    if (++_lane == 4) return false;
-                    _currentBits = _bit256.GetElement(_lane);
-                }
-
-                int bit = BitOperations.TrailingZeroCount(_currentBits);
-                int bitIdx = (_lane << 6) + bit;
-                _currentBits &= _currentBits - 1;
-
-                if ((uint)bitIdx < (uint)_data1.Length)
-                {
-                    Current = new QueryItem<T1, T2>(_start + bitIdx, ref _data1[bitIdx], ref _data2[bitIdx]);
-                    return true;
-                }
-
-                return false;
+                if (_currentBits.IsEmpty) return false;
+                _bit = BitOperations.TrailingZeroCount(_currentBits);
+                _currentBits.ClearLowerBits();
+                return true;
             }
+
+            public readonly QueryItem<T1, T2> Current
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => new(_bit + _start, _bit, ref _data1[_bit], ref _data2[_bit]);
+            }
+
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public readonly FilterEnumerator<T1, T2> GetEnumerator() => this;

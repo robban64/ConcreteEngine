@@ -12,7 +12,6 @@ public enum BitOp : byte
 
 public sealed partial class RenderWorld
 {
-
     public static partial class Query
     {
         [SkipLocalsInit]

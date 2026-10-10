@@ -16,51 +16,29 @@ public sealed class RenderCullSystem : RenderWorldSystem
 
     private readonly Vector4[] _frustum = new Vector4[12];
 
-    private readonly RenderWorld.RenderBitSet _depthSet;
-    private readonly RenderWorld.RenderBitSet _sceneSet;
-    private readonly RenderWorld.RenderBitSet _transparentSet;
     private readonly RenderWorld.RenderBitSet _ignoreSet;
 
-    private readonly RenderWorld.Query.FilterQueryItem<DrawPolicy, WorldBox>.QueryAction<
-        ValueRef<DrawEntityKey, Bit256, int>> del;
     public RenderCullSystem()
     {
-        /*
-        _depthSet = RenderWorld.CreateSet();
-        _sceneSet = RenderWorld.CreateSet();
-        _transparentSet = RenderWorld.CreateSet();
-        */
-        del = Action;
         _ignoreSet = RenderWorld.CreateSet();
     }
 
     private ref BoundingFrustum LightFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustum[0]);
     private ref BoundingFrustum SceneFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustum[6]);
 
-    private AvgFrameTimer avg;
-
-
-    //
-   private static BitSet CachedVisibilitySet;
-
     internal void Execute(long frameId, Camera camera)
     {
-      if (CachedVisibilitySet.IsNull) CachedVisibilitySet = RenderWorld.Meta.VisibleSet;
-
         FrameVersion = frameId;
 
         BuildFrustum(camera);
 
-        var entityCount = RenderWorld.EntityCount;
-        if (entityCount == 0) return;
-        
-        _ignoreSet.Set.Clear();
-        FilterEntitiesAction();
-        avg.BeginSample();
+        if (RenderWorld.EntityCount == 0) return;
 
-        var visibleCount = CullEntitiesAction();//CullEntities(entityCount);
+        _ignoreSet.Set.Clear();
+        FilterEntities();
+
+        var visibleCount = CullEntities2();
         VisibleCount = visibleCount;
-        if (avg.EndSample() > 100) avg.ResetAndPrint();
 
         if (visibleCount == 0) return;
 
@@ -77,42 +55,18 @@ public sealed class RenderCullSystem : RenderWorldSystem
         BoundingFrustum.From(in transposed, out SceneFrustum);
     }
 
-    
     private void FilterEntities()
-    {
-        var ignore = _ignoreSet.Set;
-        foreach (var query in RenderWorld.Query.New<DrawPolicy>().Filter())
-        {
-            var lanes = query.Lanes;
-            for (int i = 0; i < lanes; i++)
-            {
-                var ignoreBits = Bit64.Zero;
-                foreach (var it in query.EnumerateLane(i))
-                {
-                    if (it.Component.Cull == EntityCullStatus.ForceHidden)
-                    {
-                        ignoreBits.Enable(it.EntityBit);
-                    } 
-                }
-                
-                ignore.SetBit64(query.BlockIdx + lanes, ignoreBits);
-            }
-            
-        }
-    }
-
-    private void FilterEntitiesAction()
     {
         var ignore = _ignoreSet.Set;
 
         foreach (var query in RenderWorld.Query.New<DrawPolicy>().Filter())
         {
             var chunk = Bit256.Zero;
-            query.ForEachLane(ref chunk,static (ref ctx, lane,  start,  block,  data1) =>
+            query.ForEachLane(ref chunk, static (ref ctx, lane, start, block, data1) =>
             {
                 var ignoreBits = Bit64.Zero;
                 var span = data1.Slice(start);
-                foreach(var bit in block)
+                foreach (var bit in block)
                 {
                     var policy = span[bit];
                     if (policy.Cull == EntityCullStatus.ForceHidden)
@@ -120,59 +74,12 @@ public sealed class RenderCullSystem : RenderWorldSystem
                         ignoreBits.Enable(bit);
                     }
                 }
-                ctx.SetBit64(lane,ignoreBits);
+
+                ctx.SetBit64(lane, ignoreBits);
             });
-            
+
             ignore.SetBlock256(query.BlockIdx, chunk);
         }
-    }
-
-    private int CullEntitiesAction()
-    {
-        var visibleIndex = 0;
-        var visibilitySet = RenderWorld.Meta.VisibleSet;
-        ref var sortKeyRef = ref RenderWorld.Dense<DrawEntityKey>().AsRef();
-        foreach (var query in RenderWorld.Query.New<DrawPolicy, WorldBox>()
-                     .Filter(BitOp.AndNot, RenderWorld.Meta.EntitySet, _ignoreSet.Set))
-        {
-            int written = 0;
-            var chunk = Bit256.Zero;
-            var context = new ValueRef<DrawEntityKey, Bit256, int>(ref Unsafe.Add(ref sortKeyRef, visibleIndex), ref chunk, ref written);
-            query.ForEachLane(context, del);
-            visibilitySet.SetBit256(query.BlockIdx, chunk);
-            visibleIndex += written;
-        }
-
-        return visibleIndex;
-    }
-
-    private void Action(ValueRef<DrawEntityKey, Bit256, int> ctx, int lane, int start, Bit64 block, Span<DrawPolicy> data1, Span<WorldBox> data2)
-    {
-        var visibilityBits = Bit64.Zero;
-
-        var span1 = data1.Slice(start);
-        var span2 = data2.Slice(start);
-
-        var w = 0;
-        ref var sortKeys = ref Unsafe.Add(ref ctx.Item1, ctx.Item3);
-
-        foreach (var bit in block)
-        {
-            var policy = span1[bit];
-            var culledPasses = Intersects(policy.Passes, in span2[bit], out float distance);
-            var passes = policy.Cull == EntityCullStatus.AlwaysVisible
-                ? policy.Passes
-                : culledPasses;
-            if (passes != 0)
-            {
-                var key = DrawEntityKey.Create(start + bit, passes, distance, policy.Queue);
-                Unsafe.Add(ref sortKeys, w++) = key;
-                visibilityBits.Enable(bit);
-            }
-        }
-
-        ctx.Item3 += w;
-        ctx.Item2.SetBit64(lane, visibilityBits);
     }
 
     private int CullEntities2()
@@ -196,6 +103,7 @@ public sealed class RenderCullSystem : RenderWorldSystem
                     var passes = it.Component1.Cull == EntityCullStatus.AlwaysVisible
                         ? it.Component1.Passes
                         : culledPasses;
+                    
                     if (passes != 0)
                     {
                         sortKeys[idx++] = DrawEntityKey.Create(it.Entity, passes, distance, it.Component1.Queue);
@@ -206,12 +114,13 @@ public sealed class RenderCullSystem : RenderWorldSystem
                 chunk.SetBit64(lane, block);
                 visibleIndex += idx;
             }
+
             visibilitySet.SetBit256(query.BlockIdx, chunk);
         }
 
         return visibleIndex;
     }
-    
+
     private int CullEntities(int entityCount)
     {
         var sortKeys = RenderWorld.Dense<DrawEntityKey>().AsSpan();
@@ -261,11 +170,8 @@ public sealed class RenderCullSystem : RenderWorldSystem
 
     private PassMask Intersects(PassMask passes, in WorldBox box, out float distance)
     {
-        //var center = new Vector4(bounds.Center, 1f).AsVector128();
-        //var extent = new Vector4(bounds.Extent, 0f).AsVector128();
-        //var centerExtent = Vector256.Create(center, extent);
-
         var centerExtent = Unsafe.BitCast<WorldBox, Vector256<float>>(box);
+        
         ReadOnlySpan<Vector4> planes = _frustum;
         var depthTest = (passes & PassMask.Depth) != 0 && TestIntersect(planes.Slice(0, 6), in centerExtent);
         var sceneTest = (passes & PassMask.Main) != 0 && TestIntersect(planes.Slice(6, 6), in centerExtent);
@@ -317,6 +223,4 @@ public sealed class RenderCullSystem : RenderWorldSystem
     }
 
     public override void Dispose() { }
-    
-    
 }

@@ -104,9 +104,12 @@ public sealed class EngineRenderSystem : IDisposable
         _renderCamera.UpdateFrame(EngineTime.GameAlphaF);
 
         // process and upload draw commands
+        RenderWorld.Instance.Commit();
         RenderWorld.System<RenderCullSystem>().Execute(EngineTime.FrameId, _renderCamera);
         RenderWorld.System<RenderPassSystem>().Execute(EngineTime.FrameId);
+        
         //TestAll();
+        
         _transformBuffer.Execute();
         _particleSystem.Execute();
         _animationSystem.Execute(EngineTime.GameAlpha);
@@ -174,96 +177,5 @@ public sealed class EngineRenderSystem : IDisposable
         RenderStore.HighlightShader = store.GetByName<Shader>("Highlight").GfxId;
         RenderStore.BoundingBoxShader = store.GetByName<Shader>("BoundingBox").GfxId;
     }
-
-    /*
-
-    private AvgFrameTimer avg1, avg2;
-
-    private void TestAll()
-    {
-        if(RenderWorld.System<RenderCullSystem>().VisibleCount == 0) return;
-        TestBase();
-        avg1.BeginSample();
-        Test();
-        avg1.EndSample();
-
-       // avg2.BeginSample();
-        //Test1();
-        //avg2.EndSample();
-
-        if (iterationBase != iteration1 )
-            throw new InvalidOperationException($"Iter: {iterationBase} - {iteration1}");
-        if (set1.Count != set2.Count )
-            throw new InvalidOperationException($"Set: {set1.Count} - {set2.Count}");
-
-        foreach (var i in set2)
-        {
-            if (!set1.Contains(i))
-            {
-                throw new InvalidOperationException($"Missing entity {i}");
-            }
-        }
-
-        foreach (var i in set1)
-        {
-            if (!set2.Contains(i))
-            {
-                throw new InvalidOperationException($"Missing entity {i}");
-            }
-        }
-
-        if (avg1.Ticks > 100)
-        {
-            avg1.ResetAndPrint("Test0");
-            //avg2.ResetAndPrint("Test1");
-        }
-    }
-
-
-
-    private static int iterationBase, iteration1, iteration2;
-    private static readonly HashSet<int> set1 = new(128);
-    private static readonly HashSet<int> set2 = new(128);
-
-    private static void TestBase()
-    {
-        set1.Clear();
-        iterationBase = 0;
-        var entitySet = RenderWorld.Meta.EntitySet;
-        var visibleSet = RenderWorld.Meta.VisibleSet;
-        var entityCount = RenderWorld.EntityCount;
-        for (int i = 0; i < entityCount; ++i)
-        {
-            if (entitySet[i] && visibleSet[i])
-            {
-                set1.Add(i);
-                Console.WriteLine("Fact: " + i);
-                ++iterationBase;
-            }
-        }
-
-    }
-
-    private static void Test()
-    {
-        set2.Clear();
-        iteration1 = 0;
-        int sum = 0;
-        foreach (var filter in RenderWorld.Query.New<DrawPolicy>().Filter(BitOp.And,RenderWorld.Meta.EntitySet, RenderWorld.Meta.VisibleSet))
-        {
-            var s = 0;
-            foreach (var query in filter)
-            {
-                set2.Add(query.Entity);
-               Console.WriteLine("Test: " + query.Entity);
-               ++iteration1;
-
-               s += query.EntityBit + (int)query.Component.Passes ;
-            }
-
-        }
-
-    }
-*/
 
 }

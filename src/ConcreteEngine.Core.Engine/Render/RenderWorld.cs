@@ -14,6 +14,9 @@ public sealed partial class RenderWorld : IDisposable
 {
     public static int EntityCount => Instance.Count;
     public static int EntityCapacity => Instance.Capacity;
+    public static int EntityChunkCount => (EntityCount + 255) >> 8;
+    public static int EntityBlockCount =>  (EntityCount + 63) >> 6;
+
 
     public static RenderMetaStore Meta => Instance._meta;
     public static RenderWorld Instance { get; private set; } = null!;
@@ -42,6 +45,10 @@ public sealed partial class RenderWorld : IDisposable
 
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
+
+    public void Commit()
+    {
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderEntityContext GetContext(RenderEntity entity)

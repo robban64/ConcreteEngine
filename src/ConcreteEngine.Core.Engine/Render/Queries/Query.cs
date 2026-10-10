@@ -8,10 +8,6 @@ namespace ConcreteEngine.Core.Engine.Render;
 
 public sealed partial class RenderWorld
 {
-    private static int EntityChunkCount => (EntityCount + 255) >> 8;
-    private static int EntityBlockCount =>  (EntityCount + 63) >> 6;
-
-
     public static partial class Query
     {
         public readonly ref struct QueryItem<T1>(int entity, int entityBit, ref T1 component) where T1 : unmanaged
@@ -30,18 +26,6 @@ public sealed partial class RenderWorld
             public readonly ref T2 Component2 = ref component2;
         }
         
-        
-        [SkipLocalsInit]
-        public readonly ref struct ActionQueryItem<T1, T2>(int lane, int chunkStart, Span<T1> data1, Span<T1> data2)
-            where T1 : unmanaged, IRenderComponent<T1>
-
-        {
-            public readonly int Lane = lane;
-            public readonly int ChunkStart = chunkStart;
-            public readonly Span<T1> Data1 = data1;
-            public readonly Span<T1> Data2 = data2;
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static QueryBuilder<T1> New<T1>() where T1 : unmanaged, IRenderComponent<T1> => new();
 

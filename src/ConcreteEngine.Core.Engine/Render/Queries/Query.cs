@@ -33,25 +33,18 @@ public sealed partial class RenderWorld
         public static SparseEntityFilterQuery<T1> SparseEntityFilter<T1>(ReadOnlySpan<RenderEntity> entities,
             BitSet filter = default)
             where T1 : unmanaged, IRenderComponent<T1> => new(entities, filter);
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static QueryBuilder<T1> New<T1>() where T1 : unmanaged, IRenderComponent<T1> => new();
+        public static FilterQuery<T1> EntityFilter<T1>() where T1 : unmanaged, IRenderComponent<T1>
+        {
+            return new FilterQuery<T1>(new QueryFilterData2(BitOp.And, Meta.EntitySet, default));
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static QueryBuilder<T1, T2> New<T1, T2>()
             where T1 : unmanaged, IRenderComponent<T1>
             where T2 : unmanaged, IRenderComponent<T2> => new();
 
-        public readonly ref struct QueryBuilder<T1>
-            where T1 : unmanaged, IRenderComponent<T1>
-        {
-            public FilterQuery<T1> Filter(BitOp op = BitOp.And, BitSet filter1 = default, BitSet filter2 = default)
-            {
-                var filter = new QueryFilterData(op, filter1.IsNull ? Meta.EntitySet : filter1,
-                    filter2.IsNull ? Meta.TrueSet : filter2);
-                return new FilterQuery<T1>(filter);
-            }
-        }
 
         public readonly ref struct QueryBuilder<T1, T2>
             where T1 : unmanaged, IRenderComponent<T1>

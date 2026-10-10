@@ -15,7 +15,7 @@ public readonly record struct BitSet
     public static int GetCapacity256(int bits) => IntMath.AlignUp((bits + 63) >> 6, 4);
 
     private readonly ulong[] _bits;
-    
+
     public BitSet(int bitCount)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bitCount);
@@ -31,7 +31,7 @@ public readonly record struct BitSet
     }
 
     public bool IsNull => _bits is null;
-    
+
     public int BlockCapacity
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -64,15 +64,15 @@ public readonly record struct BitSet
             else _bits[bit >> 6] &= ~mask;
         }
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bit64 Get64(int index) => Unsafe.BitCast<ulong, Bit64>(_bits[index]);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Set64(int index, Bit64 block) => _bits[index] = block;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Bit256 Get256(int index) =>  Unsafe.As<ulong, Bit256>(ref _bits[index]);
+    public Bit256 Get256(int index) => Unsafe.As<ulong, Bit256>(ref _bits[index]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Set256(int index, in Bit256 block) => Unsafe.As<ulong, Bit256>(ref _bits[index]) = block;

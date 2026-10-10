@@ -31,22 +31,23 @@ public struct Bit256
         get => _bits != Vector256<ulong>.Zero;
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static explicit operator Bit256(Vector256<ulong> b) => Unsafe.BitCast<Vector256<ulong>, Bit256>(b);
-
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly Vector256<ulong> AsVector() => _bits;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private readonly ref Bit64 AsReadRef64() => ref Unsafe.As<Vector256<ulong>, Bit64>(ref Unsafe.AsRef(in _bits));
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Bit64 GetBit64(int lane) => Unsafe.Add(ref AsReadRef64(), lane);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetBit64(int lane, Bit64 bits) => Unsafe.Add(ref Unsafe.As<Vector256<ulong>, Bit64>(ref _bits), lane) = bits;
+    public void SetBit64(int lane, Bit64 bits) =>
+        Unsafe.Add(ref Unsafe.As<Vector256<ulong>, Bit64>(ref _bits), lane) = bits;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool HasBit(int bit) => GetBit64(bit >> 6)[bit];
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Enable(ref Bit256 it, int bit)
@@ -61,27 +62,18 @@ public struct Bit256
         ref var lane = ref Unsafe.Add(ref Unsafe.As<Bit256, Bit64>(ref it), bit >> 6);
         lane.Disable(bit);
     }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Bit256 And(Bit256 b1) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.BitwiseAnd(_bits, b1._bits));
-    
-    // left & ~right
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Bit256 AndNot(Bit256 b1) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.AndNot(_bits, b1._bits));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Bit256 Or(Bit256 b1) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.BitwiseOr(_bits, b1._bits));
-
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static  Bit256 And(Bit256 b1, Bit256 b2) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.BitwiseAnd(b1._bits, b2._bits));
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Bit256 AndNot(Bit256 b1, Bit256 b2) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.AndNot(b1._bits, b2._bits));
+    public static Bit256 And(Bit256 b1, Bit256 b2) =>
+        Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.BitwiseAnd(b1.AsVector(), b2.AsVector()));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Bit256 Or(Bit256 b1, Bit256 b2) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.BitwiseOr(b1._bits, b2._bits));
+    public static Bit256 AndNot(Bit256 b1, Bit256 b2) =>
+        Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.AndNot(b1.AsVector(), b2.AsVector()));
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Bit256 Or(Bit256 b1, Bit256 b2) =>
+        Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.BitwiseOr(b1.AsVector(), b2.AsVector()));
 }
 
 [StructLayout(LayoutKind.Sequential)]

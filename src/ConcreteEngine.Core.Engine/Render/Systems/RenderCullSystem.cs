@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Render.Systems;
@@ -47,6 +48,7 @@ public sealed class RenderCullSystem : RenderWorldSystem
         sortKeys64.Sort();
     }
 
+
     private void BuildFrustum(Camera camera)
     {
         var transposed = Matrix4x4.Transpose(camera.LightTransforms.ProjectionViewMatrix);
@@ -55,13 +57,35 @@ public sealed class RenderCullSystem : RenderWorldSystem
         transposed = Matrix4x4.Transpose(camera.FrameTransforms.ProjectionViewMatrix);
         BoundingFrustum.From(in transposed, out SceneFrustum);
     }
+    
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static FilterQueryEnumerator<TOp> NewFilter<TOp>(TOp filter) where TOp : struct, IBitDataOp<TOp>, allows ref struct 
+    {
+        return new FilterQueryEnumerator<TOp>(RenderWorld.EntityChunkCount, filter);
+    }
+
+    private int FilterTest()
+    {
+        int sum = 0;
+        foreach (var query in NewFilter(new FilterSetRight<OpAnd>(RenderWorld.Meta.EntitySet, Bit256.AllBitsSet)))
+        {
+            sum += query.BlockIdx;
+        }
+        foreach (var query in NewFilter(new FilterSet<OpAnd,OpAndNot>(RenderWorld.Meta.EntitySet, RenderWorld.Meta.VisibleSet, _ignoreSet.Set)))
+        {
+            sum += query.BlockIdx;
+        }
+
+        return sum;
+    }
 
     private void FilterEntities()
     {
         var ignore = _ignoreSet.Set;
         var skipCull = _skipCullSet.Set;
 
-        foreach (var query in RenderWorld.Query.New<DrawPolicy>().Filter())
+        foreach (var query in RenderWorld.Query.EntityFilter<DrawPolicy>())
         {
             var chunks = (Bit256.Zero, Bit256.Zero);
             query.ForEachLane(ref chunks, static (ref ctx, lane, start, block, policySpan) =>
@@ -125,7 +149,7 @@ public sealed class RenderCullSystem : RenderWorldSystem
         
         
         foreach (var query in RenderWorld.Query.New<DrawPolicy, WorldBox>()
-                     .Filter(BitOp.And, RenderWorld.Meta.EntitySet, _skipCullSet.Set))
+                     .Filter(BitOp.AndNot, _skipCullSet.Set, _ignoreSet.Set))
         {
             var chunk = visibilitySet.Get256(query.BlockIdx);
             var lanes = query.Lanes;

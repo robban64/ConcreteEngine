@@ -14,12 +14,13 @@ public sealed partial class RenderWorld
             private int _chunkCursor;
             private Bit256 _currentChunk;
 
-            private readonly QueryFilterData _filter;
+            private readonly QueryFilterData2 _filter;
 
-            public FilterQuery(QueryFilterData filter)
+            public FilterQuery(QueryFilterData2 filter)
             {
                 _chunkCount = EntityChunkCount;
                 _chunkCursor = -1;
+                _currentChunk = Bit256.Zero;
                 _filter = filter;
             }
 

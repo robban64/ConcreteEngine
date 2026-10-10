@@ -32,7 +32,7 @@ public sealed partial class RenderWorld
                 for (int lane = 0; lane < lanes; lane++)
                 {
                     var chunk = Chunk.GetBit64(lane);
-                    if (chunk.IsSet)
+                    if (chunk.IsAnySet)
                     {
                         var blockIndex = (BlockIdx + lane) << 6;
                         action(ref ctx, lane, blockIndex, chunk, Data1);
@@ -69,7 +69,7 @@ public sealed partial class RenderWorld
                 for (int lane = 0; lane < lanes; lane++)
                 {
                     var block = Chunk.GetBit64(lane);
-                    if (block.IsSet)
+                    if (block.IsAnySet)
                     {
                         var start = (BlockIdx + lane) << 6;
                         action(ref ctx, lane, start, block, Data1, Data2);

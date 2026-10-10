@@ -66,30 +66,16 @@ public readonly record struct BitSet
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool GetOrTrue(int bit) => _bits is null || this[bit];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Bit64 GetBit64(int index) => Unsafe.BitCast<ulong, Bit64>(_bits[index]);
+    public Bit64 Get64(int index) => Unsafe.BitCast<ulong, Bit64>(_bits[index]);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Bit64 GetAtBit64(int bit) => Unsafe.BitCast<ulong, Bit64>(_bits[bit >> 6]);
+    public void Set64(int index, Bit64 block) => _bits[index] = block;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetBit64(int index, Bit64 block) => _bits[index] = block;
+    public Bit256 Get256(int index) =>  Unsafe.As<ulong, Bit256>(ref _bits[index]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetAtBit64(int bit, ulong block) => _bits[bit >> 6] = block;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Bit256 GetBit256(int index) =>  Unsafe.As<ulong, Bit256>(ref _bits[index]);
-
-       // Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.LoadUnsafe(ref _bits[index]));
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetBit256(int index, in Bit256 block) => Unsafe.As<ulong, Bit256>(ref _bits[index]) = block;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetBlock256(int index, Vector256<ulong> block) => block.StoreUnsafe(ref _bits[index]);
+    public void Set256(int index, in Bit256 block) => Unsafe.As<ulong, Bit256>(ref _bits[index]) = block;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Toggle(int bit)
@@ -131,8 +117,20 @@ public readonly record struct BitSet
         return BitCapacity - countTrue;
     }
 
-    //
+    public static void And(BitSet dst, BitSet left, BitSet right)
+    {
+        ArgumentOutOfRangeException.ThrowIfNotEqual(dst.BlockCapacity, left.BlockCapacity);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(dst.BlockCapacity, right.BlockCapacity);
+        var length = dst.BlockCapacity;
+        for (int i = 0; i < length; i += 4)
+        {
+            var chunk = Bit256.And(left.Get256(i), right.Get256(i));
+            dst.Set256(i, chunk);
+        }
+    }
 
+
+    //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear() => Array.Clear(_bits, 0, _bits.Length);
 

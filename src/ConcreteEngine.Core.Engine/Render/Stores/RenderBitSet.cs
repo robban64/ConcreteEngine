@@ -32,7 +32,9 @@ public sealed partial class RenderWorld
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set =>  _set[index] = value;
         }
-        
+
+        public void Clear() => _set.Clear();
+
         internal void Resize(int size) => _set = _set.Resized(size);
     }
 }

@@ -35,7 +35,7 @@ public sealed partial class RenderWorld
                 while (++_chunkCursor < _chunkCount)
                 {
                     _currentChunk = _filter.Apply(_chunkCursor << 2);
-                    if (_currentChunk.IsSet) return true;
+                    if (_currentChunk.IsAnySet) return true;
                 }
 
                 return false;
@@ -74,7 +74,7 @@ public sealed partial class RenderWorld
                 while (++_chunkCursor < _chunkCount)
                 {
                     _currentChunk = _filter.Apply(_chunkCursor << 2);
-                    if (_currentChunk.IsSet) return true;
+                    if (_currentChunk.IsAnySet) return true;
                 }
 
                 return false;

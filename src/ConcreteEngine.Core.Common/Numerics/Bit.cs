@@ -25,14 +25,12 @@ public struct Bit256
         get => _bits == Vector256<ulong>.Zero;
     }
 
-    public readonly bool IsSet
+    public readonly bool IsAnySet
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _bits != Vector256<ulong>.Zero;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Vector256<ulong>(Bit256 b) => b._bits;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Bit256(Vector256<ulong> b) => Unsafe.BitCast<Vector256<ulong>, Bit256>(b);
@@ -65,20 +63,19 @@ public struct Bit256
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Bit256 And(Bit256 b1) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.BitwiseAnd(_bits, b1));
+    public readonly Bit256 And(Bit256 b1) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.BitwiseAnd(_bits, b1._bits));
     
     // left & ~right
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Bit256 AndNot(Bit256 b1) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.AndNot(_bits, b1));
+    public readonly Bit256 AndNot(Bit256 b1) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.AndNot(_bits, b1._bits));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Bit256 Or(Bit256 b1) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.BitwiseOr(_bits, b1));
+    public readonly Bit256 Or(Bit256 b1) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.BitwiseOr(_bits, b1._bits));
 
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static  Bit256 And(Bit256 b1, Bit256 b2) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.BitwiseAnd(b1._bits, b2._bits));
     
-    // left & ~right
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Bit256 AndNot(Bit256 b1, Bit256 b2) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.AndNot(b1._bits, b2._bits));
 
@@ -98,7 +95,7 @@ public record struct Bit64
 
     public Bit64(ulong bits) => Bits = bits;
 
-    public readonly bool IsSet
+    public readonly bool IsAnySet
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => Bits != 0;
@@ -167,7 +164,7 @@ public record struct Bit64
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-            if (_bits.IsSet)
+            if (_bits.IsAnySet)
             {
                 Current = BitOperations.TrailingZeroCount(_bits);
                 _bits.ClearLowerBits();

@@ -13,7 +13,6 @@ public sealed partial class RenderWorld
 {
     public static partial class Query
     {
-        [SkipLocalsInit]
         public readonly ref struct QueryFilterData
         {
             public readonly BitOp Op;
@@ -31,9 +30,9 @@ public sealed partial class RenderWorld
 
             public Bit256 Apply(int index)
             {
-                var b = ApplyFilter(Op, Filter1.GetBit256(index), Filter2.GetBit256(index));
+                var b = ApplyFilter(Op, Filter1.Get256(index), Filter2.Get256(index));
                 if (Filter3.IsNull) return b;
-                return ApplyFilter(Op, b, Filter3.GetBit256(index));
+                return ApplyFilter(Op, b, Filter3.Get256(index));
             }
             
             

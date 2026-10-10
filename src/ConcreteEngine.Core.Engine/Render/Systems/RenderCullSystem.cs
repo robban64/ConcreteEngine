@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 
@@ -33,8 +34,8 @@ public sealed class RenderCullSystem : RenderWorldSystem
 
         if (RenderWorld.EntityCount == 0) return;
 
-        _ignoreSet.Set.Clear();
-        _skipCullSet.Set.Clear();
+        _ignoreSet.Clear();
+        _skipCullSet.Clear();
         FilterEntities();
 
         var visibleCount = CullEntities3();
@@ -84,8 +85,8 @@ public sealed class RenderCullSystem : RenderWorldSystem
                 ctx.Item2.SetBit64(lane, skipBits);
             });
 
-            ignore.SetBlock256(query.BlockIdx, chunks.Item1);
-            skipCull.SetBlock256(query.BlockIdx, chunks.Item2);
+            ignore.Set256(query.BlockIdx, chunks.Item1);
+            skipCull.Set256(query.BlockIdx, chunks.Item2);
         }
     }
 
@@ -119,14 +120,14 @@ public sealed class RenderCullSystem : RenderWorldSystem
                 visibleIndex += idx;
             }
 
-            visibilitySet.SetBit256(query.BlockIdx, chunk);
+            visibilitySet.Set256(query.BlockIdx, chunk);
         }
         
         
         foreach (var query in RenderWorld.Query.New<DrawPolicy, WorldBox>()
                      .Filter(BitOp.And, RenderWorld.Meta.EntitySet, _skipCullSet.Set))
         {
-            var chunk = visibilitySet.GetBit256(query.BlockIdx);
+            var chunk = visibilitySet.Get256(query.BlockIdx);
             var lanes = query.Lanes;
             for (int lane = 0; lane < lanes; lane++)
             {
@@ -145,7 +146,7 @@ public sealed class RenderCullSystem : RenderWorldSystem
                 visibleIndex += idx;
             }
 
-            visibilitySet.SetBit256(query.BlockIdx, chunk);
+            visibilitySet.Set256(query.BlockIdx, chunk);
         }
 
         return visibleIndex;
@@ -183,7 +184,7 @@ public sealed class RenderCullSystem : RenderWorldSystem
                 visibleIndex += idx;
             }
 
-            visibilitySet.SetBit256(query.BlockIdx, chunk);
+            visibilitySet.Set256(query.BlockIdx, chunk);
         }
 
         return visibleIndex;
@@ -208,7 +209,7 @@ public sealed class RenderCullSystem : RenderWorldSystem
             var innerPolices = policies.Slice(start, length);
             var innerBounds = worldBounds.Slice(start, length);
 
-            var entityBits = Filter(entitySet.GetAtBit64(start), innerPolices);
+            var entityBits = Filter(entitySet.Get64(start >> 6), innerPolices);
 
             int visibleIndex = 0;
             Bit64 visibilityBits = new(0);
@@ -229,7 +230,7 @@ public sealed class RenderCullSystem : RenderWorldSystem
                 }
             }
 
-            visibilitySet.SetAtBit64(start, visibilityBits);
+            visibilitySet.Set64(start >> 6, visibilityBits);
             visibleCount += visibleIndex;
         }
 

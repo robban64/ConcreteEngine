@@ -28,7 +28,7 @@ public sealed class Skybox
         {
             _entity = RenderWorld.Instance.AddEntity(
                 new DrawSource(MeshId, material.MaterialId),
-                new DrawPolicy(DrawQueue.Skybox, PassMask.Main));
+                new DrawPolicy(DrawQueue.Skybox, PassMask.Scene));
             
         }
         

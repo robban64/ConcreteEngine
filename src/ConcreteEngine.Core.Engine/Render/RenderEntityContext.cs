@@ -1,7 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Render.Components;
 using static ConcreteEngine.Core.Engine.Render.RenderWorld;
 

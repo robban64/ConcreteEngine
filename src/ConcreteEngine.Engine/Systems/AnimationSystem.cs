@@ -90,7 +90,7 @@ internal sealed unsafe class AnimationSystem : IDisposable
     private static int FilterEntities(int slot, ReadOnlySpan<RenderEntity> entities)
     {
         var count = 0;
-        foreach (var query in RenderWorld.Query.New<SkinningLink>().SparseEntityFilter(entities, RenderWorld.Meta.VisibleSet))
+        foreach (var query in RenderWorld.Query.SparseEntityFilter<SkinningLink>(entities, RenderWorld.Meta.VisibleSet))
         {
             query.Component.AnimationSlot = (ushort)slot;
             ++count;

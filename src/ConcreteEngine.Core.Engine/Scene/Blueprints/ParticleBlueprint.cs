@@ -37,7 +37,7 @@ public sealed class ParticleInstance : RenderBlueprintInstance
     internal override void OnCreate()
     {
         var matId = ParticleMaterial.MaterialId;
-        var policy = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
+        var policy = new DrawPolicy(DrawQueue.Particles, PassMask.Scene);
         var source = new DrawSource(default, matId, DrawMask: EntityDrawMask.Instanced);
         var entity = RenderWorld.Instance.AddEntity(source, policy);
         RenderWorld.Sparse<EmitterLink>().Add(entity, new EmitterLink(Emitter.Id));
@@ -58,7 +58,7 @@ public sealed class ParticleInstance : RenderBlueprintInstance
         
         var ctx = entity.GetContext();
         ctx.Source.Mesh = Emitter.BoundMesh;
-        ctx.Policy = new DrawPolicy(DrawQueue.Particles, PassMask.Main);
+        ctx.Policy = new DrawPolicy(DrawQueue.Particles, PassMask.Scene);
         ctx.GetComponent<DrawInstanced>().Instances = (uint)Emitter.ParticleCount;
     }
 

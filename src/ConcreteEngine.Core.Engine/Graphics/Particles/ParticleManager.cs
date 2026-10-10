@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Identity;
@@ -98,7 +97,7 @@ internal sealed class ParticleManager : IDisposable
 
         _processedEmitters.Clear();
 
-        foreach (var it in RenderWorld.Query.New<EmitterLink>().SparseFilter(RenderWorld.Meta.VisibleSet))
+        foreach (var it in RenderWorld.Query.SparseFilter<EmitterLink>(RenderWorld.Meta.VisibleSet))
         {
             var emitterId = it.Component.EmitterId;
             if (_processedEmitters.Contains(emitterId)) continue;

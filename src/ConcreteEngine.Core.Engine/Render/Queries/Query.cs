@@ -1,10 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Render;
-
 
 public sealed partial class RenderWorld
 {
@@ -26,6 +24,16 @@ public sealed partial class RenderWorld
             public readonly ref T2 Component2 = ref component2;
         }
         
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SparseFilterQuery<T1> SparseFilter<T1>(BitSet filter)
+            where T1 : unmanaged, IRenderComponent<T1> => new(filter);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SparseEntityFilterQuery<T1> SparseEntityFilter<T1>(ReadOnlySpan<RenderEntity> entities,
+            BitSet filter = default)
+            where T1 : unmanaged, IRenderComponent<T1> => new(entities, filter);
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static QueryBuilder<T1> New<T1>() where T1 : unmanaged, IRenderComponent<T1> => new();
 
@@ -34,7 +42,8 @@ public sealed partial class RenderWorld
             where T1 : unmanaged, IRenderComponent<T1>
             where T2 : unmanaged, IRenderComponent<T2> => new();
 
-        public readonly ref struct QueryBuilder<T1> where T1 : unmanaged, IRenderComponent<T1>
+        public readonly ref struct QueryBuilder<T1>
+            where T1 : unmanaged, IRenderComponent<T1>
         {
             public FilterQuery<T1> Filter(BitOp op = BitOp.And, BitSet filter1 = default, BitSet filter2 = default)
             {
@@ -42,24 +51,20 @@ public sealed partial class RenderWorld
                     filter2.IsNull ? Meta.TrueSet : filter2);
                 return new FilterQuery<T1>(filter);
             }
-
-            public SparseFilterQuery<T1> SparseFilter(BitSet filter) => new(filter);
-
-            public SparseEntityFilterQuery<T1> SparseEntityFilter(ReadOnlySpan<RenderEntity> entities,
-                BitSet filter = default) => new(entities, filter);
         }
 
         public readonly ref struct QueryBuilder<T1, T2>
             where T1 : unmanaged, IRenderComponent<T1>
             where T2 : unmanaged, IRenderComponent<T2>
         {
-            public FilterQuery<T1, T2> Filter(BitOp op, BitSet filter1, BitSet filter2 = default)
+            public FilterQuery<T1, T2> Filter(BitOp op, BitSet filter1, BitSet filter2 = default, BitSet filter3 = default)
             {
                 var filter = new QueryFilterData(op, filter1.IsNull ? Meta.EntitySet : filter1,
-                    filter2.IsNull ? Meta.TrueSet : filter2);
+                    filter2.IsNull ? Meta.TrueSet : filter2, filter3);
                 
                 return new FilterQuery<T1, T2>(filter);
             }
+
         }
     }
 }

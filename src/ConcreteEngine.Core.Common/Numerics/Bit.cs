@@ -74,6 +74,17 @@ public struct Bit256
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Bit256 Or(Bit256 b1) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.BitwiseOr(_bits, b1));
 
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static  Bit256 And(Bit256 b1, Bit256 b2) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.BitwiseAnd(b1._bits, b2._bits));
+    
+    // left & ~right
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Bit256 AndNot(Bit256 b1, Bit256 b2) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.AndNot(b1._bits, b2._bits));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Bit256 Or(Bit256 b1, Bit256 b2) => Unsafe.BitCast<Vector256<ulong>, Bit256>(Vector256.BitwiseOr(b1._bits, b2._bits));
+
 }
 
 [StructLayout(LayoutKind.Sequential)]

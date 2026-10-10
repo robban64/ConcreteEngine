@@ -1,11 +1,8 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Render.Systems;
@@ -17,10 +14,12 @@ public sealed class RenderCullSystem : RenderWorldSystem
     private readonly Vector4[] _frustum = new Vector4[12];
 
     private readonly RenderWorld.RenderBitSet _ignoreSet;
+    private readonly RenderWorld.RenderBitSet _skipCullSet;
 
     public RenderCullSystem()
     {
         _ignoreSet = RenderWorld.CreateSet();
+        _skipCullSet = RenderWorld.CreateSet();
     }
 
     private ref BoundingFrustum LightFrustum => ref Unsafe.As<Vector4, BoundingFrustum>(ref _frustum[0]);
@@ -35,9 +34,10 @@ public sealed class RenderCullSystem : RenderWorldSystem
         if (RenderWorld.EntityCount == 0) return;
 
         _ignoreSet.Set.Clear();
+        _skipCullSet.Set.Clear();
         FilterEntities();
 
-        var visibleCount = CullEntities2();
+        var visibleCount = CullEntities3();
         VisibleCount = visibleCount;
 
         if (visibleCount == 0) return;
@@ -58,30 +58,98 @@ public sealed class RenderCullSystem : RenderWorldSystem
     private void FilterEntities()
     {
         var ignore = _ignoreSet.Set;
+        var skipCull = _skipCullSet.Set;
 
         foreach (var query in RenderWorld.Query.New<DrawPolicy>().Filter())
         {
-            var chunk = Bit256.Zero;
-            query.ForEachLane(ref chunk, static (ref ctx, lane, start, block, data1) =>
+            var chunks = (Bit256.Zero, Bit256.Zero);
+            query.ForEachLane(ref chunks, static (ref ctx, lane, start, block, policySpan) =>
             {
                 var ignoreBits = Bit64.Zero;
-                var span = data1.Slice(start);
+                var skipBits = Bit64.Zero;
+
+                ref var policies = ref Unsafe.Add(ref MemoryMarshal.GetReference(policySpan), start);
                 foreach (var bit in block)
                 {
-                    var policy = span[bit];
-                    if (policy.Cull == EntityCullStatus.ForceHidden)
+                    var policy = Unsafe.Add(ref policies, bit);
+                    if (policy.Passes == 0 || policy.Cull == EntityCullStatus.ForceHidden)
                     {
                         ignoreBits.Enable(bit);
+                        continue;
                     }
+                    if(policy.Cull == EntityCullStatus.AlwaysVisible) skipBits.Enable(bit);
                 }
 
-                ctx.SetBit64(lane, ignoreBits);
+                ctx.Item1.SetBit64(lane, ignoreBits);
+                ctx.Item2.SetBit64(lane, skipBits);
             });
 
-            ignore.SetBlock256(query.BlockIdx, chunk);
+            ignore.SetBlock256(query.BlockIdx, chunks.Item1);
+            skipCull.SetBlock256(query.BlockIdx, chunks.Item2);
         }
     }
 
+    private int CullEntities3()
+    {
+        var visibleIndex = 0;
+        var visibilitySet = RenderWorld.Meta.VisibleSet;
+        
+        var sortKeySpan = RenderWorld.Dense<DrawEntityKey>().AsSpan();
+        foreach (var query in RenderWorld.Query.New<DrawPolicy, WorldBox>()
+                     .Filter(BitOp.AndNot, RenderWorld.Meta.EntitySet, _skipCullSet.Set, _ignoreSet.Set))
+        {
+            var chunk = Bit256.Zero;
+            var lanes = query.Lanes;
+            for (int lane = 0; lane < lanes; lane++)
+            {
+                var idx = 0;
+                var block = Bit64.Zero;
+                var sortKeys = sortKeySpan.Slice(visibleIndex);
+                foreach (var it in query.EnumerateLane(lane))
+                {
+                    var passes = Intersects(it.Component1.Passes, in it.Component2, out float distance);
+                    if (passes != 0)
+                    {
+                        sortKeys[idx++] = DrawEntityKey.Create(it.Entity, passes, distance, it.Component1.Queue);
+                        block.Enable(it.EntityBit);
+                    }
+                }
+
+                chunk.SetBit64(lane, block);
+                visibleIndex += idx;
+            }
+
+            visibilitySet.SetBit256(query.BlockIdx, chunk);
+        }
+        
+        
+        foreach (var query in RenderWorld.Query.New<DrawPolicy, WorldBox>()
+                     .Filter(BitOp.And, RenderWorld.Meta.EntitySet, _skipCullSet.Set))
+        {
+            var chunk = visibilitySet.GetBit256(query.BlockIdx);
+            var lanes = query.Lanes;
+            for (int lane = 0; lane < lanes; lane++)
+            {
+                var idx = 0;
+                var block = chunk.GetBit64(lane);
+                var sortKeys = sortKeySpan.Slice(visibleIndex);
+                foreach (var it in query.EnumerateLane(lane))
+                {
+                    var distance = CalculateDistance(in it.Component2);
+                    sortKeys[idx++] = DrawEntityKey.Create(it.Entity, it.Component1.Passes, distance, it.Component1.Queue);
+                    block.Enable(it.EntityBit);
+
+                }
+
+                chunk.SetBit64(lane, block);
+                visibleIndex += idx;
+            }
+
+            visibilitySet.SetBit256(query.BlockIdx, chunk);
+        }
+
+        return visibleIndex;
+    }
     private int CullEntities2()
     {
         var visibleIndex = 0;
@@ -121,7 +189,7 @@ public sealed class RenderCullSystem : RenderWorldSystem
         return visibleIndex;
     }
 
-    private int CullEntities(int entityCount)
+    private int CullEntitiesLoop(int entityCount)
     {
         var sortKeys = RenderWorld.Dense<DrawEntityKey>().AsSpan();
         var policies = RenderWorld.Dense<DrawPolicy>().AsReadOnlySpan();
@@ -174,13 +242,13 @@ public sealed class RenderCullSystem : RenderWorldSystem
         
         ReadOnlySpan<Vector4> planes = _frustum;
         var depthTest = (passes & PassMask.Depth) != 0 && TestIntersect(planes.Slice(0, 6), in centerExtent);
-        var sceneTest = (passes & PassMask.Main) != 0 && TestIntersect(planes.Slice(6, 6), in centerExtent);
+        var sceneTest = (passes & PassMask.Scene) != 0 && TestIntersect(planes.Slice(6, 6), in centerExtent);
 
         distance = DistanceFromPlane(in planes[^1], in centerExtent);
 
         PassMask culledMask = 0;
         culledMask |= depthTest ? PassMask.Depth : 0;
-        culledMask |= sceneTest ? PassMask.Main : 0;
+        culledMask |= sceneTest ? PassMask.Scene : 0;
         return culledMask;
     }
 

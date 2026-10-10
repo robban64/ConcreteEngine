@@ -23,21 +23,5 @@ public readonly struct DrawEntityKey(int entity, uint sortKey) : IRenderComponen
         var sortKey = (byte)passMask | (depthKey << 8) | ((uint)queue << 24);
         return new DrawEntityKey(entity, sortKey);
     }
-    
-    [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static DrawEntityKey CreateTransparent(int entity, PassMask passMask, float distance, DrawQueue queue)
-    {
-        uint depthKey = (uint)float.Clamp(distance, 0f, 65535f) ^ ushort.MaxValue;
-        var sortKey = (byte)passMask | (depthKey << 8) | ((uint)queue << 24);
-        return new DrawEntityKey(entity, sortKey);
-    }
-    [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static DrawEntityKey CreateOpaque(int entity, PassMask passMask, float distance, DrawQueue queue)
-    {
-        uint depthKey = (uint)float.Clamp(distance, 0f, 65535f);
-        var sortKey = (byte)passMask | (depthKey << 8) | ((uint)queue << 24);
-        return new DrawEntityKey(entity, sortKey);
-    }
-
 }
 

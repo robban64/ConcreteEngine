@@ -1,8 +1,3 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Input;
-using Silk.NET.Input;
-
 namespace ConcreteEngine.Core.Engine.Scene.Modules;
 /*
 public sealed class FlyCameraModule : GameModule

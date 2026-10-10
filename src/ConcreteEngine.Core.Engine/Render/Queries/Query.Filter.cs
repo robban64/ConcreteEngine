@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Render.Components;
 
 namespace ConcreteEngine.Core.Engine.Render;
 
@@ -29,27 +28,27 @@ public sealed partial class RenderWorld
                 Filter2 = filter2;
                 Filter3 = filter3;
             }
-            
+
             public Bit256 Apply(int index)
             {
                 var b = ApplyFilter(Op, Filter1.GetBit256(index), Filter2.GetBit256(index));
                 if (Filter3.IsNull) return b;
                 return ApplyFilter(Op, b, Filter3.GetBit256(index));
             }
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Bit256 ApplyFilter(BitOp op, Bit256 left, Bit256 right)
-        {
-            return op switch
+            
+            
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static Bit256 ApplyFilter(BitOp op, Bit256 left, Bit256 right)
             {
-                BitOp.And => left.And(right),
-                BitOp.AndNot => left.AndNot(right),
-                BitOp.Or => left.Or(right),
-                _ => Bit256.Zero
-            };
+                return op switch
+                {
+                    BitOp.And => Bit256.And(left, right),
+                    BitOp.AndNot => Bit256.AndNot(left, right),
+                    BitOp.Or => Bit256.Or(left, right),
+                    _ => Bit256.Zero
+                };
+            }
         }
-
 
     }
 }
